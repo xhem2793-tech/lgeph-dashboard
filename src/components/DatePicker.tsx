@@ -495,10 +495,10 @@ const SingleDatePicker = ({
 
   const [time, setTime] = React.useState<TimeValue | null>(
     value
-      ? new Time(value.getHours(), value.getMinutes())
+      ? new (Time as any)(value.getHours(), value.getMinutes())
       : defaultValue
-        ? new Time(defaultValue.getHours(), defaultValue.getMinutes())
-        : new Time(0, 0),
+        ? new (Time as any)(defaultValue.getHours(), defaultValue.getMinutes())
+        : new (Time as any)(0, 0),
   )
 
   const initialDate = React.useMemo(() => {
@@ -527,8 +527,8 @@ const SingleDatePicker = ({
     setDate(initialDate)
     setTime(
       initialDate
-        ? new Time(initialDate.getHours(), initialDate.getMinutes())
-        : new Time(0, 0),
+        ? new (Time as any)(initialDate.getHours(), initialDate.getMinutes())
+        : new (Time as any)(0, 0),
     )
     setOpen(false)
   }
@@ -545,7 +545,7 @@ const SingleDatePicker = ({
     const newDate = date
     if (showTimePicker) {
       if (newDate && !time) {
-        setTime(new Time(0, 0))
+        setTime(new (Time as any)(0, 0))
       }
       if (newDate && time) {
         newDate.setHours(time.hour)
@@ -592,10 +592,10 @@ const SingleDatePicker = ({
     setDate(value ?? defaultValue ?? undefined)
     setTime(
       value
-        ? new Time(value.getHours(), value.getMinutes())
+        ? new (Time as any)(value.getHours(), value.getMinutes())
         : defaultValue
-          ? new Time(defaultValue.getHours(), defaultValue.getMinutes())
-          : new Time(0, 0),
+          ? new (Time as any)(defaultValue.getHours(), defaultValue.getMinutes())
+          : new (Time as any)(0, 0),
     )
   }, [value, defaultValue])
 
@@ -724,17 +724,17 @@ const RangeDatePicker = ({
 
   const [startTime, setStartTime] = React.useState<TimeValue | null>(
     value?.from
-      ? new Time(value.from.getHours(), value.from.getMinutes())
+      ? new (Time as any)(value.from.getHours(), value.from.getMinutes())
       : defaultValue?.from
-        ? new Time(defaultValue.from.getHours(), defaultValue.from.getMinutes())
-        : new Time(0, 0),
+        ? new (Time as any)(defaultValue.from.getHours(), defaultValue.from.getMinutes())
+        : new (Time as any)(0, 0),
   )
   const [endTime, setEndTime] = React.useState<TimeValue | null>(
     value?.to
-      ? new Time(value.to.getHours(), value.to.getMinutes())
+      ? new (Time as any)(value.to.getHours(), value.to.getMinutes())
       : defaultValue?.to
-        ? new Time(defaultValue.to.getHours(), defaultValue.to.getMinutes())
-        : new Time(0, 0),
+        ? new (Time as any)(defaultValue.to.getHours(), defaultValue.to.getMinutes())
+        : new (Time as any)(0, 0),
   )
 
   const initialRange = React.useMemo(() => {
@@ -763,11 +763,11 @@ const RangeDatePicker = ({
     const newRange = range
     if (showTimePicker) {
       if (newRange?.from && !startTime) {
-        setStartTime(new Time(0, 0))
+        setStartTime(new (Time as any)(0, 0))
       }
 
       if (newRange?.to && !endTime) {
-        setEndTime(new Time(0, 0))
+        setEndTime(new (Time as any)(0, 0))
       }
 
       if (newRange?.from && startTime) {
@@ -788,13 +788,13 @@ const RangeDatePicker = ({
     setRange(initialRange)
     setStartTime(
       initialRange?.from
-        ? new Time(initialRange.from.getHours(), initialRange.from.getMinutes())
-        : new Time(0, 0),
+        ? new (Time as any)(initialRange.from.getHours(), initialRange.from.getMinutes())
+        : new (Time as any)(0, 0),
     )
     setEndTime(
       initialRange?.to
-        ? new Time(initialRange.to.getHours(), initialRange.to.getMinutes())
-        : new Time(0, 0),
+        ? new (Time as any)(initialRange.to.getHours(), initialRange.to.getMinutes())
+        : new (Time as any)(0, 0),
     )
     setOpen(false)
   }
@@ -869,20 +869,20 @@ const RangeDatePicker = ({
 
     setStartTime(
       value?.from
-        ? new Time(value.from.getHours(), value.from.getMinutes())
+        ? new (Time as any)(value.from.getHours(), value.from.getMinutes())
         : defaultValue?.from
-          ? new Time(
+          ? new (Time as any)(
               defaultValue.from.getHours(),
               defaultValue.from.getMinutes(),
             )
-          : new Time(0, 0),
+          : new (Time as any)(0, 0),
     )
     setEndTime(
       value?.to
-        ? new Time(value.to.getHours(), value.to.getMinutes())
+        ? new (Time as any)(value.to.getHours(), value.to.getMinutes())
         : defaultValue?.to
-          ? new Time(defaultValue.to.getHours(), defaultValue.to.getMinutes())
-          : new Time(0, 0),
+          ? new (Time as any)(defaultValue.to.getHours(), defaultValue.to.getMinutes())
+          : new (Time as any)(0, 0),
     )
   }, [value, defaultValue])
 
