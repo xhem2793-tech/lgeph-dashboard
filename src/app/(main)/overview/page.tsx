@@ -3,6 +3,7 @@ import { CategoryBarCard } from "@/components/ui/overview/DashboardCategoryBarCa
 import { ChartCard } from "@/components/ui/overview/DashboardChartCard"
 import { Filterbar } from "@/components/ui/overview/DashboardFilterbar"
 import { ProgressBarCard } from "@/components/ui/overview/DashboardProgressBarCard"
+import { SparklineCard } from "@/components/ui/overview/DashboardSparklineCard"
 import { overviews } from "@/data/overview-data"
 import { OverviewData } from "@/data/schema"
 import { cx } from "@/lib/utils"
@@ -10,37 +11,66 @@ import { subDays, toDate } from "date-fns"
 import React from "react"
 import { DateRange } from "react-day-picker"
 
+const generateSparklineData = (days: number = 30): { date: string; value: number }[] => {
+  const data: { date: string; value: number }[] = []
+  const today = new Date()
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(today)
+    date.setDate(date.getDate() - i)
+    const dateStr = date.toLocaleDateString("zh-CN", { month: "short", day: "numeric" })
+    const baseValue = 50 + Math.random() * 50
+    const trend = i < days / 2 ? -0.3 : 0.5
+    const value = Math.round(baseValue + i * trend + (Math.random() - 0.5) * 10)
+    data.push({
+      date: dateStr,
+      value: Math.max(30, value),
+    })
+  }
+  return data
+}
+
+const newUsersData = {
+  title: "本月新用户数",
+  value: 1234,
+  change: 0.152,
+  sparklineData: generateSparklineData(30),
+  valueDescription: "本月新注册用户",
+  ctaDescription: "查看用户增长趋势分析。",
+  ctaText: "用户分析",
+  ctaLink: "#",
+}
+
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
 
 const categories: {
   title: keyof OverviewData
   type: "currency" | "unit"
 }[] = [
-  {
-    title: "Rows read",
-    type: "unit",
-  },
-  {
-    title: "Rows written",
-    type: "unit",
-  },
-  {
-    title: "Queries",
-    type: "unit",
-  },
-  {
-    title: "Payments completed",
-    type: "currency",
-  },
-  {
-    title: "Sign ups",
-    type: "unit",
-  },
-  {
-    title: "Logins",
-    type: "unit",
-  },
-]
+    {
+      title: "Rows read",
+      type: "unit",
+    },
+    {
+      title: "Rows written",
+      type: "unit",
+    },
+    {
+      title: "Queries",
+      type: "unit",
+    },
+    {
+      title: "Payments completed",
+      type: "currency",
+    },
+    {
+      title: "Sign ups",
+      type: "unit",
+    },
+    {
+      title: "Logins",
+      type: "unit",
+    },
+  ]
 
 export type KpiEntry = {
   title: string
@@ -146,7 +176,7 @@ export default function Overview() {
         >
           Current billing cycle
         </h1>
-        <div className="mt-4 grid grid-cols-1 gap-14 sm:mt-8 sm:grid-cols-2 lg:mt-10 xl:grid-cols-3">
+        <div className="mt-4 grid grid-cols-1 gap-14 sm:mt-8 sm:grid-cols-2 lg:mt-10 xl:grid-cols-4">
           <ProgressBarCard
             title="Usage"
             change="+0.2%"
@@ -177,6 +207,16 @@ export default function Overview() {
             ctaText="cost spend management."
             ctaLink="#"
             data={data3}
+          />
+          <SparklineCard
+            title={newUsersData.title}
+            value={newUsersData.value}
+            change={newUsersData.change}
+            sparklineData={newUsersData.sparklineData}
+            valueDescription={newUsersData.valueDescription}
+            ctaDescription={newUsersData.ctaDescription}
+            ctaText={newUsersData.ctaText}
+            ctaLink={newUsersData.ctaLink}
           />
         </div>
       </section>
