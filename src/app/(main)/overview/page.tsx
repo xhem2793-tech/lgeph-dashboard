@@ -1,12 +1,7 @@
 "use client"
 
 import React from "react"
-import {
-  monthlyView,
-  macroAll,
-  competitorTv,
-  latestNews,
-} from "@/lib/supabase"
+import { rangeRows, competitorTv, latestNews } from "@/lib/supabase"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
 export type KpiEntry = {
@@ -23,7 +18,6 @@ export type KpiEntryExtended = Omit<KpiEntry, "current" | "allowed" | "unit"> & 
 
 const IND = "#6366f1"
 const GRY = "#b4b2a9"
-const MONTHS = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
 
 function round(n: number, d = 1) {
   const f = Math.pow(10, d)
@@ -265,7 +259,6 @@ type Stat = {
   delta: string
   good: boolean
   prev: string
-  danger?: boolean
   chart: Series
 }
 
@@ -283,18 +276,42 @@ function StatCard({ s }: { s: Stat }) {
           <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{s.title}</span>
           <Badge good={s.good} text={s.delta} />
         </div>
-        {s.chart.prev && s.chart.prev.length ? (
-          <div className="flex items-center gap-2.5 text-[11px] text-gray-400">
-            <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: GRY }} />{s.chart.prevName}</span>
-            <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: IND }} />{s.chart.curName}</span>
-          </div>
-        ) : null}
+        <div className="flex items-center gap-2.5 text-[11px] text-gray-400">
+          <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: GRY }} />{s.chart.prevName}</span>
+          <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: IND }} />{s.chart.curName}</span>
+        </div>
       </div>
-      <p className={"mt-1 text-2xl font-semibold tabular-nums " + (s.danger ? "text-red-600 dark:text-red-400" : "text-gray-900 dark:text-gray-50")}>{s.value}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-50">{s.value}</p>
       <p className="text-[11px] text-gray-400">{s.prev}</p>
       <ProChart {...s.chart} />
     </div>
   )
+}
+
+const iso = (d: Date) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+const addDays = (d: Date, n: number) => {
+  const x = new Date(d)
+  x.setDate(x.getDate() + n)
+  return x
+}
+const minusYear = (d: Date) => {
+  const x = new Date(d)
+  x.setFullYear(x.getFullYear() - 1)
+  return x
+}
+function forwardFill(rows: { date: string; value: number }[], dates: string[]) {
+  let j = 0
+  let lastV = rows.length ? rows[0].value : NaN
+  const out: number[] = []
+  for (const d of dates) {
+    while (j < rows.length && rows[j].date <= d) {
+      lastV = rows[j].value
+      j++
+    }
+    out.push(lastV)
+  }
+  return out
 }
 
 export default function Overview() {
@@ -306,86 +323,53 @@ export default function Overview() {
   React.useEffect(() => {
     ;(async () => {
       try {
-        const [fxM, oilM, inf, cci, bci, imp, tv, nw] = await Promise.all([
-          monthlyView("v_fx_monthly"),
-          monthlyView("v_oil_monthly"),
-          macroAll("INF_all_items"),
-          macroAll("consumer_confidence_index"),
-          macroAll("business_confidence_index"),
-          macroAll("imports_home_appliances"),
-          competitorTv(6),
-          latestNews(5),
-        ])
+        const today = new Date()
+        const curDates = [...Array(7)].map((_, i) => addDays(today, -(6 - i)))
+        const prevDates = curDates.map(minusYear)
+        const curISO = curDates.map(iso)
+        const prevISO = prevDates.map(iso)
+        const labels = curDates.map((d) => `${d.getMonth() + 1}/${d.getDate()}`)
+        const yCur = String(today.getFullYear())
+        const yPrev = String(today.getFullYear() - 1)
 
-        const byYearV = (rows: { value: number; date: string }[]) => {
-          const m: Record<string, number[]> = {}
-          for (const r of rows) { const y = r.date.slice(0, 4); (m[y] = m[y] || []).push(r.value) }
-          return m
-        }
-        const byYearM = (rows: { yr: number; mon: number; v: number }[]) => {
-          const m: Record<string, number[]> = {}
-          for (const r of rows) { (m[r.yr] = m[r.yr] || []).push(r.v) }
-          return m
-        }
-        const yrs = (m: Record<string, number[]>) => Object.keys(m).sort()
+        const specs = [
+          { table: "exchange_rates", col: "usd_php", title: "환율 USD/PHP", unit: "₱", dec: 2, goodDown: true },
+          { table: "oil_prices", col: "diesel", title: "유가 디젤", unit: "₱", dec: 1, goodDown: true },
+          { table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1, goodDown: true },
+        ]
 
-        // FX (monthly avg YoY)
-        const fm = byYearM(fxM), fY = yrs(fm)
-        const fxCur = fm[fY[fY.length - 1]], fxPrev = fm[fY[fY.length - 2]]
-        // Oil
-        const om = byYearM(oilM), oY = yrs(om)
-        const oilCur = om[oY[oY.length - 1]], oilPrev = om[oY[oY.length - 2]]
-        // Inflation
-        const im = byYearV(inf), iY = yrs(im)
-        const infCur = im[iY[iY.length - 1]], infPrev = im[iY[iY.length - 2]]
-        // CCI quarterly
-        const cm = byYearV(cci), cY = yrs(cm)
-        const cciCur = cm[cY[cY.length - 1]], cciPrev = cm[cY[cY.length - 2]]
-        // BCI (2026 only)
-        const bm = byYearV(bci), bY = yrs(bm)
-        const bciCur = bm[bY[bY.length - 1]]
-        // Imports annual (multi-year single line, $M)
-        const impVals = imp.map((r) => r.value / 1e6)
-        const impYears = imp.map((r) => "'" + r.date.slice(2, 4))
+        const fetched = await Promise.all(
+          specs.flatMap((sp) => [
+            rangeRows(sp.table, sp.col, iso(addDays(curDates[0], -20)), curISO[6]),
+            rangeRows(sp.table, sp.col, iso(addDays(prevDates[0], -20)), prevISO[6]),
+          ]),
+        )
+        const [tv, nw] = await Promise.all([competitorTv(6), latestNews(5)])
 
-        const last = (a: number[]) => a[a.length - 1]
-        const prevPt = (a: number[]) => a[a.length - 2]
+        const built: Stat[] = specs.map((sp, i) => {
+          const cur = forwardFill(fetched[i * 2], curISO)
+          const prev = forwardFill(fetched[i * 2 + 1], prevISO)
+          const cToday = cur[cur.length - 1]
+          const pToday = prev[prev.length - 1]
+          const diff = cToday - pToday
+          const pctBase = sp.col === "heat_index" ? diff : (diff / pToday) * 100
+          const down = cToday <= pToday
+          const arrow = down ? "▼ " : "▲ "
+          const deltaTxt =
+            sp.col === "heat_index"
+              ? arrow + Math.abs(round(diff, 1)) + sp.unit
+              : arrow + Math.abs(round(pctBase, 2)) + "%"
+          return {
+            title: sp.title,
+            value: (sp.unit === "₱" ? "₱" : "") + round(cToday, sp.dec) + (sp.unit === "℃" ? "℃" : ""),
+            delta: deltaTxt,
+            good: sp.goodDown ? down : !down,
+            prev: "전년 동일 " + (sp.unit === "₱" ? "₱" : "") + round(pToday, sp.dec) + (sp.unit === "℃" ? "℃" : ""),
+            chart: { cur, prev, labels, unit: sp.unit, curName: yCur, prevName: yPrev, decimals: sp.dec },
+          }
+        })
 
-        const fxL = last(fxCur), fxP = prevPt(fxCur)
-        const oL = last(oilCur), oP = prevPt(oilCur)
-        const iL = last(infCur), iP = prevPt(infCur)
-        const cL = last(cciCur), cP = prevPt(cciCur)
-        const bL = last(bciCur), bP = prevPt(bciCur)
-        const mL = last(impVals), mP = prevPt(impVals)
-
-        const qLabels = ["1Q", "2Q", "3Q", "4Q"]
-
-        setStats([
-          {
-            title: "환율 USD/PHP", value: round(fxL, 2) + "", delta: (fxL <= fxP ? "▼ " : "▲ ") + Math.abs(round(((fxL - fxP) / fxP) * 100, 2)) + "%", good: fxL <= fxP, prev: "전월 " + round(fxP, 2),
-            chart: { cur: fxCur, prev: fxPrev, labels: MONTHS.slice(0, Math.max(fxCur.length, fxPrev.length)), unit: "₱", curName: fY[fY.length - 1], prevName: fY[fY.length - 2], decimals: 2 },
-          },
-          {
-            title: "물가상승률", value: round(iL, 1) + "%", delta: (iL <= iP ? "▼ " : "▲ ") + Math.abs(round(iL - iP, 1)) + "%p", good: iL <= iP, prev: "전월 " + round(iP, 1) + "%", danger: iL >= 4,
-            chart: { cur: infCur, prev: infPrev, labels: MONTHS.slice(0, Math.max(infCur.length, infPrev.length)), unit: "%", curName: iY[iY.length - 1], prevName: iY[iY.length - 2], decimals: 1 },
-          },
-          {
-            title: "소비자신뢰 CCI", value: round(cL, 1) + "", delta: (cL >= cP ? "▲ " : "▼ ") + Math.abs(round(cL - cP, 1)) + "p", good: cL >= cP, prev: "전분기 " + round(cP, 1), danger: cL < 0,
-            chart: { cur: cciCur, prev: cciPrev, labels: qLabels.slice(0, Math.max(cciCur.length, cciPrev.length)), curName: cY[cY.length - 1], prevName: cY[cY.length - 2], decimals: 1 },
-          },
-          {
-            title: "유가 디젤", value: "₱" + round(oL, 1), delta: (oL <= oP ? "▼ " : "▲ ") + Math.abs(round(oL - oP, 1)), good: oL <= oP, prev: "전월 ₱" + round(oP, 1),
-            chart: { cur: oilCur, prev: oilPrev, labels: MONTHS.slice(0, Math.max(oilCur.length, oilPrev.length)), unit: "₱", curName: oY[oY.length - 1], prevName: oY[oY.length - 2], decimals: 1 },
-          },
-          {
-            title: "기업경기 BCI", value: round(bL, 1) + "", delta: (bL >= bP ? "▲ " : "▼ ") + Math.abs(round(bL - bP, 1)), good: bL >= bP, prev: "전월 " + round(bP, 1), danger: bL < 0,
-            chart: { cur: bciCur, labels: MONTHS.slice(0, bciCur.length), curName: bY[bY.length - 1], decimals: 1 },
-          },
-          {
-            title: "가전 수입(연)", value: "$" + Math.round(mL) + "M", delta: (mL >= mP ? "▲ " : "▼ ") + Math.abs(round(((mL - mP) / mP) * 100, 1)) + "%", good: mL >= mP, prev: "전년 $" + Math.round(mP) + "M",
-            chart: { cur: impVals, labels: impYears, unit: "$M", curName: "수입", decimals: 0 },
-          },
-        ])
+        setStats(built)
         setComp(tv)
         setNews(nw)
       } catch (e) {
@@ -401,7 +385,7 @@ export default function Overview() {
     <main className="p-4 sm:p-6">
       <div className="flex items-center justify-between">
         <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">개요</h1>
-        <span className="rounded-md border border-gray-200 px-2.5 py-1 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">전년 대비 · 2025 vs 2026</span>
+        <span className="rounded-md border border-gray-200 px-2.5 py-1 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">최근 7일 · 전년 동기 대비</span>
       </div>
 
       {loading ? (
@@ -409,7 +393,7 @@ export default function Overview() {
       ) : (
         <>
           <div className="mt-5 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
-            <div className="grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
               {stats.map((s) => (
                 <StatCard key={s.title} s={s} />
               ))}
