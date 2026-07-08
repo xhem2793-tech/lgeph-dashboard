@@ -293,15 +293,15 @@ function DeltaBadge({ down, pct, pctSuffix, absVal, absPrefix }: { down: boolean
   )
 }
 
-function MultiCard({ title, items, delay }: { title: string; items: { label: string; stat: Stat }[]; delay: number }) {
+function MultiCard({ title, items, delay, range }: { title: string; items: { label: string; stat: Stat }[]; delay: number; range: string }) {
   const [sel, setSel] = React.useState(0)
   if (!items.length) return null
   const idx = Math.min(sel, items.length - 1)
   const s = items[idx].stat
   const multi = items.length > 1
   return (
-    <div style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
-    <div className="rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
+    <div className="h-full" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
+    <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className="shrink-0 text-sm font-medium text-gray-700">{title}</span>
@@ -321,14 +321,14 @@ function MultiCard({ title, items, delay }: { title: string; items: { label: str
       ) : null}
       <p className="mt-1 flex items-baseline gap-1.5">
         <span className="text-xl font-semibold tabular-nums text-gray-900">
-          <CountUp key={idx} value={s.vNum} prefix={s.vPrefix} suffix={s.vSuffix} decimals={s.vDec} />
+          <CountUp key={`${range}-${idx}`} value={s.vNum} prefix={s.vPrefix} suffix={s.vSuffix} decimals={s.vDec} />
         </span>
         <span className="text-[10px] text-gray-400/90">{s.prevText}</span>
       </p>
-      <div key={idx}>
+      <div key={`${range}-${idx}`} style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }}>
         <ProChart {...s.chart} />
       </div>
-      <div className="mt-2 border-t border-gray-200 pt-2 text-[11px] leading-snug text-gray-500">
+      <div className="mt-auto border-t border-gray-200 pt-2 text-[11px] leading-snug text-gray-500">
         <span className="rounded bg-indigo-100 px-1 text-[9px] font-semibold text-indigo-600">AI</span>
         <span className="ml-1">{s.insight}</span>
         <div className="mt-1 text-[10px] text-gray-400">출처 {s.note}</div>
@@ -413,7 +413,10 @@ const SERIES = [
   { key: "ron95", group: "oil", label: "RON95", title: "유가", table: "oil_prices", col: "ron95", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON95" },
   { key: "ron97", group: "oil", label: "RON97", title: "유가", table: "oil_prices", col: "ron97", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON97" },
   { key: "kerosene", group: "oil", label: "등유", title: "유가", table: "oil_prices", col: "kerosene", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 등유(Kerosene)" },
-  { key: "heat_index", group: "wx", label: "체감 열지수", title: "체감 열지수", table: "weather", col: "heat_index", unit: "℃", dec: 1, src: "PAGASA", note: "PAGASA 관측 · 체감 열지수(Heat Index)" },
+  { key: "heat_index", group: "wx", label: "체감", title: "날씨", table: "weather", col: "heat_index", unit: "℃", dec: 1, src: "PAGASA", note: "PAGASA 관측 · 체감 열지수(Heat Index)" },
+  { key: "max_temp", group: "wx", label: "최고", title: "날씨", table: "weather", col: "max_temp", unit: "℃", dec: 1, src: "PAGASA", note: "PAGASA 관측 · 일 최고기온" },
+  { key: "avg_temp", group: "wx", label: "평균", title: "날씨", table: "weather", col: "avg_temp", unit: "℃", dec: 1, src: "PAGASA", note: "PAGASA 관측 · 일 평균기온" },
+  { key: "rainfall", group: "wx", label: "강수", title: "날씨", table: "weather", col: "rainfall", unit: "mm", dec: 1, src: "PAGASA", note: "PAGASA 관측 · 일 강수량(mm)" },
 ] as const
 
 export default function Overview() {
@@ -460,8 +463,8 @@ export default function Overview() {
       const down = cVal <= pVal
       const up = cVal > pVal
       const pfx = m.unit === "₱" ? "₱" : m.unit === "₩" ? "₩" : ""
-      const sfx = m.unit === "℃" ? "℃" : ""
-      const isTemp = m.col === "heat_index"
+      const sfx = m.unit === "℃" ? "℃" : m.unit === "mm" ? "mm" : ""
+      const isAbs = m.unit === "℃" || m.unit === "mm"
       const trendUp = cur.length >= 2 ? cur[cur.length - 1] > cur[0] : up
       const trendFlat = cur.length >= 2 && cur[cur.length - 1] === cur[0]
       const trendW = trendFlat ? "보합세" : trendUp ? "상승 흐름" : "하락 흐름"
@@ -475,10 +478,10 @@ export default function Overview() {
         title: m.title, group: m.group, label: m.label,
         vNum: cVal, vPrefix: pfx, vSuffix: sfx, vDec: m.dec,
         dDown: down,
-        dPct: isTemp ? Math.abs(cVal - pVal) : Math.abs(((cVal - pVal) / pVal) * 100),
-        dPctSuffix: isTemp ? "℃" : "%",
-        dAbs: isTemp ? null : Math.abs(cVal - pVal),
-        dAbsPrefix: isTemp ? "" : pfx,
+        dPct: isAbs ? Math.abs(cVal - pVal) : Math.abs(((cVal - pVal) / pVal) * 100),
+        dPctSuffix: isAbs ? sfx : "%",
+        dAbs: isAbs ? null : Math.abs(cVal - pVal),
+        dAbsPrefix: isAbs ? "" : pfx,
         prevText: "전년 동기 " + pfx + (Number.isFinite(pVal) ? pVal.toFixed(m.dec) : "-") + sfx,
         src: m.src,
         note: m.note,
@@ -496,70 +499,31 @@ export default function Overview() {
 
   return (
     <main className="px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-1">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
-      <div className="grid grid-cols-1 items-end gap-3 lg:grid-cols-4" style={{ animation: "fadeUp .8s ease both" }}>
-        <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 lg:col-span-2">일간지표</h1>
-        <div className="flex flex-col items-start gap-1">
-          <p className="text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500">* 모든 변동률·비교는 전년 동기 대비</p>
-          <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
-            {RANGES.map((r) => (
-              <button
-                key={r.key}
-                onClick={() => setRange(r.key)}
-                className={
-                  "rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " +
-                  (range === r.key ? "scale-[1.03] bg-white text-indigo-600 shadow-md" : "text-gray-500 hover:-translate-y-0.5 hover:bg-white/70 hover:text-indigo-600 hover:shadow-sm")
-                }
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
       {!raw ? (
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
       ) : (
         <>
-          <div key={range} className="mt-1.5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <MultiCard title="환율" items={fxItems} delay={0} />
-            <MultiCard title="유가" items={oilItems} delay={0.12} />
-            <MultiCard title="체감 열지수" items={wxItems} delay={0.24} />
-            <div className="rounded-xl p-3.5 lg:border-l lg:border-gray-200 lg:pl-4" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
-              <div className="flex items-baseline justify-between">
-                <p className="text-lg font-bold tracking-tight text-gray-900">경제 캘린더</p>
-                <span className="text-[10px] text-gray-400">결과·예정</span>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_0.75fr]" style={{ animation: "fadeUp .8s ease both" }}>
+            <div className="lg:col-span-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간지표</h1>
+                <div className="flex flex-col items-end gap-1">
+                  <p className="text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500">* 모든 변동률·비교는 전년 동기 대비</p>
+                  <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
+                    {RANGES.map((r) => (
+                      <button key={r.key} onClick={() => setRange(r.key)} className={"rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " + (range === r.key ? "scale-[1.03] bg-white text-indigo-600 shadow-md" : "text-gray-500 hover:-translate-y-0.5 hover:bg-white/70 hover:text-indigo-600 hover:shadow-sm")}>{r.label}</button>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="mt-2 flex flex-col gap-1">
-                {cal.map((e, i) => {
-                  const showToday = i > 0 && cal[i - 1].past && !e.past
-                  return (
-                    <React.Fragment key={i}>
-                      {showToday ? (
-                        <div className="my-1 flex items-center gap-2 text-[9px] font-semibold text-indigo-400">
-                          <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
-                        </div>
-                      ) : null}
-                      <div className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-55" : "")}>
-                        <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-100 text-gray-400" : "bg-emerald-50 text-emerald-600")}>
-                          <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
-                          <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className={"line-clamp-2 text-[11.5px] leading-snug " + (e.past ? "text-gray-400" : "font-medium text-gray-800")}>{e.event}</p>
-                          <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance} · {e.past ? "결과" : "예정"}</p>
-                        </div>
-                      </div>
-                    </React.Fragment>
-                  )
-                })}
+              <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <MultiCard title="환율" items={fxItems} delay={0} range={range} />
+                <MultiCard title="유가" items={oilItems} delay={0.12} range={range} />
+                <MultiCard title="날씨" items={wxItems} delay={0.24} range={range} />
               </div>
-            </div>
-          </div>
-
-          <div className="mt-3 border-t border-gray-200 pt-4" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
-            <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
+              <div className="mt-3 border-t border-gray-200 pt-4" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
+                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
               {[
                 { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain, img: "https://images.unsplash.com/photo-1518183214770-9cffbec72538?w=640&h=360&fit=crop&q=70" },
                 { title: "CE 동향", sub: "생활가전·소비", rows: nCE, img: "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=640&h=360&fit=crop&q=70" },
@@ -590,6 +554,38 @@ export default function Overview() {
                   </div>
                 </div>
               ))}
+                </div>
+              </div>
+            </div>
+            <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
+              <div className="flex items-baseline justify-between">
+                <p className="text-lg font-bold tracking-tight text-gray-900">경제 캘린더</p>
+                <span className="text-[10px] text-gray-400">결과·예정</span>
+              </div>
+              <div className="mt-2 flex flex-col gap-1">
+                {cal.map((e, i) => {
+                  const showToday = i > 0 && cal[i - 1].past && !e.past
+                  return (
+                    <React.Fragment key={i}>
+                      {showToday ? (
+                        <div className="my-1 flex items-center gap-2 text-[9px] font-semibold text-indigo-400">
+                          <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
+                        </div>
+                      ) : null}
+                      <div className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-55" : "")}>
+                        <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-100 text-gray-400" : "bg-emerald-50 text-emerald-600")}>
+                          <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
+                          <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className={"line-clamp-2 text-[11.5px] leading-snug " + (e.past ? "text-gray-400" : "font-medium text-gray-800")}>{e.event}</p>
+                          <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance} · {e.past ? "결과" : "예정"}</p>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </>
