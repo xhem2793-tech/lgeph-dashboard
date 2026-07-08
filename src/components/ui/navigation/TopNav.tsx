@@ -1,7 +1,7 @@
 "use client"
 
 import { siteConfig } from "@/app/siteConfig"
-import { exchangeRates, macroSeries, oilSeries } from "@/lib/supabase"
+import { exchangeRates, macroAll, rangeRows } from "@/lib/supabase"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import React from "react"
@@ -11,80 +11,86 @@ function fmt(n: number, d = 1) {
   return Math.round(n * f) / f
 }
 
-type TickItem = { label: string; value: string; delta: string; up: boolean }
+type TickItem = { name: string; value: string; chg: string; up: boolean; note: string; asof: string }
+
+function lastOf<T>(a: T[]): T { return a[a.length - 1] }
+function prevOf<T>(a: T[]): T { return a[a.length - 2] }
+function isoDaysAgo(n: number) {
+  const d = new Date()
+  d.setDate(d.getDate() - n)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+}
+const mLabel = (d: string) => Number(d.slice(5, 7)) + "월"
+const qLabel = (d: string) => Math.floor((Number(d.slice(5, 7)) - 1) / 3) + 1 + "분기"
+const dLabel = (d: string) => Number(d.slice(5, 7)) + "/" + Number(d.slice(8, 10))
+const arw = (up: boolean) => (up ? "▲" : "▼")
 
 function Ticker() {
   const [items, setItems] = React.useState<TickItem[]>([])
   React.useEffect(() => {
     let alive = true
-    const last = (a: number[]) => (a.length ? a[a.length - 1] : 0)
-    const prev = (a: number[]) => (a.length > 1 ? a[a.length - 2] : last(a))
+    const iso = isoDaysAgo(0)
     ;(async () => {
       try {
         const [fx, oil, inf, cci, bci, imp] = await Promise.all([
           exchangeRates(2),
-          oilSeries(2),
-          macroSeries("INF_all_items", 2),
-          macroSeries("consumer_confidence_index", 2),
-          macroSeries("business_confidence_index", 2),
-          macroSeries("imports_home_appliances", 2),
+          rangeRows("oil_prices", "diesel", isoDaysAgo(30), iso),
+          macroAll("INF_all_items"),
+          macroAll("consumer_confidence_index"),
+          macroAll("business_confidence_index"),
+          macroAll("imports_home_appliances"),
         ])
         if (!alive) return
-        const fxV = fx.map((r) => r.value)
-        const mk = (
-          label: string,
-          value: string,
-          cur: number,
-          pv: number,
-          suffix = "",
-        ): TickItem => ({
-          label,
-          value,
-          delta: (cur >= pv ? "+" : "") + fmt(cur - pv, 2) + suffix,
-          up: cur >= pv,
-        })
+        const fxL = lastOf(fx), fxP = prevOf(fx)
+        const oL = lastOf(oil), oP = prevOf(oil)
+        const iL = lastOf(inf), iP = prevOf(inf)
+        const cL = lastOf(cci), cP = prevOf(cci)
+        const bL = lastOf(bci), bP = prevOf(bci)
+        const mL = lastOf(imp), mP = prevOf(imp)
+        const up = (a: number, b: number) => a >= b
         setItems([
-          mk("USD/PHP", "₱" + fmt(last(fxV), 2), last(fxV), prev(fxV)),
-          mk("디젤유가", "₱" + fmt(last(oil), 2), last(oil), prev(oil)),
-          mk("물가상승률", fmt(last(inf)) + "%", last(inf), prev(inf), "%p"),
-          mk("소비자신뢰", fmt(last(cci)) + "", last(cci), prev(cci), "p"),
-          mk("기업경기", fmt(last(bci)) + "", last(bci), prev(bci)),
-          mk(
-            "가전수입",
-            fmt(last(imp) / 1e6) + "M",
-            last(imp) / 1e6,
-            prev(imp) / 1e6,
-            "M",
-          ),
+          { name: "USD/PHP 환율", value: "₱" + fmt(fxL.value, 2), up: up(fxL.value, fxP.value),
+            chg: "전일比 " + fmt(Math.abs(fxL.value - fxP.value), 2) + arw(up(fxL.value, fxP.value)),
+            note: up(fxL.value, fxP.value) ? "페소 약세, 수입 원가 부담" : "페소 강세, 수입 원가 완화", asof: dLabel(fxL.date) + " 기준" },
+          { name: "경유(디젤)", value: "₱" + fmt(oL.value, 1), up: up(oL.value, oP.value),
+            chg: "전주比 " + fmt(Math.abs(oL.value - oP.value), 1) + arw(up(oL.value, oP.value)),
+            note: up(oL.value, oP.value) ? "물류·배송비 부담" : "물류비 완화", asof: dLabel(oL.date) + " 기준" },
+          { name: "소비자물가 CPI", value: fmt(iL.value, 1) + "%", up: up(iL.value, iP.value),
+            chg: "전월比 " + fmt(Math.abs(iL.value - iP.value), 1) + "%p" + arw(up(iL.value, iP.value)),
+            note: up(iL.value, iP.value) ? "물가 상방 압력" : "물가 둔화, 구매력 회복", asof: mLabel(iL.date) + " 기준" },
+          { name: "소비자신뢰 CCI", value: fmt(cL.value, 1), up: up(cL.value, cP.value),
+            chg: "전분기比 " + fmt(Math.abs(cL.value - cP.value), 1) + "p" + arw(up(cL.value, cP.value)),
+            note: up(cL.value, cP.value) ? "소비심리 개선" : "소비심리 위축", asof: qLabel(cL.date) + " 기준" },
+          { name: "기업경기 BCI", value: fmt(bL.value, 1), up: up(bL.value, bP.value),
+            chg: "전월比 " + fmt(Math.abs(bL.value - bP.value), 1) + arw(up(bL.value, bP.value)),
+            note: up(bL.value, bP.value) ? "기업경기 개선" : "기업경기 위축", asof: mLabel(bL.date) + " 기준" },
+          { name: "가전 수입", value: "$" + Math.round(mL.value / 1e6) + "M", up: up(mL.value, mP.value),
+            chg: "전년比 " + fmt(Math.abs(((mL.value - mP.value) / mP.value) * 100), 1) + "%" + arw(up(mL.value, mP.value)),
+            note: up(mL.value, mP.value) ? "가전 수입 확대" : "가전 수입 둔화", asof: mL.date.slice(0, 4) + "년 기준" },
         ])
       } catch {
         /* 티커 데이터 실패 시 조용히 숨김 */
       }
     })()
-    return () => {
-      alive = false
-    }
+    return () => { alive = false }
   }, [])
 
   if (!items.length) return null
+  const loop = [...items, ...items]
   return (
-    <div className="border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
-      <div className="mx-auto flex max-w-screen-2xl items-center gap-8 overflow-x-auto px-4 py-2.5 text-xs sm:px-6 lg:px-8">
-        {items.map((it) => (
-          <div key={it.label} className="flex shrink-0 items-center gap-1.5">
-            <span className="text-gray-500 dark:text-gray-400">{it.label}</span>
-            <span className="font-medium tabular-nums text-gray-900 dark:text-gray-50">
-              {it.value}
-            </span>
-            <span
-              className={
-                it.up
-                  ? "tabular-nums text-emerald-600 dark:text-emerald-500"
-                  : "tabular-nums text-red-600 dark:text-red-500"
-              }
-            >
-              {it.delta}
-            </span>
+    <div className="group overflow-hidden border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
+      <style>{"@keyframes axmarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}"}</style>
+      <div className="flex w-max gap-2.5 py-2 group-hover:[animation-play-state:paused]" style={{ animation: "axmarquee 55s linear infinite" }}>
+        {loop.map((it, i) => (
+          <div
+            key={i}
+            className="flex shrink-0 items-center gap-2 rounded-full border border-gray-200 bg-white px-3.5 py-1 text-xs shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow dark:border-gray-700 dark:bg-gray-950"
+          >
+            <span className="font-semibold text-gray-800 dark:text-gray-100">{it.name}</span>
+            <span className="tabular-nums font-medium text-gray-900 dark:text-gray-50">{it.value}</span>
+            <span className={it.up ? "tabular-nums text-emerald-600 dark:text-emerald-500" : "tabular-nums text-red-600 dark:text-red-500"}>{it.chg}</span>
+            <span className="text-gray-400">· {it.note}</span>
+            <span className="text-gray-300 dark:text-gray-600">· {it.asof}</span>
           </div>
         ))}
       </div>
