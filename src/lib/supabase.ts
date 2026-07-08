@@ -62,6 +62,22 @@ export async function latestNews(limit = 5) {
   return rows.map((r) => ({ title: r.title, domain: r.source_domain, bucket: r.bucket, date: r.published_date }))
 }
 
+export async function newsBySheet(sheet: string, limit = 7) {
+  const rows = await sb(
+    `news_articles?sheet=eq.${sheet}&select=title,source_name,date,source_url,category&order=date.desc&limit=${limit}`,
+  )
+  return rows.map((r) => ({ title: r.title, source: r.source_name, date: r.date, url: r.source_url, category: r.category }))
+}
+
+export async function calendarUpcoming(limit = 7) {
+  const t = new Date()
+  const today = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`
+  const rows = await sb(
+    `economic_calendar?date=gte.${today}&select=date,category,importance,event,release_time&order=date&limit=${limit}`,
+  )
+  return rows.map((r) => ({ date: r.date as string, category: r.category, importance: r.importance, event: r.event, time: r.release_time }))
+}
+
 export async function monthlyView(view: string) {
   const rows = await sb(`${view}?select=yr,mon,v&order=yr,mon`)
   return rows.map((r) => ({ yr: Number(r.yr), mon: Number(r.mon), v: num(r.v)! }))
