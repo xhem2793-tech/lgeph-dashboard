@@ -21,34 +21,17 @@ const GRY = "#b4b2a9"
 const SURFACE = "#f1f3f5"
 const GRID = "#e2e5ea"
 
-function round(n: number, d = 1) {
-  const f = Math.pow(10, d)
-  return Math.round(n * f) / f
-}
-
-function niceStep(x: number) {
-  const p = Math.pow(10, Math.floor(Math.log10(x)))
-  const f = x / p
-  const n = f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10
-  return n * p
-}
-
-function scale(vals: number[], div = 6) {
+function niceScale(vals: number[], div = 5) {
   let mn = Math.min(...vals)
   let mx = Math.max(...vals)
-  if (mn === mx) {
-    mn -= 1
-    mx += 1
-  }
-  const pad = (mx - mn) * 0.08
-  mn -= pad
-  mx += pad
-  const step = niceStep((mx - mn) / div)
-  const lo = Math.floor(mn / step) * step
-  const hi = Math.ceil(mx / step) * step
+  if (mn === mx) { mn -= 1; mx += 1 }
+  const pad = (mx - mn) * 0.1
+  const lo = mn - pad
+  const hi = mx + pad
+  const dec = hi - lo < 20 ? 1 : 0
   const ticks: number[] = []
-  for (let t = lo; t <= hi + step * 0.001; t += step) ticks.push(t)
-  return { lo, hi, ticks, step }
+  for (let i = 0; i <= div; i++) ticks.push(lo + ((hi - lo) * i) / div)
+  return { lo, hi, ticks, dec }
 }
 
 type Series = {
@@ -81,8 +64,8 @@ function ProChart(p: Series) {
     const all = [...p.cur, ...(p.prev ?? [])].filter((v) => Number.isFinite(v))
     if (!all.length) return
     const dense = slots > 12
-    const { lo, hi, ticks, step } = scale(all)
-    const L = 34, R = 292, T = 12, B = 132
+    const { lo, hi, ticks, dec: tdec } = niceScale(all)
+    const L = 36, R = 292, T = 12, B = 132
     const X = (i: number) => (slots <= 1 ? (L + R) / 2 : L + (i / (slots - 1)) * (R - L))
     const Y = (v: number) => B - ((v - lo) / (hi - lo)) * (B - T)
     const el = (n: string, a: Record<string, string | number>): SVGElement => {
@@ -94,11 +77,11 @@ function ProChart(p: Series) {
     ticks.forEach((t) => {
       svg.appendChild(el("line", { x1: L, y1: Y(t), x2: R, y2: Y(t), stroke: GRID, "stroke-width": 1 }))
       const tx = el("text", { x: L - 6, y: Y(t) + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" })
-      tx.textContent = step < 1 ? t.toFixed(step < 0.1 ? 2 : 1) : String(Math.round(t))
+      tx.textContent = t.toFixed(tdec)
       svg.appendChild(tx)
     })
     if (unit) {
-      const u = el("text", { x: L - 26, y: T - 2, "font-size": 9, fill: "#9ca3af" })
+      const u = el("text", { x: L - 28, y: T - 2, "font-size": 9, fill: "#9ca3af" })
       u.textContent = unit
       svg.appendChild(u)
     }
@@ -258,37 +241,68 @@ function ProChart(p: Series) {
   )
 }
 
+function CountUp({ value, prefix = "", suffix = "", decimals = 1 }: { value: number; prefix?: string; suffix?: string; decimals?: number }) {
+  const ref = React.useRef<HTMLSpanElement | null>(null)
+  React.useEffect(() => {
+    const node = ref.current
+    if (!node) return
+    const to = Number.isFinite(value) ? value : 0
+    const t0 = performance.now()
+    let raf = 0
+    const step = (t: number) => {
+      const k = Math.min((t - t0) / 750, 1)
+      const e = 1 - Math.pow(1 - k, 3)
+      node.textContent = prefix + (to * e).toFixed(decimals) + suffix
+      if (k < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+  }, [value, prefix, suffix, decimals])
+  return <span ref={ref}>{prefix + (Number.isFinite(value) ? value : 0).toFixed(decimals) + suffix}</span>
+}
+
 type Stat = {
   title: string
-  value: string
-  delta: string
-  good: boolean
-  prev: string
+  vNum: number; vPrefix: string; vSuffix: string; vDec: number
+  dNum: number; dDown: boolean; dSuffix: string; dDec: number
+  prevText: string
+  src: string; insight: string
   chart: Series
 }
 
-function Badge({ good, text }: { good: boolean; text: string }) {
+function Badge({ good, children }: { good: boolean; children: React.ReactNode }) {
   return (
-    <span className={"rounded px-1.5 py-0.5 text-xs font-medium " + (good ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>{text}</span>
+    <span className={"inline-flex items-center rounded px-1.5 py-0.5 text-xs font-medium tabular-nums " + (good ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>{children}</span>
   )
 }
 
-function StatCard({ s }: { s: Stat }) {
+function StatCard({ s, delay }: { s: Stat; delay: number }) {
   return (
-    <div className="rounded-xl p-5" style={{ background: SURFACE }}>
+    <div className="rounded-xl p-5" style={{ background: SURFACE, animation: "fadeUp .55s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700">{s.title}</span>
-          <Badge good={s.good} text={s.delta} />
+          <Badge good={s.dDown}>
+            {s.dDown ? "▼ " : "▲ "}
+            <CountUp value={s.dNum} decimals={s.dDec} suffix={s.dSuffix} />
+          </Badge>
         </div>
         <div className="flex items-center gap-2.5 text-[11px] text-gray-400">
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: GRY }} />{s.chart.prevName}</span>
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: IND }} />{s.chart.curName}</span>
         </div>
       </div>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">{s.value}</p>
-      <p className="text-[11px] text-gray-400">{s.prev}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
+        <CountUp value={s.vNum} prefix={s.vPrefix} suffix={s.vSuffix} decimals={s.vDec} />
+      </p>
+      <p className="text-[11px] text-gray-400">{s.prevText}</p>
       <ProChart {...s.chart} />
+      <div className="mt-3 border-t border-gray-200 pt-2 text-[11px] leading-snug text-gray-500">
+        <span className="font-medium text-gray-500">출처 {s.src}</span>
+        <span className="mx-1 text-gray-300">·</span>
+        <span className="rounded bg-indigo-100 px-1 text-[9px] font-semibold text-indigo-600">AI</span>
+        <span className="ml-1">{s.insight}</span>
+      </div>
     </div>
   )
 }
@@ -303,16 +317,8 @@ type RangeKey = (typeof RANGES)[number]["key"]
 
 const pad2 = (n: number) => String(n).padStart(2, "0")
 const iso = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
-const addDays = (d: Date, n: number) => {
-  const x = new Date(d)
-  x.setDate(x.getDate() + n)
-  return x
-}
-const minusYear = (d: Date) => {
-  const x = new Date(d)
-  x.setFullYear(x.getFullYear() - 1)
-  return x
-}
+const addDays = (d: Date, n: number) => { const x = new Date(d); x.setDate(x.getDate() + n); return x }
+const minusYear = (d: Date) => { const x = new Date(d); x.setFullYear(x.getFullYear() - 1); return x }
 const eom = (y: number, m: number) => `${y}-${pad2(m + 1)}-${pad2(new Date(y, m + 1, 0).getDate())}`
 
 type Bucket = { start: string; end: string }
@@ -350,10 +356,7 @@ function fillGaps(arr: number[]) {
   const first = arr.find((v) => Number.isFinite(v))
   if (first === undefined) return arr
   let cur = first
-  return arr.map((v) => {
-    if (Number.isFinite(v)) { cur = v; return v }
-    return cur
-  })
+  return arr.map((v) => { if (Number.isFinite(v)) { cur = v; return v } return cur })
 }
 function seriesFor(rows: { date: string; value: number }[], buckets: Bucket[]) {
   return buckets.map((b) => {
@@ -369,9 +372,18 @@ function seriesFor(rows: { date: string; value: number }[], buckets: Bucket[]) {
 }
 
 const METRICS = [
-  { key: "fx", table: "exchange_rates", col: "usd_php", title: "환율 USD/PHP", unit: "₱", dec: 2 },
-  { key: "oil", table: "oil_prices", col: "diesel", title: "유가 디젤", unit: "₱", dec: 1 },
-  { key: "wx", table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1 },
+  {
+    key: "fx", table: "exchange_rates", col: "usd_php", title: "환율 USD/PHP", unit: "₱", dec: 2, src: "BSP",
+    up: "전년比 페소 약세 지속 — 수입 가전 원가 압력 확대", down: "페소 강세 전환 — 수입 원가 부담 완화",
+  },
+  {
+    key: "oil", table: "oil_prices", col: "diesel", title: "유가 디젤", unit: "₱", dec: 1, src: "DOE",
+    up: "유가 상승 — 물류·배송비 부담 확대", down: "유가 하락 — 물류비 완화, 마진 우호",
+  },
+  {
+    key: "wx", table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1, src: "PAGASA",
+    up: "폭염 강화 — 냉방가전(RAC) 수요 모멘텀 우호", down: "열지수 완화 — 냉방 수요 모멘텀 둔화",
+  },
 ] as const
 
 export default function Overview() {
@@ -410,17 +422,18 @@ export default function Overview() {
       const cVal = cur[li]
       const pVal = prev[li] ?? prev[prev.length - 1]
       const down = cVal <= pVal
+      const up = cVal > pVal
       const pfx = m.unit === "₱" ? "₱" : ""
       const sfx = m.unit === "℃" ? "℃" : ""
-      const deltaTxt = m.col === "heat_index"
-        ? (down ? "▼ " : "▲ ") + Math.abs(round(cVal - pVal, 1)) + "℃"
-        : (down ? "▼ " : "▲ ") + Math.abs(round(((cVal - pVal) / pVal) * 100, 2)) + "%"
+      const isTemp = m.col === "heat_index"
       return {
         title: m.title,
-        value: pfx + round(cVal, m.dec) + sfx,
-        delta: deltaTxt,
-        good: down,
-        prev: "전년 동기 " + pfx + round(pVal, m.dec) + sfx,
+        vNum: cVal, vPrefix: pfx, vSuffix: sfx, vDec: m.dec,
+        dNum: isTemp ? Math.abs(cVal - pVal) : Math.abs(((cVal - pVal) / pVal) * 100),
+        dDown: down, dSuffix: isTemp ? "℃" : "%", dDec: isTemp ? 1 : 2,
+        prevText: "전년 동기 " + pfx + (Number.isFinite(pVal) ? pVal.toFixed(m.dec) : "-") + sfx,
+        src: m.src,
+        insight: up ? m.up : m.down,
         chart: { cur, prev, labels: B.labels, unit: m.unit, curName: B.curName, prevName: B.prevName, decimals: m.dec },
       }
     })
@@ -430,6 +443,7 @@ export default function Overview() {
 
   return (
     <main className="p-4 sm:p-6">
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
       <h1 className="text-lg font-semibold text-gray-900">개요</h1>
 
       <div className="mt-3 inline-flex rounded-lg bg-gray-100 p-0.5">
@@ -451,13 +465,13 @@ export default function Overview() {
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
       ) : (
         <>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {stats.map((s) => (
-              <StatCard key={s.title} s={s} />
+          <div key={range} className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {stats.map((s, i) => (
+              <StatCard key={s.title} s={s} delay={i * 0.08} />
             ))}
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2" style={{ animation: "fadeUp .55s ease both", animationDelay: "0.28s" }}>
             <div className="rounded-xl p-5" style={{ background: SURFACE }}>
               <p className="text-sm font-medium text-gray-900">경쟁사 가격 · TV</p>
               <div className="mt-3 flex flex-col gap-2">
