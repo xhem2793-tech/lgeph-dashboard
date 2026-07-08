@@ -69,6 +69,17 @@ export async function newsBySheet(sheet: string, limit = 7) {
   return rows.map((r) => ({ title: r.title, source: r.source_name, date: r.date, url: r.source_url, category: r.category }))
 }
 
+export async function calendarRecent(pastN = 3, futureN = 6) {
+  const d = new Date()
+  const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+  const [past, fut] = await Promise.all([
+    sb(`economic_calendar?date=lt.${today}&select=date,category,importance,event,release_time&order=date.desc&limit=${pastN}`),
+    sb(`economic_calendar?date=gte.${today}&select=date,category,importance,event,release_time&order=date&limit=${futureN}`),
+  ])
+  const mk = (r: any, isPast: boolean) => ({ date: r.date as string, category: r.category, importance: r.importance, event: r.event, time: r.release_time, past: isPast })
+  return [...past.reverse().map((r: any) => mk(r, true)), ...fut.map((r: any) => mk(r, false))]
+}
+
 export async function calendarUpcoming(limit = 7) {
   const t = new Date()
   const today = `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, "0")}-${String(t.getDate()).padStart(2, "0")}`
