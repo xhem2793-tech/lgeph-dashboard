@@ -52,8 +52,9 @@ function Ticker() {
           mk(
             "가전수입",
             fmt(last(imp) / 1e6) + "M",
-            last(imp),
-            prev(imp),
+            last(imp) / 1e6,
+            prev(imp) / 1e6,
+            "M",
           ),
         ])
       } catch {
