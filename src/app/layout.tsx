@@ -9,7 +9,7 @@ const inter = Inter({
   variable: "--font-inter",
 })
 
-import { Sidebar } from "@/components/ui/navigation/sidebar"
+import { TopNav } from "@/components/ui/navigation/TopNav"
 import { siteConfig } from "./siteConfig"
 
 export const metadata: Metadata = {
@@ -48,15 +48,15 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="ko">
       <body
         className={`${inter.className} overflow-y-scroll scroll-auto antialiased selection:bg-indigo-100 selection:text-indigo-700 dark:bg-gray-950`}
         suppressHydrationWarning
       >
         <div className="mx-auto max-w-screen-2xl">
           <ThemeProvider defaultTheme="system" attribute="class">
-            <Sidebar />
-            <main className="lg:pl-72">{children}</main>
+            <TopNav />
+            <main>{children}</main>
           </ThemeProvider>
         </div>
       </body>
