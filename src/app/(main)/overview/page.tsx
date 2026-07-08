@@ -2,7 +2,6 @@
 
 import React from "react"
 import {
-  latestMacro,
   macroSeries,
   exchangeRates,
   oilSeries,
@@ -122,8 +121,7 @@ export default function Overview() {
   React.useEffect(() => {
     ;(async () => {
       try {
-        const [m, fx, cci, oil, bci, imp, tv, nw] = await Promise.all([
-          latestMacro(["INF_all_items", "consumer_confidence_index", "business_confidence_index", "imports_home_appliances", "BSP_policy_rate"]),
+        const [fx, cci, oil, bci, imp, tv, nw] = await Promise.all([
           exchangeRates(14),
           macroSeries("consumer_confidence_index", 8),
           oilSeries(8),
