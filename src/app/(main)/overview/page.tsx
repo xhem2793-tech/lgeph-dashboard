@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { rangeRows, newsBySheet, calendarUpcoming } from "@/lib/supabase"
+import { rangeRows, newsBySheet, calendarRecent } from "@/lib/supabase"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
 export type KpiEntry = {
@@ -414,7 +414,7 @@ export default function Overview() {
           newsBySheet("daily_news", 7),
           newsBySheet("ce_trend", 7),
           newsBySheet("b2b_trend", 7),
-          calendarUpcoming(7),
+          calendarRecent(3, 6),
         ])
         const map: Record<string, { date: string; value: number }[]> = {}
         METRICS.forEach((m, i) => { map[m.key] = fetched[i] })
@@ -469,14 +469,12 @@ export default function Overview() {
     })
   }, [raw, range, today])
 
-  const cardCls = "rounded-xl p-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]"
 
   return (
-    <main className="px-4 pb-4 pt-2.5 sm:px-6 sm:pb-6 sm:pt-3">
+    <main className="px-4 pb-4 pt-1.5 sm:px-6 sm:pb-6 sm:pt-2">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
-      <div className="flex flex-wrap items-end justify-between gap-3" style={{ animation: "fadeUp .8s ease both" }}>
+      <div className="flex flex-wrap items-center justify-between gap-3" style={{ animation: "fadeUp .8s ease both" }}>
         <h1 className="cursor-default text-2xl font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간지표</h1>
-        <div className="flex flex-col items-end gap-1">
         <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
         {RANGES.map((r) => (
           <button
@@ -491,9 +489,8 @@ export default function Overview() {
           </button>
         ))}
         </div>
-        <p className="text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500">* 모든 변동률·비교는 전년 동기 대비</p>
-        </div>
       </div>
+      <p className="mt-1 text-right text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500">* 모든 변동률·비교는 전년 동기 대비</p>
 
       {!raw ? (
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
@@ -505,45 +502,69 @@ export default function Overview() {
             ))}
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
-            {[
-              { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain },
-              { title: "CE 동향", sub: "생활가전·소비", rows: nCE },
-              { title: "B2B 동향", sub: "공조·인프라", rows: nB2B },
-            ].map((col) => (
-              <div key={col.title} className={cardCls} style={{ background: SURFACE }}>
-                <div className="flex items-baseline justify-between">
-                  <p className="text-sm font-semibold text-gray-900">{col.title}</p>
-                  <span className="text-[10px] text-gray-400">{col.sub}</span>
-                </div>
-                <div className="mt-2 flex flex-col divide-y divide-gray-100/80">
-                  {col.rows.map((n, i) => (
-                    <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group -mx-2 rounded-lg px-2 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-white">
-                      <p className="line-clamp-2 text-[12.5px] font-medium leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
-                      <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
-                    </a>
-                  ))}
-                </div>
-              </div>
-            ))}
-            <div className={cardCls} style={{ background: SURFACE }}>
-              <div className="flex items-baseline justify-between">
-                <p className="text-sm font-semibold text-gray-900">경제 캘린더</p>
-                <span className="text-[10px] text-gray-400">예정 이벤트</span>
-              </div>
-              <div className="mt-2 flex flex-col gap-1.5">
-                {cal.map((e, i) => (
-                  <div key={i} className="flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-white">
-                    <div className="flex w-9 shrink-0 flex-col items-center justify-center rounded-md bg-indigo-50 py-1 text-indigo-600">
-                      <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
-                      <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
+          <div className="mt-4 border-t border-gray-200 pt-5" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
+              <div className="grid grid-cols-1 gap-y-5 sm:grid-cols-2 md:grid-cols-3 md:gap-y-0 md:divide-x md:divide-gray-200 lg:col-span-3">
+                {[
+                  { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain, hero: true },
+                  { title: "CE 동향", sub: "생활가전·소비", rows: nCE, hero: false },
+                  { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, hero: false },
+                ].map((col) => (
+                  <div key={col.title} className="md:px-4 md:first:pl-0 md:last:pr-0">
+                    <div className="flex items-baseline justify-between">
+                      <p className="text-sm font-semibold text-gray-900">{col.title}</p>
+                      <span className="text-[10px] text-gray-400">{col.sub}</span>
                     </div>
-                    <div className="min-w-0">
-                      <p className="line-clamp-2 text-[11.5px] leading-snug text-gray-700">{e.event}</p>
-                      <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance}</p>
+                    <div className="mt-2 flex flex-col divide-y divide-gray-100">
+                      {col.rows.map((n, i) =>
+                        col.hero && i === 0 && n.url ? (
+                          <a key={i} href={n.url} target="_blank" rel="noreferrer" className="group block pb-2.5">
+                            <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
+                              <img src={`https://api.microlink.io/?url=${encodeURIComponent(n.url)}&embed=image.url`} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                            </div>
+                            <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-gray-900 group-hover:text-indigo-600">{n.title}</p>
+                            <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
+                          </a>
+                        ) : (
+                          <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group -mx-2 rounded-lg px-2 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50">
+                            <p className="line-clamp-2 text-[12.5px] font-medium leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                            <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
+                          </a>
+                        ),
+                      )}
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-sm font-semibold text-gray-900">경제 캘린더</p>
+                  <span className="text-[10px] text-gray-400">결과·예정</span>
+                </div>
+                <div className="mt-2 flex flex-col gap-1">
+                  {cal.map((e, i) => {
+                    const showToday = i > 0 && cal[i - 1].past && !e.past
+                    return (
+                      <React.Fragment key={i}>
+                        {showToday ? (
+                          <div className="my-1 flex items-center gap-2 text-[9px] font-semibold text-indigo-400">
+                            <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
+                          </div>
+                        ) : null}
+                        <div className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "" : "opacity-55")}>
+                          <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-400")}>
+                            <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
+                            <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
+                          </div>
+                          <div className="min-w-0">
+                            <p className={"line-clamp-2 text-[11.5px] leading-snug " + (e.past ? "text-gray-700" : "text-gray-400")}>{e.event}</p>
+                            <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance} · {e.past ? "결과" : "예정"}</p>
+                          </div>
+                        </div>
+                      </React.Fragment>
+                    )
+                  })}
+                </div>
               </div>
             </div>
           </div>
