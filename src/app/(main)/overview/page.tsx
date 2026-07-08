@@ -18,6 +18,8 @@ export type KpiEntryExtended = Omit<KpiEntry, "current" | "allowed" | "unit"> & 
 
 const IND = "#6366f1"
 const GRY = "#b4b2a9"
+const SURFACE = "#f1f3f5"
+const GRID = "#e2e5ea"
 
 function round(n: number, d = 1) {
   const f = Math.pow(10, d)
@@ -31,17 +33,17 @@ function niceStep(x: number) {
   return n * p
 }
 
-function scale(vals: number[]) {
+function scale(vals: number[], div = 6) {
   let mn = Math.min(...vals)
   let mx = Math.max(...vals)
   if (mn === mx) {
     mn -= 1
     mx += 1
   }
-  const pad = (mx - mn) * 0.15
+  const pad = (mx - mn) * 0.08
   mn -= pad
   mx += pad
-  const step = niceStep((mx - mn) / 4)
+  const step = niceStep((mx - mn) / div)
   const lo = Math.floor(mn / step) * step
   const hi = Math.ceil(mx / step) * step
   const ticks: number[] = []
@@ -78,6 +80,7 @@ function ProChart(p: Series) {
     const hasPrev = !!(p.prev && p.prev.length)
     const all = [...p.cur, ...(p.prev ?? [])].filter((v) => Number.isFinite(v))
     if (!all.length) return
+    const dense = slots > 12
     const { lo, hi, ticks, step } = scale(all)
     const L = 34, R = 292, T = 12, B = 132
     const X = (i: number) => (slots <= 1 ? (L + R) / 2 : L + (i / (slots - 1)) * (R - L))
@@ -89,9 +92,9 @@ function ProChart(p: Series) {
     }
 
     ticks.forEach((t) => {
-      svg.appendChild(el("line", { x1: L, y1: Y(t), x2: R, y2: Y(t), stroke: "#eef0f2", "stroke-width": 1 }))
+      svg.appendChild(el("line", { x1: L, y1: Y(t), x2: R, y2: Y(t), stroke: GRID, "stroke-width": 1 }))
       const tx = el("text", { x: L - 6, y: Y(t) + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" })
-      tx.textContent = step < 1 ? t.toFixed(1) : String(Math.round(t))
+      tx.textContent = step < 1 ? t.toFixed(step < 0.1 ? 2 : 1) : String(Math.round(t))
       svg.appendChild(tx)
     })
     if (unit) {
@@ -99,16 +102,18 @@ function ProChart(p: Series) {
       u.textContent = unit
       svg.appendChild(u)
     }
+    const everyN = slots <= 8 ? 1 : slots <= 16 ? 2 : Math.ceil(slots / 7)
     labels.forEach((lb, i) => {
+      if (!lb || (slots - 1 - i) % everyN !== 0) return
       const tx = el("text", { x: X(i), y: B + 13, "text-anchor": "middle", "font-size": 9, fill: "#9ca3af" })
       tx.textContent = lb
       svg.appendChild(tx)
     })
 
-    const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: "#cbd5e1", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 })
+    const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: "#c3c8d0", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 })
     svg.appendChild(cross)
 
-    const base = 3
+    const base = dense ? 2 : 3
     const drawSeries = (vals: number[], color: string, w: number, draw: boolean) => {
       const pts = vals.map((v, i) => [X(i), Y(v)])
       const pl = el("polyline", {
@@ -124,7 +129,7 @@ function ProChart(p: Series) {
         requestAnimationFrame(() => requestAnimationFrame(() => { pl.style.strokeDashoffset = "0" }))
       }
       return pts.map((pp) => {
-        const c = el("circle", { cx: pp[0].toFixed(1), cy: pp[1].toFixed(1), r: base, fill: "#ffffff", stroke: color, "stroke-width": 1.6 })
+        const c = el("circle", { cx: pp[0].toFixed(1), cy: pp[1].toFixed(1), r: base, fill: SURFACE, stroke: color, "stroke-width": 1.5 })
         svg.appendChild(c)
         return { c, r: base }
       })
@@ -196,11 +201,11 @@ function ProChart(p: Series) {
       const both = dPrev ? [dPrev, dCur] : [dCur]
       both.forEach((ds) => {
         ds.forEach((o, j) => {
-          const tr = shown && j === active ? (ds === dCur ? 5.6 : 5) : base
+          const tr = shown && j === active ? (ds === dCur ? base + 2.6 : base + 2) : base
           o.r += (tr - o.r) * 0.3
           o.c.setAttribute("r", o.r.toFixed(2))
           const act = shown && j === active
-          o.c.setAttribute("fill", act ? (ds === dCur ? IND : GRY) : "#ffffff")
+          o.c.setAttribute("fill", act ? (ds === dCur ? IND : GRY) : SURFACE)
         })
       })
       const sx = rectW / 300, sy = rectH / 165
@@ -246,7 +251,7 @@ function ProChart(p: Series) {
       <svg ref={svgRef} viewBox="0 0 300 165" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
       <div
         ref={tipRef}
-        className="pointer-events-none absolute left-0 top-0 z-10 min-w-[96px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity dark:border-gray-700 dark:bg-gray-900"
+        className="pointer-events-none absolute left-0 top-0 z-10 min-w-[96px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity"
         style={{ opacity: 0 }}
       />
     </div>
@@ -264,16 +269,16 @@ type Stat = {
 
 function Badge({ good, text }: { good: boolean; text: string }) {
   return (
-    <span className={"rounded px-1.5 py-0.5 text-xs font-medium " + (good ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400" : "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-400")}>{text}</span>
+    <span className={"rounded px-1.5 py-0.5 text-xs font-medium " + (good ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>{text}</span>
   )
 }
 
 function StatCard({ s }: { s: Stat }) {
   return (
-    <div>
+    <div className="rounded-xl p-5" style={{ background: SURFACE }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">{s.title}</span>
+          <span className="text-sm font-medium text-gray-700">{s.title}</span>
           <Badge good={s.good} text={s.delta} />
         </div>
         <div className="flex items-center gap-2.5 text-[11px] text-gray-400">
@@ -281,15 +286,23 @@ function StatCard({ s }: { s: Stat }) {
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: IND }} />{s.chart.curName}</span>
         </div>
       </div>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900 dark:text-gray-50">{s.value}</p>
+      <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">{s.value}</p>
       <p className="text-[11px] text-gray-400">{s.prev}</p>
       <ProChart {...s.chart} />
     </div>
   )
 }
 
-const iso = (d: Date) =>
-  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
+const RANGES = [
+  { key: "7d", label: "최근 7일" },
+  { key: "1m", label: "한 달" },
+  { key: "3m", label: "3개월" },
+  { key: "1y", label: "연간" },
+] as const
+type RangeKey = (typeof RANGES)[number]["key"]
+
+const pad2 = (n: number) => String(n).padStart(2, "0")
+const iso = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`
 const addDays = (d: Date, n: number) => {
   const x = new Date(d)
   x.setDate(x.getDate() + n)
@@ -300,119 +313,161 @@ const minusYear = (d: Date) => {
   x.setFullYear(x.getFullYear() - 1)
   return x
 }
-function forwardFill(rows: { date: string; value: number }[], dates: string[]) {
-  let j = 0
-  let lastV = rows.length ? rows[0].value : NaN
-  const out: number[] = []
-  for (const d of dates) {
-    while (j < rows.length && rows[j].date <= d) {
-      lastV = rows[j].value
-      j++
+const eom = (y: number, m: number) => `${y}-${pad2(m + 1)}-${pad2(new Date(y, m + 1, 0).getDate())}`
+
+type Bucket = { start: string; end: string }
+type Buckets = { cur: Bucket[]; prev: Bucket[]; labels: string[]; curName: string; prevName: string }
+
+function buildBuckets(range: RangeKey, today: Date): Buckets {
+  const yr = today.getFullYear()
+  if (range === "1y") {
+    const cur: Bucket[] = [], prev: Bucket[] = [], labels: string[] = []
+    for (let m = 0; m < 12; m++) {
+      cur.push({ start: `${yr}-${pad2(m + 1)}-01`, end: eom(yr, m) })
+      prev.push({ start: `${yr - 1}-${pad2(m + 1)}-01`, end: eom(yr - 1, m) })
+      labels.push(`${m + 1}월`)
     }
-    out.push(lastV)
+    return { cur, prev, labels, curName: String(yr), prevName: String(yr - 1) }
   }
-  return out
+  const cfg = range === "7d" ? { n: 7, step: 1 } : range === "1m" ? { n: 30, step: 1 } : { n: 13, step: 7 }
+  const cur: Bucket[] = [], prev: Bucket[] = [], labels: string[] = []
+  for (let k = 0; k < cfg.n; k++) {
+    const end = addDays(today, -cfg.step * (cfg.n - 1 - k))
+    const start = addDays(end, -(cfg.step - 1))
+    cur.push({ start: iso(start), end: iso(end) })
+    prev.push({ start: iso(minusYear(start)), end: iso(minusYear(end)) })
+    labels.push(`${end.getMonth() + 1}/${end.getDate()}`)
+  }
+  return { cur, prev, labels, curName: String(yr), prevName: String(yr - 1) }
 }
 
+function trimTrail(arr: number[]) {
+  let e = arr.length
+  while (e > 0 && !Number.isFinite(arr[e - 1])) e--
+  return arr.slice(0, e)
+}
+function fillGaps(arr: number[]) {
+  const first = arr.find((v) => Number.isFinite(v))
+  if (first === undefined) return arr
+  let cur = first
+  return arr.map((v) => {
+    if (Number.isFinite(v)) { cur = v; return v }
+    return cur
+  })
+}
+function seriesFor(rows: { date: string; value: number }[], buckets: Bucket[]) {
+  return buckets.map((b) => {
+    let sum = 0, cnt = 0, ff = NaN
+    for (const r of rows) {
+      if (r.date <= b.end) ff = r.value
+      if (r.date >= b.start && r.date <= b.end) { sum += r.value; cnt++ }
+    }
+    return cnt ? sum / cnt : ff
+  })
+}
+
+const METRICS = [
+  { key: "fx", table: "exchange_rates", col: "usd_php", title: "환율 USD/PHP", unit: "₱", dec: 2 },
+  { key: "oil", table: "oil_prices", col: "diesel", title: "유가 디젤", unit: "₱", dec: 1 },
+  { key: "wx", table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1 },
+] as const
+
 export default function Overview() {
-  const [stats, setStats] = React.useState<Stat[]>([])
+  const today = React.useRef(new Date()).current
+  const [raw, setRaw] = React.useState<Record<string, { date: string; value: number }[]> | null>(null)
   const [comp, setComp] = React.useState<any[]>([])
   const [news, setNews] = React.useState<any[]>([])
-  const [loading, setLoading] = React.useState(true)
+  const [range, setRange] = React.useState<RangeKey>("7d")
 
   React.useEffect(() => {
     ;(async () => {
       try {
-        const today = new Date()
-        const curDates = [...Array(7)].map((_, i) => addDays(today, -(6 - i)))
-        const prevDates = curDates.map(minusYear)
-        const curISO = curDates.map(iso)
-        const prevISO = prevDates.map(iso)
-        const labels = curDates.map((d) => `${d.getMonth() + 1}/${d.getDate()}`)
-        const yCur = String(today.getFullYear())
-        const yPrev = String(today.getFullYear() - 1)
-
-        const specs = [
-          { table: "exchange_rates", col: "usd_php", title: "환율 USD/PHP", unit: "₱", dec: 2, goodDown: true },
-          { table: "oil_prices", col: "diesel", title: "유가 디젤", unit: "₱", dec: 1, goodDown: true },
-          { table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1, goodDown: true },
-        ]
-
-        const fetched = await Promise.all(
-          specs.flatMap((sp) => [
-            rangeRows(sp.table, sp.col, iso(addDays(curDates[0], -20)), curISO[6]),
-            rangeRows(sp.table, sp.col, iso(addDays(prevDates[0], -20)), prevISO[6]),
-          ]),
-        )
+        const start = "2025-01-01"
+        const end = iso(today)
+        const fetched = await Promise.all(METRICS.map((m) => rangeRows(m.table, m.col, start, end)))
         const [tv, nw] = await Promise.all([competitorTv(6), latestNews(5)])
-
-        const built: Stat[] = specs.map((sp, i) => {
-          const cur = forwardFill(fetched[i * 2], curISO)
-          const prev = forwardFill(fetched[i * 2 + 1], prevISO)
-          const cToday = cur[cur.length - 1]
-          const pToday = prev[prev.length - 1]
-          const diff = cToday - pToday
-          const pctBase = sp.col === "heat_index" ? diff : (diff / pToday) * 100
-          const down = cToday <= pToday
-          const arrow = down ? "▼ " : "▲ "
-          const deltaTxt =
-            sp.col === "heat_index"
-              ? arrow + Math.abs(round(diff, 1)) + sp.unit
-              : arrow + Math.abs(round(pctBase, 2)) + "%"
-          return {
-            title: sp.title,
-            value: (sp.unit === "₱" ? "₱" : "") + round(cToday, sp.dec) + (sp.unit === "℃" ? "℃" : ""),
-            delta: deltaTxt,
-            good: sp.goodDown ? down : !down,
-            prev: "전년 동일 " + (sp.unit === "₱" ? "₱" : "") + round(pToday, sp.dec) + (sp.unit === "℃" ? "℃" : ""),
-            chart: { cur, prev, labels, unit: sp.unit, curName: yCur, prevName: yPrev, decimals: sp.dec },
-          }
-        })
-
-        setStats(built)
+        const map: Record<string, { date: string; value: number }[]> = {}
+        METRICS.forEach((m, i) => { map[m.key] = fetched[i] })
+        setRaw(map)
         setComp(tv)
         setNews(nw)
       } catch (e) {
         console.error(e)
       }
-      setLoading(false)
     })()
-  }, [])
+  }, [today])
+
+  const stats: Stat[] = React.useMemo(() => {
+    if (!raw) return []
+    const B = buildBuckets(range, today)
+    return METRICS.map((m) => {
+      const rows = raw[m.key] || []
+      const cur = fillGaps(trimTrail(seriesFor(rows, B.cur)))
+      const prev = fillGaps(seriesFor(rows, B.prev))
+      const li = cur.length - 1
+      const cVal = cur[li]
+      const pVal = prev[li] ?? prev[prev.length - 1]
+      const down = cVal <= pVal
+      const pfx = m.unit === "₱" ? "₱" : ""
+      const sfx = m.unit === "℃" ? "℃" : ""
+      const deltaTxt = m.col === "heat_index"
+        ? (down ? "▼ " : "▲ ") + Math.abs(round(cVal - pVal, 1)) + "℃"
+        : (down ? "▼ " : "▲ ") + Math.abs(round(((cVal - pVal) / pVal) * 100, 2)) + "%"
+      return {
+        title: m.title,
+        value: pfx + round(cVal, m.dec) + sfx,
+        delta: deltaTxt,
+        good: down,
+        prev: "전년 동기 " + pfx + round(pVal, m.dec) + sfx,
+        chart: { cur, prev, labels: B.labels, unit: m.unit, curName: B.curName, prevName: B.prevName, decimals: m.dec },
+      }
+    })
+  }, [raw, range, today])
 
   const maxP = comp.length ? Math.max(...comp.map((c) => c.price)) : 1
 
   return (
     <main className="p-4 sm:p-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-50">개요</h1>
-        <span className="rounded-md border border-gray-200 px-2.5 py-1 text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400">최근 7일 · 전년 동기 대비</span>
+      <h1 className="text-lg font-semibold text-gray-900">개요</h1>
+
+      <div className="mt-3 inline-flex rounded-lg bg-gray-100 p-0.5">
+        {RANGES.map((r) => (
+          <button
+            key={r.key}
+            onClick={() => setRange(r.key)}
+            className={
+              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors " +
+              (range === r.key ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-800")
+            }
+          >
+            {r.label}
+          </button>
+        ))}
       </div>
 
-      {loading ? (
+      {!raw ? (
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
       ) : (
         <>
-          <div className="mt-5 rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
-            <div className="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
-              {stats.map((s) => (
-                <StatCard key={s.title} s={s} />
-              ))}
-            </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {stats.map((s) => (
+              <StatCard key={s.title} s={s} />
+            ))}
           </div>
 
           <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">경쟁사 가격 · TV</p>
+            <div className="rounded-xl p-5" style={{ background: SURFACE }}>
+              <p className="text-sm font-medium text-gray-900">경쟁사 가격 · TV</p>
               <div className="mt-3 flex flex-col gap-2">
                 {comp.map((c, i) => {
                   const pct = Math.round((c.price / maxP) * 100)
                   const lg = c.brand === "LG"
                   return (
                     <div key={i} className="relative h-7">
-                      <div className={"absolute left-0 top-0 h-full rounded " + (lg ? "bg-indigo-100 dark:bg-indigo-500/20" : "bg-gray-100 dark:bg-gray-800")} style={{ width: pct + "%" }} />
+                      <div className={"absolute left-0 top-0 h-full rounded " + (lg ? "bg-indigo-100" : "bg-gray-200")} style={{ width: pct + "%" }} />
                       <div className="relative flex h-full items-center justify-between px-2 text-xs">
-                        <span className={lg ? "font-medium text-indigo-600 dark:text-indigo-300" : "text-gray-700 dark:text-gray-300"}>{c.brand} · {c.retailer}</span>
-                        <span className={"tabular-nums " + (lg ? "text-indigo-600 dark:text-indigo-300" : "text-gray-600 dark:text-gray-400")}>₱{c.price.toLocaleString()}</span>
+                        <span className={lg ? "font-medium text-indigo-600" : "text-gray-700"}>{c.brand} · {c.retailer}</span>
+                        <span className={"tabular-nums " + (lg ? "text-indigo-600" : "text-gray-600")}>₱{c.price.toLocaleString()}</span>
                       </div>
                     </div>
                   )
@@ -420,12 +475,12 @@ export default function Overview() {
               </div>
             </div>
 
-            <div className="rounded-xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-gray-950">
-              <p className="text-sm font-medium text-gray-900 dark:text-gray-50">주요 뉴스</p>
+            <div className="rounded-xl p-5" style={{ background: SURFACE }}>
+              <p className="text-sm font-medium text-gray-900">주요 뉴스</p>
               <div className="mt-3 flex flex-col gap-2.5">
                 {news.map((n, i) => (
                   <div key={i}>
-                    <p className="text-[13px] leading-snug text-gray-800 dark:text-gray-200">{n.title}</p>
+                    <p className="text-[13px] leading-snug text-gray-800">{n.title}</p>
                     <p className="text-[11px] text-gray-400">{n.domain} · {n.date}</p>
                   </div>
                 ))}
