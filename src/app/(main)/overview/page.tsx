@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { rangeRows, competitorTv, latestNews } from "@/lib/supabase"
+import { rangeRows, newsBySheet, calendarUpcoming } from "@/lib/supabase"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
 export type KpiEntry = {
@@ -398,8 +398,10 @@ const METRICS = [
 export default function Overview() {
   const today = React.useRef(new Date()).current
   const [raw, setRaw] = React.useState<Record<string, { date: string; value: number }[]> | null>(null)
-  const [comp, setComp] = React.useState<any[]>([])
-  const [news, setNews] = React.useState<any[]>([])
+  const [nMain, setNMain] = React.useState<any[]>([])
+  const [nCE, setNCE] = React.useState<any[]>([])
+  const [nB2B, setNB2B] = React.useState<any[]>([])
+  const [cal, setCal] = React.useState<any[]>([])
   const [range, setRange] = React.useState<RangeKey>("7d")
 
   React.useEffect(() => {
@@ -408,12 +410,16 @@ export default function Overview() {
         const start = "2025-01-01"
         const end = iso(today)
         const fetched = await Promise.all(METRICS.map((m) => rangeRows(m.table, m.col, start, end)))
-        const [tv, nw] = await Promise.all([competitorTv(6), latestNews(5)])
+        const [nm, nc, nb, ec] = await Promise.all([
+          newsBySheet("daily_news", 7),
+          newsBySheet("ce_trend", 7),
+          newsBySheet("b2b_trend", 7),
+          calendarUpcoming(7),
+        ])
         const map: Record<string, { date: string; value: number }[]> = {}
         METRICS.forEach((m, i) => { map[m.key] = fetched[i] })
         setRaw(map)
-        setComp(tv)
-        setNews(nw)
+        setNMain(nm); setNCE(nc); setNB2B(nb); setCal(ec)
       } catch (e) {
         console.error(e)
       }
@@ -463,13 +469,14 @@ export default function Overview() {
     })
   }, [raw, range, today])
 
-  const maxP = comp.length ? Math.max(...comp.map((c) => c.price)) : 1
+  const cardCls = "rounded-xl p-4 transition-all duration-300 ease-out hover:-translate-y-1 hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]"
 
   return (
     <main className="px-4 pb-4 pt-2.5 sm:px-6 sm:pb-6 sm:pt-3">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold tracking-tight text-gray-900">일간지표</h1>
+      <div className="flex flex-wrap items-end justify-between gap-3" style={{ animation: "fadeUp .8s ease both" }}>
+        <h1 className="cursor-default text-2xl font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간지표</h1>
+        <div className="flex flex-col items-end gap-1">
         <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
         {RANGES.map((r) => (
           <button
@@ -484,46 +491,57 @@ export default function Overview() {
           </button>
         ))}
         </div>
+        <p className="text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500">* 모든 변동률·비교는 전년 동기 대비</p>
+        </div>
       </div>
-      <p className="mt-1.5 text-[10px] text-gray-400">* 모든 변동률·비교는 전년 동기 대비</p>
 
       {!raw ? (
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
       ) : (
         <>
-          <div key={range} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div key={range} className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((s, i) => (
               <StatCard key={s.title} s={s} delay={i * 0.14} />
             ))}
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.55s" }}>
-            <div className="rounded-xl p-5" style={{ background: SURFACE }}>
-              <p className="text-sm font-medium text-gray-900">경쟁사 가격 · TV</p>
-              <div className="mt-3 flex flex-col gap-2">
-                {comp.map((c, i) => {
-                  const pct = Math.round((c.price / maxP) * 100)
-                  const lg = c.brand === "LG"
-                  return (
-                    <div key={i} className="relative h-7">
-                      <div className={"absolute left-0 top-0 h-full rounded " + (lg ? "bg-indigo-100" : "bg-gray-200")} style={{ width: pct + "%" }} />
-                      <div className="relative flex h-full items-center justify-between px-2 text-xs">
-                        <span className={lg ? "font-medium text-indigo-600" : "text-gray-700"}>{c.brand} · {c.retailer}</span>
-                        <span className={"tabular-nums " + (lg ? "text-indigo-600" : "text-gray-600")}>₱{c.price.toLocaleString()}</span>
-                      </div>
-                    </div>
-                  )
-                })}
+          <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
+            {[
+              { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain },
+              { title: "CE 동향", sub: "생활가전·소비", rows: nCE },
+              { title: "B2B 동향", sub: "공조·인프라", rows: nB2B },
+            ].map((col) => (
+              <div key={col.title} className={cardCls} style={{ background: SURFACE }}>
+                <div className="flex items-baseline justify-between">
+                  <p className="text-sm font-semibold text-gray-900">{col.title}</p>
+                  <span className="text-[10px] text-gray-400">{col.sub}</span>
+                </div>
+                <div className="mt-2 flex flex-col divide-y divide-gray-100/80">
+                  {col.rows.map((n, i) => (
+                    <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group -mx-2 rounded-lg px-2 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-white">
+                      <p className="line-clamp-2 text-[12.5px] font-medium leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                      <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
+                    </a>
+                  ))}
+                </div>
               </div>
-            </div>
-
-            <div className="rounded-xl p-5" style={{ background: SURFACE }}>
-              <p className="text-sm font-medium text-gray-900">주요 뉴스</p>
-              <div className="mt-3 flex flex-col gap-2.5">
-                {news.map((n, i) => (
-                  <div key={i}>
-                    <p className="text-[13px] leading-snug text-gray-800">{n.title}</p>
-                    <p className="text-[11px] text-gray-400">{n.domain} · {n.date}</p>
+            ))}
+            <div className={cardCls} style={{ background: SURFACE }}>
+              <div className="flex items-baseline justify-between">
+                <p className="text-sm font-semibold text-gray-900">경제 캘린더</p>
+                <span className="text-[10px] text-gray-400">예정 이벤트</span>
+              </div>
+              <div className="mt-2 flex flex-col gap-1.5">
+                {cal.map((e, i) => (
+                  <div key={i} className="flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-white">
+                    <div className="flex w-9 shrink-0 flex-col items-center justify-center rounded-md bg-indigo-50 py-1 text-indigo-600">
+                      <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
+                      <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="line-clamp-2 text-[11.5px] leading-snug text-gray-700">{e.event}</p>
+                      <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance}</p>
+                    </div>
                   </div>
                 ))}
               </div>
