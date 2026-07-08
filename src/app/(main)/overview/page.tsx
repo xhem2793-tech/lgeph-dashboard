@@ -295,7 +295,8 @@ function DeltaBadge({ down, pct, pctSuffix, absVal, absPrefix }: { down: boolean
 
 function StatCard({ s, delay }: { s: Stat; delay: number }) {
   return (
-    <div className="rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
+    <div style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
+    <div className="rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700">{s.title}</span>
@@ -318,6 +319,7 @@ function StatCard({ s, delay }: { s: Stat; delay: number }) {
         <span className="ml-1">{s.insight}</span>
         <div className="mt-1 text-[10px] text-gray-400">출처 {s.note}</div>
       </div>
+    </div>
     </div>
   )
 }
@@ -471,10 +473,12 @@ export default function Overview() {
 
 
   return (
-    <main className="px-4 pb-4 pt-1.5 sm:px-6 sm:pb-6 sm:pt-2">
+    <main className="px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-1">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
-      <div className="flex flex-wrap items-center justify-between gap-3" style={{ animation: "fadeUp .8s ease both" }}>
+      <div className="flex flex-wrap items-end justify-between gap-3" style={{ animation: "fadeUp .8s ease both" }}>
         <h1 className="cursor-default text-2xl font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간지표</h1>
+        <div className="flex flex-col items-end gap-1">
+        <p className="text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500">* 모든 변동률·비교는 전년 동기 대비</p>
         <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
         {RANGES.map((r) => (
           <button
@@ -489,38 +493,37 @@ export default function Overview() {
           </button>
         ))}
         </div>
+        </div>
       </div>
-      <p className="mt-1 text-right text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500">* 모든 변동률·비교는 전년 동기 대비</p>
 
       {!raw ? (
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
       ) : (
         <>
-          <div key={range} className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div key={range} className="mt-1.5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((s, i) => (
               <StatCard key={s.title} s={s} delay={i * 0.14} />
             ))}
           </div>
 
-          <div className="mt-4 border-t border-gray-200 pt-5" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-              <div className="grid grid-cols-1 gap-y-5 sm:grid-cols-2 md:grid-cols-3 md:gap-y-0 md:divide-x md:divide-gray-200 lg:col-span-3">
+          <div className="mt-3 border-t border-gray-200 pt-4" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
+            <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
                 {[
-                  { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain, hero: true },
-                  { title: "CE 동향", sub: "생활가전·소비", rows: nCE, hero: false },
-                  { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, hero: false },
+                  { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain, img: "https://loremflickr.com/640/360/manila,skyline?lock=17" },
+                  { title: "CE 동향", sub: "생활가전·소비", rows: nCE, img: "https://loremflickr.com/640/360/home,appliances?lock=23" },
+                  { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, img: "https://loremflickr.com/640/360/construction,skyscraper?lock=29" },
                 ].map((col) => (
-                  <div key={col.title} className="md:px-4 md:first:pl-0 md:last:pr-0">
+                  <div key={col.title} className="lg:px-4">
                     <div className="flex items-baseline justify-between">
                       <p className="text-sm font-semibold text-gray-900">{col.title}</p>
                       <span className="text-[10px] text-gray-400">{col.sub}</span>
                     </div>
                     <div className="mt-2 flex flex-col divide-y divide-gray-100">
                       {col.rows.map((n, i) =>
-                        col.hero && i === 0 && n.url ? (
-                          <a key={i} href={n.url} target="_blank" rel="noreferrer" className="group block pb-2.5">
+                        i === 0 ? (
+                          <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group block pb-2.5">
                             <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
-                              <img src={`https://api.microlink.io/?url=${encodeURIComponent(n.url)}&embed=image.url`} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                              <img src={col.img} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                             </div>
                             <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-gray-900 group-hover:text-indigo-600">{n.title}</p>
                             <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
@@ -535,8 +538,7 @@ export default function Overview() {
                     </div>
                   </div>
                 ))}
-              </div>
-              <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-5 lg:pt-0">
+              <div className="border-t border-gray-200 pt-4 sm:border-t-0 sm:pt-0 lg:px-4">
                 <div className="flex items-baseline justify-between">
                   <p className="text-sm font-semibold text-gray-900">경제 캘린더</p>
                   <span className="text-[10px] text-gray-400">결과·예정</span>
@@ -551,13 +553,13 @@ export default function Overview() {
                             <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
                           </div>
                         ) : null}
-                        <div className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "" : "opacity-55")}>
-                          <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-emerald-50 text-emerald-600" : "bg-gray-100 text-gray-400")}>
+                        <div className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-55" : "")}>
+                          <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-100 text-gray-400" : "bg-emerald-50 text-emerald-600")}>
                             <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                             <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
                           </div>
                           <div className="min-w-0">
-                            <p className={"line-clamp-2 text-[11.5px] leading-snug " + (e.past ? "text-gray-700" : "text-gray-400")}>{e.event}</p>
+                            <p className={"line-clamp-2 text-[11.5px] leading-snug " + (e.past ? "text-gray-400" : "font-medium text-gray-800")}>{e.event}</p>
                             <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance} · {e.past ? "결과" : "예정"}</p>
                           </div>
                         </div>
