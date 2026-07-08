@@ -64,7 +64,7 @@ function ProChart(p: Series) {
     const all = [...p.cur, ...(p.prev ?? [])].filter((v) => Number.isFinite(v))
     if (!all.length) return
     const { lo, hi, ticks, dec: tdec } = niceScale(all)
-    const L = 36, R = 292, T = 12, B = 132
+    const L = 36, R = 292, T = 10, B = 104
     const X = (i: number) => (slots <= 1 ? (L + R) / 2 : L + (i / (slots - 1)) * (R - L))
     const Y = (v: number) => B - ((v - lo) / (hi - lo)) * (B - T)
     const el = (n: string, a: Record<string, string | number>): SVGElement => {
@@ -90,7 +90,7 @@ function ProChart(p: Series) {
     const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: "#c3c8d0", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 })
     svg.appendChild(cross)
 
-    const base = 3
+    const base = slots <= 7 ? 4 : 3
     const drawSeries = (vals: number[], color: string, w: number, draw: boolean) => {
       const pts = vals.map((v, i) => [X(i), Y(v)])
       const pl = el("polyline", {
@@ -186,7 +186,7 @@ function ProChart(p: Series) {
           o.c.setAttribute("fill", act ? (ds === dCur ? IND : GRY) : SURFACE)
         })
       })
-      const sx = rectW / 300, sy = rectH / 165
+      const sx = rectW / 300, sy = rectH / 130
       tip.style.left = (curX * sx).toFixed(1) + "px"
       tip.style.top = (curTop * sy - 14).toFixed(1) + "px"
       tip.style.transform = "translate(-50%,-100%)"
@@ -226,7 +226,7 @@ function ProChart(p: Series) {
 
   return (
     <div className="relative mt-2" style={{ touchAction: "none" }}>
-      <svg ref={svgRef} viewBox="0 0 300 165" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
+      <svg ref={svgRef} viewBox="0 0 300 130" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
       <div
         ref={tipRef}
         className="pointer-events-none absolute left-0 top-0 z-10 min-w-[96px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity"
@@ -281,6 +281,7 @@ function StatCard({ s, delay }: { s: Stat; delay: number }) {
             {s.dDown ? "▼ " : "▲ "}
             <CountUp value={s.dNum} decimals={s.dDec} suffix={s.dSuffix} />
           </Badge>
+          <span className="text-[10px] text-gray-400">전년비</span>
         </div>
         <div className="flex items-center gap-2.5 text-[11px] text-gray-400">
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: GRY }} />{s.chart.prevName}</span>
@@ -431,6 +432,22 @@ export default function Overview() {
       const pfx = m.unit === "₱" ? "₱" : ""
       const sfx = m.unit === "℃" ? "℃" : ""
       const isTemp = m.col === "heat_index"
+      const period = range === "7d" ? "최근 7일" : range === "1m" ? "최근 한 달" : range === "3m" ? "최근 3개월" : "연간"
+      const avStr = pfx + (Number.isFinite(cVal) ? cVal.toFixed(m.dec) : "-") + sfx
+      const yoyStr = isTemp
+        ? Math.abs(cVal - pVal).toFixed(1) + "℃"
+        : Math.abs(((cVal - pVal) / pVal) * 100).toFixed(1) + "%"
+      const trendUp = cur.length >= 2 ? cur[cur.length - 1] > cur[0] : up
+      const trendFlat = cur.length >= 2 && cur[cur.length - 1] === cur[0]
+      const trendW = trendFlat ? "보합세" : trendUp ? "상승 흐름" : "하락 흐름"
+      const brief =
+        m.key === "fx"
+          ? `페소/달러 ${period} 평균 ${avStr}, 전년 동기 대비 ${yoyStr} ${up ? "절하" : "절상"}. 주 내 ${trendW} 속 수입 가전 원가에 ${up ? "상방" : "하방"} 압력이 이어지는 국면`
+          : m.key === "oil"
+            ? `디젤 ${period} 평균 ${avStr}, 전년비 ${yoyStr} ${up ? "상승" : "하락"}. ${trendW}이며 물류·배송비 부담이 ${up ? "가중" : "완화"}되는 흐름`
+            : m.key === "gas"
+              ? `가솔린 RON91 ${period} 평균 ${avStr}, 전년비 ${yoyStr} ${up ? "상승" : "하락"}. 소비자 유류비 부담이 ${up ? "확대" : "축소"}되며 가전 구매여력에 ${up ? "부정적" : "우호적"}으로 작용하는 상황`
+              : `체감 열지수 ${period} 평균 ${avStr}, 전년 동기 대비 ${yoyStr} ${up ? "상승" : "하락"}. ${trendW} 속 RAC·냉장고 등 냉방 가전 수요 환경이 ${up ? "우호적" : "둔화"}인 국면`
       return {
         title: m.title,
         vNum: cVal, vPrefix: pfx, vSuffix: sfx, vDec: m.dec,
@@ -438,11 +455,7 @@ export default function Overview() {
         dDown: down, dSuffix: isTemp ? "℃" : "%", dDec: isTemp ? 1 : 2,
         prevText: "전년 동기 " + pfx + (Number.isFinite(pVal) ? pVal.toFixed(m.dec) : "-") + sfx,
         src: m.src,
-        insight:
-          (range === "7d" ? "최근 7일" : range === "1m" ? "최근 한 달" : range === "3m" ? "최근 3개월" : "연간") +
-          " · " + (up ? m.dirUp : m.dirDn) + " 전년비 " + (up ? "+" : "−") +
-          (isTemp ? Math.abs(cVal - pVal).toFixed(1) + "℃" : Math.abs(((cVal - pVal) / pVal) * 100).toFixed(1) + "%") +
-          " — " + (up ? m.impUp : m.impDn),
+        insight: brief,
         chart: { cur, prev, labels: B.labels, unit: m.unit, curName: B.curName, prevName: B.prevName, decimals: m.dec },
       }
     })
