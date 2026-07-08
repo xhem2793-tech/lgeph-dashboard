@@ -64,7 +64,7 @@ function ProChart(p: Series) {
     const all = [...p.cur, ...(p.prev ?? [])].filter((v) => Number.isFinite(v))
     if (!all.length) return
     const { lo, hi, ticks, dec: tdec } = niceScale(all)
-    const L = 36, R = 292, T = 10, B = 104
+    const L = 36, R = 292, T = 8, B = 86
     const X = (i: number) => (slots <= 1 ? (L + R) / 2 : L + (i / (slots - 1)) * (R - L))
     const Y = (v: number) => B - ((v - lo) / (hi - lo)) * (B - T)
     const el = (n: string, a: Record<string, string | number>): SVGElement => {
@@ -186,7 +186,7 @@ function ProChart(p: Series) {
           o.c.setAttribute("fill", act ? (ds === dCur ? IND : GRY) : SURFACE)
         })
       })
-      const sx = rectW / 300, sy = rectH / 130
+      const sx = rectW / 300, sy = rectH / 108
       tip.style.left = (curX * sx).toFixed(1) + "px"
       tip.style.top = (curTop * sy - 14).toFixed(1) + "px"
       tip.style.transform = "translate(-50%,-100%)"
@@ -225,8 +225,8 @@ function ProChart(p: Series) {
   }, [p])
 
   return (
-    <div className="relative mt-2" style={{ touchAction: "none" }}>
-      <svg ref={svgRef} viewBox="0 0 300 130" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
+    <div className="relative mt-1" style={{ touchAction: "none" }}>
+      <svg ref={svgRef} viewBox="0 0 300 108" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
       <div
         ref={tipRef}
         className="pointer-events-none absolute left-0 top-0 z-10 min-w-[96px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity"
@@ -259,9 +259,9 @@ function CountUp({ value, prefix = "", suffix = "", decimals = 1 }: { value: num
 type Stat = {
   title: string
   vNum: number; vPrefix: string; vSuffix: string; vDec: number
-  dNum: number; dDown: boolean; dSuffix: string; dDec: number
+  dDown: boolean; dPct: number; dPctSuffix: string; dAbs: number | null; dAbsPrefix: string
   prevText: string
-  src: string; insight: string
+  src: string; note: string; insight: string
   chart: Series
 }
 
@@ -271,17 +271,33 @@ function Badge({ good, children }: { good: boolean; children: React.ReactNode })
   )
 }
 
+function DeltaBadge({ down, pct, pctSuffix, absVal, absPrefix }: { down: boolean; pct: number; pctSuffix: string; absVal: number | null; absPrefix: string }) {
+  const [mode, setMode] = React.useState(0)
+  React.useEffect(() => {
+    if (absVal == null) return
+    const id = setInterval(() => setMode((m) => (m === 0 ? 1 : 0)), 3000)
+    return () => clearInterval(id)
+  }, [absVal])
+  const showAbs = absVal != null && mode === 1
+  return (
+    <Badge good={down}>
+      {down ? "▼ " : "▲ "}
+      {showAbs ? (
+        <CountUp value={absVal as number} decimals={1} prefix={absPrefix} />
+      ) : (
+        <CountUp value={pct} decimals={1} suffix={pctSuffix} />
+      )}
+    </Badge>
+  )
+}
+
 function StatCard({ s, delay }: { s: Stat; delay: number }) {
   return (
-    <div className="rounded-xl p-4" style={{ background: SURFACE, animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
+    <div className="rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700">{s.title}</span>
-          <Badge good={s.dDown}>
-            {s.dDown ? "▼ " : "▲ "}
-            <CountUp value={s.dNum} decimals={s.dDec} suffix={s.dSuffix} />
-          </Badge>
-          <span className="text-[10px] text-gray-400">전년비</span>
+          <DeltaBadge down={s.dDown} pct={s.dPct} pctSuffix={s.dPctSuffix} absVal={s.dAbs} absPrefix={s.dAbsPrefix} />
         </div>
         <div className="flex items-center gap-2.5 text-[11px] text-gray-400">
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: GRY }} />{s.chart.prevName}</span>
@@ -293,11 +309,10 @@ function StatCard({ s, delay }: { s: Stat; delay: number }) {
       </p>
       <p className="text-[11px] text-gray-400">{s.prevText}</p>
       <ProChart {...s.chart} />
-      <div className="mt-3 border-t border-gray-200 pt-2 text-[11px] leading-snug text-gray-500">
-        <span className="font-medium text-gray-500">출처 {s.src}</span>
-        <span className="mx-1 text-gray-300">·</span>
+      <div className="mt-2 border-t border-gray-200 pt-2 text-[11px] leading-snug text-gray-500">
         <span className="rounded bg-indigo-100 px-1 text-[9px] font-semibold text-indigo-600">AI</span>
         <span className="ml-1">{s.insight}</span>
+        <div className="mt-1 text-[10px] text-gray-400">출처 {s.note}</div>
       </div>
     </div>
   )
@@ -370,26 +385,10 @@ function seriesFor(rows: { date: string; value: number }[], buckets: Bucket[]) {
 }
 
 const METRICS = [
-  {
-    key: "fx", table: "exchange_rates", col: "usd_php", title: "환율 USD/PHP", unit: "₱", dec: 2, src: "BSP",
-    dirUp: "페소 약세", dirDn: "페소 강세",
-    impUp: "수입 가전 원가·마진 압박, 가격 인상 압력", impDn: "수입 원가 완화, 판촉·프로모션 여력 확대",
-  },
-  {
-    key: "oil", table: "oil_prices", col: "diesel", title: "디젤", unit: "₱", dec: 1, src: "DOE",
-    dirUp: "디젤 상승", dirDn: "디젤 하락",
-    impUp: "물류·배송비 부담, 대형가전 판매·설치 마진 압박", impDn: "물류비 완화, 배송 마진·프로모션 개선",
-  },
-  {
-    key: "gas", table: "oil_prices", col: "ron91", title: "가솔린 RON91", unit: "₱", dec: 1, src: "DOE",
-    dirUp: "가솔린 상승", dirDn: "가솔린 하락",
-    impUp: "소비자 유류비 부담↑, 가전 구매여력·소비심리 위축", impDn: "유류비 완화, 가전 구매여력·소비심리 개선",
-  },
-  {
-    key: "wx", table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1, src: "PAGASA",
-    dirUp: "열지수 상승", dirDn: "열지수 하락",
-    impUp: "RAC·냉장고 냉방 수요 강세, 성수기 재고·물량 확대", impDn: "냉방 수요 둔화, 재고·판촉 조정 필요",
-  },
+  { key: "fx", table: "exchange_rates", col: "usd_php", title: "환율 USD/PHP", unit: "₱", dec: 2, src: "BSP", note: "BSP 기준환율 (USD/PHP, 전일 종가)" },
+  { key: "oil", table: "oil_prices", col: "diesel", title: "경유", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 일반 경유(Diesel)" },
+  { key: "gas", table: "oil_prices", col: "ron91", title: "가솔린 RON91", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON91" },
+  { key: "wx", table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1, src: "PAGASA", note: "PAGASA 관측 · 체감 열지수(Heat Index)" },
 ] as const
 
 export default function Overview() {
@@ -444,17 +443,21 @@ export default function Overview() {
         m.key === "fx"
           ? `페소/달러 ${period} 평균 ${avStr}, 전년 동기 대비 ${yoyStr} ${up ? "절하" : "절상"}. 주 내 ${trendW} 속 수입 가전 원가에 ${up ? "상방" : "하방"} 압력이 이어지는 국면`
           : m.key === "oil"
-            ? `디젤 ${period} 평균 ${avStr}, 전년비 ${yoyStr} ${up ? "상승" : "하락"}. ${trendW}이며 물류·배송비 부담이 ${up ? "가중" : "완화"}되는 흐름`
+            ? `경유 ${period} 평균 ${avStr}, 전년비 ${yoyStr} ${up ? "상승" : "하락"}. ${trendW}이며 물류·배송비 부담이 ${up ? "가중" : "완화"}되는 흐름`
             : m.key === "gas"
               ? `가솔린 RON91 ${period} 평균 ${avStr}, 전년비 ${yoyStr} ${up ? "상승" : "하락"}. 소비자 유류비 부담이 ${up ? "확대" : "축소"}되며 가전 구매여력에 ${up ? "부정적" : "우호적"}으로 작용하는 상황`
               : `체감 열지수 ${period} 평균 ${avStr}, 전년 동기 대비 ${yoyStr} ${up ? "상승" : "하락"}. ${trendW} 속 RAC·냉장고 등 냉방 가전 수요 환경이 ${up ? "우호적" : "둔화"}인 국면`
       return {
         title: m.title,
         vNum: cVal, vPrefix: pfx, vSuffix: sfx, vDec: m.dec,
-        dNum: isTemp ? Math.abs(cVal - pVal) : Math.abs(((cVal - pVal) / pVal) * 100),
-        dDown: down, dSuffix: isTemp ? "℃" : "%", dDec: isTemp ? 1 : 2,
+        dDown: down,
+        dPct: isTemp ? Math.abs(cVal - pVal) : Math.abs(((cVal - pVal) / pVal) * 100),
+        dPctSuffix: isTemp ? "℃" : "%",
+        dAbs: isTemp ? null : Math.abs(cVal - pVal),
+        dAbsPrefix: isTemp ? "" : "₱",
         prevText: "전년 동기 " + pfx + (Number.isFinite(pVal) ? pVal.toFixed(m.dec) : "-") + sfx,
         src: m.src,
+        note: m.note,
         insight: brief,
         chart: { cur, prev, labels: B.labels, unit: m.unit, curName: B.curName, prevName: B.prevName, decimals: m.dec },
       }
@@ -468,20 +471,21 @@ export default function Overview() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
       <h1 className="text-lg font-semibold text-gray-900">개요</h1>
 
-      <div className="mt-3 inline-flex rounded-lg bg-gray-100 p-0.5">
+      <div className="mt-3 inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
         {RANGES.map((r) => (
           <button
             key={r.key}
             onClick={() => setRange(r.key)}
             className={
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-colors " +
-              (range === r.key ? "bg-white text-indigo-600 shadow-sm" : "text-gray-500 hover:text-gray-800")
+              "rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " +
+              (range === r.key ? "scale-[1.03] bg-white text-indigo-600 shadow-md" : "text-gray-500 hover:-translate-y-0.5 hover:bg-white/70 hover:text-indigo-600 hover:shadow-sm")
             }
           >
             {r.label}
           </button>
         ))}
       </div>
+      <p className="mt-1.5 text-[10px] text-gray-400">* 모든 변동률·비교는 전년 동기 대비</p>
 
       {!raw ? (
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
