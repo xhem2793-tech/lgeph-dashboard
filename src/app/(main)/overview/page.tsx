@@ -257,7 +257,7 @@ function CountUp({ value, prefix = "", suffix = "", decimals = 1 }: { value: num
 }
 
 type Stat = {
-  title: string
+  title: string; group: string; label: string
   vNum: number; vPrefix: string; vSuffix: string; vDec: number
   dDown: boolean; dPct: number; dPctSuffix: string; dAbs: number | null; dAbsPrefix: string
   prevText: string
@@ -293,27 +293,41 @@ function DeltaBadge({ down, pct, pctSuffix, absVal, absPrefix }: { down: boolean
   )
 }
 
-function StatCard({ s, delay }: { s: Stat; delay: number }) {
+function MultiCard({ title, items, delay }: { title: string; items: { label: string; stat: Stat }[]; delay: number }) {
+  const [sel, setSel] = React.useState(0)
+  if (!items.length) return null
+  const idx = Math.min(sel, items.length - 1)
+  const s = items[idx].stat
+  const multi = items.length > 1
   return (
     <div style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
     <div className="rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700">{s.title}</span>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="shrink-0 text-sm font-medium text-gray-700">{title}</span>
           <DeltaBadge down={s.dDown} pct={s.dPct} pctSuffix={s.dPctSuffix} absVal={s.dAbs} absPrefix={s.dAbsPrefix} />
         </div>
-        <div className="flex items-center gap-2.5 text-[11px] text-gray-400">
+        <div className="flex shrink-0 items-center gap-2.5 text-[11px] text-gray-400">
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: GRY }} />{s.chart.prevName}</span>
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: IND }} />{s.chart.curName}</span>
         </div>
       </div>
-      <p className="mt-0.5 flex items-baseline gap-1.5">
+      {multi ? (
+        <div className="mt-1.5 flex flex-wrap gap-1">
+          {items.map((it, i) => (
+            <button key={i} onClick={() => setSel(i)} className={"rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (idx === i ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}>{it.label}</button>
+          ))}
+        </div>
+      ) : null}
+      <p className="mt-1 flex items-baseline gap-1.5">
         <span className="text-xl font-semibold tabular-nums text-gray-900">
-          <CountUp value={s.vNum} prefix={s.vPrefix} suffix={s.vSuffix} decimals={s.vDec} />
+          <CountUp key={idx} value={s.vNum} prefix={s.vPrefix} suffix={s.vSuffix} decimals={s.vDec} />
         </span>
         <span className="text-[10px] text-gray-400/90">{s.prevText}</span>
       </p>
-      <ProChart {...s.chart} />
+      <div key={idx}>
+        <ProChart {...s.chart} />
+      </div>
       <div className="mt-2 border-t border-gray-200 pt-2 text-[11px] leading-snug text-gray-500">
         <span className="rounded bg-indigo-100 px-1 text-[9px] font-semibold text-indigo-600">AI</span>
         <span className="ml-1">{s.insight}</span>
@@ -390,11 +404,16 @@ function seriesFor(rows: { date: string; value: number }[], buckets: Bucket[]) {
   })
 }
 
-const METRICS = [
-  { key: "fx", table: "exchange_rates", col: "usd_php", title: "환율 USD/PHP", unit: "₱", dec: 1, src: "BSP", note: "BSP 기준환율 (USD/PHP, 전일 종가)" },
-  { key: "oil", table: "oil_prices", col: "diesel", title: "경유", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 일반 경유(Diesel)" },
-  { key: "gas", table: "oil_prices", col: "ron91", title: "가솔린 RON91", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON91" },
-  { key: "wx", table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1, src: "PAGASA", note: "PAGASA 관측 · 체감 열지수(Heat Index)" },
+const SERIES = [
+  { key: "usd_php", group: "fx", label: "USD/PHP", title: "환율", table: "exchange_rates", col: "usd_php", unit: "₱", dec: 1, src: "BSP", note: "BSP 기준환율 · USD/PHP (전일 종가)" },
+  { key: "usd_krw", group: "fx", label: "USD/KRW", title: "환율", table: "exchange_rates", col: "usd_krw", unit: "₩", dec: 0, src: "하나은행", note: "USD/KRW 원/달러 종가" },
+  { key: "diesel", group: "oil", label: "디젤", title: "유가", table: "oil_prices", col: "diesel", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 일반 경유(Diesel)" },
+  { key: "diesel_p", group: "oil", label: "디젤+", title: "유가", table: "oil_prices", col: "diesel_p", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 프리미엄 디젤" },
+  { key: "ron91", group: "oil", label: "RON91", title: "유가", table: "oil_prices", col: "ron91", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON91" },
+  { key: "ron95", group: "oil", label: "RON95", title: "유가", table: "oil_prices", col: "ron95", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON95" },
+  { key: "ron97", group: "oil", label: "RON97", title: "유가", table: "oil_prices", col: "ron97", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON97" },
+  { key: "kerosene", group: "oil", label: "등유", title: "유가", table: "oil_prices", col: "kerosene", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 등유(Kerosene)" },
+  { key: "heat_index", group: "wx", label: "체감 열지수", title: "체감 열지수", table: "weather", col: "heat_index", unit: "℃", dec: 1, src: "PAGASA", note: "PAGASA 관측 · 체감 열지수(Heat Index)" },
 ] as const
 
 export default function Overview() {
@@ -411,7 +430,7 @@ export default function Overview() {
       try {
         const start = "2025-01-01"
         const end = iso(today)
-        const fetched = await Promise.all(METRICS.map((m) => rangeRows(m.table, m.col, start, end)))
+        const fetched = await Promise.all(SERIES.map((m) => rangeRows(m.table, m.col, start, end)))
         const [nm, nc, nb, ec] = await Promise.all([
           newsBySheet("daily_news", 7),
           newsBySheet("ce_trend", 7),
@@ -419,7 +438,7 @@ export default function Overview() {
           calendarRecent(3, 6),
         ])
         const map: Record<string, { date: string; value: number }[]> = {}
-        METRICS.forEach((m, i) => { map[m.key] = fetched[i] })
+        SERIES.forEach((m, i) => { map[m.key] = fetched[i] })
         setRaw(map)
         setNMain(nm); setNCE(nc); setNB2B(nb); setCal(ec)
       } catch (e) {
@@ -431,7 +450,7 @@ export default function Overview() {
   const stats: Stat[] = React.useMemo(() => {
     if (!raw) return []
     const B = buildBuckets(range, today)
-    return METRICS.map((m) => {
+    return SERIES.map((m) => {
       const rows = raw[m.key] || []
       const cur = fillGaps(trimTrail(seriesFor(rows, B.cur)))
       const prev = fillGaps(seriesFor(rows, B.prev))
@@ -440,28 +459,26 @@ export default function Overview() {
       const pVal = meanOf(prev)
       const down = cVal <= pVal
       const up = cVal > pVal
-      const pfx = m.unit === "₱" ? "₱" : ""
+      const pfx = m.unit === "₱" ? "₱" : m.unit === "₩" ? "₩" : ""
       const sfx = m.unit === "℃" ? "℃" : ""
       const isTemp = m.col === "heat_index"
       const trendUp = cur.length >= 2 ? cur[cur.length - 1] > cur[0] : up
       const trendFlat = cur.length >= 2 && cur[cur.length - 1] === cur[0]
       const trendW = trendFlat ? "보합세" : trendUp ? "상승 흐름" : "하락 흐름"
       const brief =
-        m.key === "fx"
+        m.group === "fx"
           ? `${trendW} 속 수입 가전 원가에 ${up ? "상방" : "하방"} 압력이 이어지는 국면`
-          : m.key === "oil"
-            ? `${trendW} 속 물류·배송비 부담이 ${up ? "가중" : "완화"}되는 흐름`
-            : m.key === "gas"
-              ? `${trendW} 속 소비자 유류비 부담이 ${up ? "확대" : "축소"}되며 가전 구매여력에 ${up ? "부정적" : "우호적"}으로 작용하는 국면`
-              : `${trendW} 속 RAC·냉장고 등 냉방 가전 수요 환경이 ${up ? "우호적" : "둔화"}인 국면`
+          : m.group === "oil"
+            ? `${trendW} 속 물류·유류비 부담이 ${up ? "가중" : "완화"}되며 가전 구매여력에 ${up ? "부정적" : "우호적"}으로 작용`
+            : `${trendW} 속 RAC·냉장고 등 냉방 가전 수요 환경이 ${up ? "우호적" : "둔화"}인 국면`
       return {
-        title: m.title,
+        title: m.title, group: m.group, label: m.label,
         vNum: cVal, vPrefix: pfx, vSuffix: sfx, vDec: m.dec,
         dDown: down,
         dPct: isTemp ? Math.abs(cVal - pVal) : Math.abs(((cVal - pVal) / pVal) * 100),
         dPctSuffix: isTemp ? "℃" : "%",
         dAbs: isTemp ? null : Math.abs(cVal - pVal),
-        dAbsPrefix: isTemp ? "" : "₱",
+        dAbsPrefix: isTemp ? "" : pfx,
         prevText: "전년 동기 " + pfx + (Number.isFinite(pVal) ? pVal.toFixed(m.dec) : "-") + sfx,
         src: m.src,
         note: m.note,
@@ -472,27 +489,32 @@ export default function Overview() {
   }, [raw, range, today])
 
 
+  const grp = (name: string) => stats.filter((s) => s.group === name).map((s) => ({ label: s.label, stat: s }))
+  const fxItems = grp("fx")
+  const oilItems = grp("oil")
+  const wxItems = grp("wx")
+
   return (
     <main className="px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-1">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
-      <div className="flex flex-wrap items-end justify-between gap-3" style={{ animation: "fadeUp .8s ease both" }}>
-        <h1 className="cursor-default text-2xl font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간지표</h1>
-        <div className="flex flex-col items-end gap-1">
-        <p className="text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500">* 모든 변동률·비교는 전년 동기 대비</p>
-        <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
-        {RANGES.map((r) => (
-          <button
-            key={r.key}
-            onClick={() => setRange(r.key)}
-            className={
-              "rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " +
-              (range === r.key ? "scale-[1.03] bg-white text-indigo-600 shadow-md" : "text-gray-500 hover:-translate-y-0.5 hover:bg-white/70 hover:text-indigo-600 hover:shadow-sm")
-            }
-          >
-            {r.label}
-          </button>
-        ))}
-        </div>
+      <div className="grid grid-cols-1 items-end gap-3 lg:grid-cols-4" style={{ animation: "fadeUp .8s ease both" }}>
+        <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 lg:col-span-2">일간지표</h1>
+        <div className="flex flex-col items-start gap-1">
+          <p className="text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500">* 모든 변동률·비교는 전년 동기 대비</p>
+          <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
+            {RANGES.map((r) => (
+              <button
+                key={r.key}
+                onClick={() => setRange(r.key)}
+                className={
+                  "rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " +
+                  (range === r.key ? "scale-[1.03] bg-white text-indigo-600 shadow-md" : "text-gray-500 hover:-translate-y-0.5 hover:bg-white/70 hover:text-indigo-600 hover:shadow-sm")
+                }
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -501,73 +523,73 @@ export default function Overview() {
       ) : (
         <>
           <div key={range} className="mt-1.5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {stats.map((s, i) => (
-              <StatCard key={s.title} s={s} delay={i * 0.14} />
-            ))}
+            <MultiCard title="환율" items={fxItems} delay={0} />
+            <MultiCard title="유가" items={oilItems} delay={0.12} />
+            <MultiCard title="체감 열지수" items={wxItems} delay={0.24} />
+            <div className="rounded-xl p-3.5 lg:border-l lg:border-gray-200 lg:pl-4" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
+              <div className="flex items-baseline justify-between">
+                <p className="text-lg font-bold tracking-tight text-gray-900">경제 캘린더</p>
+                <span className="text-[10px] text-gray-400">결과·예정</span>
+              </div>
+              <div className="mt-2 flex flex-col gap-1">
+                {cal.map((e, i) => {
+                  const showToday = i > 0 && cal[i - 1].past && !e.past
+                  return (
+                    <React.Fragment key={i}>
+                      {showToday ? (
+                        <div className="my-1 flex items-center gap-2 text-[9px] font-semibold text-indigo-400">
+                          <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
+                        </div>
+                      ) : null}
+                      <div className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-55" : "")}>
+                        <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-100 text-gray-400" : "bg-emerald-50 text-emerald-600")}>
+                          <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
+                          <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
+                        </div>
+                        <div className="min-w-0">
+                          <p className={"line-clamp-2 text-[11.5px] leading-snug " + (e.past ? "text-gray-400" : "font-medium text-gray-800")}>{e.event}</p>
+                          <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance} · {e.past ? "결과" : "예정"}</p>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  )
+                })}
+              </div>
+            </div>
           </div>
 
           <div className="mt-3 border-t border-gray-200 pt-4" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
-            <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
-                {[
-                  { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain, img: "https://loremflickr.com/640/360/manila,skyline?lock=17" },
-                  { title: "CE 동향", sub: "생활가전·소비", rows: nCE, img: "https://loremflickr.com/640/360/home,appliances?lock=23" },
-                  { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, img: "https://loremflickr.com/640/360/construction,skyscraper?lock=29" },
-                ].map((col) => (
-                  <div key={col.title} className="lg:px-4">
-                    <div className="flex items-baseline justify-between">
-                      <p className="text-sm font-semibold text-gray-900">{col.title}</p>
-                      <span className="text-[10px] text-gray-400">{col.sub}</span>
-                    </div>
-                    <div className="mt-2 flex flex-col divide-y divide-gray-100">
-                      {col.rows.map((n, i) =>
-                        i === 0 ? (
-                          <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group block pb-2.5">
-                            <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
-                              <img src={col.img} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
-                            </div>
-                            <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-gray-900 group-hover:text-indigo-600">{n.title}</p>
-                            <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
-                          </a>
-                        ) : (
-                          <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group -mx-2 rounded-lg px-2 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50">
-                            <p className="line-clamp-2 text-[12.5px] font-medium leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
-                            <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
-                          </a>
-                        ),
-                      )}
-                    </div>
+            <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
+              {[
+                { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain, img: "https://images.unsplash.com/photo-1518183214770-9cffbec72538?w=640&h=360&fit=crop&q=70" },
+                { title: "CE 동향", sub: "생활가전·소비", rows: nCE, img: "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=640&h=360&fit=crop&q=70" },
+                { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, img: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=640&h=360&fit=crop&q=70" },
+              ].map((col) => (
+                <div key={col.title} className="lg:px-4">
+                  <div className="flex items-baseline justify-between">
+                    <p className="text-sm font-semibold text-gray-900">{col.title}</p>
+                    <span className="text-[10px] text-gray-400">{col.sub}</span>
                   </div>
-                ))}
-              <div className="border-t border-gray-200 pt-4 sm:border-t-0 sm:pt-0 lg:px-4">
-                <div className="flex items-baseline justify-between">
-                  <p className="text-sm font-semibold text-gray-900">경제 캘린더</p>
-                  <span className="text-[10px] text-gray-400">결과·예정</span>
+                  <div className="mt-2 flex flex-col divide-y divide-gray-100">
+                    {col.rows.map((n, i) =>
+                      i === 0 ? (
+                        <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group block pb-2.5">
+                          <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
+                            <img src={col.img} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                          </div>
+                          <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-gray-900 group-hover:text-indigo-600">{n.title}</p>
+                          <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
+                        </a>
+                      ) : (
+                        <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group -mx-2 rounded-lg px-2 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50">
+                          <p className="line-clamp-2 text-[12.5px] font-medium leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                          <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
+                        </a>
+                      ),
+                    )}
+                  </div>
                 </div>
-                <div className="mt-2 flex flex-col gap-1">
-                  {cal.map((e, i) => {
-                    const showToday = i > 0 && cal[i - 1].past && !e.past
-                    return (
-                      <React.Fragment key={i}>
-                        {showToday ? (
-                          <div className="my-1 flex items-center gap-2 text-[9px] font-semibold text-indigo-400">
-                            <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
-                          </div>
-                        ) : null}
-                        <div className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-55" : "")}>
-                          <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-100 text-gray-400" : "bg-emerald-50 text-emerald-600")}>
-                            <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
-                            <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
-                          </div>
-                          <div className="min-w-0">
-                            <p className={"line-clamp-2 text-[11.5px] leading-snug " + (e.past ? "text-gray-400" : "font-medium text-gray-800")}>{e.event}</p>
-                            <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance} · {e.past ? "결과" : "예정"}</p>
-                          </div>
-                        </div>
-                      </React.Fragment>
-                    )
-                  })}
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         </>
