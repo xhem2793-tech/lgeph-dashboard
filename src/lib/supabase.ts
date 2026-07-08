@@ -61,3 +61,15 @@ export async function latestNews(limit = 5) {
   const rows = await sb(`news_raw?select=title,source_domain,bucket,published_date&order=fetched_at.desc&limit=${limit}`)
   return rows.map((r) => ({ title: r.title, domain: r.source_domain, bucket: r.bucket, date: r.published_date }))
 }
+
+export async function monthlyView(view: string) {
+  const rows = await sb(`${view}?select=yr,mon,v&order=yr,mon`)
+  return rows.map((r) => ({ yr: Number(r.yr), mon: Number(r.mon), v: num(r.v)! }))
+}
+
+export async function macroAll(indicator: string) {
+  const rows = await sb(
+    `macro_indicators?geo=eq.PHILIPPINES&indicator=eq.${indicator}&select=value,period_date&order=period_date`,
+  )
+  return rows.map((r) => ({ value: num(r.value)!, date: r.period_date as string }))
+}
