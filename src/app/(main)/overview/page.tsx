@@ -18,8 +18,8 @@ export type KpiEntryExtended = Omit<KpiEntry, "current" | "allowed" | "unit"> & 
 
 const IND = "#6366f1"
 const GRY = "#b4b2a9"
-const SURFACE = "#f1f3f5"
-const GRID = "#e2e5ea"
+const SURFACE = "#f9fafb"
+const GRID = "#eceef1"
 
 function niceScale(vals: number[], div = 5) {
   let mn = Math.min(...vals)
@@ -80,11 +80,6 @@ function ProChart(p: Series) {
       tx.textContent = t.toFixed(tdec)
       svg.appendChild(tx)
     })
-    if (unit) {
-      const u = el("text", { x: L - 28, y: T - 2, "font-size": 9, fill: "#9ca3af" })
-      u.textContent = unit
-      svg.appendChild(u)
-    }
     const everyN = slots <= 8 ? 1 : slots <= 16 ? 2 : Math.ceil(slots / 7)
     labels.forEach((lb, i) => {
       if (!lb || (slots - 1 - i) % everyN !== 0) return
@@ -108,7 +103,8 @@ function ProChart(p: Series) {
         const len = (pl as unknown as SVGPolylineElement).getTotalLength()
         pl.style.strokeDasharray = String(len)
         pl.style.strokeDashoffset = String(len)
-        pl.style.transition = "stroke-dashoffset 1000ms ease"
+        pl.style.transition = "stroke-dashoffset 1500ms cubic-bezier(.22,1,.36,1)"
+        pl.style.transitionDelay = "0.18s"
         requestAnimationFrame(() => requestAnimationFrame(() => { pl.style.strokeDashoffset = "0" }))
       }
       return pts.map((pp) => {
@@ -117,7 +113,7 @@ function ProChart(p: Series) {
         return { c, r: base }
       })
     }
-    const dPrev = hasPrev ? drawSeries(p.prev as number[], GRY, 1.6, false) : null
+    const dPrev = hasPrev ? drawSeries(p.prev as number[], GRY, 1.6, true) : null
     const dCur = drawSeries(p.cur, IND, 2, true)
 
     const ttm = document.createElement("div")
@@ -250,7 +246,7 @@ function CountUp({ value, prefix = "", suffix = "", decimals = 1 }: { value: num
     const t0 = performance.now()
     let raf = 0
     const step = (t: number) => {
-      const k = Math.min((t - t0) / 750, 1)
+      const k = Math.min((t - t0) / 1200, 1)
       const e = 1 - Math.pow(1 - k, 3)
       node.textContent = prefix + (to * e).toFixed(decimals) + suffix
       if (k < 1) raf = requestAnimationFrame(step)
@@ -278,7 +274,7 @@ function Badge({ good, children }: { good: boolean; children: React.ReactNode })
 
 function StatCard({ s, delay }: { s: Stat; delay: number }) {
   return (
-    <div className="rounded-xl p-5" style={{ background: SURFACE, animation: "fadeUp .55s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
+    <div className="rounded-xl p-4" style={{ background: SURFACE, animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-gray-700">{s.title}</span>
@@ -292,7 +288,7 @@ function StatCard({ s, delay }: { s: Stat; delay: number }) {
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: IND }} />{s.chart.curName}</span>
         </div>
       </div>
-      <p className="mt-1 text-2xl font-semibold tabular-nums text-gray-900">
+      <p className="mt-1 text-xl font-semibold tabular-nums text-gray-900">
         <CountUp value={s.vNum} prefix={s.vPrefix} suffix={s.vSuffix} decimals={s.vDec} />
       </p>
       <p className="text-[11px] text-gray-400">{s.prevText}</p>
@@ -374,15 +370,23 @@ function seriesFor(rows: { date: string; value: number }[], buckets: Bucket[]) {
 const METRICS = [
   {
     key: "fx", table: "exchange_rates", col: "usd_php", title: "환율 USD/PHP", unit: "₱", dec: 2, src: "BSP",
-    up: "전년比 페소 약세 지속 — 수입 가전 원가 압력 확대", down: "페소 강세 전환 — 수입 원가 부담 완화",
+    dirUp: "페소 약세", dirDn: "페소 강세",
+    impUp: "수입 가전 원가·마진 압박, 가격 인상 압력", impDn: "수입 원가 완화, 판촉·프로모션 여력 확대",
   },
   {
     key: "oil", table: "oil_prices", col: "diesel", title: "유가 디젤", unit: "₱", dec: 1, src: "DOE",
-    up: "유가 상승 — 물류·배송비 부담 확대", down: "유가 하락 — 물류비 완화, 마진 우호",
+    dirUp: "유가 상승", dirDn: "유가 하락",
+    impUp: "물류·배송비 부담, 대형가전 판매·설치 마진 압박", impDn: "물류비 완화, 배송 마진·프로모션 개선",
   },
   {
     key: "wx", table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1, src: "PAGASA",
-    up: "폭염 강화 — 냉방가전(RAC) 수요 모멘텀 우호", down: "열지수 완화 — 냉방 수요 모멘텀 둔화",
+    dirUp: "열지수 상승", dirDn: "열지수 하락",
+    impUp: "RAC·냉장고 냉방 수요 강세, 성수기 재고·물량 확대", impDn: "냉방 수요 둔화, 재고·판촉 조정 필요",
+  },
+  {
+    key: "gas", table: "oil_prices", col: "ron91", title: "가솔린 RON91", unit: "₱", dec: 1, src: "DOE",
+    dirUp: "가솔린 상승", dirDn: "가솔린 하락",
+    impUp: "소비자 유류비 부담↑, 가전 구매여력·소비심리 위축", impDn: "유류비 완화, 가전 구매여력·소비심리 개선",
   },
 ] as const
 
@@ -433,7 +437,11 @@ export default function Overview() {
         dDown: down, dSuffix: isTemp ? "℃" : "%", dDec: isTemp ? 1 : 2,
         prevText: "전년 동기 " + pfx + (Number.isFinite(pVal) ? pVal.toFixed(m.dec) : "-") + sfx,
         src: m.src,
-        insight: up ? m.up : m.down,
+        insight:
+          (range === "7d" ? "최근 7일" : range === "1m" ? "최근 한 달" : range === "3m" ? "최근 3개월" : "연간") +
+          " · " + (up ? m.dirUp : m.dirDn) + " 전년비 " + (up ? "+" : "−") +
+          (isTemp ? Math.abs(cVal - pVal).toFixed(1) + "℃" : Math.abs(((cVal - pVal) / pVal) * 100).toFixed(1) + "%") +
+          " — " + (up ? m.impUp : m.impDn),
         chart: { cur, prev, labels: B.labels, unit: m.unit, curName: B.curName, prevName: B.prevName, decimals: m.dec },
       }
     })
@@ -465,13 +473,13 @@ export default function Overview() {
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
       ) : (
         <>
-          <div key={range} className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div key={range} className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {stats.map((s, i) => (
-              <StatCard key={s.title} s={s} delay={i * 0.08} />
+              <StatCard key={s.title} s={s} delay={i * 0.14} />
             ))}
           </div>
 
-          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2" style={{ animation: "fadeUp .55s ease both", animationDelay: "0.28s" }}>
+          <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.55s" }}>
             <div className="rounded-xl p-5" style={{ background: SURFACE }}>
               <p className="text-sm font-medium text-gray-900">경쟁사 가격 · TV</p>
               <div className="mt-3 flex flex-col gap-2">
