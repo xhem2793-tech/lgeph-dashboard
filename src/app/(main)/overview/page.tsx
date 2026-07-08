@@ -468,9 +468,9 @@ export default function Overview() {
   return (
     <main className="p-4 sm:p-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
-      <h1 className="text-lg font-semibold text-gray-900">개요</h1>
-
-      <div className="mt-3 inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900">일간지표</h1>
+        <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
         {RANGES.map((r) => (
           <button
             key={r.key}
@@ -483,6 +483,7 @@ export default function Overview() {
             {r.label}
           </button>
         ))}
+        </div>
       </div>
       <p className="mt-1.5 text-[10px] text-gray-400">* 모든 변동률·비교는 전년 동기 대비</p>
 
