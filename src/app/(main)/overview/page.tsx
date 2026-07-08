@@ -466,7 +466,7 @@ export default function Overview() {
   const maxP = comp.length ? Math.max(...comp.map((c) => c.price)) : 1
 
   return (
-    <main className="p-4 sm:p-6">
+    <main className="px-4 pb-4 pt-2.5 sm:px-6 sm:pb-6 sm:pt-3">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold tracking-tight text-gray-900">일간지표</h1>
