@@ -73,3 +73,10 @@ export async function macroAll(indicator: string) {
   )
   return rows.map((r) => ({ value: num(r.value)!, date: r.period_date as string }))
 }
+
+export async function rangeRows(table: string, col: string, start: string, end: string) {
+  const rows = await sb(
+    `${table}?select=${col},date&date=gte.${start}&date=lte.${end}&order=date`,
+  )
+  return rows.map((r) => ({ date: r.date as string, value: num(r[col])! }))
+}
