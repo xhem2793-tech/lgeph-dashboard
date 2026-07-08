@@ -275,18 +275,20 @@ function DeltaBadge({ down, pct, pctSuffix, absVal, absPrefix }: { down: boolean
   const [mode, setMode] = React.useState(0)
   React.useEffect(() => {
     if (absVal == null) return
-    const id = setInterval(() => setMode((m) => (m === 0 ? 1 : 0)), 3000)
+    const id = setInterval(() => setMode((m) => (m === 0 ? 1 : 0)), 4000)
     return () => clearInterval(id)
   }, [absVal])
   const showAbs = absVal != null && mode === 1
   return (
     <Badge good={down}>
       {down ? "▼ " : "▲ "}
-      {showAbs ? (
-        <CountUp value={absVal as number} decimals={1} prefix={absPrefix} />
-      ) : (
-        <CountUp value={pct} decimals={1} suffix={pctSuffix} />
-      )}
+      <span key={mode} className="inline-block" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
+        {showAbs ? (
+          <CountUp value={absVal as number} decimals={1} prefix={absPrefix} />
+        ) : (
+          <CountUp value={pct} decimals={1} suffix={pctSuffix} />
+        )}
+      </span>
     </Badge>
   )
 }
@@ -465,7 +467,7 @@ export default function Overview() {
 
   return (
     <main className="p-4 sm:p-6">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <h1 className="text-lg font-semibold text-gray-900">개요</h1>
 
       <div className="mt-3 inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
