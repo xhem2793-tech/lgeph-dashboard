@@ -1,7 +1,7 @@
 "use client"
 
 import { siteConfig } from "@/app/siteConfig"
-import { exchangeRates, macroAll, rangeRows } from "@/lib/supabase"
+import { exchangeRates, macroAll } from "@/lib/supabase"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import React from "react"
@@ -12,62 +12,100 @@ function fmt(n: number, d = 1) {
 }
 
 type TickItem = { name: string; value: string; chg: string; up: boolean; note: string; asof: string }
+type Freq = "D" | "M" | "Q" | "Y"
+type Kind = "fx" | "inflation" | "confidence" | "growth" | "import" | "ppi" | "unemp"
+type Cfg = { name: string; ind: string; freq: Freq; kind: Kind; vk: "fx" | "pct" | "idx" | "usd" }
 
-function lastOf<T>(a: T[]): T { return a[a.length - 1] }
-function prevOf<T>(a: T[]): T { return a[a.length - 2] }
-function isoDaysAgo(n: number) {
-  const d = new Date()
-  d.setDate(d.getDate() - n)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`
-}
-const mLabel = (d: string) => Number(d.slice(5, 7)) + "월"
-const qLabel = (d: string) => Math.floor((Number(d.slice(5, 7)) - 1) / 3) + 1 + "분기"
-const dLabel = (d: string) => Number(d.slice(5, 7)) + "/" + Number(d.slice(8, 10))
+const CFG: Cfg[] = [
+  { name: "페소 환율 (USD/PHP)", ind: "FX", freq: "D", kind: "fx", vk: "fx" },
+  { name: "소비자물가 상승률", ind: "INF_all_items", freq: "M", kind: "inflation", vk: "pct" },
+  { name: "전기요금 물가 상승률", ind: "INF_electricity", freq: "M", kind: "inflation", vk: "pct" },
+  { name: "실질 GDP 성장률", ind: "GDP_growth", freq: "Y", kind: "growth", vk: "pct" },
+  { name: "실업률", ind: "unemployment_rate", freq: "Y", kind: "unemp", vk: "pct" },
+  { name: "소비자신뢰지수", ind: "consumer_confidence_index", freq: "Q", kind: "confidence", vk: "idx" },
+  { name: "내구재 구매심리지수", ind: "durables_buying_intention", freq: "Q", kind: "confidence", vk: "idx" },
+  { name: "생활가전 물가 상승률", ind: "INF_household_appliances", freq: "M", kind: "inflation", vk: "pct" },
+  { name: "에어컨 물가 상승률", ind: "INF_aircon", freq: "M", kind: "inflation", vk: "pct" },
+  { name: "가전 수입액", ind: "imports_home_appliances", freq: "Y", kind: "import", vk: "usd" },
+  { name: "기업경기실사지수", ind: "business_confidence_index", freq: "M", kind: "confidence", vk: "idx" },
+  { name: "가전 생산자물가 상승률", ind: "PPI_domestic_appliances", freq: "M", kind: "ppi", vk: "pct" },
+  { name: "건설업 성장률", ind: "construction_gva_growth", freq: "Q", kind: "growth", vk: "pct" },
+]
 const arw = (up: boolean) => (up ? "▲" : "▼")
+const WORD: Record<Kind, [string, string]> = {
+  fx: ["상승", "하락"], inflation: ["가속", "둔화"], confidence: ["개선", "악화"],
+  growth: ["개선", "둔화"], import: ["증가", "감소"], ppi: ["상승", "하락"], unemp: ["상승", "하락"],
+}
+const OUT: Record<string, string> = {
+  "fx|true": "수입 원가 부담 지속", "fx|false": "수입 원가 완화 기대",
+  "inflation|true": "물가 압력 지속 전망", "inflation|false": "하향 안정 흐름",
+  "confidence|true": "수요 회복 조짐", "confidence|false": "수요 위축 우려",
+  "growth|true": "성장 모멘텀 유지", "growth|false": "성장 둔화 우려",
+  "import|true": "가전 수요 확대", "import|false": "가전 수요 위축",
+  "ppi|true": "제조원가 상승 압력", "ppi|false": "제조원가 완화",
+  "unemp|true": "고용 여건 악화", "unemp|false": "고용 여건 개선",
+}
+function streakOf(vals: number[]): { len: number; up: boolean } {
+  if (vals.length < 2) return { len: 0, up: true }
+  const d: number[] = []
+  for (let i = 1; i < vals.length; i++) d.push(vals[i] - vals[i - 1])
+  const last = d[d.length - 1]
+  const sign = last > 0 ? 1 : last < 0 ? -1 : 0
+  if (sign === 0) return { len: 0, up: true }
+  let len = 0
+  for (let i = d.length - 1; i >= 0; i--) {
+    const sg = d[i] > 0 ? 1 : d[i] < 0 ? -1 : 0
+    if (sg === sign) len++
+    else break
+  }
+  return { len, up: sign > 0 }
+}
+function unitOf(f: Freq) { return f === "D" ? "일" : f === "M" ? "개월" : f === "Q" ? "분기" : "년" }
+function prefixOf(f: Freq) { return f === "D" ? "전일比" : f === "M" ? "전월比" : f === "Q" ? "전분기比" : "전년比" }
+function asofOf(f: Freq, d: string) {
+  const t = f === "D" ? Number(d.slice(5, 7)) + "/" + Number(d.slice(8, 10))
+    : f === "M" ? Number(d.slice(5, 7)) + "월"
+    : f === "Q" ? Math.floor((Number(d.slice(5, 7)) - 1) / 3) + 1 + "분기"
+    : d.slice(0, 4) + "년"
+  return t + " 기준"
+}
 
 function Ticker() {
   const [items, setItems] = React.useState<TickItem[]>([])
   React.useEffect(() => {
     let alive = true
-    const iso = isoDaysAgo(0)
     ;(async () => {
       try {
-        const [fx, oil, inf, cci, bci, imp] = await Promise.all([
-          exchangeRates(2),
-          rangeRows("oil_prices", "diesel", isoDaysAgo(30), iso),
-          macroAll("INF_all_items"),
-          macroAll("consumer_confidence_index"),
-          macroAll("business_confidence_index"),
-          macroAll("imports_home_appliances"),
-        ])
+        const series = await Promise.all(
+          CFG.map((c) => (c.ind === "FX" ? exchangeRates(20) : macroAll(c.ind))),
+        )
         if (!alive) return
-        const fxL = lastOf(fx), fxP = prevOf(fx)
-        const oL = lastOf(oil), oP = prevOf(oil)
-        const iL = lastOf(inf), iP = prevOf(inf)
-        const cL = lastOf(cci), cP = prevOf(cci)
-        const bL = lastOf(bci), bP = prevOf(bci)
-        const mL = lastOf(imp), mP = prevOf(imp)
-        const up = (a: number, b: number) => a >= b
-        setItems([
-          { name: "USD/PHP 환율", value: "₱" + fmt(fxL.value, 2), up: up(fxL.value, fxP.value),
-            chg: "전일比 " + fmt(Math.abs(fxL.value - fxP.value), 2) + arw(up(fxL.value, fxP.value)),
-            note: up(fxL.value, fxP.value) ? "페소 약세, 수입 원가 부담" : "페소 강세, 수입 원가 완화", asof: dLabel(fxL.date) + " 기준" },
-          { name: "경유(디젤)", value: "₱" + fmt(oL.value, 1), up: up(oL.value, oP.value),
-            chg: "전주比 " + fmt(Math.abs(oL.value - oP.value), 1) + arw(up(oL.value, oP.value)),
-            note: up(oL.value, oP.value) ? "물류·배송비 부담" : "물류비 완화", asof: dLabel(oL.date) + " 기준" },
-          { name: "소비자물가 CPI", value: fmt(iL.value, 1) + "%", up: up(iL.value, iP.value),
-            chg: "전월比 " + fmt(Math.abs(iL.value - iP.value), 1) + "%p" + arw(up(iL.value, iP.value)),
-            note: up(iL.value, iP.value) ? "물가 상방 압력" : "물가 둔화, 구매력 회복", asof: mLabel(iL.date) + " 기준" },
-          { name: "소비자신뢰 CCI", value: String(fmt(cL.value, 1)), up: up(cL.value, cP.value),
-            chg: "전분기比 " + fmt(Math.abs(cL.value - cP.value), 1) + "p" + arw(up(cL.value, cP.value)),
-            note: up(cL.value, cP.value) ? "소비심리 개선" : "소비심리 위축", asof: qLabel(cL.date) + " 기준" },
-          { name: "기업경기 BCI", value: String(fmt(bL.value, 1)), up: up(bL.value, bP.value),
-            chg: "전월比 " + fmt(Math.abs(bL.value - bP.value), 1) + arw(up(bL.value, bP.value)),
-            note: up(bL.value, bP.value) ? "기업경기 개선" : "기업경기 위축", asof: mLabel(bL.date) + " 기준" },
-          { name: "가전 수입", value: "$" + Math.round(mL.value / 1e6) + "M", up: up(mL.value, mP.value),
-            chg: "전년比 " + fmt(Math.abs(((mL.value - mP.value) / mP.value) * 100), 1) + "%" + arw(up(mL.value, mP.value)),
-            note: up(mL.value, mP.value) ? "가전 수입 확대" : "가전 수입 둔화", asof: mL.date.slice(0, 4) + "년 기준" },
-        ])
+        const list: TickItem[] = []
+        CFG.forEach((c, idx) => {
+          const s = series[idx]
+          if (!s || s.length === 0) return
+          const last = s[s.length - 1]
+          const prev = s.length > 1 ? s[s.length - 2] : last
+          const rawUp = last.value >= prev.value
+          const value =
+            c.vk === "fx" ? "₱" + fmt(last.value, 2)
+            : c.vk === "pct" ? fmt(last.value, 1) + "%"
+            : c.vk === "usd" ? "$" + Math.round(last.value / 1e6) + "M"
+            : String(fmt(last.value, 1))
+          let chgNum: number, csuf: string
+          if (c.kind === "import") { chgNum = prev.value ? Math.abs(((last.value - prev.value) / prev.value) * 100) : 0; csuf = "%" }
+          else if (c.vk === "idx") { chgNum = Math.abs(last.value - prev.value); csuf = "p" }
+          else if (c.vk === "fx") { chgNum = Math.abs(last.value - prev.value); csuf = "" }
+          else { chgNum = Math.abs(last.value - prev.value); csuf = "%p" }
+          const chg = prefixOf(c.freq) + " " + fmt(chgNum, c.vk === "fx" ? 2 : 1) + csuf + arw(rawUp)
+          const st = streakOf(s.map((x) => x.value))
+          const word = st.up ? WORD[c.kind][0] : WORD[c.kind][1]
+          const out = OUT[c.kind + "|" + st.up]
+          const note = st.len >= 2 ? `${st.len}${unitOf(c.freq)} 연속 ${word}, ${out}`
+            : st.len === 1 ? `${word} 전환, ${out}` : out
+          list.push({ name: c.name, value, chg, up: rawUp, note, asof: asofOf(c.freq, last.date) })
+        })
+        setItems(list)
       } catch {
         /* 티커 데이터 실패 시 조용히 숨김 */
       }
@@ -78,9 +116,9 @@ function Ticker() {
   if (!items.length) return null
   const loop = [...items, ...items]
   return (
-    <div className="group overflow-hidden border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
-      <style>{"@keyframes axmarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}"}</style>
-      <div className="flex w-max gap-2.5 py-2 group-hover:[animation-play-state:paused]" style={{ animation: "axmarquee 55s linear infinite" }}>
+    <div className="axm-wrap overflow-hidden border-b border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
+      <style>{"@keyframes axmarquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}.axm-track{animation:axmarquee 78s linear infinite}.axm-wrap:hover .axm-track{animation-play-state:paused}"}</style>
+      <div className="axm-track flex w-max gap-2.5 py-2">
         {loop.map((it, i) => (
           <div
             key={i}
