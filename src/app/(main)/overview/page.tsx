@@ -359,8 +359,10 @@ function seriesFor(rows: { date: string; value: number }[], buckets: Bucket[]) {
   return buckets.map((b) => {
     let sum = 0, cnt = 0, ff = NaN
     for (const r of rows) {
-      if (r.date <= b.end) ff = r.value
-      if (r.date >= b.start && r.date <= b.end) { sum += r.value; cnt++ }
+      const v = r.value
+      if (v == null || !Number.isFinite(v)) continue
+      if (r.date <= b.end) ff = v
+      if (r.date >= b.start && r.date <= b.end) { sum += v; cnt++ }
     }
     return cnt ? sum / cnt : ff
   })
