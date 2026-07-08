@@ -63,7 +63,6 @@ function ProChart(p: Series) {
     const hasPrev = !!(p.prev && p.prev.length)
     const all = [...p.cur, ...(p.prev ?? [])].filter((v) => Number.isFinite(v))
     if (!all.length) return
-    const dense = slots > 12
     const { lo, hi, ticks, dec: tdec } = niceScale(all)
     const L = 36, R = 292, T = 12, B = 132
     const X = (i: number) => (slots <= 1 ? (L + R) / 2 : L + (i / (slots - 1)) * (R - L))
@@ -91,7 +90,7 @@ function ProChart(p: Series) {
     const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: "#c3c8d0", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 })
     svg.appendChild(cross)
 
-    const base = dense ? 2 : 3
+    const base = 3
     const drawSeries = (vals: number[], color: string, w: number, draw: boolean) => {
       const pts = vals.map((v, i) => [X(i), Y(v)])
       const pl = el("polyline", {
@@ -355,7 +354,9 @@ function fillGaps(arr: number[]) {
   return arr.map((v) => { if (Number.isFinite(v)) { cur = v; return v } return cur })
 }
 function seriesFor(rows: { date: string; value: number }[], buckets: Bucket[]) {
+  const last = rows.length ? rows[rows.length - 1].date : ""
   return buckets.map((b) => {
+    if (last && b.start > last) return NaN
     let sum = 0, cnt = 0, ff = NaN
     for (const r of rows) {
       const v = r.value
@@ -374,19 +375,19 @@ const METRICS = [
     impUp: "수입 가전 원가·마진 압박, 가격 인상 압력", impDn: "수입 원가 완화, 판촉·프로모션 여력 확대",
   },
   {
-    key: "oil", table: "oil_prices", col: "diesel", title: "유가 디젤", unit: "₱", dec: 1, src: "DOE",
-    dirUp: "유가 상승", dirDn: "유가 하락",
+    key: "oil", table: "oil_prices", col: "diesel", title: "디젤", unit: "₱", dec: 1, src: "DOE",
+    dirUp: "디젤 상승", dirDn: "디젤 하락",
     impUp: "물류·배송비 부담, 대형가전 판매·설치 마진 압박", impDn: "물류비 완화, 배송 마진·프로모션 개선",
-  },
-  {
-    key: "wx", table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1, src: "PAGASA",
-    dirUp: "열지수 상승", dirDn: "열지수 하락",
-    impUp: "RAC·냉장고 냉방 수요 강세, 성수기 재고·물량 확대", impDn: "냉방 수요 둔화, 재고·판촉 조정 필요",
   },
   {
     key: "gas", table: "oil_prices", col: "ron91", title: "가솔린 RON91", unit: "₱", dec: 1, src: "DOE",
     dirUp: "가솔린 상승", dirDn: "가솔린 하락",
     impUp: "소비자 유류비 부담↑, 가전 구매여력·소비심리 위축", impDn: "유류비 완화, 가전 구매여력·소비심리 개선",
+  },
+  {
+    key: "wx", table: "weather", col: "heat_index", title: "체감 열지수", unit: "℃", dec: 1, src: "PAGASA",
+    dirUp: "열지수 상승", dirDn: "열지수 하락",
+    impUp: "RAC·냉장고 냉방 수요 강세, 성수기 재고·물량 확대", impDn: "냉방 수요 둔화, 재고·판촉 조정 필요",
   },
 ] as const
 
@@ -422,9 +423,9 @@ export default function Overview() {
       const rows = raw[m.key] || []
       const cur = fillGaps(trimTrail(seriesFor(rows, B.cur)))
       const prev = fillGaps(seriesFor(rows, B.prev))
-      const li = cur.length - 1
-      const cVal = cur[li]
-      const pVal = prev[li] ?? prev[prev.length - 1]
+      const meanOf = (a: number[]) => { const f = a.filter((v) => Number.isFinite(v)); return f.length ? f.reduce((x, y) => x + y, 0) / f.length : NaN }
+      const cVal = meanOf(cur)
+      const pVal = meanOf(prev)
       const down = cVal <= pVal
       const up = cVal > pVal
       const pfx = m.unit === "₱" ? "₱" : ""
