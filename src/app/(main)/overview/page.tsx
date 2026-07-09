@@ -313,9 +313,9 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
         </div>
       </div>
       {multi ? (
-        <div className="mt-1.5 flex flex-wrap gap-1">
+        <div className="mt-1.5 flex flex-nowrap gap-1 overflow-hidden">
           {items.map((it, i) => (
-            <button key={i} onClick={() => setSel(i)} className={"rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (idx === i ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}>{it.label}</button>
+            <button key={i} onClick={() => setSel(i)} className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (idx === i ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}>{it.label}</button>
           ))}
         </div>
       ) : null}
@@ -409,9 +409,9 @@ const SERIES = [
   { key: "usd_krw", group: "fx", label: "USD/KRW", title: "환율", table: "exchange_rates", col: "usd_krw", unit: "₩", dec: 0, src: "하나은행", note: "USD/KRW 원/달러 종가" },
   { key: "diesel", group: "oil", label: "디젤", title: "유가", table: "oil_prices", col: "diesel", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 일반 경유(Diesel)" },
   { key: "diesel_p", group: "oil", label: "디젤+", title: "유가", table: "oil_prices", col: "diesel_p", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 프리미엄 디젤" },
-  { key: "ron91", group: "oil", label: "RON91", title: "유가", table: "oil_prices", col: "ron91", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON91" },
-  { key: "ron95", group: "oil", label: "RON95", title: "유가", table: "oil_prices", col: "ron95", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON95" },
-  { key: "ron97", group: "oil", label: "RON97", title: "유가", table: "oil_prices", col: "ron97", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON97" },
+  { key: "ron91", group: "oil", label: "91", title: "유가", table: "oil_prices", col: "ron91", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON91" },
+  { key: "ron95", group: "oil", label: "95", title: "유가", table: "oil_prices", col: "ron95", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON95" },
+  { key: "ron97", group: "oil", label: "97", title: "유가", table: "oil_prices", col: "ron97", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 가솔린 RON97" },
   { key: "kerosene", group: "oil", label: "등유", title: "유가", table: "oil_prices", col: "kerosene", unit: "₱", dec: 1, src: "DOE", note: "DOE NCR 공동고시 · 등유(Kerosene)" },
   { key: "heat_index", group: "wx", label: "체감", title: "날씨", table: "weather", col: "heat_index", unit: "℃", dec: 1, src: "PAGASA", note: "PAGASA 관측 · 체감 열지수(Heat Index)" },
   { key: "max_temp", group: "wx", label: "최고", title: "날씨", table: "weather", col: "max_temp", unit: "℃", dec: 1, src: "PAGASA", note: "PAGASA 관측 · 일 최고기온" },
@@ -427,6 +427,9 @@ export default function Overview() {
   const [nB2B, setNB2B] = React.useState<any[]>([])
   const [cal, setCal] = React.useState<any[]>([])
   const [modal, setModal] = React.useState<any>(null)
+  const [modalClosing, setModalClosing] = React.useState(false)
+  const [calTick, setCalTick] = React.useState(0)
+  const closeModal = () => { setModalClosing(true); window.setTimeout(() => { setModal(null); setModalClosing(false) }, 240) }
   const [range, setRange] = React.useState<RangeKey>("7d")
 
   React.useEffect(() => {
@@ -450,6 +453,11 @@ export default function Overview() {
       }
     })()
   }, [today])
+
+  React.useEffect(() => {
+    const id = window.setInterval(() => setCalTick((t) => t + 1), 10000)
+    return () => window.clearInterval(id)
+  }, [])
 
   const stats: Stat[] = React.useMemo(() => {
     if (!raw) return []
@@ -500,7 +508,7 @@ export default function Overview() {
 
   return (
     <main className="px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-1">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
       {!raw ? (
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
       ) : (
@@ -532,13 +540,13 @@ export default function Overview() {
               ].map((col) => (
                 <div key={col.title} className="lg:px-4">
                   <div className="flex items-baseline justify-between">
-                    <p className="text-sm font-semibold text-gray-900">{col.title}</p>
-                    <span className="text-[10px] text-gray-400">{col.sub}</span>
+                    <p className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">{col.title}</p>
+                    <span className="text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">{col.sub}</span>
                   </div>
                   <div className="mt-2 flex flex-col divide-y divide-gray-100">
                     {col.rows.map((n, i) =>
                       i === 0 ? (
-                        <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group block w-full pb-3 text-left">
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group block w-full rounded-lg pb-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
                           {n.image ? (
                             <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
                               <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
@@ -571,11 +579,8 @@ export default function Overview() {
             </div>
             <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
               <div className="lg:sticky lg:top-[164px]">
-              <div className="flex items-baseline justify-between">
-                <p className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">경제 캘린더</p>
-                <span className="text-[10px] text-gray-400">결과·예정</span>
-              </div>
-              <div className="mt-2 flex flex-col gap-1">
+              <p className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">경제 캘린더</p>
+              <div key={calTick} className="mt-2 flex flex-col gap-1">
                 {cal.map((e, i) => {
                   const showToday = i > 0 && cal[i - 1].past && !e.past
                   return (
@@ -585,7 +590,7 @@ export default function Overview() {
                           <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
                         </div>
                       ) : null}
-                      <div className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-80" : "")}>
+                      <div style={{ animation: "calIn .5s ease both", animationDelay: i * 0.09 + "s" }} className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
                         <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
                           <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
@@ -605,15 +610,15 @@ export default function Overview() {
         </>
       )}
       {modal ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" onClick={() => setModal(null)}>
-          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: "fadeUp .3s cubic-bezier(.22,1,.36,1) both" }}>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" style={{ animation: modalClosing ? "backOut .24s ease both" : "backIn .24s ease both" }} onClick={closeModal}>
+          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: modalClosing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}>
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 {modal.category ? <span className="text-[11px] font-semibold text-indigo-600">{modal.category}</span> : null}
                 <h3 className="mt-0.5 text-lg font-bold leading-snug text-gray-900">{modal.title}</h3>
                 <p className="mt-1 text-xs text-gray-400">{modal.source} · {modal.date}</p>
               </div>
-              <button type="button" onClick={() => setModal(null)} className="shrink-0 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="닫기">
+              <button type="button" onClick={closeModal} className="shrink-0 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="닫기">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
               </button>
             </div>
