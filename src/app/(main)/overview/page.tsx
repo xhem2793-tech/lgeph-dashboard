@@ -430,6 +430,7 @@ export default function Overview() {
   const [modalClosing, setModalClosing] = React.useState(false)
   const [calTick, setCalTick] = React.useState(0)
   const [newsExp, setNewsExp] = React.useState<Record<string, boolean>>({})
+  const listRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const closeModal = () => { setModalClosing(true); window.setTimeout(() => { setModal(null); setModalClosing(false) }, 240) }
   const [range, setRange] = React.useState<RangeKey>("7d")
 
@@ -545,7 +546,7 @@ export default function Overview() {
                     <span className="text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">{col.sub}</span>
                   </div>
                   <div className="relative mt-2">
-                  <div className="flex flex-col divide-y divide-gray-100 overflow-hidden transition-all duration-500 ease-out" style={{ maxHeight: newsExp[col.title] ? 4000 : 560 }}>
+                  <div ref={(el) => { listRefs.current[col.title] = el }} className="flex flex-col divide-y divide-gray-100 overflow-hidden transition-[max-height] duration-500 ease-in-out" style={{ maxHeight: newsExp[col.title] ? (listRefs.current[col.title]?.scrollHeight ?? 2400) : 560 }}>
                     {col.rows.map((n, i) =>
                       i === 0 ? (
                         <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group block w-full rounded-lg pb-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
@@ -593,6 +594,10 @@ export default function Overview() {
               <div key={calTick} className="mt-2 flex flex-col gap-1">
                 {cal.map((e, i) => {
                   const showToday = i > 0 && cal[i - 1].past && !e.past
+                  const head = e.event.split("\u2014")[0]
+                  const abbr = head.match(/\(([^)0-9/]{1,12})\)/)
+                  const calTitle = head.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim()
+                  const kws = [abbr ? abbr[1].trim() : null, e.category].filter(Boolean).slice(0, 2)
                   return (
                     <React.Fragment key={i}>
                       {showToday ? (
@@ -600,16 +605,21 @@ export default function Overview() {
                           <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
                         </div>
                       ) : null}
-                      <div style={{ animation: "calIn 1.5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
+                      <button type="button" onClick={() => setModal({ title: e.event, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance })} style={{ animation: "calIn 1.5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
                         <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
                           <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
                         </div>
-                        <div className="min-w-0">
-                          <p className={"line-clamp-2 text-[11.5px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{e.event}</p>
-                          <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance} · {e.past ? "결과" : "예정"}</p>
+                        <div className="min-w-0 flex-1">
+                          <p className={"truncate text-[12px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{calTitle}</p>
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                            {kws.map((k, ki) => (
+                              <span key={ki} className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">{k}</span>
+                            ))}
+                            <span className="text-[9px] text-gray-400">{e.past ? "결과" : "예정"}</span>
+                          </div>
                         </div>
-                      </div>
+                      </button>
                     </React.Fragment>
                   )
                 })}
@@ -631,11 +641,11 @@ export default function Overview() {
               <p className="mt-1 text-xs text-gray-400">{modal.source} · {modal.date}</p>
             </div>
             {modal.image ? (
-              <div className="mt-4 grid gap-5 md:grid-cols-2">
-                <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 md:aspect-auto md:h-full md:min-h-[160px]">
+              <div className="mt-4 grid gap-5 md:grid-cols-3">
+                <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 md:col-span-1 md:aspect-auto md:h-full md:min-h-[140px]">
                   <img src={modal.image} alt="" className="h-full w-full object-cover" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                 </div>
-                <div className="min-w-0">
+                <div className="min-w-0 md:col-span-2">
                   {modal.summary ? (
                     <>
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>
