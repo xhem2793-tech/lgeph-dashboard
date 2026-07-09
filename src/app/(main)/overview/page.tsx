@@ -590,7 +590,7 @@ export default function Overview() {
                           <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
                         </div>
                       ) : null}
-                      <div style={{ animation: "calIn .5s ease both", animationDelay: i * 0.09 + "s" }} className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
+                      <div style={{ animation: "calIn 1.15s cubic-bezier(.22,1,.36,1) backwards", animationDelay: i * 0.18 + "s" }} className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
                         <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
                           <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
@@ -611,23 +611,30 @@ export default function Overview() {
       )}
       {modal ? (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" style={{ animation: modalClosing ? "backOut .24s ease both" : "backIn .24s ease both" }} onClick={closeModal}>
-          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: modalClosing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}>
-            <div className="flex items-start justify-between gap-4">
-              <div className="min-w-0">
-                {modal.category ? <span className="text-[11px] font-semibold text-indigo-600">{modal.category}</span> : null}
-                <h3 className="mt-0.5 text-lg font-bold leading-snug text-gray-900">{modal.title}</h3>
-                <p className="mt-1 text-xs text-gray-400">{modal.source} · {modal.date}</p>
-              </div>
-              <button type="button" onClick={closeModal} className="shrink-0 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="닫기">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-              </button>
+          <div className="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: modalClosing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}>
+            <button type="button" onClick={closeModal} className="absolute right-4 top-4 z-10 shrink-0 rounded-full bg-white/80 p-1.5 text-gray-400 backdrop-blur transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="닫기">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+            <div className="min-w-0 pr-8">
+              {modal.category ? <span className="text-[11px] font-semibold text-indigo-600">{modal.category}</span> : null}
+              <h3 className="mt-0.5 text-lg font-bold leading-snug text-gray-900">{modal.title}</h3>
+              <p className="mt-1 text-xs text-gray-400">{modal.source} · {modal.date}</p>
             </div>
             {modal.image ? (
-              <div className="mt-4 aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100">
-                <img src={modal.image} alt="" className="h-full w-full object-cover" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+              <div className="mt-4 grid gap-5 md:grid-cols-2">
+                <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 md:aspect-auto md:h-full md:min-h-[160px]">
+                  <img src={modal.image} alt="" className="h-full w-full object-cover" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                </div>
+                <div className="min-w-0">
+                  {modal.summary ? (
+                    <>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>
+                      <p className="mt-1 text-sm leading-relaxed text-gray-700">{modal.summary}</p>
+                    </>
+                  ) : null}
+                </div>
               </div>
-            ) : null}
-            {modal.summary ? (
+            ) : modal.summary ? (
               <div className="mt-4">
                 <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>
                 <p className="mt-1 text-sm leading-relaxed text-gray-700">{modal.summary}</p>
