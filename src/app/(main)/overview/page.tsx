@@ -429,6 +429,7 @@ export default function Overview() {
   const [modal, setModal] = React.useState<any>(null)
   const [modalClosing, setModalClosing] = React.useState(false)
   const [calTick, setCalTick] = React.useState(0)
+  const [newsExp, setNewsExp] = React.useState<Record<string, boolean>>({})
   const closeModal = () => { setModalClosing(true); window.setTimeout(() => { setModal(null); setModalClosing(false) }, 240) }
   const [range, setRange] = React.useState<RangeKey>("7d")
 
@@ -507,8 +508,8 @@ export default function Overview() {
   const wxItems = grp("wx")
 
   return (
-    <main className="px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-1">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
+    <main className="px-4 pb-4 pt-0 sm:px-6 sm:pb-6 sm:pt-0">
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
       {!raw ? (
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
       ) : (
@@ -543,7 +544,8 @@ export default function Overview() {
                     <p className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">{col.title}</p>
                     <span className="text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">{col.sub}</span>
                   </div>
-                  <div className="mt-2 flex flex-col divide-y divide-gray-100">
+                  <div className="relative mt-2">
+                  <div className="flex flex-col divide-y divide-gray-100 overflow-hidden transition-all duration-500 ease-out" style={{ maxHeight: newsExp[col.title] ? 4000 : 560 }}>
                     {col.rows.map((n, i) =>
                       i === 0 ? (
                         <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group block w-full rounded-lg pb-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
@@ -572,6 +574,14 @@ export default function Overview() {
                       ),
                     )}
                   </div>
+                  {newsExp[col.title] ? (
+                    <button type="button" onClick={() => setNewsExp((st) => ({ ...st, [col.title]: false }))} className="mt-2 flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white py-1.5 text-[11px] font-medium text-gray-500 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600">접기</button>
+                  ) : (
+                    <button type="button" onClick={() => setNewsExp((st) => ({ ...st, [col.title]: true }))} className="absolute inset-x-0 bottom-0 flex h-24 items-end justify-center bg-gradient-to-t from-white via-white/85 to-transparent pb-1 backdrop-blur-[1.5px]">
+                      <span className="rounded-full border border-gray-200 bg-white px-3.5 py-1 text-[11px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600">더보기</span>
+                    </button>
+                  )}
+                  </div>
                 </div>
               ))}
                 </div>
@@ -590,13 +600,13 @@ export default function Overview() {
                           <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
                         </div>
                       ) : null}
-                      <div style={{ animation: "calIn 1.15s cubic-bezier(.22,1,.36,1) backwards", animationDelay: i * 0.18 + "s" }} className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
+                      <div style={{ animation: "calIn 1.5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
                         <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
                           <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
                         </div>
                         <div className="min-w-0">
-                          <p className={"line-clamp-2 text-[11.5px] leading-snug " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{e.event}</p>
+                          <p className={"line-clamp-2 text-[11.5px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{e.event}</p>
                           <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance} · {e.past ? "결과" : "예정"}</p>
                         </div>
                       </div>
