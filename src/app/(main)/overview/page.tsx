@@ -562,6 +562,7 @@ export default function Overview() {
               </div>
             </div>
             <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
+              <div className="lg:sticky lg:top-[164px]">
               <div className="flex items-baseline justify-between">
                 <p className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">경제 캘린더</p>
                 <span className="text-[10px] text-gray-400">결과·예정</span>
@@ -589,6 +590,7 @@ export default function Overview() {
                     </React.Fragment>
                   )
                 })}
+              </div>
               </div>
             </div>
           </div>
