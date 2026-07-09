@@ -328,7 +328,7 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
       <div key={`${range}-${idx}`} style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }}>
         <ProChart {...s.chart} />
       </div>
-      <div className="mt-auto border-t border-gray-200 pt-2 text-[11px] leading-snug text-gray-500">
+      <div key={`ins-${range}-${idx}`} style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }} className="mt-auto border-t border-gray-200 pt-2 text-[11px] leading-snug text-gray-500">
         <span className="rounded bg-indigo-100 px-1 text-[9px] font-semibold text-indigo-600">AI</span>
         <span className="ml-1">{s.insight}</span>
         <div className="mt-1 text-[10px] text-gray-400">출처 {s.note}</div>
@@ -430,6 +430,7 @@ export default function Overview() {
   const [modalClosing, setModalClosing] = React.useState(false)
   const [calTick, setCalTick] = React.useState(0)
   const [newsExp, setNewsExp] = React.useState<Record<string, boolean>>({})
+  const [newsH, setNewsH] = React.useState<Record<string, number>>({})
   const listRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const closeModal = () => { setModalClosing(true); window.setTimeout(() => { setModal(null); setModalClosing(false) }, 240) }
   const [range, setRange] = React.useState<RangeKey>("7d")
@@ -517,15 +518,15 @@ export default function Overview() {
         <>
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_0.75fr]" style={{ animation: "fadeUp .8s ease both" }}>
             <div className="lg:col-span-3">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간지표</h1>
-                <div className="flex flex-col items-end gap-1">
-                  <p className="text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500">* 모든 변동률·비교는 전년 동기 대비</p>
-                  <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
-                    {RANGES.map((r) => (
-                      <button key={r.key} onClick={() => setRange(r.key)} className={"rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " + (range === r.key ? "scale-[1.03] bg-white text-indigo-600 shadow-md" : "text-gray-500 hover:-translate-y-0.5 hover:bg-white/70 hover:text-indigo-600 hover:shadow-sm")}>{r.label}</button>
-                    ))}
-                  </div>
+              <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                <div className="flex items-baseline gap-2">
+                  <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간지표</h1>
+                  <p className="hidden text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500 sm:block">* 모든 변동률·비교는 전년 동기 대비</p>
+                </div>
+                <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
+                  {RANGES.map((r) => (
+                    <button key={r.key} onClick={() => setRange(r.key)} className={"rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " + (range === r.key ? "scale-[1.03] bg-white text-indigo-600 shadow-md" : "text-gray-500 hover:-translate-y-0.5 hover:bg-white/70 hover:text-indigo-600 hover:shadow-sm")}>{r.label}</button>
+                  ))}
                 </div>
               </div>
               <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -546,7 +547,7 @@ export default function Overview() {
                     <span className="text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">{col.sub}</span>
                   </div>
                   <div className="relative mt-2">
-                  <div ref={(el) => { listRefs.current[col.title] = el }} className="flex flex-col divide-y divide-gray-100 overflow-hidden transition-[max-height] duration-500 ease-in-out" style={{ maxHeight: newsExp[col.title] ? (listRefs.current[col.title]?.scrollHeight ?? 2400) : 560 }}>
+                  <div ref={(el) => { listRefs.current[col.title] = el }} className="flex flex-col divide-y divide-gray-100 overflow-hidden transition-[max-height] duration-500 ease-in-out" style={{ maxHeight: newsExp[col.title] ? (newsH[col.title] ?? 2400) : 560 }}>
                     {col.rows.map((n, i) =>
                       i === 0 ? (
                         <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group block w-full rounded-lg pb-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
@@ -576,10 +577,10 @@ export default function Overview() {
                     )}
                   </div>
                   {newsExp[col.title] ? (
-                    <button type="button" onClick={() => setNewsExp((st) => ({ ...st, [col.title]: false }))} className="mt-2 flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white py-1.5 text-[11px] font-medium text-gray-500 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600">접기</button>
+                    <button type="button" onClick={() => { const el = listRefs.current[col.title]; if (el) setNewsH((h) => ({ ...h, [col.title]: el.scrollHeight })); requestAnimationFrame(() => setNewsExp((st) => ({ ...st, [col.title]: false }))) }} className="mt-2 flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white py-1.5 text-[11px] font-medium text-gray-500 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600">접기</button>
                   ) : (
-                    <button type="button" onClick={() => setNewsExp((st) => ({ ...st, [col.title]: true }))} className="absolute inset-x-0 bottom-0 flex h-24 items-end justify-center bg-gradient-to-t from-white via-white/85 to-transparent pb-1 backdrop-blur-[1.5px]">
-                      <span className="rounded-full border border-gray-200 bg-white px-3.5 py-1 text-[11px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600">더보기</span>
+                    <button type="button" onClick={() => { const el = listRefs.current[col.title]; setNewsH((h) => ({ ...h, [col.title]: el ? el.scrollHeight : 2400 })); setNewsExp((st) => ({ ...st, [col.title]: true })) }} className="absolute inset-x-0 bottom-0 flex h-24 items-end justify-center bg-gradient-to-t from-white via-white/85 to-transparent pb-1 backdrop-blur-[1.5px]">
+                      <span className="rounded-full border border-gray-200 bg-white px-3.5 py-1 text-[11px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600">펼치기</span>
                     </button>
                   )}
                   </div>
@@ -605,7 +606,7 @@ export default function Overview() {
                           <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
                         </div>
                       ) : null}
-                      <button type="button" onClick={() => setModal({ title: e.event, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance })} style={{ animation: "calIn 1.5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
+                      <button type="button" onClick={() => setModal({ title: e.event.split("\u2014")[0].trim(), summary: e.event.split("\u2014").slice(1).join("\u2014").trim() || null, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance, isCal: true })} style={{ animation: "calIn 1.5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
                         <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
                           <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
@@ -648,7 +649,7 @@ export default function Overview() {
                 <div className="min-w-0 md:col-span-2">
                   {modal.summary ? (
                     <>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{modal.isCal ? "예정 상세" : "본문 요약"}</p>
                       <p className="mt-1 text-sm leading-relaxed text-gray-700">{modal.summary}</p>
                     </>
                   ) : null}
@@ -656,7 +657,7 @@ export default function Overview() {
               </div>
             ) : modal.summary ? (
               <div className="mt-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{modal.isCal ? "예정 상세" : "본문 요약"}</p>
                 <p className="mt-1 text-sm leading-relaxed text-gray-700">{modal.summary}</p>
               </div>
             ) : null}
