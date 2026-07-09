@@ -605,13 +605,13 @@ export default function Overview() {
                           <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
                         </div>
                       ) : null}
-                      <button type="button" onClick={() => setModal({ title: e.event, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance })} style={{ animation: "calIn 1.5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
+                      <button type="button" onClick={() => setModal({ title: e.event, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance })} style={{ animation: "calIn 1.5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
                         <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
                           <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className={"truncate text-[12px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{calTitle}</p>
+                          <p className={"line-clamp-1 break-all text-[12px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{calTitle}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-1">
                             {kws.map((k, ki) => (
                               <span key={ki} className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">{k}</span>
