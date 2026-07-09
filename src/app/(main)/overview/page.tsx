@@ -426,6 +426,7 @@ export default function Overview() {
   const [nCE, setNCE] = React.useState<any[]>([])
   const [nB2B, setNB2B] = React.useState<any[]>([])
   const [cal, setCal] = React.useState<any[]>([])
+  const [modal, setModal] = React.useState<any>(null)
   const [range, setRange] = React.useState<RangeKey>("7d")
 
   React.useEffect(() => {
@@ -525,9 +526,9 @@ export default function Overview() {
               <div className="mt-3 border-t border-gray-200 pt-4" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
                 <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
               {[
-                { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain, img: "https://images.unsplash.com/photo-1518183214770-9cffbec72538?w=640&h=360&fit=crop&q=70" },
-                { title: "CE 동향", sub: "생활가전·소비", rows: nCE, img: "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=640&h=360&fit=crop&q=70" },
-                { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, img: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=640&h=360&fit=crop&q=70" },
+                { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain },
+                { title: "CE 동향", sub: "생활가전·소비", rows: nCE },
+                { title: "B2B 동향", sub: "공조·인프라", rows: nB2B },
               ].map((col) => (
                 <div key={col.title} className="lg:px-4">
                   <div className="flex items-baseline justify-between">
@@ -537,22 +538,29 @@ export default function Overview() {
                   <div className="mt-2 flex flex-col divide-y divide-gray-100">
                     {col.rows.map((n, i) =>
                       i === 0 ? (
-                        <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group block pb-3">
-                          <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
-                            <img src={col.img} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
-                          </div>
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group block w-full pb-3 text-left">
+                          {n.image ? (
+                            <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
+                              <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                            </div>
+                          ) : null}
                           <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-gray-900 group-hover:text-indigo-600">{n.title}</p>
                           {n.summary ? <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-gray-500">{n.summary}</p> : null}
-                          {n.ai ? <p className="mt-1 line-clamp-3 text-[11px] leading-snug text-indigo-700"><span className="mr-1 rounded bg-indigo-100 px-1 text-[8px] font-semibold text-indigo-600 align-[1px]">AI</span>{n.ai}</p> : null}
                           <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
-                        </a>
+                        </button>
                       ) : (
-                        <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group -mx-2 rounded-lg px-2 py-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50">
-                          <p className="line-clamp-2 text-[12.5px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
-                          {n.summary ? <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-gray-500">{n.summary}</p> : null}
-                          {n.ai ? <p className="mt-1 line-clamp-3 text-[11px] leading-snug text-indigo-700"><span className="mr-1 rounded bg-indigo-100 px-1 text-[8px] font-semibold text-indigo-600 align-[1px]">AI</span>{n.ai}</p> : null}
-                          <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
-                        </a>
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group -mx-2 flex gap-2.5 rounded-lg px-2 py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50">
+                          {n.image ? (
+                            <div className="h-12 w-16 shrink-0 overflow-hidden rounded-md bg-gray-100">
+                              <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                            </div>
+                          ) : null}
+                          <div className="min-w-0">
+                            <p className="line-clamp-2 text-[12.5px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                            {n.summary ? <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-gray-500">{n.summary}</p> : null}
+                            <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
+                          </div>
+                        </button>
                       ),
                     )}
                   </div>
@@ -596,6 +604,42 @@ export default function Overview() {
           </div>
         </>
       )}
+      {modal ? (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" onClick={() => setModal(null)}>
+          <div className="max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: "fadeUp .3s cubic-bezier(.22,1,.36,1) both" }}>
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                {modal.category ? <span className="text-[11px] font-semibold text-indigo-600">{modal.category}</span> : null}
+                <h3 className="mt-0.5 text-lg font-bold leading-snug text-gray-900">{modal.title}</h3>
+                <p className="mt-1 text-xs text-gray-400">{modal.source} · {modal.date}</p>
+              </div>
+              <button type="button" onClick={() => setModal(null)} className="shrink-0 rounded-full p-1.5 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="닫기">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              </button>
+            </div>
+            {modal.image ? (
+              <div className="mt-4 aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100">
+                <img src={modal.image} alt="" className="h-full w-full object-cover" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+              </div>
+            ) : null}
+            {modal.summary ? (
+              <div className="mt-4">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>
+                <p className="mt-1 text-sm leading-relaxed text-gray-700">{modal.summary}</p>
+              </div>
+            ) : null}
+            {modal.ai ? (
+              <div className="mt-4 rounded-xl bg-indigo-50 p-4">
+                <p className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600"><span className="rounded bg-indigo-600 px-1 text-[9px] text-white">AI</span> 분석</p>
+                <p className="mt-1.5 text-sm leading-relaxed text-gray-700">{modal.ai}</p>
+              </div>
+            ) : null}
+            {modal.url ? (
+              <a href={modal.url} target="_blank" rel="noreferrer" className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700">원문 보기 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M7 17L17 7M17 7H8M17 7v9" /></svg></a>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </main>
   )
 }
