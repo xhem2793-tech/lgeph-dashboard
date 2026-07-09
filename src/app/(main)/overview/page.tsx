@@ -304,7 +304,7 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
     <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0 text-sm font-medium text-gray-700">{title}</span>
+          <span className="shrink-0 cursor-default text-sm font-medium text-gray-700 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">{title}</span>
           <DeltaBadge down={s.dDown} pct={s.dPct} pctSuffix={s.dPctSuffix} absVal={s.dAbs} absPrefix={s.dAbsPrefix} />
         </div>
         <div className="flex shrink-0 items-center gap-2.5 text-[11px] text-gray-400">
@@ -320,18 +320,16 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
         </div>
       ) : null}
       <p className="mt-1 flex items-baseline gap-1.5">
-        <span className="text-xl font-semibold tabular-nums text-gray-900">
+        <span className="inline-block cursor-default text-xl font-semibold tabular-nums text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">
           <CountUp key={`${range}-${idx}`} value={s.vNum} prefix={s.vPrefix} suffix={s.vSuffix} decimals={s.vDec} />
         </span>
-        <span className="text-[10px] text-gray-400/90">{s.prevText}</span>
+        <span className="cursor-default text-[10px] text-gray-400/90 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">{s.prevText}</span>
       </p>
       <div key={`${range}-${idx}`} style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }}>
         <ProChart {...s.chart} />
       </div>
-      <div key={`ins-${range}-${idx}`} style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }} className="mt-auto border-t border-gray-200 pt-2 text-[11px] leading-snug text-gray-500">
-        <span className="rounded bg-indigo-100 px-1 text-[9px] font-semibold text-indigo-600">AI</span>
-        <span className="ml-1">{s.insight}</span>
-        <div className="mt-1 text-[10px] text-gray-400">출처 {s.note}</div>
+      <div className="mt-auto border-t border-gray-200 pt-2">
+        <span className="cursor-default text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">출처 {s.note}</span>
       </div>
     </div>
     </div>
@@ -520,7 +518,7 @@ export default function Overview() {
             <div className="lg:col-span-3">
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <div className="flex items-baseline gap-2">
-                  <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간지표</h1>
+                  <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간 지표</h1>
                   <p className="hidden text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500 sm:block">* 모든 변동률·비교는 전년 동기 대비</p>
                 </div>
                 <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
@@ -534,10 +532,10 @@ export default function Overview() {
                 <MultiCard title="유가" items={oilItems} delay={0.12} range={range} />
                 <MultiCard title="날씨" items={wxItems} delay={0.24} range={range} />
               </div>
-              <div className="mt-3 border-t border-gray-200 pt-4" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
+              <div className="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:mt-8 sm:p-5" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
                 <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
               {[
-                { title: "주요 뉴스", sub: "경제·정치·사회", rows: nMain },
+                { title: "시장 동향", sub: "경제·정치·사회", rows: nMain },
                 { title: "CE 동향", sub: "생활가전·소비", rows: nCE },
                 { title: "B2B 동향", sub: "공조·인프라", rows: nB2B },
               ].map((col) => (
@@ -649,7 +647,7 @@ export default function Overview() {
                 <div className="min-w-0 md:col-span-2">
                   {modal.summary ? (
                     <>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{modal.isCal ? "예정 상세" : "본문 요약"}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>
                       <p className="mt-1 text-sm leading-relaxed text-gray-700">{modal.summary}</p>
                     </>
                   ) : null}
@@ -657,8 +655,8 @@ export default function Overview() {
               </div>
             ) : modal.summary ? (
               <div className="mt-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">{modal.isCal ? "예정 상세" : "본문 요약"}</p>
-                <p className="mt-1 text-sm leading-relaxed text-gray-700">{modal.summary}</p>
+                {modal.isCal ? null : <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>}
+                <p className={"leading-relaxed text-gray-700 " + (modal.isCal ? "text-[15px]" : "mt-1 text-sm")}>{modal.summary}</p>
               </div>
             ) : null}
             {modal.ai ? (
