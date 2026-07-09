@@ -64,9 +64,9 @@ export async function latestNews(limit = 5) {
 
 export async function newsBySheet(sheet: string, limit = 5) {
   const rows = await sb(
-    `news_articles?sheet=eq.${sheet}&select=title,summary,ai_analysis,source_name,date,source_url,category&order=date.desc&limit=${limit}`,
+    `news_articles?sheet=eq.${sheet}&select=title,summary,ai_analysis,source_name,date,source_url,category,image_url&order=date.desc&limit=${limit}`,
   )
-  return rows.map((r) => ({ title: r.title, summary: r.summary, ai: r.ai_analysis, source: r.source_name, date: r.date, url: r.source_url, category: r.category }))
+  return rows.map((r) => ({ title: r.title, summary: r.summary, ai: r.ai_analysis, source: r.source_name, date: r.date, url: r.source_url, category: r.category, image: r.image_url }))
 }
 
 export async function calendarRecent(pastN = 3, futureN = 6) {
