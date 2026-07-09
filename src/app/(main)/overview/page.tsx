@@ -435,9 +435,9 @@ export default function Overview() {
         const end = iso(today)
         const fetched = await Promise.all(SERIES.map((m) => rangeRows(m.table, m.col, start, end)))
         const [nm, nc, nb, ec] = await Promise.all([
-          newsBySheet("daily_news", 7),
-          newsBySheet("ce_trend", 7),
-          newsBySheet("b2b_trend", 7),
+          newsBySheet("daily_news", 5),
+          newsBySheet("ce_trend", 5),
+          newsBySheet("b2b_trend", 5),
           calendarRecent(3, 6),
         ])
         const map: Record<string, { date: string; value: number }[]> = {}
@@ -537,16 +537,20 @@ export default function Overview() {
                   <div className="mt-2 flex flex-col divide-y divide-gray-100">
                     {col.rows.map((n, i) =>
                       i === 0 ? (
-                        <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group block pb-2.5">
+                        <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group block pb-3">
                           <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
                             <img src={col.img} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                           </div>
                           <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-gray-900 group-hover:text-indigo-600">{n.title}</p>
+                          {n.summary ? <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-gray-500">{n.summary}</p> : null}
+                          {n.ai ? <p className="mt-1 line-clamp-3 text-[11px] leading-snug text-indigo-700"><span className="mr-1 rounded bg-indigo-100 px-1 text-[8px] font-semibold text-indigo-600 align-[1px]">AI</span>{n.ai}</p> : null}
                           <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
                         </a>
                       ) : (
-                        <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group -mx-2 rounded-lg px-2 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50">
-                          <p className="line-clamp-2 text-[12.5px] font-medium leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                        <a key={i} href={n.url || undefined} target="_blank" rel="noreferrer" className="group -mx-2 rounded-lg px-2 py-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50">
+                          <p className="line-clamp-2 text-[12.5px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                          {n.summary ? <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-gray-500">{n.summary}</p> : null}
+                          {n.ai ? <p className="mt-1 line-clamp-3 text-[11px] leading-snug text-indigo-700"><span className="mr-1 rounded bg-indigo-100 px-1 text-[8px] font-semibold text-indigo-600 align-[1px]">AI</span>{n.ai}</p> : null}
                           <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
                         </a>
                       ),
@@ -559,7 +563,7 @@ export default function Overview() {
             </div>
             <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
               <div className="flex items-baseline justify-between">
-                <p className="text-lg font-bold tracking-tight text-gray-900">경제 캘린더</p>
+                <p className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">경제 캘린더</p>
                 <span className="text-[10px] text-gray-400">결과·예정</span>
               </div>
               <div className="mt-2 flex flex-col gap-1">
@@ -572,13 +576,13 @@ export default function Overview() {
                           <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
                         </div>
                       ) : null}
-                      <div className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-55" : "")}>
-                        <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-100 text-gray-400" : "bg-emerald-50 text-emerald-600")}>
+                      <div className={"flex gap-2.5 rounded-lg px-1 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-80" : "")}>
+                        <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
                           <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
                         </div>
                         <div className="min-w-0">
-                          <p className={"line-clamp-2 text-[11.5px] leading-snug " + (e.past ? "text-gray-400" : "font-medium text-gray-800")}>{e.event}</p>
+                          <p className={"line-clamp-2 text-[11.5px] leading-snug " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{e.event}</p>
                           <p className="mt-0.5 text-[10px] text-gray-400">{e.category} · {e.importance} · {e.past ? "결과" : "예정"}</p>
                         </div>
                       </div>
