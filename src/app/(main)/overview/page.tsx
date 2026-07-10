@@ -544,7 +544,7 @@ export default function Overview() {
                 { title: "CE 동향", sub: "생활가전·소비", rows: nCE },
                 { title: "B2B 동향", sub: "공조·인프라", rows: nB2B },
               ].map((col) => (
-                <div key={col.title} className="lg:px-5">
+                <div key={col.title} className="lg:px-3">
                   <div className="flex items-baseline justify-between">
                     <p className="flex items-baseline gap-1.5">
                       <span className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">{col.title}</span>
@@ -562,21 +562,21 @@ export default function Overview() {
                               <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                             </div>
                           ) : null}
-                          <p className="line-clamp-2 text-[13px] font-semibold leading-snug text-gray-900 group-hover:text-indigo-600">{n.title}</p>
-                          {n.summary ? <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-gray-500">{n.summary}</p> : null}
-                          <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
+                          <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-gray-900 group-hover:text-indigo-600 2xl:text-[15px]">{n.title}</p>
+                          {n.summary ? <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-gray-500 2xl:text-[13px]">{n.summary}</p> : null}
+                          <p className="mt-1 text-[10px] text-gray-400 2xl:text-[11px]">{n.source} · {n.date}</p>
                         </button>
                       ) : (
-                        <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group -mx-2 flex gap-2.5 rounded-lg px-2 py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50">
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group -mx-2 flex gap-3 rounded-lg px-2 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50">
                           {n.image ? (
                             <div className="h-12 w-16 shrink-0 overflow-hidden rounded-md bg-gray-100">
                               <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                             </div>
                           ) : null}
                           <div className="min-w-0">
-                            <p className="line-clamp-2 text-[12.5px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
-                            {n.summary ? <p className="mt-1 line-clamp-2 text-[11px] leading-snug text-gray-500">{n.summary}</p> : null}
-                            <p className="mt-1 text-[10px] text-gray-400">{n.source} · {n.date}</p>
+                            <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-gray-800 group-hover:text-indigo-600 2xl:text-[15px]">{n.title}</p>
+                            {n.summary ? <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-gray-500 2xl:text-[13px]">{n.summary}</p> : null}
+                            <p className="mt-1 text-[10px] text-gray-400 2xl:text-[11px]">{n.source} · {n.date}</p>
                           </div>
                         </button>
                       ),
