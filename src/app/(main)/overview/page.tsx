@@ -2,6 +2,7 @@
 
 import React from "react"
 import { rangeRows, newsBySheet, calendarRecent } from "@/lib/supabase"
+import CompetitorMovers from "@/components/CompetitorMovers"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
 export type KpiEntry = {
@@ -585,6 +586,9 @@ export default function Overview() {
                 </div>
               ))}
                 </div>
+              </div>
+              <div className="lg:w-2/3">
+                <CompetitorMovers />
               </div>
             </div>
             <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
