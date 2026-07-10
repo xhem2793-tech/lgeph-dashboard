@@ -107,3 +107,18 @@ export async function rangeRows(table: string, col: string, start: string, end: 
   )
   return rows.map((r) => ({ date: r.date as string, value: num(r[col])! }))
 }
+
+export async function competitorMovers(limit = 6) {
+  const rows = await sb(
+    `v_competitor_movers?select=brand,category,model,y_price,t_price,chg_pct,abs_chg,as_of&order=abs_chg.desc&limit=${limit}`,
+  )
+  return rows.map((r) => ({
+    brand: r.brand as string,
+    category: r.category as string,
+    model: r.model as string,
+    from: num(r.y_price)!,
+    to: num(r.t_price)!,
+    pct: num(r.chg_pct)!,
+    asOf: r.as_of as string,
+  }))
+}
