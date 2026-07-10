@@ -189,7 +189,7 @@ export default function CompetitorMovers() {
     (a, b) => (CAT_ORDER.indexOf(a) < 0 ? 99 : CAT_ORDER.indexOf(a)) - (CAT_ORDER.indexOf(b) < 0 ? 99 : CAT_ORDER.indexOf(b)),
   )]
   const view = cat === "전체" ? rows : rows.filter((r) => r.category === cat)
-  const cardRows = (sortDir === "up" ? view.filter((r) => r.pct > 0).sort((a, b) => b.pct - a.pct) : view.filter((r) => r.pct < 0).sort((a, b) => a.pct - b.pct)).slice(0, 10)
+  const cardRows = (sortDir === "up" ? view.filter((r) => r.pct > 0).sort((a, b) => b.pct - a.pct) : view.filter((r) => r.pct < 0).sort((a, b) => a.pct - b.pct)).slice(0, 5)
 
   const pick = (c: string) => { setCat(c) }
 
@@ -295,7 +295,7 @@ export default function CompetitorMovers() {
                         <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] text-gray-500"}>{shopName(r.retailer)}</span></td>
                       </tr>
                     ))}
-                    {Array.from({ length: Math.max(0, 10 - cardRows.length) }).map((_, j) => (
+                    {Array.from({ length: Math.max(0, 5 - cardRows.length) }).map((_, j) => (
                       <tr key={`pad-${cat}-${sortDir}-${j}`} aria-hidden className="border-b border-gray-100">
                         <td className={td} colSpan={8}><span className="inline-flex h-6 items-center">&nbsp;</span></td>
                       </tr>
