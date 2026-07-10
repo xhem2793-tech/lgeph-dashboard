@@ -23,24 +23,23 @@ const BRAND_COLOR: Record<string, string> = {
 const HOV = "inline-block cursor-default transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600"
 const HOVM = "inline-block cursor-default transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500"
 const CAT_ORDER = ["냉장고", "TV", "에어컨", "세탁기", "에어케어", "정수기"]
-const COLLAPSED = 262
+const WD = ["일", "월", "화", "수", "목", "금", "토"]
+const COLLAPSED = 214
 
 function peso(n: number | null) {
   return n == null ? "—" : "₱" + Math.round(n).toLocaleString("en-US")
-}
-function pesoSigned(n: number) {
-  const sign = n > 0 ? "+" : n < 0 ? "−" : ""
-  return sign + "₱" + Math.round(Math.abs(n)).toLocaleString("en-US")
 }
 function fmtDate(s: string) {
   if (!s) return ""
   const p = s.split("-")
   return p.length === 3 ? `${+p[1]}월${+p[2]}일` : s
 }
-function fmtMD(s: string) {
+function fmtHdr(s: string) {
   if (!s) return ""
-  const p = s.split("-")
-  return p.length === 3 ? `${+p[1]}/${+p[2]}` : s
+  const p = s.split("-").map(Number)
+  if (p.length !== 3) return s
+  const wd = WD[new Date(p[0], p[1] - 1, p[2]).getDay()]
+  return `${p[1]}/${p[2]}일(${wd})`
 }
 function shopName(r: string) {
   if (!r) return "—"
@@ -98,16 +97,57 @@ function modelCode(s: string, brand: string) {
   return code.length ? code.join(" ") : (m.length > 16 ? m.slice(0, 14) + "…" : m)
 }
 
+function CountUp({ value, decimals = 1, suffix = "", fmt }: { value: number; decimals?: number; suffix?: string; fmt?: (n: number) => string }) {
+  const ref = React.useRef<HTMLSpanElement | null>(null)
+  const render = (n: number) => (fmt ? fmt(n) : n.toFixed(decimals) + suffix)
+  React.useEffect(() => {
+    const node = ref.current
+    if (!node) return
+    const to = Number.isFinite(value) ? value : 0
+    const t0 = performance.now()
+    let raf = 0
+    const step = (t: number) => {
+      const k = Math.min((t - t0) / 1000, 1)
+      const e = 1 - Math.pow(1 - k, 3)
+      node.textContent = render(to * e)
+      if (k < 1) raf = requestAnimationFrame(step)
+    }
+    raf = requestAnimationFrame(step)
+    return () => cancelAnimationFrame(raf)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value])
+  return <span ref={ref}>{render(Number.isFinite(value) ? value : 0)}</span>
+}
+
+function MoverDelta({ delta, pct }: { delta: number; pct: number }) {
+  const dn = pct < 0
+  const [mode, setMode] = React.useState(0)
+  React.useEffect(() => {
+    const id = setInterval(() => setMode((m) => (m === 0 ? 1 : 0)), 4000)
+    return () => clearInterval(id)
+  }, [])
+  return (
+    <span className={"inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
+      {dn ? "▼ " : "▲ "}
+      <span key={mode} className="inline-block" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
+        {mode === 1
+          ? <CountUp value={Math.abs(delta)} fmt={(n) => "₱" + Math.round(n).toLocaleString("en-US")} />
+          : <CountUp value={Math.abs(pct)} decimals={1} suffix="%" />}
+      </span>
+    </span>
+  )
+}
+
 function BrandLogo({ brand }: { brand: string }) {
   const logo = BRAND_LOGO[brand]
   return (
-    <span className="flex h-6 w-10 items-center justify-center transition-all duration-300 ease-out hover:-translate-y-0.5">
+    <span className="inline-flex h-5 w-10 items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logo}
           alt={brand}
-          className="max-h-4 max-w-[38px] object-contain"
+          className="max-h-[15px] max-w-[36px] object-contain"
           onError={(e) => {
             const el = e.currentTarget
             el.style.display = "none"
@@ -132,6 +172,11 @@ export default function CompetitorMovers() {
   const [exp, setExp] = React.useState(false)
   const [fullH, setFullH] = React.useState<number>()
   const listRef = React.useRef<HTMLDivElement | null>(null)
+  const [tick, setTick] = React.useState(0)
+  React.useEffect(() => {
+    const id = window.setInterval(() => setTick((t) => t + 1), 10000)
+    return () => window.clearInterval(id)
+  }, [])
 
   React.useEffect(() => {
     let alive = true
@@ -148,16 +193,17 @@ export default function CompetitorMovers() {
   const cats = ["전체", ...Array.from(new Set(rows.map((r) => r.category))).sort(
     (a, b) => (CAT_ORDER.indexOf(a) < 0 ? 99 : CAT_ORDER.indexOf(a)) - (CAT_ORDER.indexOf(b) < 0 ? 99 : CAT_ORDER.indexOf(b)),
   )]
-  const view = cat === "전체" ? rows : rows.filter((r) => r.category === cat)
+  const view = (cat === "전체" ? rows : rows.filter((r) => r.category === cat)).slice(0, 10)
   const canExp = view.length > 8
 
   const pick = (c: string) => { setCat(c); setExp(false); setFullH(undefined) }
 
-  const th = "px-2 py-1 text-left text-[9px] font-semibold uppercase tracking-wide text-gray-400"
-  const td = "px-2 py-0.5 align-middle"
+  const th = "px-1 py-0.5 text-center text-[9px] font-semibold uppercase tracking-wide text-gray-400"
+  const td = "px-1 py-0.5 text-center align-middle"
 
   return (
     <div className="mt-6 sm:mt-8" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+      <style>{"@keyframes tabSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes calInA{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes calInB{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
           <h2 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일일 가격 변동</h2>
@@ -170,58 +216,65 @@ export default function CompetitorMovers() {
       </div>
 
       <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-3 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
-        <div className="flex flex-wrap gap-1">
-          {cats.map((c) => (
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap gap-1">
+            {cats.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => pick(c)}
+                className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (cat === c ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}
+              >
+                {c}
+              </button>
+            ))}
+          </div>
+          {canExp ? (
             <button
-              key={c}
               type="button"
-              onClick={() => pick(c)}
-              className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (cat === c ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}
+              onClick={() => { const el = listRef.current; if (exp) { if (el) setFullH(el.scrollHeight); requestAnimationFrame(() => setExp(false)) } else { setFullH(el ? el.scrollHeight : 2400); setExp(true) } }}
+              className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 hover:text-indigo-600"
             >
-              {c}
+              {exp ? "접기" : "더보기"}
             </button>
-          ))}
+          ) : null}
         </div>
 
-        <div className="relative mt-2">
+        <div key={cat} className="mt-2" style={{ animation: "tabSwap .4s ease both" }}>
           <div
             ref={listRef}
             className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
-            style={{ maxHeight: !canExp || exp ? (exp ? (fullH ?? 3000) : 3000) : COLLAPSED }}
+            style={{ maxHeight: !canExp || exp ? (exp ? (fullH ?? 2400) : 2400) : COLLAPSED }}
           >
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-collapse text-[11px]">
+              <table className="w-full min-w-[640px] border-collapse text-[11px]">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className={th + " text-center"}>브랜드</th>
+                    <th className={th}>브랜드</th>
                     <th className={th}>유형</th>
                     <th className={th}>모델</th>
-                    <th className={th + " text-right"}>SRP</th>
-                    <th className={th + " text-right"}>{fmtMD(asOf)}</th>
-                    <th className={th + " text-right"}>{fmtMD(prevAsOf)}</th>
-                    <th className={th + " text-right"}>전일비</th>
-                    <th className={th + " text-right"}>전일비(%)</th>
+                    <th className={th}>SRP</th>
+                    <th className={th}>{fmtHdr(asOf)}</th>
+                    <th className={th}>{fmtHdr(prevAsOf)}</th>
+                    <th className={th}>전일비</th>
                     <th className={th}>유통</th>
                   </tr>
                 </thead>
                 <tbody>
                   {view.map((r, i) => {
-                    const dn = r.pct < 0
-                    const cc = dn ? "text-emerald-600" : "text-rose-600"
                     return (
-                      <tr key={i} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
-                        <td className={td + " text-center"}><BrandLogo brand={r.brand} /></td>
+                      <tr key={i} style={{ animation: (tick % 2 ? "calInA" : "calInB") + " 1.1s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.05 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
+                        <td className={td}><BrandLogo brand={r.brand} /></td>
                         <td className={td}>
                           <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[9px] font-semibold text-gray-500"}>{specType(r.model, r.category)}</span>
                         </td>
                         <td className={td}>
-                          <span className={HOV + " block max-w-[130px] truncate font-medium text-gray-700"} title={r.model}>{modelCode(r.model, r.brand)}</span>
+                          <span className={HOV + " max-w-[140px] truncate font-medium text-gray-700"} title={r.model}>{modelCode(r.model, r.brand)}</span>
                         </td>
-                        <td className={td + " text-right"}><span className={HOVM + " tabular-nums text-gray-400"}>{peso(r.srp)}</span></td>
-                        <td className={td + " text-right"}><span className={HOV + " font-bold tabular-nums text-gray-900"}>{peso(r.promo)}</span></td>
-                        <td className={td + " text-right"}><span className={HOVM + " tabular-nums text-gray-400"}>{peso(r.yPromo)}</span></td>
-                        <td className={td + " text-right"}><span className={HOV + " whitespace-nowrap font-semibold tabular-nums " + cc}>{pesoSigned(r.delta)}</span></td>
-                        <td className={td + " text-right"}><span className={HOV + " whitespace-nowrap font-extrabold tabular-nums " + cc}>{dn ? "▼" : "▲"} {Math.abs(r.pct).toFixed(1)}%</span></td>
+                        <td className={td}><span className={HOVM + " tabular-nums text-gray-400"}>{peso(r.srp)}</span></td>
+                        <td className={td}><span className={HOV + " font-bold tabular-nums text-gray-900"}>{peso(r.promo)}</span></td>
+                        <td className={td}><span className={HOVM + " tabular-nums text-gray-400"}>{peso(r.yPromo)}</span></td>
+                        <td className={td}><MoverDelta delta={r.delta} pct={r.pct} /></td>
                         <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] text-gray-500"}>{shopName(r.retailer)}</span></td>
                       </tr>
                     )
@@ -230,27 +283,7 @@ export default function CompetitorMovers() {
               </table>
             </div>
           </div>
-
-          {canExp && !exp ? (
-            <button
-              type="button"
-              onClick={() => { const el = listRef.current; setFullH(el ? el.scrollHeight : 3000); setExp(true) }}
-              className="absolute inset-x-0 bottom-0 flex h-16 items-end justify-center bg-gradient-to-t from-[#f9fafb] via-[#f9fafb]/85 to-transparent pb-1 backdrop-blur-[1.5px]"
-            >
-              <span className="rounded-full border border-gray-200 bg-white px-3.5 py-1 text-[11px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600">펼치기 +{view.length - 8}</span>
-            </button>
-          ) : null}
         </div>
-
-        {canExp && exp ? (
-          <button
-            type="button"
-            onClick={() => { const el = listRef.current; if (el) setFullH(el.scrollHeight); requestAnimationFrame(() => setExp(false)) }}
-            className="mt-2 flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white py-1.5 text-[11px] font-medium text-gray-500 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
-          >
-            접기
-          </button>
-        ) : null}
 
         <p className="mt-auto pt-1.5 text-[9.5px] leading-relaxed text-gray-400">
           <span className={HOVM}>경쟁사 온라인 매장 스크래핑 · 변동률 높은순 · <span className="text-rose-600">▲인상</span> / <span className="text-emerald-600">▼인하</span> · 유통: Anson&#39;s · Abenson · SM</span>
