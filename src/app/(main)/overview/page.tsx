@@ -533,14 +533,18 @@ export default function Overview() {
                 <MultiCard title="유가" items={oilItems} delay={0.12} range={range} />
                 <MultiCard title="날씨" items={wxItems} delay={0.24} range={range} />
               </div>
-              <div className="mt-6 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:mt-8 sm:p-5" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
+              <div className="mt-6 flex items-baseline gap-2 sm:mt-8" style={{ animation: "fadeUp .9s ease both", animationDelay: "0.45s" }}>
+                <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">주요 뉴스</h1>
+                <span className="cursor-default text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">경제·산업·B2B</span>
+              </div>
+              <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-5" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
                 <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
               {[
                 { title: "시장 동향", sub: "경제·정치·사회", rows: nMain },
                 { title: "CE 동향", sub: "생활가전·소비", rows: nCE },
                 { title: "B2B 동향", sub: "공조·인프라", rows: nB2B },
               ].map((col) => (
-                <div key={col.title} className="lg:px-4">
+                <div key={col.title} className="lg:px-5">
                   <div className="flex items-baseline justify-between">
                     <p className="flex items-baseline gap-1.5">
                       <span className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">{col.title}</span>
