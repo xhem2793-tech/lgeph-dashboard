@@ -533,6 +533,9 @@ export default function Overview() {
                 <MultiCard title="유가" items={oilItems} delay={0.12} range={range} />
                 <MultiCard title="날씨" items={wxItems} delay={0.24} range={range} />
               </div>
+              <div className="mt-6 sm:mt-8 lg:w-2/3" style={{ animation: "fadeUp .92s ease both", animationDelay: "0.4s" }}>
+                <CompetitorMovers />
+              </div>
               <div className="mt-6 flex items-baseline gap-2 sm:mt-8" style={{ animation: "fadeUp .9s ease both", animationDelay: "0.45s" }}>
                 <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">주요 뉴스</h1>
                 <span className="cursor-default text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">경제·산업·B2B</span>
@@ -586,9 +589,6 @@ export default function Overview() {
                 </div>
               ))}
                 </div>
-              </div>
-              <div className="lg:w-2/3">
-                <CompetitorMovers />
               </div>
             </div>
             <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
