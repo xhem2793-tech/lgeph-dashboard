@@ -144,13 +144,13 @@ function BrandLogo({ brand }: { brand: string }) {
   const logo = BRAND_LOGO[brand]
   const big = brand === "LG"
   return (
-    <span className="inline-flex h-7 w-[62px] items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
+    <span className="inline-flex h-7 w-[54px] items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logo}
           alt={brand}
-          className={(big ? "max-h-[26px] max-w-[60px]" : "max-h-[15px] max-w-[40px]") + " object-contain"}
+          className={(big ? "max-h-[20px] max-w-[48px]" : "max-h-[15px] max-w-[40px]") + " object-contain"}
           onError={(e) => {
             const el = e.currentTarget
             el.style.display = "none"
@@ -172,7 +172,7 @@ function BrandLogo({ brand }: { brand: string }) {
 export default function CompetitorMovers() {
   const [rows, setRows] = React.useState<Awaited<ReturnType<typeof competitorMovers>>>([])
   const [cat, setCat] = React.useState("전체")
-  const [sortDir, setSortDir] = React.useState<"up" | "down">("up")
+  const [sortDir, setSortDir] = React.useState<"up" | "down">("down")
   React.useEffect(() => {
     let alive = true
     competitorMovers(500)
@@ -227,17 +227,17 @@ export default function CompetitorMovers() {
           <div className="flex shrink-0 items-center gap-1">
             <button
               type="button"
-              onClick={() => setSortDir("up")}
-              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 bg-white text-gray-500 hover:border-rose-200 hover:text-rose-600")}
-            >
-              ▲ 인상순
-            </button>
-            <button
-              type="button"
               onClick={() => setSortDir("down")}
               className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "down" ? "border-emerald-300 bg-emerald-50 text-emerald-600" : "border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:text-emerald-600")}
             >
               ▼ 인하순
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortDir("up")}
+              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 bg-white text-gray-500 hover:border-rose-200 hover:text-rose-600")}
+            >
+              ▲ 인상순
             </button>
             <Link
               href="/competitors"
@@ -257,7 +257,7 @@ export default function CompetitorMovers() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[640px] table-fixed border-collapse text-[11px]">
                   <colgroup>
-                    <col style={{ width: 66 }} />
+                    <col style={{ width: 58 }} />
                     <col style={{ width: 58 }} />
                     <col style={{ width: 118 }} />
                     <col style={{ width: 80 }} />
