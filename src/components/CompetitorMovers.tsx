@@ -52,26 +52,27 @@ function specType(model: string, category: string) {
   if (category === "TV") {
     if (m.includes("oled")) return "OLED"
     if (m.includes("rgb-mini") || m.includes("rgb mini")) return "RGB-Mini"
-    if (m.includes("mini led") || m.includes("mini-led") || m.includes("miniled")) return "Mini-LED"
+    if (m.includes("mini led") || m.includes("mini-led") || m.includes("miniled") || m.includes("mini")) return "Mini-LED"
     if (m.includes("qled")) return "QLED"
-    if (m.includes("uhd") || m.includes("4k")) return "UHD"
     if (m.includes("qd")) return "QD-LED"
+    if (m.includes("uhd") || m.includes("4k")) return "UHD"
     return "LED"
   }
   if (category === "냉장고") {
+    if (m.includes("chest") || m.includes("freezer")) return "냉동고"
     if (m.includes("side by side") || m.includes("side-by-side") || /\bsxs\b/.test(m)) return "SxS"
     if (m.includes("french") || m.includes("multi door") || m.includes("multi-door") || m.includes("4 door") || m.includes("4-door")) return "FDR"
-    if (m.includes("bottom")) return "BMF"
+    if (m.includes("bottom") || /\bnr-b/.test(m)) return "BMF"
     if (m.includes("two door") || m.includes("2 door") || m.includes("double door") || m.includes("2-door") || m.includes("top mount")) return "2도어"
     if (m.includes("single") || m.includes("one door")) return "1도어"
-    if (m.includes("inverter")) return "인버터"
+    if (m.includes("inverter") || /\binv\b/.test(m)) return "인버터"
     return "냉장고"
   }
   if (category === "세탁기") {
-    if (m.includes("front load") || m.includes("front-load") || /\bf\/?l\b/.test(m)) return "F/L"
-    if (m.includes("top load") || m.includes("top-load") || /\bt\/?l\b/.test(m)) return "T/L"
-    if (m.includes("twin")) return "Twin"
     if (m.includes("dryer")) return "건조기"
+    if (m.includes("twin")) return "트윈"
+    if (m.includes("front load") || m.includes("front-load") || /\bf\/?l\b/.test(m) || /\bna[- ]?[vs]/.test(m)) return "F/L"
+    if (m.includes("top load") || m.includes("top-load") || /\bt\/?l\b/.test(m) || /\bna[- ]?f/.test(m)) return "T/L"
     return "세탁기"
   }
   if (category === "에어컨") {
@@ -143,13 +144,13 @@ function BrandLogo({ brand }: { brand: string }) {
   const logo = BRAND_LOGO[brand]
   const big = brand === "LG"
   return (
-    <span className={"inline-flex items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5 " + (big ? "h-7 w-16" : "h-6 w-12")}>
+    <span className="inline-flex h-7 w-[50px] items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logo}
           alt={brand}
-          className={(big ? "max-h-[30px] max-w-[64px]" : "max-h-[17px] max-w-[38px]") + " object-contain"}
+          className={(big ? "max-h-[24px] max-w-[48px]" : "max-h-[15px] max-w-[40px]") + " object-contain"}
           onError={(e) => {
             const el = e.currentTarget
             el.style.display = "none"
