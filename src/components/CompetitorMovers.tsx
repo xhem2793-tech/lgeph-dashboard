@@ -37,6 +37,11 @@ function fmtDate(s: string) {
   const p = s.split("-")
   return p.length === 3 ? `${+p[1]}월${+p[2]}일` : s
 }
+function fmtMD(s: string) {
+  if (!s) return ""
+  const p = s.split("-")
+  return p.length === 3 ? `${+p[1]}/${+p[2]}` : s
+}
 function shopName(r: string) {
   if (!r) return "—"
   if (/sm/i.test(r)) return "SM"
@@ -96,13 +101,13 @@ function modelCode(s: string, brand: string) {
 function BrandLogo({ brand }: { brand: string }) {
   const logo = BRAND_LOGO[brand]
   return (
-    <span className="flex h-6 w-14 items-center justify-center transition-all duration-300 ease-out hover:-translate-y-0.5">
+    <span className="flex h-6 w-10 items-center justify-center transition-all duration-300 ease-out hover:-translate-y-0.5">
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logo}
           alt={brand}
-          className="max-h-[18px] max-w-[50px] object-contain"
+          className="max-h-4 max-w-[38px] object-contain"
           onError={(e) => {
             const el = e.currentTarget
             el.style.display = "none"
@@ -138,6 +143,7 @@ export default function CompetitorMovers() {
 
   if (rows.length === 0) return null
   const asOf = rows[0]?.asOf
+  const prevAsOf = rows[0]?.prevAsOf
 
   const cats = ["전체", ...Array.from(new Set(rows.map((r) => r.category))).sort(
     (a, b) => (CAT_ORDER.indexOf(a) < 0 ? 99 : CAT_ORDER.indexOf(a)) - (CAT_ORDER.indexOf(b) < 0 ? 99 : CAT_ORDER.indexOf(b)),
@@ -184,19 +190,18 @@ export default function CompetitorMovers() {
             style={{ maxHeight: !canExp || exp ? (exp ? (fullH ?? 3000) : 3000) : COLLAPSED }}
           >
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[850px] border-collapse text-[11px]">
+              <table className="w-full min-w-[720px] border-collapse text-[11px]">
                 <thead>
                   <tr className="border-b border-gray-200">
                     <th className={th + " text-center"}>브랜드</th>
-                    <th className={th}>유통</th>
-                    <th className={th}>제품</th>
                     <th className={th}>유형</th>
                     <th className={th}>모델</th>
                     <th className={th + " text-right"}>SRP</th>
-                    <th className={th + " text-right"}>프로모션(오늘)</th>
-                    <th className={th + " text-right"}>프로모션(어제)</th>
+                    <th className={th + " text-right"}>{fmtMD(asOf)}</th>
+                    <th className={th + " text-right"}>{fmtMD(prevAsOf)}</th>
                     <th className={th + " text-right"}>전일비</th>
                     <th className={th + " text-right"}>전일비(%)</th>
+                    <th className={th}>유통</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -206,8 +211,6 @@ export default function CompetitorMovers() {
                     return (
                       <tr key={i} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
                         <td className={td + " text-center"}><BrandLogo brand={r.brand} /></td>
-                        <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] text-gray-500"}>{shopName(r.retailer)}</span></td>
-                        <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] font-medium text-gray-600"}>{r.category}</span></td>
                         <td className={td}>
                           <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[9px] font-semibold text-gray-500"}>{specType(r.model, r.category)}</span>
                         </td>
@@ -219,6 +222,7 @@ export default function CompetitorMovers() {
                         <td className={td + " text-right"}><span className={HOVM + " tabular-nums text-gray-400"}>{peso(r.yPromo)}</span></td>
                         <td className={td + " text-right"}><span className={HOV + " whitespace-nowrap font-semibold tabular-nums " + cc}>{pesoSigned(r.delta)}</span></td>
                         <td className={td + " text-right"}><span className={HOV + " whitespace-nowrap font-extrabold tabular-nums " + cc}>{dn ? "▼" : "▲"} {Math.abs(r.pct).toFixed(1)}%</span></td>
+                        <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] text-gray-500"}>{shopName(r.retailer)}</span></td>
                       </tr>
                     )
                   })}
