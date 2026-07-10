@@ -3,7 +3,6 @@
 import React from "react"
 import { rangeRows, newsBySheet, calendarRecent } from "@/lib/supabase"
 import CompetitorMovers from "@/components/CompetitorMovers"
-import PesoFxStrip from "@/components/PesoFxStrip"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
 export type KpiEntry = {
@@ -516,7 +515,6 @@ export default function Overview() {
         <p className="mt-8 text-sm text-gray-400">데이터 불러오는 중…</p>
       ) : (
         <>
-          <div className="mb-4"><PesoFxStrip /></div>
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_0.75fr]" style={{ animation: "fadeUp .8s ease both" }}>
             <div className="lg:col-span-3">
               <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
