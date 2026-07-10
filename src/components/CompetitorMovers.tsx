@@ -128,9 +128,9 @@ function MoverDelta({ delta, pct }: { delta: number; pct: number }) {
     return () => clearInterval(id)
   }, [])
   return (
-    <span className={"inline-flex w-[60px] items-center justify-center rounded px-1 py-0.5 text-[9px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
-      {dn ? "▼ " : "▲ "}
-      <span key={mode} className="inline-block" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
+    <span className={"inline-flex w-[66px] items-center rounded px-1 py-0.5 text-[9px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
+      <span className="w-[9px] shrink-0 text-left">{dn ? "▼" : "▲"}</span>
+      <span key={mode} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
         {mode === 1
           ? <CountUp value={Math.abs(delta)} fmt={(n) => "₱" + Math.round(n).toLocaleString("en-US")} />
           : <CountUp value={Math.abs(pct)} decimals={1} suffix="%" />}
@@ -170,6 +170,7 @@ function BrandLogo({ brand }: { brand: string }) {
 export default function CompetitorMovers() {
   const [rows, setRows] = React.useState<Awaited<ReturnType<typeof competitorMovers>>>([])
   const [cat, setCat] = React.useState("전체")
+  const [sortDir, setSortDir] = React.useState<"up" | "down">("up")
   React.useEffect(() => {
     let alive = true
     competitorMovers(40)
@@ -186,7 +187,7 @@ export default function CompetitorMovers() {
     (a, b) => (CAT_ORDER.indexOf(a) < 0 ? 99 : CAT_ORDER.indexOf(a)) - (CAT_ORDER.indexOf(b) < 0 ? 99 : CAT_ORDER.indexOf(b)),
   )]
   const view = (cat === "전체" ? rows : rows.filter((r) => r.category === cat)).slice(0, 10)
-  const cardRows = view.slice(0, 8)
+  const cardRows = view.slice().sort((a, b) => (sortDir === "up" ? b.pct - a.pct : a.pct - b.pct)).slice(0, 8)
 
   const pick = (c: string) => { setCat(c) }
 
@@ -221,12 +222,28 @@ export default function CompetitorMovers() {
               </button>
             ))}
           </div>
-          <Link
-            href="/competitors"
-            className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[9px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
-          >
-            더보기
-          </Link>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setSortDir("up")}
+              className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (sortDir === "up" ? "bg-rose-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-rose-600")}
+            >
+              ▲ 상승순
+            </button>
+            <button
+              type="button"
+              onClick={() => setSortDir("down")}
+              className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (sortDir === "down" ? "bg-emerald-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-emerald-600")}
+            >
+              ▼ 하락순
+            </button>
+            <Link
+              href="/competitors"
+              className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[9px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
+            >
+              더보기
+            </Link>
+          </div>
         </div>
 
         <div className="mt-2">
@@ -244,7 +261,7 @@ export default function CompetitorMovers() {
                     <col style={{ width: 80 }} />
                     <col style={{ width: 92 }} />
                     <col style={{ width: 92 }} />
-                    <col style={{ width: 76 }} />
+                    <col style={{ width: 80 }} />
                     <col style={{ width: 72 }} />
                   </colgroup>
                   <thead>
@@ -261,7 +278,7 @@ export default function CompetitorMovers() {
                   </thead>
                   <tbody>
                     {cardRows.map((r, i) => (
-                      <tr key={`${cat}-${i}`} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.12 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
+                      <tr key={`${cat}-${sortDir}-${i}`} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
                         <td className={td}><BrandLogo brand={r.brand} /></td>
                         <td className={td}>
                           <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[9px] font-semibold text-gray-500"}>{specType(r.model, r.category)}</span>
