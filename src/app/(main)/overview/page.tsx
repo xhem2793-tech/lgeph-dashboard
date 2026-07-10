@@ -542,8 +542,11 @@ export default function Overview() {
               ].map((col) => (
                 <div key={col.title} className="lg:px-4">
                   <div className="flex items-baseline justify-between">
-                    <p className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">{col.title}</p>
-                    <span className="text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">{col.sub}</span>
+                    <p className="flex items-baseline gap-1.5">
+                      <span className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">{col.title}</span>
+                      <span className="cursor-default text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">{col.sub}</span>
+                    </p>
+                    <button type="button" onClick={() => { const el = listRefs.current[col.title]; if (newsExp[col.title]) { if (el) setNewsH((h) => ({ ...h, [col.title]: el.scrollHeight })); requestAnimationFrame(() => setNewsExp((st) => ({ ...st, [col.title]: false }))) } else { setNewsH((h) => ({ ...h, [col.title]: el ? el.scrollHeight : 2400 })); setNewsExp((st) => ({ ...st, [col.title]: true })) } }} className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 hover:text-indigo-600">{newsExp[col.title] ? "접기" : "더보기"}</button>
                   </div>
                   <div className="relative mt-2">
                   <div ref={(el) => { listRefs.current[col.title] = el }} className="flex flex-col divide-y divide-gray-100 overflow-hidden transition-[max-height] duration-500 ease-in-out" style={{ maxHeight: newsExp[col.title] ? (newsH[col.title] ?? 2400) : 560 }}>
@@ -575,13 +578,6 @@ export default function Overview() {
                       ),
                     )}
                   </div>
-                  {newsExp[col.title] ? (
-                    <button type="button" onClick={() => { const el = listRefs.current[col.title]; if (el) setNewsH((h) => ({ ...h, [col.title]: el.scrollHeight })); requestAnimationFrame(() => setNewsExp((st) => ({ ...st, [col.title]: false }))) }} className="mt-2 flex w-full items-center justify-center rounded-lg border border-gray-200 bg-white py-1.5 text-[11px] font-medium text-gray-500 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600">접기</button>
-                  ) : (
-                    <button type="button" onClick={() => { const el = listRefs.current[col.title]; setNewsH((h) => ({ ...h, [col.title]: el ? el.scrollHeight : 2400 })); setNewsExp((st) => ({ ...st, [col.title]: true })) }} className="absolute inset-x-0 bottom-0 flex h-24 items-end justify-center bg-gradient-to-t from-white via-white/85 to-transparent pb-1 backdrop-blur-[1.5px]">
-                      <span className="rounded-full border border-gray-200 bg-white px-3.5 py-1 text-[11px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600">펼치기</span>
-                    </button>
-                  )}
                   </div>
                 </div>
               ))}
