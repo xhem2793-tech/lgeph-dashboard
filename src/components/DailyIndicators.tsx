@@ -422,9 +422,16 @@ export default function DailyIndicators() {
     })()
   }, [today])
 
+  const refDate = React.useMemo(() => {
+    if (!raw) return today
+    let mx = ""
+    for (const k in raw) { for (const r of raw[k]) if (r.date > mx) mx = r.date }
+    return mx ? new Date(mx + "T00:00:00") : today
+  }, [raw, today])
+
   const stats: Stat[] = React.useMemo(() => {
     if (!raw) return []
-    const B = buildBuckets(range, today)
+    const B = buildBuckets(range, refDate)
     return SERIES.map((m) => {
       const rows = raw[m.key] || []
       const cur = fillGaps(trimTrail(seriesFor(rows, B.cur)))
@@ -461,7 +468,7 @@ export default function DailyIndicators() {
         chart: { cur, prev, labels: B.labels, unit: m.unit, curName: B.curName, prevName: B.prevName, decimals: m.dec },
       }
     })
-  }, [raw, range, today])
+  }, [raw, range, refDate])
 
   const grp = (name: string) => stats.filter((s) => s.group === name).map((s) => ({ label: s.label, stat: s }))
   const fxItems = grp("fx")
