@@ -110,15 +110,17 @@ export async function rangeRows(table: string, col: string, start: string, end: 
 
 export async function competitorMovers(limit = 10) {
   const rows = await sb(
-    `v_competitor_movers?select=brand,category,model,capacity,srp_php,promo_price,discount_pct,delta,chg_pct,abs_chg,reason,as_of&order=abs_chg.desc&limit=${limit}`,
+    `v_competitor_movers?select=retailer,brand,category,model,capacity,srp_php,promo_price,y_price,discount_pct,delta,chg_pct,abs_chg,reason,as_of&order=abs_chg.desc&limit=${limit}`,
   )
   return rows.map((r) => ({
+    retailer: r.retailer as string,
     brand: r.brand as string,
     category: r.category as string,
     model: r.model as string,
     capacity: (r.capacity ?? null) as string | null,
     srp: num(r.srp_php),
     promo: num(r.promo_price)!,
+    yPromo: num(r.y_price)!,
     discount: num(r.discount_pct),
     delta: num(r.delta)!,
     pct: num(r.chg_pct)!,
