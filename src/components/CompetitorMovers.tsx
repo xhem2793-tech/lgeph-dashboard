@@ -170,19 +170,12 @@ function BrandLogo({ brand }: { brand: string }) {
 export default function CompetitorMovers() {
   const [rows, setRows] = React.useState<Awaited<ReturnType<typeof competitorMovers>>>([])
   const [cat, setCat] = React.useState("전체")
-  const [animKey, setAnimKey] = React.useState(0)
-
   React.useEffect(() => {
     let alive = true
     competitorMovers(40)
       .then((r) => { if (alive) setRows(r) })
       .catch((e) => console.error(e))
     return () => { alive = false }
-  }, [])
-
-  React.useEffect(() => {
-    const id = window.setInterval(() => setAnimKey((t) => t + 1), 10000)
-    return () => window.clearInterval(id)
   }, [])
 
   if (rows.length === 0) return null
@@ -193,17 +186,16 @@ export default function CompetitorMovers() {
     (a, b) => (CAT_ORDER.indexOf(a) < 0 ? 99 : CAT_ORDER.indexOf(a)) - (CAT_ORDER.indexOf(b) < 0 ? 99 : CAT_ORDER.indexOf(b)),
   )]
   const view = (cat === "전체" ? rows : rows.filter((r) => r.category === cat)).slice(0, 10)
-  const canExp = view.length > 8
   const cardRows = view.slice(0, 8)
 
-  const pick = (c: string) => { setCat(c); setAnimKey((k) => k + 1) }
+  const pick = (c: string) => { setCat(c) }
 
   const th = "px-1 py-0.5 text-center text-[9px] font-semibold uppercase tracking-wide text-gray-400"
   const td = "px-1 py-0.5 text-center align-middle"
 
   return (
     <div className="mt-6 sm:mt-8" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
-      <style>{"@keyframes tabSwapA{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}@keyframes tabSwapB{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
+      <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
           <h2 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일일 가격 변동</h2>
@@ -229,24 +221,32 @@ export default function CompetitorMovers() {
               </button>
             ))}
           </div>
-          {canExp ? (
-            <Link
-              href="/competitors"
-              className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[9px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
-            >
-              더보기
-            </Link>
-          ) : null}
+          <Link
+            href="/competitors"
+            className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[9px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
+          >
+            더보기
+          </Link>
         </div>
 
         <div className="mt-2">
-          <div style={{ animation: (animKey % 2 ? "tabSwapA" : "tabSwapB") + " .5s cubic-bezier(.22,1,.36,1) both" }}>
+          <div>
             <div
               className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
               style={{ height: COLLAPSED }}
             >
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[640px] border-collapse text-[11px]">
+                <table className="w-full min-w-[640px] table-fixed border-collapse text-[11px]">
+                  <colgroup>
+                    <col style={{ width: 52 }} />
+                    <col style={{ width: 58 }} />
+                    <col style={{ width: 118 }} />
+                    <col style={{ width: 80 }} />
+                    <col style={{ width: 92 }} />
+                    <col style={{ width: 92 }} />
+                    <col style={{ width: 76 }} />
+                    <col style={{ width: 72 }} />
+                  </colgroup>
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className={th}>브랜드</th>
@@ -261,7 +261,7 @@ export default function CompetitorMovers() {
                   </thead>
                   <tbody>
                     {cardRows.map((r, i) => (
-                      <tr key={i} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
+                      <tr key={`${cat}-${i}`} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.12 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
                         <td className={td}><BrandLogo brand={r.brand} /></td>
                         <td className={td}>
                           <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[9px] font-semibold text-gray-500"}>{specType(r.model, r.category)}</span>
