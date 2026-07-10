@@ -142,13 +142,13 @@ function MoverDelta({ delta, pct }: { delta: number; pct: number }) {
 function BrandLogo({ brand }: { brand: string }) {
   const logo = BRAND_LOGO[brand]
   return (
-    <span className="inline-flex h-7 w-16 items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
+    <span className="inline-flex h-6 w-12 items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logo}
           alt={brand}
-          className="max-h-[24px] max-w-[60px] object-contain"
+          className="max-h-[18px] max-w-[40px] object-contain"
           onError={(e) => {
             const el = e.currentTarget
             el.style.display = "none"
