@@ -141,14 +141,15 @@ function MoverDelta({ delta, pct }: { delta: number; pct: number }) {
 
 function BrandLogo({ brand }: { brand: string }) {
   const logo = BRAND_LOGO[brand]
+  const big = brand === "LG"
   return (
-    <span className="inline-flex h-6 w-12 items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
+    <span className={"inline-flex items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5 " + (big ? "h-7 w-16" : "h-6 w-12")}>
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logo}
           alt={brand}
-          className="max-h-[18px] max-w-[40px] object-contain"
+          className={(big ? "max-h-[30px] max-w-[64px]" : "max-h-[17px] max-w-[38px]") + " object-contain"}
           onError={(e) => {
             const el = e.currentTarget
             el.style.display = "none"
@@ -291,6 +292,11 @@ export default function CompetitorMovers() {
                         <td className={td}><span className={HOVM + " tabular-nums text-gray-400"}>{peso(r.yPromo)}</span></td>
                         <td className={td}><MoverDelta delta={r.delta} pct={r.pct} /></td>
                         <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] text-gray-500"}>{shopName(r.retailer)}</span></td>
+                      </tr>
+                    ))}
+                    {Array.from({ length: Math.max(0, 10 - cardRows.length) }).map((_, j) => (
+                      <tr key={`pad-${cat}-${sortDir}-${j}`} aria-hidden className="border-b border-gray-100">
+                        <td className={td} colSpan={8}><span className="inline-flex h-6 items-center">&nbsp;</span></td>
                       </tr>
                     ))}
                   </tbody>
