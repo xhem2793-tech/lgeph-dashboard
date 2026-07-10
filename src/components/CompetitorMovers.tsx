@@ -144,13 +144,13 @@ function BrandLogo({ brand }: { brand: string }) {
   const logo = BRAND_LOGO[brand]
   const big = brand === "LG"
   return (
-    <span className="inline-flex h-7 w-[50px] items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
+    <span className="inline-flex h-7 w-[62px] items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logo}
           alt={brand}
-          className={(big ? "max-h-[24px] max-w-[48px]" : "max-h-[15px] max-w-[40px]") + " object-contain"}
+          className={(big ? "max-h-[26px] max-w-[60px]" : "max-h-[15px] max-w-[40px]") + " object-contain"}
           onError={(e) => {
             const el = e.currentTarget
             el.style.display = "none"
@@ -257,7 +257,7 @@ export default function CompetitorMovers() {
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[640px] table-fixed border-collapse text-[11px]">
                   <colgroup>
-                    <col style={{ width: 52 }} />
+                    <col style={{ width: 66 }} />
                     <col style={{ width: 58 }} />
                     <col style={{ width: 118 }} />
                     <col style={{ width: 80 }} />
