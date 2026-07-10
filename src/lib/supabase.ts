@@ -36,7 +36,7 @@ export async function exchangeRates(days = 14) {
 }
 
 export async function oilSeries(weeks = 8): Promise<number[]> {
-  const rows = await sb(`v_oil_daily?select=diesel,date&order=date.desc&limit=${weeks * 7}`)
+  const rows = await sb(`oil_prices?select=diesel,date&order=date.desc&limit=${weeks}`)
   return rows.reverse().map((r) => num(r.diesel)!)
 }
 
@@ -129,4 +129,19 @@ export async function competitorMovers(limit = 10) {
     asOf: r.as_of as string,
     prevAsOf: r.prev_date as string,
   }))
+}
+
+export async function fxStrip() {
+  const rows = await sb(`fx_daily?select=pair,label,rate,yoy_pct,biz_impact,as_of&order=as_of.desc`)
+  if (!rows.length) return { asOf: null as string | null, pairs: {} as Record<string, any>, peers: [] as any[] }
+  const asOf = rows[0].as_of
+  const cur = rows.filter((r) => r.as_of === asOf)
+  const pairs: Record<string, any> = {}
+  const peers: any[] = []
+  for (const r of cur) {
+    const o = { label: r.label, rate: num(r.rate), yoy: num(r.yoy_pct), biz: r.biz_impact }
+    if (String(r.pair).startsWith("PEER_")) peers.push(o)
+    else pairs[r.pair] = o
+  }
+  return { asOf, pairs, peers }
 }
