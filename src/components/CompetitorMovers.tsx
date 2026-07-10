@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { competitorMovers } from "@/lib/supabase"
 
 const BRAND_LOGO: Record<string, string> = {
@@ -127,7 +128,7 @@ function MoverDelta({ delta, pct }: { delta: number; pct: number }) {
     return () => clearInterval(id)
   }, [])
   return (
-    <span className={"inline-flex w-[84px] items-center justify-center rounded px-1 py-0.5 text-[10px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
+    <span className={"inline-flex w-[60px] items-center justify-center rounded px-1 py-0.5 text-[9px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
       {dn ? "▼ " : "▲ "}
       <span key={mode} className="inline-block" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
         {mode === 1
@@ -169,14 +170,7 @@ function BrandLogo({ brand }: { brand: string }) {
 export default function CompetitorMovers() {
   const [rows, setRows] = React.useState<Awaited<ReturnType<typeof competitorMovers>>>([])
   const [cat, setCat] = React.useState("전체")
-  const [exp, setExp] = React.useState(false)
-  const [fullH, setFullH] = React.useState<number>()
-  const listRef = React.useRef<HTMLDivElement | null>(null)
-  const [tick, setTick] = React.useState(0)
-  React.useEffect(() => {
-    const id = window.setInterval(() => setTick((t) => t + 1), 10000)
-    return () => window.clearInterval(id)
-  }, [])
+  const [animKey, setAnimKey] = React.useState(0)
 
   React.useEffect(() => {
     let alive = true
@@ -184,6 +178,11 @@ export default function CompetitorMovers() {
       .then((r) => { if (alive) setRows(r) })
       .catch((e) => console.error(e))
     return () => { alive = false }
+  }, [])
+
+  React.useEffect(() => {
+    const id = window.setInterval(() => setAnimKey((t) => t + 1), 10000)
+    return () => window.clearInterval(id)
   }, [])
 
   if (rows.length === 0) return null
@@ -195,19 +194,20 @@ export default function CompetitorMovers() {
   )]
   const view = (cat === "전체" ? rows : rows.filter((r) => r.category === cat)).slice(0, 10)
   const canExp = view.length > 8
+  const cardRows = view.slice(0, 8)
 
-  const pick = (c: string) => { setCat(c); setExp(false); setFullH(undefined) }
+  const pick = (c: string) => { setCat(c); setAnimKey((k) => k + 1) }
 
   const th = "px-1 py-0.5 text-center text-[9px] font-semibold uppercase tracking-wide text-gray-400"
   const td = "px-1 py-0.5 text-center align-middle"
 
   return (
     <div className="mt-6 sm:mt-8" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
-      <style>{"@keyframes tabSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes calInA{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes calInB{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}"}</style>
+      <style>{"@keyframes tabSwapA{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}@keyframes tabSwapB{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
           <h2 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일일 가격 변동</h2>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-semibold text-emerald-600">
+          <span className="inline-flex cursor-default items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-semibold text-emerald-600 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-emerald-700">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
             매일 갱신
           </span>
@@ -230,40 +230,38 @@ export default function CompetitorMovers() {
             ))}
           </div>
           {canExp ? (
-            <button
-              type="button"
-              onClick={() => { const el = listRef.current; if (exp) { if (el) setFullH(el.scrollHeight + 24); requestAnimationFrame(() => setExp(false)) } else { setFullH(el ? el.scrollHeight + 24 : 2400); setExp(true) } }}
-              className="shrink-0 rounded-full border border-gray-200 bg-white px-3.5 py-1 text-[11px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
+            <Link
+              href="/competitors"
+              className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[9px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
             >
-              {exp ? "접기" : "더보기"}
-            </button>
+              더보기
+            </Link>
           ) : null}
         </div>
 
-        <div key={cat} className="mt-2" style={{ animation: "tabSwap .4s ease both" }}>
-          <div
-            ref={listRef}
-            className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
-            style={{ minHeight: COLLAPSED, maxHeight: !canExp || exp ? (exp ? (fullH ?? 2400) : 2400) : COLLAPSED }}
-          >
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[640px] border-collapse text-[11px]">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className={th}>브랜드</th>
-                    <th className={th}>유형</th>
-                    <th className={th}>모델</th>
-                    <th className={th}>SRP</th>
-                    <th className={th}>{fmtHdr(asOf)}</th>
-                    <th className={th}>{fmtHdr(prevAsOf)}</th>
-                    <th className={th}>전일비</th>
-                    <th className={th}>유통</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {view.map((r, i) => {
-                    return (
-                      <tr key={i} style={{ animation: (tick % 2 ? "calInA" : "calInB") + " 0.55s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.12 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
+        <div className="mt-2">
+          <div style={{ animation: (animKey % 2 ? "tabSwapA" : "tabSwapB") + " .5s cubic-bezier(.22,1,.36,1) both" }}>
+            <div
+              className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
+              style={{ height: COLLAPSED }}
+            >
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[640px] border-collapse text-[11px]">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className={th}>브랜드</th>
+                      <th className={th}>유형</th>
+                      <th className={th}>모델</th>
+                      <th className={th}>SRP</th>
+                      <th className={th}>{fmtHdr(asOf)}</th>
+                      <th className={th}>{fmtHdr(prevAsOf)}</th>
+                      <th className={th}>전일비</th>
+                      <th className={th}>유통</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cardRows.map((r, i) => (
+                      <tr key={i} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
                         <td className={td}><BrandLogo brand={r.brand} /></td>
                         <td className={td}>
                           <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[9px] font-semibold text-gray-500"}>{specType(r.model, r.category)}</span>
@@ -277,10 +275,10 @@ export default function CompetitorMovers() {
                         <td className={td}><MoverDelta delta={r.delta} pct={r.pct} /></td>
                         <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] text-gray-500"}>{shopName(r.retailer)}</span></td>
                       </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         </div>
