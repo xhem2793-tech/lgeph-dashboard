@@ -28,9 +28,6 @@ export default function Overview() {
   const [modal, setModal] = React.useState<any>(null)
   const [modalClosing, setModalClosing] = React.useState(false)
   const [calTick, setCalTick] = React.useState(0)
-  const [newsExp, setNewsExp] = React.useState<Record<string, boolean>>({})
-  const [newsH, setNewsH] = React.useState<Record<string, number>>({})
-  const listRefs = React.useRef<Record<string, HTMLDivElement | null>>({})
   const closeModal = () => { setModalClosing(true); window.setTimeout(() => { setModal(null); setModalClosing(false) }, 240) }
 
   React.useEffect(() => {
@@ -74,53 +71,43 @@ export default function Overview() {
                 <span className="cursor-default text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">경제·산업·B2B</span>
               </div>
               <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-5" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
+                {nMain[0] ? (
+                  <button type="button" onClick={() => setModal({ ...nMain[0], category: "경제·정치·사회" })} className="group mb-4 flex flex-col gap-3 border-b border-gray-100 pb-4 text-left sm:flex-row sm:gap-4">
+                    {nMain[0].image ? (
+                      <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 sm:aspect-auto sm:h-40 sm:w-64 sm:shrink-0">
+                        <img src={nMain[0].image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                      </div>
+                    ) : null}
+                    <div className="min-w-0">
+                      <span className="text-[10px] font-semibold text-indigo-600">오늘의 1면</span>
+                      <p className="mt-1 text-[18px] font-bold leading-snug text-gray-900 group-hover:text-indigo-600 2xl:text-[22px]">{nMain[0].title}</p>
+                      {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-gray-500 2xl:text-[14px]">{nMain[0].summary}</p> : null}
+                      <p className="mt-1.5 text-[11px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
+                    </div>
+                  </button>
+                ) : null}
                 <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
-              {[
-                { title: "시장 동향", sub: "경제·정치·사회", rows: nMain },
-                { title: "CE 동향", sub: "생활가전·소비", rows: nCE },
-                { title: "B2B 동향", sub: "공조·인프라", rows: nB2B },
-              ].map((col) => (
-                <div key={col.title} className="lg:px-3">
-                  <div className="flex items-baseline justify-between">
-                    <p className="flex items-baseline gap-1.5">
-                      <span className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">{col.title}</span>
-                      <span className="cursor-default text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">{col.sub}</span>
-                    </p>
-                    <button type="button" onClick={() => { const el = listRefs.current[col.title]; if (newsExp[col.title]) { if (el) setNewsH((h) => ({ ...h, [col.title]: el.scrollHeight })); requestAnimationFrame(() => setNewsExp((st) => ({ ...st, [col.title]: false }))) } else { setNewsH((h) => ({ ...h, [col.title]: el ? el.scrollHeight : 2400 })); setNewsExp((st) => ({ ...st, [col.title]: true })) } }} className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[9px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600">{newsExp[col.title] ? "접기" : "더보기"}</button>
-                  </div>
-                  <div className="relative mt-2">
-                  <div ref={(el) => { listRefs.current[col.title] = el }} className="flex flex-col divide-y divide-gray-100 overflow-hidden transition-[max-height] duration-500 ease-in-out" style={{ maxHeight: newsExp[col.title] ? (newsH[col.title] ?? 2400) : 560 }}>
-                    {col.rows.map((n, i) =>
-                      i === 0 ? (
-                        <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group block w-full rounded-lg pb-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
-                          {n.image ? (
-                            <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
-                              <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
-                            </div>
-                          ) : null}
-                          <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-gray-900 group-hover:text-indigo-600 2xl:text-[15px]">{n.title}</p>
-                          {n.summary ? <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-gray-500 2xl:text-[13px]">{n.summary}</p> : null}
-                          <p className="mt-1 text-[10px] text-gray-400 2xl:text-[11px]">{n.source} · {n.date}</p>
-                        </button>
-                      ) : (
-                        <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group -mx-2 flex gap-3 rounded-lg px-2 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50">
-                          {n.image ? (
-                            <div className="h-12 w-16 shrink-0 overflow-hidden rounded-md bg-gray-100">
-                              <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
-                            </div>
-                          ) : null}
-                          <div className="min-w-0">
-                            <p className="line-clamp-2 text-[14px] font-semibold leading-tight text-gray-800 group-hover:text-indigo-600 2xl:text-[15px]">{n.title}</p>
-                            {n.summary ? <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-gray-500 2xl:text-[13px]">{n.summary}</p> : null}
+                  {[
+                    { title: "시장 동향", sub: "경제·정치·사회", rows: nMain, skip: 1, cat: "시장" },
+                    { title: "CE 동향", sub: "생활가전·소비", rows: nCE, skip: 0, cat: "CE" },
+                    { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, skip: 0, cat: "B2B" },
+                  ].map((col) => (
+                    <div key={col.title} className="lg:px-3">
+                      <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
+                        <span className="text-[15px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{col.title}</span>
+                        <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+                        <span className="ml-1 text-[10px] text-gray-400">{col.sub}</span>
+                      </a>
+                      <div className="flex flex-col divide-y divide-gray-100">
+                        {col.rows.slice(col.skip, col.skip + 5).map((n, i) => (
+                          <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
+                            <p className="line-clamp-2 text-[13.5px] font-semibold leading-tight text-gray-800 group-hover:text-indigo-600 2xl:text-[15px]">{n.title}</p>
                             <p className="mt-1 text-[10px] text-gray-400 2xl:text-[11px]">{n.source} · {n.date}</p>
-                          </div>
-                        </button>
-                      ),
-                    )}
-                  </div>
-                  </div>
-                </div>
-              ))}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
