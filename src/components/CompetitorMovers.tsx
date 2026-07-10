@@ -5,14 +5,14 @@ import Link from "next/link"
 import { competitorMovers } from "@/lib/supabase"
 
 const BRAND_LOGO: Record<string, string> = {
-  LG: "/logos/LG-Logo.webp",
+  LG: "/logos/lg.png",
   Samsung: "/logos/samsung-company-logo-south-korean-260nw-2394493913.webp",
-  Sony: "/logos/sony-logo-png_seeklogo-129420.png",
-  TCL: "/logos/tcl-logo-png_seeklogo-434831.png",
+  Sony: "/logos/sony.png",
+  TCL: "/logos/tcl.png",
   Hisense: "/logos/Hisense-Logo.png",
-  Midea: "/logos/midea-logo-png_seeklogo-92432.png",
-  Panasonic: "/logos/Panasonic-Logo.wine.png",
-  Carrier: "/logos/Logo_of_the_Carrier_Corporation.svg.webp",
+  Midea: "/logos/midea.png",
+  Panasonic: "/logos/panasonic.png",
+  Carrier: "/logos/carrier.png",
 }
 
 const BRAND_COLOR: Record<string, string> = {
