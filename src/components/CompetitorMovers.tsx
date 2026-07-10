@@ -24,7 +24,7 @@ const HOV = "inline-block cursor-default transition-all duration-300 ease-out ho
 const HOVM = "inline-block cursor-default transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500"
 const CAT_ORDER = ["냉장고", "TV", "에어컨", "세탁기", "에어케어", "정수기"]
 const WD = ["일", "월", "화", "수", "목", "금", "토"]
-const COLLAPSED = 214
+const COLLAPSED = 236
 
 function peso(n: number | null) {
   return n == null ? "—" : "₱" + Math.round(n).toLocaleString("en-US")
@@ -127,7 +127,7 @@ function MoverDelta({ delta, pct }: { delta: number; pct: number }) {
     return () => clearInterval(id)
   }, [])
   return (
-    <span className={"inline-flex items-center rounded px-1.5 py-0.5 text-[11px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
+    <span className={"inline-flex w-[84px] items-center justify-center rounded px-1 py-0.5 text-[10px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
       {dn ? "▼ " : "▲ "}
       <span key={mode} className="inline-block" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
         {mode === 1
@@ -232,8 +232,8 @@ export default function CompetitorMovers() {
           {canExp ? (
             <button
               type="button"
-              onClick={() => { const el = listRef.current; if (exp) { if (el) setFullH(el.scrollHeight); requestAnimationFrame(() => setExp(false)) } else { setFullH(el ? el.scrollHeight : 2400); setExp(true) } }}
-              className="shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 hover:text-indigo-600"
+              onClick={() => { const el = listRef.current; if (exp) { if (el) setFullH(el.scrollHeight + 24); requestAnimationFrame(() => setExp(false)) } else { setFullH(el ? el.scrollHeight + 24 : 2400); setExp(true) } }}
+              className="shrink-0 rounded-full border border-gray-200 bg-white px-3.5 py-1 text-[11px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
             >
               {exp ? "접기" : "더보기"}
             </button>
@@ -244,7 +244,7 @@ export default function CompetitorMovers() {
           <div
             ref={listRef}
             className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
-            style={{ maxHeight: !canExp || exp ? (exp ? (fullH ?? 2400) : 2400) : COLLAPSED }}
+            style={{ minHeight: COLLAPSED, maxHeight: !canExp || exp ? (exp ? (fullH ?? 2400) : 2400) : COLLAPSED }}
           >
             <div className="overflow-x-auto">
               <table className="w-full min-w-[640px] border-collapse text-[11px]">
@@ -263,7 +263,7 @@ export default function CompetitorMovers() {
                 <tbody>
                   {view.map((r, i) => {
                     return (
-                      <tr key={i} style={{ animation: (tick % 2 ? "calInA" : "calInB") + " 1.1s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.05 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
+                      <tr key={i} style={{ animation: (tick % 2 ? "calInA" : "calInB") + " 0.55s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.12 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
                         <td className={td}><BrandLogo brand={r.brand} /></td>
                         <td className={td}>
                           <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[9px] font-semibold text-gray-500"}>{specType(r.model, r.category)}</span>
