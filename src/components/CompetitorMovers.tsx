@@ -142,13 +142,13 @@ function MoverDelta({ delta, pct }: { delta: number; pct: number }) {
 function BrandLogo({ brand }: { brand: string }) {
   const logo = BRAND_LOGO[brand]
   return (
-    <span className="inline-flex h-5 w-10 items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
+    <span className="inline-flex h-7 w-16 items-center justify-center align-middle transition-all duration-300 ease-out hover:-translate-y-0.5">
       {logo ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={logo}
           alt={brand}
-          className="max-h-[15px] max-w-[36px] object-contain"
+          className="max-h-[24px] max-w-[60px] object-contain"
           onError={(e) => {
             const el = e.currentTarget
             el.style.display = "none"
@@ -173,7 +173,7 @@ export default function CompetitorMovers() {
   const [sortDir, setSortDir] = React.useState<"up" | "down">("up")
   React.useEffect(() => {
     let alive = true
-    competitorMovers(40)
+    competitorMovers(500)
       .then((r) => { if (alive) setRows(r) })
       .catch((e) => console.error(e))
     return () => { alive = false }
@@ -186,8 +186,8 @@ export default function CompetitorMovers() {
   const cats = ["전체", ...Array.from(new Set(rows.map((r) => r.category))).sort(
     (a, b) => (CAT_ORDER.indexOf(a) < 0 ? 99 : CAT_ORDER.indexOf(a)) - (CAT_ORDER.indexOf(b) < 0 ? 99 : CAT_ORDER.indexOf(b)),
   )]
-  const view = (cat === "전체" ? rows : rows.filter((r) => r.category === cat)).slice(0, 10)
-  const cardRows = view.slice().sort((a, b) => (sortDir === "up" ? b.pct - a.pct : a.pct - b.pct)).slice(0, 8)
+  const view = cat === "전체" ? rows : rows.filter((r) => r.category === cat)
+  const cardRows = (sortDir === "up" ? view.filter((r) => r.pct > 0).sort((a, b) => b.pct - a.pct) : view.filter((r) => r.pct < 0).sort((a, b) => a.pct - b.pct)).slice(0, 10)
 
   const pick = (c: string) => { setCat(c) }
 
@@ -226,16 +226,16 @@ export default function CompetitorMovers() {
             <button
               type="button"
               onClick={() => setSortDir("up")}
-              className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (sortDir === "up" ? "bg-rose-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-rose-600")}
+              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 bg-white text-gray-500 hover:border-rose-200 hover:text-rose-600")}
             >
-              ▲ 상승순
+              ▲ 인상순
             </button>
             <button
               type="button"
               onClick={() => setSortDir("down")}
-              className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (sortDir === "down" ? "bg-emerald-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-emerald-600")}
+              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "down" ? "border-emerald-300 bg-emerald-50 text-emerald-600" : "border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:text-emerald-600")}
             >
-              ▼ 하락순
+              ▼ 인하순
             </button>
             <Link
               href="/competitors"
@@ -250,7 +250,7 @@ export default function CompetitorMovers() {
           <div>
             <div
               className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
-              style={{ height: COLLAPSED }}
+              style={{ minHeight: COLLAPSED }}
             >
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[640px] table-fixed border-collapse text-[11px]">
@@ -301,7 +301,7 @@ export default function CompetitorMovers() {
         </div>
 
         <p className="mt-auto pt-1.5 text-[9.5px] leading-relaxed text-gray-400">
-          <span className={HOVM}>경쟁사 온라인 매장 스크래핑 · 변동률 높은순 · <span className="text-rose-600">▲인상</span> / <span className="text-emerald-600">▼인하</span> · 유통: Anson&#39;s · Abenson · SM</span>
+          <span className={HOVM}>경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 10 · <span className="text-rose-600">▲인상</span> / <span className="text-emerald-600">▼인하</span> · 유통: Anson&#39;s · Abenson · SM</span>
         </p>
       </div>
     </div>
