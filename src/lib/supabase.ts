@@ -36,7 +36,7 @@ export async function exchangeRates(days = 14) {
 }
 
 export async function oilSeries(weeks = 8): Promise<number[]> {
-  const rows = await sb(`oil_prices?select=diesel,date&order=date.desc&limit=${weeks}`)
+  const rows = await sb(`v_oil_daily?select=diesel,date&order=date.desc&limit=${weeks * 7}`)
   return rows.reverse().map((r) => num(r.diesel)!)
 }
 
