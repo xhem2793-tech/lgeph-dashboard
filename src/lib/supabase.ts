@@ -110,7 +110,7 @@ export async function rangeRows(table: string, col: string, start: string, end: 
 
 export async function competitorMovers(limit = 10) {
   const rows = await sb(
-    `v_competitor_movers?select=retailer,brand,category,model,capacity,srp_php,promo_price,y_price,discount_pct,delta,chg_pct,abs_chg,reason,as_of&order=abs_chg.desc&limit=${limit}`,
+    `v_competitor_movers?select=retailer,brand,category,model,capacity,srp_php,promo_price,y_price,discount_pct,delta,chg_pct,abs_chg,reason,as_of,prev_date&order=abs_chg.desc&limit=${limit}`,
   )
   return rows.map((r) => ({
     retailer: r.retailer as string,
@@ -127,5 +127,6 @@ export async function competitorMovers(limit = 10) {
     absChg: num(r.abs_chg)!,
     reason: r.reason as string,
     asOf: r.as_of as string,
+    prevAsOf: r.prev_date as string,
   }))
 }
