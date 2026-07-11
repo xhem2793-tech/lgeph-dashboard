@@ -287,11 +287,11 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
   const s = items[idx].stat
   const multi = items.length > 1
   return (
-    <div className="h-full" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
+    <div className="h-full" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: delay + "s" }}>
     <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="shrink-0 cursor-default text-sm font-medium text-gray-700 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">{title}</span>
+          <span className="shrink-0 cursor-default text-sm font-medium text-gray-700">{title}</span>
           <DeltaBadge down={s.dDown} pct={s.dPct} pctSuffix={s.dPctSuffix} absVal={s.dAbs} absPrefix={s.dAbsPrefix} />
         </div>
         <div className="flex shrink-0 items-center gap-2.5 text-[11px] text-gray-400">
@@ -302,21 +302,21 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
       {multi ? (
         <div className="mt-1.5 flex flex-nowrap gap-1 overflow-hidden">
           {items.map((it, i) => (
-            <button key={i} onClick={() => setSel(i)} className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (idx === i ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}>{it.label}</button>
+            <button key={i} onClick={() => setSel(i)} className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-medium transition-all duration-200 active:scale-95 " + (idx === i ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}>{it.label}</button>
           ))}
         </div>
       ) : null}
       <p className="mt-1 flex items-baseline gap-1.5">
-        <span className="inline-block cursor-default text-xl font-semibold tabular-nums text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">
+        <span className="inline-block cursor-default text-xl font-semibold tabular-nums text-gray-900">
           <CountUp key={`${range}-${idx}`} value={s.vNum} prefix={s.vPrefix} suffix={s.vSuffix} decimals={s.vDec} />
         </span>
-        <span className="cursor-default text-[10px] text-gray-400/90 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">{s.prevText}</span>
+        <span className="cursor-default text-[10px] text-gray-400/90">{s.prevText}</span>
       </p>
       <div key={`${range}-${idx}`} style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }}>
         <ProChart {...s.chart} />
       </div>
       <div className="mt-auto border-t border-gray-200 pt-2">
-        <span className="cursor-default text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">출처 {s.note}</span>
+        <span className="cursor-default text-[10px] text-gray-400">출처 {s.note}</span>
       </div>
     </div>
     </div>
@@ -481,12 +481,12 @@ export default function DailyIndicators() {
       {!raw ? (
         <p className="mt-2 text-sm text-gray-400">데이터 불러오는 중…</p>
       ) : (
-        <div style={{ animation: "fadeUp .8s ease both" }}>
+        <div style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <div className="flex items-baseline gap-2">
-                  <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간 지표</h1>
+                  <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900">일간 지표</h1>
                   <span className="hidden items-center gap-1.5 text-[10px] text-gray-400 sm:flex">
-                    <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[8px] font-semibold text-emerald-700">CONFIRMED</span>
+                    <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
                     {iso(refDate).slice(5).replace("-", "/")} 기준 · 전년 동기 대비
                   </span>
                 </div>
