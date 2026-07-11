@@ -130,7 +130,7 @@ function MoverDelta({ delta, pct }: { delta: number; pct: number }) {
   }, [])
   return (
     <span className={"inline-flex w-[66px] items-center rounded px-1 py-0.5 text-[9px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
-      <span className="w-[9px] shrink-0 text-left">{dn ? "▼" : "▲"}</span>
+      <span className="w-[9px] shrink-0 text-left">{dn ? "↓" : "↑"}</span>
       <span key={mode} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
         {mode === 1
           ? <CountUp value={Math.abs(delta)} fmt={(n) => "₱" + Math.round(n).toLocaleString("en-US")} />
@@ -207,7 +207,10 @@ export default function CompetitorMovers() {
             매일 갱신
           </span>
         </div>
-        <span className={HOVM + " text-[10px] text-gray-400"}>{fmtDate(asOf)} 오전 9시 기준 · 6개 브랜드</span>
+        <span className={HOVM + " flex items-center gap-1.5 text-[10px] text-gray-400"}>
+          <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[8px] font-semibold text-emerald-700">CONFIRMED</span>
+          {fmtDate(asOf)} 기준 · 6개 브랜드
+        </span>
       </div>
 
       <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-3 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
@@ -230,14 +233,14 @@ export default function CompetitorMovers() {
               onClick={() => setSortDir("down")}
               className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "down" ? "border-emerald-300 bg-emerald-50 text-emerald-600" : "border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:text-emerald-600")}
             >
-              ▼ 인하순
+              ↓ 인하순
             </button>
             <button
               type="button"
               onClick={() => setSortDir("up")}
               className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 bg-white text-gray-500 hover:border-rose-200 hover:text-rose-600")}
             >
-              ▲ 인상순
+              ↑ 인상순
             </button>
             <Link
               href="/competitors"
@@ -308,7 +311,7 @@ export default function CompetitorMovers() {
         </div>
 
         <p className="mt-auto pt-1.5 text-[9.5px] leading-relaxed text-gray-400">
-          <span className={HOVM}>경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 10 · <span className="text-rose-600">▲인상</span> / <span className="text-emerald-600">▼인하</span> · 유통: Anson&#39;s · Abenson · SM</span>
+          <span className={HOVM}>경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5 · <span className="text-rose-600">↑인상</span> / <span className="text-emerald-600">↓인하</span> · 유통: Anson&#39;s · Abenson · SM</span>
         </p>
       </div>
     </div>
