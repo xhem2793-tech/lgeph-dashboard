@@ -21,8 +21,8 @@ const BRAND_COLOR: Record<string, string> = {
   Toshiba: "#e60012", Sharp: "#b3121f",
 }
 
-const HOV = "inline-block cursor-default transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600"
-const HOVM = "inline-block cursor-default transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500"
+const HOV = "inline-block transition-colors duration-200"
+const HOVM = "inline-block transition-colors duration-200"
 const CAT_ORDER = ["냉장고", "TV", "에어컨", "세탁기", "에어케어", "정수기"]
 const WD = ["일", "월", "화", "수", "목", "금", "토"]
 const COLLAPSED = 236
@@ -129,7 +129,7 @@ function MoverDelta({ delta, pct }: { delta: number; pct: number }) {
     return () => clearInterval(id)
   }, [])
   return (
-    <span className={"inline-flex w-[66px] items-center rounded px-1 py-0.5 text-[9px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
+    <span className={"inline-flex w-[66px] items-center rounded px-1 py-0.5 text-[10px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-700")}>
       <span className="w-[9px] shrink-0 text-left">{dn ? "↓" : "↑"}</span>
       <span key={mode} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
         {mode === 1
@@ -160,7 +160,7 @@ function BrandLogo({ brand }: { brand: string }) {
         />
       ) : null}
       <span
-        className="rounded px-1 py-0.5 text-[8px] font-bold text-white"
+        className="rounded px-1 py-0.5 text-[10px] font-bold text-white"
         style={{ display: logo ? "none" : "inline-block", background: BRAND_COLOR[brand] || "#6b7280" }}
       >
         {brand}
@@ -193,22 +193,22 @@ export default function CompetitorMovers() {
 
   const pick = (c: string) => { setCat(c) }
 
-  const th = "px-1 py-0.5 text-center text-[9px] font-semibold uppercase tracking-wide text-gray-400"
+  const th = "px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-gray-400"
   const td = "px-1 py-0.5 text-center align-middle"
 
   return (
-    <div className="mt-6 sm:mt-8" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <div className="mt-6 sm:mt-8" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
-          <h2 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일일 가격 변동</h2>
-          <span className="inline-flex cursor-default items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-semibold text-emerald-600 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-emerald-700">
+          <h2 className="cursor-default text-lg font-bold tracking-tight text-gray-900">일일 가격 변동</h2>
+          <span className="inline-flex cursor-default items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 transition-all duration-300 ease-out hover:text-emerald-700">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
             매일 갱신
           </span>
         </div>
         <span className={HOVM + " flex items-center gap-1.5 text-[10px] text-gray-400"}>
-          <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[8px] font-semibold text-emerald-700">CONFIRMED</span>
+          <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
           {fmtDate(asOf)} 기준 · 6개 브랜드
         </span>
       </div>
@@ -221,7 +221,7 @@ export default function CompetitorMovers() {
                 key={c}
                 type="button"
                 onClick={() => pick(c)}
-                className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[9px] font-medium transition-all duration-200 active:scale-95 " + (cat === c ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}
+                className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-medium transition-all duration-200 active:scale-95 " + (cat === c ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}
               >
                 {c}
               </button>
@@ -231,20 +231,20 @@ export default function CompetitorMovers() {
             <button
               type="button"
               onClick={() => setSortDir("down")}
-              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "down" ? "border-emerald-300 bg-emerald-50 text-emerald-600" : "border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:text-emerald-600")}
+              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "down" ? "border-emerald-300 bg-emerald-50 text-emerald-600" : "border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:text-emerald-600")}
             >
               ↓ 인하순
             </button>
             <button
               type="button"
               onClick={() => setSortDir("up")}
-              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[9px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 bg-white text-gray-500 hover:border-rose-200 hover:text-rose-600")}
+              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 bg-white text-gray-500 hover:border-rose-200 hover:text-rose-600")}
             >
               ↑ 인상순
             </button>
             <Link
               href="/competitors"
-              className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[9px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
+              className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
             >
               더보기
             </Link>
@@ -286,7 +286,7 @@ export default function CompetitorMovers() {
                       <tr key={`${cat}-${sortDir}-${i}`} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
                         <td className={td}><BrandLogo brand={r.brand} /></td>
                         <td className={td}>
-                          <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[9px] font-semibold text-gray-500"}>{specType(r.model, r.category)}</span>
+                          <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[10px] font-semibold text-gray-500"}>{specType(r.model, r.category)}</span>
                         </td>
                         <td className={td}>
                           <span className={HOV + " max-w-[140px] truncate font-medium text-gray-700"} title={r.model}>{modelCode(r.model, r.brand)}</span>
@@ -310,7 +310,7 @@ export default function CompetitorMovers() {
           </div>
         </div>
 
-        <p className="mt-auto pt-1.5 text-[9.5px] leading-relaxed text-gray-400">
+        <p className="mt-auto pt-1.5 text-[10px] leading-relaxed text-gray-400">
           <span className={HOVM}>경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5 · <span className="text-rose-600">↑인상</span> / <span className="text-emerald-600">↓인하</span> · 유통: Anson&#39;s · Abenson · SM</span>
         </p>
       </div>
