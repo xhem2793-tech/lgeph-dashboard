@@ -34,7 +34,7 @@ export default function Overview() {
     ;(async () => {
       try {
         const [nm, nc, nb, ec] = await Promise.all([
-          newsBySheet("daily_news", 5),
+          newsBySheet("daily_news", 6),
           newsBySheet("ce_trend", 5),
           newsBySheet("b2b_trend", 5),
           calendarRecent(3, 6),
@@ -69,6 +69,12 @@ export default function Overview() {
               <div className="mt-6 flex items-baseline gap-2 sm:mt-8" style={{ animation: "fadeUp .9s ease both", animationDelay: "0.45s" }}>
                 <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">주요 뉴스</h1>
                 <span className="cursor-default text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">경제·산업·B2B</span>
+                {nMain[0]?.date ? (
+                  <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                    <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[8px] font-semibold text-emerald-700">CONFIRMED</span>
+                    최종 갱신 {String(nMain[0].date).slice(5).replace("-", "/")}
+                  </span>
+                ) : null}
               </div>
               <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-5" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
                 {nMain[0] ? (
