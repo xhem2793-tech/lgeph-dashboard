@@ -107,7 +107,12 @@ export default function Overview() {
                       <div className="flex flex-col divide-y divide-gray-100">
                         {col.rows.slice(col.skip, col.skip + 5).map((n, i) => (
                           <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
-                            <p className="line-clamp-2 text-[13.5px] font-semibold leading-tight text-gray-800 group-hover:text-indigo-600 2xl:text-[15px]">{n.title}</p>
+                            {i === 0 && n.image ? (
+                              <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
+                                <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                              </div>
+                            ) : null}
+                            <p className={"line-clamp-2 font-semibold leading-tight text-gray-800 group-hover:text-indigo-600 " + (i === 0 ? "text-[14.5px] 2xl:text-[16px]" : "text-[13.5px] 2xl:text-[15px]")}>{n.title}</p>
                             <p className="mt-1 text-[10px] text-gray-400 2xl:text-[11px]">{n.source} · {n.date}</p>
                           </button>
                         ))}
