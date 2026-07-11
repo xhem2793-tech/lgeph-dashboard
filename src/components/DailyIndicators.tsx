@@ -485,7 +485,10 @@ export default function DailyIndicators() {
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <div className="flex items-baseline gap-2">
                   <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">일간 지표</h1>
-                  <p className="hidden text-[10px] text-gray-400 transition-colors duration-300 hover:text-gray-500 sm:block">* 모든 변동률·비교는 전년 동기 대비</p>
+                  <span className="hidden items-center gap-1.5 text-[10px] text-gray-400 sm:flex">
+                    <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[8px] font-semibold text-emerald-700">CONFIRMED</span>
+                    {iso(refDate).slice(5).replace("-", "/")} 기준 · 전년 동기 대비
+                  </span>
                 </div>
                 <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
                   {RANGES.map((r) => (
