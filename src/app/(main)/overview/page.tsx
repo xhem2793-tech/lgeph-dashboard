@@ -61,22 +61,22 @@ export default function Overview() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
       {(
         <>
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_0.75fr]" style={{ animation: "fadeUp .8s ease both" }}>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_0.75fr]" style={{ animation: "fadeUp .5s ease both" }}>
             <div className="lg:col-span-3">
-              <div className="mt-6 sm:mt-8 lg:w-2/3" style={{ animation: "fadeUp .92s ease both", animationDelay: "0.4s" }}>
+              <div className="mt-6 sm:mt-8 lg:w-2/3" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.4s" }}>
                 <CompetitorMovers />
               </div>
-              <div className="mt-6 flex items-baseline gap-2 sm:mt-8" style={{ animation: "fadeUp .9s ease both", animationDelay: "0.45s" }}>
-                <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">주요 뉴스</h1>
-                <span className="cursor-default text-[10px] text-gray-400 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-500">경제·산업·B2B</span>
+              <div className="mt-6 flex items-baseline gap-2 sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
+                <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900">주요 뉴스</h1>
+                <span className="cursor-default text-[10px] text-gray-400">경제·산업·B2B</span>
                 {nMain[0]?.date ? (
                   <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
-                    <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[8px] font-semibold text-emerald-700">CONFIRMED</span>
+                    <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
                     최종 갱신 {String(nMain[0].date).slice(5).replace("-", "/")}
                   </span>
                 ) : null}
               </div>
-              <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-5" style={{ animation: "fadeUp .95s ease both", animationDelay: "0.5s" }}>
+              <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-5" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
                 {nMain[0] ? (
                   <button type="button" onClick={() => setModal({ ...nMain[0], category: "경제·정치·사회" })} className="group mb-4 flex flex-col gap-3 border-b border-gray-100 pb-4 text-left sm:flex-row sm:gap-4">
                     {nMain[0].image ? (
@@ -86,8 +86,8 @@ export default function Overview() {
                     ) : null}
                     <div className="min-w-0">
                       <span className="text-[10px] font-semibold text-indigo-600">오늘의 1면</span>
-                      <p className="mt-1 text-[18px] font-bold leading-snug text-gray-900 group-hover:text-indigo-600 2xl:text-[22px]">{nMain[0].title}</p>
-                      {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[13px] leading-relaxed text-gray-500 2xl:text-[14px]">{nMain[0].summary}</p> : null}
+                      <p className="mt-1 text-[20px] font-bold leading-snug text-gray-900 group-hover:text-indigo-600 2xl:text-[20px]">{nMain[0].title}</p>
+                      {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500 2xl:text-[14px]">{nMain[0].summary}</p> : null}
                       <p className="mt-1.5 text-[11px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
                     </div>
                   </button>
@@ -100,7 +100,7 @@ export default function Overview() {
                   ].map((col) => (
                     <div key={col.title} className="lg:px-3">
                       <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
-                        <span className="text-[15px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{col.title}</span>
+                        <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{col.title}</span>
                         <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
                         <span className="ml-1 text-[10px] text-gray-400">{col.sub}</span>
                       </a>
@@ -112,7 +112,7 @@ export default function Overview() {
                                 <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                               </div>
                             ) : null}
-                            <p className={"line-clamp-2 font-semibold leading-tight text-gray-800 group-hover:text-indigo-600 " + (i === 0 ? "text-[14.5px] 2xl:text-[16px]" : "text-[13.5px] 2xl:text-[15px]")}>{n.title}</p>
+                            <p className={"line-clamp-2 font-semibold leading-tight text-gray-800 group-hover:text-indigo-600 " + (i === 0 ? "text-[14px] 2xl:text-[16px]" : "text-[14px] 2xl:text-[16px]")}>{n.title}</p>
                             <p className="mt-1 text-[10px] text-gray-400 2xl:text-[11px]">{n.source} · {n.date}</p>
                           </button>
                         ))}
@@ -122,9 +122,9 @@ export default function Overview() {
                 </div>
               </div>
             </div>
-            <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .95s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
+            <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
               <div className="lg:sticky lg:top-[164px]">
-              <p className="cursor-default text-lg font-bold tracking-tight text-gray-900 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600">경제 캘린더</p>
+              <p className="cursor-default text-lg font-bold tracking-tight text-gray-900">경제 캘린더</p>
               <div key={calTick} className="mt-2 flex flex-col gap-1">
                 {cal.map((e, i) => {
                   const showToday = i > 0 && cal[i - 1].past && !e.past
@@ -135,22 +135,22 @@ export default function Overview() {
                   return (
                     <React.Fragment key={i}>
                       {showToday ? (
-                        <div className="my-1 flex items-center gap-2 text-[9px] font-semibold text-indigo-400">
+                        <div className="my-1 flex items-center gap-2 text-[10px] font-semibold text-indigo-400">
                           <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
                         </div>
                       ) : null}
-                      <button type="button" onClick={() => setModal({ title: e.event.split("\u2014")[0].trim(), summary: e.event.split("\u2014").slice(1).join("\u2014").trim() || null, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance, isCal: true })} style={{ animation: "calIn 1.5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
+                      <button type="button" onClick={() => setModal({ title: e.event.split("\u2014")[0].trim(), summary: e.event.split("\u2014").slice(1).join("\u2014").trim() || null, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance, isCal: true })} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
                         <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
-                          <span className="text-[8px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
+                          <span className="text-[10px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className={"line-clamp-1 break-all text-[12px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{calTitle}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-1">
                             {kws.map((k, ki) => (
-                              <span key={ki} className="rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">{k}</span>
+                              <span key={ki} className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">{k}</span>
                             ))}
-                            <span className="text-[9px] text-gray-400">{e.past ? "결과" : "예정"}</span>
+                            <span className="text-[10px] text-gray-400">{e.past ? "결과" : "예정"}</span>
                           </div>
                         </div>
                       </button>
@@ -191,12 +191,12 @@ export default function Overview() {
             ) : modal.summary ? (
               <div className="mt-4">
                 {modal.isCal ? null : <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>}
-                <p className={"leading-relaxed text-gray-700 " + (modal.isCal ? "text-[15px]" : "mt-1 text-sm")}>{modal.summary}</p>
+                <p className={"leading-relaxed text-gray-700 " + (modal.isCal ? "text-[16px]" : "mt-1 text-sm")}>{modal.summary}</p>
               </div>
             ) : null}
             {modal.ai ? (
               <div className="mt-4 rounded-xl bg-indigo-50 p-4">
-                <p className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600"><span className="rounded bg-indigo-600 px-1 text-[9px] text-white">AI</span> 분석</p>
+                <p className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600"><span className="rounded bg-indigo-600 px-1 text-[10px] text-white">AI</span> 분석</p>
                 <p className="mt-1.5 text-sm leading-relaxed text-gray-700">{modal.ai}</p>
               </div>
             ) : null}
