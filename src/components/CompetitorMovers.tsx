@@ -25,7 +25,7 @@ const HOV = "inline-block transition-colors duration-200"
 const HOVM = "inline-block transition-colors duration-200"
 const CAT_ORDER = ["냉장고", "TV", "에어컨", "세탁기", "에어케어", "정수기"]
 const WD = ["일", "월", "화", "수", "목", "금", "토"]
-const COLLAPSED = 236
+const COLLAPSED = 150
 
 function peso(n: number | null) {
   return n == null ? "—" : "₱" + Math.round(n).toLocaleString("en-US")
@@ -194,12 +194,12 @@ export default function CompetitorMovers() {
   const pick = (c: string) => { setCat(c) }
 
   const th = "px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-gray-400"
-  const td = "px-1 py-0.5 text-center align-middle"
+  const td = "px-1 py-px text-center align-middle"
 
   return (
-    <section className="h-full rounded-xl border border-gray-200 bg-white p-3" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <section className="h-full rounded-xl border border-gray-200 bg-white p-2.5" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
-      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
+      <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
           <h2 className="cursor-default text-[16px] font-bold tracking-tight text-gray-900">일일 가격 변동</h2>
           <span className="inline-flex cursor-default items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 transition-all duration-300 ease-out hover:text-emerald-700">
@@ -251,7 +251,7 @@ export default function CompetitorMovers() {
           </div>
         </div>
 
-        <div className="mt-2">
+        <div className="mt-1">
           <div>
             <div
               className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
