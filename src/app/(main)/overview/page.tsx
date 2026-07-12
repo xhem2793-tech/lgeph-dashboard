@@ -64,7 +64,7 @@ export default function Overview() {
   
 
   return (
-    <main className="mx-auto max-w-[1280px] px-4 pb-4 pt-0 sm:px-6 sm:pb-6 sm:pt-0">
+    <main className="mx-auto max-w-[1536px] px-4 pb-4 pt-0 sm:px-6 sm:pb-6 sm:pt-0">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
       {(
         <>
@@ -87,24 +87,43 @@ export default function Overview() {
                 ) : null}
               </div>
               <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-5" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
-                {nMain[0] ? (
-                  <button type="button" onClick={() => setModal({ ...nMain[0], category: "경제·정치·사회" })} className="group mb-4 flex flex-col gap-3 border-b border-gray-100 pb-4 text-left sm:flex-row sm:gap-4">
-                    {nMain[0].image ? (
-                      <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 sm:aspect-auto sm:h-40 sm:w-64 sm:shrink-0">
-                        <img src={nMain[0].image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                {/* 야후 구조 — 헤드라인(좌) 옆에 시장 동향 목록(우)을 같은 높이로 끌어올림 */}
+                <div className="mb-4 grid grid-cols-1 gap-5 border-b border-gray-100 pb-4 lg:grid-cols-[2fr_1fr]">
+                  {nMain[0] ? (
+                    <button type="button" onClick={() => setModal({ ...nMain[0], category: "경제·정치·사회" })} className="group flex flex-col gap-3 text-left sm:flex-row sm:gap-4">
+                      {nMain[0].image ? (
+                        <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 sm:aspect-auto sm:h-40 sm:w-64 sm:shrink-0">
+                          <img src={nMain[0].image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                        </div>
+                      ) : null}
+                      <div className="min-w-0">
+                        <span className="text-[10px] font-semibold text-indigo-600">오늘의 1면</span>
+                        <p className="mt-1 text-[24px] font-bold leading-tight text-gray-900 group-hover:text-indigo-600">{nMain[0].title}</p>
+                        {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500">{nMain[0].summary}</p> : null}
+                        <p className="mt-2 text-[12px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
                       </div>
-                    ) : null}
-                    <div className="min-w-0">
-                      <span className="text-[10px] font-semibold text-indigo-600">오늘의 1면</span>
-                      <p className="mt-1 text-[24px] font-bold leading-tight text-gray-900 group-hover:text-indigo-600">{nMain[0].title}</p>
-                      {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500">{nMain[0].summary}</p> : null}
-                      <p className="mt-2 text-[12px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
+                    </button>
+                  ) : null}
+
+                  {/* 시장 동향 = 야후의 Popular 자리. 사진 없이 제목만, 스캔용 */}
+                  <div className="lg:border-l lg:border-gray-200 lg:pl-5">
+                    <a href="/news?cat=시장" className="group mb-1 flex items-baseline gap-1">
+                      <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">시장 동향</span>
+                      <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+                      <span className="ml-1 text-[10px] text-gray-400">경제·정치·사회</span>
+                    </a>
+                    <div className="flex flex-col divide-y divide-gray-100">
+                      {nMain.slice(1, 7).map((n, i) => (
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group py-2 text-left transition-colors duration-200">
+                          <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                          <p className="mt-0.5 text-[11px] text-gray-400">{n.source} · {n.date}</p>
+                        </button>
+                      ))}
                     </div>
-                  </button>
-                ) : null}
-                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
                   {[
-                    { title: "시장 동향", sub: "경제·정치·사회", rows: nMain, skip: 1, cat: "시장" },
                     { title: "CE 동향", sub: "생활가전·소비", rows: nCE, skip: 0, cat: "CE" },
                     { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, skip: 0, cat: "B2B" },
                   ].map((col) => (
