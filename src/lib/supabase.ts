@@ -176,13 +176,14 @@ export async function categoryKpi() {
  *       'neutral' = 방향 없음(태풍 등) */
 export async function homeBand() {
   const rows = await sb(
-    `v_home_band?select=seq,key,label,prefix,value,delta,delta_label,dir,as_of,freq&order=seq.asc`,
+    `v_home_band?select=seq,key,label,prefix,value,suffix,delta,delta_label,dir,as_of,freq&order=seq.asc`,
   )
   return rows.map((r) => ({
     key: r.key as string,
     label: r.label as string,
     prefix: (r.prefix ?? "") as string,
     value: r.value as string,
+    suffix: (r.suffix ?? "") as string,
     delta: num(r.delta),
     deltaLabel: r.delta_label as string,
     dir: r.dir as "bad" | "good" | "neutral",
