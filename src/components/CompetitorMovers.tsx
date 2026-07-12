@@ -1,7 +1,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 import { competitorMovers } from "@/lib/supabase"
 
 const BRAND_LOGO: Record<string, string> = {
@@ -194,14 +193,17 @@ export default function CompetitorMovers() {
   const pick = (c: string) => { setCat(c) }
 
   const th = "px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-gray-400"
-  const td = "px-1 py-px text-center align-middle"
+  const td = "px-0.5 py-px text-center align-middle truncate"
 
   return (
-    <section className="h-full rounded-xl border border-gray-200 bg-white p-2.5" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <section className="h-full rounded-xl border-[1.5px] border-indigo-500 bg-white p-2.5" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
-          <h2 className="cursor-default text-[16px] font-bold tracking-tight text-gray-900">일일 가격 변동</h2>
+          <a href="/competitors" className="group flex items-baseline gap-1">
+            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">현대 유통 동향</h2>
+            <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+          </a>
           <span className="inline-flex cursor-default items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 transition-all duration-300 ease-out hover:text-emerald-700">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
             매일 갱신
@@ -242,12 +244,6 @@ export default function CompetitorMovers() {
             >
               ↑ 인상순
             </button>
-            <Link
-              href="/competitors"
-              className="shrink-0 rounded-full border border-gray-200 bg-white px-2 py-0.5 text-[10px] font-medium text-gray-500 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:text-indigo-600"
-            >
-              더보기
-            </Link>
           </div>
         </div>
 
@@ -257,18 +253,18 @@ export default function CompetitorMovers() {
               className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
               style={{ minHeight: COLLAPSED }}
             >
-              <div className="w-full max-w-full overflow-x-auto">
-                <table className="w-full min-w-[520px] table-fixed border-collapse text-[11px]">
-                  {/* 합 520px — 카드(≈555px) 안에 들어오도록. 넘치면 테두리를 뚫는다 */}
+              <div className="w-full max-w-full overflow-hidden">
+                <table className="w-full table-fixed border-collapse text-[11px]">
+                  {/* 비율 폭 — 카드가 좁아져도 표가 테두리를 뚫지 않는다(가로 스크롤 금지) */}
                   <colgroup>
-                    <col style={{ width: 46 }} />
-                    <col style={{ width: 46 }} />
-                    <col style={{ width: 96 }} />
-                    <col style={{ width: 66 }} />
-                    <col style={{ width: 76 }} />
-                    <col style={{ width: 76 }} />
-                    <col style={{ width: 68 }} />
-                    <col style={{ width: 46 }} />
+                    <col style={{ width: "9%" }} />
+                    <col style={{ width: "9%" }} />
+                    <col style={{ width: "20%" }} />
+                    <col style={{ width: "12%" }} />
+                    <col style={{ width: "15%" }} />
+                    <col style={{ width: "15%" }} />
+                    <col style={{ width: "12%" }} />
+                    <col style={{ width: "8%" }} />
                   </colgroup>
                   <thead>
                     <tr className="border-b border-gray-200">
