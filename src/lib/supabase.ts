@@ -145,3 +145,27 @@ export async function fxStrip() {
   }
   return { asOf, pairs, peers }
 }
+
+/** 상황판 매트릭스 — 카테고리 × KPI.
+ *  ⚠️ 시장 품절률은 LG의 유통 믹스로 보정된 값(v_category_kpi) — 합산 평균 비교 금지 룰. */
+export async function categoryKpi() {
+  const rows = await sb(
+    `v_category_kpi?select=category,as_of,total_sku,lg_sku,shelf_share_pct,lg_oos_pct,mkt_oos_pct_adj,oos_gap_pp,lg_disc_pct,cn_disc_pct,disc_gap_pp,lg_asp,mkt_asp,premium_pct`,
+  )
+  return rows.map((r) => ({
+    category: r.category as string,
+    asOf: r.as_of as string,
+    totalSku: num(r.total_sku)!,
+    lgSku: num(r.lg_sku)!,
+    shelfShare: num(r.shelf_share_pct)!,
+    lgOos: num(r.lg_oos_pct),
+    mktOos: num(r.mkt_oos_pct_adj),
+    oosGap: num(r.oos_gap_pp),
+    lgDisc: num(r.lg_disc_pct),
+    cnDisc: num(r.cn_disc_pct),
+    discGap: num(r.disc_gap_pp),
+    lgAsp: num(r.lg_asp),
+    mktAsp: num(r.mkt_asp),
+    premium: num(r.premium_pct),
+  }))
+}
