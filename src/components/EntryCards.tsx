@@ -61,7 +61,7 @@ export default function EntryCards() {
   return (
     <section className="animate-[fadeUp_.5s_ease]">
       <header className="mb-2 flex items-baseline gap-2">
-        <h2 className="text-[15px] font-bold tracking-tight text-gray-900">더 파고들기</h2>
+        <h2 className="text-[16px] font-bold tracking-tight text-gray-900">더 파고들기</h2>
         <span className="text-[10px] text-gray-400">주제별 상세</span>
       </header>
 
@@ -76,7 +76,7 @@ export default function EntryCards() {
               className="group rounded-lg border border-gray-200 bg-white px-3 py-2.5 transition-colors duration-200 hover:border-indigo-300"
               style={{ animation: "fadeUp .5s ease both", animationDelay: `${i * 0.05}s` }}
             >
-              <p className="flex items-baseline justify-between text-[10.5px] font-bold text-gray-900">
+              <p className="flex items-baseline justify-between text-[11px] font-bold text-gray-900">
                 {c.title}
                 <span className="text-gray-300 transition-colors duration-200 group-hover:text-indigo-600">
                   ›
@@ -85,9 +85,9 @@ export default function EntryCards() {
               <p className="mt-1 text-[16px] font-bold leading-none tracking-tight text-gray-900">
                 {c.value}
               </p>
-              <p className="mt-1 text-[9px] leading-tight text-gray-400">{c.sub}</p>
+              <p className="mt-1 text-[10px] leading-tight text-gray-400">{c.sub}</p>
               {c.hint ? (
-                <p className="mt-0.5 text-[8.5px] leading-tight text-gray-300">{c.hint}</p>
+                <p className="mt-0.5 text-[10px] leading-tight text-gray-300">{c.hint}</p>
               ) : null}
             </a>
           ),
