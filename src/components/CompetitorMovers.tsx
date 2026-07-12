@@ -157,7 +157,7 @@ export default function CompetitorMovers() {
   const td = "px-0.5 py-px text-center align-middle truncate"
 
   return (
-    <section className="h-full overflow-hidden rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <section className="flex h-full flex-col rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
@@ -208,7 +208,7 @@ export default function CompetitorMovers() {
           </div>
         </div>
 
-        <div className="mt-1">
+        <div className="mt-1 rounded-lg border border-indigo-100/70 bg-white/70 px-2 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-white">
           <div>
             <div
               className="overflow-hidden"
