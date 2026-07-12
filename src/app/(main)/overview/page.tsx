@@ -110,7 +110,7 @@ export default function Overview() {
                         { title: "CE 동향", sub: "생활가전·소비", rows: nCE, skip: 0, cat: "CE" },
                         { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, skip: 0, cat: "B2B" },
                       ].map((col) => (
-                        <div key={col.title} className="lg:h-[560px] lg:overflow-hidden lg:px-3 lg:first:pl-0">
+                        <div key={col.title} className="lg:h-[560px] lg:overflow-hidden lg:px-3">
                           <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
                             <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{col.title}</span>
                             <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
@@ -127,7 +127,7 @@ export default function Overview() {
                             })().map((n, i) => (
                               <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
                                 {i === 0 && n.image ? (
-                                  <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
+                                  <div className="mb-2 h-[150px] w-full overflow-hidden rounded-lg bg-gray-100">
                                     <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                                   </div>
                                 ) : null}
