@@ -153,7 +153,7 @@ export default function CompetitorMovers() {
   const pick = (c: string) => { setCat(c) }
 
   const th = "px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-gray-400"
-  const td = "px-0.5 py-px text-center align-middle truncate"
+  const td = "h-[26px] px-0.5 py-0 text-center align-middle truncate"
 
   return (
     <section className="flex h-full flex-col rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
@@ -238,7 +238,7 @@ export default function CompetitorMovers() {
                   <tbody>
                     {cardRows.length === 0 ? (
                       <tr className="border-b border-gray-100">
-                        <td className="px-1 py-3 text-center text-[11px] text-gray-400" colSpan={7}>
+                        <td className="h-[26px] px-1 py-0 text-center text-[11px] text-gray-400" colSpan={7}>
                           변동 없음
                         </td>
                       </tr>
@@ -261,7 +261,7 @@ export default function CompetitorMovers() {
                     {/* 행 수는 항상 5줄 — 표 높이가 날마다 출렁이면 눈이 위치를 다시 찾는다 */}
                     {Array.from({ length: Math.max(0, (cardRows.length === 0 ? 4 : 5) - cardRows.length) }).map((_, j) => (
                       <tr key={`pad-${cat}-${sortDir}-${j}`} aria-hidden className="border-b border-gray-100">
-                        <td className={td} colSpan={7}><span className="inline-flex h-[22px] items-center">&nbsp;</span></td>
+                        <td className={td} colSpan={7}>&nbsp;</td>
                       </tr>
                     ))}
                   </tbody>
