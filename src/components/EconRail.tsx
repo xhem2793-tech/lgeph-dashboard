@@ -143,7 +143,6 @@ export default function EconRail() {
 
                       <DeltaBadge c={c} />
 
-                      <span className={"shrink-0 text-[10px] text-gray-300 transition-transform duration-300 " + (open === c.key ? "rotate-180" : "")}>▾</span>
                     </button>
 
                     {open === c.key && series[c.key] ? (
