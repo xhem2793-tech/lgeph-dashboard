@@ -67,7 +67,7 @@ export default function Overview() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
       {(
         <>
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_0.89fr]" style={{ animation: "fadeUp .5s ease both" }}>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_0.80fr]" style={{ animation: "fadeUp .5s ease both" }}>
             <div className="lg:col-span-3">
               {/* ① 오늘의 핵심(주장) + 오늘의 변화(근거) — 좌우로 나란히.
                   주장 옆에 근거가 있어야 신뢰가 생긴다. */}
@@ -110,7 +110,7 @@ export default function Overview() {
                         { title: "CE 동향", sub: "생활가전·소비", rows: nCE, skip: 0, cat: "CE" },
                         { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, skip: 0, cat: "B2B" },
                       ].map((col) => (
-                        <div key={col.title} className="lg:px-3 lg:first:pl-0">
+                        <div key={col.title} className="lg:h-[560px] lg:overflow-hidden lg:px-3 lg:first:pl-0">
                           <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
                             <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{col.title}</span>
                             <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
@@ -139,7 +139,9 @@ export default function Overview() {
                         </div>
                       ))}
                       {/* 뉴스가 마르는 날에도 우리가 쓴 글은 있다 */}
-                      <AnalysisColumn />
+                      <div className="lg:h-[560px] lg:overflow-hidden">
+                        <AnalysisColumn />
+                      </div>
                     </div>
                   </div>
 
@@ -151,7 +153,7 @@ export default function Overview() {
                       <span className="ml-1 text-[10px] text-gray-400">경제·정치·사회</span>
                     </a>
                     <div className="flex flex-col divide-y divide-gray-100">
-                      {nMain.slice(1, 13).map((n, i) => (
+                      {nMain.slice(1, 9).map((n, i) => (
                         <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
                           <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
                           <p className="mt-0.5 text-[11px] text-gray-400">{n.source} · {n.date}</p>
