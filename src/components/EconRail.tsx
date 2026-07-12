@@ -154,45 +154,60 @@ export default function EconRail() {
       {err ? (
         <p className="px-3 py-6 text-center text-[12px] text-gray-400">지표를 불러오지 못함 · 확인 필요</p>
       ) : (
-        <div className="divide-y divide-gray-50">
-          {(rows ?? Array.from({ length: 8 })).map((c, i) =>
-            !c ? (
-              <div key={i} className="h-[34px]" />
-            ) : (
-              <a
-                key={c.key}
-                href={"/economy#" + c.key}
-                className="group flex items-center gap-2 px-3 py-1 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-gray-50"
-              >
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[14px] font-semibold text-gray-800 transition-colors duration-200 group-hover:text-indigo-600">
-                    {c.label}
-                  </p>
-                  <p className="text-[10px] text-gray-400">
-                    {c.asOf?.slice(5).replace("-", "/")} · {c.freq}
-                  </p>
-                </div>
+        <div>
+          {/* 주기별 섹션 — 일별 지표와 분기 지표를 한 줄에 섞으면
+              "오늘 바뀐 것"과 "석 달에 한 번 바뀌는 것"이 같은 무게로 읽힌다. 갱신 주기가 다르면 자리를 나눈다 */}
+          {["일별", "주간", "월별", "분기", "수시"].map((grp) => {
+            const list = (rows ?? []).filter((c) => c.freq === grp)
+            if (!rows) return null
+            if (list.length === 0) return null
+            return (
+              <div key={grp} className="border-b border-gray-100 last:border-0">
+                <p className="bg-gray-50/60 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                  {grp}
+                </p>
+                <div className="divide-y divide-gray-50">
+                  {list.map((c) => (
+                    <a
+                      key={c.key}
+                      href={"/economy#" + c.key}
+                      className="group flex items-center gap-2 px-3 py-0.5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:bg-gray-50"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[14px] font-semibold leading-tight text-gray-800 transition-colors duration-200 group-hover:text-indigo-600">
+                          {c.label}
+                        </p>
+                        <p className="text-[10px] leading-tight text-gray-400">
+                          {c.asOf?.slice(5).replace("-", "/")}
+                        </p>
+                      </div>
 
-                <Spark pts={spark[c.key] ?? []} bad={impact(c).bad} />
+                      <Spark pts={spark[c.key] ?? []} bad={impact(c).bad} />
 
-                <div className="w-[86px] shrink-0 text-right">
-                  <p className="text-[14px] font-bold tabular-nums text-gray-900">
-                    {c.prefix}
-                    <CountUp text={c.value} />
-                  </p>
-                  {c.delta != null && c.delta !== 0 ? (
-                    <p className={"text-[12px] font-semibold tabular-nums " + impact(c).cls}>
-                      <CountUp text={Math.abs(c.delta).toFixed(1)} />
-                      {unit(c.deltaLabel ?? "")}
-                      {impact(c).arrow}
-                    </p>
-                  ) : (
-                    <p className="text-[12px] text-gray-400">보합</p>
-                  )}
+                      <div className="w-[92px] shrink-0 text-right">
+                        <p className="text-[14px] font-bold leading-tight tabular-nums text-gray-900">
+                          {c.prefix}
+                          <CountUp text={c.value} />
+                        </p>
+                        {c.delta != null && c.delta !== 0 ? (
+                          <p className={"text-[12px] font-semibold leading-tight tabular-nums " + impact(c).cls}>
+                            <CountUp text={Math.abs(c.delta).toFixed(1)} />
+                            {unit(c.deltaLabel ?? "")}
+                            {impact(c).arrow}
+                          </p>
+                        ) : (
+                          <p className="text-[12px] leading-tight text-gray-400">보합</p>
+                        )}
+                      </div>
+                    </a>
+                  ))}
                 </div>
-              </a>
-            ),
-          )}
+              </div>
+            )
+          })}
+          {!rows
+            ? Array.from({ length: 8 }).map((_, i) => <div key={i} className="h-[30px]" />)
+            : null}
         </div>
       )}
 
