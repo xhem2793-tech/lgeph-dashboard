@@ -41,7 +41,7 @@ export default function IngestHealth() {
     <section className="h-full rounded-lg border border-gray-200 bg-white p-3">
       <header className="mb-2 flex items-baseline justify-between">
         <h3 className="text-[12px] font-bold tracking-tight text-gray-900">데이터 신뢰</h3>
-        <span className="text-[9px] text-gray-300">
+        <span className="text-[10px] text-gray-300">
           {rows ? (bad ? `${bad}건 주의` : "전부 정상") : "수집 상태"}
         </span>
       </header>
@@ -49,7 +49,7 @@ export default function IngestHealth() {
       {err ? (
         <p className="py-4 text-center text-[10px] text-gray-400">불러오지 못함</p>
       ) : (
-        <table className="w-full border-collapse text-[9.5px]">
+        <table className="w-full border-collapse text-[10px]">
           <tbody>
             {(rows ?? Array.from({ length: 8 })).map((r, i) =>
               !r ? (
@@ -77,7 +77,7 @@ export default function IngestHealth() {
         </table>
       )}
 
-      <p className="mt-2 border-t border-gray-100 pt-1.5 text-[8.5px] leading-relaxed text-gray-400">
+      <p className="mt-2 border-t border-gray-100 pt-1.5 text-[10px] leading-relaxed text-gray-400">
         정상 발표 지연을 반영 — BSP 송금은 원래 2~3개월 늦음
         <br />
         <b className="font-semibold text-gray-500">약점을 우리가 먼저 공개한다</b>
