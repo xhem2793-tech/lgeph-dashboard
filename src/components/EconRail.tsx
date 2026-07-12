@@ -57,7 +57,11 @@ function DeltaBadge({ c }: { c: Card }) {
     >
       <span className="w-[9px] shrink-0 text-left">{up ? "↑" : "↓"}</span>
       <span key={mode} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
-        {mode === 1 ? `${c.prefix}${c.value}${c.suffix}` : `${Math.abs(c.delta).toFixed(1)}${pctUnit(c.deltaLabel ?? "")}`}
+        {mode === 1 ? (
+          <CountUp value={Number(c.value)} prefix={c.prefix} suffix={c.suffix} decimals={c.key === "remit" ? 2 : 1} />
+        ) : (
+          <CountUp value={Math.abs(c.delta)} suffix={pctUnit(c.deltaLabel ?? "")} decimals={1} />
+        )}
       </span>
     </span>
   )
@@ -131,11 +135,11 @@ export default function EconRail() {
                         (open === c.key ? "bg-indigo-50/60" : "hover:-translate-y-0.5 hover:bg-gray-50")
                       }
                     >
-                      <p className="min-w-0 flex-1 truncate text-[14px] font-semibold text-gray-800">{c.label}</p>
+                      <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-800">{c.label}</p>
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="w-[62px] shrink-0 text-right text-[14px] font-bold tabular-nums text-gray-900">
+                      <p className="w-[58px] shrink-0 text-right text-[13px] font-bold tabular-nums text-gray-900">
                         {c.prefix}
                         {c.value}
                         {c.suffix}
