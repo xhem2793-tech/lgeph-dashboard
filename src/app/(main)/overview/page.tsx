@@ -105,7 +105,7 @@ export default function Overview() {
                       </button>
                     ) : null}
 
-                    <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
+                    <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:-mx-3 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
                       {[
                         { title: "CE 동향", sub: "생활가전·소비", rows: nCE, skip: 0, cat: "CE" },
                         { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, skip: 0, cat: "B2B" },
