@@ -97,25 +97,8 @@ export default function TodayBrief() {
             </div>
           ))}
 
-          {b.weeklyCall ? (
-            <p className="mt-1.5 border-t border-indigo-200/60 pt-1.5 text-[11px] leading-tight text-gray-500">
-              이번 주 판단 ·{" "}
-              <b className="font-semibold text-gray-800">{b.weeklyCall}</b>
-              {b.weeklyOwner ? (
-                <span className="text-gray-400">
-                  {" "}
-                  — {b.weeklyOwner} · {b.weeklyDue}
-                </span>
-              ) : null}
-            </p>
-          ) : null}
-
           {err ? <p className="mt-1 text-[10px] text-rose-600">{err}</p> : null}
 
-          <p className="mt-1 text-[10px] leading-tight text-gray-400">
-            매일은 <b className="font-semibold text-gray-500">변화 감지</b>, 판단은 주 단위 — 없는
-            판단을 매일 지어내지 않음
-          </p>
         </>
       )}
     </section>
