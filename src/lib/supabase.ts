@@ -176,7 +176,7 @@ export async function categoryKpi() {
  *       'neutral' = 방향 없음(태풍 등) */
 export async function homeBand() {
   const rows = await sb(
-    `v_home_band?select=seq,key,label,prefix,value,suffix,delta,delta_label,dir,as_of,freq&order=seq.asc`,
+    `v_home_band?select=seq,key,label,prefix,value,suffix,delta,delta_label,delta_mom,delta_yoy,delta_unit,dir,as_of,freq&order=seq.asc`,
   )
   return rows.map((r) => ({
     key: r.key as string,
@@ -185,6 +185,9 @@ export async function homeBand() {
     value: r.value as string,
     suffix: (r.suffix ?? "") as string,
     delta: num(r.delta),
+    deltaMom: num(r.delta_mom),
+    deltaYoy: num(r.delta_yoy),
+    deltaUnit: (r.delta_unit ?? "") as string,
     deltaLabel: r.delta_label as string,
     dir: r.dir as "bad" | "good" | "neutral",
     asOf: (r.as_of ?? null) as string | null,
