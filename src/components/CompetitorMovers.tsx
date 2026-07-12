@@ -22,7 +22,7 @@ const BRAND_COLOR: Record<string, string> = {
 
 const HOV = "inline-block transition-colors duration-200"
 const HOVM = "inline-block transition-colors duration-200"
-const CAT_ORDER = ["냉장고", "TV", "에어컨", "세탁기", "에어케어", "정수기"]
+const CAT_ORDER = ["냉장고", "세탁기", "TV", "에어컨"]
 const WD = ["일", "월", "화", "수", "목", "금", "토"]
 
 function peso(n: number | null) {
@@ -145,9 +145,8 @@ export default function CompetitorMovers() {
   if (rows.length === 0) return null
   const asOf = rows[0]?.asOf
 
-  const cats = ["전체", ...Array.from(new Set(rows.map((r) => r.category))).sort(
-    (a, b) => (CAT_ORDER.indexOf(a) < 0 ? 99 : CAT_ORDER.indexOf(a)) - (CAT_ORDER.indexOf(b) < 0 ? 99 : CAT_ORDER.indexOf(b)),
-  )]
+  // 탭은 항상 고정 — 데이터가 없는 날에도 카테고리는 사라지지 않는다(자리가 곧 관측 대상)
+  const cats = ["전체", ...CAT_ORDER]
   const view = cat === "전체" ? rows : rows.filter((r) => r.category === cat)
   const cardRows = (sortDir === "up" ? view.filter((r) => r.pct > 0).sort((a, b) => b.pct - a.pct) : view.filter((r) => r.pct < 0).sort((a, b) => a.pct - b.pct)).slice(0, 5)
 
@@ -237,6 +236,13 @@ export default function CompetitorMovers() {
                     </tr>
                   </thead>
                   <tbody>
+                    {cardRows.length === 0 ? (
+                      <tr className="border-b border-gray-100">
+                        <td className="px-1 py-3 text-center text-[11px] text-gray-400" colSpan={7}>
+                          변동 없음
+                        </td>
+                      </tr>
+                    ) : null}
                     {cardRows.map((r, i) => (
                       <tr key={`${cat}-${sortDir}-${i}`} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
                         <td className={td}><BrandLogo brand={r.brand} /></td>
@@ -250,6 +256,12 @@ export default function CompetitorMovers() {
                         <td className={td}><span className={HOV + " font-bold tabular-nums text-gray-900"}>{peso(r.promo)}</span></td>
                         <td className={td}><MoverDelta delta={r.delta} pct={r.pct} /></td>
                         <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] text-gray-500"}>{shopName(r.retailer)}</span></td>
+                      </tr>
+                    ))}
+                    {/* 행 수는 항상 5줄 — 표 높이가 날마다 출렁이면 눈이 위치를 다시 찾는다 */}
+                    {Array.from({ length: Math.max(0, (cardRows.length === 0 ? 4 : 5) - cardRows.length) }).map((_, j) => (
+                      <tr key={`pad-${cat}-${sortDir}-${j}`} aria-hidden className="border-b border-gray-100">
+                        <td className={td} colSpan={7}><span className="inline-flex h-[22px] items-center">&nbsp;</span></td>
                       </tr>
                     ))}
                   </tbody>
