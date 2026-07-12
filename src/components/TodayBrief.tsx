@@ -47,10 +47,10 @@ export default function TodayBrief() {
   const approved = b?.status === "approved"
 
   return (
-    <section className="h-full rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100">
+    <section className="flex h-full flex-col rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100">
       <header className="mb-1 flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2">
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900">오늘의 핵심</h2>
+          <h2 className="text-[16px] font-bold tracking-tight text-gray-900">금주 주요 이슈</h2>
           <span className="text-[10px] text-gray-400">{fmtDate(b?.asOf)}</span>
         </div>
 
@@ -72,7 +72,7 @@ export default function TodayBrief() {
       </header>
 
       {b === undefined ? (
-        <div className="space-y-2">
+        <div className="flex-1 space-y-2">
           {[0, 1, 2].map((i) => (
             <div key={i} className="h-[24px] rounded bg-white/60" />
           ))}
@@ -83,19 +83,27 @@ export default function TodayBrief() {
         </p>
       ) : (
         <>
-          {b.lines.map((l, i) => (
-            <div
-              key={i}
-              className="relative mb-1 pl-3 last:mb-0"
-              style={{ animation: "fadeUp .5s ease both", animationDelay: `${i * 0.06}s` }}
-            >
-              <span className="absolute left-0 top-[7px] h-1 w-1 rounded-full bg-indigo-500" />
-              <p className="text-[12px] font-medium leading-tight text-gray-800">{l.text}</p>
-              {l.evidence ? (
-                <p className="mt-0.5 text-[10px] text-gray-400">근거 · {l.evidence}</p>
-              ) : null}
-            </div>
-          ))}
+          <div className="flex flex-1 flex-col justify-around gap-1">
+            {b.lines.map((l, i) => (
+              <div
+                key={i}
+                className="group relative rounded-lg border border-indigo-100/70 bg-white/70 px-2.5 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-white"
+                style={{ animation: "fadeUp .5s ease both", animationDelay: `${i * 0.06}s` }}
+              >
+                <div className="flex items-start gap-2">
+                  <span className="mt-[3px] flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white">
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[14px] font-semibold leading-snug text-gray-900">{l.text}</p>
+                    {l.evidence ? (
+                      <p className="mt-1 text-[11px] text-gray-400">근거 · {l.evidence}</p>
+                    ) : null}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
 
           {err ? <p className="mt-1 text-[10px] text-rose-600">{err}</p> : null}
 
