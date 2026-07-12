@@ -3,7 +3,7 @@
 import React from "react"
 import { newsBySheet, calendarMonth } from "@/lib/supabase"
 import TodayBrief from "@/components/TodayBrief"
-import ChangeFeed from "@/components/ChangeFeed"
+import CompetitorMovers from "@/components/CompetitorMovers"
 import EconRail from "@/components/EconRail"
 import IngestHealth from "@/components/IngestHealth"
 import BriefArchive from "@/components/BriefArchive"
@@ -73,7 +73,7 @@ export default function Overview() {
                   주장 옆에 근거가 있어야 신뢰가 생긴다. */}
               <div className="mt-6 grid grid-cols-1 gap-3 sm:mt-8 lg:grid-cols-[1.05fr_1fr]" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}>
                 <TodayBrief />
-                <ChangeFeed />
+                <CompetitorMovers />
               </div>
               <div className="mt-6 flex items-baseline gap-2 sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
                 <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900">주요 뉴스</h1>
@@ -181,10 +181,10 @@ export default function Overview() {
               </div>
               <div className="flex items-baseline justify-between">
                 <p className="cursor-default text-[16px] font-bold tracking-tight text-gray-900">경제 캘린더</p>
-                <span className="text-[11px] text-gray-400">{new Date().getMonth() + 1}월 전체 · {cal.length}건</span>
+                <span className="text-[11px] text-gray-400">{new Date().getMonth() + 1}월 · 주요 {Math.min(cal.length, 10)}건</span>
               </div>
               <div key={calTick} className="mt-2 flex flex-col gap-0.5">
-                {cal.map((e, i) => {
+                {cal.slice(0, 10).map((e, i) => {
                   const showToday = i > 0 && cal[i - 1].past && !e.past
                   const head = e.event.split("\u2014")[0]
                   const abbr = head.match(/\(([^)0-9/]{1,12})\)/)
