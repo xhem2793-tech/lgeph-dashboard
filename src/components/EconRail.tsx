@@ -21,13 +21,6 @@ type Series = Awaited<ReturnType<typeof econSeries>>[string]
 
 const IND = "#6366f1"
 
-const pctUnit = (l: string) => (l.includes("%p") ? "%p" : "%")
-
-function impact(c: Card) {
-  const up = (c.delta ?? 0) > 0
-  const bad = c.dir === "bad" ? up : !up
-  return { bad, up }
-}
 
 /** 기간 라벨 — 월별 "6월", 분기 "2Q26" */
 function periodLabel(iso: string, freq: string) {
@@ -39,29 +32,37 @@ function periodLabel(iso: string, freq: string) {
 /** 송금 원자료는 절대값(달러) — 10억 단위로 읽는다 */
 const scale = (key: string, v: number) => (key === "remit" ? v / 1e9 : v)
 
-/** 변화 배지 — 가격 동향(MoverDelta)과 동일: 화살표 + 4초마다 변화폭 ↔ 값 교대 */
+/** 변화 배지 — 4초마다 전월(전분기)비 ↔ 전년비 교대.
+ *  한 시점의 등락(전월비)과 추세(전년비)는 서로 다른 이야기다. 둘 다 보여야 오독이 없다. */
 function DeltaBadge({ c }: { c: Card }) {
-  const { bad, up } = impact(c)
-  const [mode, setMode] = React.useState(0)
+  const opts = [
+    { d: c.deltaMom, lb: c.freq === "분기" ? "전분기" : "전월" },
+    { d: c.deltaYoy, lb: "전년" },
+  ].filter((o) => o.d != null) as { d: number; lb: string }[]
+  const [i, setI] = React.useState(0)
   React.useEffect(() => {
-    const id = setInterval(() => setMode((m) => (m === 0 ? 1 : 0)), 4000)
+    if (opts.length < 2) return
+    const id = setInterval(() => setI((k) => (k + 1) % opts.length), 4000)
     return () => clearInterval(id)
-  }, [])
-  if (c.delta == null || c.delta === 0) return <span className="text-[10px] text-gray-400">보합</span>
+  }, [opts.length])
+  if (opts.length === 0) return <span className="w-[78px] shrink-0 text-right text-[10px] text-gray-400">—</span>
+  const o = opts[Math.min(i, opts.length - 1)]
+  const up = o.d > 0
+  const bad = c.dir === "bad" ? up : !up
+  const flat = o.d === 0
   return (
     <span
       className={
-        "inline-flex w-[66px] items-center rounded px-1 py-0.5 text-[10px] font-semibold tabular-nums transition-transform duration-300 ease-out hover:-translate-y-0.5 " +
-        (bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
+        "inline-flex w-[78px] shrink-0 items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-semibold tabular-nums transition-transform duration-300 ease-out hover:-translate-y-0.5 " +
+        (flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
       }
     >
-      <span className="w-[9px] shrink-0 text-left">{up ? "↑" : "↓"}</span>
-      <span key={mode} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
-        {mode === 1 ? (
-          <CountUp value={Number(c.value)} prefix={c.prefix} suffix={c.suffix} decimals={c.key === "remit" ? 2 : 1} />
-        ) : (
-          <CountUp value={Math.abs(c.delta)} suffix={pctUnit(c.deltaLabel ?? "")} decimals={1} />
-        )}
+      <span key={o.lb} className="shrink-0 opacity-70" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
+        {o.lb}
+      </span>
+      <span className="w-[8px] shrink-0 text-center">{flat ? "·" : up ? "↑" : "↓"}</span>
+      <span key={o.lb + "v"} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
+        <CountUp value={Math.abs(o.d)} suffix={c.deltaUnit} decimals={1} />
       </span>
     </span>
   )
