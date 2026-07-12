@@ -140,7 +140,7 @@ export default function EconRail() {
   }, [])
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white" style={{ animation: "fadeUp .5s ease both" }}>
+    <section className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}>
       <header className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2">
         <h2 className="text-[16px] font-bold tracking-tight text-gray-900">경제지표</h2>
         <a
