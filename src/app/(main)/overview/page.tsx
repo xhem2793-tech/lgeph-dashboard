@@ -71,7 +71,7 @@ export default function Overview() {
             <div className="lg:col-span-3">
               {/* ① 오늘의 핵심(주장) + 오늘의 변화(근거) — 좌우로 나란히.
                   주장 옆에 근거가 있어야 신뢰가 생긴다. */}
-              <div className="mt-6 grid grid-cols-1 gap-3 sm:mt-8 lg:grid-cols-[1.05fr_1fr]" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}>
+              <div className="mt-6 grid grid-cols-1 gap-3 sm:mt-8 lg:grid-cols-2" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}>
                 <TodayBrief />
                 <CompetitorMovers />
               </div>
@@ -93,7 +93,7 @@ export default function Overview() {
                     {nMain[0] ? (
                       <button type="button" onClick={() => setModal({ ...nMain[0], category: "경제·정치·사회" })} className="group mb-4 flex flex-col gap-3 border-b border-gray-100 pb-4 text-left sm:flex-row sm:gap-4">
                         {nMain[0].image ? (
-                          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 sm:aspect-auto sm:h-52 sm:w-[22rem] sm:shrink-0">
+                          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 sm:aspect-auto sm:h-[187px] sm:w-[387px] sm:shrink-0">
                             <img src={nMain[0].image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                           </div>
                         ) : null}
