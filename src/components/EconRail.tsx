@@ -69,8 +69,8 @@ function DeltaBadge({ c }: { c: Card }) {
 
 /** 접힌 줄의 추세 미리보기 — 축 없음, 마지막 점만 */
 function Preview({ pts }: { pts: number[] }) {
-  if (!pts || pts.length < 2) return <div className="h-[24px] w-[54px] shrink-0" />
-  const W = 54, H = 24, L = 1, R = W - 3, T = 4, B = H - 4
+  if (!pts || pts.length < 2) return <div className="h-[22px] w-[54px] shrink-0" />
+  const W = 54, H = 22, L = 1, R = W - 3, T = 3, B = H - 3
   const lo = Math.min(...pts), hi = Math.max(...pts)
   const pad = (hi - lo || 1) * 0.2
   const LO = lo - pad, HI = hi + pad, n = pts.length
@@ -105,7 +105,7 @@ export default function EconRail() {
 
   return (
     <section className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
-      <header className="flex items-baseline justify-between border-b border-gray-100 px-3.5 py-3.5">
+      <header className="flex items-baseline justify-between border-b border-gray-100 px-3.5 py-2.5">
         <a href="/economy" className="group flex items-baseline gap-1">
           <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">주요지표</h2>
           <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
@@ -121,17 +121,17 @@ export default function EconRail() {
           if (rows && list.length === 0) return null
           return (
             <div key={g}>
-              <p className="border-b border-gray-100 bg-gray-50/70 px-3.5 py-1.5 text-[10px] font-semibold text-gray-400">{g} 지표</p>
+              <p className="border-b border-gray-100 bg-gray-50/70 px-3.5 py-1 text-[10px] font-semibold text-gray-400">{g} 지표</p>
               {(rows ? list : (Array.from({ length: 4 }) as (Card | undefined)[])).map((c, i) =>
                 !c ? (
-                  <div key={i} className="h-[44px] border-b border-gray-50" />
+                  <div key={i} className="h-[36px] border-b border-gray-50" />
                 ) : (
                   <div key={c.key}>
                     <button
                       type="button"
                       onClick={() => setOpen(open === c.key ? null : c.key)}
                       className={
-                        "flex w-full items-center gap-2 border-b border-gray-50 px-3 py-2 text-left transition-all duration-300 ease-out " +
+                        "flex w-full items-center gap-2 border-b border-gray-50 px-3 py-1.5 text-left transition-all duration-300 ease-out " +
                         (open === c.key ? "bg-indigo-50/60" : "hover:-translate-y-0.5 hover:bg-gray-50")
                       }
                     >
