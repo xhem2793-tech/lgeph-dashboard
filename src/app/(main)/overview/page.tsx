@@ -3,6 +3,7 @@
 import React from "react"
 import { newsBySheet, calendarRecent } from "@/lib/supabase"
 import CompetitorMovers from "@/components/CompetitorMovers"
+import TriageMatrix from "@/components/TriageMatrix"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
 export type KpiEntry = {
@@ -63,6 +64,9 @@ export default function Overview() {
         <>
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_0.75fr]" style={{ animation: "fadeUp .5s ease both" }}>
             <div className="lg:col-span-3">
+              <div className="mt-6 sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.15s" }}>
+                <TriageMatrix />
+              </div>
               <div className="mt-6 sm:mt-8 lg:w-2/3" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.4s" }}>
                 <CompetitorMovers />
               </div>
