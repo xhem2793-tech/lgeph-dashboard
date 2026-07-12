@@ -208,6 +208,30 @@ export async function weekHighlights(limit = 5) {
   }))
 }
 
+/** 이번 주 분석 — 자체 칼럼 + 외부 큐레이션.
+ *  외부 글은 원문을 저장하지 않는다(전재 금지) — 요약·해석·링크만. */
+export async function analysisPosts(limit = 4) {
+  const rows = await sb(
+    `analysis_posts?select=id,published_at,kind,title,dek,summary,body_md,why_matters,source_name,source_url,image_url,tags,confidence,author&order=published_at.desc&limit=${limit}`,
+  )
+  return rows.map((r) => ({
+    id: Number(r.id),
+    publishedAt: r.published_at as string,
+    kind: r.kind as "own" | "external",
+    title: r.title as string,
+    dek: (r.dek ?? null) as string | null,
+    summary: (r.summary ?? null) as string | null,
+    body: (r.body_md ?? null) as string | null,
+    whyMatters: (r.why_matters ?? "") as string,
+    source: (r.source_name ?? "") as string,
+    url: (r.source_url ?? null) as string | null,
+    image: (r.image_url ?? null) as string | null,
+    tags: (r.tags ?? []) as string[],
+    confidence: (r.confidence ?? "") as string,
+    author: (r.author ?? null) as string | null,
+  }))
+}
+
 /** 지난 7일 브리핑 아카이브 — 승인 이력이 곧 판단의 로그 */
 export async function briefArchive() {
   const rows = await sb(
