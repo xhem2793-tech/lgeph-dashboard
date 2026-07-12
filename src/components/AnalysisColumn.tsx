@@ -31,7 +31,7 @@ function OwnVisual({ tags, compact }: { tags: string[]; compact?: boolean }) {
     <div
       className={
         "flex w-full flex-col justify-between overflow-hidden rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-800 p-3 " +
-        (compact ? "aspect-[16/9]" : "h-full min-h-[180px]")
+        (compact ? "h-[150px]" : "h-full min-h-[180px]")
       }
     >
       <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">
@@ -218,7 +218,7 @@ export default function AnalysisColumn() {
                       <OwnVisual tags={p.tags} compact />
                     </div>
                   ) : p.image ? (
-                    <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
+                    <div className="mb-2 h-[150px] w-full overflow-hidden rounded-lg bg-gray-100">
                       <img
                         src={p.image}
                         alt=""
