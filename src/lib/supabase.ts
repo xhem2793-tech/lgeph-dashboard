@@ -208,6 +208,14 @@ export async function weekHighlights(limit = 5) {
   }))
 }
 
+/** 지표별 미니차트 데이터 — 최근 12개 관측치(오래된 → 최신). 축 없는 추세용. */
+export async function econSpark(): Promise<Record<string, number[]>> {
+  const rows = await sb(`v_econ_spark?select=key,points`)
+  const out: Record<string, number[]> = {}
+  for (const r of rows) out[r.key as string] = (r.points ?? []).map((v: any) => Number(v))
+  return out
+}
+
 /** 이번 주 분석 — 자체 칼럼 + 외부 큐레이션.
  *  외부 글은 원문을 저장하지 않는다(전재 금지) — 요약·해석·링크만. */
 export async function analysisPosts(limit = 4) {
