@@ -24,11 +24,14 @@ export function TopNav() {
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
       <style>{"@keyframes axfade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}"}</style>
       <div className="mx-auto flex max-w-[1536px] items-center gap-4 px-4 py-3 sm:px-6 lg:px-8" style={{ animation: "axfade .5s ease both" }}>
-        <Link href="/overview" className="flex shrink-0 items-baseline gap-2">
-          <span className="hidden text-[11px] font-semibold text-gray-400 sm:inline">필리핀법인</span>
-          <span className="text-2xl font-extrabold leading-none tracking-tight">
-            <span className="text-indigo-600">AX</span>
-            <span className="text-gray-900 dark:text-gray-50"> Dashboard</span>
+        {/* 워드마크 — 주소가 곧 브랜드. 아래 한 줄로 소속을 고정해 캡처가 돌아도 오해가 없다 */}
+        <Link href="/overview" className="flex shrink-0 flex-col leading-none">
+          <span className="text-[20px] font-extrabold tracking-tight">
+            <span className="text-gray-900 dark:text-gray-50">axlgeph</span>
+            <span className="text-indigo-600">.report</span>
+          </span>
+          <span className="mt-1 border-t border-gray-200 pt-0.5 text-[10px] font-semibold text-gray-400 dark:border-gray-700">
+            LG전자 필리핀법인 · 경영기획
           </span>
         </Link>
         <form onSubmit={(e) => e.preventDefault()} className="relative mx-auto hidden w-full max-w-xl md:block">
