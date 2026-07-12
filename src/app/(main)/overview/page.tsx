@@ -1,11 +1,10 @@
 "use client"
 
 import React from "react"
-import { newsBySheet, calendarRecent } from "@/lib/supabase"
+import { newsBySheet, calendarMonth } from "@/lib/supabase"
 import TodayBrief from "@/components/TodayBrief"
 import ChangeFeed from "@/components/ChangeFeed"
 import EconRail from "@/components/EconRail"
-import Watchlist from "@/components/Watchlist"
 import IngestHealth from "@/components/IngestHealth"
 import BriefArchive from "@/components/BriefArchive"
 import EntryCards from "@/components/EntryCards"
@@ -44,7 +43,7 @@ export default function Overview() {
           newsBySheet("daily_news", 14),
           newsBySheet("ce_trend", 5),
           newsBySheet("b2b_trend", 5),
-          calendarRecent(3, 6),
+          calendarMonth(),
         ])
         setNMain(nm); setNCE(nc); setNB2B(nb); setCal(ec)
       } catch (e) {
@@ -94,7 +93,7 @@ export default function Overview() {
                     {nMain[0] ? (
                       <button type="button" onClick={() => setModal({ ...nMain[0], category: "경제·정치·사회" })} className="group mb-4 flex flex-col gap-3 border-b border-gray-100 pb-4 text-left sm:flex-row sm:gap-4">
                         {nMain[0].image ? (
-                          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 sm:aspect-auto sm:h-40 sm:w-64 sm:shrink-0">
+                          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 sm:aspect-auto sm:h-52 sm:w-[22rem] sm:shrink-0">
                             <img src={nMain[0].image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                           </div>
                         ) : null}
@@ -133,8 +132,8 @@ export default function Overview() {
                                     <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                                   </div>
                                 ) : null}
-                                <p className="line-clamp-2 text-[16px] font-semibold leading-tight text-gray-800 group-hover:text-indigo-600">{n.title}</p>
-                                <p className="mt-1 text-[12px] text-gray-400">{n.source} · {n.date}</p>
+                                <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                                <p className="mt-0.5 text-[11px] text-gray-400">{n.source} · {n.date}</p>
                               </button>
                             ))}
                           </div>
@@ -154,7 +153,7 @@ export default function Overview() {
                     </a>
                     <div className="flex flex-col divide-y divide-gray-100">
                       {nMain.slice(1, 13).map((n, i) => (
-                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group py-2.5 text-left">
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
                           <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
                           <p className="mt-0.5 text-[11px] text-gray-400">{n.source} · {n.date}</p>
                         </button>
@@ -177,15 +176,14 @@ export default function Overview() {
             </div>
             <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
               <div className="lg:sticky lg:top-[164px]">
-              {/* 우측 레일 = 우리 위치(2단락 SO WHAT) → 경제지표 → 캘린더 */}
-              <div className="mb-5">
-                <Watchlist />
-              </div>
               <div className="mb-5">
                 <EconRail />
               </div>
-              <p className="cursor-default text-[14px] font-bold tracking-tight text-gray-900">경제 캘린더</p>
-              <div key={calTick} className="mt-2 flex flex-col gap-1">
+              <div className="flex items-baseline justify-between">
+                <p className="cursor-default text-[16px] font-bold tracking-tight text-gray-900">경제 캘린더</p>
+                <span className="text-[11px] text-gray-400">{new Date().getMonth() + 1}월 전체 · {cal.length}건</span>
+              </div>
+              <div key={calTick} className="mt-2 flex flex-col gap-0.5">
                 {cal.map((e, i) => {
                   const showToday = i > 0 && cal[i - 1].past && !e.past
                   const head = e.event.split("\u2014")[0]
@@ -205,7 +203,7 @@ export default function Overview() {
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className={"line-clamp-1 break-all text-[12px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{calTitle}</p>
+                          <p className={"line-clamp-2 text-[14px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{calTitle}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-1">
                             {kws.map((k, ki) => (
                               <span key={ki} className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">{k}</span>
