@@ -23,7 +23,7 @@ export function TopNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
       <style>{"@keyframes axfade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}"}</style>
-      <div className="mx-auto flex max-w-screen-2xl items-center gap-4 px-4 py-3 sm:px-6 lg:px-8" style={{ animation: "axfade .5s ease both" }}>
+      <div className="mx-auto flex max-w-[1536px] items-center gap-4 px-4 py-3 sm:px-6 lg:px-8" style={{ animation: "axfade .5s ease both" }}>
         <Link href="/overview" className="flex shrink-0 items-baseline gap-2">
           <span className="hidden text-[11px] font-semibold text-gray-400 sm:inline">필리핀법인</span>
           <span className="text-2xl font-extrabold leading-none tracking-tight">
@@ -49,7 +49,7 @@ export function TopNav() {
           <span className="hidden rounded-md bg-gray-100 px-2 py-1 text-[11px] font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300 md:block">LGE-PH 경영기획</span>
         </div>
       </div>
-      <nav className="mx-auto flex max-w-screen-2xl items-center gap-1 overflow-x-auto border-t border-gray-100 px-4 py-1.5 dark:border-gray-800/60 sm:px-6 lg:px-8" style={{ animation: "axfade .5s ease both", animationDelay: ".08s" }}>
+      <nav className="mx-auto flex max-w-[1536px] items-center gap-1 overflow-x-auto border-t border-gray-100 px-4 py-1.5 dark:border-gray-800/60 sm:px-6 lg:px-8" style={{ animation: "axfade .5s ease both", animationDelay: ".08s" }}>
         {siteConfig.nav.map((item) => (
           <Link
             key={item.href}
