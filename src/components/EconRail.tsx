@@ -131,11 +131,11 @@ export default function EconRail() {
                         (open === c.key ? "bg-indigo-50/60" : "hover:-translate-y-0.5 hover:bg-gray-50")
                       }
                     >
-                      <p className="min-w-0 flex-1 truncate text-[16px] font-semibold text-gray-800">{c.label}</p>
+                      <p className="min-w-0 flex-1 truncate text-[14px] font-semibold text-gray-800">{c.label}</p>
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="w-[64px] shrink-0 text-right text-[16px] font-bold tabular-nums text-gray-900">
+                      <p className="w-[62px] shrink-0 text-right text-[14px] font-bold tabular-nums text-gray-900">
                         {c.prefix}
                         {c.value}
                         {c.suffix}
@@ -168,7 +168,8 @@ export default function EconRail() {
 function Detail({ c, s }: { c: Card; s: Series }) {
   const cur = s.points.map((v) => scale(c.key, v))
   const prevArr = s.prev.map((v) => (v == null ? NaN : scale(c.key, v)))
-  const hasPrev = prevArr.some((v) => Number.isFinite(v))
+  // 전년 값이 하나라도 비면 선이 끊겨 차트가 깨진다 — 전 구간이 있을 때만 그린다
+  const hasPrev = prevArr.length === cur.length && prevArr.every((v) => Number.isFinite(v))
   const labels = s.dates.map((d) => periodLabel(d, c.freq))
   const yr = s.dates[s.dates.length - 1]?.slice(0, 4) ?? ""
   const dec = c.key === "remit" ? 2 : 1
