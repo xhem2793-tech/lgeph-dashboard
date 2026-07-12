@@ -32,6 +32,7 @@ export default function Overview() {
   const [modal, setModal] = React.useState<any>(null)
   const [modalClosing, setModalClosing] = React.useState(false)
   const [calTick, setCalTick] = React.useState(0)
+  const [calTab, setCalTab] = React.useState<"upcoming" | "past">("upcoming")
   const closeModal = () => { setModalClosing(true); window.setTimeout(() => { setModal(null); setModalClosing(false) }, 240) }
 
   React.useEffect(() => {
@@ -59,6 +60,9 @@ export default function Overview() {
 
 
   
+
+  // 캘린더 — 탭에 따라 예정/결과만. 제목은 2줄 클램프로 잘리되 카드 밖으로 흐르지 않는다
+  const calList = cal.filter((e: any) => (calTab === "past" ? e.past : !e.past)).slice(0, 10)
 
   return (
     <main className="mx-auto max-w-[1536px] px-4 pb-4 pt-0 sm:px-6 sm:pb-6 sm:pt-0">
@@ -179,36 +183,47 @@ export default function Overview() {
                 <EconRail />
               </div>
               <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-shadow duration-300 hover:shadow-md">
-              <div className="flex items-baseline justify-between">
-                <p className="cursor-default text-[16px] font-bold tracking-tight text-gray-900">경제 캘린더</p>
-                <span className="text-[11px] text-gray-400">{new Date().getMonth() + 1}월 · 주요 {Math.min(cal.length, 10)}건</span>
+              <div className="flex items-center justify-between gap-2">
+                <a href="/calendar" className="group flex items-baseline gap-1">
+                  <p className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">경제 캘린더</p>
+                  <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+                </a>
+                {/* 예정 ↔ 결과 — 같은 달을 두 방향으로 본다(앞으로 볼 것 / 이미 나온 것) */}
+                <div className="flex shrink-0 gap-1">
+                  {([["upcoming", "예정"], ["past", "결과"]] as const).map(([k, lb]) => (
+                    <button
+                      key={k}
+                      type="button"
+                      onClick={() => setCalTab(k)}
+                      className={"rounded px-1.5 py-0.5 text-[10px] font-medium transition-all duration-200 active:scale-95 " + (calTab === k ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}
+                    >
+                      {lb}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div key={calTick} className="mt-2 flex flex-col gap-0.5">
-                {cal.slice(0, 10).map((e, i) => {
-                  const showToday = i > 0 && cal[i - 1].past && !e.past
+              <div key={`${calTick}-${calTab}`} className="mt-2 flex flex-col gap-0.5">
+                {calList.length === 0 ? (
+                  <p className="py-6 text-center text-[12px] text-gray-400">{calTab === "past" ? "이번 달 발표된 결과 없음" : "남은 일정 없음"}</p>
+                ) : null}
+                {calList.map((e, i) => {
                   const head = e.event.split("\u2014")[0]
                   const abbr = head.match(/\(([^)0-9/]{1,12})\)/)
                   const calTitle = head.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim()
                   const kws = [abbr ? abbr[1].trim() : null, e.category].filter(Boolean).slice(0, 2)
                   return (
                     <React.Fragment key={i}>
-                      {showToday ? (
-                        <div className="my-1 flex items-center gap-2 text-[10px] font-semibold text-indigo-400">
-                          <span className="h-px flex-1 bg-indigo-100" />오늘<span className="h-px flex-1 bg-indigo-100" />
-                        </div>
-                      ) : null}
                       <button type="button" onClick={() => setModal({ title: e.event.split("\u2014")[0].trim(), summary: e.event.split("\u2014").slice(1).join("\u2014").trim() || null, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance, isCal: true })} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
                         <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
                           <span className="text-[10px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className={"line-clamp-2 text-[14px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{calTitle}</p>
+                          <p className={"line-clamp-2 break-words text-[13px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{calTitle}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-1">
                             {kws.map((k, ki) => (
                               <span key={ki} className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">{k}</span>
                             ))}
-                            <span className="text-[10px] text-gray-400">{e.past ? "결과" : "예정"}</span>
                           </div>
                         </div>
                       </button>
