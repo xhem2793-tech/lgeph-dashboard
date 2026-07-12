@@ -208,6 +208,24 @@ export async function weekHighlights(limit = 5) {
   }))
 }
 
+/** 경제 캘린더 — 이번 달 고정.
+ *  기존 calendarRecent(과거3·미래6)는 창이 매일 밀려 같은 달인데도 이벤트가 바뀌었다.
+ *  달 단위로 고정하면 "이번 달에 무엇이 있는가"가 매일 같은 답을 준다(일관성=브랜드). */
+export async function calendarMonth() {
+  const rows = await sb(
+    `v_calendar_month?select=date,category,importance,event,release_time,past,today`,
+  )
+  return rows.map((r) => ({
+    date: r.date as string,
+    category: r.category as string,
+    importance: r.importance as string,
+    event: r.event as string,
+    time: r.release_time as string | null,
+    past: Boolean(r.past),
+    today: Boolean(r.today),
+  }))
+}
+
 /** 지표별 미니차트 데이터 — 최근 12개 관측치(오래된 → 최신). 축 없는 추세용. */
 export async function econSpark(): Promise<Record<string, number[]>> {
   const rows = await sb(`v_econ_spark?select=key,points`)
