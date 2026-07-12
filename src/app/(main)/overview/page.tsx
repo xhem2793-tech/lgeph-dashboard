@@ -5,9 +5,7 @@ import { newsBySheet, calendarMonth } from "@/lib/supabase"
 import TodayBrief from "@/components/TodayBrief"
 import CompetitorMovers from "@/components/CompetitorMovers"
 import EconRail from "@/components/EconRail"
-import IngestHealth from "@/components/IngestHealth"
-import BriefArchive from "@/components/BriefArchive"
-import EntryCards from "@/components/EntryCards"
+import DailyIndicators from "@/components/DailyIndicators"
 import AnalysisColumn from "@/components/AnalysisColumn"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
@@ -164,15 +162,9 @@ export default function Overview() {
                 </div>
               </div>
 
-              {/* ③ 더 파고들기 — 주제별 진입 카드 */}
+              {/* ③ 경제지표 3카드(환율·유가·날씨) — 뉴스 아래 복구 */}
               <div className="mt-7 sm:mt-9" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
-                <EntryCards />
-              </div>
-
-              {/* ④ 하단 3분할 — 매일 볼 필요는 없지만 신뢰가 쌓이는 자리 */}
-              <div className="mt-7 grid grid-cols-1 gap-3 sm:mt-9 lg:grid-cols-3" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.55s" }}>
-                <IngestHealth />
-                <BriefArchive />
+                <DailyIndicators />
               </div>
             </div>
             <div className="pt-4 lg:pt-0" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
