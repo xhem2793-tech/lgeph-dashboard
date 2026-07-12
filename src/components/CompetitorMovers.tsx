@@ -24,7 +24,6 @@ const HOV = "inline-block transition-colors duration-200"
 const HOVM = "inline-block transition-colors duration-200"
 const CAT_ORDER = ["냉장고", "TV", "에어컨", "세탁기", "에어케어", "정수기"]
 const WD = ["일", "월", "화", "수", "목", "금", "토"]
-const COLLAPSED = 150
 
 function peso(n: number | null) {
   return n == null ? "—" : "₱" + Math.round(n).toLocaleString("en-US")
@@ -158,7 +157,7 @@ export default function CompetitorMovers() {
   const td = "px-0.5 py-px text-center align-middle truncate"
 
   return (
-    <section className="h-full overflow-hidden rounded-xl border-[1.5px] border-indigo-500 bg-white p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <section className="h-full overflow-hidden rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
@@ -212,8 +211,7 @@ export default function CompetitorMovers() {
         <div className="mt-1">
           <div>
             <div
-              className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
-              style={{ minHeight: COLLAPSED }}
+              className="overflow-hidden"
             >
               <div className="w-full max-w-full overflow-hidden">
                 <table className="w-full table-fixed border-collapse text-[11px]">
@@ -254,11 +252,6 @@ export default function CompetitorMovers() {
                         <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] text-gray-500"}>{shopName(r.retailer)}</span></td>
                       </tr>
                     ))}
-                    {Array.from({ length: Math.max(0, 5 - cardRows.length) }).map((_, j) => (
-                      <tr key={`pad-${cat}-${sortDir}-${j}`} aria-hidden className="border-b border-gray-100">
-                        <td className={td} colSpan={7}><span className="inline-flex h-6 items-center">&nbsp;</span></td>
-                      </tr>
-                    ))}
                   </tbody>
                 </table>
               </div>
@@ -266,7 +259,7 @@ export default function CompetitorMovers() {
           </div>
         </div>
 
-        <p className="mt-auto pt-1.5 text-[10px] leading-relaxed text-gray-400">
+        <p className="mt-1 text-[10px] leading-snug text-gray-400">
           <span className={HOVM}>경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5 · <span className="text-rose-600">↑인상</span> / <span className="text-emerald-600">↓인하</span> · 유통: Anson&#39;s · Abenson · SM</span>
         </p>
       </div>
