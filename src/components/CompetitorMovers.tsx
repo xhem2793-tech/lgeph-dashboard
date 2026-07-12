@@ -257,17 +257,18 @@ export default function CompetitorMovers() {
               className="overflow-hidden transition-[max-height] duration-500 ease-in-out"
               style={{ minHeight: COLLAPSED }}
             >
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[640px] table-fixed border-collapse text-[11px]">
+              <div className="w-full max-w-full overflow-x-auto">
+                <table className="w-full min-w-[520px] table-fixed border-collapse text-[11px]">
+                  {/* 합 520px — 카드(≈555px) 안에 들어오도록. 넘치면 테두리를 뚫는다 */}
                   <colgroup>
-                    <col style={{ width: 58 }} />
-                    <col style={{ width: 58 }} />
-                    <col style={{ width: 118 }} />
-                    <col style={{ width: 80 }} />
-                    <col style={{ width: 92 }} />
-                    <col style={{ width: 92 }} />
-                    <col style={{ width: 80 }} />
-                    <col style={{ width: 72 }} />
+                    <col style={{ width: 46 }} />
+                    <col style={{ width: 46 }} />
+                    <col style={{ width: 96 }} />
+                    <col style={{ width: 66 }} />
+                    <col style={{ width: 76 }} />
+                    <col style={{ width: 76 }} />
+                    <col style={{ width: 68 }} />
+                    <col style={{ width: 46 }} />
                   </colgroup>
                   <thead>
                     <tr className="border-b border-gray-200">
