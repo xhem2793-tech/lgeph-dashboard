@@ -64,7 +64,7 @@ export default function Overview() {
   
 
   return (
-    <main className="px-4 pb-4 pt-0 sm:px-6 sm:pb-6 sm:pt-0">
+    <main className="mx-auto max-w-[1280px] px-4 pb-4 pt-0 sm:px-6 sm:pb-6 sm:pt-0">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
       {(
         <>
@@ -96,9 +96,9 @@ export default function Overview() {
                     ) : null}
                     <div className="min-w-0">
                       <span className="text-[10px] font-semibold text-indigo-600">오늘의 1면</span>
-                      <p className="mt-1 text-[20px] font-bold leading-snug text-gray-900 group-hover:text-indigo-600 2xl:text-[20px]">{nMain[0].title}</p>
-                      {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500 2xl:text-[14px]">{nMain[0].summary}</p> : null}
-                      <p className="mt-1.5 text-[11px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
+                      <p className="mt-1 text-[24px] font-bold leading-tight text-gray-900 group-hover:text-indigo-600">{nMain[0].title}</p>
+                      {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500">{nMain[0].summary}</p> : null}
+                      <p className="mt-2 text-[12px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
                     </div>
                   </button>
                 ) : null}
@@ -123,14 +123,14 @@ export default function Overview() {
                           if (li > 0) rows.unshift(rows.splice(li, 1)[0])
                           return rows
                         })().map((n, i) => (
-                          <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
+                          <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
                             {i === 0 && n.image ? (
                               <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
                                 <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                               </div>
                             ) : null}
-                            <p className={"line-clamp-2 font-semibold leading-tight text-gray-800 group-hover:text-indigo-600 " + (i === 0 ? "text-[14px] 2xl:text-[16px]" : "text-[14px] 2xl:text-[16px]")}>{n.title}</p>
-                            <p className="mt-1 text-[10px] text-gray-400 2xl:text-[11px]">{n.source} · {n.date}</p>
+                            <p className={"line-clamp-2 font-semibold leading-tight text-gray-800 group-hover:text-indigo-600 " + "text-[16px]"}>{n.title}</p>
+                            <p className="mt-1 text-[12px] text-gray-400">{n.source} · {n.date}</p>
                           </button>
                         ))}
                       </div>
