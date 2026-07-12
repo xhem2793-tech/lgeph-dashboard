@@ -9,6 +9,7 @@ import Watchlist from "@/components/Watchlist"
 import IngestHealth from "@/components/IngestHealth"
 import BriefArchive from "@/components/BriefArchive"
 import EntryCards from "@/components/EntryCards"
+import AnalysisColumn from "@/components/AnalysisColumn"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
 export type KpiEntry = {
@@ -101,7 +102,7 @@ export default function Overview() {
                     </div>
                   </button>
                 ) : null}
-                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
+                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
                   {[
                     { title: "시장 동향", sub: "경제·정치·사회", rows: nMain, skip: 1, cat: "시장" },
                     { title: "CE 동향", sub: "생활가전·소비", rows: nCE, skip: 0, cat: "CE" },
@@ -114,7 +115,14 @@ export default function Overview() {
                         <span className="ml-1 text-[10px] text-gray-400">{col.sub}</span>
                       </a>
                       <div className="flex flex-col divide-y divide-gray-100">
-                        {col.rows.slice(col.skip, col.skip + 5).map((n, i) => (
+                        {(() => {
+                          // 각 열의 상단은 반드시 사진 — 리드에 이미지가 없으면
+                          // 이미지 있는 최신 기사를 끌어올린다(야후식). 순서만 바꿀 뿐 기사를 지어내지 않음
+                          const rows = col.rows.slice(col.skip, col.skip + 5)
+                          const li = rows.findIndex((r: any) => r.image)
+                          if (li > 0) rows.unshift(rows.splice(li, 1)[0])
+                          return rows
+                        })().map((n, i) => (
                           <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
                             {i === 0 && n.image ? (
                               <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
@@ -128,6 +136,8 @@ export default function Overview() {
                       </div>
                     </div>
                   ))}
+                  {/* 4번째 열 — 뉴스가 마르는 날에도 우리가 쓴 글은 있다 */}
+                  <AnalysisColumn />
                 </div>
               </div>
 
