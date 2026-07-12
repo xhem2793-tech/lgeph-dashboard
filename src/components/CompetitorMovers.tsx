@@ -46,43 +46,6 @@ function shopName(r: string) {
   if (/sm/i.test(r)) return "SM"
   return r
 }
-function specType(model: string, category: string) {
-  const m = (model || "").toLowerCase()
-  if (category === "TV") {
-    if (m.includes("oled")) return "OLED"
-    if (m.includes("rgb-mini") || m.includes("rgb mini")) return "RGB-Mini"
-    if (m.includes("mini led") || m.includes("mini-led") || m.includes("miniled") || m.includes("mini")) return "Mini-LED"
-    if (m.includes("qled")) return "QLED"
-    if (m.includes("qd")) return "QD-LED"
-    if (m.includes("uhd") || m.includes("4k")) return "UHD"
-    return "LED"
-  }
-  if (category === "냉장고") {
-    if (m.includes("chest") || m.includes("freezer")) return "냉동고"
-    if (m.includes("side by side") || m.includes("side-by-side") || /\bsxs\b/.test(m)) return "SxS"
-    if (m.includes("french") || m.includes("multi door") || m.includes("multi-door") || m.includes("4 door") || m.includes("4-door")) return "FDR"
-    if (m.includes("bottom") || /\bnr-b/.test(m)) return "BMF"
-    if (m.includes("two door") || m.includes("2 door") || m.includes("double door") || m.includes("2-door") || m.includes("top mount")) return "2도어"
-    if (m.includes("single") || m.includes("one door")) return "1도어"
-    if (m.includes("inverter") || /\binv\b/.test(m)) return "인버터"
-    return "냉장고"
-  }
-  if (category === "세탁기") {
-    if (m.includes("dryer")) return "건조기"
-    if (m.includes("twin")) return "트윈"
-    if (m.includes("front load") || m.includes("front-load") || /\bf\/?l\b/.test(m) || /\bna[- ]?[vs]/.test(m)) return "F/L"
-    if (m.includes("top load") || m.includes("top-load") || /\bt\/?l\b/.test(m) || /\bna[- ]?f/.test(m)) return "T/L"
-    return "세탁기"
-  }
-  if (category === "에어컨") {
-    if (m.includes("window") || m.includes("wdw")) return "창문형"
-    if (m.includes("split")) return "스플릿"
-    if (m.includes("floor")) return "스탠드"
-    if (m.includes("inverter") || /\binv\b/.test(m)) return "인버터"
-    return "에어컨"
-  }
-  return category
-}
 function modelCode(s: string, brand: string) {
   let m = (s || "").replace(/&#821[12];/g, "–").replace(/&amp;/g, "&").replace(/&#\d+;/g, "")
   m = m.replace(/^\s*20\d{2}\s*Model\s*[–-]\s*/i, "")
@@ -182,7 +145,6 @@ export default function CompetitorMovers() {
 
   if (rows.length === 0) return null
   const asOf = rows[0]?.asOf
-  const prevAsOf = rows[0]?.prevAsOf
 
   const cats = ["전체", ...Array.from(new Set(rows.map((r) => r.category))).sort(
     (a, b) => (CAT_ORDER.indexOf(a) < 0 ? 99 : CAT_ORDER.indexOf(a)) - (CAT_ORDER.indexOf(b) < 0 ? 99 : CAT_ORDER.indexOf(b)),
@@ -196,7 +158,7 @@ export default function CompetitorMovers() {
   const td = "px-0.5 py-px text-center align-middle truncate"
 
   return (
-    <section className="h-full rounded-xl border-[1.5px] border-indigo-500 bg-white p-2.5" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <section className="h-full rounded-xl border-[1.5px] border-indigo-500 bg-white p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
@@ -257,23 +219,19 @@ export default function CompetitorMovers() {
                 <table className="w-full table-fixed border-collapse text-[11px]">
                   {/* 비율 폭 — 카드가 좁아져도 표가 테두리를 뚫지 않는다(가로 스크롤 금지) */}
                   <colgroup>
-                    <col style={{ width: "9%" }} />
-                    <col style={{ width: "9%" }} />
-                    <col style={{ width: "20%" }} />
+                    <col style={{ width: "11%" }} />
+                    <col style={{ width: "28%" }} />
+                    <col style={{ width: "16%" }} />
+                    <col style={{ width: "17%" }} />
+                    <col style={{ width: "16%" }} />
                     <col style={{ width: "12%" }} />
-                    <col style={{ width: "15%" }} />
-                    <col style={{ width: "15%" }} />
-                    <col style={{ width: "12%" }} />
-                    <col style={{ width: "8%" }} />
                   </colgroup>
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className={th}>브랜드</th>
-                      <th className={th}>유형</th>
                       <th className={th}>모델</th>
                       <th className={th}>SRP</th>
                       <th className={th}>{fmtHdr(asOf)}</th>
-                      <th className={th}>{fmtHdr(prevAsOf)}</th>
                       <th className={th}>전일비</th>
                       <th className={th}>유통</th>
                     </tr>
@@ -283,21 +241,17 @@ export default function CompetitorMovers() {
                       <tr key={`${cat}-${sortDir}-${i}`} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
                         <td className={td}><BrandLogo brand={r.brand} /></td>
                         <td className={td}>
-                          <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[10px] font-semibold text-gray-500"}>{specType(r.model, r.category)}</span>
-                        </td>
-                        <td className={td}>
                           <span className={HOV + " max-w-[140px] truncate font-medium text-gray-700"} title={r.model}>{modelCode(r.model, r.brand)}</span>
                         </td>
                         <td className={td}><span className={HOVM + " tabular-nums text-gray-400"}>{peso(r.srp)}</span></td>
                         <td className={td}><span className={HOV + " font-bold tabular-nums text-gray-900"}>{peso(r.promo)}</span></td>
-                        <td className={td}><span className={HOVM + " tabular-nums text-gray-400"}>{peso(r.yPromo)}</span></td>
                         <td className={td}><MoverDelta delta={r.delta} pct={r.pct} /></td>
                         <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] text-gray-500"}>{shopName(r.retailer)}</span></td>
                       </tr>
                     ))}
                     {Array.from({ length: Math.max(0, 5 - cardRows.length) }).map((_, j) => (
                       <tr key={`pad-${cat}-${sortDir}-${j}`} aria-hidden className="border-b border-gray-100">
-                        <td className={td} colSpan={8}><span className="inline-flex h-6 items-center">&nbsp;</span></td>
+                        <td className={td} colSpan={6}><span className="inline-flex h-6 items-center">&nbsp;</span></td>
                       </tr>
                     ))}
                   </tbody>
