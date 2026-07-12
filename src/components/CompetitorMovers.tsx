@@ -158,12 +158,12 @@ export default function CompetitorMovers() {
   const td = "px-0.5 py-px text-center align-middle truncate"
 
   return (
-    <section className="h-full rounded-xl border-[1.5px] border-indigo-500 bg-white p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <section className="h-full overflow-hidden rounded-xl border-[1.5px] border-indigo-500 bg-white p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
           <a href="/competitors" className="group flex items-baseline gap-1">
-            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">현대 유통 동향</h2>
+            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">가격 동향</h2>
             <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
           </a>
           <span className="inline-flex cursor-default items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 transition-all duration-300 ease-out hover:text-emerald-700">
@@ -219,16 +219,18 @@ export default function CompetitorMovers() {
                 <table className="w-full table-fixed border-collapse text-[11px]">
                   {/* 비율 폭 — 카드가 좁아져도 표가 테두리를 뚫지 않는다(가로 스크롤 금지) */}
                   <colgroup>
-                    <col style={{ width: "11%" }} />
-                    <col style={{ width: "28%" }} />
+                    <col style={{ width: "10%" }} />
+                    <col style={{ width: "13%" }} />
+                    <col style={{ width: "22%" }} />
+                    <col style={{ width: "14%" }} />
+                    <col style={{ width: "15%" }} />
                     <col style={{ width: "16%" }} />
-                    <col style={{ width: "17%" }} />
-                    <col style={{ width: "16%" }} />
-                    <col style={{ width: "12%" }} />
+                    <col style={{ width: "10%" }} />
                   </colgroup>
                   <thead>
                     <tr className="border-b border-gray-200">
                       <th className={th}>브랜드</th>
+                      <th className={th}>카테고리</th>
                       <th className={th}>모델</th>
                       <th className={th}>SRP</th>
                       <th className={th}>{fmtHdr(asOf)}</th>
@@ -241,7 +243,10 @@ export default function CompetitorMovers() {
                       <tr key={`${cat}-${sortDir}-${i}`} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
                         <td className={td}><BrandLogo brand={r.brand} /></td>
                         <td className={td}>
-                          <span className={HOV + " max-w-[140px] truncate font-medium text-gray-700"} title={r.model}>{modelCode(r.model, r.brand)}</span>
+                          <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[10px] font-semibold text-gray-500"}>{r.category}</span>
+                        </td>
+                        <td className={td}>
+                          <span className={HOV + " block truncate font-medium text-gray-700"} title={r.model}>{modelCode(r.model, r.brand)}</span>
                         </td>
                         <td className={td}><span className={HOVM + " tabular-nums text-gray-400"}>{peso(r.srp)}</span></td>
                         <td className={td}><span className={HOV + " font-bold tabular-nums text-gray-900"}>{peso(r.promo)}</span></td>
@@ -251,7 +256,7 @@ export default function CompetitorMovers() {
                     ))}
                     {Array.from({ length: Math.max(0, 5 - cardRows.length) }).map((_, j) => (
                       <tr key={`pad-${cat}-${sortDir}-${j}`} aria-hidden className="border-b border-gray-100">
-                        <td className={td} colSpan={6}><span className="inline-flex h-6 items-center">&nbsp;</span></td>
+                        <td className={td} colSpan={7}><span className="inline-flex h-6 items-center">&nbsp;</span></td>
                       </tr>
                     ))}
                   </tbody>
