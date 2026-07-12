@@ -191,19 +191,36 @@ export async function homeBand() {
   }))
 }
 
-/** 오늘의 변화 — 모든 축(가격·재고·기상·뉴스)에서 실제로 바뀐 것만.
- *  행이 없으면 화면은 "특이사항 없음"을 표시한다(억지로 채우지 않음). */
-export async function dailyChanges(limit = 8) {
+/** 금주 핵심 — 하루 창은 가격만 움직여 가격 피드가 됨(seq=1이 상위를 다 차지).
+ *  창을 7일로 넓히고 종류별 쿼터(재고2·가격1·거시2·태풍1·뉴스1)를 둬
+ *  재고·거시·태풍·뉴스가 가격에 밀려 사라지지 않게 함. LG 재고는 항상 우선. */
+export async function weekHighlights(limit = 5) {
   const rows = await sb(
-    `v_daily_changes?select=as_of,seq,kind,tone,subject,detail,source&limit=${limit}`,
+    `v_week_highlights?select=as_of,kind,tone,subject,detail,source&limit=${limit}`,
   )
   return rows.map((r) => ({
     asOf: r.as_of as string,
-    kind: r.kind as "price" | "stock" | "weather" | "news",
+    kind: r.kind as "price" | "stock" | "weather" | "news" | "macro",
     tone: r.tone as "bad" | "good" | "warn" | "neutral",
     subject: r.subject as string,
     detail: r.detail as string,
     source: r.source as string,
+  }))
+}
+
+/** 지난 7일 브리핑 아카이브 — 승인 이력이 곧 판단의 로그 */
+export async function briefArchive() {
+  const rows = await sb(
+    `v_brief_archive?select=as_of,status,approved_by,head,n_lines,weekly_call,weekly_owner`,
+  )
+  return rows.map((r) => ({
+    asOf: r.as_of as string,
+    status: r.status as "draft" | "approved",
+    approvedBy: (r.approved_by ?? null) as string | null,
+    head: (r.head ?? "") as string,
+    nLines: Number(r.n_lines ?? 0),
+    weeklyCall: (r.weekly_call ?? null) as string | null,
+    weeklyOwner: (r.weekly_owner ?? null) as string | null,
   }))
 }
 
