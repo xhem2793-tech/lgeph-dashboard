@@ -173,11 +173,12 @@ export default function Overview() {
                 <BriefArchive />
               </div>
             </div>
-            <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
+            <div className="pt-4 lg:pt-0" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
               <div className="lg:sticky lg:top-[164px]">
               <div className="mb-5">
                 <EconRail />
               </div>
+              <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-shadow duration-300 hover:shadow-md">
               <div className="flex items-baseline justify-between">
                 <p className="cursor-default text-[16px] font-bold tracking-tight text-gray-900">경제 캘린더</p>
                 <span className="text-[11px] text-gray-400">{new Date().getMonth() + 1}월 · 주요 {Math.min(cal.length, 10)}건</span>
@@ -214,6 +215,7 @@ export default function Overview() {
                     </React.Fragment>
                   )
                 })}
+              </div>
               </div>
               </div>
             </div>
