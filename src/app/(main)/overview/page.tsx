@@ -67,7 +67,7 @@ export default function Overview() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
       {(
         <>
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_1.05fr]" style={{ animation: "fadeUp .5s ease both" }}>
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_0.89fr]" style={{ animation: "fadeUp .5s ease both" }}>
             <div className="lg:col-span-3">
               {/* ① 오늘의 핵심(주장) + 오늘의 변화(근거) — 좌우로 나란히.
                   주장 옆에 근거가 있어야 신뢰가 생긴다. */}
@@ -98,8 +98,7 @@ export default function Overview() {
                           </div>
                         ) : null}
                         <div className="min-w-0">
-                          <span className="text-[10px] font-semibold text-indigo-600">오늘의 1면</span>
-                          <p className="mt-1 text-[24px] font-bold leading-tight text-gray-900 group-hover:text-indigo-600">{nMain[0].title}</p>
+                          <p className="text-[28px] font-bold leading-tight text-gray-900 group-hover:text-indigo-600">{nMain[0].title}</p>
                           {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500">{nMain[0].summary}</p> : null}
                           <p className="mt-2 text-[12px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
                         </div>
