@@ -141,13 +141,10 @@ export default function EconRail() {
 
   return (
     <section className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}>
-      <header className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2">
-        <h2 className="text-[16px] font-bold tracking-tight text-gray-900">경제지표</h2>
-        <a
-          href="/economy"
-          className="text-[11px] text-gray-400 transition-colors duration-200 hover:text-indigo-600"
-        >
-          상세 ›
+      <header className="flex items-baseline justify-between border-b border-gray-100 px-3.5 py-3.5">
+        <a href="/economy" className="group flex items-baseline gap-1">
+          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">주요지표</h2>
+          <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
         </a>
       </header>
 
