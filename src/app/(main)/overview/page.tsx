@@ -2,8 +2,12 @@
 
 import React from "react"
 import { newsBySheet, calendarRecent } from "@/lib/supabase"
-import CompetitorMovers from "@/components/CompetitorMovers"
-import TriageMatrix from "@/components/TriageMatrix"
+import TodayBrief from "@/components/TodayBrief"
+import ChangeFeed from "@/components/ChangeFeed"
+import EconRail from "@/components/EconRail"
+import Watchlist from "@/components/Watchlist"
+import IngestHealth from "@/components/IngestHealth"
+import EntryCards from "@/components/EntryCards"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
 export type KpiEntry = {
@@ -64,11 +68,11 @@ export default function Overview() {
         <>
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_1fr_1fr_0.75fr]" style={{ animation: "fadeUp .5s ease both" }}>
             <div className="lg:col-span-3">
-              <div className="mt-6 sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.15s" }}>
-                <TriageMatrix />
-              </div>
-              <div className="mt-6 sm:mt-8 lg:w-2/3" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.4s" }}>
-                <CompetitorMovers />
+              {/* ① 오늘의 핵심(주장) + 오늘의 변화(근거) — 좌우로 나란히.
+                  주장 옆에 근거가 있어야 신뢰가 생긴다. */}
+              <div className="mt-6 grid grid-cols-1 gap-3 sm:mt-8 lg:grid-cols-[1.05fr_1fr]" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}>
+                <TodayBrief />
+                <ChangeFeed />
               </div>
               <div className="mt-6 flex items-baseline gap-2 sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
                 <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900">주요 뉴스</h1>
@@ -125,10 +129,31 @@ export default function Overview() {
                   ))}
                 </div>
               </div>
+
+              {/* ③ 더 파고들기 — 주제별 진입 카드 */}
+              <div className="mt-7 sm:mt-9" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
+                <EntryCards />
+              </div>
+
+              {/* ④ 하단 3분할 — 매일 볼 필요는 없지만 신뢰가 쌓이는 자리 */}
+              <div className="mt-7 grid grid-cols-1 gap-3 sm:mt-9 lg:grid-cols-3" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.55s" }}>
+                <IngestHealth />
+                <div className="lg:col-span-2 rounded-lg border border-gray-200 bg-white p-3">
+                  <p className="mb-1 text-[12px] font-bold tracking-tight text-gray-900">지난 7일 브리핑</p>
+                  <p className="text-[10px] text-gray-400">아카이브 — 다음 단계에서 연결</p>
+                </div>
+              </div>
             </div>
             <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
               <div className="lg:sticky lg:top-[164px]">
-              <p className="cursor-default text-lg font-bold tracking-tight text-gray-900">경제 캘린더</p>
+              {/* 우측 레일 = 우리 위치(2단락 SO WHAT) → 경제지표 → 캘린더 */}
+              <div className="mb-5">
+                <Watchlist />
+              </div>
+              <div className="mb-5">
+                <EconRail />
+              </div>
+              <p className="cursor-default text-[13px] font-bold tracking-tight text-gray-900">경제 캘린더</p>
               <div key={calTick} className="mt-2 flex flex-col gap-1">
                 {cal.map((e, i) => {
                   const showToday = i > 0 && cal[i - 1].past && !e.past
