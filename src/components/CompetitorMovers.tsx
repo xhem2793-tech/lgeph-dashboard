@@ -153,7 +153,9 @@ export default function CompetitorMovers() {
   const pick = (c: string) => { setCat(c) }
 
   const th = "px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-gray-400"
-  const td = "h-[26px] px-0.5 py-0 text-center align-middle truncate"
+  const td = "h-[26px] p-0 align-middle"
+  // 셀 내용은 26px 박스 안에서만 산다 — 로고·배지 때문에 행이 커지지 않도록 고정
+  const cell = "flex h-[26px] items-center justify-center overflow-hidden px-0.5"
 
   return (
     <section className="flex h-full flex-col rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
@@ -238,30 +240,32 @@ export default function CompetitorMovers() {
                   <tbody>
                     {cardRows.length === 0 ? (
                       <tr className="border-b border-gray-100">
-                        <td className="h-[26px] px-1 py-0 text-center text-[11px] text-gray-400" colSpan={7}>
-                          변동 없음
-                        </td>
+                        <td className={td} colSpan={7}><div className={cell + " text-[11px] text-gray-400"}>변동 없음</div></td>
                       </tr>
                     ) : null}
                     {cardRows.map((r, i) => (
                       <tr key={`${cat}-${sortDir}-${i}`} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s" }} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
-                        <td className={td}><BrandLogo brand={r.brand} /></td>
+                        <td className={td}><div className={cell}><BrandLogo brand={r.brand} /></div></td>
                         <td className={td}>
-                          <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[10px] font-semibold text-gray-500"}>{r.category}</span>
+                          <div className={cell}>
+                            <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 text-[10px] font-semibold leading-[16px] text-gray-500"}>{r.category}</span>
+                          </div>
                         </td>
                         <td className={td}>
-                          <span className={HOV + " block truncate font-medium text-gray-700"} title={r.model}>{modelCode(r.model, r.brand)}</span>
+                          <div className={cell}>
+                            <span className={HOV + " truncate font-medium leading-none text-gray-700"} title={r.model}>{modelCode(r.model, r.brand)}</span>
+                          </div>
                         </td>
-                        <td className={td}><span className={HOVM + " tabular-nums text-gray-400"}>{peso(r.srp)}</span></td>
-                        <td className={td}><span className={HOV + " font-bold tabular-nums text-gray-900"}>{peso(r.promo)}</span></td>
-                        <td className={td}><MoverDelta delta={r.delta} pct={r.pct} /></td>
-                        <td className={td}><span className={HOVM + " whitespace-nowrap text-[10px] text-gray-500"}>{shopName(r.retailer)}</span></td>
+                        <td className={td}><div className={cell}><span className={HOVM + " tabular-nums leading-none text-gray-400"}>{peso(r.srp)}</span></div></td>
+                        <td className={td}><div className={cell}><span className={HOV + " font-bold tabular-nums leading-none text-gray-900"}>{peso(r.promo)}</span></div></td>
+                        <td className={td}><div className={cell}><MoverDelta delta={r.delta} pct={r.pct} /></div></td>
+                        <td className={td}><div className={cell}><span className={HOVM + " whitespace-nowrap text-[10px] leading-none text-gray-500"}>{shopName(r.retailer)}</span></div></td>
                       </tr>
                     ))}
                     {/* 행 수는 항상 5줄 — 표 높이가 날마다 출렁이면 눈이 위치를 다시 찾는다 */}
                     {Array.from({ length: Math.max(0, (cardRows.length === 0 ? 4 : 5) - cardRows.length) }).map((_, j) => (
                       <tr key={`pad-${cat}-${sortDir}-${j}`} aria-hidden className="border-b border-gray-100">
-                        <td className={td} colSpan={7}>&nbsp;</td>
+                        <td className={td} colSpan={7}><div className={cell}>&nbsp;</div></td>
                       </tr>
                     ))}
                   </tbody>
