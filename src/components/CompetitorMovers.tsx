@@ -197,11 +197,11 @@ export default function CompetitorMovers() {
   const td = "px-1 py-0.5 text-center align-middle"
 
   return (
-    <div className="mt-6 sm:mt-8" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <section className="h-full rounded-xl border border-gray-200 bg-white p-3" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
-          <h2 className="cursor-default text-lg font-bold tracking-tight text-gray-900">일일 가격 변동</h2>
+          <h2 className="cursor-default text-[16px] font-bold tracking-tight text-gray-900">일일 가격 변동</h2>
           <span className="inline-flex cursor-default items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 transition-all duration-300 ease-out hover:text-emerald-700">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
             매일 갱신
@@ -314,6 +314,6 @@ export default function CompetitorMovers() {
           <span className={HOVM}>경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5 · <span className="text-rose-600">↑인상</span> / <span className="text-emerald-600">↓인하</span> · 유통: Anson&#39;s · Abenson · SM</span>
         </p>
       </div>
-    </div>
+    </section>
   )
 }
