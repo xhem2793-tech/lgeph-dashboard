@@ -234,6 +234,22 @@ export async function econSpark(): Promise<Record<string, number[]>> {
   return out
 }
 
+/** 지표 시계열 — 최근 12개 관측치 + 전년 동기 값(있는 경우).
+ *  레일에서 접힌 줄은 추세 미리보기, 펼치면 경제지표 페이지와 같은 차트를 그린다. */
+export type EconSeries = { dates: string[]; points: number[]; prev: (number | null)[] }
+export async function econSeries(): Promise<Record<string, EconSeries>> {
+  const rows = await sb(`v_econ_series?select=key,dates,points,prev`)
+  const out: Record<string, EconSeries> = {}
+  for (const r of rows) {
+    out[r.key as string] = {
+      dates: (r.dates ?? []) as string[],
+      points: ((r.points ?? []) as any[]).map((v) => Number(v)),
+      prev: ((r.prev ?? []) as any[]).map((v) => (v == null ? null : Number(v))),
+    }
+  }
+  return out
+}
+
 /** 이번 주 분석 — 자체 칼럼 + 외부 큐레이션.
  *  외부 글은 원문을 저장하지 않는다(전재 금지) — 요약·해석·링크만. */
 export async function analysisPosts(limit = 4) {
