@@ -74,9 +74,12 @@ export default function Overview() {
                 <CompetitorMovers />
               </div>
               {/* 주요 뉴스 — 금주 주요 이슈·가격 동향과 같은 카드 어법으로 묶음 */}
-              <section className="mt-6 sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
+              <section className="mt-6 rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
               <div className="mb-2 flex items-baseline gap-2 px-0.5">
-                <h2 className="cursor-default text-[16px] font-bold tracking-tight text-gray-900">주요 뉴스</h2>
+                <a href="/news" className="group flex items-baseline gap-1">
+                  <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">주요 뉴스</h2>
+                  <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+                </a>
                 <span className="cursor-default text-[10px] text-gray-400">경제·산업·B2B</span>
                 {nMain[0]?.date ? (
                   <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
@@ -166,8 +169,7 @@ export default function Overview() {
               </section>
 
               {/* ③ 일간 지표(환율·유가·날씨) — 뉴스와 같은 카드 어법 */}
-              <section className="mt-6 sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
-                <h2 className="mb-2 cursor-default text-[16px] font-bold tracking-tight text-gray-900">일간 지표</h2>
+              <section className="mt-6 rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
                 <DailyIndicators />
               </section>
             </div>
