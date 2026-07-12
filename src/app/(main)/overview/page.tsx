@@ -41,7 +41,7 @@ export default function Overview() {
     ;(async () => {
       try {
         const [nm, nc, nb, ec] = await Promise.all([
-          newsBySheet("daily_news", 6),
+          newsBySheet("daily_news", 14),
           newsBySheet("ce_trend", 5),
           newsBySheet("b2b_trend", 5),
           calendarRecent(3, 6),
@@ -87,76 +87,80 @@ export default function Overview() {
                 ) : null}
               </div>
               <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-5" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
-                {/* 야후 구조 — 헤드라인(좌) 옆에 시장 동향 목록(우)을 같은 높이로 끌어올림 */}
-                <div className="mb-4 grid grid-cols-1 gap-5 border-b border-gray-100 pb-4 lg:grid-cols-[2fr_1fr]">
-                  {nMain[0] ? (
-                    <button type="button" onClick={() => setModal({ ...nMain[0], category: "경제·정치·사회" })} className="group flex flex-col gap-3 text-left sm:flex-row sm:gap-4">
-                      {nMain[0].image ? (
-                        <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 sm:aspect-auto sm:h-40 sm:w-64 sm:shrink-0">
-                          <img src={nMain[0].image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                {/* 야후 구조 — 좌: 헤드라인 + 3열 / 우: 시장 동향이 위에서 아래까지 한 컬럼 */}
+                <div className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_1fr]">
+                  {/* 좌측 — 헤드라인 아래 CE·B2B·분석 3열 */}
+                  <div>
+                    {nMain[0] ? (
+                      <button type="button" onClick={() => setModal({ ...nMain[0], category: "경제·정치·사회" })} className="group mb-4 flex flex-col gap-3 border-b border-gray-100 pb-4 text-left sm:flex-row sm:gap-4">
+                        {nMain[0].image ? (
+                          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 sm:aspect-auto sm:h-40 sm:w-64 sm:shrink-0">
+                            <img src={nMain[0].image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                          </div>
+                        ) : null}
+                        <div className="min-w-0">
+                          <span className="text-[10px] font-semibold text-indigo-600">오늘의 1면</span>
+                          <p className="mt-1 text-[24px] font-bold leading-tight text-gray-900 group-hover:text-indigo-600">{nMain[0].title}</p>
+                          {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500">{nMain[0].summary}</p> : null}
+                          <p className="mt-2 text-[12px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
                         </div>
-                      ) : null}
-                      <div className="min-w-0">
-                        <span className="text-[10px] font-semibold text-indigo-600">오늘의 1면</span>
-                        <p className="mt-1 text-[24px] font-bold leading-tight text-gray-900 group-hover:text-indigo-600">{nMain[0].title}</p>
-                        {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500">{nMain[0].summary}</p> : null}
-                        <p className="mt-2 text-[12px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
-                      </div>
-                    </button>
-                  ) : null}
+                      </button>
+                    ) : null}
 
-                  {/* 시장 동향 = 야후의 Popular 자리. 사진 없이 제목만, 스캔용 */}
+                    <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
+                      {[
+                        { title: "CE 동향", sub: "생활가전·소비", rows: nCE, skip: 0, cat: "CE" },
+                        { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, skip: 0, cat: "B2B" },
+                      ].map((col) => (
+                        <div key={col.title} className="lg:px-3 lg:first:pl-0">
+                          <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
+                            <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{col.title}</span>
+                            <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+                            <span className="ml-1 text-[10px] text-gray-400">{col.sub}</span>
+                          </a>
+                          <div className="flex flex-col divide-y divide-gray-100">
+                            {(() => {
+                              // 각 열의 상단은 반드시 사진 — 리드에 이미지가 없으면
+                              // 이미지 있는 최신 기사를 끌어올린다(야후식). 순서만 바꿀 뿐 기사를 지어내지 않음
+                              const rows = col.rows.slice(col.skip, col.skip + 5)
+                              const li = rows.findIndex((r: any) => r.image)
+                              if (li > 0) rows.unshift(rows.splice(li, 1)[0])
+                              return rows
+                            })().map((n, i) => (
+                              <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
+                                {i === 0 && n.image ? (
+                                  <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
+                                    <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+                                  </div>
+                                ) : null}
+                                <p className="line-clamp-2 text-[16px] font-semibold leading-tight text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                                <p className="mt-1 text-[12px] text-gray-400">{n.source} · {n.date}</p>
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      {/* 뉴스가 마르는 날에도 우리가 쓴 글은 있다 */}
+                      <AnalysisColumn />
+                    </div>
+                  </div>
+
+                  {/* 우측 — 시장 동향. 야후의 Popular처럼 헤드라인 높이에서 시작해 아래까지 한 컬럼 */}
                   <div className="lg:border-l lg:border-gray-200 lg:pl-5">
-                    <a href="/news?cat=시장" className="group mb-1 flex items-baseline gap-1">
+                    <a href="/news?cat=시장" className="group mb-2 flex items-baseline gap-1">
                       <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">시장 동향</span>
                       <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
                       <span className="ml-1 text-[10px] text-gray-400">경제·정치·사회</span>
                     </a>
                     <div className="flex flex-col divide-y divide-gray-100">
-                      {nMain.slice(1, 7).map((n, i) => (
-                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group py-2 text-left transition-colors duration-200">
+                      {nMain.slice(1, 13).map((n, i) => (
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group py-2.5 text-left">
                           <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
                           <p className="mt-0.5 text-[11px] text-gray-400">{n.source} · {n.date}</p>
                         </button>
                       ))}
                     </div>
                   </div>
-                </div>
-                <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
-                  {[
-                    { title: "CE 동향", sub: "생활가전·소비", rows: nCE, skip: 0, cat: "CE" },
-                    { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, skip: 0, cat: "B2B" },
-                  ].map((col) => (
-                    <div key={col.title} className="lg:px-3">
-                      <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
-                        <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{col.title}</span>
-                        <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
-                        <span className="ml-1 text-[10px] text-gray-400">{col.sub}</span>
-                      </a>
-                      <div className="flex flex-col divide-y divide-gray-100">
-                        {(() => {
-                          // 각 열의 상단은 반드시 사진 — 리드에 이미지가 없으면
-                          // 이미지 있는 최신 기사를 끌어올린다(야후식). 순서만 바꿀 뿐 기사를 지어내지 않음
-                          const rows = col.rows.slice(col.skip, col.skip + 5)
-                          const li = rows.findIndex((r: any) => r.image)
-                          if (li > 0) rows.unshift(rows.splice(li, 1)[0])
-                          return rows
-                        })().map((n, i) => (
-                          <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
-                            {i === 0 && n.image ? (
-                              <div className="mb-2 aspect-[16/9] w-full overflow-hidden rounded-lg bg-gray-100">
-                                <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
-                              </div>
-                            ) : null}
-                            <p className={"line-clamp-2 font-semibold leading-tight text-gray-800 group-hover:text-indigo-600 " + "text-[16px]"}>{n.title}</p>
-                            <p className="mt-1 text-[12px] text-gray-400">{n.source} · {n.date}</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                  {/* 4번째 열 — 뉴스가 마르는 날에도 우리가 쓴 글은 있다 */}
-                  <AnalysisColumn />
                 </div>
               </div>
 
