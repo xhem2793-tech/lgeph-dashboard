@@ -174,7 +174,7 @@ export default function Overview() {
               </div>
             </div>
             <div className="pt-4 lg:pt-0" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
-              <div className="lg:sticky lg:top-[164px]">
+              <div className="mt-6 sm:mt-8 lg:sticky lg:top-[96px]">
               <div className="mb-5">
                 <EconRail />
               </div>
