@@ -47,7 +47,7 @@ export default function TodayBrief() {
   const approved = b?.status === "approved"
 
   return (
-    <section className="h-full rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-2.5">
+    <section className="h-full rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100">
       <header className="mb-1 flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2">
           <h2 className="text-[16px] font-bold tracking-tight text-gray-900">오늘의 핵심</h2>
