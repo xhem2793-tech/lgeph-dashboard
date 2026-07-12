@@ -169,3 +169,120 @@ export async function categoryKpi() {
     premium: num(r.premium_pct),
   }))
 }
+
+/** 홈 상단 밴드 8카드 — 시장 환경(원가·물가·수요·리스크)을 한눈에.
+ *  dir: 'bad'  = 값↑이면 사업에 불리(원가·물가)
+ *       'good' = 값↑이면 유리(수요·구매력)
+ *       'neutral' = 방향 없음(태풍 등) */
+export async function homeBand() {
+  const rows = await sb(
+    `v_home_band?select=seq,key,label,prefix,value,delta,delta_label,dir,as_of,freq&order=seq.asc`,
+  )
+  return rows.map((r) => ({
+    key: r.key as string,
+    label: r.label as string,
+    prefix: (r.prefix ?? "") as string,
+    value: r.value as string,
+    delta: num(r.delta),
+    deltaLabel: r.delta_label as string,
+    dir: r.dir as "bad" | "good" | "neutral",
+    asOf: (r.as_of ?? null) as string | null,
+    freq: r.freq as string,
+  }))
+}
+
+/** 오늘의 변화 — 모든 축(가격·재고·기상·뉴스)에서 실제로 바뀐 것만.
+ *  행이 없으면 화면은 "특이사항 없음"을 표시한다(억지로 채우지 않음). */
+export async function dailyChanges(limit = 8) {
+  const rows = await sb(
+    `v_daily_changes?select=as_of,seq,kind,tone,subject,detail,source&limit=${limit}`,
+  )
+  return rows.map((r) => ({
+    asOf: r.as_of as string,
+    kind: r.kind as "price" | "stock" | "weather" | "news",
+    tone: r.tone as "bad" | "good" | "warn" | "neutral",
+    subject: r.subject as string,
+    detail: r.detail as string,
+    source: r.source as string,
+  }))
+}
+
+/** 우리 위치 = 워치리스트 (유통 × 카테고리).
+ *  ⚠️ 순위표 아님 — 액션 목록. shelf는 SKU 개수 기준이며 매출 점유율이 아님. */
+export async function watchlist(limit = 4) {
+  const rows = await sb(
+    `v_watchlist?select=as_of,retailer,category,lg_n,total_n,shelf_pct,lg_oos,mkt_oos,oos_gap,lg_disc,cn_disc,disc_gap,verdict&limit=${limit}`,
+  )
+  return rows.map((r) => ({
+    asOf: r.as_of as string,
+    retailer: r.retailer as string,
+    category: r.category as string,
+    lgN: num(r.lg_n)!,
+    totalN: num(r.total_n)!,
+    shelf: num(r.shelf_pct)!,
+    lgOos: num(r.lg_oos),
+    mktOos: num(r.mkt_oos),
+    oosGap: num(r.oos_gap),
+    lgDisc: num(r.lg_disc),
+    cnDisc: num(r.cn_disc),
+    discGap: num(r.disc_gap),
+    verdict: r.verdict as "risk" | "chance" | "watch",
+  }))
+}
+
+/** 데이터 신뢰 패널 — 각 소스가 언제 마지막으로 성공했는가.
+ *  expected_lag(정상 발표 지연)를 반영 — BSP 송금은 원래 2~3개월 늦다. */
+export async function ingestHealth() {
+  const rows = await sb(
+    `v_ingest_health?select=seq,src,freq,expected_lag,last_at,days_old,vol,status&order=seq.asc`,
+  )
+  return rows.map((r) => ({
+    src: r.src as string,
+    freq: r.freq as string,
+    lastAt: r.last_at as string,
+    daysOld: num(r.days_old),
+    vol: num(r.vol),
+    status: r.status as "ok" | "warn" | "stale" | "dead",
+  }))
+}
+
+/** 오늘의 핵심 — AI 초안 3줄 + 근거 + 이번 주 판단.
+ *  status: 'draft'(AI INTERPRETED) → 사람 승인 → 'approved'(CONFIRMED) */
+export async function todayBrief() {
+  const rows = await sb(
+    `daily_brief?select=as_of,lines,weekly_call,weekly_owner,weekly_due,status,approved_by,approved_at&order=as_of.desc&limit=1`,
+  )
+  if (!rows.length) return null
+  const r = rows[0]
+  return {
+    asOf: r.as_of as string,
+    lines: (r.lines ?? []) as { text: string; evidence?: string }[],
+    weeklyCall: (r.weekly_call ?? null) as string | null,
+    weeklyOwner: (r.weekly_owner ?? null) as string | null,
+    weeklyDue: (r.weekly_due ?? null) as string | null,
+    status: r.status as "draft" | "approved",
+    approvedBy: (r.approved_by ?? null) as string | null,
+  }
+}
+
+/** 승인 — 철학 3원칙(사람이 최종 판단자)의 실제 작동부.
+ *  배지만 달고 버튼이 없으면 원칙은 장식이 된다. */
+export async function approveBrief(asOf: string, by: string) {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const res = await fetch(`${url}/rest/v1/daily_brief?as_of=eq.${asOf}`, {
+    method: "PATCH",
+    headers: {
+      apikey: key as string,
+      Authorization: `Bearer ${key}`,
+      "Content-Type": "application/json",
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({
+      status: "approved",
+      approved_by: by,
+      approved_at: new Date().toISOString(),
+    }),
+  })
+  if (!res.ok) throw new Error(`approve failed ${res.status}`)
+}
