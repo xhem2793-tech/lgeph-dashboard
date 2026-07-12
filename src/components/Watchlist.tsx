@@ -33,8 +33,8 @@ export default function Watchlist() {
   return (
     <section className="animate-[fadeUp_.5s_ease]">
       <header className="mb-1.5 flex items-baseline justify-between">
-        <h2 className="text-[13px] font-bold tracking-tight text-gray-900">우리 위치</h2>
-        <span className="text-[9px] text-gray-300">{fmtDate(asOf)} · 주간 성격</span>
+        <h2 className="text-[14px] font-bold tracking-tight text-gray-900">우리 위치</h2>
+        <span className="text-[10px] text-gray-300">{fmtDate(asOf)} · 주간 성격</span>
       </header>
 
       <div className="rounded-lg border border-gray-200 bg-white p-2">
@@ -59,7 +59,7 @@ export default function Watchlist() {
                       : "border-l-gray-200")
                 }
               >
-                <p className="flex items-baseline justify-between text-[10.5px] font-bold text-gray-900">
+                <p className="flex items-baseline justify-between text-[11px] font-bold text-gray-900">
                   <span>
                     {r.retailer} · {r.category}
                   </span>
@@ -78,7 +78,7 @@ export default function Watchlist() {
                       : pp(r.discGap)}
                   </span>
                 </p>
-                <p className="mt-0.5 text-[9px] leading-snug text-gray-500">
+                <p className="mt-0.5 text-[10px] leading-snug text-gray-500">
                   {r.oosGap != null && r.oosGap >= 3
                     ? `품절 LG ${r.lgOos?.toFixed(0)}% vs 시장 ${r.mktOos?.toFixed(0)}% — 우리가 비움`
                     : r.oosGap != null && r.oosGap <= -8
@@ -87,7 +87,7 @@ export default function Watchlist() {
                         ? `할인 LG ${r.lgDisc?.toFixed(0)}% vs 중국계 ${r.cnDisc?.toFixed(0)}%`
                         : `선반 ${r.shelf.toFixed(1)}% — 취급 확대 여지`}
                 </p>
-                <p className="mt-0.5 text-[8.5px] text-gray-300">
+                <p className="mt-0.5 text-[10px] text-gray-300">
                   표본 LG {r.lgN} / 전체 {r.totalN} SKU
                 </p>
               </div>
@@ -96,7 +96,7 @@ export default function Watchlist() {
         )}
       </div>
 
-      <p className="mt-1.5 text-[8.5px] leading-relaxed text-gray-400">
+      <p className="mt-1.5 text-[10px] leading-relaxed text-gray-400">
         선반 점유는 <b className="font-semibold text-gray-500">SKU 개수 기준</b> — 매출 점유율 아님
         <br />
         웹 리스팅 기준(실매장 진열 아님) · 판매량 데이터 없음
