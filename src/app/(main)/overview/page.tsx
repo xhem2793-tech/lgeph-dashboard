@@ -7,6 +7,7 @@ import ChangeFeed from "@/components/ChangeFeed"
 import EconRail from "@/components/EconRail"
 import Watchlist from "@/components/Watchlist"
 import IngestHealth from "@/components/IngestHealth"
+import BriefArchive from "@/components/BriefArchive"
 import EntryCards from "@/components/EntryCards"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
@@ -138,10 +139,7 @@ export default function Overview() {
               {/* ④ 하단 3분할 — 매일 볼 필요는 없지만 신뢰가 쌓이는 자리 */}
               <div className="mt-7 grid grid-cols-1 gap-3 sm:mt-9 lg:grid-cols-3" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.55s" }}>
                 <IngestHealth />
-                <div className="lg:col-span-2 rounded-lg border border-gray-200 bg-white p-3">
-                  <p className="mb-1 text-[12px] font-bold tracking-tight text-gray-900">지난 7일 브리핑</p>
-                  <p className="text-[10px] text-gray-400">아카이브 — 다음 단계에서 연결</p>
-                </div>
+                <BriefArchive />
               </div>
             </div>
             <div className="border-t border-gray-200 pt-4 lg:border-l lg:border-t-0 lg:pl-4 lg:pt-0" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
@@ -153,7 +151,7 @@ export default function Overview() {
               <div className="mb-5">
                 <EconRail />
               </div>
-              <p className="cursor-default text-[13px] font-bold tracking-tight text-gray-900">경제 캘린더</p>
+              <p className="cursor-default text-[14px] font-bold tracking-tight text-gray-900">경제 캘린더</p>
               <div key={calTick} className="mt-2 flex flex-col gap-1">
                 {cal.map((e, i) => {
                   const showToday = i > 0 && cal[i - 1].past && !e.past
