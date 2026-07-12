@@ -73,8 +73,10 @@ export default function Overview() {
                 <TodayBrief />
                 <CompetitorMovers />
               </div>
-              <div className="mt-6 flex items-baseline gap-2 sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
-                <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900">주요 뉴스</h1>
+              {/* 주요 뉴스 — 금주 주요 이슈·가격 동향과 같은 카드 어법으로 묶음 */}
+              <section className="mt-6 rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100 sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
+              <div className="mb-2 flex items-baseline gap-2 px-0.5">
+                <h2 className="cursor-default text-[16px] font-bold tracking-tight text-gray-900">주요 뉴스</h2>
                 <span className="cursor-default text-[10px] text-gray-400">경제·산업·B2B</span>
                 {nMain[0]?.date ? (
                   <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
@@ -83,7 +85,7 @@ export default function Overview() {
                   </span>
                 ) : null}
               </div>
-              <div className="mt-2 rounded-2xl bg-white p-4 shadow-sm ring-1 ring-gray-100 sm:p-5" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
+              <div className="rounded-lg border border-indigo-100/70 bg-white/70 p-3 sm:p-4">
                 {/* 야후 구조 — 좌: 헤드라인 + 3열 / 우: 시장 동향이 위에서 아래까지 한 컬럼 */}
                 <div className="grid grid-cols-1 gap-5 lg:grid-cols-[3fr_1fr]">
                   {/* 좌측 — 헤드라인 아래 CE·B2B·분석 3열 */}
@@ -161,11 +163,18 @@ export default function Overview() {
                   </div>
                 </div>
               </div>
+              </section>
 
-              {/* ③ 경제지표 3카드(환율·유가·날씨) — 뉴스 아래 복구 */}
-              <div className="mt-7 sm:mt-9" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
-                <DailyIndicators />
-              </div>
+              {/* ③ 일간 지표(환율·유가·날씨) — 뉴스와 같은 카드 어법 */}
+              <section className="mt-6 rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100 sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
+                <div className="mb-2 flex items-baseline gap-2 px-0.5">
+                  <h2 className="cursor-default text-[16px] font-bold tracking-tight text-gray-900">일간 지표</h2>
+                  <span className="cursor-default text-[10px] text-gray-400">환율 · 유가 · 날씨</span>
+                </div>
+                <div className="rounded-lg border border-indigo-100/70 bg-white/70 p-3 sm:p-4">
+                  <DailyIndicators />
+                </div>
+              </section>
             </div>
             <div className="pt-4 lg:pt-0" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.36s" }}>
               <div className="mt-6 sm:mt-8 lg:sticky lg:top-[96px]">
