@@ -83,13 +83,14 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-      style={{ animation: `${closing ? "backOut" : "backIn"} .24s ease both` }}
+      className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:items-center"
       onClick={close}
     >
+      {/* 뉴스 모달과 같은 어법 — 오버레이 스크롤, 본문은 흰 카드 */}
+      <style>{"@keyframes apIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}"}</style>
       <div
-        className="max-h-[86vh] w-full max-w-[880px] overflow-y-auto rounded-xl bg-white p-5 shadow-2xl"
-        style={{ animation: `${closing ? "modalOut" : "modalIn"} .24s cubic-bezier(.22,1,.36,1) both` }}
+        className="my-auto w-full max-w-[880px] rounded-2xl bg-white p-5 shadow-2xl"
+        style={{ animation: "apIn .24s cubic-bezier(.22,1,.36,1) both" }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-3 flex items-start justify-between gap-3">
@@ -129,8 +130,8 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
             {p.kind === "own" ? (
               <OwnVisual tags={p.tags} />
             ) : p.image ? (
-              <div className="aspect-[4/3] w-full overflow-hidden rounded-lg bg-gray-100">
-                <img src={p.image} alt="" className="h-full w-full object-cover" />
+              <div className="w-full overflow-hidden rounded-lg bg-gray-100">
+                <img src={p.image} alt="" className="h-auto w-full object-contain" />
               </div>
             ) : null}
           </div>
@@ -166,11 +167,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
           </div>
         ) : null}
 
-        {p.kind === "external" ? (
-          <p className="mt-4 border-t border-gray-100 pt-3 text-[11px] leading-snug text-gray-400">
-            외부 글은 원문을 옮기지 않음. 요약·해석·링크만 제공 (출처와 저작권 보존)
-          </p>
-        ) : null}
+        
       </div>
     </div>
   )
@@ -263,9 +260,7 @@ export default function AnalysisColumn() {
         </div>
       )}
 
-      <p className="mt-2 border-t border-gray-100 pt-2 text-[10px] leading-snug text-gray-400">
-        {t("analysis_note")}
-      </p>
+
 
       {open ? <Modal p={open} onClose={() => setOpen(null)} /> : null}
     </div>
