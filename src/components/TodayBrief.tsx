@@ -85,7 +85,7 @@ export default function TodayBrief() {
         </p>
       ) : (
         <>
-          <div className="flex flex-1 flex-col justify-around gap-1">
+          <div className="flex flex-col gap-1.5">
             {(lang === "en" && b.linesEn && b.linesEn.length ? b.linesEn : b.lines).map((l, i) => (
               <div
                 key={i}
