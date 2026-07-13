@@ -55,7 +55,7 @@ function DeltaBadge({ c }: { c: Card }) {
   return (
     <span
       className={
-        "inline-flex w-[78px] shrink-0 items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-semibold tabular-nums transition-transform duration-300 ease-out hover:-translate-y-0.5 " +
+        "inline-flex w-[78px] shrink-0 items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-normal tabular-nums transition-transform duration-300 ease-out hover:-translate-y-0.5 " +
         (flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
       }
     >
@@ -125,7 +125,7 @@ export default function EconRail() {
           if (rows && list.length === 0) return null
           return (
             <div key={g}>
-              <p className="border-b border-gray-100 bg-gray-50/70 px-3.5 py-1 text-[10px] font-semibold text-gray-400">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</p>
+              <p className="border-b border-gray-100 bg-gray-50/70 px-3.5 py-1 text-[10px] font-normal text-gray-400">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</p>
               {(rows ? list : (Array.from({ length: 4 }) as (Card | undefined)[])).map((c, i) =>
                 !c ? (
                   <div key={i} className="h-[36px] border-b border-gray-50" />
@@ -141,7 +141,7 @@ export default function EconRail() {
                     >
                       <p
                         className={
-                          "min-w-0 flex-1 font-semibold leading-tight text-gray-800 " +
+                          "min-w-0 flex-1 font-normal leading-tight text-gray-800 " +
                           (lang === "en" ? "line-clamp-2 text-[11px]" : "truncate text-[13px]")
                         }
                       >
@@ -150,7 +150,7 @@ export default function EconRail() {
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="w-[58px] shrink-0 text-right text-[13px] font-bold tabular-nums text-gray-900">
+                      <p className="w-[58px] shrink-0 text-right text-[13px] font-normal tabular-nums text-gray-900">
                         {c.prefix}
                         {c.value}
                         {c.suffix}
@@ -209,7 +209,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
         </div>
 
         <p className="mt-0.5 flex items-baseline gap-1.5">
-          <span className="text-[20px] font-semibold tabular-nums text-gray-900">
+          <span className="text-[20px] font-normal tabular-nums text-gray-900">
             <CountUp value={Number(c.value)} prefix={c.prefix} suffix={c.suffix} decimals={dec} />
           </span>
           <span className="text-[10px] text-gray-400/90">{c.asOf?.slice(0, 7).replace("-", ".")} 기준</span>
