@@ -89,25 +89,25 @@ export default function TodayBrief() {
             {(lang === "en" && b.linesEn && b.linesEn.length ? b.linesEn : b.lines).map((l, i) => (
               <div
                 key={i}
-                className="group relative rounded-lg border border-indigo-100/70 bg-white/70 px-2.5 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-white"
+                className="group relative rounded-lg border border-indigo-100/70 bg-white/70 px-2.5 py-1.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-white"
                 style={{ animation: "fadeUp .5s ease both", animationDelay: `${i * 0.06}s` }}
               >
                 <div className="flex items-start gap-2">
-                  <span className="mt-[3px] flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[10px] font-bold text-white">
+                  <span className="mt-[2px] flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[9px] font-bold text-white">
                     {i + 1}
                   </span>
                   <div className="min-w-0">
                     <p
                       className={
                         // 레이아웃은 한글 기준 고정 — 영문이 길면 글자를 줄이고 3줄로 잘라 카드 높이를 맞춘다
-                        "line-clamp-3 font-semibold leading-snug text-gray-900 " +
-                        (lang === "en" ? "text-[12.5px]" : "text-[14px]")
+                        "line-clamp-2 font-semibold leading-snug text-gray-900 " +
+                        (lang === "en" ? "text-[12px]" : "text-[13px]")
                       }
                     >
                       {l.text}
                     </p>
                     {l.evidence ? (
-                      <p className="mt-1 text-[11px] text-gray-400">{t("brief_evidence")} · {l.evidence}</p>
+                      <p className="mt-0.5 text-[10px] leading-4 text-gray-400">{t("brief_evidence")} · {l.evidence}</p>
                     ) : null}
                   </div>
                 </div>
