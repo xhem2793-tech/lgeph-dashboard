@@ -2,6 +2,7 @@
 
 import React from "react"
 import { todayBrief, approveBrief } from "@/lib/supabase"
+import { useLang } from "@/lib/i18n"
 
 /** 오늘의 핵심 — 주장 3줄 + 근거 + 이번 주 판단.
  *
@@ -20,6 +21,7 @@ type Brief = NonNullable<Awaited<ReturnType<typeof todayBrief>>>
 const fmtDate = (s?: string | null) => (s ? s.slice(5).replace("-", "/") : "—")
 
 export default function TodayBrief() {
+  const { lang, t } = useLang()
   const [b, setB] = React.useState<Brief | null | undefined>(undefined)
   const [busy, setBusy] = React.useState(false)
   const [err, setErr] = React.useState<string | null>(null)
@@ -38,7 +40,7 @@ export default function TodayBrief() {
       await approveBrief(b.asOf, "경영기획")
       setB({ ...b, status: "approved", approvedBy: "경영기획" })
     } catch {
-      setErr("승인 실패 — 다시 시도")
+      setErr("fail")
     } finally {
       setBusy(false)
     }
@@ -50,7 +52,7 @@ export default function TodayBrief() {
     <section className="flex h-full flex-col rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100">
       <header className="mb-1 flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2">
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900">금주 주요 이슈</h2>
+          <h2 className="text-[16px] font-bold tracking-tight text-gray-900">{t("brief_title")}</h2>
           <span className="text-[10px] text-gray-400">{fmtDate(b?.asOf)}</span>
         </div>
 
@@ -66,7 +68,7 @@ export default function TodayBrief() {
             className="rounded border border-amber-300 bg-amber-50 px-1.5 py-px text-[10px] font-bold text-amber-700 transition-colors duration-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-50"
             title="검토 후 승인하면 CONFIRMED로 전환됩니다"
           >
-            {busy ? "승인 중…" : "AI · 검토 전 → 승인"}
+            {busy ? t("brief_approving") : t("brief_approve")}
           </button>
         )}
       </header>
@@ -79,12 +81,12 @@ export default function TodayBrief() {
         </div>
       ) : !b ? (
         <p className="py-6 text-center text-[12px] text-gray-400">
-          오늘 초안 없음 — 아직 생성 전
+          {t("brief_empty")}
         </p>
       ) : (
         <>
           <div className="flex flex-1 flex-col justify-around gap-1">
-            {b.lines.map((l, i) => (
+            {(lang === "en" && b.linesEn && b.linesEn.length ? b.linesEn : b.lines).map((l, i) => (
               <div
                 key={i}
                 className="group relative rounded-lg border border-indigo-100/70 bg-white/70 px-2.5 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-white"
@@ -97,7 +99,7 @@ export default function TodayBrief() {
                   <div className="min-w-0">
                     <p className="text-[14px] font-semibold leading-snug text-gray-900">{l.text}</p>
                     {l.evidence ? (
-                      <p className="mt-1 text-[11px] text-gray-400">근거 · {l.evidence}</p>
+                      <p className="mt-1 text-[11px] text-gray-400">{t("brief_evidence")} · {l.evidence}</p>
                     ) : null}
                   </div>
                 </div>
@@ -105,7 +107,7 @@ export default function TodayBrief() {
             ))}
           </div>
 
-          {err ? <p className="mt-1 text-[10px] text-rose-600">{err}</p> : null}
+          {err ? <p className="mt-1 text-[10px] text-rose-600">{t("brief_fail")}</p> : null}
 
         </>
       )}
