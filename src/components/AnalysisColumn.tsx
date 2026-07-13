@@ -219,7 +219,6 @@ export default function AnalysisColumn() {
         <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">
           ›
         </span>
-        <span className="ml-1 text-[11px] text-gray-400">{t("analysis_sub")}</span>
       </a>
 
       {err ? (
