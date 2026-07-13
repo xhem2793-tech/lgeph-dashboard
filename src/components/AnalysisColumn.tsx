@@ -213,7 +213,10 @@ export default function AnalysisColumn() {
                 key={p.id}
                 type="button"
                 onClick={() => setOpen(p)}
-                className="group py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5"
+                className={
+                  "group flex w-full flex-col overflow-hidden py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 " +
+                  (i === 0 ? "h-[240px]" : "h-[86px]")
+                }
               >
                 {i === 0 ? (
                   p.kind === "own" ? (
