@@ -158,7 +158,7 @@ export default function CompetitorMovers() {
     return () => { alive = false }
   }, [])
 
-  if (rows.length === 0) return null
+  // 변동 0건인 날에도 카드는 남긴다 — "오늘 변동 없음"도 정보다
   const asOf = rows[0]?.asOf
 
   // 탭은 항상 고정 — 데이터가 없는 날에도 카테고리는 사라지지 않는다(자리가 곧 관측 대상)
