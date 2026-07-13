@@ -165,7 +165,7 @@ export default function CompetitorMovers() {
   const CAT_LABEL: Record<string, string> = { "전체": t("price_all"), "냉장고": t("cat_ref"), "세탁기": t("cat_wash"), "TV": t("cat_tv"), "에어컨": t("cat_ac") }
   const cats = ["전체", ...CAT_ORDER]
   const view = cat === "전체" ? rows : rows.filter((r) => r.category === cat)
-  const cardRows = (sortDir === "up" ? view.filter((r) => r.pct > 0).sort((a, b) => b.pct - a.pct) : view.filter((r) => r.pct < 0).sort((a, b) => a.pct - b.pct)).slice(0, 7)
+  const cardRows = (sortDir === "up" ? view.filter((r) => r.pct > 0).sort((a, b) => b.pct - a.pct) : view.filter((r) => r.pct < 0).sort((a, b) => a.pct - b.pct)).slice(0, 5)
 
   const pick = (c: string) => { setCat(c) }
 
@@ -231,7 +231,7 @@ export default function CompetitorMovers() {
             <div
               className="overflow-hidden"
             >
-              <div className="w-full max-w-full overflow-hidden">
+              <div className="min-h-[167px] w-full max-w-full overflow-hidden">
                 <table className="w-full table-fixed border-collapse text-[11px]">
                   {/* 비율 폭 — 카드가 좁아져도 표가 테두리를 뚫지 않는다(가로 스크롤 금지) */}
                   <colgroup>
