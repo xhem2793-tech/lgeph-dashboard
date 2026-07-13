@@ -173,7 +173,7 @@ export default function EconRail() {
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="num flex-1 text-right text-[13px] font-normal text-gray-900">
+                      <p className="num flex-1 text-right text-[13px] font-semibold text-gray-900">
                         <CountUp value={Number(c.value)} prefix={c.prefix ?? ""} suffix={c.suffix ?? ""} decimals={c.key === "remit" ? 2 : 1} />
                       </p>
 
@@ -230,7 +230,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
         </div>
 
         <p className="mt-0.5 flex items-baseline gap-1.5">
-          <span className="num text-[20px] font-medium text-gray-900">
+          <span className="num text-[20px] font-semibold text-gray-900">
             <CountUp value={Number(c.value)} prefix={c.prefix} suffix={c.suffix} decimals={dec} />
           </span>
           <span className="text-[10px] text-gray-400/90">{c.asOf?.slice(0, 7).replace("-", ".")} 기준</span>
