@@ -34,13 +34,11 @@ function periodLabel(iso: string, freq: string) {
 const scale = (key: string, v: number) => (key === "remit" ? v / 1e9 : v)
 
 /** 변동률 두 칸 — 전월비 / 전년비를 각각 표기(교대 없음).
- *  숫자는 Arial Narrow로 폭을 아낀다. 레이아웃은 한글 기준 고정. */
-const NUMF = { fontFamily: "'Arial Narrow', Arial, Helvetica, sans-serif" } as React.CSSProperties
-
+ *  숫자 글꼴은 기본(한글판과 동일) · tabular-nums. 레이아웃은 한글 기준 고정. */
 function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; unit: string | null }) {
   if (d == null)
     return (
-      <span style={NUMF} className="w-[46px] shrink-0 text-right text-[10px] text-gray-300">
+      <span className="w-[42px] shrink-0 text-right text-[10px] text-gray-300">
         —
       </span>
     )
@@ -49,9 +47,8 @@ function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; uni
   const bad = dir === "bad" ? up : !up
   return (
     <span
-      style={NUMF}
       className={
-        "inline-flex w-[46px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[10px] leading-4 " +
+        "inline-flex w-[46px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[10px] leading-4 tabular-nums " +
         (flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
       }
     >
@@ -66,8 +63,8 @@ function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; uni
 
 /** 접힌 줄의 추세 미리보기 — 축 없음, 마지막 점만 */
 function Preview({ pts }: { pts: number[] }) {
-  if (!pts || pts.length < 2) return <div className="h-[22px] w-[54px] shrink-0" />
-  const W = 54, H = 22, L = 1, R = W - 3, T = 3, B = H - 3
+  if (!pts || pts.length < 2) return <div className="h-[20px] w-[40px] shrink-0" />
+  const W = 40, H = 20, L = 1, R = W - 3, T = 3, B = H - 3
   const lo = Math.min(...pts), hi = Math.max(...pts)
   const pad = (hi - lo || 1) * 0.2
   const LO = lo - pad, HI = hi + pad, n = pts.length
@@ -107,6 +104,12 @@ const EN_SHORT: Record<string, string> = {
 
 export default function EconRail() {
   const { lang, t, pick } = useLang()
+  /** 변동률 기준을 4초마다 교대 — 지금 무엇을 보고 있는지는 헤더 우측 배지로 알린다 */
+  const [mode, setMode] = React.useState<"mom" | "yoy">("yoy")
+  React.useEffect(() => {
+    const id = setInterval(() => setMode((m) => (m === "yoy" ? "mom" : "yoy")), 4000)
+    return () => clearInterval(id)
+  }, [])
   const [rows, setRows] = React.useState<Card[] | null>(null)
   const [series, setSeries] = React.useState<Record<string, Series>>({})
   const [open, setOpen] = React.useState<string | null>(null)
@@ -128,7 +131,14 @@ export default function EconRail() {
           <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("rail_title")}</h2>
           <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
         </a>
-        
+        {/* 지금 보고 있는 변동률 기준 — 4초마다 교대 */}
+        <span
+          key={mode}
+          className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-600"
+          style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}
+        >
+          {mode === "yoy" ? (lang === "en" ? "YoY" : "전년비") : lang === "en" ? "MoM" : "전월비"}
+        </span>
       </header>
 
       {err ? (
@@ -139,11 +149,7 @@ export default function EconRail() {
           if (rows && list.length === 0) return null
           return (
             <div key={g}>
-              <div className="flex items-center gap-1.5 border-b border-gray-100 bg-gray-50/70 px-2.5 py-0.5 text-[10px] font-normal text-gray-400">
-                <span className="flex-1">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</span>
-                <span className="w-[46px] shrink-0 text-right">{lang === "en" ? (g === "월별" ? "MoM" : "QoQ") : g === "월별" ? "전월" : "전분기"}</span>
-                <span className="w-[46px] shrink-0 text-right">{lang === "en" ? "YoY" : "전년"}</span>
-              </div>
+              <p className="border-b border-gray-100 bg-gray-50/70 px-2.5 py-0.5 text-[10px] font-normal text-gray-400">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</p>
               {(rows ? list : (Array.from({ length: 4 }) as (Card | undefined)[])).map((c, i) =>
                 !c ? (
                   <div key={i} className="h-[36px] border-b border-gray-50" />
@@ -168,14 +174,13 @@ export default function EconRail() {
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p style={NUMF} className="w-[50px] shrink-0 text-right text-[13px] font-normal text-gray-900">
+                      <p className="w-[46px] shrink-0 text-right text-[13px] font-normal tabular-nums text-gray-900">
                         {c.prefix}
                         {c.value}
                         {c.suffix}
                       </p>
 
-                      <DeltaCell d={c.deltaMom} dir={c.dir} unit={c.deltaUnit} />
-                      <DeltaCell d={c.deltaYoy} dir={c.dir} unit={c.deltaUnit} />
+                      <DeltaCell d={mode === "mom" ? c.deltaMom ?? c.deltaYoy : c.deltaYoy ?? c.deltaMom} dir={c.dir} unit={c.deltaUnit} />
 
                     </button>
 
