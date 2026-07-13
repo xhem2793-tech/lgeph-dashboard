@@ -38,7 +38,7 @@ const scale = (key: string, v: number) => (key === "remit" ? v / 1e9 : v)
 function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; unit: string | null }) {
   if (d == null)
     return (
-      <span className="num w-[42px] shrink-0 text-right text-[9px] text-gray-300">
+      <span className="num w-[56px] shrink-0 text-right text-[9px] text-gray-300">
         —
       </span>
     )
@@ -48,7 +48,7 @@ function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; uni
   return (
     <span
       className={
-        "num inline-flex font-semibold w-[46px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[9px] leading-4 " +
+        "num inline-flex font-semibold w-[56px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[9px] leading-4 " +
         (flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
       }
     >
@@ -177,7 +177,7 @@ export default function EconRail() {
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="num flex-1 text-right text-[12px] font-semibold text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
+                      <p className="num flex-1 pr-1.5 text-right text-[12px] font-semibold text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
                         <CountUp value={Number(c.value)} prefix={c.prefix ?? ""} suffix={c.suffix ?? ""} decimals={c.key === "remit" ? 2 : 1} />
                       </p>
 
