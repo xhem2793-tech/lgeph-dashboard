@@ -154,7 +154,7 @@ export default function EconRail() {
                 !c ? (
                   <div key={i} className="h-[36px] border-b border-gray-50" />
                 ) : (
-                  <div key={c.key}>
+                  <div key={c.key} className="mx-2.5 border-b border-gray-200 last:border-b-0">
                     <button
                       type="button"
                       onClick={() => {
@@ -162,7 +162,7 @@ export default function EconRail() {
                     setOpen(open === c.key ? null : c.key)
                   }}
                       className={
-                        "group flex min-h-[26px] w-full items-center gap-1.5 border-b transition-colors duration-300  border-gray-200 px-2.5 py-0.5 text-left transition-all duration-300 ease-out " +
+                        "group flex min-h-[26px] w-full items-center gap-1.5 transition-colors duration-300 px-0 py-0.5 text-left transition-all duration-300 ease-out " +
                         (open === c.key ? "bg-indigo-50/60" : "hover:-translate-y-0.5 hover:bg-gray-50")
                       }
                     >
@@ -222,7 +222,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
   const dec = c.key === "remit" ? 2 : 1
 
   return (
-    <div className="px-2.5 pb-2.5 pt-2.5" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
+    <div className="pb-2.5 pt-2.5" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="rounded-xl bg-[#f9fafb] p-3">
         <div className="flex items-center justify-between gap-2">
           <span className={(lang === "en" ? "text-[10px]" : "text-[11px]") + " font-normal text-gray-700"}>{pick(c.label, c.labelEn)}</span>
