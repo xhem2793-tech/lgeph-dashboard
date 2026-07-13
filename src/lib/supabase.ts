@@ -406,43 +406,83 @@ export function fmtStamp(iso?: string | null, en = false) {
   return `${g("month")}/${g("day")} ${g("hour")}:${g("minute")}`
 }
 
-/** 경쟁사 가격 — 최신 수집일 전 행(엑셀형 표·CSV 내보내기용). 필터는 화면에서 처리한다. */
+/** 경쟁사 가격 — 최근 3일 피벗(v_competitor_3d). 표·CSV·KPI 모두 이 한 벌을 쓴다. */
 export type PriceRow = {
   retailer: string
   brand: string
   category: string
   model: string
+  code: string
   capacity: string | null
   srp: number | null
-  price: number | null
-  discountPct: number | null
-  prevPrice: number | null
+  p0: number | null
+  p1: number | null
+  p2: number | null
+  d0: string
+  d1: string | null
+  d2: string | null
   deltaPhp: number | null
   deltaPct: number | null
-  promo: string | null
+  delta3Pct: number | null
+  discountPct: number | null
   url: string | null
-  asOf: string
 }
 
-export async function competitorTable(limit = 3000): Promise<PriceRow[]> {
-  const rows = await sb(
-    "v_competitor_prices_latest?select=retailer,brand,category,model,capacity,srp_php,price_php,discount_pct,prev_price,price_delta_pct,promo_text,url,scraped_date&order=brand.asc,category.asc&limit=" +
-      limit,
-  )
-  return (rows ?? []).map((r: any) => ({
-    retailer: r.retailer,
-    brand: r.brand,
-    category: r.category,
-    model: r.model,
-    capacity: r.capacity ?? null,
-    srp: num(r.srp_php),
-    price: num(r.price_php),
-    discountPct: num(r.discount_pct),
-    prevPrice: num(r.prev_price),
-    deltaPhp: r.price_php != null && r.prev_price != null ? Number(r.price_php) - Number(r.prev_price) : null,
-    deltaPct: num(r.price_delta_pct),
-    promo: r.promo_text ?? null,
-    url: r.url ?? null,
-    asOf: r.scraped_date,
-  }))
+/** HTML 엔티티 정리 — 스크래핑 원문에 &#8211; &amp; 등이 섞여 들어온다 */
+function clean(s: string) {
+  return (s || "")
+    .replace(/&#8211;|&ndash;/g, "–")
+    .replace(/&#8212;|&mdash;/g, "—")
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#(\d+);/g, (_, d) => String.fromCharCode(Number(d)))
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+/** 모델 suffix(모델코드) 추출 — 설명문 안에서 영문+숫자 조합의 마지막 토큰 */
+function modelCode(s: string) {
+  const bad = /^(KG|CU|FT|INCH|HP|TON|LED|OLED|QNED|SMART|TV|BUNDLE|MODEL|LG|SAMSUNG|SHARP|HISENSE|TCL|PANASONIC|MIDEA)$/i
+  const c = clean(s)
+    .split(/[\s(),/]+/)
+    .map((x) => x.replace(/[^A-Za-z0-9.-]/g, ""))
+    .filter((u) => {
+      if (u.length < 4 || u.length > 22) return false
+      if (!/[A-Za-z]/.test(u) || !/\d/.test(u)) return false
+      if (/^\d/.test(u)) return false
+      if (bad.test(u)) return false
+      return (u.match(/\d/g) || []).length >= 2
+    })
+  return c.length ? c[c.length - 1] : "—"
+}
+
+export async function competitorTable(limit = 4000): Promise<PriceRow[]> {
+  const rows = await sb("v_competitor_3d?select=*&limit=" + limit)
+  return (rows ?? []).map((r: any) => {
+    const p0 = num(r.p0)
+    const p1 = num(r.p1)
+    const p2 = num(r.p2)
+    return {
+      retailer: r.retailer,
+      brand: r.brand,
+      category: r.category,
+      model: clean(r.model),
+      code: modelCode(r.model),
+      capacity: r.capacity ?? null,
+      srp: num(r.srp),
+      p0,
+      p1,
+      p2,
+      d0: r.d0,
+      d1: r.d1 ?? null,
+      d2: r.d2 ?? null,
+      deltaPhp: p0 != null && p1 != null ? p0 - p1 : null,
+      deltaPct: p0 != null && p1 != null && p1 !== 0 ? ((p0 - p1) / p1) * 100 : null,
+      delta3Pct: p0 != null && p2 != null && p2 !== 0 ? ((p0 - p2) / p2) * 100 : null,
+      discountPct: num(r.discount_pct),
+      url: r.url ?? null,
+    }
+  })
 }
