@@ -53,7 +53,7 @@ export default function TodayBrief() {
       <header className="mb-1 flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2">
           <h2 className="text-[16px] font-bold tracking-tight text-gray-900">{t("brief_title")}</h2>
-          <span className="text-[10px] text-gray-400">{fmtDate(b?.asOf)}</span>
+          <span className="text-[10px] text-gray-400">{t("news_updated")} {fmtDate(b?.asOf)}</span>
         </div>
 
         {b === undefined ? null : approved ? (
