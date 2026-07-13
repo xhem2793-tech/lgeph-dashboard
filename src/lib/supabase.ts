@@ -64,9 +64,9 @@ export async function latestNews(limit = 5) {
 
 export async function newsBySheet(sheet: string, limit = 5) {
   const rows = await sb(
-    `news_articles?sheet=eq.${sheet}&select=title,summary,ai_analysis,source_name,date,source_url,category,image_url&order=date.desc&limit=${limit}`,
+    `news_articles?sheet=eq.${sheet}&select=title,summary,ai_analysis,title_en,summary_en,ai_analysis_en,source_name,date,source_url,category,image_url&order=date.desc&limit=${limit}`,
   )
-  return rows.map((r) => ({ title: r.title, summary: r.summary, ai: r.ai_analysis, source: r.source_name, date: r.date, url: r.source_url, category: r.category, image: r.image_url }))
+  return rows.map((r) => ({ title: r.title, summary: r.summary, ai: r.ai_analysis, titleEn: r.title_en, summaryEn: r.summary_en, aiEn: r.ai_analysis_en, source: r.source_name, date: r.date, url: r.source_url, category: r.category, image: r.image_url }))
 }
 
 export async function calendarRecent(pastN = 3, futureN = 6) {
@@ -176,11 +176,12 @@ export async function categoryKpi() {
  *       'neutral' = 방향 없음(태풍 등) */
 export async function homeBand() {
   const rows = await sb(
-    `v_home_band?select=seq,key,label,prefix,value,suffix,delta,delta_label,delta_mom,delta_yoy,delta_unit,dir,as_of,freq&order=seq.asc`,
+    `v_home_band?select=seq,key,label,label_en,prefix,value,suffix,delta,delta_label,delta_mom,delta_yoy,delta_unit,dir,as_of,freq&order=seq.asc`,
   )
   return rows.map((r) => ({
     key: r.key as string,
     label: r.label as string,
+    labelEn: (r.label_en ?? null) as string | null,
     prefix: (r.prefix ?? "") as string,
     value: r.value as string,
     suffix: (r.suffix ?? "") as string,
@@ -217,13 +218,14 @@ export async function weekHighlights(limit = 5) {
  *  달 단위로 고정하면 "이번 달에 무엇이 있는가"가 매일 같은 답을 준다(일관성=브랜드). */
 export async function calendarMonth() {
   const rows = await sb(
-    `v_calendar_month?select=date,category,importance,event,release_time,past,today`,
+    `v_calendar_month?select=date,category,importance,event,event_en,release_time,past,today`,
   )
   return rows.map((r) => ({
     date: r.date as string,
     category: r.category as string,
     importance: r.importance as string,
     event: r.event as string,
+    eventEn: (r.event_en ?? null) as string | null,
     time: r.release_time as string | null,
     past: Boolean(r.past),
     today: Boolean(r.today),
@@ -258,14 +260,19 @@ export async function econSeries(): Promise<Record<string, EconSeries>> {
  *  외부 글은 원문을 저장하지 않는다(전재 금지) — 요약·해석·링크만. */
 export async function analysisPosts(limit = 4) {
   const rows = await sb(
-    `analysis_posts?select=id,published_at,kind,title,dek,summary,body_md,why_matters,source_name,source_url,image_url,tags,confidence,author&order=published_at.desc&limit=${limit}`,
+    `analysis_posts?select=id,published_at,kind,title,dek,summary,body_md,why_matters,title_en,dek_en,summary_en,body_en,why_matters_en,source_name,source_url,image_url,tags,confidence,author&order=published_at.desc&limit=${limit}`,
   )
   return rows.map((r) => ({
     id: Number(r.id),
     publishedAt: r.published_at as string,
     kind: r.kind as "own" | "external",
     title: r.title as string,
+    titleEn: (r.title_en ?? null) as string | null,
     dek: (r.dek ?? null) as string | null,
+    dekEn: (r.dek_en ?? null) as string | null,
+    summaryEn: (r.summary_en ?? null) as string | null,
+    bodyEn: (r.body_en ?? null) as string | null,
+    whyMattersEn: (r.why_matters_en ?? null) as string | null,
     summary: (r.summary ?? null) as string | null,
     body: (r.body_md ?? null) as string | null,
     whyMatters: (r.why_matters ?? "") as string,
@@ -337,13 +344,14 @@ export async function ingestHealth() {
  *  status: 'draft'(AI INTERPRETED) → 사람 승인 → 'approved'(CONFIRMED) */
 export async function todayBrief() {
   const rows = await sb(
-    `daily_brief?select=as_of,lines,weekly_call,weekly_owner,weekly_due,status,approved_by,approved_at&order=as_of.desc&limit=1`,
+    `daily_brief?select=as_of,lines,lines_en,weekly_call,weekly_owner,weekly_due,status,approved_by,approved_at&order=as_of.desc&limit=1`,
   )
   if (!rows.length) return null
   const r = rows[0]
   return {
     asOf: r.as_of as string,
     lines: (r.lines ?? []) as { text: string; evidence?: string }[],
+    linesEn: (r.lines_en ?? null) as { text: string; evidence?: string }[] | null,
     weeklyCall: (r.weekly_call ?? null) as string | null,
     weeklyOwner: (r.weekly_owner ?? null) as string | null,
     weeklyDue: (r.weekly_due ?? null) as string | null,
