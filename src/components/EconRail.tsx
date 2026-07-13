@@ -92,7 +92,7 @@ function Preview({ pts }: { pts: number[] }) {
 const GROUPS = ["월별", "분기"] as const
 
 export default function EconRail() {
-  const { t, pick } = useLang()
+  const { lang, t, pick } = useLang()
   const [rows, setRows] = React.useState<Card[] | null>(null)
   const [series, setSeries] = React.useState<Record<string, Series>>({})
   const [open, setOpen] = React.useState<string | null>(null)
@@ -135,11 +135,18 @@ export default function EconRail() {
                       type="button"
                       onClick={() => setOpen(open === c.key ? null : c.key)}
                       className={
-                        "flex w-full items-center gap-2 border-b border-gray-50 px-3 py-1.5 text-left transition-all duration-300 ease-out " +
+                        "flex min-h-[36px] w-full items-center gap-2 border-b border-gray-50 px-3 py-1.5 text-left transition-all duration-300 ease-out " +
                         (open === c.key ? "bg-indigo-50/60" : "hover:-translate-y-0.5 hover:bg-gray-50")
                       }
                     >
-                      <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-800">{pick(c.label, c.labelEn)}</p>
+                      <p
+                        className={
+                          "min-w-0 flex-1 font-semibold leading-tight text-gray-800 " +
+                          (lang === "en" ? "line-clamp-2 text-[11px]" : "truncate text-[13px]")
+                        }
+                      >
+                        {pick(c.label, c.labelEn)}
+                      </p>
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
@@ -173,7 +180,7 @@ export default function EconRail() {
 
 /** 펼침 — 경제지표 페이지 카드와 같은 어법(회색 서피스 · 값 CountUp · ProChart · 출처) */
 function Detail({ c, s }: { c: Card; s: Series }) {
-  const { pick } = useLang()
+  const { lang, pick } = useLang()
   const cur = s.points.map((v) => scale(c.key, v))
   const prevArr = s.prev.map((v) => (v == null ? NaN : scale(c.key, v)))
   // 전년 값이 하나라도 비면 선이 끊겨 차트가 깨진다 — 전 구간이 있을 때만 그린다
@@ -186,7 +193,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
     <div className="px-2.5 pb-2.5" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="rounded-xl bg-[#f9fafb] p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[12px] font-medium text-gray-700">{pick(c.label, c.labelEn)}</span>
+          <span className={(lang === "en" ? "text-[11px]" : "text-[12px]") + " font-medium text-gray-700"}>{pick(c.label, c.labelEn)}</span>
           <div className="flex shrink-0 items-center gap-2.5 text-[10px] text-gray-400">
             {hasPrev ? (
               <span className="flex items-center gap-1">
