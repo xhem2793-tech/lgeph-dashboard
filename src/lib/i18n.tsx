@@ -1,0 +1,113 @@
+"use client"
+
+import React from "react"
+
+/** 언어 전환 — KO(기본) / EN.
+ *
+ *  ■ 원칙
+ *   1) 원문을 지우지 않는다. DB에는 한국어 원문 + 영문 컬럼(_en)이 함께 산다.
+ *   2) 번역이 없으면 원문을 보여준다(pick()의 폴백). 빈칸이나 지어낸 번역은 금지.
+ *   3) UI 문구는 사전(DICT)에 모아 한 곳에서 관리한다.
+ */
+export type Lang = "ko" | "en"
+
+const Ctx = React.createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
+  lang: "ko",
+  setLang: () => {},
+})
+
+export function LangProvider({ children }: { children: React.ReactNode }) {
+  const [lang, setLangState] = React.useState<Lang>("ko")
+  React.useEffect(() => {
+    const saved = typeof window !== "undefined" ? window.localStorage.getItem("ax_lang") : null
+    if (saved === "en" || saved === "ko") setLangState(saved)
+  }, [])
+  const setLang = React.useCallback((l: Lang) => {
+    setLangState(l)
+    try { window.localStorage.setItem("ax_lang", l) } catch {}
+    if (typeof document !== "undefined") document.documentElement.lang = l
+  }, [])
+  return <Ctx.Provider value={{ lang, setLang }}>{children}</Ctx.Provider>
+}
+
+export function useLang() {
+  const { lang, setLang } = React.useContext(Ctx)
+  const t = React.useCallback((key: keyof typeof DICT) => (lang === "en" ? DICT[key].en : DICT[key].ko), [lang])
+  /** 데이터 필드 — 번역이 없으면 원문 폴백 */
+  const pick = React.useCallback(
+    (ko?: string | null, en?: string | null) => (lang === "en" ? (en && en.trim() ? en : ko ?? "") : ko ?? ""),
+    [lang],
+  )
+  return { lang, setLang, t, pick }
+}
+
+export const DICT = {
+  nav_overview: { ko: "대시보드", en: "Overview" },
+  nav_economy: { ko: "경제지표", en: "Economy" },
+  nav_news: { ko: "주요뉴스", en: "News" },
+  nav_competitors: { ko: "경쟁사 가격", en: "Prices" },
+  nav_calendar: { ko: "캘린더", en: "Calendar" },
+  nav_appendix: { ko: "부록", en: "Appendix" },
+  search_ph: { ko: "지표·뉴스·키워드 검색", en: "Search indicators, news, keywords" },
+  org: { ko: "LGE-PH 경영기획", en: "LGE-PH Strategy" },
+  brief_title: { ko: "금주 주요 이슈", en: "This Week's Key Issues" },
+  brief_evidence: { ko: "근거", en: "Evidence" },
+  brief_empty: { ko: "오늘 초안 없음 — 아직 생성 전", en: "No draft today — not generated yet" },
+  brief_approve: { ko: "AI · 검토 전 → 승인", en: "AI draft → approve" },
+  brief_approving: { ko: "승인 중…", en: "Approving…" },
+  brief_fail: { ko: "승인 실패 — 다시 시도", en: "Approval failed — retry" },
+  price_title: { ko: "가격 동향", en: "Price Moves" },
+  price_daily: { ko: "매일 갱신", en: "Daily" },
+  price_all: { ko: "전체", en: "All" },
+  price_down: { ko: "↓ 인하순", en: "↓ Cuts" },
+  price_up: { ko: "↑ 인상순", en: "↑ Hikes" },
+  price_none: { ko: "변동 없음", en: "No change" },
+  th_brand: { ko: "브랜드", en: "Brand" },
+  th_category: { ko: "카테고리", en: "Category" },
+  th_model: { ko: "모델", en: "Model" },
+  th_srp: { ko: "SRP", en: "SRP" },
+  th_delta: { ko: "전일비", en: "D/D" },
+  th_retail: { ko: "유통", en: "Retail" },
+  price_note: {
+    ko: "경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5",
+    en: "Scraped from competitor online stores · top 5 hikes and cuts",
+  },
+  rail_title: { ko: "주요지표", en: "Key Indicators" },
+  rail_hint: { ko: "누르면 상세 차트", en: "Tap for full chart" },
+  rail_monthly: { ko: "월별 지표", en: "Monthly" },
+  rail_quarterly: { ko: "분기 지표", en: "Quarterly" },
+  rail_note: {
+    ko: "배지 색은 사업영향 기준 · 4초마다 전월비 ↔ 전년비 교대",
+    en: "Badge color = business impact · toggles MoM ↔ YoY every 4s",
+  },
+  rail_fail: { ko: "지표를 불러오지 못함 · 확인 필요", en: "Failed to load indicators · check needed" },
+  prev_year: { ko: "전년", en: "Prev yr" },
+  cur_year: { ko: "현재", en: "Current" },
+  news_title: { ko: "주요 뉴스", en: "Top News" },
+  news_sub: { ko: "경제·산업·B2B", en: "Economy · Industry · B2B" },
+  news_updated: { ko: "최종 갱신", en: "Updated" },
+  news_none_today: { ko: "오늘 신규 없음", en: "No new items today" },
+  ce_title: { ko: "CE 동향", en: "CE Trends" },
+  ce_sub: { ko: "생활가전·소비", en: "Home appliances" },
+  b2b_title: { ko: "B2B 동향", en: "B2B Trends" },
+  b2b_sub: { ko: "공조·인프라", en: "HVAC · Infra" },
+  market_title: { ko: "시장 동향", en: "Market" },
+  market_sub: { ko: "경제·정치·사회", en: "Economy · Politics" },
+  analysis_title: { ko: "이번 주 분석", en: "This Week's Analysis" },
+  analysis_sub: { ko: "자체 칼럼 · 외부 큐레이션", en: "In-house · Curated" },
+  analysis_own: { ko: "자체", en: "In-house" },
+  analysis_ext: { ko: "외부", en: "External" },
+  analysis_note: {
+    ko: "외부 글은 원문을 옮기지 않음. 요약·해석·링크만 (출처와 저작권 보존)",
+    en: "External pieces are not reproduced — summary, take and link only",
+  },
+  why_matters: { ko: "왜 중요한가", en: "Why it matters" },
+  daily_title: { ko: "일간 지표", en: "Daily Indicators" },
+  cal_title: { ko: "경제 캘린더", en: "Economic Calendar" },
+  cal_upcoming: { ko: "예정", en: "Upcoming" },
+  cal_past: { ko: "결과", en: "Released" },
+  cal_none_up: { ko: "남은 일정 없음", en: "No upcoming events" },
+  cal_none_past: { ko: "이번 달 발표된 결과 없음", en: "No releases this month" },
+  confirmed: { ko: "CONFIRMED", en: "CONFIRMED" },
+  source: { ko: "출처", en: "Source" },
+} as const
