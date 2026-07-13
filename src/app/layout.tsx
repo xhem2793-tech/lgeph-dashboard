@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import { ThemeProvider } from "next-themes"
-import { Inter, Public_Sans } from "next/font/google"
+import { Inter, Public_Sans, IBM_Plex_Sans } from "next/font/google"
 import "./globals.css"
 
 const inter = Inter({
@@ -17,6 +17,8 @@ const publicSans = Public_Sans({
   display: "swap",
   variable: "--font-public-sans",
 })
+
+const plexNum = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"], display: "swap", variable: "--font-num" })
 
 import { TopNav } from "@/components/ui/navigation/TopNav"
 import { LangProvider } from "@/lib/i18n"
@@ -60,7 +62,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${inter.className} ${publicSans.variable} overflow-y-scroll scroll-auto antialiased selection:bg-indigo-100 selection:text-indigo-700 dark:bg-gray-950`}
+        className={`${inter.className} ${publicSans.variable} ${plexNum.variable} overflow-y-scroll scroll-auto antialiased selection:bg-indigo-100 selection:text-indigo-700 dark:bg-gray-950`}
         suppressHydrationWarning
       >
         <div className="mx-auto max-w-screen-2xl">
