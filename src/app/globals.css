@@ -39,3 +39,8 @@ html.lang-in header {
   font-feature-settings: "tnum" 1, "zero" 1;
   letter-spacing: 0;
 }
+
+/* 가독성 — 회색 텍스트 한 단계 짙게(대비 확보). 배지·보조문구가 흐려 안 보이는 문제 */
+.text-gray-300 { color: rgb(156 163 175); } /* → gray-400 */
+.text-gray-400 { color: rgb(107 114 128); } /* → gray-500 */
+.text-gray-500 { color: rgb(75 85 99); }   /* → gray-600 */
