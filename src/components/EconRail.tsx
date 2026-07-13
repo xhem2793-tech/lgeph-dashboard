@@ -47,7 +47,7 @@ function DeltaBadge({ c }: { c: Card }) {
     const id = setInterval(() => setI((k) => (k + 1) % opts.length), 4000)
     return () => clearInterval(id)
   }, [opts.length])
-  if (opts.length === 0) return <span className="w-[78px] shrink-0 text-right text-[10px] text-gray-400">—</span>
+  if (opts.length === 0) return <span className="w-[54px] shrink-0 text-right text-[10px] text-gray-400">—</span>
   const o = opts[Math.min(i, opts.length - 1)]
   const up = o.d > 0
   const bad = c.dir === "bad" ? up : !up
@@ -55,13 +55,10 @@ function DeltaBadge({ c }: { c: Card }) {
   return (
     <span
       className={
-        "inline-flex w-[78px] shrink-0 items-center gap-0.5 rounded px-1 py-0.5 text-[10px] font-normal tabular-nums transition-transform duration-300 ease-out hover:-translate-y-0.5 " +
+        "inline-flex w-[54px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[10px] font-normal tabular-nums transition-transform duration-300 ease-out hover:-translate-y-0.5 " +
         (flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
       }
     >
-      <span key={o.lb} className="shrink-0 opacity-70" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
-        {o.lb}
-      </span>
       <span className="w-[8px] shrink-0 text-center">{flat ? "·" : up ? "↑" : "↓"}</span>
       <span key={o.lb + "v"} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
         <CountUp value={Math.abs(o.d)} suffix={c.deltaUnit} decimals={1} />
@@ -125,7 +122,7 @@ export default function EconRail() {
           if (rows && list.length === 0) return null
           return (
             <div key={g}>
-              <p className="border-b border-gray-100 bg-gray-50/70 px-3.5 py-1 text-[10px] font-normal text-gray-400">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</p>
+              <p className="border-b border-gray-100 bg-gray-50/70 px-2.5 py-0.5 text-[10px] font-normal text-gray-400">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</p>
               {(rows ? list : (Array.from({ length: 4 }) as (Card | undefined)[])).map((c, i) =>
                 !c ? (
                   <div key={i} className="h-[36px] border-b border-gray-50" />
@@ -135,13 +132,13 @@ export default function EconRail() {
                       type="button"
                       onClick={() => setOpen(open === c.key ? null : c.key)}
                       className={
-                        "flex min-h-[36px] w-full items-center gap-2 border-b border-gray-50 px-3 py-1.5 text-left transition-all duration-300 ease-out " +
+                        "flex min-h-[26px] w-full items-center gap-1.5 border-b border-gray-50 px-2.5 py-0.5 text-left transition-all duration-300 ease-out " +
                         (open === c.key ? "bg-indigo-50/60" : "hover:-translate-y-0.5 hover:bg-gray-50")
                       }
                     >
                       <p
                         className={
-                          "min-w-0 flex-1 font-normal leading-tight text-gray-800 " +
+                          "min-w-0 flex-1 font-medium leading-snug text-gray-800 " +
                           (lang === "en" ? "line-clamp-2 text-[11px]" : "truncate text-[13px]")
                         }
                       >
@@ -150,7 +147,7 @@ export default function EconRail() {
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="w-[58px] shrink-0 text-right text-[13px] font-normal tabular-nums text-gray-900">
+                      <p className="w-[52px] shrink-0 text-right text-[13px] font-normal tabular-nums text-gray-900">
                         {c.prefix}
                         {c.value}
                         {c.suffix}
@@ -214,6 +211,24 @@ function Detail({ c, s }: { c: Card; s: Series }) {
           </span>
           <span className="text-[10px] text-gray-400/90">{c.asOf?.slice(0, 7).replace("-", ".")} 기준</span>
         </p>
+
+        {/* 변동률 라벨은 상세에서 본다 — 목록 배지에는 숫자만 */}
+        <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[10px] tabular-nums">
+          {c.deltaMom != null ? (
+            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-600">
+              {lang === "en" ? (c.freq === "분기" ? "QoQ" : "MoM") : c.freq === "분기" ? "전분기" : "전월"}{" "}
+              {c.deltaMom > 0 ? "↑" : c.deltaMom < 0 ? "↓" : "·"} {Math.abs(c.deltaMom).toFixed(1)}
+              {c.deltaUnit}
+            </span>
+          ) : null}
+          {c.deltaYoy != null ? (
+            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-600">
+              {lang === "en" ? "YoY" : "전년"} {c.deltaYoy > 0 ? "↑" : c.deltaYoy < 0 ? "↓" : "·"}{" "}
+              {Math.abs(c.deltaYoy).toFixed(1)}
+              {c.deltaUnit}
+            </span>
+          ) : null}
+        </div>
 
         <ProChart
           cur={cur}
