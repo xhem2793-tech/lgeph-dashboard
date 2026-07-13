@@ -121,6 +121,11 @@ export default function EconRail() {
       })
       .catch(() => {})
   }, [])
+  React.useEffect(() => {
+    const id = setInterval(() => setMode((m) => (m === "yoy" ? "mom" : "yoy")), 4000)
+    return () => clearInterval(id)
+  }, [])
+  const [rows, setRows] = React.useState<Card[] | null>(null)
   /** 색은 "이번에 실제로 움직인" 상위 4개에만 — 나머지는 회색으로 눌러 시선 분산 방지 */
   const hot = React.useMemo(() => {
     const arr = (rows ?? []).map((c) => ({
@@ -130,11 +135,6 @@ export default function EconRail() {
     arr.sort((a, b) => b.v - a.v)
     return new Set(arr.filter((x) => x.v > 0).slice(0, 4).map((x) => x.k))
   }, [rows, mode])
-  React.useEffect(() => {
-    const id = setInterval(() => setMode((m) => (m === "yoy" ? "mom" : "yoy")), 4000)
-    return () => clearInterval(id)
-  }, [])
-  const [rows, setRows] = React.useState<Card[] | null>(null)
   const [series, setSeries] = React.useState<Record<string, Series>>({})
   const [open, setOpen] = React.useState<string | null>(null)
   const [seen, setSeen] = React.useState<Set<string>>(new Set())
