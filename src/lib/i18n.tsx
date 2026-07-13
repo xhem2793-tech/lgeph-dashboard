@@ -81,10 +81,10 @@ export const DICT = {
   th_delta: { ko: "전일비", en: "D/D" },
   th_retail: { ko: "유통", en: "Retail" },
   price_note: {
-    ko: "경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5",
-    en: "Scraped from competitor online stores · top 5 hikes and cuts",
+    ko: "LG · Samsung · Panasonic · TCL · Midea · Hisense 기준",
+    en: "LG · Samsung · Panasonic · TCL · Midea · Hisense",
   },
-  price_asof: { ko: "기준 · 6개 브랜드", en: "as of · 6 brands" },
+  price_asof: { ko: "기준", en: "as of" },
   cat_ref: { ko: "냉장고", en: "REF" },
   cat_wash: { ko: "세탁기", en: "W/M" },
   cat_tv: { ko: "TV", en: "TV" },
