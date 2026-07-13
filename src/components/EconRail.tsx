@@ -35,7 +35,7 @@ const scale = (key: string, v: number) => (key === "remit" ? v / 1e9 : v)
 
 /** 변동률 두 칸 — 전월비 / 전년비를 각각 표기(교대 없음).
  *  숫자 글꼴은 기본(한글판과 동일) · tabular-nums. 레이아웃은 한글 기준 고정. */
-function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; unit: string | null }) {
+function DeltaCell({ d, dir, unit, muted }: { d: number | null; dir: string | null; unit: string | null; muted?: boolean }) {
   if (d == null)
     return (
       <span className="num w-[60px] shrink-0 text-right text-[9px] text-gray-300">
@@ -49,7 +49,7 @@ function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; uni
     <span
       className={
         "num inline-flex font-semibold w-[60px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[9px] leading-4 " +
-        (flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
+        (muted || flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
       }
     >
       <span>{flat ? "·" : up ? "↑" : "↓"}</span>
@@ -105,6 +105,15 @@ export default function EconRail() {
   const { lang, t, pick } = useLang()
   /** 변동률 기준을 4초마다 교대 — 지금 무엇을 보고 있는지는 헤더 우측 배지로 알린다 */
   const [mode, setMode] = React.useState<"mom" | "yoy">("yoy")
+  /** 색은 "이번에 실제로 움직인" 상위 4개에만 — 나머지는 회색으로 눌러 시선 분산 방지 */
+  const hot = React.useMemo(() => {
+    const arr = (rows ?? []).map((c) => ({
+      k: c.key,
+      v: Math.abs(Number(mode === "mom" ? c.deltaMom ?? c.deltaYoy : c.deltaYoy ?? c.deltaMom) || 0),
+    }))
+    arr.sort((a, b) => b.v - a.v)
+    return new Set(arr.filter((x) => x.v > 0).slice(0, 4).map((x) => x.k))
+  }, [rows, mode])
   React.useEffect(() => {
     const id = setInterval(() => setMode((m) => (m === "yoy" ? "mom" : "yoy")), 4000)
     return () => clearInterval(id)
@@ -181,7 +190,7 @@ export default function EconRail() {
                         <CountUp value={Number(c.value)} prefix={c.prefix ?? ""} suffix={c.suffix ?? ""} decimals={c.key === "remit" ? 2 : 1} />
                       </p>
 
-                      <DeltaCell d={mode === "mom" ? c.deltaMom ?? c.deltaYoy : c.deltaYoy ?? c.deltaMom} dir={c.dir} unit={c.deltaUnit} />
+                      <DeltaCell d={mode === "mom" ? c.deltaMom ?? c.deltaYoy : c.deltaYoy ?? c.deltaMom} dir={c.dir} unit={c.deltaUnit} muted={!hot.has(c.key)} />
 
                     </button>
 
