@@ -236,26 +236,23 @@ export default function AnalysisColumn() {
                   ) : null
                 ) : null}
 
-                <div className="mb-1 flex items-center gap-1.5">
-                  <span
-                    className={
-                      "rounded px-1.5 py-px text-[10px] font-bold " +
-                      (p.kind === "own"
-                        ? "bg-indigo-50 text-indigo-700"
-                        : "bg-gray-100 text-gray-600")
-                    }
-                  >
-                    {p.kind === "own" ? t("analysis_own") : t("analysis_ext")}
-                  </span>
-                  <span className="text-[11px] text-gray-400">{fmt(p.publishedAt)}</span>
-                </div>
-
                 <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 transition-colors duration-200 group-hover:text-indigo-600">
                   {pick(p.title, p.titleEn)}
                 </p>
 
-                <p className="mt-0.5 text-[11px] text-gray-400">
-                  {p.kind === "own" ? p.author ?? "경영기획" : p.source} · {fmt(p.publishedAt)}
+                {/* 다른 기사 열과 같은 한 줄 메타 — 배지·매체·날짜를 제목 아래로 통일(레이아웃 고정) */}
+                <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-4 text-gray-400">
+                  <span
+                    className={
+                      "shrink-0 rounded px-1 py-px text-[10px] font-bold leading-4 " +
+                      (p.kind === "own" ? "bg-indigo-50 text-indigo-700" : "bg-gray-100 text-gray-600")
+                    }
+                  >
+                    {p.kind === "own" ? t("analysis_own") : t("analysis_ext")}
+                  </span>
+                  <span className="min-w-0 truncate">{p.kind === "own" ? p.author ?? "경영기획" : p.source}</span>
+                  <span className="shrink-0">·</span>
+                  <span className="shrink-0">{fmt(p.publishedAt)}</span>
                 </p>
               </button>
             ),
