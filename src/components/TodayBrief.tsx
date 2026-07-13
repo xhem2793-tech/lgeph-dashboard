@@ -59,24 +59,26 @@ export default function TodayBrief() {
       <header className="mb-1 flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2">
           <h2 className="text-[16px] font-bold tracking-tight text-gray-900">{t("brief_title")}</h2>
-          <span className="text-[10px] text-gray-400">{t("news_updated")} {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(b?.asOf)}</span>
         </div>
 
-        {b === undefined ? null : approved ? (
-          <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-px text-[10px] font-bold text-emerald-700">
-            CONFIRMED · {b?.approvedBy ?? "승인"}
-          </span>
-        ) : (
-          <button
-            type="button"
-            onClick={onApprove}
-            disabled={busy || !b}
-            className="rounded border border-amber-300 bg-amber-50 px-1.5 py-px text-[10px] font-bold text-amber-700 transition-colors duration-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-50"
-            title="검토 후 승인하면 CONFIRMED로 전환됩니다"
-          >
-            {busy ? t("brief_approving") : t("brief_approve")}
-          </button>
-        )}
+        <div className="flex items-baseline gap-2">
+          {b === undefined ? null : approved ? (
+            <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-px text-[10px] font-bold text-emerald-700">
+              CONFIRMED · {b?.approvedBy ?? "승인"}
+            </span>
+          ) : (
+            <button
+              type="button"
+              onClick={onApprove}
+              disabled={busy || !b}
+              className="rounded border border-amber-300 bg-amber-50 px-1.5 py-px text-[10px] font-bold text-amber-700 transition-colors duration-200 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 disabled:opacity-50"
+              title="검토 후 승인하면 CONFIRMED로 전환됩니다"
+            >
+              {busy ? t("brief_approving") : t("brief_approve")}
+            </button>
+          )}
+          <span className="text-[10px] text-gray-400">{t("news_updated")} {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(b?.asOf)}</span>
+        </div>
       </header>
 
       {b === undefined ? (
