@@ -20,7 +20,10 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = React.useState<Lang>("ko")
   React.useEffect(() => {
     const saved = typeof window !== "undefined" ? window.localStorage.getItem("ax_lang") : null
-    if (saved === "en" || saved === "ko") setLangState(saved)
+    if (saved === "en" || saved === "ko") {
+      setLangState(saved)
+      if (typeof document !== "undefined") document.documentElement.lang = saved
+    }
   }, [])
   const setLang = React.useCallback((l: Lang) => {
     setLangState(l)
