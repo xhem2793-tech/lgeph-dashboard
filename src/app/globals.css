@@ -32,3 +32,11 @@ html.lang-in main,
 html.lang-in header {
   animation: langIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
+
+/* 지표 숫자 — IBM Plex Sans(tabular). 금융 대시보드 톤, 자릿수 정렬 */
+.num {
+  font-family: var(--font-num), Inter, Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "zero" 1;
+  letter-spacing: 0;
+}
