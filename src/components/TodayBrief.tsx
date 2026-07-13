@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { todayBrief, approveBrief } from "@/lib/supabase"
+import { todayBrief, approveBrief, freshness, fmtStamp } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
 /** 오늘의 핵심 — 주장 3줄 + 근거 + 이번 주 판단.
@@ -22,6 +22,12 @@ const fmtDate = (s?: string | null) => (s ? s.slice(5).replace("-", "/") : "—"
 
 export default function TodayBrief() {
   const { lang, t } = useLang()
+  const [stamp, setStamp] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    freshness()
+      .then((f) => setStamp(f.brief ?? null))
+      .catch(() => {})
+  }, [])
   const [b, setB] = React.useState<Brief | null | undefined>(undefined)
   const [busy, setBusy] = React.useState(false)
   const [err, setErr] = React.useState<string | null>(null)
@@ -53,7 +59,7 @@ export default function TodayBrief() {
       <header className="mb-1 flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2">
           <h2 className="text-[16px] font-bold tracking-tight text-gray-900">{t("brief_title")}</h2>
-          <span className="text-[10px] text-gray-400">{t("news_updated")} {fmtDate(b?.asOf)}</span>
+          <span className="text-[10px] text-gray-400">{t("news_updated")} {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(b?.asOf)}</span>
         </div>
 
         {b === undefined ? null : approved ? (
