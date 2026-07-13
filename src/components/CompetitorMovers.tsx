@@ -159,12 +159,12 @@ export default function CompetitorMovers() {
   const pick = (c: string) => { setCat(c) }
 
   const th = "px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-gray-400"
-  const td = "h-[26px] p-0 align-middle"
+  const td = "h-[21px] p-0 align-middle"
   // 셀 내용은 26px 박스 안에서만 산다 — 로고·배지 때문에 행이 커지지 않도록 고정
-  const cell = "flex h-[26px] items-center justify-center overflow-hidden px-0.5"
+  const cell = "flex h-[21px] items-center justify-center overflow-hidden px-0.5"
 
   return (
-    <section className="flex h-full flex-col rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <section className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
@@ -183,7 +183,7 @@ export default function CompetitorMovers() {
         </span>
       </div>
 
-      <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-3 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
+      <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-white hover:shadow-md">
         <div className="flex items-center justify-between gap-2">
           <div className="flex flex-wrap gap-1">
             {cats.map((c) => (
