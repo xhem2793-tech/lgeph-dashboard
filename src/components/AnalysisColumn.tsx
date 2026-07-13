@@ -2,6 +2,7 @@
 
 import React from "react"
 import { analysisPosts } from "@/lib/supabase"
+import { useLang } from "@/lib/i18n"
 
 /** 이번 주 분석 — 뉴스 4번째 열.
  *
@@ -61,6 +62,7 @@ function OwnVisual({ tags, compact }: { tags: string[]; compact?: boolean }) {
 
 /** 팝업 — 뉴스 모달과 동일한 어법(배경 클릭·ESC로 닫힘, 이미지 좌 / 본문 우) */
 function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
+  const { t, pick } = useLang()
   const [closing, setClosing] = React.useState(false)
   const close = React.useCallback(() => {
     setClosing(true)
@@ -119,8 +121,8 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
           </button>
         </div>
 
-        <h2 className="text-[24px] font-bold leading-tight text-gray-900">{p.title}</h2>
-        {p.dek ? <p className="mt-1.5 text-[14px] leading-relaxed text-gray-500">{p.dek}</p> : null}
+        <h2 className="text-[24px] font-bold leading-tight text-gray-900">{pick(p.title, p.titleEn)}</h2>
+        {p.dek ? <p className="mt-1.5 text-[14px] leading-relaxed text-gray-500">{pick(p.dek, p.dekEn)}</p> : null}
 
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[1fr_2fr]">
           <div>
@@ -135,13 +137,13 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
 
           <div>
             {p.summary ? (
-              <p className="text-[14px] leading-relaxed text-gray-700">{p.summary}</p>
+              <p className="text-[14px] leading-relaxed text-gray-700">{pick(p.summary, p.summaryEn)}</p>
             ) : null}
 
             <div className="mt-3 rounded-lg border border-indigo-100 bg-indigo-50/50 p-3">
               <p className="text-[14px] leading-relaxed text-gray-700">
-                <b className="font-semibold text-gray-900">왜 중요한가 · </b>
-                {p.whyMatters}
+                <b className="font-semibold text-gray-900">{t("why_matters")} · </b>
+                {pick(p.whyMatters, p.whyMattersEn)}
               </p>
             </div>
 
@@ -160,7 +162,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
 
         {p.body ? (
           <div className="mt-4 border-t border-gray-100 pt-4">
-            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-gray-700">{p.body}</p>
+            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-gray-700">{pick(p.body, p.bodyEn)}</p>
           </div>
         ) : null}
 
@@ -175,6 +177,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
 }
 
 export default function AnalysisColumn() {
+  const { t, pick } = useLang()
   const [rows, setRows] = React.useState<Post[] | null>(null)
   const [err, setErr] = React.useState(false)
   const [open, setOpen] = React.useState<Post | null>(null)
@@ -187,12 +190,12 @@ export default function AnalysisColumn() {
     <div className="lg:px-3">
       <a href="/news?cat=분석" className="group mb-2 flex items-baseline gap-1">
         <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-          이번 주 분석
+          {t("analysis_title")}
         </span>
         <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">
           ›
         </span>
-        <span className="ml-1 text-[11px] text-gray-400">자체 칼럼 · 외부 큐레이션</span>
+        <span className="ml-1 text-[11px] text-gray-400">{t("analysis_sub")}</span>
       </a>
 
       {err ? (
@@ -242,21 +245,17 @@ export default function AnalysisColumn() {
                         : "bg-gray-100 text-gray-600")
                     }
                   >
-                    {p.kind === "own" ? "자체" : "외부"}
+                    {p.kind === "own" ? t("analysis_own") : t("analysis_ext")}
                   </span>
                   <span className="text-[11px] text-gray-400">{fmt(p.publishedAt)}</span>
                 </div>
 
-                <p className="line-clamp-2 text-[16px] font-semibold leading-tight text-gray-800 transition-colors duration-200 group-hover:text-indigo-600">
-                  {p.title}
+                <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 transition-colors duration-200 group-hover:text-indigo-600">
+                  {pick(p.title, p.titleEn)}
                 </p>
 
-                {p.dek ? (
-                  <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-gray-500">{p.dek}</p>
-                ) : null}
-
-                <p className="mt-1 text-[12px] text-gray-400">
-                  {p.kind === "own" ? p.author ?? "경영기획" : p.source}
+                <p className="mt-0.5 text-[11px] text-gray-400">
+                  {p.kind === "own" ? p.author ?? "경영기획" : p.source} · {fmt(p.publishedAt)}
                 </p>
               </button>
             ),
@@ -265,7 +264,7 @@ export default function AnalysisColumn() {
       )}
 
       <p className="mt-2 border-t border-gray-100 pt-2 text-[10px] leading-snug text-gray-400">
-        외부 글은 원문을 옮기지 않음. 요약·해석·링크만 (출처와 저작권 보존)
+        {t("analysis_note")}
       </p>
 
       {open ? <Modal p={open} onClose={() => setOpen(null)} /> : null}
