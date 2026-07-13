@@ -16,3 +16,26 @@ html[lang="en"] table,
 html[lang="en"] .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* 언어 전환 애니메이션 — KO↔EN 페이드아웃 후 페이드인 */
+@keyframes langIn {
+  from { opacity: 0.25; transform: translateY(4px); }
+  to   { opacity: 1;    transform: none; }
+}
+html.lang-out main,
+html.lang-out header {
+  opacity: 0.25;
+  transform: translateY(2px);
+  transition: opacity 0.13s ease, transform 0.13s ease;
+}
+html.lang-in main,
+html.lang-in header {
+  animation: langIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* 로고는 언어와 무관하게 항상 동일 */
+.site-logo,
+.site-logo * {
+  font-family: Inter, "Public Sans", Arial, sans-serif !important;
+  letter-spacing: normal !important;
+}
