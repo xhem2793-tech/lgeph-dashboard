@@ -164,7 +164,7 @@ export default function EconRail() {
                     >
                       <p
                         className={
-                          "w-[104px] shrink-0 font-medium leading-snug text-gray-800 " +
+                          "w-[104px] shrink-0 font-normal leading-snug text-gray-800 " +
                           (lang === "en" ? "truncate text-[12px]" : "truncate text-[13px]")
                         }
                       >
@@ -173,7 +173,7 @@ export default function EconRail() {
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="num flex-1 text-right text-[13px] font-medium text-gray-900">
+                      <p className="num flex-1 text-right text-[13px] font-normal text-gray-900">
                         <CountUp value={Number(c.value)} prefix={c.prefix ?? ""} suffix={c.suffix ?? ""} decimals={c.key === "remit" ? 2 : 1} />
                       </p>
 
@@ -214,7 +214,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
     <div className="px-2.5 pb-2.5" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="rounded-xl bg-[#f9fafb] p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className={(lang === "en" ? "text-[11px]" : "text-[12px]") + " font-medium text-gray-700"}>{pick(c.label, c.labelEn)}</span>
+          <span className={(lang === "en" ? "text-[11px]" : "text-[12px]") + " font-normal text-gray-700"}>{pick(c.label, c.labelEn)}</span>
           <div className="flex shrink-0 items-center gap-2.5 text-[10px] text-gray-400">
             {hasPrev ? (
               <span className="flex items-center gap-1">
