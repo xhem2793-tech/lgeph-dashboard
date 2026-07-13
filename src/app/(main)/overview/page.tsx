@@ -132,7 +132,7 @@ export default function Overview() {
                         { title: t("ce_title"), sub: t("ce_sub"), rows: nCE, skip: 0, cat: "CE" },
                         { title: t("b2b_title"), sub: t("b2b_sub"), rows: nB2B, skip: 0, cat: "B2B" },
                       ].map((col) => (
-                        <div key={col.title} className="lg:h-[560px] lg:overflow-hidden lg:px-3">
+                        <div key={col.title} className="lg:min-h-[560px] lg:px-3">
                           <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
                             <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{col.title}</span>
                             <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
@@ -154,14 +154,14 @@ export default function Overview() {
                                   </div>
                                 ) : null}
                                 <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{pick(n.title, (n as any).titleEn)}</p>
-                                <p className="mt-0.5 text-[11px] text-gray-400">{n.source} · {n.date}</p>
+                                <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-4 text-gray-400"><span className="min-w-0 truncate">{n.source}</span><span className="shrink-0">·</span><span className="shrink-0">{n.date}</span></p>
                               </button>
                             ))}
                           </div>
                         </div>
                       ))}
                       {/* 뉴스가 마르는 날에도 우리가 쓴 글은 있다 */}
-                      <div className="lg:h-[560px] lg:overflow-hidden">
+                      <div className="lg:min-h-[560px]">
                         <AnalysisColumn />
                       </div>
                     </div>
@@ -178,7 +178,7 @@ export default function Overview() {
                       {nMain.slice(1, 10).map((n, i) => (
                         <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
                           <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{pick(n.title, (n as any).titleEn)}</p>
-                          <p className="mt-0.5 text-[11px] text-gray-400">{n.source} · {n.date}</p>
+                          <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-4 text-gray-400"><span className="min-w-0 truncate">{n.source}</span><span className="shrink-0">·</span><span className="shrink-0">{n.date}</span></p>
                         </button>
                       ))}
                     </div>
