@@ -63,10 +63,8 @@ function OwnVisual({ tags, compact }: { tags: string[]; compact?: boolean }) {
 /** 팝업 — 뉴스 모달과 동일한 어법(배경 클릭·ESC로 닫힘, 이미지 좌 / 본문 우) */
 function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
   const { t, pick } = useLang()
-  const [closing, setClosing] = React.useState(false)
   const close = React.useCallback(() => {
-    setClosing(true)
-    window.setTimeout(onClose, 240)
+    onClose()
   }, [onClose])
 
   React.useEffect(() => {
