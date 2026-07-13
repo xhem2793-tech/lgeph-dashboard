@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import { useLang } from "@/lib/i18n"
 import { rangeRows } from "@/lib/supabase"
 
 const IND = "#6366f1"
@@ -281,6 +282,7 @@ function DeltaBadge({ down, pct, pctSuffix, absVal, absPrefix }: { down: boolean
 }
 
 function MultiCard({ title, items, delay, range }: { title: string; items: { label: string; stat: Stat }[]; delay: number; range: string }) {
+  const { t } = useLang()
   const [sel, setSel] = React.useState(0)
   if (!items.length) return null
   const idx = Math.min(sel, items.length - 1)
@@ -316,7 +318,7 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
         <ProChart {...s.chart} />
       </div>
       <div className="mt-auto border-t border-gray-200 pt-2">
-        <span className="cursor-default text-[10px] text-gray-400">출처 {s.note}</span>
+        <span className="cursor-default text-[10px] text-gray-400">{t("source")} {s.note}</span>
       </div>
     </div>
     </div>
@@ -405,6 +407,7 @@ const SERIES = [
 ] as const
 
 export default function DailyIndicators() {
+  const { t } = useLang()
   const today = React.useRef(new Date()).current
   const [raw, setRaw] = React.useState<Record<string, { date: string; value: number }[]> | null>(null)
   const [range, setRange] = React.useState<RangeKey>("7d")
@@ -479,27 +482,27 @@ export default function DailyIndicators() {
     <div>
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
       {!raw ? (
-        <p className="mt-2 text-sm text-gray-400">데이터 불러오는 중…</p>
+        <p className="mt-2 text-sm text-gray-400">{t("d_loading")}</p>
       ) : (
         <div style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <div className="flex items-baseline gap-2">
-                  <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900">일간 지표</h1>
+                  <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900">{t("daily_title")}</h1>
                   <span className="hidden items-center gap-1.5 text-[10px] text-gray-400 sm:flex">
                     <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
-                    {iso(refDate).slice(5).replace("-", "/")} 기준 · 전년 동기 대비
+                    {iso(refDate).slice(5).replace("-", "/")} {t("d_basis")}
                   </span>
                 </div>
                 <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
                   {RANGES.map((r) => (
-                    <button key={r.key} onClick={() => setRange(r.key)} className={"rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " + (range === r.key ? "scale-[1.03] bg-white text-indigo-600 shadow-md" : "text-gray-500 hover:-translate-y-0.5 hover:bg-white/70 hover:text-indigo-600 hover:shadow-sm")}>{r.label}</button>
+                    <button key={r.key} onClick={() => setRange(r.key)} className={"rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " + (range === r.key ? "scale-[1.03] bg-white text-indigo-600 shadow-md" : "text-gray-500 hover:-translate-y-0.5 hover:bg-white/70 hover:text-indigo-600 hover:shadow-sm")}>{t(("r_" + r.key) as "r_7d")}</button>
                   ))}
                 </div>
               </div>
               <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <MultiCard title="환율" items={fxItems} delay={0} range={range} />
-                <MultiCard title="유가" items={oilItems} delay={0.12} range={range} />
-                <MultiCard title="날씨" items={wxItems} delay={0.24} range={range} />
+                <MultiCard title={t("d_fx")} items={fxItems} delay={0} range={range} />
+                <MultiCard title={t("d_oil")} items={oilItems} delay={0.12} range={range} />
+                <MultiCard title={t("d_wx")} items={wxItems} delay={0.24} range={range} />
               </div>
         </div>
       )}
