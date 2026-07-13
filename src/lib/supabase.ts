@@ -405,3 +405,44 @@ export function fmtStamp(iso?: string | null, en = false) {
   const g = (t: string) => p.find((x) => x.type === t)?.value ?? "00"
   return `${g("month")}/${g("day")} ${g("hour")}:${g("minute")}`
 }
+
+/** 경쟁사 가격 — 최신 수집일 전 행(엑셀형 표·CSV 내보내기용). 필터는 화면에서 처리한다. */
+export type PriceRow = {
+  retailer: string
+  brand: string
+  category: string
+  model: string
+  capacity: string | null
+  srp: number | null
+  price: number | null
+  discountPct: number | null
+  prevPrice: number | null
+  deltaPhp: number | null
+  deltaPct: number | null
+  promo: string | null
+  url: string | null
+  asOf: string
+}
+
+export async function competitorTable(limit = 3000): Promise<PriceRow[]> {
+  const rows = await sb(
+    "v_competitor_prices_latest?select=retailer,brand,category,model,capacity,srp_php,price_php,discount_pct,prev_price,price_delta_pct,promo_text,url,scraped_date&order=brand.asc,category.asc&limit=" +
+      limit,
+  )
+  return (rows ?? []).map((r: any) => ({
+    retailer: r.retailer,
+    brand: r.brand,
+    category: r.category,
+    model: r.model,
+    capacity: r.capacity ?? null,
+    srp: num(r.srp_php),
+    price: num(r.price_php),
+    discountPct: num(r.discount_pct),
+    prevPrice: num(r.prev_price),
+    deltaPhp: r.price_php != null && r.prev_price != null ? Number(r.price_php) - Number(r.prev_price) : null,
+    deltaPct: num(r.price_delta_pct),
+    promo: r.promo_text ?? null,
+    url: r.url ?? null,
+    asOf: r.scraped_date,
+  }))
+}
