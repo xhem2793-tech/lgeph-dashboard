@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { createPortal } from "react-dom"
 import { analysisPosts } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
@@ -61,6 +62,33 @@ function OwnVisual({ tags, compact }: { tags: string[]; compact?: boolean }) {
 }
 
 /** 팝업 — 뉴스 모달과 동일한 어법(배경 클릭·ESC로 닫힘, 이미지 좌 / 본문 우) */
+/** 본문 마크다운 최소 렌더 — ## 소제목, **강조**, 문단 */
+function MdBody({ text }: { text: string }) {
+  const blocks = text.split(/\n{2,}/).filter((b) => b.trim().length > 0)
+  const inline = (s: string) =>
+    s.split(/(\*\*[^*]+\*\*)/g).map((seg, i) =>
+      seg.startsWith("**") && seg.endsWith("**") ? (
+        <strong key={i} className="font-semibold text-gray-900">{seg.slice(2, -2)}</strong>
+      ) : (
+        <React.Fragment key={i}>{seg}</React.Fragment>
+      ),
+    )
+  return (
+    <div className="space-y-3">
+      {blocks.map((b, i) => {
+        const h = b.match(/^(#{2,4})\s+(.*)$/)
+        if (h) {
+          return (
+            <h4 key={i} className="mt-4 text-[15px] font-semibold text-gray-900">{inline(h[2])}</h4>
+          )
+        }
+        return (
+          <p key={i} className="whitespace-pre-wrap text-[14px] leading-relaxed text-gray-700">{inline(b)}</p>
+        )
+      })}
+    </div>
+  )
+}
 function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
   const { t, pick } = useLang()
   const close = React.useCallback(() => {
@@ -79,7 +107,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
     }
   }, [close])
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:items-center"
       onClick={close}
@@ -161,13 +189,14 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
 
         {p.body ? (
           <div className="mt-4 border-t border-gray-100 pt-4">
-            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-gray-700">{pick(p.body, p.bodyEn)}</p>
+            <MdBody text={pick(p.body, p.bodyEn) as string} />
           </div>
         ) : null}
 
         
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
