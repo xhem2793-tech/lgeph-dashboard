@@ -36,7 +36,7 @@ export function TopNav() {
       <style>{"@keyframes axfade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}"}</style>
       <div className="mx-auto flex max-w-[1536px] items-center gap-4 px-4 py-3 sm:px-6" style={{ animation: "axfade .5s ease both" }}>
         {/* 워드마크 — 주소가 곧 브랜드. 아래 한 줄로 소속을 고정해 캡처가 돌아도 오해가 없다 */}
-        <Link href="/overview" className="site-logo flex shrink-0 flex-col leading-none">
+        <Link href="/overview" className="flex shrink-0 flex-col leading-none">
           <span className="text-[20px] font-extrabold tracking-tight">
             <span className="text-gray-900 dark:text-gray-50">axlgeph</span>
             <span className="text-indigo-600">.report</span>
