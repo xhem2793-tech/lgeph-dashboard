@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { newsBySheet, calendarMonth } from "@/lib/supabase"
+import { newsBySheet, calendarMonth, freshness, fmtStamp } from "@/lib/supabase"
 import TodayBrief from "@/components/TodayBrief"
 import CompetitorMovers from "@/components/CompetitorMovers"
 import EconRail from "@/components/EconRail"
@@ -26,6 +26,12 @@ export type KpiEntryExtended = Omit<KpiEntry, "current" | "allowed" | "unit"> & 
 
 export default function Overview() {
   const { t, pick, lang } = useLang()
+  const [newsStamp, setNewsStamp] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    freshness()
+      .then((f) => setNewsStamp(f.news ?? null))
+      .catch(() => {})
+  }, [])
   const today = React.useRef(new Date()).current
   const [nMain, setNMain] = React.useState<any[]>([])
   const [nCE, setNCE] = React.useState<any[]>([])
@@ -90,7 +96,7 @@ export default function Overview() {
                 {nMain[0]?.date ? (
                   <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
                     <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
-                    {t("news_updated")} {String(nMain[0].date).slice(5).replace("-", "/")}
+                    {t("news_updated")} {newsStamp ? fmtStamp(newsStamp, lang === "en") : String(nMain[0].date).slice(5).replace("-", "/")}
                     {/* 없는 기사를 지어내지 않는다 — 신규가 없으면 없다고 쓴다 */}
                     {String(nMain[0].date) !== new Date().toISOString().slice(0, 10) ? (
                       <span className="rounded border border-amber-200 bg-amber-50 px-1 py-px text-[10px] font-semibold text-amber-700">
