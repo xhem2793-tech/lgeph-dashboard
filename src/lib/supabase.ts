@@ -458,9 +458,18 @@ function modelCode(s: string) {
   return c.length ? c[c.length - 1] : "—"
 }
 
-export async function competitorTable(limit = 4000): Promise<PriceRow[]> {
-  const rows = await sb("v_competitor_3d?select=*&limit=" + limit)
-  return (rows ?? []).map((r: any) => {
+/** PostgREST는 한 응답을 1,000행에서 자른다 — 페이지네이션으로 전량(≈1,800행) 가져온다 */
+export async function competitorTable(max = 6000): Promise<PriceRow[]> {
+  const page = 1000
+  const rows: any[] = []
+  for (let off = 0; off < max; off += page) {
+    const chunk = await sb(
+      "v_competitor_3d?select=*&order=brand.asc,category.asc,model.asc&offset=" + off + "&limit=" + page,
+    )
+    rows.push(...(chunk ?? []))
+    if (!chunk || chunk.length < page) break
+  }
+  return rows.map((r: any) => {
     const p0 = num(r.p0)
     const p1 = num(r.p1)
     const p2 = num(r.p2)
