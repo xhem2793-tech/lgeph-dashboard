@@ -236,10 +236,10 @@ export default function Overview() {
                       <button type="button" onClick={() => setModal({ title: ev.split("\u2014")[0].trim(), summary: ev.split("\u2014").slice(1).join("\u2014").trim() || null, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance, isCal: true })} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
                         <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
                           <span className="text-[10px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
-                          <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
+                          <span className="num text-sm font-semibold leading-tight">{Number(e.date.slice(8, 10))}</span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className={"truncate break-normal text-[13px] leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "font-medium text-gray-800")}>{calTitle}</p>
+                          <p className={"truncate break-normal text-[12px] font-normal leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "text-gray-800")}>{calTitle}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-1">
                             {kws.map((k, ki) => (
                               <span key={ki} className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">{k}</span>
