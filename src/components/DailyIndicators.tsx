@@ -501,7 +501,7 @@ export default function DailyIndicators() {
                   </div>
                 </div>
                   <span className="hidden items-center gap-1.5 text-[10px] text-gray-400 sm:flex">
-                    {stamp ? fmtStamp(stamp) : iso(refDate).slice(5).replace("-", "/")} {t("d_basis")}
+                    {t("news_updated")} {stamp ? fmtStamp(stamp) : iso(refDate).slice(5).replace("-", "/")}
                     <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
                   </span>
               </div>
