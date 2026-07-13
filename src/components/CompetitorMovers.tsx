@@ -293,7 +293,7 @@ export default function CompetitorMovers() {
         </div>
 
         <p className="mt-1 text-[10px] leading-snug text-gray-400">
-          <span className={HOVM}>{lang === "en" ? "Scraped daily · top 5 moves · " : "경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5 · "}<span className="text-rose-600">{lang === "en" ? "↑Hike" : "↑인상"}</span> / <span className="text-emerald-600">{lang === "en" ? "↓Cut" : "↓인하"}</span>{lang === "en" ? " · Anson’s · Abenson · SM" : " · 유통: Anson’s · Abenson · SM"}</span>
+          <span className={HOVM}>{lang === "en" ? "LG · Samsung · Panasonic · TCL · Midea · Hisense · Retail: Anson's · Abenson · SM" : "LG · Samsung · Panasonic · TCL · Midea · Hisense 기준 · 유통: Anson's · Abenson · SM"}</span>
         </p>
       </div>
     </section>
