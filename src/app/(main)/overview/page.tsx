@@ -147,7 +147,7 @@ export default function Overview() {
                               if (li > 0) rows.unshift(rows.splice(li, 1)[0])
                               return rows
                             })().map((n, i) => (
-                              <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className="group py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
+                              <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className={"group flex w-full flex-col overflow-hidden py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 " + (i === 0 ? "h-[240px]" : "h-[86px]")}>
                                 {i === 0 && n.image ? (
                                   <div className="mb-2 h-[150px] w-full overflow-hidden rounded-lg bg-gray-100">
                                     <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
