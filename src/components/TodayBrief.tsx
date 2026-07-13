@@ -97,7 +97,15 @@ export default function TodayBrief() {
                     {i + 1}
                   </span>
                   <div className="min-w-0">
-                    <p className="text-[14px] font-semibold leading-snug text-gray-900">{l.text}</p>
+                    <p
+                      className={
+                        // 레이아웃은 한글 기준 고정 — 영문이 길면 글자를 줄이고 3줄로 잘라 카드 높이를 맞춘다
+                        "line-clamp-3 font-semibold leading-snug text-gray-900 " +
+                        (lang === "en" ? "text-[12.5px]" : "text-[14px]")
+                      }
+                    >
+                      {l.text}
+                    </p>
                     {l.evidence ? (
                       <p className="mt-1 text-[11px] text-gray-400">{t("brief_evidence")} · {l.evidence}</p>
                     ) : null}
