@@ -38,7 +38,7 @@ const scale = (key: string, v: number) => (key === "remit" ? v / 1e9 : v)
 function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; unit: string | null }) {
   if (d == null)
     return (
-      <span className="w-[42px] shrink-0 text-right text-[10px] text-gray-300">
+      <span className="num w-[42px] shrink-0 text-right text-[10px] text-gray-300">
         —
       </span>
     )
@@ -48,7 +48,7 @@ function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; uni
   return (
     <span
       className={
-        "inline-flex w-[46px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[10px] leading-4 tabular-nums " +
+        "num inline-flex w-[46px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[10px] leading-4 " +
         (flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
       }
     >
@@ -173,7 +173,7 @@ export default function EconRail() {
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="flex-1 text-right text-[13px] font-normal tabular-nums text-gray-900">
+                      <p className="num flex-1 text-right text-[13px] font-medium text-gray-900">
                         <CountUp value={Number(c.value)} prefix={c.prefix ?? ""} suffix={c.suffix ?? ""} decimals={c.key === "remit" ? 2 : 1} />
                       </p>
 
@@ -230,7 +230,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
         </div>
 
         <p className="mt-0.5 flex items-baseline gap-1.5">
-          <span className="text-[20px] font-normal tabular-nums text-gray-900">
+          <span className="num text-[20px] font-medium text-gray-900">
             <CountUp value={Number(c.value)} prefix={c.prefix} suffix={c.suffix} decimals={dec} />
           </span>
           <span className="text-[10px] text-gray-400/90">{c.asOf?.slice(0, 7).replace("-", ".")} 기준</span>
