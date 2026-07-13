@@ -29,15 +29,18 @@ const WD = ["일", "월", "화", "수", "목", "금", "토"]
 function peso(n: number | null) {
   return n == null ? "—" : "₱" + Math.round(n).toLocaleString("en-US")
 }
-function fmtDate(s: string) {
+const MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+function fmtDate(s: string, en = false) {
   if (!s) return ""
   const p = s.split("-")
-  return p.length === 3 ? `${+p[1]}월${+p[2]}일` : s
+  if (p.length !== 3) return s
+  return en ? `${MON[+p[1] - 1]} ${+p[2]}` : `${+p[1]}월${+p[2]}일`
 }
-function fmtHdr(s: string) {
+function fmtHdr(s: string, en = false) {
   if (!s) return ""
   const p = s.split("-").map(Number)
   if (p.length !== 3) return s
+  if (en) return `${p[1]}/${p[2]}`
   const wd = WD[new Date(p[0], p[1] - 1, p[2]).getDay()]
   return `${p[1]}/${p[2]}일(${wd})`
 }
@@ -176,7 +179,7 @@ export default function CompetitorMovers() {
         </div>
         <span className={HOVM + " flex items-center gap-1.5 text-[10px] text-gray-400"}>
           <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
-          {fmtDate(asOf)} {t("price_asof")}
+          {fmtDate(asOf, lang === "en")} {t("price_asof")}
         </span>
       </div>
 
@@ -235,7 +238,7 @@ export default function CompetitorMovers() {
                       <th className={th}>{t("th_category")}</th>
                       <th className={th}>{t("th_model")}</th>
                       <th className={th}>{t("th_srp")}</th>
-                      <th className={th}>{fmtHdr(asOf)}</th>
+                      <th className={th}>{fmtHdr(asOf, lang === "en")}</th>
                       <th className={th}>{t("th_delta")}</th>
                       <th className={th}>{t("th_retail")}</th>
                     </tr>
@@ -279,7 +282,7 @@ export default function CompetitorMovers() {
         </div>
 
         <p className="mt-1 text-[10px] leading-snug text-gray-400">
-          <span className={HOVM}>{lang === "en" ? "Scraped from competitor online stores · top 5 hikes and cuts · " : "경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5 · "}<span className="text-rose-600">{lang === "en" ? "↑Hike" : "↑인상"}</span> / <span className="text-emerald-600">{lang === "en" ? "↓Cut" : "↓인하"}</span>{lang === "en" ? " · Retail: Anson’s · Abenson · SM" : " · 유통: Anson’s · Abenson · SM"}</span>
+          <span className={HOVM}>{lang === "en" ? "Scraped daily · top 5 moves · " : "경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5 · "}<span className="text-rose-600">{lang === "en" ? "↑Hike" : "↑인상"}</span> / <span className="text-emerald-600">{lang === "en" ? "↓Cut" : "↓인하"}</span>{lang === "en" ? " · Anson’s · Abenson · SM" : " · 유통: Anson’s · Abenson · SM"}</span>
         </p>
       </div>
     </section>
