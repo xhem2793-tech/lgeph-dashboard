@@ -154,7 +154,7 @@ export default function EconRail() {
                 !c ? (
                   <div key={i} className="h-[36px] border-b border-gray-50" />
                 ) : (
-                  <div key={c.key} className="mx-2.5 border-b border-gray-200 last:border-b-0">
+                  <div key={c.key} className="mx-2.5 border-b border-dashed border-gray-300 last:border-b-0">
                     <button
                       type="button"
                       onClick={() => {
