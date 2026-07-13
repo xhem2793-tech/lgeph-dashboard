@@ -381,3 +381,27 @@ export async function approveBrief(asOf: string, by: string) {
   })
   if (!res.ok) throw new Error(`approve failed ${res.status}`)
 }
+
+/** 각 데이터 소스의 최종 적재 시각(created_at). 카드 헤더 "최종 갱신 MM/DD HH:MM" 표기용 */
+export async function freshness(): Promise<Record<string, string>> {
+  const rows = await sb("v_freshness?select=src,last_at")
+  const out: Record<string, string> = {}
+  for (const r of rows) if (r?.src && r?.last_at) out[r.src] = r.last_at
+  return out
+}
+
+/** ISO timestamp → "07/13 18:43" (Asia/Manila) */
+export function fmtStamp(iso?: string | null, en = false) {
+  if (!iso) return "—"
+  const d = new Date(iso)
+  const p = new Intl.DateTimeFormat(en ? "en-US" : "ko-KR", {
+    timeZone: "Asia/Manila",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).formatToParts(d)
+  const g = (t: string) => p.find((x) => x.type === t)?.value ?? "00"
+  return `${g("month")}/${g("day")} ${g("hour")}:${g("minute")}`
+}
