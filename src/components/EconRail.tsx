@@ -3,6 +3,7 @@
 import React from "react"
 import { homeBand, econSeries } from "@/lib/supabase"
 import { ProChart, CountUp } from "@/components/ProChartCore"
+import { useLang } from "@/lib/i18n"
 
 /** 주요지표 레일 — 월별·분기 지표.
  *
@@ -35,9 +36,10 @@ const scale = (key: string, v: number) => (key === "remit" ? v / 1e9 : v)
 /** 변화 배지 — 4초마다 전월(전분기)비 ↔ 전년비 교대.
  *  한 시점의 등락(전월비)과 추세(전년비)는 서로 다른 이야기다. 둘 다 보여야 오독이 없다. */
 function DeltaBadge({ c }: { c: Card }) {
+  const { lang } = useLang()
   const opts = [
-    { d: c.deltaMom, lb: c.freq === "분기" ? "전분기" : "전월" },
-    { d: c.deltaYoy, lb: "전년" },
+    { d: c.deltaMom, lb: lang === "en" ? (c.freq === "분기" ? "QoQ" : "MoM") : c.freq === "분기" ? "전분기" : "전월" },
+    { d: c.deltaYoy, lb: lang === "en" ? "YoY" : "전년" },
   ].filter((o) => o.d != null) as { d: number; lb: string }[]
   const [i, setI] = React.useState(0)
   React.useEffect(() => {
@@ -90,6 +92,7 @@ function Preview({ pts }: { pts: number[] }) {
 const GROUPS = ["월별", "분기"] as const
 
 export default function EconRail() {
+  const { t, pick } = useLang()
   const [rows, setRows] = React.useState<Card[] | null>(null)
   const [series, setSeries] = React.useState<Record<string, Series>>({})
   const [open, setOpen] = React.useState<string | null>(null)
@@ -108,21 +111,21 @@ export default function EconRail() {
     <section className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
       <header className="flex items-baseline justify-between border-b border-gray-100 px-3.5 py-2.5">
         <a href="/economy" className="group flex items-baseline gap-1">
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">주요지표</h2>
+          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("rail_title")}</h2>
           <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
         </a>
-        <span className="text-[10px] text-gray-400">누르면 상세 차트</span>
+        <span className="text-[10px] text-gray-400">{t("rail_hint")}</span>
       </header>
 
       {err ? (
-        <p className="px-3 py-6 text-center text-[12px] text-gray-400">지표를 불러오지 못함 · 확인 필요</p>
+        <p className="px-3 py-6 text-center text-[12px] text-gray-400">{t("rail_fail")}</p>
       ) : (
         GROUPS.map((g) => {
           const list = (rows ?? []).filter((c) => c.freq === g)
           if (rows && list.length === 0) return null
           return (
             <div key={g}>
-              <p className="border-b border-gray-100 bg-gray-50/70 px-3.5 py-1 text-[10px] font-semibold text-gray-400">{g} 지표</p>
+              <p className="border-b border-gray-100 bg-gray-50/70 px-3.5 py-1 text-[10px] font-semibold text-gray-400">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</p>
               {(rows ? list : (Array.from({ length: 4 }) as (Card | undefined)[])).map((c, i) =>
                 !c ? (
                   <div key={i} className="h-[36px] border-b border-gray-50" />
@@ -136,7 +139,7 @@ export default function EconRail() {
                         (open === c.key ? "bg-indigo-50/60" : "hover:-translate-y-0.5 hover:bg-gray-50")
                       }
                     >
-                      <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-800">{c.label}</p>
+                      <p className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-800">{pick(c.label, c.labelEn)}</p>
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
@@ -162,7 +165,7 @@ export default function EconRail() {
       )}
 
       <p className="border-t border-gray-100 px-3.5 py-2 text-[10px] leading-snug text-gray-400">
-        배지 색은 <b className="font-semibold text-gray-500">사업영향</b> 기준 · 4초마다 변화폭 ↔ 값 교대
+        {t("rail_note")}
       </p>
     </section>
   )
@@ -170,6 +173,7 @@ export default function EconRail() {
 
 /** 펼침 — 경제지표 페이지 카드와 같은 어법(회색 서피스 · 값 CountUp · ProChart · 출처) */
 function Detail({ c, s }: { c: Card; s: Series }) {
+  const { pick } = useLang()
   const cur = s.points.map((v) => scale(c.key, v))
   const prevArr = s.prev.map((v) => (v == null ? NaN : scale(c.key, v)))
   // 전년 값이 하나라도 비면 선이 끊겨 차트가 깨진다 — 전 구간이 있을 때만 그린다
@@ -182,7 +186,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
     <div className="px-2.5 pb-2.5" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="rounded-xl bg-[#f9fafb] p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[12px] font-medium text-gray-700">{c.label}</span>
+          <span className="text-[12px] font-medium text-gray-700">{pick(c.label, c.labelEn)}</span>
           <div className="flex shrink-0 items-center gap-2.5 text-[10px] text-gray-400">
             {hasPrev ? (
               <span className="flex items-center gap-1">
