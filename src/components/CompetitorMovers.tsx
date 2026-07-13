@@ -189,8 +189,8 @@ export default function CompetitorMovers() {
           </span>
         </div>
         <span className={HOVM + " flex items-center gap-1.5 text-[10px] text-gray-400"}>
-          <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
           {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(asOf, lang === "en")} {t("price_asof")}
+          <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
         </span>
       </div>
 
