@@ -33,35 +33,32 @@ function periodLabel(iso: string, freq: string) {
 /** 송금 원자료는 절대값(달러) — 10억 단위로 읽는다 */
 const scale = (key: string, v: number) => (key === "remit" ? v / 1e9 : v)
 
-/** 변화 배지 — 4초마다 전월(전분기)비 ↔ 전년비 교대.
- *  한 시점의 등락(전월비)과 추세(전년비)는 서로 다른 이야기다. 둘 다 보여야 오독이 없다. */
-function DeltaBadge({ c }: { c: Card }) {
-  const { lang } = useLang()
-  const opts = [
-    { d: c.deltaMom, lb: lang === "en" ? (c.freq === "분기" ? "QoQ" : "MoM") : c.freq === "분기" ? "전분기" : "전월" },
-    { d: c.deltaYoy, lb: lang === "en" ? "YoY" : "전년" },
-  ].filter((o) => o.d != null) as { d: number; lb: string }[]
-  const [i, setI] = React.useState(0)
-  React.useEffect(() => {
-    if (opts.length < 2) return
-    const id = setInterval(() => setI((k) => (k + 1) % opts.length), 4000)
-    return () => clearInterval(id)
-  }, [opts.length])
-  if (opts.length === 0) return <span className="w-[54px] shrink-0 text-right text-[10px] text-gray-400">—</span>
-  const o = opts[Math.min(i, opts.length - 1)]
-  const up = o.d > 0
-  const bad = c.dir === "bad" ? up : !up
-  const flat = o.d === 0
+/** 변동률 두 칸 — 전월비 / 전년비를 각각 표기(교대 없음).
+ *  숫자는 Arial Narrow로 폭을 아낀다. 레이아웃은 한글 기준 고정. */
+const NUMF = { fontFamily: "'Arial Narrow', Arial, Helvetica, sans-serif" } as React.CSSProperties
+
+function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; unit: string | null }) {
+  if (d == null)
+    return (
+      <span style={NUMF} className="w-[46px] shrink-0 text-right text-[10px] text-gray-300">
+        —
+      </span>
+    )
+  const up = d > 0
+  const flat = d === 0
+  const bad = dir === "bad" ? up : !up
   return (
     <span
+      style={NUMF}
       className={
-        "inline-flex w-[54px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[10px] font-normal tabular-nums transition-transform duration-300 ease-out hover:-translate-y-0.5 " +
+        "inline-flex w-[46px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[10px] leading-4 " +
         (flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
       }
     >
-      <span className="w-[8px] shrink-0 text-center">{flat ? "·" : up ? "↑" : "↓"}</span>
-      <span key={o.lb + "v"} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
-        <CountUp value={Math.abs(o.d)} suffix={c.deltaUnit} decimals={1} />
+      <span>{flat ? "·" : up ? "↑" : "↓"}</span>
+      <span>
+        {Math.abs(d).toFixed(1)}
+        {unit}
       </span>
     </span>
   )
@@ -88,6 +85,26 @@ function Preview({ pts }: { pts: number[] }) {
 
 const GROUPS = ["월별", "분기"] as const
 
+/** EN 라벨 축약 — 레이아웃은 한글 기준 고정이므로 영문은 약어로 맞춘다 */
+const EN_SHORT: Record<string, string> = {
+  fx: "USD/PHP",
+  oil: "Diesel",
+  elec: "Power CPI",
+  cpi: "CPI",
+  appinf: "Appl. CPI",
+  acinf: "AC CPI",
+  riceinf: "Rice CPI",
+  foodinf: "Food CPI",
+  traninf: "Transp. CPI",
+  lpginf: "LPG CPI",
+  ppiapp: "Appl. PPI",
+  remit: "OFW Remit.",
+  cci: "Cons. Conf.",
+  durable: "Durables",
+  retgva: "Retail GVA",
+  congva: "Constr. GVA",
+}
+
 export default function EconRail() {
   const { lang, t, pick } = useLang()
   const [rows, setRows] = React.useState<Card[] | null>(null)
@@ -111,7 +128,7 @@ export default function EconRail() {
           <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("rail_title")}</h2>
           <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
         </a>
-        <span className="text-[10px] text-gray-400">{t("rail_hint")}</span>
+        
       </header>
 
       {err ? (
@@ -122,7 +139,11 @@ export default function EconRail() {
           if (rows && list.length === 0) return null
           return (
             <div key={g}>
-              <p className="border-b border-gray-100 bg-gray-50/70 px-2.5 py-0.5 text-[10px] font-normal text-gray-400">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</p>
+              <div className="flex items-center gap-1.5 border-b border-gray-100 bg-gray-50/70 px-2.5 py-0.5 text-[10px] font-normal text-gray-400">
+                <span className="flex-1">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</span>
+                <span className="w-[46px] shrink-0 text-right">{lang === "en" ? (g === "월별" ? "MoM" : "QoQ") : g === "월별" ? "전월" : "전분기"}</span>
+                <span className="w-[46px] shrink-0 text-right">{lang === "en" ? "YoY" : "전년"}</span>
+              </div>
               {(rows ? list : (Array.from({ length: 4 }) as (Card | undefined)[])).map((c, i) =>
                 !c ? (
                   <div key={i} className="h-[36px] border-b border-gray-50" />
@@ -139,21 +160,22 @@ export default function EconRail() {
                       <p
                         className={
                           "min-w-0 flex-1 font-medium leading-snug text-gray-800 " +
-                          (lang === "en" ? "line-clamp-2 text-[11px]" : "truncate text-[13px]")
+                          (lang === "en" ? "truncate text-[12px]" : "truncate text-[13px]")
                         }
                       >
-                        {pick(c.label, c.labelEn)}
+                        {lang === "en" ? EN_SHORT[c.key] ?? pick(c.label, c.labelEn) : c.label}
                       </p>
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="w-[52px] shrink-0 text-right text-[13px] font-normal tabular-nums text-gray-900">
+                      <p style={NUMF} className="w-[50px] shrink-0 text-right text-[13px] font-normal text-gray-900">
                         {c.prefix}
                         {c.value}
                         {c.suffix}
                       </p>
 
-                      <DeltaBadge c={c} />
+                      <DeltaCell d={c.deltaMom} dir={c.dir} unit={c.deltaUnit} />
+                      <DeltaCell d={c.deltaYoy} dir={c.dir} unit={c.deltaUnit} />
 
                     </button>
 
