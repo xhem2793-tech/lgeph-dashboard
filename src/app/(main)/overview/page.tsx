@@ -7,6 +7,7 @@ import CompetitorMovers from "@/components/CompetitorMovers"
 import EconRail from "@/components/EconRail"
 import DailyIndicators from "@/components/DailyIndicators"
 import AnalysisColumn from "@/components/AnalysisColumn"
+import { useLang } from "@/lib/i18n"
 
 export type PeriodValue = "previous-period" | "last-year" | "no-comparison"
 export type KpiEntry = {
@@ -24,6 +25,7 @@ export type KpiEntryExtended = Omit<KpiEntry, "current" | "allowed" | "unit"> & 
 
 
 export default function Overview() {
+  const { t, pick } = useLang()
   const today = React.useRef(new Date()).current
   const [nMain, setNMain] = React.useState<any[]>([])
   const [nCE, setNCE] = React.useState<any[]>([])
@@ -81,18 +83,18 @@ export default function Overview() {
               <section className="mt-6 rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
               <div className="mb-2 flex items-baseline gap-2 px-0.5">
                 <a href="/news" className="group flex items-baseline gap-1">
-                  <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">주요 뉴스</h2>
+                  <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("news_title")}</h2>
                   <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
                 </a>
-                <span className="cursor-default text-[10px] text-gray-400">경제·산업·B2B</span>
+                <span className="cursor-default text-[10px] text-gray-400">{t("news_sub")}</span>
                 {nMain[0]?.date ? (
                   <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
                     <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
-                    최종 갱신 {String(nMain[0].date).slice(5).replace("-", "/")}
+                    {t("news_updated")} {String(nMain[0].date).slice(5).replace("-", "/")}
                     {/* 없는 기사를 지어내지 않는다 — 신규가 없으면 없다고 쓴다 */}
                     {String(nMain[0].date) !== new Date().toISOString().slice(0, 10) ? (
                       <span className="rounded border border-amber-200 bg-amber-50 px-1 py-px text-[10px] font-semibold text-amber-700">
-                        오늘 신규 없음
+                        {t("news_none_today")}
                       </span>
                     ) : null}
                   </span>
@@ -111,8 +113,8 @@ export default function Overview() {
                           </div>
                         ) : null}
                         <div className="min-w-0">
-                          <p className="text-[25px] font-bold leading-tight text-gray-900 group-hover:text-indigo-600">{nMain[0].title}</p>
-                          {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500">{nMain[0].summary}</p> : null}
+                          <p className="text-[25px] font-bold leading-tight text-gray-900 group-hover:text-indigo-600">{pick(nMain[0].title, (nMain[0] as any).titleEn)}</p>
+                          {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500">{pick(nMain[0].summary, (nMain[0] as any).summaryEn)}</p> : null}
                           <p className="mt-2 text-[12px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
                         </div>
                       </button>
@@ -120,8 +122,8 @@ export default function Overview() {
 
                     <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:-mx-3 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
                       {[
-                        { title: "CE 동향", sub: "생활가전·소비", rows: nCE, skip: 0, cat: "CE" },
-                        { title: "B2B 동향", sub: "공조·인프라", rows: nB2B, skip: 0, cat: "B2B" },
+                        { title: t("ce_title"), sub: t("ce_sub"), rows: nCE, skip: 0, cat: "CE" },
+                        { title: t("b2b_title"), sub: t("b2b_sub"), rows: nB2B, skip: 0, cat: "B2B" },
                       ].map((col) => (
                         <div key={col.title} className="lg:h-[560px] lg:overflow-hidden lg:px-3">
                           <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
@@ -144,7 +146,7 @@ export default function Overview() {
                                     <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                                   </div>
                                 ) : null}
-                                <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                                <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{pick(n.title, (n as any).titleEn)}</p>
                                 <p className="mt-0.5 text-[11px] text-gray-400">{n.source} · {n.date}</p>
                               </button>
                             ))}
@@ -161,14 +163,14 @@ export default function Overview() {
                   {/* 우측 — 시장 동향. 야후의 Popular처럼 헤드라인 높이에서 시작해 아래까지 한 컬럼 */}
                   <div className="lg:border-l lg:border-gray-200 lg:pl-5">
                     <a href="/news?cat=시장" className="group mb-2 flex items-baseline gap-1">
-                      <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">시장 동향</span>
+                      <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("market_title")}</span>
                       <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
-                      <span className="ml-1 text-[10px] text-gray-400">경제·정치·사회</span>
+                      <span className="ml-1 text-[10px] text-gray-400">{t("market_sub")}</span>
                     </a>
                     <div className="flex flex-col divide-y divide-gray-100">
                       {nMain.slice(1, 10).map((n, i) => (
                         <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
-                          <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{n.title}</p>
+                          <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{pick(n.title, (n as any).titleEn)}</p>
                           <p className="mt-0.5 text-[11px] text-gray-400">{n.source} · {n.date}</p>
                         </button>
                       ))}
@@ -191,12 +193,12 @@ export default function Overview() {
               <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-shadow duration-300 hover:shadow-md">
               <div className="flex items-center justify-between gap-2">
                 <a href="/calendar" className="group flex items-baseline gap-1">
-                  <p className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">경제 캘린더</p>
+                  <p className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("cal_title")}</p>
                   <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
                 </a>
                 {/* 예정 ↔ 결과 — 같은 달을 두 방향으로 본다(앞으로 볼 것 / 이미 나온 것) */}
                 <div className="flex shrink-0 gap-1">
-                  {([["upcoming", "예정"], ["past", "결과"]] as const).map(([k, lb]) => (
+                  {([["upcoming", t("cal_upcoming")], ["past", t("cal_past")]] as const).map(([k, lb]) => (
                     <button
                       key={k}
                       type="button"
@@ -210,16 +212,17 @@ export default function Overview() {
               </div>
               <div key={`${calTick}-${calTab}`} className="mt-2 flex flex-col gap-0.5">
                 {calList.length === 0 ? (
-                  <p className="py-6 text-center text-[12px] text-gray-400">{calTab === "past" ? "이번 달 발표된 결과 없음" : "남은 일정 없음"}</p>
+                  <p className="py-6 text-center text-[12px] text-gray-400">{calTab === "past" ? t("cal_none_past") : t("cal_none_up")}</p>
                 ) : null}
                 {calList.map((e, i) => {
-                  const head = e.event.split("\u2014")[0]
+                  const ev = pick(e.event, (e as any).eventEn)
+                  const head = ev.split("\u2014")[0]
                   const abbr = head.match(/\(([^)0-9/]{1,12})\)/)
                   const calTitle = head.replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim()
                   const kws = [abbr ? abbr[1].trim() : null, e.category].filter(Boolean).slice(0, 2)
                   return (
                     <React.Fragment key={i}>
-                      <button type="button" onClick={() => setModal({ title: e.event.split("\u2014")[0].trim(), summary: e.event.split("\u2014").slice(1).join("\u2014").trim() || null, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance, isCal: true })} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
+                      <button type="button" onClick={() => setModal({ title: ev.split("\u2014")[0].trim(), summary: ev.split("\u2014").slice(1).join("\u2014").trim() || null, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance, isCal: true })} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
                         <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
                           <span className="text-[10px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="text-sm font-bold leading-tight">{Number(e.date.slice(8, 10))}</span>
