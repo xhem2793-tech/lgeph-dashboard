@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { competitorMovers } from "@/lib/supabase"
+import { useLang } from "@/lib/i18n"
 
 const BRAND_LOGO: Record<string, string> = {
   LG: "/logos/lg.png",
@@ -131,6 +132,7 @@ function BrandLogo({ brand }: { brand: string }) {
 }
 
 export default function CompetitorMovers() {
+  const { t } = useLang()
   const [rows, setRows] = React.useState<Awaited<ReturnType<typeof competitorMovers>>>([])
   const [cat, setCat] = React.useState("전체")
   const [sortDir, setSortDir] = React.useState<"up" | "down">("down")
@@ -163,12 +165,12 @@ export default function CompetitorMovers() {
       <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
           <a href="/competitors" className="group flex items-baseline gap-1">
-            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">가격 동향</h2>
+            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("price_title")}</h2>
             <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
           </a>
           <span className="inline-flex cursor-default items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 transition-all duration-300 ease-out hover:text-emerald-700">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-            매일 갱신
+            {t("price_daily")}
           </span>
         </div>
         <span className={HOVM + " flex items-center gap-1.5 text-[10px] text-gray-400"}>
@@ -197,14 +199,14 @@ export default function CompetitorMovers() {
               onClick={() => setSortDir("down")}
               className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "down" ? "border-emerald-300 bg-emerald-50 text-emerald-600" : "border-gray-200 bg-white text-gray-500 hover:border-emerald-200 hover:text-emerald-600")}
             >
-              ↓ 인하순
+              {t("price_down")}
             </button>
             <button
               type="button"
               onClick={() => setSortDir("up")}
               className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 text-rose-600" : "border-gray-200 bg-white text-gray-500 hover:border-rose-200 hover:text-rose-600")}
             >
-              ↑ 인상순
+              {t("price_up")}
             </button>
           </div>
         </div>
@@ -228,19 +230,19 @@ export default function CompetitorMovers() {
                   </colgroup>
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className={th}>브랜드</th>
-                      <th className={th}>카테고리</th>
-                      <th className={th}>모델</th>
-                      <th className={th}>SRP</th>
+                      <th className={th}>{t("th_brand")}</th>
+                      <th className={th}>{t("th_category")}</th>
+                      <th className={th}>{t("th_model")}</th>
+                      <th className={th}>{t("th_srp")}</th>
                       <th className={th}>{fmtHdr(asOf)}</th>
-                      <th className={th}>전일비</th>
-                      <th className={th}>유통</th>
+                      <th className={th}>{t("th_delta")}</th>
+                      <th className={th}>{t("th_retail")}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {cardRows.length === 0 ? (
                       <tr className="border-b border-gray-100">
-                        <td className={td} colSpan={7}><div className={cell + " text-[11px] text-gray-400"}>변동 없음</div></td>
+                        <td className={td} colSpan={7}><div className={cell + " text-[11px] text-gray-400"}>{t("price_none")}</div></td>
                       </tr>
                     ) : null}
                     {cardRows.map((r, i) => (
