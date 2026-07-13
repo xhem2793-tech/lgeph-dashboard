@@ -48,7 +48,7 @@ function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; uni
   return (
     <span
       className={
-        "num inline-flex w-[46px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[9px] leading-4 " +
+        "num inline-flex font-semibold w-[46px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[9px] leading-4 " +
         (flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
       }
     >
@@ -112,6 +112,7 @@ export default function EconRail() {
   const [rows, setRows] = React.useState<Card[] | null>(null)
   const [series, setSeries] = React.useState<Record<string, Series>>({})
   const [open, setOpen] = React.useState<string | null>(null)
+  const [seen, setSeen] = React.useState<Set<string>>(new Set())
   const [err, setErr] = React.useState(false)
 
   React.useEffect(() => {
@@ -156,15 +157,18 @@ export default function EconRail() {
                   <div key={c.key}>
                     <button
                       type="button"
-                      onClick={() => setOpen(open === c.key ? null : c.key)}
+                      onClick={() => {
+                    setSeen((s) => (s.has(c.key) ? s : new Set(s).add(c.key)))
+                    setOpen(open === c.key ? null : c.key)
+                  }}
                       className={
-                        "flex min-h-[26px] w-full items-center gap-1.5 border-b border-gray-50 px-2.5 py-0.5 text-left transition-all duration-300 ease-out " +
+                        "group flex min-h-[26px] w-full items-center gap-1.5 border-b transition-colors duration-300  border-gray-50 px-2.5 py-0.5 text-left transition-all duration-300 ease-out " +
                         (open === c.key ? "bg-indigo-50/60" : "hover:-translate-y-0.5 hover:bg-gray-50")
                       }
                     >
                       <p
                         className={
-                          "w-[104px] shrink-0 text-[12px] font-normal leading-snug text-gray-800 " +
+                          "w-[104px] shrink-0 text-[12px] font-normal leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 " +
                           (lang === "en" ? "truncate text-[12px]" : "truncate text-[13px]")
                         }
                       >
@@ -173,7 +177,7 @@ export default function EconRail() {
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="num flex-1 text-right text-[12px] font-semibold text-gray-900">
+                      <p className="num flex-1 text-right text-[12px] font-semibold text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
                         <CountUp value={Number(c.value)} prefix={c.prefix ?? ""} suffix={c.suffix ?? ""} decimals={c.key === "remit" ? 2 : 1} />
                       </p>
 
@@ -181,8 +185,15 @@ export default function EconRail() {
 
                     </button>
 
-                    {open === c.key && series[c.key] ? (
-                      <Detail c={c} s={series[c.key]} />
+                    {seen.has(c.key) && series[c.key] ? (
+                      <div
+                        className="grid transition-all duration-300 ease-out"
+                        style={{ gridTemplateRows: open === c.key ? "1fr" : "0fr", opacity: open === c.key ? 1 : 0 }}
+                      >
+                        <div className="overflow-hidden">
+                          <Detail c={c} s={series[c.key]} />
+                        </div>
+                      </div>
                     ) : null}
                   </div>
                 ),
@@ -211,7 +222,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
   const dec = c.key === "remit" ? 2 : 1
 
   return (
-    <div className="px-2.5 pb-2.5" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
+    <div className="px-2.5 pb-2.5 pt-2.5" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="rounded-xl bg-[#f9fafb] p-3">
         <div className="flex items-center justify-between gap-2">
           <span className={(lang === "en" ? "text-[10px]" : "text-[11px]") + " font-normal text-gray-700"}>{pick(c.label, c.labelEn)}</span>
