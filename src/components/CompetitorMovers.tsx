@@ -50,18 +50,23 @@ function shopName(r: string) {
   return r
 }
 function modelCode(s: string, brand: string) {
-  let m = (s || "").replace(/&#821[12];/g, "–").replace(/&amp;/g, "&").replace(/&#\d+;/g, "")
-  m = m.replace(/^\s*20\d{2}\s*Model\s*[–-]\s*/i, "")
-  m = m.replace(new RegExp("^\\s*" + brand + "\\s*", "i"), "")
-  m = m.replace(/\s+/g, " ").trim()
-  const toks = m.split(" ")
-  const code: string[] = []
-  for (const t of toks) {
-    if (/^[A-Z0-9][A-Z0-9-]*$/.test(t) && /[0-9-]/.test(t)) code.push(t)
-    else if (code.length === 0 && /^[A-Z]{1,3}$/.test(t)) code.push(t)
-    else break
-  }
-  return code.length ? code.join(" ") : (m.length > 16 ? m.slice(0, 14) + "…" : m)
+  const raw = (s || "")
+    .replace(/&#8211;|&ndash;/g, "-")
+    .replace(/&amp;/g, "&")
+    .replace(/&#\d+;/g, " ")
+  const bad = /^(KG|CU|FT|INCH|HP|TON|LED|OLED|QNED|SMART|TV|BUNDLE|MODEL|LG|SAMSUNG|SHARP|HISENSE|TCL|PANASONIC)$/i
+  const cands = raw
+    .split(/[\s(),/]+/)
+    .map((x) => x.replace(/[^A-Za-z0-9.-]/g, ""))
+    .filter((u) => {
+      if (u.length < 4 || u.length > 22) return false
+      if (!/[A-Za-z]/.test(u) || !/\d/.test(u)) return false
+      if (/^\d/.test(u)) return false
+      if (bad.test(u)) return false
+      return (u.match(/\d/g) || []).length >= 2
+    })
+  if (cands.length) return cands[cands.length - 1]
+  return raw.replace(new RegExp("^\\d{4}\\s*Model\\s*-\\s*", "i"), "").replace(new RegExp("^" + brand + "\\s*", "i"), "").trim()
 }
 
 function CountUp({ value, decimals = 1, suffix = "", fmt }: { value: number; decimals?: number; suffix?: string; fmt?: (n: number) => string }) {
