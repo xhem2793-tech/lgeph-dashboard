@@ -165,7 +165,7 @@ export default function CompetitorMovers() {
   const CAT_LABEL: Record<string, string> = { "전체": t("price_all"), "냉장고": t("cat_ref"), "세탁기": t("cat_wash"), "TV": t("cat_tv"), "에어컨": t("cat_ac") }
   const cats = ["전체", ...CAT_ORDER]
   const view = cat === "전체" ? rows : rows.filter((r) => r.category === cat)
-  const cardRows = (sortDir === "up" ? view.filter((r) => r.pct > 0).sort((a, b) => b.pct - a.pct) : view.filter((r) => r.pct < 0).sort((a, b) => a.pct - b.pct)).slice(0, 5)
+  const cardRows = (sortDir === "up" ? view.filter((r) => r.pct > 0).sort((a, b) => b.pct - a.pct) : view.filter((r) => r.pct < 0).sort((a, b) => a.pct - b.pct)).slice(0, 7)
 
   const pick = (c: string) => { setCat(c) }
 
