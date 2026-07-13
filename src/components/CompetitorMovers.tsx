@@ -132,7 +132,7 @@ function BrandLogo({ brand }: { brand: string }) {
 }
 
 export default function CompetitorMovers() {
-  const { t } = useLang()
+  const { t, lang } = useLang()
   const [rows, setRows] = React.useState<Awaited<ReturnType<typeof competitorMovers>>>([])
   const [cat, setCat] = React.useState("전체")
   const [sortDir, setSortDir] = React.useState<"up" | "down">("down")
@@ -148,6 +148,7 @@ export default function CompetitorMovers() {
   const asOf = rows[0]?.asOf
 
   // 탭은 항상 고정 — 데이터가 없는 날에도 카테고리는 사라지지 않는다(자리가 곧 관측 대상)
+  const CAT_LABEL: Record<string, string> = { "전체": t("price_all"), "냉장고": t("cat_ref"), "세탁기": t("cat_wash"), "TV": t("cat_tv"), "에어컨": t("cat_ac") }
   const cats = ["전체", ...CAT_ORDER]
   const view = cat === "전체" ? rows : rows.filter((r) => r.category === cat)
   const cardRows = (sortDir === "up" ? view.filter((r) => r.pct > 0).sort((a, b) => b.pct - a.pct) : view.filter((r) => r.pct < 0).sort((a, b) => a.pct - b.pct)).slice(0, 5)
@@ -175,7 +176,7 @@ export default function CompetitorMovers() {
         </div>
         <span className={HOVM + " flex items-center gap-1.5 text-[10px] text-gray-400"}>
           <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
-          {fmtDate(asOf)} 기준 · 6개 브랜드
+          {fmtDate(asOf)} {t("price_asof")}
         </span>
       </div>
 
@@ -189,7 +190,7 @@ export default function CompetitorMovers() {
                 onClick={() => pick(c)}
                 className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-medium transition-all duration-200 active:scale-95 " + (cat === c ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}
               >
-                {c}
+                {CAT_LABEL[c] ?? c}
               </button>
             ))}
           </div>
@@ -250,7 +251,7 @@ export default function CompetitorMovers() {
                         <td className={td}><div className={cell}><BrandLogo brand={r.brand} /></div></td>
                         <td className={td}>
                           <div className={cell}>
-                            <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 text-[10px] font-semibold leading-[16px] text-gray-500"}>{r.category}</span>
+                            <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 px-1 text-[10px] font-semibold leading-[16px] text-gray-500"}>{CAT_LABEL[r.category] ?? r.category}</span>
                           </div>
                         </td>
                         <td className={td}>
@@ -278,7 +279,7 @@ export default function CompetitorMovers() {
         </div>
 
         <p className="mt-1 text-[10px] leading-snug text-gray-400">
-          <span className={HOVM}>경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5 · <span className="text-rose-600">↑인상</span> / <span className="text-emerald-600">↓인하</span> · 유통: Anson&#39;s · Abenson · SM</span>
+          <span className={HOVM}>{lang === "en" ? "Scraped from competitor online stores · top 5 hikes and cuts · " : "경쟁사 온라인 매장 스크래핑 · 인상·인하율 각 상위 5 · "}<span className="text-rose-600">{lang === "en" ? "↑Hike" : "↑인상"}</span> / <span className="text-emerald-600">{lang === "en" ? "↓Cut" : "↓인하"}</span>{lang === "en" ? " · Retail: Anson’s · Abenson · SM" : " · 유통: Anson’s · Abenson · SM"}</span>
         </p>
       </div>
     </section>
