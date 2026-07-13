@@ -87,12 +87,11 @@ export default function Overview() {
               </div>
               {/* 주요 뉴스 — 금주 주요 이슈·가격 동향과 같은 카드 어법으로 묶음 */}
               <section className="mt-6 rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
-              <div className="mb-2 flex items-baseline gap-2 px-0.5">
+              <div className="mb-2 flex items-baseline justify-between gap-2 px-0.5">
                 <a href="/news" className="group flex items-baseline gap-1">
                   <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("news_title")}</h2>
                   <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
                 </a>
-                <span className="cursor-default text-[10px] text-gray-400">{t("news_sub")}</span>
                 {nMain[0]?.date ? (
                   <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
                     <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
@@ -135,8 +134,8 @@ export default function Overview() {
 
                     <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:-mx-3 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
                       {[
-                        { title: t("ce_title"), sub: t("ce_sub"), rows: nCE, skip: 0, cat: "CE" },
-                        { title: t("b2b_title"), sub: t("b2b_sub"), rows: nB2B, skip: 0, cat: "B2B" },
+                        { title: t("ce_title"), sub: "", rows: nCE, skip: 0, cat: "CE" },
+                        { title: t("b2b_title"), sub: "", rows: nB2B, skip: 0, cat: "B2B" },
                       ].map((col) => (
                         <div key={col.title} className="lg:min-h-[560px] lg:px-3">
                           <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
@@ -178,7 +177,6 @@ export default function Overview() {
                     <a href="/news?cat=시장" className="group mb-2 flex items-baseline gap-1">
                       <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("market_title")}</span>
                       <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
-                      <span className="ml-1 text-[10px] text-gray-400">{t("market_sub")}</span>
                     </a>
                     <div className="flex flex-col divide-y divide-gray-100">
                       {nMain.slice(1, 10).map((n, i) => (
