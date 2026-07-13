@@ -287,6 +287,27 @@ export default function CompetitorMovers() {
                     ))}
                   </tbody>
                 </table>
+
+                {/* 표 아래 빈 공간 대신 오늘의 요약 — 카드 높이는 고정 유지 */}
+                <p className="mt-2 flex items-center gap-2 border-t border-gray-100 pt-1.5 text-[11px] text-gray-600">
+                  <span className="font-semibold text-emerald-700">
+                    {lang === "en" ? "Cuts" : "인하"} {view.filter((r) => r.pct < 0).length}
+                  </span>
+                  <span className="num text-gray-500">
+                    {view.filter((r) => r.pct < 0).length
+                      ? (view.filter((r) => r.pct < 0).reduce((s, r) => s + r.pct, 0) / view.filter((r) => r.pct < 0).length).toFixed(1) + "%"
+                      : "—"}
+                  </span>
+                  <span className="text-gray-300">|</span>
+                  <span className="font-semibold text-red-700">
+                    {lang === "en" ? "Hikes" : "인상"} {view.filter((r) => r.pct > 0).length}
+                  </span>
+                  <span className="num text-gray-500">
+                    {view.filter((r) => r.pct > 0).length
+                      ? "+" + (view.filter((r) => r.pct > 0).reduce((s, r) => s + r.pct, 0) / view.filter((r) => r.pct > 0).length).toFixed(1) + "%"
+                      : "—"}
+                  </span>
+                </p>
               </div>
             </div>
           </div>
