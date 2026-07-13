@@ -1,12 +1,21 @@
 import type { Metadata } from "next"
 import { ThemeProvider } from "next-themes"
-import { Inter } from "next/font/google"
+import { Inter, Public_Sans } from "next/font/google"
 import "./globals.css"
 
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-inter",
+})
+
+/** EN 모드 본문 — Yahoo Finance(GT America)는 상용 폰트라 사용 불가.
+ *  같은 계열(중립 그로테스크) 오픈폰트 Public Sans로 대체하고, 숫자는 tabular로 고정한다.
+ *  레이아웃은 한글 기준 고정 — globals.css에서 자간을 미세 조정해 폭이 늘지 않게 한다 */
+const publicSans = Public_Sans({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-public-sans",
 })
 
 import { TopNav } from "@/components/ui/navigation/TopNav"
@@ -51,7 +60,7 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body
-        className={`${inter.className} overflow-y-scroll scroll-auto antialiased selection:bg-indigo-100 selection:text-indigo-700 dark:bg-gray-950`}
+        className={`${inter.className} ${publicSans.variable} overflow-y-scroll scroll-auto antialiased selection:bg-indigo-100 selection:text-indigo-700 dark:bg-gray-950`}
         suppressHydrationWarning
       >
         <div className="mx-auto max-w-screen-2xl">
