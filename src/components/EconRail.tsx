@@ -53,9 +53,8 @@ function DeltaCell({ d, dir, unit }: { d: number | null; dir: string | null; uni
       }
     >
       <span>{flat ? "·" : up ? "↑" : "↓"}</span>
-      <span>
-        {Math.abs(d).toFixed(1)}
-        {unit}
+      <span key={String(d)} style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
+        <CountUp value={Math.abs(d)} suffix={unit ?? ""} decimals={1} />
       </span>
     </span>
   )
@@ -165,7 +164,7 @@ export default function EconRail() {
                     >
                       <p
                         className={
-                          "min-w-0 flex-1 font-medium leading-snug text-gray-800 " +
+                          "w-[104px] shrink-0 font-medium leading-snug text-gray-800 " +
                           (lang === "en" ? "truncate text-[12px]" : "truncate text-[13px]")
                         }
                       >
@@ -174,10 +173,8 @@ export default function EconRail() {
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="w-[46px] shrink-0 text-right text-[13px] font-normal tabular-nums text-gray-900">
-                        {c.prefix}
-                        {c.value}
-                        {c.suffix}
+                      <p className="flex-1 text-right text-[13px] font-normal tabular-nums text-gray-900">
+                        <CountUp value={Number(c.value)} prefix={c.prefix ?? ""} suffix={c.suffix ?? ""} decimals={c.key === "remit" ? 2 : 1} />
                       </p>
 
                       <DeltaCell d={mode === "mom" ? c.deltaMom ?? c.deltaYoy : c.deltaYoy ?? c.deltaMom} dir={c.dir} unit={c.deltaUnit} />
