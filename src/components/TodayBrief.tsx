@@ -62,6 +62,7 @@ export default function TodayBrief() {
         </div>
 
         <div className="flex items-baseline gap-2">
+          <span className="text-[10px] text-gray-400">{t("news_updated")} {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(b?.asOf)}</span>
           {b === undefined ? null : approved ? (
             <span className="rounded border border-emerald-200 bg-emerald-50 px-1.5 py-px text-[10px] font-bold text-emerald-700">
               CONFIRMED · {b?.approvedBy ?? "승인"}
@@ -77,7 +78,6 @@ export default function TodayBrief() {
               {busy ? t("brief_approving") : t("brief_approve")}
             </button>
           )}
-          <span className="text-[10px] text-gray-400">{t("news_updated")} {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(b?.asOf)}</span>
         </div>
       </header>
 
