@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useLang } from "@/lib/i18n"
-import { rangeRows } from "@/lib/supabase"
+import { rangeRows, freshness, fmtStamp } from "@/lib/supabase"
 
 const IND = "#6366f1"
 const GRY = "#b4b2a9"
@@ -408,6 +408,12 @@ const SERIES = [
 
 export default function DailyIndicators() {
   const { t } = useLang()
+  const [stamp, setStamp] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    freshness()
+      .then((f) => setStamp(f.daily ?? null))
+      .catch(() => {})
+  }, [])
   const today = React.useRef(new Date()).current
   const [raw, setRaw] = React.useState<Record<string, { date: string; value: number }[]> | null>(null)
   const [range, setRange] = React.useState<RangeKey>("7d")
@@ -490,7 +496,7 @@ export default function DailyIndicators() {
                   <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900">{t("daily_title")}</h1>
                   <span className="hidden items-center gap-1.5 text-[10px] text-gray-400 sm:flex">
                     <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
-                    {iso(refDate).slice(5).replace("-", "/")} {t("d_basis")}
+                    {stamp ? fmtStamp(stamp) : iso(refDate).slice(5).replace("-", "/")} {t("d_basis")}
                   </span>
                 </div>
                 <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
