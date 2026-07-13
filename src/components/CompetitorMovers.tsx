@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { competitorMovers } from "@/lib/supabase"
+import { competitorMovers, freshness, fmtStamp } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
 const BRAND_LOGO: Record<string, string> = {
@@ -141,6 +141,12 @@ function BrandLogo({ brand }: { brand: string }) {
 
 export default function CompetitorMovers() {
   const { t, lang } = useLang()
+  const [stamp, setStamp] = React.useState<string | null>(null)
+  React.useEffect(() => {
+    freshness()
+      .then((f) => setStamp(f.prices ?? null))
+      .catch(() => {})
+  }, [])
   const [rows, setRows] = React.useState<Awaited<ReturnType<typeof competitorMovers>>>([])
   const [cat, setCat] = React.useState("전체")
   const [sortDir, setSortDir] = React.useState<"up" | "down">("down")
@@ -184,7 +190,7 @@ export default function CompetitorMovers() {
         </div>
         <span className={HOVM + " flex items-center gap-1.5 text-[10px] text-gray-400"}>
           <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
-          {fmtDate(asOf, lang === "en")} {t("price_asof")}
+          {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(asOf, lang === "en")} {t("price_asof")}
         </span>
       </div>
 
