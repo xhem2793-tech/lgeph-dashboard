@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { competitorTable, type PriceRow } from "@/lib/supabase"
 
 /** 경쟁사 가격 — 좌 1/4 메뉴판 + 우 3/4 콘텐츠.
  *
@@ -60,6 +61,41 @@ const BADGE: Record<Status, { t: string; c: string }> = {
   plan: { t: "PLAN", c: "border-gray-200 bg-gray-50 text-gray-500" },
 }
 
+
+const peso = (n: number | null) => (n == null ? "—" : "₱" + Math.round(n).toLocaleString("en-US"))
+const pct = (n: number | null) => (n == null ? "—" : (n > 0 ? "+" : "") + n.toFixed(1) + "%")
+
+/** 화면에 보이는 표를 그대로 CSV로 — Excel에서 바로 열리도록 UTF-8 BOM 부착 */
+function exportCsv(rows: PriceRow[], name: string) {
+  const head = ["수집일", "유통", "브랜드", "카테고리", "모델", "용량", "SRP(₱)", "현재가(₱)", "전일가(₱)", "변동(₱)", "변동(%)", "할인율(%)", "프로모", "URL"]
+  const esc = (v: unknown) => {
+    const s = v == null ? "" : String(v)
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s
+  }
+  const body = rows.map((r) =>
+    [r.asOf, r.retailer, r.brand, r.category, r.model, r.capacity, r.srp, r.price, r.prevPrice, r.deltaPhp, r.deltaPct, r.discountPct, r.promo, r.url]
+      .map(esc)
+      .join(","),
+  )
+  const csv = "\uFEFF" + [head.join(","), ...body].join("\r\n")
+  const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8;" }))
+  const a = document.createElement("a")
+  a.href = url
+  a.download = name
+  a.click()
+  URL.revokeObjectURL(url)
+}
+
+function Kpi({ label, value, sub }: { label: string; value: string; sub?: string }) {
+  return (
+    <div className="rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
+      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{label}</p>
+      <p className="num mt-0.5 text-[17px] font-semibold text-gray-900">{value}</p>
+      {sub ? <p className="text-[10px] text-gray-500">{sub}</p> : null}
+    </div>
+  )
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border-t border-gray-100 px-3 py-3 first:border-t-0">
@@ -92,6 +128,45 @@ export default function Competitors() {
   const [brands, setBrands] = React.useState<string[]>(["LG"])
   const [shops, setShops] = React.useState<string[]>([...SHOPS])
   const [period, setPeriod] = React.useState("1주")
+
+  const [rows, setRows] = React.useState<PriceRow[] | null>(null)
+  const [q, setQ] = React.useState("")
+  const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "deltaPct", asc: true })
+
+  React.useEffect(() => {
+    competitorTable(3000).then(setRows).catch(() => setRows([]))
+  }, [])
+
+  /** 필터 → 검색 → 정렬. 표에 보이는 것이 곧 CSV로 나가는 것 */
+  const data = React.useMemo(() => {
+    let d = (rows ?? []).filter(
+      (r) =>
+        (cat === "전체" || r.category === cat) &&
+        (brands.length === 0 || brands.includes(r.brand)) &&
+        (shops.length === 0 || shops.includes(r.retailer)),
+    )
+    if (q.trim()) {
+      const k = q.trim().toLowerCase()
+      d = d.filter((r) => (r.model + " " + r.brand + " " + r.category).toLowerCase().includes(k))
+    }
+    const dir = sort.asc ? 1 : -1
+    return [...d].sort((a: any, b: any) => {
+      const x = a[sort.k]
+      const y = b[sort.k]
+      if (x == null) return 1
+      if (y == null) return -1
+      return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * dir
+    })
+  }, [rows, cat, brands, shops, q, sort])
+
+  const moved = data.filter((r) => r.deltaPct != null && r.deltaPct !== 0)
+  const cuts = moved.filter((r) => (r.deltaPct ?? 0) < 0)
+  const hikes = moved.filter((r) => (r.deltaPct ?? 0) > 0)
+  const avg = (a: PriceRow[], f: (r: PriceRow) => number | null) => {
+    const v2 = a.map(f).filter((x): x is number => x != null)
+    return v2.length ? v2.reduce((s, x) => s + x, 0) / v2.length : null
+  }
+  const asOf = rows && rows[0] ? rows[0].asOf : "—"
 
   const toggle = (arr: string[], x: string, set: (v: string[]) => void) =>
     set(arr.includes(x) ? arr.filter((y) => y !== x) : [...arr, x])
@@ -205,10 +280,10 @@ export default function Competitors() {
         {/* ── 우 3/4 : 콘텐츠 (뷰 전환 애니메이션) ── */}
         <section
           key={view}
-          className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+          className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
           style={{ animation: "viewIn .32s cubic-bezier(.22,1,.36,1) both" }}
         >
-          <header className="flex items-baseline justify-between border-b border-gray-100 pb-2">
+          <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 pb-2">
             <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
               {active?.label}
               <span className={"rounded border px-1 py-px text-[9px] font-semibold " + BADGE[active?.status ?? "plan"].c}>
@@ -216,14 +291,103 @@ export default function Competitors() {
               </span>
             </h2>
             <span className="text-[11px] text-gray-500">
-              {cat} · {brands.length ? brands.join(" · ") : "브랜드 미선택"} · {shops.length}개 유통 · {period}
+              최종 갱신 {asOf} · {cat} · {brands.length ? brands.join("·") : "브랜드 미선택"} · {shops.length}개 유통
             </span>
           </header>
-
-          <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
-            <p className="text-[13px] font-medium text-gray-600">{active?.desc}</p>
-            <p className="text-[12px] text-gray-400">데이터 연결 예정 — 뷰 확정 후 구현</p>
-          </div>
+        
+          {active?.status !== "live" ? (
+            <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
+              <p className="text-[13px] font-medium text-gray-600">{active?.desc}</p>
+              <p className="text-[12px] text-gray-400">데이터 연결 예정 — 뷰 확정 후 구현</p>
+            </div>
+          ) : (
+            <>
+              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <Kpi label="평균가" value={peso(avg(data, (r) => r.price))} sub={data.length + "개 리스팅"} />
+                <Kpi label="평균 할인율" value={pct(avg(data, (r) => r.discountPct))} sub="SRP 대비" />
+                <Kpi label="인하" value={String(cuts.length)} sub={"평균 " + pct(avg(cuts, (r) => r.deltaPct))} />
+                <Kpi label="인상" value={String(hikes.length)} sub={"평균 " + pct(avg(hikes, (r) => r.deltaPct))} />
+              </div>
+        
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <input
+                  value={q}
+                  onChange={(ev) => setQ(ev.target.value)}
+                  placeholder="모델·브랜드 검색"
+                  className="w-56 rounded-md border border-gray-200 px-2 py-1 text-[12px] outline-none transition-colors focus:border-indigo-300"
+                />
+                <span className="num text-[11px] text-gray-500">{data.length}행</span>
+                <button
+                  type="button"
+                  onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")}
+                  className="ml-auto rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[12px] font-medium text-emerald-700 transition-all duration-200 hover:bg-emerald-100 active:scale-95"
+                >
+                  엑셀(CSV) 내보내기
+                </button>
+              </div>
+        
+              <div className="mt-2 max-h-[560px] overflow-auto rounded-lg border border-gray-200">
+                <table className="w-full border-collapse text-[11px]">
+                  <thead className="sticky top-0 z-10 bg-gray-50">
+                    <tr>
+                      {[
+                        { k: "retailer", t: "유통" },
+                        { k: "brand", t: "브랜드" },
+                        { k: "category", t: "카테고리" },
+                        { k: "model", t: "모델" },
+                        { k: "srp", t: "SRP" },
+                        { k: "price", t: "현재가" },
+                        { k: "prevPrice", t: "전일가" },
+                        { k: "deltaPhp", t: "변동₱" },
+                        { k: "deltaPct", t: "변동%" },
+                        { k: "discountPct", t: "할인율" },
+                      ].map((c) => (
+                        <th
+                          key={c.k}
+                          onClick={() => setSort((s2) => ({ k: c.k, asc: s2.k === c.k ? !s2.asc : true }))}
+                          className="cursor-pointer select-none border-b border-gray-200 px-2 py-1.5 text-left font-semibold text-gray-600 transition-colors hover:text-indigo-600"
+                        >
+                          {c.t}
+                          {sort.k === c.k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows === null ? (
+                      <tr>
+                        <td colSpan={10} className="px-2 py-10 text-center text-[12px] text-gray-400">불러오는 중…</td>
+                      </tr>
+                    ) : data.length === 0 ? (
+                      <tr>
+                        <td colSpan={10} className="px-2 py-10 text-center text-[12px] text-gray-400">조건에 맞는 행 없음</td>
+                      </tr>
+                    ) : (
+                      data.slice(0, 500).map((r, i) => (
+                        <tr key={i} className="border-b border-gray-100 transition-colors hover:bg-indigo-50/40">
+                          <td className="px-2 py-1 text-gray-500">{r.retailer}</td>
+                          <td className="px-2 py-1 font-medium text-gray-800">{r.brand}</td>
+                          <td className="px-2 py-1 text-gray-600">{r.category}</td>
+                          <td className="max-w-[220px] truncate px-2 py-1 text-gray-700" title={r.model}>{r.model}</td>
+                          <td className="num px-2 py-1 text-right text-gray-500">{peso(r.srp)}</td>
+                          <td className="num px-2 py-1 text-right font-semibold text-gray-900">{peso(r.price)}</td>
+                          <td className="num px-2 py-1 text-right text-gray-500">{peso(r.prevPrice)}</td>
+                          <td className={"num px-2 py-1 text-right " + ((r.deltaPhp ?? 0) < 0 ? "text-emerald-700" : (r.deltaPhp ?? 0) > 0 ? "text-red-700" : "text-gray-400")}>
+                            {r.deltaPhp == null || r.deltaPhp === 0 ? "—" : peso(Math.abs(r.deltaPhp))}
+                          </td>
+                          <td className={"num px-2 py-1 text-right font-semibold " + ((r.deltaPct ?? 0) < 0 ? "text-emerald-700" : (r.deltaPct ?? 0) > 0 ? "text-red-700" : "text-gray-400")}>
+                            {r.deltaPct == null || r.deltaPct === 0 ? "—" : pct(r.deltaPct)}
+                          </td>
+                          <td className="num px-2 py-1 text-right text-gray-600">{r.discountPct == null ? "—" : r.discountPct.toFixed(0) + "%"}</td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <p className="mt-1 text-[10px] text-gray-400">표는 최대 500행 표시 · 내보내기는 필터된 전체 {data.length}행</p>
+            </>
+          )}
         </section>
       </div>
     </div>
