@@ -198,7 +198,7 @@ export default function Competitors() {
         Anson&apos;s · Abenson · SM 온라인 매장 일 1회 스크래핑 · LG · Samsung · Panasonic · TCL · Midea · Hisense
       </p>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(172px,0.7fr)_4fr]">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(190px,0.8fr)_4fr]">
         <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
           {GROUPS.map((g) => (
             <Section key={g.group} title={g.group}>
