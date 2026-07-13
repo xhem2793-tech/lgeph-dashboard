@@ -25,10 +25,19 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
       if (typeof document !== "undefined") document.documentElement.lang = saved
     }
   }, [])
+  /** 언어 전환은 '깜빡'이 아니라 '넘어감' — 짧게 페이드아웃 후 새 언어로 페이드인 */
   const setLang = React.useCallback((l: Lang) => {
-    setLangState(l)
-    try { window.localStorage.setItem("ax_lang", l) } catch {}
-    if (typeof document !== "undefined") document.documentElement.lang = l
+    const root = typeof document !== "undefined" ? document.documentElement : null
+    if (!root) { setLangState(l); return }
+    root.classList.add("lang-out")
+    window.setTimeout(() => {
+      setLangState(l)
+      try { window.localStorage.setItem("ax_lang", l) } catch {}
+      root.lang = l
+      root.classList.remove("lang-out")
+      root.classList.add("lang-in")
+      window.setTimeout(() => root.classList.remove("lang-in"), 420)
+    }, 130)
   }, [])
   return <Ctx.Provider value={{ lang, setLang }}>{children}</Ctx.Provider>
 }
