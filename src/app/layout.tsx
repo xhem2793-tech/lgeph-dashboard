@@ -10,6 +10,7 @@ const inter = Inter({
 })
 
 import { TopNav } from "@/components/ui/navigation/TopNav"
+import { LangProvider } from "@/lib/i18n"
 import { siteConfig } from "./siteConfig"
 
 export const metadata: Metadata = {
@@ -55,8 +56,10 @@ export default function RootLayout({
       >
         <div className="mx-auto max-w-screen-2xl">
           <ThemeProvider defaultTheme="system" attribute="class">
-            <TopNav />
-            <main>{children}</main>
+            <LangProvider>
+              <TopNav />
+              <main>{children}</main>
+            </LangProvider>
           </ThemeProvider>
         </div>
       </body>
