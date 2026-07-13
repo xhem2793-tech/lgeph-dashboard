@@ -86,6 +86,77 @@ function exportCsv(rows: PriceRow[], name: string) {
   URL.revokeObjectURL(url)
 }
 
+/** 3일 미니 라인 — 숫자 3개를 눈으로 비교하는 대신 모양으로 읽는다 */
+function Spark({ p2, p1, p0 }: { p2: number | null; p1: number | null; p0: number | null }) {
+  const v = [p2, p1, p0]
+  if (v.some((x) => x == null)) return <span className="text-gray-300">—</span>
+  const arr = v as number[]
+  const mn = Math.min(...arr)
+  const mx = Math.max(...arr)
+  const W = 40
+  const H = 14
+  const y = (n: number) => (mx === mn ? H / 2 : H - 2 - ((n - mn) / (mx - mn)) * (H - 4))
+  const pts = arr.map((n, i) => (i * (W - 2)) / 2 + 1 + "," + y(n)).join(" ")
+  const dn = arr[2] < arr[0]
+  const flat = arr[2] === arr[0]
+  const col = flat ? "#9ca3af" : dn ? "#047857" : "#b91c1c"
+  return (
+    <svg width={W} height={H} className="overflow-visible">
+      <polyline points={pts} fill="none" stroke={col} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={W - 1} cy={y(arr[2])} r="1.8" fill={col} />
+    </svg>
+  )
+}
+
+/** 가격대 분포 — 필터된 리스팅의 가격 히스토그램. LG 위치를 인디고로 겹쳐 보여준다 */
+function DistStrip({ rows }: { rows: PriceRow[] }) {
+  const px = rows.map((r) => r.p0).filter((x): x is number => x != null)
+  if (px.length < 5) return null
+  const mn = Math.min(...px)
+  const mx = Math.max(...px)
+  const N = 24
+  const bin = (n: number) => Math.min(N - 1, Math.floor(((n - mn) / (mx - mn || 1)) * N))
+  const all = new Array(N).fill(0)
+  const lg = new Array(N).fill(0)
+  rows.forEach((r) => {
+    if (r.p0 == null) return
+    const b = bin(r.p0)
+    all[b] += 1
+    if (r.brand === "LG") lg[b] += 1
+  })
+  const top = Math.max(...all, 1)
+  const fmt = (n: number) => "₱" + Math.round(n / 1000) + "k"
+  return (
+    <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
+      <div className="flex items-baseline justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">가격대 분포</p>
+        <p className="text-[10px] text-gray-500">
+          <span className="inline-block h-1.5 w-1.5 rounded-sm bg-gray-300" /> 전체{" "}
+          <span className="ml-1 inline-block h-1.5 w-1.5 rounded-sm bg-indigo-500" /> LG
+        </p>
+      </div>
+      <div className="mt-1.5 flex h-12 items-end gap-[2px]">
+        {all.map((c, i) => (
+          <div key={i} className="flex-1" title={fmt(mn + ((mx - mn) * i) / N) + " · " + c + "건"}>
+            <div className="relative w-full" style={{ height: (c / top) * 44 }}>
+              <div className="absolute inset-0 rounded-sm bg-gray-300" />
+              <div
+                className="absolute bottom-0 left-0 right-0 rounded-sm bg-indigo-500 transition-all duration-300"
+                style={{ height: (lg[i] / (c || 1)) * 100 + "%" }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="mt-1 flex justify-between text-[9px] text-gray-400">
+        <span className="num">{fmt(mn)}</span>
+        <span className="num">{fmt((mn + mx) / 2)}</span>
+        <span className="num">{fmt(mx)}</span>
+      </div>
+    </div>
+  )
+}
+
 function Kpi({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
@@ -122,12 +193,13 @@ function Chip({ on, children, onClick }: { on: boolean; children: React.ReactNod
   )
 }
 
-const COLS: { k: keyof PriceRow | "d2" | "d1" | "d0"; t: string; num?: boolean }[] = [
+const COLS: { k: string; t: string; num?: boolean }[] = [
   { k: "retailer", t: "유통" },
   { k: "brand", t: "브랜드" },
   { k: "category", t: "카테고리" },
   { k: "code", t: "모델코드" },
   { k: "srp", t: "SRP", num: true },
+  { k: "spark", t: "3일 추이" },
   { k: "p2", t: "D-2", num: true },
   { k: "p1", t: "D-1", num: true },
   { k: "p0", t: "당일", num: true },
@@ -320,6 +392,8 @@ export default function Competitors() {
                 <Kpi label="인상" value={String(hikes.length)} sub={"평균 " + pct(avg(hikes, (r) => r.deltaPct))} />
               </div>
 
+              <DistStrip rows={data} />
+
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <input
                   value={q}
@@ -370,7 +444,7 @@ export default function Competitors() {
                         </td>
                       </tr>
                     ) : (
-                      data.slice(0, 600).map((r, i) => {
+                      data.slice(0, 100).map((r, i) => {
                         const up = (r.deltaPhp ?? 0) > 0
                         const dn = (r.deltaPhp ?? 0) < 0
                         const dcol = dn ? "text-emerald-700" : up ? "text-red-700" : "text-gray-400"
@@ -383,6 +457,7 @@ export default function Competitors() {
                               {r.code}
                             </td>
                             <td className="num px-2 py-1 text-right text-gray-400">{peso(r.srp)}</td>
+                            <td className="px-2 py-1"><Spark p2={r.p2} p1={r.p1} p0={r.p0} /></td>
                             <td className="num px-2 py-1 text-right text-gray-500">{peso(r.p2)}</td>
                             <td className="num px-2 py-1 text-right text-gray-500">{peso(r.p1)}</td>
                             <td className="num px-2 py-1 text-right font-semibold text-gray-900">{peso(r.p0)}</td>
@@ -411,7 +486,7 @@ export default function Competitors() {
                 </table>
               </div>
               <p className="mt-1 text-[10px] text-gray-400">
-                표는 최대 600행 표시 · 내보내기는 필터된 전체 {data.length}행(모델명·URL 포함) · 모델코드에 마우스를 올리면 원문 모델명
+                표는 상위 100행만 표시(정렬 기준) · 엑셀(CSV)에는 필터된 전체 {data.length}행 전부 · 모델코드에 마우스를 올리면 원문 모델명
               </p>
             </>
           )}
