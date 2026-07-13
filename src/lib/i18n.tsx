@@ -129,11 +129,11 @@ export const DICT = {
   },
   why_matters: { ko: "왜 중요한가", en: "Why it matters" },
   daily_title: { ko: "일간 지표", en: "Daily Indicators" },
-  cal_title: { ko: "경제 캘린더", en: "Economic Calendar" },
+  cal_title: { ko: "캘린더", en: "Calendar" },
   cal_upcoming: { ko: "예정", en: "Upcoming" },
   cal_past: { ko: "결과", en: "Released" },
   cal_none_up: { ko: "남은 일정 없음", en: "No upcoming events" },
-  cal_none_past: { ko: "이번 달 발표된 결과 없음", en: "No releases this month" },
+  cal_none_past: { ko: "발표된 결과 없음", en: "No releases" },
   confirmed: { ko: "CONFIRMED", en: "CONFIRMED" },
   source: { ko: "출처", en: "Source" },
 } as const
