@@ -168,7 +168,7 @@ export default function EconRail() {
                     >
                       <p
                         className={
-                          "w-[104px] shrink-0 text-[12px] font-normal leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 " +
+                          "w-[104px] shrink-0 text-[13px] font-medium leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 " +
                           (lang === "en" ? "truncate text-[12px]" : "truncate text-[13px]")
                         }
                       >
@@ -225,7 +225,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
     <div className="pb-2.5 pt-2.5" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="rounded-xl bg-[#f9fafb] p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className={(lang === "en" ? "text-[10px]" : "text-[11px]") + " font-normal text-gray-700"}>{pick(c.label, c.labelEn)}</span>
+          <span className={(lang === "en" ? "text-[12px]" : "text-[13px]") + " font-medium text-gray-800"}>{pick(c.label, c.labelEn)}</span>
           <div className="flex shrink-0 items-center gap-2.5 text-[10px] text-gray-400">
             {hasPrev ? (
               <span className="flex items-center gap-1">
