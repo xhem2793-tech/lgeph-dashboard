@@ -25,7 +25,7 @@ export type KpiEntryExtended = Omit<KpiEntry, "current" | "allowed" | "unit"> & 
 
 
 export default function Overview() {
-  const { t, pick } = useLang()
+  const { t, pick, lang } = useLang()
   const today = React.useRef(new Date()).current
   const [nMain, setNMain] = React.useState<any[]>([])
   const [nCE, setNCE] = React.useState<any[]>([])
@@ -113,7 +113,14 @@ export default function Overview() {
                           </div>
                         ) : null}
                         <div className="min-w-0">
-                          <p className="text-[25px] font-bold leading-tight text-gray-900 group-hover:text-indigo-600">{pick(nMain[0].title, (nMain[0] as any).titleEn)}</p>
+                          <p
+                          className={
+                            "line-clamp-3 font-bold leading-tight text-gray-900 group-hover:text-indigo-600 " +
+                            (lang === "en" ? "text-[22px]" : "text-[25px]")
+                          }
+                        >
+                          {pick(nMain[0].title, (nMain[0] as any).titleEn)}
+                        </p>
                           {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500">{pick(nMain[0].summary, (nMain[0] as any).summaryEn)}</p> : null}
                           <p className="mt-2 text-[12px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
                         </div>
