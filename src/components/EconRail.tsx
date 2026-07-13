@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { homeBand, econSeries, calendarMonth } from "@/lib/supabase"
+import { homeBand, econSeries } from "@/lib/supabase"
 import { ProChart, CountUp } from "@/components/ProChartCore"
 import { useLang } from "@/lib/i18n"
 
@@ -105,22 +105,6 @@ export default function EconRail() {
   const { lang, t, pick } = useLang()
   /** 변동률 기준을 4초마다 교대 — 지금 무엇을 보고 있는지는 헤더 우측 배지로 알린다 */
   const [mode, setMode] = React.useState<"mom" | "yoy">("yoy")
-  /** 다음 발표 2건 — 캘린더까지 스크롤하지 않아도 "무엇이 다가오는가"가 보이게 */
-  const [next2, setNext2] = React.useState<{ d: string; t: string }[]>([])
-  React.useEffect(() => {
-    calendarMonth()
-      .then((cal: any[]) => {
-        const up = (cal ?? [])
-          .filter((e) => !e.past)
-          .slice(0, 2)
-          .map((e) => ({
-            d: String(e.date).slice(5).replace("-", "/"),
-            t: String(e.event).split("\u2014")[0].replace(/\([^)]*\)/g, "").replace(/\s+/g, " ").trim().slice(0, 18),
-          }))
-        setNext2(up)
-      })
-      .catch(() => {})
-  }, [])
   React.useEffect(() => {
     const id = setInterval(() => setMode((m) => (m === "yoy" ? "mom" : "yoy")), 4000)
     return () => clearInterval(id)
@@ -166,17 +150,6 @@ export default function EconRail() {
         </span>
       </header>
 
-      {next2.length > 0 ? (
-        <p className="flex items-center gap-1.5 border-b border-gray-100 bg-indigo-50/40 px-3 py-1 text-[10px] text-gray-600">
-          <span className="shrink-0 font-semibold text-indigo-600">{lang === "en" ? "Next" : "다음 발표"}</span>
-          {next2.map((n, i) => (
-            <span key={i} className="truncate">
-              {i > 0 ? "· " : ""}
-              <span className="num font-medium text-gray-800">{n.d}</span> {n.t}
-            </span>
-          ))}
-        </p>
-      ) : null}
 
       {err ? (
         <p className="px-3 py-6 text-center text-[12px] text-gray-400">{t("rail_fail")}</p>
@@ -240,9 +213,6 @@ export default function EconRail() {
         })
       )}
 
-      <p className="border-t border-gray-100 px-3.5 py-2 text-[10px] leading-snug text-gray-400">
-        {t("rail_note")}
-      </p>
     </section>
   )
 }
