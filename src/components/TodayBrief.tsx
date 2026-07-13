@@ -100,7 +100,7 @@ export default function TodayBrief() {
                     <p
                       className={
                         // 레이아웃은 한글 기준 고정 — 영문이 길면 글자를 줄이고 3줄로 잘라 카드 높이를 맞춘다
-                        "line-clamp-2 font-semibold leading-snug text-gray-900 " +
+                        "line-clamp-3 font-semibold leading-snug text-gray-900 " +
                         (lang === "en" ? "text-[12px]" : "text-[13px]")
                       }
                     >
