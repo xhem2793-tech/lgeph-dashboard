@@ -37,7 +37,7 @@ function OwnVisual({ tags, compact }: { tags: string[]; compact?: boolean }) {
     <div
       className={
         "flex w-full flex-col justify-between overflow-hidden rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-800 p-3 " +
-        (compact ? "h-[110px]" : "h-full min-h-[180px]")
+        (compact ? "h-[76px]" : "h-full min-h-[180px]")
       }
     >
       <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">AX 자체 분석</span>
@@ -307,7 +307,7 @@ export default function AnalysisColumn() {
                 <OwnVisual tags={post.tags} compact />
               </div>
             ) : post.image ? (
-              <div className="mb-2 h-[110px] w-full overflow-hidden rounded-lg bg-gray-100">
+              <div className="mb-2 h-[76px] w-full overflow-hidden rounded-lg bg-gray-100">
                 <img
                   src={post.image}
                   alt=""
@@ -323,10 +323,6 @@ export default function AnalysisColumn() {
 
             <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 transition-colors duration-200 group-hover:text-indigo-600">
               {pick(post.title, post.titleEn)}
-            </p>
-
-            <p className="mt-1 line-clamp-3 text-[12px] leading-relaxed text-gray-600">
-              {pick(post.summary, post.summaryEn) || pick(post.dek, post.dekEn)}
             </p>
 
             <p className="mt-1.5 flex items-center gap-1 text-[11px] leading-4 text-gray-500">
@@ -387,17 +383,6 @@ export default function AnalysisColumn() {
             <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 transition-colors duration-200 group-hover:text-indigo-600">
               {pick(reg.title, reg.titleEn)}
             </p>
-
-            <p className="mt-1 line-clamp-3 text-[12px] leading-relaxed text-gray-600">
-              {pick(reg.summary, reg.summaryEn)}
-            </p>
-
-            {reg.implication ? (
-              <p className="mt-1.5 line-clamp-1 text-[11px] leading-4 text-indigo-700">
-                <b className="font-semibold">우리 영향 · </b>
-                {reg.implication}
-              </p>
-            ) : null}
 
             <p className="mt-1 text-[11px] leading-4 text-gray-500">
               {reg.source} · {fmt(reg.date)}
