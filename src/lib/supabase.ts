@@ -644,13 +644,32 @@ export async function newsFeed(days = 30): Promise<FeedItem[]> {
 }
 
 /** 뉴스가 움직인 지표 — 기사 chip_keys와 조인해 칩으로 렌더 */
-export type Chip = { k: string; label: string; value: number | null; unit: string; deltaPct: number | null; asOf: string | null }
+export type Chip = {
+  k: string
+  label: string
+  value: number | null
+  unit: string
+  deltaPct: number | null
+  /** 물가·금리처럼 값 자체가 %인 지표는 상대변화율이 아니라 %p 절대차 */
+  deltaUnit: string
+  asOf: string | null
+  freq: "daily" | "weekly" | "monthly"
+}
 
 export async function indicatorChips(): Promise<Record<string, Chip>> {
   const rows = await sb("v_indicator_chips?select=*")
   const out: Record<string, Chip> = {}
   for (const r of rows ?? []) {
-    out[r.k] = { k: r.k, label: r.label, value: num(r.value), unit: r.unit ?? "", deltaPct: num(r.delta_pct), asOf: r.as_of ?? null }
+    out[r.k] = {
+      k: r.k,
+      label: r.label,
+      value: num(r.value),
+      unit: r.unit ?? "",
+      deltaPct: num(r.delta_pct),
+      deltaUnit: r.delta_unit ?? "%",
+      asOf: r.as_of ?? null,
+      freq: (r.freq ?? "daily") as "daily" | "weekly" | "monthly",
+    }
   }
   return out
 }
