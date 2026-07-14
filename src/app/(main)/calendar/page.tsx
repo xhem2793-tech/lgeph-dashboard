@@ -95,7 +95,8 @@ export default function Calendar() {
 
   const cats = React.useMemo(() => {
     const s = new Set((rows ?? []).map((r) => r.category))
-    return ["전체", ...LEGEND.filter((c) => s.has(c)), ...[...s].filter((c) => !LEGEND.includes(c))]
+    const extra = Array.from(s).filter((c) => !LEGEND.includes(c))
+    return ["전체", ...LEGEND.filter((c) => s.has(c)), ...extra]
   }, [rows])
 
   const list = React.useMemo(
