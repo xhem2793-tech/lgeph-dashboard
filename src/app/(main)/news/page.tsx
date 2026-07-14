@@ -6,7 +6,10 @@ import {
   indicatorChips,
   regBoard,
   analysisPosts,
+  weekDigest,
+  todayBrief,
   freshness,
+  type WeekItem,
   fmtStamp,
   type FeedItem,
   type Chip,
@@ -49,15 +52,16 @@ type Doc = {
 
 type Menu = { key: string; label: string; desc: string }
 
+/** 주석은 한 줄, 항목 3개, 구분자는 가운뎃점 하나 — 표기가 흔들리면 메뉴가 산만해진다 */
 const MENUS: Menu[] = [
-  { key: "전체", label: "전체", desc: "뉴스 · 규제 · 인사이트 전부" },
-  { key: "거시·금융", label: "거시·금융", desc: "물가·금리·환율·투자" },
-  { key: "정치·정책", label: "정치·정책", desc: "예산·행정명령·정세" },
-  { key: "B2B", label: "B2B", desc: "공조·인프라·데이터센터" },
-  { key: "CE·유통", label: "CE·유통", desc: "가전 수요·채널·경쟁" },
-  { key: "기상·재난", label: "기상·재난", desc: "태풍·폭염 · 냉방 수요" },
-  { key: "에너지·전력", label: "에너지·전력", desc: "유가·전기요금·전력수급" },
-  { key: "규제·정책", label: "규제·정책", desc: "통관·관세·세무·표준 · 시행일" },
+  { key: "전체", label: "전체", desc: "뉴스 · 규제 · 인사이트" },
+  { key: "거시·금융", label: "거시·금융", desc: "물가 · 금리 · 환율" },
+  { key: "정치·정책", label: "정치·정책", desc: "예산 · 행정명령 · 정세" },
+  { key: "B2B", label: "B2B", desc: "공조 · 인프라 · 데이터센터" },
+  { key: "CE·유통", label: "CE·유통", desc: "가전 수요 · 채널 · 경쟁" },
+  { key: "기상·재난", label: "기상·재난", desc: "태풍 · 폭염 · 냉방 수요" },
+  { key: "에너지·전력", label: "에너지·전력", desc: "유가 · 전기요금 · 전력" },
+  { key: "규제·정책", label: "규제·정책", desc: "통관 · 관세 · 시행일" },
   { key: "인사이트", label: "인사이트", desc: "자체 칼럼 · 외부 큐레이션" },
 ]
 
@@ -89,6 +93,14 @@ function rel(s: string) {
   return s.slice(5).replace("-", "/")
 }
 
+function weekRange(d: Date) {
+  const day = (d.getDay() + 6) % 7
+  const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - day)
+  const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6)
+  const f = (x: Date) => x.getMonth() + 1 + "/" + x.getDate()
+  return f(mon) + " – " + f(sun)
+}
+
 function weekNo(d: Date) {
   const s = new Date(d.getFullYear(), 0, 1)
   return Math.ceil(((d.getTime() - s.getTime()) / 86400000 + s.getDay() + 1) / 7)
@@ -98,6 +110,20 @@ const SEV: Record<string, string> = {
   Critical: "bg-red-100 text-red-700",
   High: "bg-amber-100 text-amber-700",
   Medium: "bg-gray-100 text-gray-600",
+}
+
+/** 우리가 만든 것(가격 트래커·자체 칼럼)에는 표식을 붙인다 — 남의 보도와 섞이면 안 된다 */
+const OURS = "LGEPH AI"
+
+function AiMark() {
+  return (
+    <span className="inline-flex items-center gap-0.5 rounded border border-indigo-200 bg-indigo-50 px-1 py-px text-[9px] font-bold leading-4 text-indigo-700">
+      <svg width="8" height="8" viewBox="0 0 12 12" fill="none" aria-hidden>
+        <path d="M6 1l1.3 3.2L10.5 5.5 7.3 6.8 6 10 4.7 6.8 1.5 5.5l3.2-1.3L6 1z" fill="currentColor" />
+      </svg>
+      AI
+    </span>
+  )
 }
 
 function ChipPill({ c }: { c: Chip }) {
@@ -299,6 +325,8 @@ export default function Page() {
   const [regs, setRegs] = React.useState<RegBoardItem[]>([])
   const [posts, setPosts] = React.useState<Awaited<ReturnType<typeof analysisPosts>>>([])
   const [stamp, setStamp] = React.useState<string | null>(null)
+  const [week, setWeek] = React.useState<WeekItem[]>([])
+  const [call, setCall] = React.useState<{ text: string; owner: string | null } | null>(null)
   const [modal, setModal] = React.useState<Doc | null>(null)
   const [closing, setClosing] = React.useState(false)
 
@@ -319,12 +347,14 @@ export default function Page() {
   }, [closeModal])
 
   React.useEffect(() => {
-    Promise.all([indicatorChips(), regBoard(40), analysisPosts(20), freshness()])
-      .then(([c, r, p, f]) => {
+    Promise.all([indicatorChips(), regBoard(40), analysisPosts(20), freshness(), weekDigest(), todayBrief()])
+      .then(([c, r, p, f, w, b]) => {
         setChips(c)
         setRegs(r)
         setPosts(p)
         setStamp(f.news ?? null)
+        setWeek(w)
+        if (b?.weeklyCall) setCall({ text: b.weeklyCall, owner: b.weeklyOwner ?? null })
       })
       .catch(() => {})
     newsFeed(0).then(setFeed).catch(() => setFeed([]))
@@ -453,19 +483,7 @@ export default function Page() {
     <div className="px-4 py-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
 
-      <div style={{ animation: "fadeUp .5s ease both" }}>
-        <a href="/news" className="group inline-flex items-baseline gap-1">
-          <h1 className="text-[20px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-            주요뉴스
-          </h1>
-          <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
-        </a>
-        <p className="num mt-0.5 text-[12px] text-gray-500">
-          W{weekNo(today)} · {today.getMonth() + 1}/{today.getDate()} · 뉴스 · 규제·정책 · 인사이트
-        </p>
-      </div>
-
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(190px,0.9fr)_minmax(0,3fr)_minmax(250px,1.1fr)]">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(190px,0.9fr)_minmax(0,3fr)_minmax(250px,1.1fr)]">
         {/* ── 좌 : 메뉴 ── */}
         <aside
           className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]"
@@ -653,6 +671,7 @@ export default function Page() {
                           <span className="text-[10.5px] font-medium text-gray-500">{d.topic}</span>
                           <span className="text-[10.5px] text-gray-300">·</span>
                           <span className="text-[10.5px] text-gray-500">{d.source}</span>
+                          {d.source === OURS || d.kind === "insight" ? <AiMark /> : null}
                           <span className="text-[10.5px] text-gray-300">·</span>
                           <span className="num text-[10.5px] text-gray-500">{rel(d.date)}</span>
                           {c ? <ChipPill c={c} /> : null}
@@ -705,8 +724,76 @@ export default function Page() {
           ) : null}
         </section>
 
-        {/* ── 우 : 규제 동향 상시 (클릭 시 같은 팝업) ── */}
-        <aside className="h-fit lg:sticky lg:top-[88px]" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.15s" }}>
+        {/* ── 우 : 이번 주 요약(위) + 규제 상위 3건(아래) ── */}
+        <aside className="flex h-fit flex-col gap-4 lg:sticky lg:top-[88px]" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.15s" }}>
+          {/* W## 이번 주 — 지표 발표와 규제 시행일을 한 줄에 섞어 본다 */}
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
+            <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
+              <p className="text-[14px] font-bold tracking-tight text-gray-900">W{weekNo(today)} 이번 주</p>
+              <span className="num text-[10px] text-gray-500">
+                {weekRange(today)}
+              </span>
+            </div>
+
+            <div className="border-b border-gray-100 px-3 py-2.5">
+              <p className="mb-1.5 text-[10px] font-semibold tracking-wide text-gray-400">지나간 일</p>
+              {week.filter((w) => w.past).length === 0 ? (
+                <p className="text-[11px] text-gray-400">없음</p>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {week
+                    .filter((w) => w.past)
+                    .slice(0, 3)
+                    .map((w, i) => (
+                      <div key={i} className="flex gap-2">
+                        <span className="num shrink-0 pt-px text-[10px] text-gray-400">{w.date.slice(5).replace("-", "/")}</span>
+                        <span className="line-clamp-2 text-[11.5px] leading-snug text-gray-700">{pick(w.label, w.labelEn)}</span>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            <div className="border-b border-gray-100 px-3 py-2.5">
+              <p className="mb-1.5 text-[10px] font-semibold tracking-wide text-gray-400">남은 일정</p>
+              {week.filter((w) => !w.past).length === 0 ? (
+                <p className="text-[11px] text-gray-400">남은 일정 없음</p>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {week
+                    .filter((w) => !w.past)
+                    .slice(0, 4)
+                    .map((w, i) => (
+                      <div key={i} className="flex gap-2">
+                        <span
+                          className={
+                            "num shrink-0 pt-px text-[10px] font-semibold " +
+                            (w.src === "reg" ? "text-red-600" : "text-indigo-600")
+                          }
+                        >
+                          {w.date.slice(5).replace("-", "/")}
+                        </span>
+                        <span className="line-clamp-2 text-[11.5px] leading-snug text-gray-700">{pick(w.label, w.labelEn)}</span>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {call ? (
+              <div className="bg-indigo-50/60 px-3 py-2.5">
+                <p className="text-[9px] font-bold tracking-widest text-indigo-600">이번 주 한 줄</p>
+                <p className="mt-1 text-[11.5px] leading-relaxed text-gray-800">{call.text}</p>
+                <p className="mt-1 flex items-center gap-1 text-[9px] text-gray-500">
+                  {OURS}
+                  <AiMark />
+                  {call.owner ? "· " + call.owner : ""}
+                </p>
+              </div>
+            ) : null}
+          </div>
+
+          {/* 규제 동향 — 상단 3건만, 나머지는 메뉴로 */}
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
             <button
               type="button"
@@ -721,38 +808,47 @@ export default function Page() {
                 {regDocs.filter((r) => r.severity === "High").length}
               </span>
             </button>
-            <div className="max-h-[calc(100vh-190px)] overflow-y-auto p-2">
+            <div className="p-2">
               {board.length === 0 ? (
-                <p className="py-8 text-center text-[12px] text-gray-500">등재된 규제 없음</p>
+                <p className="py-6 text-center text-[12px] text-gray-500">등재된 규제 없음</p>
               ) : (
-                <div className="flex flex-col gap-1">
-                  {board.slice(0, 12).map((r) => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => setModal(r)}
-                      className={
-                        "group flex flex-col gap-1 rounded-md border-l-2 bg-white px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 active:scale-[.99] " +
-                        (r.severity === "Critical" ? "border-red-500" : r.severity === "High" ? "border-amber-400" : "border-gray-200")
-                      }
-                    >
-                      <span className="flex flex-wrap items-center gap-1">
-                        <span className={"rounded px-1 py-px text-[9px] font-bold leading-4 " + (SEV[r.severity ?? ""] ?? SEV.Medium)}>
-                          {r.severity}
-                        </span>
-                        {r.dDay != null ? (
-                          <span className={"num text-[9px] font-bold " + (r.dDay >= 0 && r.dDay <= 7 ? "text-red-600" : "text-gray-500")}>
-                            {r.dDay <= 0 ? "시행 중" : "D-" + r.dDay}
+                <>
+                  <div className="flex flex-col gap-1">
+                    {board.slice(0, 3).map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setModal(r)}
+                        className={
+                          "group flex flex-col gap-1 rounded-md border-l-2 bg-white px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 active:scale-[.99] " +
+                          (r.severity === "Critical" ? "border-red-500" : r.severity === "High" ? "border-amber-400" : "border-gray-200")
+                        }
+                      >
+                        <span className="flex flex-wrap items-center gap-1">
+                          <span className={"rounded px-1 py-px text-[9px] font-bold leading-4 " + (SEV[r.severity ?? ""] ?? SEV.Medium)}>
+                            {r.severity}
                           </span>
-                        ) : null}
-                        <span className="truncate text-[10px] text-gray-500">{r.agency}</span>
-                      </span>
-                      <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-                        {r.title}
-                      </p>
-                    </button>
-                  ))}
-                </div>
+                          {r.dDay != null ? (
+                            <span className={"num text-[9px] font-bold " + (r.dDay >= 0 && r.dDay <= 7 ? "text-red-600" : "text-gray-500")}>
+                              {r.dDay <= 0 ? "시행 중" : "D-" + r.dDay}
+                            </span>
+                          ) : null}
+                          <span className="truncate text-[10px] text-gray-500">{r.agency}</span>
+                        </span>
+                        <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
+                          {r.title}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMenu("규제·정책")}
+                    className="mt-1.5 w-full rounded-md py-1.5 text-center text-[11px] text-indigo-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-50 active:scale-95"
+                  >
+                    규제 {regDocs.length}건 전체 보기 ›
+                  </button>
+                </>
               )}
             </div>
           </div>
@@ -802,6 +898,7 @@ export default function Page() {
                 <span className="font-semibold text-indigo-600">{modal.topic}</span>
                 <span className="text-gray-300">·</span>
                 <span>{modal.source}</span>
+                {modal.source === OURS || modal.kind === "insight" ? <AiMark /> : null}
                 <span className="text-gray-300">·</span>
                 <span className="num">{modal.date}</span>
                 {modal.kind === "reg" ? (
