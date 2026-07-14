@@ -1,7 +1,16 @@
 "use client"
 
 import React from "react"
-import { competitorTable, freshness, fmtStamp, type PriceRow } from "@/lib/supabase"
+import {
+  competitorTable,
+  freshness,
+  fmtStamp,
+  promoIntensity,
+  promoCampaigns,
+  type PriceRow,
+  type PromoIntensity,
+  type PromoCampaign,
+} from "@/lib/supabase"
 
 /** 경쟁사 가격 — 좌 1/4 메뉴판 + 우 3/4 콘텐츠.
  *
@@ -33,7 +42,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
   {
     group: "채널·프로모",
     items: [
-      { key: "promo", no: 4, label: "프로모션 트래커", desc: "할인율·기간 · SRP 복귀(종료) 감지", status: "next" },
+      { key: "promo", no: 4, label: "프로모션 트래커", desc: "브랜드별 프로모 강도 · 유통 캠페인", status: "live" },
       { key: "channel", no: 6, label: "채널별 가격 비교", desc: "동일모델 유통 최저가 · 온·오프 격차", status: "plan" },
     ],
   },
@@ -193,6 +202,101 @@ const COLS: { k: string; t: string; num?: boolean }[] = [
   { k: "discountPct", t: "할인율", num: true },
 ]
 
+
+/** 프로모션 트래커 — 브랜드별 프로모 강도(전주 대비) + 유통 캠페인.
+ *  ⚠ Anson's는 정가 필드가 항상 세일가로 잡혀 '비중'이 구조적으로 100%가 된다.
+ *     따라서 판단은 '전주 대비 변화'와 '평균 할인율'로만 한다. */
+function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camps: PromoCampaign[] }) {
+  if (rows === null) {
+    return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400">불러오는 중</div>
+  }
+  if (rows.length === 0) {
+    return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400">데이터 없음</div>
+  }
+  const wow = (n: number) => (n > 0 ? "+" + n : String(n))
+  const tone = (n: number) =>
+    n > 0 ? "text-rose-600" : n < 0 ? "text-emerald-600" : "text-gray-400"
+
+  return (
+    <div className="mt-3 flex flex-col gap-4">
+      <div className="overflow-x-auto rounded-lg border border-gray-100">
+        <table className="w-full min-w-[720px] text-[12.5px]">
+          <thead>
+            <tr className="border-b border-gray-100 bg-gray-50/70 text-[11px] font-semibold text-gray-500">
+              <th className="px-3 py-2 text-left">브랜드</th>
+              <th className="px-3 py-2 text-left">유통</th>
+              <th className="px-3 py-2 text-right">프로모 모델</th>
+              <th className="px-3 py-2 text-right">전주 대비</th>
+              <th className="px-3 py-2 text-right">평균 할인율</th>
+              <th className="px-3 py-2 text-right">전주 대비</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr
+                key={r.brand + r.retailer}
+                className="border-b border-gray-50 transition-colors hover:bg-indigo-50/40"
+                style={{ animation: "rowIn .3s cubic-bezier(.16,1,.3,1) both", animationDelay: i * 22 + "ms" }}
+              >
+                <td className={"px-3 py-2 font-semibold " + (r.brand === "LG" ? "text-indigo-700" : "text-gray-800")}>
+                  {r.brand}
+                </td>
+                <td className="px-3 py-2 text-gray-500">{r.retailer}</td>
+                <td className="px-3 py-2 text-right tabular-nums text-gray-900">
+                  {r.promoModels}
+                  <span className="text-[10px] text-gray-400"> / {r.listedModels}</span>
+                </td>
+                <td className={"px-3 py-2 text-right tabular-nums font-semibold " + tone(r.promoModelsWow)}>
+                  {wow(r.promoModelsWow)}
+                </td>
+                <td className="px-3 py-2 text-right tabular-nums text-gray-900">
+                  {r.avgDiscount === null ? "—" : r.avgDiscount.toFixed(1) + "%"}
+                </td>
+                <td className={"px-3 py-2 text-right tabular-nums font-semibold " + tone(r.avgDiscountWowPp ?? 0)}>
+                  {r.avgDiscountWowPp === null ? "—" : wow(r.avgDiscountWowPp) + "%p"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {camps.length > 0 && (
+        <div>
+          <p className="mb-1.5 text-[12px] font-semibold text-gray-700">유통 캠페인 (진행 중)</p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            {camps.map((c) => (
+              <a
+                key={c.retailer + c.title}
+                href={c.url ?? "#"}
+                target="_blank"
+                rel="noreferrer"
+                className="rounded-lg border border-gray-200 bg-white p-3 transition-all duration-200 hover:-translate-y-px hover:border-indigo-300 hover:shadow-sm"
+              >
+                <p className="text-[11px] font-semibold text-gray-500">{c.retailer}</p>
+                <p className="text-[13px] font-semibold text-gray-900">{c.title}</p>
+                <p className="mt-1 text-[11.5px] text-gray-600">
+                  {c.liveDiscounted !== null && <span>할인 {c.liveDiscounted}종 · 평균 {c.avgDiscount}% · 최대 {c.maxDiscount}%</span>}
+                  {c.onSaleCount !== null && <span>세일 중 {c.onSaleCount.toLocaleString()}종</span>}
+                </p>
+                {c.brands.length > 0 && (
+                  <p className="mt-1 truncate text-[11px] text-gray-400">{c.brands.join(" · ")}</p>
+                )}
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <p className="text-[11px] leading-relaxed text-gray-400">
+        프로모 모델 = 할인가 또는 프로모 문구가 걸린 리스팅 · 전주 대비는 7일 전 대비 변화
+        <br />
+        Anson&apos;s는 정가 필드가 세일가로 표기돼 비중이 항상 100% — 판단은 전주 대비 변화와 평균 할인율 기준
+      </p>
+    </div>
+  )
+}
+
 export default function Competitors() {
   const [view, setView] = React.useState("movers")
   const [cat, setCat] = React.useState("전체")
@@ -205,6 +309,8 @@ export default function Competitors() {
   const [stamp, setStamp] = React.useState<string | null>(null)
   const [q, setQ] = React.useState("")
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "deltaPct", asc: true })
+  const [promo, setPromo] = React.useState<PromoIntensity[] | null>(null)
+  const [camps, setCamps] = React.useState<PromoCampaign[]>([])
 
   React.useEffect(() => {
     freshness()
@@ -213,6 +319,12 @@ export default function Competitors() {
     competitorTable(4000)
       .then(setRows)
       .catch(() => setRows([]))
+    promoIntensity(14)
+      .then(setPromo)
+      .catch(() => setPromo([]))
+    promoCampaigns()
+      .then(setCamps)
+      .catch(() => setCamps([]))
   }, [])
 
   const toggle = (arr: string[], x: string, set: (v: string[]) => void) =>
@@ -259,7 +371,7 @@ export default function Competitors() {
 
   return (
     <div className="mx-auto max-w-[1536px] px-4 pb-6 pt-6 sm:px-6 sm:pb-8 sm:pt-8">
-      <style>{"@keyframes viewIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}"}</style>
+      <style>{"@keyframes viewIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
 
       <div className="grid gap-4 lg:grid-cols-[minmax(190px,0.8fr)_4fr]">
         <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
@@ -333,7 +445,9 @@ export default function Competitors() {
             </span>
           </header>
 
-          {active?.status !== "live" ? (
+          {view === "promo" ? (
+            <PromoView rows={promo} camps={camps} />
+          ) : active?.status !== "live" ? (
             <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
               <p className="text-[13px] font-medium text-gray-600">{active?.desc}</p>
               <p className="text-[12px] text-gray-400">데이터 연결 예정 — 뷰 확정 후 구현</p>
