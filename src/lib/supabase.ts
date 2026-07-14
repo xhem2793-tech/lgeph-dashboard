@@ -553,3 +553,43 @@ export async function competitorTable(max = 6000): Promise<PriceRow[]> {
     }
   })
 }
+
+/** 정부 규제 동향 — 통관·물류·세무·관세·표준. Critical 우선, 최신순 */
+export type RegAlert = {
+  id: number
+  date: string
+  effectiveDate: string | null
+  agency: string
+  docNo: string | null
+  category: string
+  severity: "Critical" | "High" | "Medium"
+  title: string
+  titleEn: string | null
+  summary: string
+  summaryEn: string | null
+  implication: string | null
+  actions: string | null
+  source: string
+  url: string
+}
+
+export async function regAlerts(limit = 5): Promise<RegAlert[]> {
+  const rows = await sb("v_reg_alerts?select=*&limit=" + limit)
+  return (rows ?? []).map((r: any) => ({
+    id: r.id,
+    date: r.date,
+    effectiveDate: r.effective_date ?? null,
+    agency: r.agency,
+    docNo: r.doc_no ?? null,
+    category: r.category,
+    severity: r.severity,
+    title: r.title,
+    titleEn: r.title_en ?? null,
+    summary: r.summary,
+    summaryEn: r.summary_en ?? null,
+    implication: r.implication ?? null,
+    actions: r.actions ?? null,
+    source: r.source,
+    url: r.url,
+  }))
+}
