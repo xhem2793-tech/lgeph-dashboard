@@ -102,7 +102,6 @@ const PRODUCTS: { group: string; items: { key: string; chips: string[] }[] }[] =
   },
 ]
 
-const ALL_PRODUCTS = PRODUCTS.flatMap((g) => g.items)
 
 const PAGE = 20
 
