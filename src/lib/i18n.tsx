@@ -55,9 +55,9 @@ export function useLang() {
 
 export const DICT = {
   nav_overview: { ko: "대시보드", en: "Overview" },
-  nav_economy: { ko: "경제지표", en: "Economy" },
-  nav_news: { ko: "주요뉴스", en: "News" },
-  nav_competitors: { ko: "경쟁사 가격", en: "Prices" },
+  nav_economy: { ko: "주요 지표", en: "Indicators" },
+  nav_news: { ko: "주요 뉴스", en: "News" },
+  nav_competitors: { ko: "가격 동향", en: "Prices" },
   nav_calendar: { ko: "캘린더", en: "Calendar" },
   nav_appendix: { ko: "부록", en: "Appendix" },
   search_ph: { ko: "지표·뉴스·키워드 검색", en: "Search indicators, news, keywords" },
