@@ -442,23 +442,52 @@ function clean(s: string) {
     .trim()
 }
 
-/** 모델 suffix(모델코드) 추출 — 설명문 안에서 영문+숫자 조합의 마지막 토큰 */
-function modelCode(s: string) {
-  const bad = /^(KG|CU|FT|INCH|HP|TON|LED|OLED|QNED|SMART|TV|BUNDLE|MODEL|LG|SAMSUNG|SHARP|HISENSE|TCL|PANASONIC|MIDEA)$/i
-  const c = clean(s)
-    .split(/[\s(),/]+/)
+/** 모델 suffix(모델코드) — 항상 값을 만든다.
+ *  ① 제목에서 영문+숫자 코드 토큰 → ② URL slug에서 같은 규칙 → ③ 그래도 없으면 제목을 압축한 약식코드.
+ *  "—"는 만들지 않는다. 표에서 행을 특정할 수 없으면 데이터가 쓸모없기 때문.
+ */
+function pickCode(text: string) {
+  const bad = /^(KG|CU|FT|INCH|HP|TON|LED|OLED|QNED|SMART|TV|BUNDLE|MODEL|NEW|SALE|LG|SAMSUNG|SHARP|HISENSE|TCL|PANASONIC|MIDEA|CARRIER|SONY|WHIRLPOOL|CONDURA|FUJIDENZO)$/i
+  const c = (text || "")
+    .split(/[\s(),/_]+/)
     .map((x) => x.replace(/[^A-Za-z0-9.-]/g, ""))
     .filter((u) => {
       if (u.length < 4 || u.length > 22) return false
       if (!/[A-Za-z]/.test(u) || !/\d/.test(u)) return false
       if (/^\d/.test(u)) return false
       if (bad.test(u)) return false
+      if (/^\d+(KG|L|W|CUFT|INCH|HP)$/i.test(u)) return false
       return (u.match(/\d/g) || []).length >= 2
     })
-  return c.length ? c[c.length - 1] : "—"
+  return c.length ? c[c.length - 1].toUpperCase() : ""
 }
 
-/** PostgREST는 한 응답을 1,000행에서 자른다 — 페이지네이션으로 전량(≈1,800행) 가져온다 */
+function modelCode(model: string, url?: string | null) {
+  const title = clean(model)
+  const fromTitle = pickCode(title)
+  if (fromTitle) return fromTitle
+
+  if (url) {
+    const slug = decodeURIComponent(String(url).split("?")[0].split("#")[0].split("/").filter(Boolean).pop() ?? "")
+      .replace(/\.(html?|php|aspx?)$/i, "")
+      .replace(/-/g, " ")
+    const fromUrl = pickCode(slug)
+    if (fromUrl) return fromUrl
+  }
+
+  /** 코드가 아예 없는 리스팅(주로 TV) — 제목을 약식코드로 압축해 행을 특정 가능하게 만든다 */
+  const words = title
+    .replace(/\b(20\d\d|Model|Smart|Inch|inches|New|Sale|with|and|the)\b/gi, " ")
+    .split(/[\s(),/]+/)
+    .filter(Boolean)
+  const short = words
+    .slice(0, 4)
+    .map((w) => (/^\d/.test(w) ? w : w.slice(0, 4)))
+    .join("-")
+    .toUpperCase()
+  return short ? "≈" + short : "N/A"
+}
+
 export async function competitorTable(max = 6000): Promise<PriceRow[]> {
   const page = 1000
   const rows: any[] = []
@@ -478,7 +507,7 @@ export async function competitorTable(max = 6000): Promise<PriceRow[]> {
       brand: r.brand,
       category: r.category,
       model: clean(r.model),
-      code: modelCode(r.model),
+      code: modelCode(r.model, r.url),
       capacity: r.capacity ?? null,
       srp: num(r.srp),
       p0,
