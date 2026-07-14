@@ -54,6 +54,40 @@ const ALL = GROUPS.flatMap((g) => g.items)
 const BRANDS = ["LG", "Samsung", "Panasonic", "TCL", "Midea", "Hisense"]
 const SHOPS = ["Anson's", "Abenson", "SM Appliance"]
 
+/** 세그먼트 — 유통 매장이 실제로 진열을 나누는 축(설치형태·도어·급) */
+const SEGMENTS: Record<string, { t: string; re: RegExp }[]> = {
+  에어컨: [
+    { t: "윈도우", re: /window/i },
+    { t: "스플릿", re: /split|wall[- ]?mount/i },
+    { t: "플로어·천장", re: /floor|ceiling|cassette/i },
+    { t: "포터블", re: /portable/i },
+    { t: "인버터", re: /inverter/i },
+  ],
+  냉장고: [
+    { t: "양문형(SxS)", re: /side by side|sxs/i },
+    { t: "상냉동", re: /top mount|two door|2 door/i },
+    { t: "하냉동·프렌치", re: /bottom|french|multi ?door/i },
+    { t: "인버터", re: /inverter/i },
+  ],
+  세탁기: [
+    { t: "프론트로드", re: /front load/i },
+    { t: "탑로드", re: /top load/i },
+    { t: "트윈워시", re: /twin/i },
+  ],
+  TV: [
+    { t: "OLED", re: /oled/i },
+    { t: "QNED·NANO", re: /qned|nano/i },
+    { t: "UHD·4K", re: /uhd|4k/i },
+  ],
+}
+
+/** 가격대 — 절대 금액이 아니라 "급". 프로모 판단이 급별로 갈린다 */
+const BANDS: { t: string; lo: number; hi: number }[] = [
+  { t: "엔트리 <₱25k", lo: 0, hi: 25000 },
+  { t: "미드 ₱25~60k", lo: 25000, hi: 60000 },
+  { t: "프리미엄 ₱60k+", lo: 60000, hi: Infinity },
+]
+
 const BADGE: Record<Status, { t: string; c: string }> = {
   live: { t: "LIVE", c: "border-emerald-200 bg-emerald-50 text-emerald-700" },
   next: { t: "SOON", c: "border-indigo-200 bg-indigo-50 text-indigo-600" },
