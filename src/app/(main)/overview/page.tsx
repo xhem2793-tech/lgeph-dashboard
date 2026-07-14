@@ -24,6 +24,19 @@ export type KpiEntryExtended = Omit<KpiEntry, "current" | "allowed" | "unit"> & 
 
 
 
+
+/** 요약 한 덩어리를 문단으로 — /news 팝업과 동일 규칙 */
+function para(s: string): string[] {
+  if (!s) return []
+  const out: string[] = []
+  for (const x of s.split(/(?<=\.)\s+/)) {
+    const last = out[out.length - 1]
+    if (last && (last + x).length < 170) out[out.length - 1] = last + " " + x
+    else out.push(x)
+  }
+  return out
+}
+
 export default function Overview() {
   const { t, pick, lang } = useLang()
   const [newsStamp, setNewsStamp] = React.useState<string | null>(null)
@@ -258,45 +271,89 @@ export default function Overview() {
         </>
       )}
       {modal ? (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" style={{ animation: modalClosing ? "backOut .24s ease both" : "backIn .24s ease both" }} onClick={closeModal}>
-          <div className="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: modalClosing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}>
-            <button type="button" onClick={closeModal} className="absolute right-4 top-4 z-10 shrink-0 rounded-full bg-white/80 p-1.5 text-gray-400 backdrop-blur transition-colors hover:bg-gray-100 hover:text-gray-700" aria-label="닫기">
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+          style={{ animation: modalClosing ? "backOut .24s ease both" : "backIn .24s ease both" }}
+          onClick={closeModal}
+        >
+          {/* 뉴스 페이지(/news)와 동일한 팝업 — 결론(SO WHAT) 먼저, 본문은 문단으로 */}
+          <div
+            className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+            style={{ animation: modalClosing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={closeModal}
+              aria-label="닫기"
+              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-1.5 text-gray-500 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 active:scale-95"
+            >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
-            <div className="min-w-0 pr-8">
-              {modal.category ? <span className="text-[11px] font-semibold text-indigo-600">{modal.category}</span> : null}
-              <h3 className="mt-0.5 text-lg font-bold leading-snug text-gray-900">{modal.title}</h3>
-              <p className="mt-1 text-xs text-gray-400">{modal.source} · {modal.date}</p>
-            </div>
+
             {modal.image ? (
-              <div className="mt-4 grid gap-5 md:grid-cols-3">
-                <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 md:col-span-1 md:aspect-auto md:h-full md:min-h-[140px]">
-                  <img src={modal.image} alt="" className="h-full w-full object-cover" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
+              <div className="h-[200px] w-full shrink-0 overflow-hidden bg-gray-100">
+                <img
+                  src={modal.image}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  onError={(ev) => {
+                    const el = ev.currentTarget.parentElement
+                    if (el) el.style.display = "none"
+                  }}
+                />
+              </div>
+            ) : null}
+
+            <div className="overflow-y-auto px-7 pb-7 pt-5">
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500">
+                {modal.category ? <span className="font-semibold text-indigo-600">{modal.category}</span> : null}
+                {modal.source ? (
+                  <>
+                    <span className="text-gray-300">·</span>
+                    <span>{modal.source}</span>
+                  </>
+                ) : null}
+                {modal.date ? (
+                  <>
+                    <span className="text-gray-300">·</span>
+                    <span className="num">{modal.date}</span>
+                  </>
+                ) : null}
+              </div>
+
+              <h3 className="mt-2 text-[24px] font-bold leading-[1.35] tracking-tight text-gray-900">{modal.title}</h3>
+
+              {modal.ai ? (
+                <div className="mt-4 rounded-xl border-l-[3px] border-indigo-500 bg-indigo-50/60 px-4 py-3">
+                  <p className="text-[10px] font-bold tracking-widest text-indigo-600">SO WHAT</p>
+                  <p className="mt-1 text-[15px] leading-[1.75] text-gray-800">{modal.ai}</p>
                 </div>
-                <div className="min-w-0 md:col-span-2">
-                  {modal.summary ? (
-                    <>
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>
-                      <p className="mt-1 text-sm leading-relaxed text-gray-700">{modal.summary}</p>
-                    </>
-                  ) : null}
+              ) : null}
+
+              {modal.summary ? (
+                <div className="mt-5">
+                  {modal.isCal ? null : <p className="text-[10px] font-bold tracking-widest text-gray-400">본문 요약</p>}
+                  <div className="mt-2 space-y-3">
+                    {para(modal.summary as string).map((p: string, i: number) => (
+                      <p key={i} className="text-[15px] leading-[1.8] text-gray-700">{p}</p>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ) : modal.summary ? (
-              <div className="mt-4">
-                {modal.isCal ? null : <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">본문 요약</p>}
-                <p className={"leading-relaxed text-gray-700 " + (modal.isCal ? "text-[16px]" : "mt-1 text-sm")}>{modal.summary}</p>
-              </div>
-            ) : null}
-            {modal.ai ? (
-              <div className="mt-4 rounded-xl bg-indigo-50 p-4">
-                <p className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600"><span className="rounded bg-indigo-600 px-1 text-[10px] text-white">AI</span> 분석</p>
-                <p className="mt-1.5 text-sm leading-relaxed text-gray-700">{modal.ai}</p>
-              </div>
-            ) : null}
-            {modal.url ? (
-              <a href={modal.url} target="_blank" rel="noreferrer" className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700">원문 보기 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M7 17L17 7M17 7H8M17 7v9" /></svg></a>
-            ) : null}
+              ) : null}
+
+              {modal.url ? (
+                <a
+                  href={modal.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-[13px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95"
+                >
+                  원문 보기{modal.source ? " · " + modal.source : ""}
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M7 17L17 7M17 7H8M17 7v9" /></svg>
+                </a>
+              ) : null}
+            </div>
           </div>
         </div>
       ) : null}
