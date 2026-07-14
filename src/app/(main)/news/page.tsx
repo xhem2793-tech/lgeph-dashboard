@@ -35,6 +35,7 @@ type Doc = {
   id: string
   kind: Kind
   topic: string
+  product: string
   title: string
   summary: string
   so: string
@@ -74,6 +75,34 @@ const W: Record<string, number> = {
   "규제·정책": 1.1,
   인사이트: 0.9,
 }
+
+/** 제품별 보기 — PD 조직 그대로. 각 제품군에 걸리는 지표를 함께 묶는다 */
+const PRODUCTS: { group: string; items: { key: string; chips: string[] }[] }[] = [
+  {
+    group: "CE — 생활가전",
+    items: [
+      { key: "에어컨·RAC", chips: ["electricity", "heat_index", "cpi"] },
+      { key: "냉장고", chips: ["electricity", "cpi", "fx"] },
+      { key: "세탁기·건조기", chips: ["electricity", "cpi"] },
+      { key: "TV·오디오", chips: ["cpi", "fx", "policy_rate"] },
+      { key: "에어케어·정수기", chips: ["heat_index", "cpi"] },
+    ],
+  },
+  {
+    group: "B2B — 공조·솔루션",
+    items: [
+      { key: "칠러·데이터센터", chips: ["electricity", "policy_rate"] },
+      { key: "SAC·VRF", chips: ["policy_rate", "electricity"] },
+      { key: "사이니지·상업용TV", chips: ["policy_rate", "fx"] },
+    ],
+  },
+  {
+    group: "공통",
+    items: [{ key: "전 제품 영향", chips: ["fx", "cpi", "diesel"] }],
+  },
+]
+
+const ALL_PRODUCTS = PRODUCTS.flatMap((g) => g.items)
 
 const PAGE = 20
 
@@ -341,7 +370,9 @@ function para(s: string): string[] {
 
 export default function Page() {
   const { pick } = useLang()
+  const [mode, setMode] = React.useState<"topic" | "product">("topic")
   const [menu, setMenu] = React.useState("전체")
+  const [prod, setProd] = React.useState("에어컨·RAC")
   const [sort, setSort] = React.useState<"new" | "impact">("new")
   const [q, setQ] = React.useState("")
   const [page, setPage] = React.useState(1)
@@ -386,7 +417,7 @@ export default function Page() {
 
   React.useEffect(() => {
     setPage(1)
-  }, [menu, sort, q])
+  }, [menu, sort, q, mode, prod])
 
   /** 세 소스를 표준형으로 */
   const newsDocs: Doc[] = React.useMemo(
@@ -397,6 +428,7 @@ export default function Page() {
           id: "n" + f.id,
           kind: "news" as Kind,
           topic: f.topic,
+          product: f.product,
           title: pick(f.title, f.titleEn) as string,
           summary: pick(f.summary, f.summaryEn) as string,
           so: pick(f.ai, f.aiEn) as string,
@@ -415,6 +447,7 @@ export default function Page() {
         id: "r" + r.id,
         kind: "reg" as Kind,
         topic: "규제·정책",
+        product: "전 제품 영향",
         title: pick(r.title, r.titleEn) as string,
         summary: pick(r.summary, r.summaryEn) as string,
         so: r.implication ?? "",
@@ -437,6 +470,7 @@ export default function Page() {
         id: "i" + p.id,
         kind: "insight" as Kind,
         topic: "인사이트",
+        product: "전 제품 영향",
         title: pick(p.title, p.titleEn) as string,
         summary: (pick(p.summary, p.summaryEn) as string) || (pick(p.dek, p.dekEn) as string) || "",
         so: pick(p.whyMatters, p.whyMattersEn) as string,
@@ -457,8 +491,19 @@ export default function Page() {
     return m
   }, [all])
 
+  const prodCounts = React.useMemo(() => {
+    const m: Record<string, number> = {}
+    for (const x of all) m[x.product] = (m[x.product] ?? 0) + 1
+    return m
+  }, [all])
+
   const shown = React.useMemo(() => {
-    let d = menu === "전체" ? all : all.filter((x) => x.topic === menu)
+    let d =
+      mode === "product"
+        ? all.filter((x) => x.product === prod)
+        : menu === "전체"
+          ? all
+          : all.filter((x) => x.topic === menu)
     const k = q.trim().toLowerCase()
     if (k) d = d.filter((x) => (x.title + " " + x.summary + " " + x.so + " " + x.source).toLowerCase().includes(k))
     if (sort === "impact") {
@@ -478,7 +523,7 @@ export default function Page() {
       d = [...d].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
     }
     return d
-  }, [all, menu, q, sort, chips])
+  }, [all, menu, q, sort, chips, mode, prod])
 
   const pages = Math.max(1, Math.ceil(shown.length / PAGE))
   const cur = Math.min(page, pages)
@@ -515,40 +560,93 @@ export default function Page() {
         >
           <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
             <p className="text-[14px] font-bold tracking-tight text-gray-900">
-              주제 <span className="num text-[11px] font-medium text-gray-500">{all.length}</span>
+              보기 <span className="num text-[11px] font-medium text-gray-500">{all.length}</span>
             </p>
-            <span className="text-[10px] text-gray-500">필터</span>
+            <span className="text-[10px] text-gray-500">주제 / 제품</span>
           </div>
-          <div className="px-3 py-3">
-            <div className="flex flex-col gap-0.5">
-              {MENUS.map((m, i) => (
-                <React.Fragment key={m.key}>
-                  {i === 7 ? <div className="my-1 border-t border-gray-100" /> : null}
-                  <button
-                    type="button"
-                    onClick={() => setMenu(m.key)}
-                    className={
-                      "group rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
-                      (menu === m.key ? "bg-indigo-50" : "hover:bg-indigo-50/40")
-                    }
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <span
-                        className={
-                          "flex-1 text-[13px] transition-colors duration-300 " +
-                          (menu === m.key ? "font-semibold text-indigo-700" : "font-medium text-gray-800 group-hover:text-indigo-600")
-                        }
-                      >
-                        {m.label}
-                      </span>
-                      <span className="num shrink-0 text-[10px] text-gray-400">{counts[m.key] ?? 0}</span>
-                    </span>
-                    <span className="block text-[11px] leading-snug text-gray-500">{m.desc}</span>
-                  </button>
-                </React.Fragment>
+
+          {/* 주제별 ↔ 제품별 — PD는 자기 제품군만 보면 된다 */}
+          <div className="px-3 pt-2.5">
+            <div className="flex gap-0.5 rounded-lg bg-gray-100 p-0.5">
+              {([["topic", "주제별"], ["product", "제품별"]] as const).map(([k, t]) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setMode(k)}
+                  className={
+                    "flex-1 rounded-md py-1 text-[11.5px] font-medium transition-all duration-300 ease-out active:scale-95 " +
+                    (mode === k ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-indigo-600")
+                  }
+                >
+                  {t}
+                </button>
               ))}
             </div>
           </div>
+
+          {mode === "topic" ? (
+            <div className="px-3 py-3">
+              <div className="flex flex-col gap-0.5">
+                {MENUS.map((m, i) => (
+                  <React.Fragment key={m.key}>
+                    {i === 7 ? <div className="my-1 border-t border-gray-100" /> : null}
+                    <button
+                      type="button"
+                      onClick={() => setMenu(m.key)}
+                      className={
+                        "group rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                        (menu === m.key ? "bg-indigo-50" : "hover:bg-indigo-50/40")
+                      }
+                    >
+                      <span className="flex items-center gap-1.5">
+                        <span
+                          className={
+                            "flex-1 text-[13px] transition-colors duration-300 " +
+                            (menu === m.key ? "font-semibold text-indigo-700" : "font-medium text-gray-800 group-hover:text-indigo-600")
+                          }
+                        >
+                          {m.label}
+                        </span>
+                        <span className="num shrink-0 text-[10px] text-gray-400">{counts[m.key] ?? 0}</span>
+                      </span>
+                      <span className="block text-[11px] leading-snug text-gray-500">{m.desc}</span>
+                    </button>
+                  </React.Fragment>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="px-3 py-3">
+              {PRODUCTS.map((g) => (
+                <div key={g.group} className="mb-2 last:mb-0">
+                  <p className="px-1 pb-1 pt-1.5 text-[10px] font-semibold tracking-wide text-gray-400">{g.group}</p>
+                  <div className="flex flex-col gap-0.5">
+                    {g.items.map((it) => (
+                      <button
+                        key={it.key}
+                        type="button"
+                        onClick={() => setProd(it.key)}
+                        className={
+                          "group flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                          (prod === it.key ? "bg-indigo-50" : "hover:bg-indigo-50/40")
+                        }
+                      >
+                        <span
+                          className={
+                            "text-[13px] transition-colors duration-300 " +
+                            (prod === it.key ? "font-semibold text-indigo-700" : "font-medium text-gray-800 group-hover:text-indigo-600")
+                          }
+                        >
+                          {it.key}
+                        </span>
+                        <span className="num shrink-0 text-[10px] text-gray-400">{prodCounts[it.key] ?? 0}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </aside>
 
         {/* ── 중앙 : 결론 앵커 + 피드 ── */}
@@ -559,7 +657,7 @@ export default function Page() {
         >
           <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
             <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
-              {active?.label}
+              {mode === "product" ? prod : active?.label}
               <span className="num text-[11px] font-medium text-gray-500">{shown.length}건</span>
             </h2>
             <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
@@ -569,6 +667,21 @@ export default function Page() {
               </span>
             </span>
           </header>
+
+          {mode === "product" ? (
+            <div className="mt-3 rounded-lg bg-indigo-50/60 px-3 py-2.5">
+              <p className="mb-1 text-[10px] font-bold tracking-widest text-indigo-600">이 제품군에 지금 걸린 것</p>
+              <div className="flex flex-wrap items-center gap-1.5">
+                {(ALL_PRODUCTS.find((p) => p.key === prod)?.chips ?? [])
+                  .map((k) => chips[k])
+                  .filter(Boolean)
+                  .map((c) => (
+                    <ChipPill key={c.k} c={c} />
+                  ))}
+                <span className="text-[11px] text-gray-500">· 관련 기사 {shown.length}건</span>
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <div className="flex gap-0.5 rounded-lg border border-gray-200 p-0.5">
@@ -627,7 +740,7 @@ export default function Page() {
             </div>
           </div>
 
-          <div key={menu + sort + cur + q} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
+          <div key={mode + menu + prod + sort + cur + q} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
             {feed === null ? (
               <div className="mt-3 flex flex-col gap-2">
                 {Array.from({ length: 8 }).map((_, i) => (
