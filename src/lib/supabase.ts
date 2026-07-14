@@ -602,6 +602,7 @@ export type FeedItem = {
   id: number
   date: string
   topic: string
+  product: string
   chipKeys: string[]
   title: string
   titleEn: string | null
@@ -627,6 +628,7 @@ export async function newsFeed(days = 30): Promise<FeedItem[]> {
     id: Number(r.id),
     date: r.date,
     topic: r.topic ?? "기타",
+    product: r.product ?? "전 제품 영향",
     chipKeys: (r.chip_keys ?? []) as string[],
     title: r.title,
     titleEn: r.title_en ?? null,
