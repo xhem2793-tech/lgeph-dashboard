@@ -7,7 +7,6 @@ import {
   regBoard,
   analysisPosts,
   weekDigest,
-  todayBrief,
   freshness,
   type WeekItem,
   fmtStamp,
@@ -99,6 +98,32 @@ function weekRange(d: Date) {
   const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6)
   const f = (x: Date) => x.getMonth() + 1 + "/" + x.getDate()
   return f(mon) + " – " + f(sun)
+}
+
+/** 이번 주 남은 일수(오늘 포함 X) · 주간 진행률 · 가장 급한 시행 D-day */
+function daysLeft(d: Date) {
+  return 6 - ((d.getDay() + 6) % 7)
+}
+
+function weekProgress(d: Date) {
+  return Math.round((((d.getDay() + 6) % 7) + 1) * (100 / 7))
+}
+
+function isTomorrow(s: string, today: Date) {
+  const t = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
+  const p = (x: Date) => x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0")
+  return s === p(t)
+}
+
+function urgent(week: WeekItem[]) {
+  const regs = week.filter((w) => w.src === "reg" && !w.past)
+  if (!regs.length) return "—"
+  const now = new Date()
+  const t = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const dd = regs
+    .map((w) => Math.round((new Date(w.date + "T00:00:00+08:00").getTime() - t) / 86400000))
+    .sort((a, b) => a - b)[0]
+  return dd <= 0 ? "오늘" : "D-" + dd
 }
 
 function weekNo(d: Date) {
@@ -326,7 +351,7 @@ export default function Page() {
   const [posts, setPosts] = React.useState<Awaited<ReturnType<typeof analysisPosts>>>([])
   const [stamp, setStamp] = React.useState<string | null>(null)
   const [week, setWeek] = React.useState<WeekItem[]>([])
-  const [call, setCall] = React.useState<{ text: string; owner: string | null } | null>(null)
+  const [showPast, setShowPast] = React.useState(false)
   const [modal, setModal] = React.useState<Doc | null>(null)
   const [closing, setClosing] = React.useState(false)
 
@@ -347,14 +372,13 @@ export default function Page() {
   }, [closeModal])
 
   React.useEffect(() => {
-    Promise.all([indicatorChips(), regBoard(40), analysisPosts(20), freshness(), weekDigest(), todayBrief()])
-      .then(([c, r, p, f, w, b]) => {
+    Promise.all([indicatorChips(), regBoard(40), analysisPosts(20), freshness(), weekDigest()])
+      .then(([c, r, p, f, w]) => {
         setChips(c)
         setRegs(r)
         setPosts(p)
         setStamp(f.news ?? null)
         setWeek(w)
-        if (b?.weeklyCall) setCall({ text: b.weeklyCall, owner: b.weeklyOwner ?? null })
       })
       .catch(() => {})
     newsFeed(0).then(setFeed).catch(() => setFeed([]))
@@ -529,23 +553,6 @@ export default function Page() {
 
         {/* ── 중앙 : 결론 앵커 + 피드 ── */}
         <div className="flex min-w-0 flex-col gap-4">
-        {call ? (
-          <section
-            className="rounded-xl border-2 border-indigo-200 bg-white p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md"
-            style={{ animation: "fadeUp .5s ease both", animationDelay: "0.08s" }}
-          >
-            <div className="mb-1.5 flex items-baseline justify-between gap-2">
-              <p className="text-[14px] font-bold tracking-tight text-gray-900">이번 주 한 줄</p>
-              <span className="flex items-center gap-1 text-[10px] text-gray-500">
-                {OURS}
-                <AiMark />
-                {call.owner ? "· " + call.owner : ""}
-              </span>
-            </div>
-            <p className="text-[13.5px] leading-relaxed text-gray-800">{call.text}</p>
-          </section>
-        ) : null}
-
         <section
           className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-300 hover:shadow-md"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.1s" }}
@@ -584,20 +591,37 @@ export default function Page() {
                 ? "영향도 = 주제 가중 × 연결지표 변동폭 × 신선도(14일 반감) · 규제는 severity × 시행 임박"
                 : "발행일 최신순"}
             </span>
-            <div className="relative min-w-[220px] flex-1">
+            <div className="group relative min-w-[220px] flex-1">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden
+                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" />
+              </svg>
               <input
                 value={q}
                 onChange={(ev) => setQ(ev.target.value)}
-                placeholder="제목·본문·SO WHAT·출처 검색"
-                className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 pr-16 text-[12px] outline-none transition-colors duration-300 focus:border-indigo-300"
+                placeholder="제목 · 본문 · SO WHAT · 출처 검색"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-8 pr-8 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]"
               />
               {q ? (
                 <button
                   type="button"
                   onClick={() => setQ("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-1 text-[11px] text-gray-400 transition-colors duration-200 hover:text-indigo-600"
+                  aria-label="검색어 지우기"
+                  className="absolute right-1.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90"
                 >
-                  지우기
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
                 </button>
               ) : null}
             </div>
@@ -755,43 +779,48 @@ export default function Page() {
 
         {/* ── 우 : 이번 주 요약(위) + 규제 상위 3건(아래) ── */}
         <aside className="flex h-fit flex-col gap-4 lg:sticky lg:top-[88px]" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.15s" }}>
-          {/* W## 이번 주 — 지표 발표와 규제 시행일을 한 줄에 섞어 본다 */}
+          {/* W## 이번 주 — 숫자로 먼저(진행·시행·급한 것), 그 다음 남은 일정 */}
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
             <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
               <p className="text-[14px] font-bold tracking-tight text-gray-900">
-                W{weekNo(today)} 이번 주 <span className="num text-[11px] font-medium text-gray-500">{weekRange(today)}</span>
+                W{weekNo(today)} <span className="num text-[11px] font-medium text-gray-500">{weekRange(today)}</span>
               </p>
-              <span className="flex items-center gap-1 text-[10px] text-gray-500">
-                월 09:00 갱신
-                <AiMark />
-              </span>
+              <span className="num text-[10px] text-gray-500">{daysLeft(today)}일 남음</span>
             </div>
 
             <div className="border-b border-gray-100 px-3 py-2.5">
-              <p className="mb-1.5 text-[10px] font-semibold tracking-wide text-gray-400">지나간 일</p>
-              {week.filter((w) => w.past).length === 0 ? (
-                <p className="text-[11px] text-gray-400">없음</p>
-              ) : (
-                <div className="flex flex-col gap-1.5">
-                  {week
-                    .filter((w) => w.past)
-                    .slice(0, 3)
-                    .map((w, i) => (
-                      <div key={i} className="flex gap-2">
-                        <span className="num shrink-0 pt-px text-[10px] text-gray-400">{w.date.slice(5).replace("-", "/")}</span>
-                        <span className="line-clamp-2 text-[11.5px] leading-snug text-gray-700">{pick(w.label, w.labelEn)}</span>
-                      </div>
-                    ))}
+              <div className="grid grid-cols-3 gap-1.5">
+                <div className="rounded-lg bg-gray-50 px-2 py-1.5">
+                  <p className="text-[9px] text-gray-500">발표</p>
+                  <p className="num text-[16px] font-semibold leading-tight text-gray-900">
+                    {week.filter((w) => w.src === "cal" && w.past).length}
+                    <span className="text-[10px] font-normal text-gray-400">/{week.filter((w) => w.src === "cal").length}</span>
+                  </p>
                 </div>
-              )}
+                <div className="rounded-lg bg-gray-50 px-2 py-1.5">
+                  <p className="text-[9px] text-gray-500">규제 시행</p>
+                  <p className="num text-[16px] font-semibold leading-tight text-red-700">
+                    {week.filter((w) => w.src === "reg").length}
+                  </p>
+                </div>
+                <div className="rounded-lg bg-gray-50 px-2 py-1.5">
+                  <p className="text-[9px] text-gray-500">가장 급한</p>
+                  <p className="num text-[16px] font-semibold leading-tight text-red-700">{urgent(week)}</p>
+                </div>
+              </div>
+
+              <div className="mt-2 h-1 overflow-hidden rounded-full bg-gray-100">
+                <div className="h-full rounded-full bg-indigo-500 transition-all duration-700 ease-out" style={{ width: weekProgress(today) + "%" }} />
+              </div>
+              <p className="mt-1 text-[9px] text-gray-400">주간 진행 · {"일월화수목금토"[today.getDay()]}요일</p>
             </div>
 
-            <div className="border-b border-gray-100 px-3 py-2.5">
+            <div className="px-3 py-2.5">
               <p className="mb-1.5 text-[10px] font-semibold tracking-wide text-gray-400">남은 일정</p>
               {week.filter((w) => !w.past).length === 0 ? (
                 <p className="text-[11px] text-gray-400">남은 일정 없음</p>
               ) : (
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-2">
                   {week
                     .filter((w) => !w.past)
                     .slice(0, 4)
@@ -799,19 +828,42 @@ export default function Page() {
                       <div key={i} className="flex gap-2">
                         <span
                           className={
-                            "num shrink-0 pt-px text-[10px] font-semibold " +
+                            "num w-[42px] shrink-0 pt-px text-[10px] font-semibold " +
                             (w.src === "reg" ? "text-red-600" : "text-indigo-600")
                           }
                         >
-                          {w.date.slice(5).replace("-", "/")}
+                          {isTomorrow(w.date, today) ? "내일" : w.date.slice(5).replace("-", "/")}
                         </span>
-                        <span className="line-clamp-2 text-[11.5px] leading-snug text-gray-700">{pick(w.label, w.labelEn)}</span>
+                        <span className="line-clamp-2 flex-1 text-[11.5px] leading-snug text-gray-700">
+                          {pick(w.label, w.labelEn)}
+                          <span className="ml-1 text-[10px] text-gray-400">· {w.category}</span>
+                        </span>
                       </div>
                     ))}
                 </div>
               )}
+              {week.filter((w) => w.past).length ? (
+                <button
+                  type="button"
+                  onClick={() => setShowPast((v) => !v)}
+                  className="mt-2 w-full rounded-md py-1 text-center text-[10px] text-indigo-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-50 active:scale-95"
+                >
+                  {showPast ? "지난 일정 접기" : "지난 일정 " + week.filter((w) => w.past).length + "건 보기 ›"}
+                </button>
+              ) : null}
+              {showPast ? (
+                <div className="mt-1.5 flex flex-col gap-1.5 border-t border-gray-100 pt-2">
+                  {week
+                    .filter((w) => w.past)
+                    .map((w, i) => (
+                      <div key={i} className="flex gap-2">
+                        <span className="num w-[42px] shrink-0 pt-px text-[10px] text-gray-400">{w.date.slice(5).replace("-", "/")}</span>
+                        <span className="line-clamp-2 flex-1 text-[11px] leading-snug text-gray-500">{pick(w.label, w.labelEn)}</span>
+                      </div>
+                    ))}
+                </div>
+              ) : null}
             </div>
-
           </div>
 
           {/* 규제 동향 — 상단 3건만, 나머지는 메뉴로 */}
