@@ -490,6 +490,33 @@ function modelCode(model: string, url?: string | null) {
   return short ? "≈" + short : "N/A"
 }
 
+/** 카테고리 재분류 — 스크래퍼는 매장 메뉴(4개 버킷)를 그대로 쓰지만,
+ *  실제 리스팅에는 제습기·모니터·사이니지·오디오·냉동고·건조기가 섞여 있다.
+ *  제품 성격이 다르면 가격 비교의 의미도 다르므로 제목 기준으로 다시 나눈다. */
+const CAT_RULES: { t: string; re: RegExp }[] = [
+  { t: "제습기", re: /dehumidif/i },
+  { t: "공기청정기", re: /air ?purifier|purifier/i },
+  { t: "정수기", re: /water (purifier|dispenser)/i },
+  { t: "청소기", re: /vacuum|cordzero|stick clean/i },
+  { t: "오디오", re: /soundbar|sound bar|speaker|xboom|home theater|audio system/i },
+  { t: "모니터", re: /monitor|ultragear|ultrawide|gaming display/i },
+  { t: "사이니지", re: /signage|video wall|commercial display|interactive touch/i },
+  { t: "프로젝터", re: /projector|cinebeam/i },
+  { t: "전자레인지·오븐", re: /microwave|oven|air fryer/i },
+  { t: "냉동고", re: /chest freezer|upright freezer|\bfreezer\b/i },
+  { t: "건조기", re: /\bdryer\b|heat pump dry/i },
+  { t: "세탁기", re: /washing machine|washer|twin ?wash|laundry/i },
+  { t: "냉장고", re: /refrigerator|fridge|side by side|inverter ref\b/i },
+  { t: "에어컨", re: /aircon|air ?condition|split type|window type|cassette|floor mounted|hvac|\bacu\b/i },
+  { t: "TV", re: /\btv\b|oled|qned|nano ?cell|uhd|4k smart|led tv/i },
+]
+
+function classify(model: string, fallback: string) {
+  const t = clean(model)
+  for (const r of CAT_RULES) if (r.re.test(t)) return r.t
+  return fallback ?? "기타"
+}
+
 export async function competitorTable(max = 6000): Promise<PriceRow[]> {
   const page = 1000
   const rows: any[] = []
@@ -507,7 +534,7 @@ export async function competitorTable(max = 6000): Promise<PriceRow[]> {
     return {
       retailer: r.retailer,
       brand: r.brand,
-      category: r.category,
+      category: classify(r.model, r.category),
       model: clean(r.model),
       code: modelCode(r.model, r.url),
       capacity: r.capacity ?? null,
