@@ -144,6 +144,20 @@ function TopicArt({ f, chip, big }: { f: FeedItem; chip: Chip | null; big?: bool
   )
 }
 
+
+/** 요약 한 덩어리를 2~3문단으로 쪼갠다 — 벽처럼 붙은 글은 아무도 안 읽는다 */
+function para(s: string): string[] {
+  if (!s) return []
+  const sentences = s.split(/(?<=\.)\s+/)
+  const out: string[] = []
+  for (const x of sentences) {
+    const last = out[out.length - 1]
+    if (last && (last + x).length < 170) out[out.length - 1] = last + " " + x
+    else out.push(x)
+  }
+  return out
+}
+
 export default function Page() {
   const { pick } = useLang()
   const [topic, setTopic] = React.useState("전체")
@@ -381,7 +395,7 @@ export default function Page() {
                       }}
                       className="group -mx-2 flex cursor-pointer gap-3 rounded-lg px-2 py-3 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 active:scale-[.997]"
                     >
-                      <div className={"shrink-0 overflow-hidden rounded-md bg-gray-100 " + (isLead ? "hidden h-[128px] w-[208px] sm:block" : "hidden h-[62px] w-[104px] sm:block")}>
+                      <div className={"shrink-0 overflow-hidden rounded-md bg-gray-100 " + (isLead ? "hidden h-[176px] w-[280px] sm:block" : "hidden h-[92px] w-[148px] sm:block")}>
                         {f.image ? (
                           <img
                             src={f.image}
@@ -538,12 +552,12 @@ export default function Page() {
 
       {modal ? (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
           style={{ animation: closing ? "backOut .24s ease both" : "backIn .24s ease both" }}
           onClick={closeModal}
         >
           <div
-            className="relative max-h-[85vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-6 shadow-2xl"
+            className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
             style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
             onClick={(ev) => ev.stopPropagation()}
           >
@@ -551,73 +565,88 @@ export default function Page() {
               type="button"
               onClick={closeModal}
               aria-label="닫기"
-              className="absolute right-4 top-4 z-10 shrink-0 rounded-full bg-white/80 p-1.5 text-gray-400 backdrop-blur transition-colors duration-300 hover:bg-gray-100 hover:text-gray-700"
+              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-1.5 text-gray-500 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 active:scale-95"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>
 
-            <div className="min-w-0 pr-8">
-              <span className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] font-semibold text-indigo-600">{modal.topic}</span>
+            <div className="h-[200px] w-full shrink-0 overflow-hidden bg-gray-100">
+              {modal.image ? (
+                <img
+                  src={modal.image}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  onError={(ev) => {
+                    ev.currentTarget.style.display = "none"
+                  }}
+                />
+              ) : (
+                <TopicArt f={modal} chip={lead(modal, chips)} big />
+              )}
+            </div>
+
+            <div className="overflow-y-auto px-7 pb-7 pt-5">
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500">
+                <span className="font-semibold text-indigo-600">{modal.topic}</span>
+                <span className="text-gray-300">·</span>
+                <span>{modal.source}</span>
+                <span className="text-gray-300">·</span>
+                <span className="num">{modal.date}</span>
                 {modal.confidence ? (
-                  <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
+                  <span className="ml-1 rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
                     {modal.confidence}
                   </span>
                 ) : null}
-                {modal.chipKeys
-                  .map((k) => chips[k])
-                  .filter(Boolean)
-                  .map((c) => (
-                    <ChipPill key={c.k} c={c} />
+              </div>
+
+              <h3 className="mt-2 text-[24px] font-bold leading-[1.35] tracking-tight text-gray-900">
+                {pick(modal.title, modal.titleEn)}
+              </h3>
+
+              <div className="mt-4 rounded-xl border-l-[3px] border-indigo-500 bg-indigo-50/60 px-4 py-3">
+                <p className="text-[10px] font-bold tracking-widest text-indigo-600">SO WHAT</p>
+                <p className="mt-1 text-[15px] leading-[1.75] text-gray-800">{pick(modal.ai, modal.aiEn)}</p>
+              </div>
+
+              <div className="mt-5">
+                <p className="text-[10px] font-bold tracking-widest text-gray-400">본문 요약</p>
+                <div className="mt-2 space-y-3">
+                  {para(pick(modal.summary, modal.summaryEn) as string).map((p, i) => (
+                    <p key={i} className="text-[15px] leading-[1.8] text-gray-700">
+                      {p}
+                    </p>
                   ))}
-              </span>
-              <h3 className="mt-1 text-lg font-bold leading-snug text-gray-900">{pick(modal.title, modal.titleEn)}</h3>
-              <p className="num mt-1 text-xs text-gray-500">
-                {modal.source} · {modal.date}
-              </p>
-            </div>
-
-            <div className="mt-4 grid gap-5 md:grid-cols-3">
-              <div className="h-[150px] w-full overflow-hidden rounded-xl bg-gray-100 md:col-span-1 md:h-full md:min-h-[150px]">
-                {modal.image ? (
-                  <img
-                    src={modal.image}
-                    alt=""
-                    className="h-full w-full object-cover"
-                    onError={(ev) => {
-                      ev.currentTarget.style.display = "none"
-                    }}
-                  />
-                ) : (
-                  <TopicArt f={modal} chip={lead(modal, chips)} big />
-                )}
+                </div>
               </div>
-              <div className="min-w-0 md:col-span-2">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">본문 요약</p>
-                <p className="mt-1 text-sm leading-relaxed text-gray-700">{pick(modal.summary, modal.summaryEn)}</p>
-              </div>
-            </div>
 
-            <div className="mt-4 rounded-xl bg-indigo-50 p-4">
-              <p className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600">
-                <span className="rounded bg-indigo-600 px-1 text-[10px] text-white">AI</span> SO WHAT
-              </p>
-              <p className="mt-1.5 text-sm leading-relaxed text-gray-700">{pick(modal.ai, modal.aiEn)}</p>
-            </div>
+              {modal.chipKeys.map((k) => chips[k]).filter(Boolean).length ? (
+                <div className="mt-5 border-t border-gray-100 pt-4">
+                  <p className="mb-1.5 text-[10px] font-bold tracking-widest text-gray-400">연결 지표</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {modal.chipKeys
+                      .map((k) => chips[k])
+                      .filter(Boolean)
+                      .map((c) => (
+                        <ChipPill key={c.k} c={c} />
+                      ))}
+                  </div>
+                </div>
+              ) : null}
 
-            <a
-              href={modal.url}
-              target="_blank"
-              rel="noreferrer"
-              className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95"
-            >
-              원문 보기
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M7 17L17 7M17 7H8M17 7v9" />
-              </svg>
-            </a>
+              <a
+                href={modal.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-[13px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95"
+              >
+                원문 보기 · {modal.source}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M7 17L17 7M17 7H8M17 7v9" />
+                </svg>
+              </a>
+            </div>
           </div>
         </div>
       ) : null}
