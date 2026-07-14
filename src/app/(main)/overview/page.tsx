@@ -150,7 +150,7 @@ export default function Overview() {
                         { title: t("ce_title"), sub: "", rows: nCE, skip: 0, cat: "CE" },
                         { title: t("b2b_title"), sub: "", rows: nB2B, skip: 0, cat: "B2B" },
                       ].map((col) => (
-                        <div key={col.title} className="lg:min-h-[560px] lg:px-3">
+                        <div key={col.title} className="lg:min-h-[480px] lg:px-3">
                           <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
                             <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{col.title}</span>
                             <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
@@ -160,12 +160,12 @@ export default function Overview() {
                             {(() => {
                               // 각 열의 상단은 반드시 사진 — 리드에 이미지가 없으면
                               // 이미지 있는 최신 기사를 끌어올린다(야후식). 순서만 바꿀 뿐 기사를 지어내지 않음
-                              const rows = col.rows.slice(col.skip, col.skip + 5)
+                              const rows = col.rows.slice(col.skip, col.skip + 4)
                               const li = rows.findIndex((r: any) => r.image)
                               if (li > 0) rows.unshift(rows.splice(li, 1)[0])
                               return rows
                             })().map((n, i) => (
-                              <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className={"group flex w-full flex-col overflow-hidden py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 " + (i === 0 ? "h-[240px]" : "h-[86px]")}>
+                              <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className={"group -mx-2 flex w-full flex-col overflow-hidden rounded-lg px-2 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 " + (i === 0 ? "h-[240px]" : "h-[86px]")}>
                                 {i === 0 && n.image ? (
                                   <div className="mb-2 h-[150px] w-full overflow-hidden rounded-lg bg-gray-100">
                                     <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
@@ -179,7 +179,7 @@ export default function Overview() {
                         </div>
                       ))}
                       {/* 뉴스가 마르는 날에도 우리가 쓴 글은 있다 */}
-                      <div className="lg:min-h-[560px]">
+                      <div className="lg:min-h-[480px]">
                         <AnalysisColumn />
                       </div>
                     </div>
@@ -192,8 +192,8 @@ export default function Overview() {
                       <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
                     </a>
                     <div className="flex flex-col divide-y divide-gray-100">
-                      {nMain.slice(1, 10).map((n, i) => (
-                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5">
+                      {nMain.slice(1, 9).map((n, i) => (
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group -mx-2 rounded-lg px-2 py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40">
                           <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{pick(n.title, (n as any).titleEn)}</p>
                           <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-4 text-gray-400"><span className="min-w-0 truncate">{n.source}</span><span className="shrink-0">·</span><span className="shrink-0">{n.date}</span></p>
                         </button>
