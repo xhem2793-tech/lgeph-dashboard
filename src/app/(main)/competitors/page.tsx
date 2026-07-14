@@ -164,6 +164,8 @@ export default function Competitors() {
   const [cat, setCat] = React.useState("전체")
   const [brands, setBrands] = React.useState<string[]>(["LG"])
   const [shops, setShops] = React.useState<string[]>([...SHOPS])
+  const [seg, setSeg] = React.useState("전체")
+  const [band, setBand] = React.useState("전체")
   const [onlyMoved, setOnlyMoved] = React.useState(false)
   const [rows, setRows] = React.useState<PriceRow[] | null>(null)
   const [stamp, setStamp] = React.useState<string | null>(null)
@@ -203,7 +205,7 @@ export default function Competitors() {
       if (y == null) return -1
       return (typeof x === "number" ? x - y : String(x).localeCompare(String(y))) * dir
     })
-  }, [rows, cat, brands, shops, onlyMoved, q, sort])
+  }, [rows, cat, seg, band, brands, shops, onlyMoved, q, sort])
 
   const moved = data.filter((r) => r.deltaPct != null && r.deltaPct !== 0)
   const cuts = moved.filter((r) => (r.deltaPct ?? 0) < 0)
@@ -267,9 +269,6 @@ export default function Competitors() {
               ))}
             </div>
           </Section>
-              </div>
-            </Section>
-          ))}
 
           <div className="border-t border-gray-100 px-3 py-2.5">
             <button
