@@ -795,3 +795,39 @@ export async function promoCampaigns() {
     collectedDate: r.collected_date as string,
   })) as PromoCampaign[]
 }
+
+/* ── 경제캘린더 ─────────────────────────────────────────────────── */
+export type CalEvent = {
+  date: string
+  category: string
+  importance: number
+  event: string
+  releaseTime: string | null
+  indicatorKey: string | null
+  actual: number | null
+  previous: number | null
+  forecast: string | null
+  unit: string | null
+  past: boolean
+  today: boolean
+}
+
+export async function calendarEvents(from: string, to: string) {
+  const rows = await sb(
+    `v_calendar_month?select=*&date=gte.${from}&date=lte.${to}&order=date.asc`,
+  )
+  return rows.map((r) => ({
+    date: r.date as string,
+    category: (r.category ?? "기타") as string,
+    importance: String(r.importance ?? "").length,
+    event: r.event as string,
+    releaseTime: (r.release_time ?? null) as string | null,
+    indicatorKey: (r.indicator_key ?? null) as string | null,
+    actual: num(r.actual),
+    previous: num(r.previous),
+    forecast: (r.forecast ?? null) as string | null,
+    unit: (r.unit ?? null) as string | null,
+    past: Boolean(r.past),
+    today: Boolean(r.today),
+  })) as CalEvent[]
+}
