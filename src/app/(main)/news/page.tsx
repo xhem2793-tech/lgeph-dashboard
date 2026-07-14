@@ -131,42 +131,147 @@ function lead(d: Doc, chips: Record<string, Chip>): Chip | null {
   return [...arr].sort((a, b) => Math.abs(b.deltaPct ?? 0) - Math.abs(a.deltaPct ?? 0))[0]
 }
 
-/** 사진이 없으면 지어내지 않는다 — 저채도 자체 비주얼 */
-const ART: Record<string, { c: string; tag: string }> = {
-  "거시·금융": { c: "#eef2ff", tag: "MACRO" },
-  "정치·정책": { c: "#f1f5f9", tag: "POLICY" },
-  B2B: { c: "#eff6ff", tag: "B2B" },
-  "CE·유통": { c: "#f5f3ff", tag: "RETAIL" },
-  "기상·재난": { c: "#f0fdfa", tag: "WEATHER" },
-  "에너지·전력": { c: "#fffbeb", tag: "ENERGY" },
-  "규제·정책": { c: "#fef2f2", tag: "REGULATION" },
-  인사이트: { c: "#eef2ff", tag: "INSIGHT" },
+/** 사진이 없으면 지어내지 않는다 — 우리 데이터로 만든 자체 비주얼.
+ *  구성: 상단 액센트 바 · 토픽 라벨 · 큰 수치(지표값 또는 시행 D-day) · 워터마크 글리프 · 출처/날짜.
+ *  사진 자리를 "채우는 그림"이 아니라 "읽히는 정보"가 되게 만든다. */
+const ART: Record<string, { tint: string; accent: string; tag: string; glyph: React.ReactNode }> = {
+  "거시·금융": {
+    tint: "#f5f6ff",
+    accent: "#4f46e5",
+    tag: "MACRO",
+    glyph: (
+      <path d="M4 44 L18 30 L28 38 L44 16" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+    ),
+  },
+  "정치·정책": {
+    tint: "#f6f8fa",
+    accent: "#475569",
+    tag: "POLICY",
+    glyph: (
+      <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
+        <path d="M12 8h20l8 8v32H12z" />
+        <path d="M18 24h16M18 32h16M18 40h10" strokeLinecap="round" />
+      </g>
+    ),
+  },
+  B2B: {
+    tint: "#f2f8ff",
+    accent: "#0284c7",
+    tag: "B2B",
+    glyph: (
+      <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
+        <path d="M8 48V16h16v32M24 48V24h20v24" />
+        <path d="M14 24h4M14 32h4M14 40h4M30 32h8M30 40h8" strokeLinecap="round" />
+      </g>
+    ),
+  },
+  "CE·유통": {
+    tint: "#f8f6ff",
+    accent: "#7c3aed",
+    tag: "RETAIL",
+    glyph: (
+      <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
+        <path d="M10 18h32l-3 30H13z" />
+        <path d="M20 18v-4a6 6 0 0 1 12 0v4" strokeLinecap="round" />
+      </g>
+    ),
+  },
+  "기상·재난": {
+    tint: "#f1fdfa",
+    accent: "#0d9488",
+    tag: "WEATHER",
+    glyph: (
+      <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+        <path d="M6 22c6-8 14-8 20 0s14 8 20 0" />
+        <path d="M6 34c6-8 14-8 20 0s14 8 20 0" />
+        <path d="M6 46c6-8 14-8 20 0s14 8 20 0" />
+      </g>
+    ),
+  },
+  "에너지·전력": {
+    tint: "#fffaf0",
+    accent: "#d97706",
+    tag: "ENERGY",
+    glyph: (
+      <path d="M28 6 L14 32h12l-4 20 20-28H30l4-18z" fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round" />
+    ),
+  },
+  "규제·정책": {
+    tint: "#fff6f6",
+    accent: "#dc2626",
+    tag: "REGULATION",
+    glyph: (
+      <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
+        <circle cx="26" cy="26" r="16" />
+        <path d="M26 16v11l7 5" strokeLinecap="round" />
+      </g>
+    ),
+  },
+  인사이트: {
+    tint: "#f5f6ff",
+    accent: "#4f46e5",
+    tag: "INSIGHT",
+    glyph: (
+      <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
+        <path d="M26 6a16 16 0 0 1 10 28v6H16v-6A16 16 0 0 1 26 6z" />
+        <path d="M18 48h16" strokeLinecap="round" />
+      </g>
+    ),
+  },
 }
 
 function DocArt({ d, chip, big }: { d: Doc; chip: Chip | null; big?: boolean }) {
-  const a = ART[d.topic] ?? { c: "#f8fafc", tag: "NEWS" }
+  const a = ART[d.topic] ?? ART["거시·금융"]
+
+  /** 큰 수치 — 규제는 시행 D-day, 뉴스는 대표 지표. 둘 다 없으면 날짜 */
+  let big1 = ""
+  let sub = ""
+  if (d.kind === "reg") {
+    big1 = d.dDay == null ? "—" : d.dDay <= 0 ? "시행 중" : "D-" + d.dDay
+    sub = d.agency ?? ""
+  } else if (chip) {
+    big1 = (chip.unit === "₱" ? "₱" : "") + (chip.value ?? "—") + (chip.unit && chip.unit !== "₱" ? chip.unit : "")
+    sub = chip.label + (chip.deltaPct ? " " + (chip.deltaPct > 0 ? "▲" : "▼") + Math.abs(chip.deltaPct).toFixed(1) + "%" : "")
+  } else {
+    big1 = d.date.slice(5).replace("-", "/")
+    sub = d.topic
+  }
+
   return (
-    <div
-      className="flex h-full w-full flex-col justify-between overflow-hidden rounded-md border border-gray-200 p-2.5"
-      style={{ backgroundColor: a.c }}
-    >
-      <span className="text-[9px] font-semibold tracking-widest text-gray-500">{a.tag}</span>
-      {d.kind === "reg" ? (
-        <span className={"font-semibold leading-tight text-gray-700 " + (big ? "text-[15px]" : "text-[12px]")}>
-          {d.dDay == null ? d.agency : d.dDay <= 0 ? "시행 중 · " + d.agency : "시행 D-" + d.dDay}
+    <div className="relative h-full w-full overflow-hidden rounded-lg border border-gray-200" style={{ backgroundColor: a.tint }}>
+      {/* 상단 액센트 바 */}
+      <div className="absolute inset-x-0 top-0 h-[3px]" style={{ backgroundColor: a.accent }} />
+
+      {/* 워터마크 글리프 — 정보가 아니라 결, 아주 옅게 */}
+      <svg
+        viewBox="0 0 52 52"
+        className={"pointer-events-none absolute " + (big ? "-bottom-4 -right-3 h-[140px] w-[140px]" : "-bottom-2 -right-2 h-[74px] w-[74px]")}
+        style={{ color: a.accent, opacity: 0.1 }}
+        aria-hidden
+      >
+        {a.glyph}
+      </svg>
+
+      <div className={"relative flex h-full flex-col justify-between " + (big ? "p-5" : "p-2.5")}>
+        <span className="flex items-center gap-1">
+          <span className="inline-block h-[5px] w-[5px] rounded-full" style={{ backgroundColor: a.accent }} />
+          <span className="text-[9px] font-bold tracking-[0.14em] text-gray-500">{a.tag}</span>
         </span>
-      ) : chip ? (
-        <span className={"num font-semibold leading-tight text-gray-700 " + (big ? "text-[15px]" : "text-[12px]")}>
-          {chip.label} {chip.unit === "₱" ? "₱" : ""}
-          {chip.value ?? "—"}
-          {chip.unit && chip.unit !== "₱" ? chip.unit : ""}
+
+        <span className="flex flex-col">
+          <span
+            className={"num font-bold leading-none tracking-tight text-gray-900 " + (big ? "text-[34px]" : "text-[19px]")}
+            style={{ color: a.accent }}
+          >
+            {big1}
+          </span>
+          <span className={"mt-1 truncate font-medium text-gray-600 " + (big ? "text-[13px]" : "text-[10px]")}>{sub}</span>
         </span>
-      ) : (
-        <span className={"font-semibold leading-tight text-gray-600 " + (big ? "text-[15px]" : "text-[12px]")}>
-          {d.topic}
+
+        <span className={"num truncate text-gray-400 " + (big ? "text-[11px]" : "text-[9px]")}>
+          {d.source} · {d.date.slice(5).replace("-", "/")}
         </span>
-      )}
-      <span className="num text-[9px] text-gray-400">{d.date.slice(5).replace("-", "/")}</span>
+      </div>
     </div>
   )
 }
@@ -433,6 +538,11 @@ export default function Page() {
                 </button>
               ))}
             </div>
+            <span className="text-[10.5px] leading-snug text-gray-400">
+              {sort === "impact"
+                ? "영향도 = 주제 가중 × 연결지표 변동폭 × 신선도(14일 반감) · 규제는 severity × 시행 임박"
+                : "발행일 최신순"}
+            </span>
             <div className="relative min-w-[220px] flex-1">
               <input
                 value={q}
