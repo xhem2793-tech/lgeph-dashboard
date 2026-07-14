@@ -180,14 +180,25 @@ function AiMark() {
   )
 }
 
+/** 지표칩 — 기준 시점을 반드시 붙인다(월간 지표는 'N월').
+ *  6월 CPI를 5월 값으로 보여주던 사고가 여기서 났다: 값만 있고 기준이 없으면 아무도 못 잡는다.
+ *  변동은 물가·금리처럼 값 자체가 %인 지표는 %p 절대차, 나머지는 상대변화율 %. */
+function chipStamp(c: Chip) {
+  if (!c.asOf) return ""
+  if (c.freq === "monthly") return Number(c.asOf.slice(5, 7)) + "월"
+  return Number(c.asOf.slice(5, 7)) + "/" + Number(c.asOf.slice(8, 10))
+}
+
 function ChipPill({ c }: { c: Chip }) {
   const dv = c.deltaPct ?? 0
-  const strong = Math.abs(dv) >= 1
+  const pp = c.deltaUnit === "%p"
+  const strong = pp ? Math.abs(dv) >= 0.2 : Math.abs(dv) >= 1
   const up = dv > 0
   return (
     <a
       href={"/economy?k=" + c.k}
       onClick={(e) => e.stopPropagation()}
+      title={c.label + " · " + chipStamp(c) + " 기준"}
       className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-1.5 py-px text-[10px] leading-4 text-gray-600 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 active:scale-95"
     >
       <span>{c.label}</span>
@@ -198,9 +209,12 @@ function ChipPill({ c }: { c: Chip }) {
       </span>
       {dv ? (
         <span className={"num font-semibold " + (strong ? (up ? "text-red-600" : "text-emerald-600") : "text-gray-400")}>
-          {Math.abs(dv).toFixed(1)}%{up ? "↑" : "↓"}
+          {Math.abs(dv).toFixed(1)}
+          {c.deltaUnit}
+          {up ? "↑" : "↓"}
         </span>
       ) : null}
+      <span className="num text-gray-400">{chipStamp(c)}</span>
     </a>
   )
 }
@@ -311,7 +325,10 @@ function DocArt({ d, chip, big }: { d: Doc; chip: Chip | null; big?: boolean }) 
     sub = d.agency ?? ""
   } else if (chip) {
     big1 = (chip.unit === "₱" ? "₱" : "") + (chip.value ?? "—") + (chip.unit && chip.unit !== "₱" ? chip.unit : "")
-    sub = chip.label + (chip.deltaPct ? " " + (chip.deltaPct > 0 ? "▲" : "▼") + Math.abs(chip.deltaPct).toFixed(1) + "%" : "")
+    sub =
+      chip.label +
+      (chip.deltaPct ? " " + (chip.deltaPct > 0 ? "▲" : "▼") + Math.abs(chip.deltaPct).toFixed(1) + chip.deltaUnit : "") +
+      (chip.asOf ? " · " + (chip.freq === "monthly" ? Number(chip.asOf.slice(5, 7)) + "월" : chip.asOf.slice(5).replace("-", "/")) : "")
   } else {
     big1 = d.date.slice(5).replace("-", "/")
     sub = d.topic
