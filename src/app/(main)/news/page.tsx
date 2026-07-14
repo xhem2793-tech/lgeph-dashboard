@@ -407,6 +407,7 @@ export default function Page() {
   const [prod, setProd] = React.useState("에어컨·RAC")
   const [sort, setSort] = React.useState<"new" | "impact">("new")
   const [q, setQ] = React.useState("")
+  const [focused, setFocused] = React.useState(false)
   const [page, setPage] = React.useState(1)
   const [feed, setFeed] = React.useState<FeedItem[] | null>(null)
   const [chips, setChips] = React.useState<Record<string, Chip>>({})
@@ -711,7 +712,12 @@ export default function Page() {
             </div>
 
             {/* 검색 — 가운데, 끝은 동글게 */}
-            <div className="group relative mx-auto w-full max-w-[320px] flex-1">
+            <div
+              className={
+                "group relative mx-auto w-full flex-1 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " +
+                (focused || q ? "max-w-[416px]" : "max-w-[320px]")
+              }
+            >
               <svg
                 width="14"
                 height="14"
@@ -729,6 +735,8 @@ export default function Page() {
               <input
                 value={q}
                 onChange={(ev) => setQ(ev.target.value)}
+                onFocus={() => setFocused(true)}
+                onBlur={() => setFocused(false)}
                 placeholder="제목 · 본문 · SO WHAT · 출처 검색"
                 className="w-full rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]"
               />
