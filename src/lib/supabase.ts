@@ -593,3 +593,96 @@ export async function regAlerts(limit = 5): Promise<RegAlert[]> {
     url: r.url,
   }))
 }
+
+
+/** ── 주요뉴스(/news) ─────────────────────────────────────────
+ *  피드는 "기사 나열"이 아니다. 각 행은 제목·메타·지표칩·SO WHAT 4요소를 갖는다.
+ *  SO WHAT(ai_analysis)이 없는 기사는 행으로 나가지 않는다. */
+export type FeedItem = {
+  id: number
+  date: string
+  topic: string
+  chipKeys: string[]
+  title: string
+  titleEn: string | null
+  summary: string
+  summaryEn: string | null
+  ai: string
+  aiEn: string | null
+  source: string
+  url: string
+  image: string | null
+  confidence: string
+}
+
+export async function newsFeed(days = 7): Promise<FeedItem[]> {
+  const d = new Date(Date.now() - days * 86400000)
+  const from = d.toISOString().slice(0, 10)
+  const rows = await sb("v_news_feed?select=*&date=gte." + from + "&order=date.desc,id.desc&limit=300")
+  return (rows ?? []).map((r: any) => ({
+    id: Number(r.id),
+    date: r.date,
+    topic: r.topic ?? "기타",
+    chipKeys: (r.chip_keys ?? []) as string[],
+    title: r.title,
+    titleEn: r.title_en ?? null,
+    summary: r.summary ?? "",
+    summaryEn: r.summary_en ?? null,
+    ai: r.ai_analysis ?? "",
+    aiEn: r.ai_analysis_en ?? null,
+    source: r.source_name ?? "",
+    url: r.source_url,
+    image: r.image_url ?? null,
+    confidence: r.confidence ?? "",
+  }))
+}
+
+/** 뉴스가 움직인 지표 — 기사 chip_keys와 조인해 칩으로 렌더 */
+export type Chip = { k: string; label: string; value: number | null; unit: string; deltaPct: number | null; asOf: string | null }
+
+export async function indicatorChips(): Promise<Record<string, Chip>> {
+  const rows = await sb("v_indicator_chips?select=*")
+  const out: Record<string, Chip> = {}
+  for (const r of rows ?? []) {
+    out[r.k] = { k: r.k, label: r.label, value: num(r.value), unit: r.unit ?? "", deltaPct: num(r.delta_pct), asOf: r.as_of ?? null }
+  }
+  return out
+}
+
+/** 규제 액션보드 — Critical/High만 피드에 섞는다. d_day ≤ 7이면 최상단 */
+export type RegBoardItem = {
+  id: number
+  date: string
+  dDay: number | null
+  agency: string
+  category: string
+  severity: "Critical" | "High" | "Medium"
+  title: string
+  titleEn: string | null
+  summary: string
+  summaryEn: string | null
+  implication: string | null
+  actions: string | null
+  source: string
+  url: string
+}
+
+export async function regBoard(limit = 30): Promise<RegBoardItem[]> {
+  const rows = await sb("v_reg_board?select=*&limit=" + limit)
+  return (rows ?? []).map((r: any) => ({
+    id: Number(r.id),
+    date: r.date,
+    dDay: r.d_day == null ? null : Number(r.d_day),
+    agency: r.agency,
+    category: r.category,
+    severity: r.severity,
+    title: r.title,
+    titleEn: r.title_en ?? null,
+    summary: r.summary ?? "",
+    summaryEn: r.summary_en ?? null,
+    implication: r.implication ?? null,
+    actions: r.actions ?? null,
+    source: r.source ?? "",
+    url: r.url,
+  }))
+}
