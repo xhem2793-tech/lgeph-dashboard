@@ -13,10 +13,11 @@ import {
 } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
-/** 주요뉴스 — 경쟁사 가격 페이지와 같은 뼈대(좌 메뉴판 카드 + 우 콘텐츠 카드).
- *  각 행은 주제배지 · 제목 · 메타+지표칩 · 본문 요약 · SO WHAT 5층.
- *  SO WHAT 없는 기사는 행으로 나가지 않는다. 규제(Critical/High)는 피드 안에 적색 행으로 삽입.
- *  지표칩 클릭 → /economy?k=<key> */
+/** 주요뉴스 — 3분할(주제 메뉴 / 피드 / 규제 상시).
+ *  각 행은 주제배지 · 제목 · 메타+지표칩 · 본문 2줄 · SO WHAT.
+ *  좌·우 패널은 스크롤을 따라 붙고(sticky), 피드는 20건씩 페이지로 끊는다 —
+ *  한 화면에 140건을 쏟으면 아무것도 안 읽힌다.
+ *  애니메이션은 대시보드와 동일: fadeUp .5s ease(진입) · hover는 indigo-600 + 살짝 부상 · 클릭은 active:scale */
 
 type Topic = { key: string; label: string; desc: string }
 
@@ -30,13 +31,14 @@ const TOPICS: Topic[] = [
   { key: "에너지·전력", label: "에너지·전력", desc: "유가·전기요금·전력수급" },
 ]
 
-/** 기간 — 창을 좁히면 기사가 사라지는 게 아니라 안 보이는 것뿐. 기본 30일, 전체(0)까지 */
 const PERIODS = [
   { d: 7, t: "7일" },
   { d: 30, t: "30일" },
   { d: 90, t: "90일" },
   { d: 0, t: "전체" },
 ]
+
+const PAGE = 20
 
 function rel(s: string) {
   const d = new Date(s + "T00:00:00+08:00").getTime()
@@ -45,7 +47,8 @@ function rel(s: string) {
   const diff = Math.round((t - d) / 86400000)
   if (diff <= 0) return "오늘"
   if (diff === 1) return "어제"
-  return diff + "일 전"
+  if (diff < 7) return diff + "일 전"
+  return s.slice(5).replace("-", "/")
 }
 
 function weekNo(d: Date) {
@@ -69,7 +72,7 @@ function ChipPill({ c, on, onHover }: { c: Chip; on: boolean; onHover: (k: strin
       onMouseEnter={() => onHover(c.k)}
       onMouseLeave={() => onHover(null)}
       className={
-        "inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-[10px] leading-4 transition-all duration-200 hover:-translate-y-px hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 " +
+        "inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-[10px] leading-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 active:scale-95 " +
         (on ? "border-indigo-300 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600")
       }
     >
@@ -88,39 +91,59 @@ function ChipPill({ c, on, onHover }: { c: Chip; on: boolean; onHover: (k: strin
   )
 }
 
-
 /** 이미지 없는 기사의 대표 비주얼 — 남의 사진을 빌려오지 않는다.
- *  주제색 그라데이션 + 주제명 + 연결된 지표 키 + 출처로 만든 자체 카드(저작권·정직성 둘 다 해결). */
-const TOPIC_ART: Record<string, { g: string; icon: string }> = {
-  "거시·금융": { g: "from-indigo-600 to-indigo-800", icon: "₱" },
-  "정치·정책": { g: "from-slate-600 to-slate-800", icon: "§" },
-  B2B: { g: "from-sky-600 to-blue-800", icon: "▤" },
-  "CE·유통": { g: "from-violet-600 to-purple-800", icon: "◨" },
-  "기상·재난": { g: "from-teal-600 to-emerald-800", icon: "≈" },
-  "에너지·전력": { g: "from-amber-500 to-orange-700", icon: "⚡" },
+ *  주제색 + 도트 그리드 + 연결 지표(있으면) + 출처로 만든 자체 카드. */
+const TOPIC_ART: Record<string, { a: string; b: string; tag: string }> = {
+  "거시·금융": { a: "#4f46e5", b: "#312e81", tag: "MACRO" },
+  "정치·정책": { a: "#475569", b: "#1e293b", tag: "POLICY" },
+  B2B: { a: "#0284c7", b: "#0c4a6e", tag: "B2B" },
+  "CE·유통": { a: "#7c3aed", b: "#4c1d95", tag: "RETAIL" },
+  "기상·재난": { a: "#0d9488", b: "#134e4a", tag: "WEATHER" },
+  "에너지·전력": { a: "#f59e0b", b: "#b45309", tag: "ENERGY" },
 }
 
 function TopicArt({ f, chips, big }: { f: FeedItem; chips: Record<string, Chip>; big?: boolean }) {
-  const a = TOPIC_ART[f.topic] ?? { g: "from-gray-500 to-gray-700", icon: "•" }
+  const t = TOPIC_ART[f.topic] ?? { a: "#64748b", b: "#334155", tag: "NEWS" }
   const keys = f.chipKeys.map((k) => chips[k]).filter(Boolean).slice(0, 2)
   return (
-    <div className={"flex h-full w-full flex-col justify-between overflow-hidden rounded-lg bg-gradient-to-br p-2.5 " + a.g}>
-      <span className="flex items-center justify-between">
-        <span className="text-[10px] font-bold uppercase tracking-wider text-white/70">{f.topic}</span>
-        <span className={"font-bold text-white/40 " + (big ? "text-[28px]" : "text-[20px]")}>{a.icon}</span>
+    <div
+      className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-lg p-3"
+      style={{
+        background:
+          "radial-gradient(120% 120% at 100% 0%, " + t.a + " 0%, " + t.b + " 70%)",
+      }}
+    >
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.18]"
+        style={{
+          backgroundImage: "radial-gradient(#fff 1px, transparent 1px)",
+          backgroundSize: "10px 10px",
+        }}
+      />
+      <span className="relative flex items-center justify-between">
+        <span className="rounded bg-white/15 px-1.5 py-px text-[9px] font-bold tracking-widest text-white/90 backdrop-blur-sm">
+          {t.tag}
+        </span>
+        <span className={"font-bold leading-none text-white/30 " + (big ? "text-[26px]" : "text-[18px]")}>
+          {String(Number(f.date.slice(5, 7))) + "/" + String(Number(f.date.slice(8, 10)))}
+        </span>
       </span>
-      {keys.length ? (
-        <span className="flex flex-col gap-0.5">
-          {keys.map((c) => (
-            <span key={c.k} className="num text-[12px] font-semibold leading-tight text-white">
+
+      <span className="relative flex flex-col gap-0.5">
+        {keys.length ? (
+          keys.map((c) => (
+            <span key={c.k} className="num text-[13px] font-semibold leading-tight text-white">
               {c.label} {c.unit === "₱" ? "₱" : ""}
               {c.value ?? "—"}
               {c.unit && c.unit !== "₱" ? c.unit : ""}
             </span>
-          ))}
-        </span>
-      ) : null}
-      <span className="truncate text-[10px] text-white/70">{f.source}</span>
+          ))
+        ) : (
+          <span className="text-[13px] font-semibold leading-tight text-white/90">{f.topic}</span>
+        )}
+      </span>
+
+      <span className="relative truncate text-[10px] text-white/60">{f.source}</span>
     </div>
   )
 }
@@ -129,6 +152,8 @@ export default function Page() {
   const { pick } = useLang()
   const [days, setDays] = React.useState(30)
   const [topic, setTopic] = React.useState("전체")
+  const [q, setQ] = React.useState("")
+  const [page, setPage] = React.useState(1)
   const [feed, setFeed] = React.useState<FeedItem[] | null>(null)
   const [chips, setChips] = React.useState<Record<string, Chip>>({})
   const [regs, setRegs] = React.useState<RegBoardItem[]>([])
@@ -168,6 +193,10 @@ export default function Page() {
     newsFeed(days).then(setFeed).catch(() => setFeed([]))
   }, [days])
 
+  React.useEffect(() => {
+    setPage(1)
+  }, [topic, days, q])
+
   const rows = React.useMemo(() => (feed ?? []).filter((f) => f.ai && f.ai.trim().length > 0), [feed])
   const counts = React.useMemo(() => {
     const m: Record<string, number> = { 전체: rows.length }
@@ -175,10 +204,21 @@ export default function Page() {
     return m
   }, [rows])
 
-  const shown = topic === "전체" ? rows : rows.filter((r) => r.topic === topic)
-  const today = new Date()
-  const active = TOPICS.find((t) => t.key === topic)
-  /** 우측 패널 — Critical 먼저, 그 안에서 시행 임박순. 놓치면 비용이 되는 것부터 위로 */
+  const shown = React.useMemo(() => {
+    let d = topic === "전체" ? rows : rows.filter((r) => r.topic === topic)
+    const k = q.trim().toLowerCase()
+    if (k) {
+      d = d.filter((r) =>
+        (r.title + " " + r.summary + " " + r.ai + " " + r.source).toLowerCase().includes(k),
+      )
+    }
+    return d
+  }, [rows, topic, q])
+
+  const pages = Math.max(1, Math.ceil(shown.length / PAGE))
+  const cur = Math.min(page, pages)
+  const slice = shown.slice((cur - 1) * PAGE, cur * PAGE)
+
   const board = React.useMemo(() => {
     const rank = { Critical: 0, High: 1, Medium: 2 } as Record<string, number>
     return [...regs].sort((a, b) => {
@@ -190,23 +230,36 @@ export default function Page() {
     })
   }, [regs])
 
+  const today = new Date()
+  const active = TOPICS.find((t) => t.key === topic)
+
+  const go = (p: number) => {
+    setPage(p)
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
   return (
     <div className="px-4 py-4 sm:px-6">
-      <style>{"@keyframes viewIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
 
-      <a href="/news" className="group inline-flex items-baseline gap-1">
-        <h1 className="text-[20px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-          주요뉴스
-        </h1>
-        <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
-      </a>
-      <p className="num mt-0.5 text-[12px] text-gray-500">
-        W{weekNo(today)} · {today.getMonth() + 1}/{today.getDate()} · SO WHAT이 달린 승인 기사만 노출
-      </p>
+      <div style={{ animation: "fadeUp .5s ease both" }}>
+        <a href="/news" className="group inline-flex items-baseline gap-1">
+          <h1 className="text-[20px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
+            주요뉴스
+          </h1>
+          <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+        </a>
+        <p className="num mt-0.5 text-[12px] text-gray-500">
+          W{weekNo(today)} · {today.getMonth() + 1}/{today.getDate()} · SO WHAT이 달린 승인 기사만 노출
+        </p>
+      </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(190px,0.9fr)_minmax(0,3fr)_minmax(260px,1.15fr)]">
-        {/* ── 좌 : 메뉴판(경쟁사 가격과 동일 규격) ── */}
-        <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
+      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(190px,0.9fr)_minmax(0,3fr)_minmax(260px,1.15fr)]">
+        {/* ── 좌 : 주제 메뉴 (스크롤 따라붙음) ── */}
+        <aside
+          className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]"
+          style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}
+        >
           <div className="px-3 py-3">
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">주제</p>
             <div className="flex flex-col gap-0.5">
@@ -216,14 +269,14 @@ export default function Page() {
                   type="button"
                   onClick={() => setTopic(t.key)}
                   className={
-                    "group rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 hover:-translate-y-px active:scale-[.99] " +
+                    "group rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
                     (topic === t.key ? "bg-indigo-50" : "hover:bg-indigo-50/40")
                   }
                 >
                   <span className="flex items-center gap-1.5">
                     <span
                       className={
-                        "flex-1 text-[13px] transition-colors duration-200 " +
+                        "flex-1 text-[13px] transition-colors duration-300 " +
                         (topic === t.key
                           ? "font-semibold text-indigo-700"
                           : "font-medium text-gray-800 group-hover:text-indigo-600")
@@ -256,38 +309,16 @@ export default function Page() {
                   {regs.filter((r) => r.severity === "High").length}
                 </span>
               </span>
-              <span className="mt-1 text-[10px] leading-snug text-gray-400">
-                시행 임박순 · 우측 패널에 상시 노출
-              </span>
-            </div>
-          </div>
-
-          <div className="border-t border-gray-100 px-3 py-2.5">
-            <div className="grid grid-cols-4 gap-1 rounded-lg border border-gray-200 p-0.5">
-              {PERIODS.map((p) => (
-                <button
-                  key={p.d}
-                  type="button"
-                  onClick={() => setDays(p.d)}
-                  className={
-                    "rounded-md py-1 text-[11px] font-medium transition-all duration-200 active:scale-95 " +
-                    (days === p.d ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:text-indigo-600")
-                  }
-                >
-                  {p.t}
-                </button>
-              ))}
             </div>
           </div>
         </aside>
 
-        {/* ── 우 : 피드 카드 ── */}
+        {/* ── 중앙 : 피드 ── */}
         <section
-          key={topic + days}
-          className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
-          style={{ animation: "viewIn .32s cubic-bezier(.22,1,.36,1) both" }}
+          className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-300 hover:shadow-md"
+          style={{ animation: "fadeUp .5s ease both", animationDelay: "0.1s" }}
         >
-          <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 pb-2">
+          <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
             <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
               {active?.label}
               <span className="num text-[11px] font-medium text-gray-500">{shown.length}건</span>
@@ -300,91 +331,175 @@ export default function Page() {
             </span>
           </header>
 
-          <div className="mt-3 flex flex-col gap-2.5">
+          {/* 조회 바 — 기간 + 검색을 피드 바로 위에 (메뉴 맨 밑은 아무도 안 본다) */}
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="flex gap-0.5 rounded-lg border border-gray-200 p-0.5">
+              {PERIODS.map((p) => (
+                <button
+                  key={p.d}
+                  type="button"
+                  onClick={() => setDays(p.d)}
+                  className={
+                    "rounded-md px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " +
+                    (days === p.d
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
+                  }
+                >
+                  {p.t}
+                </button>
+              ))}
+            </div>
+            <div className="relative min-w-[220px] flex-1">
+              <input
+                value={q}
+                onChange={(ev) => setQ(ev.target.value)}
+                placeholder="제목·본문·SO WHAT·출처 검색"
+                className="w-full rounded-lg border border-gray-200 px-2.5 py-1.5 pr-16 text-[12px] outline-none transition-colors duration-300 focus:border-indigo-300"
+              />
+              {q ? (
+                <button
+                  type="button"
+                  onClick={() => setQ("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-1 text-[11px] text-gray-400 transition-colors duration-200 hover:text-indigo-600"
+                >
+                  지우기
+                </button>
+              ) : null}
+            </div>
+          </div>
+
+          <div key={topic + days + cur + q} className="mt-3 flex flex-col gap-2.5" style={{ animation: "viewIn .32s cubic-bezier(.22,1,.36,1) both" }}>
             {feed === null ? (
               <>
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="h-[168px] rounded-lg bg-gray-50" />
                 ))}
               </>
-            ) : shown.length === 0 ? (
-              <p className="py-10 text-center text-[12px] text-gray-500">해당 주제 기사 없음</p>
+            ) : slice.length === 0 ? (
+              <p className="py-10 text-center text-[12px] text-gray-500">조건에 맞는 기사 없음</p>
             ) : (
-              shown.map((f) => (
-                <React.Fragment key={f.id}>
-                  <div
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setModal(f)}
-                    onKeyDown={(ev) => {
-                      if (ev.key === "Enter") setModal(f)
-                    }}
-                    className="group flex cursor-pointer gap-4 rounded-lg bg-gray-50 p-3.5 text-left transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-lg hover:shadow-indigo-100"
-                  >
-                    {f.image ? (
-                      <div className="hidden h-[140px] w-[210px] shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:block">
-                        <img
-                          src={f.image}
-                          alt=""
-                          loading="lazy"
-                          className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                          onError={(ev) => {
-                            const el = ev.currentTarget.parentElement
-                            if (el) el.style.display = "none"
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="hidden h-[140px] w-[210px] shrink-0 sm:block">
-                        <TopicArt f={f} chips={chips} />
-                      </div>
-                    )}
-
-                    <div className="flex min-w-0 flex-1 flex-col">
-                      <div className="flex flex-wrap items-center gap-1">
-                        <span className="rounded bg-indigo-50 px-1.5 py-px text-[10px] font-bold leading-4 text-indigo-700">
-                          {f.topic}
-                        </span>
-                        <span className="text-[11px] text-gray-500">
-                          {f.source} · {rel(f.date)}
-                        </span>
-                        {f.chipKeys
-                          .map((k) => chips[k])
-                          .filter(Boolean)
-                          .map((c) => (
-                            <ChipPill key={c.k} c={c} on={hot === c.k} onHover={setHot} />
-                          ))}
-                      </div>
-
-                      <p className="mt-1 line-clamp-2 text-[16px] font-semibold leading-snug text-gray-900 transition-colors duration-200 group-hover:text-indigo-600">
-                        {pick(f.title, f.titleEn)}
-                      </p>
-
-                      <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-gray-600">
-                        {pick(f.summary, f.summaryEn)}
-                      </p>
-
-                      <p className="mt-auto line-clamp-2 border-l-2 border-indigo-500 pl-2 pt-1.5 text-[12px] leading-relaxed text-gray-700">
-                        <span className="mr-1 text-[10px] font-bold tracking-wider text-indigo-600">SO WHAT</span>
-                        {pick(f.ai, f.aiEn)}
-                      </p>
+              slice.map((f) => (
+                <div
+                  key={f.id}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setModal(f)}
+                  onKeyDown={(ev) => {
+                    if (ev.key === "Enter") setModal(f)
+                  }}
+                  className="group flex cursor-pointer gap-4 rounded-lg bg-gray-50 p-3.5 text-left transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-lg hover:shadow-indigo-100 active:scale-[.995]"
+                >
+                  {f.image ? (
+                    <div className="hidden h-[140px] w-[210px] shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:block">
+                      <img
+                        src={f.image}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        onError={(ev) => {
+                          const el = ev.currentTarget.parentElement
+                          if (el) el.style.display = "none"
+                        }}
+                      />
                     </div>
-                  </div>
+                  ) : (
+                    <div className="hidden h-[140px] w-[210px] shrink-0 sm:block">
+                      <TopicArt f={f} chips={chips} />
+                    </div>
+                  )}
 
-                </React.Fragment>
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <div className="flex flex-wrap items-center gap-1">
+                      <span className="rounded bg-indigo-50 px-1.5 py-px text-[10px] font-bold leading-4 text-indigo-700">
+                        {f.topic}
+                      </span>
+                      <span className="text-[11px] text-gray-500">
+                        {f.source} · {rel(f.date)}
+                      </span>
+                      {f.chipKeys
+                        .map((k) => chips[k])
+                        .filter(Boolean)
+                        .map((c) => (
+                          <ChipPill key={c.k} c={c} on={hot === c.k} onHover={setHot} />
+                        ))}
+                    </div>
+
+                    <p className="mt-1 line-clamp-2 text-[16px] font-semibold leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
+                      {pick(f.title, f.titleEn)}
+                    </p>
+
+                    <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-gray-600">
+                      {pick(f.summary, f.summaryEn)}
+                    </p>
+
+                    <p className="mt-auto line-clamp-2 border-l-2 border-indigo-500 pl-2 pt-1.5 text-[12px] leading-relaxed text-gray-700">
+                      <span className="mr-1 text-[10px] font-bold tracking-wider text-indigo-600">SO WHAT</span>
+                      {pick(f.ai, f.aiEn)}
+                    </p>
+                  </div>
+                </div>
               ))
             )}
           </div>
+
+          {/* 페이지 — 20건씩 */}
+          {feed && shown.length > PAGE ? (
+            <div className="mt-4 flex items-center justify-center gap-1 border-t border-gray-100 pt-3">
+              <button
+                type="button"
+                disabled={cur === 1}
+                onClick={() => go(cur - 1)}
+                className="rounded-md border border-gray-200 px-2 py-1 text-[11px] text-gray-600 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+              >
+                이전
+              </button>
+              {Array.from({ length: pages })
+                .map((_, i) => i + 1)
+                .filter((p) => p === 1 || p === pages || Math.abs(p - cur) <= 2)
+                .map((p, i, arr) => (
+                  <React.Fragment key={p}>
+                    {i > 0 && p - arr[i - 1] > 1 ? <span className="px-1 text-[11px] text-gray-400">…</span> : null}
+                    <button
+                      type="button"
+                      onClick={() => go(p)}
+                      className={
+                        "num min-w-[26px] rounded-md px-1.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " +
+                        (p === cur
+                          ? "bg-indigo-600 text-white shadow-sm"
+                          : "text-gray-600 hover:-translate-y-0.5 hover:bg-indigo-50 hover:text-indigo-600")
+                      }
+                    >
+                      {p}
+                    </button>
+                  </React.Fragment>
+                ))}
+              <button
+                type="button"
+                disabled={cur === pages}
+                onClick={() => go(cur + 1)}
+                className="rounded-md border border-gray-200 px-2 py-1 text-[11px] text-gray-600 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
+              >
+                다음
+              </button>
+            </div>
+          ) : null}
         </section>
 
-        {/* ── 우 : 규제·정책 상시 노출 ── */}
-        <aside className="h-fit lg:sticky lg:top-[96px]">
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+        {/* ── 우 : 규제 동향 (스크롤 따라붙음) ── */}
+        <aside
+          className="h-fit lg:sticky lg:top-[88px]"
+          style={{ animation: "fadeUp .5s ease both", animationDelay: "0.15s" }}
+        >
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
             <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
               <p className="text-[14px] font-bold tracking-tight text-gray-900">규제 동향</p>
-              <span className="num text-[10px] text-gray-500">Critical {regs.filter((r) => r.severity === "Critical").length} · High {regs.filter((r) => r.severity === "High").length}</span>
+              <span className="num text-[10px] text-gray-500">
+                Critical {regs.filter((r) => r.severity === "Critical").length} · High{" "}
+                {regs.filter((r) => r.severity === "High").length}
+              </span>
             </div>
-            <div className="max-h-[720px] overflow-y-auto p-2">
+            <div className="max-h-[calc(100vh-190px)] overflow-y-auto p-2">
               {regs.length === 0 ? (
                 <p className="py-8 text-center text-[12px] text-gray-500">등재된 규제 없음</p>
               ) : (
@@ -396,7 +511,7 @@ export default function Page() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className={
-                        "group flex flex-col gap-1 rounded-lg border p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-sm " +
+                        "group flex flex-col gap-1 rounded-lg border p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-sm active:scale-[.99] " +
                         (r.severity === "Critical" ? "border-red-100 bg-red-50/60" : "border-gray-100 bg-gray-50")
                       }
                     >
@@ -416,7 +531,7 @@ export default function Page() {
                         ) : null}
                         <span className="truncate text-[10px] text-gray-500">{r.agency}</span>
                       </span>
-                      <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-gray-900 transition-colors duration-200 group-hover:text-indigo-600">
+                      <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
                         {pick(r.title, r.titleEn)}
                       </p>
                       {r.actions ? (
@@ -448,7 +563,7 @@ export default function Page() {
               type="button"
               onClick={closeModal}
               aria-label="닫기"
-              className="absolute right-4 top-4 z-10 shrink-0 rounded-full bg-white/80 p-1.5 text-gray-400 backdrop-blur transition-colors hover:bg-gray-100 hover:text-gray-700"
+              className="absolute right-4 top-4 z-10 shrink-0 rounded-full bg-white/80 p-1.5 text-gray-400 backdrop-blur transition-colors duration-300 hover:bg-gray-100 hover:text-gray-700"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M6 6l12 12M18 6L6 18" />
@@ -478,7 +593,7 @@ export default function Page() {
 
             {modal.image ? (
               <div className="mt-4 grid gap-5 md:grid-cols-3">
-                <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 md:col-span-1 md:aspect-auto md:h-full md:min-h-[140px]">
+                <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 md:col-span-1 md:aspect-auto md:h-full md:min-h-[150px]">
                   <img
                     src={modal.image}
                     alt=""
@@ -517,7 +632,7 @@ export default function Page() {
               href={modal.url}
               target="_blank"
               rel="noreferrer"
-              className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700"
+              className="mt-5 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95"
             >
               원문 보기
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
