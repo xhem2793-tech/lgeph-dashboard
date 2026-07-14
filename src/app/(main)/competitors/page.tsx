@@ -107,55 +107,6 @@ function Spark({ p2, p1, p0 }: { p2: number | null; p1: number | null; p0: numbe
   )
 }
 
-/** 가격대 분포 — 필터된 리스팅의 가격 히스토그램. LG 위치를 인디고로 겹쳐 보여준다 */
-function DistStrip({ rows }: { rows: PriceRow[] }) {
-  const px = rows.map((r) => r.p0).filter((x): x is number => x != null)
-  if (px.length < 5) return null
-  const mn = Math.min(...px)
-  const mx = Math.max(...px)
-  const N = 24
-  const bin = (n: number) => Math.min(N - 1, Math.floor(((n - mn) / (mx - mn || 1)) * N))
-  const all = new Array(N).fill(0)
-  const lg = new Array(N).fill(0)
-  rows.forEach((r) => {
-    if (r.p0 == null) return
-    const b = bin(r.p0)
-    all[b] += 1
-    if (r.brand === "LG") lg[b] += 1
-  })
-  const top = Math.max(...all, 1)
-  const fmt = (n: number) => "₱" + Math.round(n / 1000) + "k"
-  return (
-    <div className="mt-3 rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
-      <div className="flex items-baseline justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">가격대 분포</p>
-        <p className="text-[10px] text-gray-500">
-          <span className="inline-block h-1.5 w-1.5 rounded-sm bg-gray-300" /> 전체{" "}
-          <span className="ml-1 inline-block h-1.5 w-1.5 rounded-sm bg-indigo-500" /> LG
-        </p>
-      </div>
-      <div className="mt-1.5 flex h-12 items-end gap-[2px]">
-        {all.map((c, i) => (
-          <div key={i} className="flex-1" title={fmt(mn + ((mx - mn) * i) / N) + " · " + c + "건"}>
-            <div className="relative w-full" style={{ height: (c / top) * 44 }}>
-              <div className="absolute inset-0 rounded-sm bg-gray-300" />
-              <div
-                className="absolute bottom-0 left-0 right-0 rounded-sm bg-indigo-500 transition-all duration-300"
-                style={{ height: (lg[i] / (c || 1)) * 100 + "%" }}
-              />
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="mt-1 flex justify-between text-[9px] text-gray-400">
-        <span className="num">{fmt(mn)}</span>
-        <span className="num">{fmt((mn + mx) / 2)}</span>
-        <span className="num">{fmt(mx)}</span>
-      </div>
-    </div>
-  )
-}
-
 function Kpi({ label, value, sub }: { label: string; value: string; sub?: string }) {
   return (
     <div className="rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
@@ -363,7 +314,6 @@ export default function Competitors() {
                 <Kpi label="인상" value={String(hikes.length)} sub={"평균 " + pct(avg(hikes, (r) => r.deltaPct))} />
               </div>
 
-              <DistStrip rows={data} />
 
               {/* 필터 바 — 매장이 실제로 진열을 나누는 축 순서: 카테고리 → 세그먼트 → 가격대 → 브랜드 → 유통 */}
               <div className="mt-3 space-y-1.5 rounded-lg border border-gray-200 bg-gray-50/60 p-2.5">
