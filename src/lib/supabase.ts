@@ -615,10 +615,14 @@ export type FeedItem = {
   confidence: string
 }
 
-export async function newsFeed(days = 7): Promise<FeedItem[]> {
-  const d = new Date(Date.now() - days * 86400000)
-  const from = d.toISOString().slice(0, 10)
-  const rows = await sb("v_news_feed?select=*&date=gte." + from + "&order=date.desc,id.desc&limit=300")
+/** days = 0 이면 전체 기간(누적 425건). 창을 좁히면 기사가 사라지는 게 아니라 안 보이는 것뿐이다. */
+export async function newsFeed(days = 30): Promise<FeedItem[]> {
+  let path = "v_news_feed?select=*&order=date.desc,id.desc&limit=600"
+  if (days > 0) {
+    const d = new Date(Date.now() - days * 86400000)
+    path = "v_news_feed?select=*&date=gte." + d.toISOString().slice(0, 10) + "&order=date.desc,id.desc&limit=600"
+  }
+  const rows = await sb(path)
   return (rows ?? []).map((r: any) => ({
     id: Number(r.id),
     date: r.date,
