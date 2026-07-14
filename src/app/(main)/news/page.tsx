@@ -30,9 +30,13 @@ const TOPICS: Topic[] = [
   { key: "에너지·전력", label: "에너지·전력", desc: "유가·전기요금·전력수급" },
 ]
 
-/** 상단 고정 규제 최대 2건 · 본문 삽입 2건 — 그 이상은 피드가 규제판이 되어 뉴스가 안 읽힌다 */
-const PIN_MAX = 2
-const INLINE_MAX = 2
+/** 기간 — 창을 좁히면 기사가 사라지는 게 아니라 안 보이는 것뿐. 기본 30일, 전체(0)까지 */
+const PERIODS = [
+  { d: 7, t: "7일" },
+  { d: 30, t: "30일" },
+  { d: 90, t: "90일" },
+  { d: 0, t: "전체" },
+]
 
 function rel(s: string) {
   const d = new Date(s + "T00:00:00+08:00").getTime()
@@ -86,7 +90,7 @@ function ChipPill({ c, on, onHover }: { c: Chip; on: boolean; onHover: (k: strin
 
 export default function Page() {
   const { pick } = useLang()
-  const [days, setDays] = React.useState(7)
+  const [days, setDays] = React.useState(30)
   const [topic, setTopic] = React.useState("전체")
   const [feed, setFeed] = React.useState<FeedItem[] | null>(null)
   const [chips, setChips] = React.useState<Record<string, Chip>>({})
@@ -135,44 +139,19 @@ export default function Page() {
   }, [rows])
 
   const shown = topic === "전체" ? rows : rows.filter((r) => r.topic === topic)
-  const alerts = regs.filter((r) => r.severity === "Critical" || r.severity === "High")
-  const pinned = alerts
-    .filter((r) => r.dDay != null && (r.dDay as number) >= 0 && (r.dDay as number) <= 7)
-    .slice(0, PIN_MAX)
-  const rest = alerts.filter((r) => !pinned.includes(r)).slice(0, INLINE_MAX)
   const today = new Date()
   const active = TOPICS.find((t) => t.key === topic)
-
-  const RegRow = ({ r }: { r: RegBoardItem }) => (
-    <a
-      href={r.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex flex-col gap-1 rounded-lg border border-red-100 bg-red-50/60 p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-indigo-200 hover:bg-white hover:shadow-lg hover:shadow-indigo-100"
-    >
-      <span className="flex flex-wrap items-center gap-1">
-        <span className={"rounded px-1 py-px text-[10px] font-bold leading-4 " + (SEV[r.severity] ?? SEV.Medium)}>
-          {r.severity}
-        </span>
-        {r.dDay != null ? (
-          <span className="rounded bg-red-600 px-1 py-px text-[10px] font-bold leading-4 text-white">
-            {r.dDay <= 0 ? "시행 중" : "시행 D-" + r.dDay}
-          </span>
-        ) : null}
-        <span className="rounded bg-white px-1 py-px text-[10px] font-bold leading-4 text-gray-600">{r.agency}</span>
-        <span className="text-[11px] text-gray-500">{r.category}</span>
-      </span>
-      <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-gray-900 transition-colors duration-200 group-hover:text-indigo-600">
-        {pick(r.title, r.titleEn)}
-      </p>
-      <p className="line-clamp-2 text-[12px] leading-relaxed text-gray-600">{pick(r.summary, r.summaryEn)}</p>
-      {r.actions ? (
-        <p className="line-clamp-1 border-l-2 border-red-500 pl-2 text-[12px] leading-relaxed text-gray-700">
-          <b className="font-semibold">ACTION</b> {r.actions.split(" / ")[0]}
-        </p>
-      ) : null}
-    </a>
-  )
+  /** 우측 패널 — Critical 먼저, 그 안에서 시행 임박순. 놓치면 비용이 되는 것부터 위로 */
+  const board = React.useMemo(() => {
+    const rank = { Critical: 0, High: 1, Medium: 2 } as Record<string, number>
+    return [...regs].sort((a, b) => {
+      const s = (rank[a.severity] ?? 9) - (rank[b.severity] ?? 9)
+      if (s !== 0) return s
+      const ad = a.dDay == null ? 9999 : a.dDay < 0 ? 9998 : a.dDay
+      const bd = b.dDay == null ? 9999 : b.dDay < 0 ? 9998 : b.dDay
+      return ad - bd
+    })
+  }, [regs])
 
   return (
     <div className="px-4 py-4 sm:px-6">
@@ -188,7 +167,7 @@ export default function Page() {
         W{weekNo(today)} · {today.getMonth() + 1}/{today.getDate()} · SO WHAT이 달린 승인 기사만 노출
       </p>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(190px,0.8fr)_4fr]">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(190px,0.9fr)_minmax(0,3fr)_minmax(260px,1.15fr)]">
         {/* ── 좌 : 메뉴판(경쟁사 가격과 동일 규격) ── */}
         <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
           <div className="px-3 py-3">
@@ -241,24 +220,24 @@ export default function Page() {
                 </span>
               </span>
               <span className="mt-1 text-[10px] leading-snug text-gray-400">
-                시행 D-7 이내만 피드 최상단 고정 · 최대 {PIN_MAX + INLINE_MAX}건 노출
+                시행 임박순 · 우측 패널에 상시 노출
               </span>
             </div>
           </div>
 
           <div className="border-t border-gray-100 px-3 py-2.5">
-            <div className="flex gap-1 rounded-lg border border-gray-200 p-0.5">
-              {[7, 30].map((d) => (
+            <div className="grid grid-cols-4 gap-1 rounded-lg border border-gray-200 p-0.5">
+              {PERIODS.map((p) => (
                 <button
-                  key={d}
+                  key={p.d}
                   type="button"
-                  onClick={() => setDays(d)}
+                  onClick={() => setDays(p.d)}
                   className={
-                    "flex-1 rounded-md py-1 text-[12px] font-medium transition-all duration-200 active:scale-95 " +
-                    (days === d ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:text-indigo-600")
+                    "rounded-md py-1 text-[11px] font-medium transition-all duration-200 active:scale-95 " +
+                    (days === p.d ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:text-indigo-600")
                   }
                 >
-                  최근 {d}일
+                  {p.t}
                 </button>
               ))}
             </div>
@@ -285,10 +264,6 @@ export default function Page() {
           </header>
 
           <div className="mt-3 flex flex-col gap-2.5">
-            {pinned.map((r) => (
-              <RegRow key={"p" + r.id} r={r} />
-            ))}
-
             {feed === null ? (
               <>
                 {Array.from({ length: 5 }).map((_, i) => (
@@ -346,7 +321,7 @@ export default function Page() {
                         {pick(f.title, f.titleEn)}
                       </p>
 
-                      <p className="mt-1 line-clamp-3 text-[12.5px] leading-relaxed text-gray-600">
+                      <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-gray-600">
                         {pick(f.summary, f.summaryEn)}
                       </p>
 
@@ -357,13 +332,66 @@ export default function Page() {
                     </div>
                   </div>
 
-                  {i === 2 && rest.length ? <RegRow r={rest[0]} /> : null}
-                  {i === 9 && rest.length > 1 ? <RegRow r={rest[1]} /> : null}
                 </React.Fragment>
               ))
             )}
           </div>
         </section>
+
+        {/* ── 우 : 규제·정책 상시 노출 ── */}
+        <aside className="h-fit lg:sticky lg:top-[96px]">
+          <div className="rounded-xl border border-gray-200 bg-white shadow-sm">
+            <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
+              <p className="text-[14px] font-bold tracking-tight text-gray-900">규제 동향</p>
+              <span className="num text-[10px] text-gray-500">Critical {regs.filter((r) => r.severity === "Critical").length} · High {regs.filter((r) => r.severity === "High").length}</span>
+            </div>
+            <div className="max-h-[720px] overflow-y-auto p-2">
+              {regs.length === 0 ? (
+                <p className="py-8 text-center text-[12px] text-gray-500">등재된 규제 없음</p>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  {board.map((r) => (
+                    <a
+                      key={r.id}
+                      href={r.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={
+                        "group flex flex-col gap-1 rounded-lg border p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-sm " +
+                        (r.severity === "Critical" ? "border-red-100 bg-red-50/60" : "border-gray-100 bg-gray-50")
+                      }
+                    >
+                      <span className="flex flex-wrap items-center gap-1">
+                        <span className={"rounded px-1 py-px text-[9px] font-bold leading-4 " + (SEV[r.severity] ?? SEV.Medium)}>
+                          {r.severity}
+                        </span>
+                        {r.dDay != null ? (
+                          <span
+                            className={
+                              "rounded px-1 py-px text-[9px] font-bold leading-4 " +
+                              (r.dDay >= 0 && r.dDay <= 7 ? "bg-red-600 text-white" : "bg-gray-200 text-gray-600")
+                            }
+                          >
+                            {r.dDay <= 0 ? "시행 중" : "D-" + r.dDay}
+                          </span>
+                        ) : null}
+                        <span className="truncate text-[10px] text-gray-500">{r.agency}</span>
+                      </span>
+                      <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-gray-900 transition-colors duration-200 group-hover:text-indigo-600">
+                        {pick(r.title, r.titleEn)}
+                      </p>
+                      {r.actions ? (
+                        <p className="line-clamp-1 text-[10px] leading-4 text-gray-600">
+                          <b className="font-semibold text-gray-700">ACTION</b> {r.actions.split(" / ")[0]}
+                        </p>
+                      ) : null}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </aside>
       </div>
 
       {modal ? (
