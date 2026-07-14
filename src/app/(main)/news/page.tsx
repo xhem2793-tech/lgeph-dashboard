@@ -5,18 +5,30 @@ import {
   newsFeed,
   indicatorChips,
   regBoard,
+  freshness,
+  fmtStamp,
   type FeedItem,
   type Chip,
   type RegBoardItem,
 } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
-/** 주요뉴스 — 대시보드와 같은 그릇(max-w-1536 · 흰 카드 · fadeUp).
- *  각 행은 제목 · 메타+지표칩 · SO WHAT 3층. SO WHAT 없는 기사는 행으로 나가지 않는다.
- *  규제(Critical/High)는 별도 카드가 아니라 피드 안에 적색 행으로 끼워 넣는다.
- *  지표칩은 클릭하면 해당 지표 상세로 이동(/economy?k=<key>) — 뉴스에서 수치로 바로 건너뛰는 통로. */
+/** 주요뉴스 — 경쟁사 가격 페이지와 같은 뼈대(좌 메뉴판 카드 + 우 콘텐츠 카드).
+ *  각 행은 주제배지 · 제목 · 메타+지표칩 · 본문 요약 · SO WHAT 5층.
+ *  SO WHAT 없는 기사는 행으로 나가지 않는다. 규제(Critical/High)는 피드 안에 적색 행으로 삽입.
+ *  지표칩 클릭 → /economy?k=<key> */
 
-const TOPICS = ["전체", "거시·금융", "정치·정책", "B2B", "CE·유통", "기상·재난", "에너지·전력"]
+type Topic = { key: string; label: string; desc: string }
+
+const TOPICS: Topic[] = [
+  { key: "전체", label: "전체", desc: "SO WHAT이 달린 승인 기사 전부" },
+  { key: "거시·금융", label: "거시·금융", desc: "물가·금리·환율·투자" },
+  { key: "정치·정책", label: "정치·정책", desc: "규제·예산·행정명령" },
+  { key: "B2B", label: "B2B", desc: "공조·인프라·데이터센터" },
+  { key: "CE·유통", label: "CE·유통", desc: "가전 수요·채널·경쟁" },
+  { key: "기상·재난", label: "기상·재난", desc: "태풍·폭염 · 냉방 수요" },
+  { key: "에너지·전력", label: "에너지·전력", desc: "유가·전기요금·전력수급" },
+]
 
 /** 상단 고정 규제 최대 2건 · 본문 삽입 2건 — 그 이상은 피드가 규제판이 되어 뉴스가 안 읽힌다 */
 const PIN_MAX = 2
@@ -43,7 +55,6 @@ const SEV: Record<string, string> = {
   Medium: "bg-gray-100 text-gray-600",
 }
 
-/** 지표칩 — 클릭하면 해당 지표로 이동. 행 클릭(모달)과 겹치지 않게 전파 차단 */
 function ChipPill({ c, on, onHover }: { c: Chip; on: boolean; onHover: (k: string | null) => void }) {
   const up = (c.deltaPct ?? 0) > 0
   const flat = !c.deltaPct
@@ -80,6 +91,7 @@ export default function Page() {
   const [feed, setFeed] = React.useState<FeedItem[] | null>(null)
   const [chips, setChips] = React.useState<Record<string, Chip>>({})
   const [regs, setRegs] = React.useState<RegBoardItem[]>([])
+  const [stamp, setStamp] = React.useState<string | null>(null)
   const [hot, setHot] = React.useState<string | null>(null)
   const [modal, setModal] = React.useState<FeedItem | null>(null)
   const [closing, setClosing] = React.useState(false)
@@ -101,10 +113,11 @@ export default function Page() {
   }, [closeModal])
 
   React.useEffect(() => {
-    Promise.all([indicatorChips(), regBoard()])
-      .then(([c, r]) => {
+    Promise.all([indicatorChips(), regBoard(), freshness()])
+      .then(([c, r, f]) => {
         setChips(c)
         setRegs(r)
+        setStamp(f.news ?? null)
       })
       .catch(() => {})
   }, [])
@@ -128,13 +141,14 @@ export default function Page() {
     .slice(0, PIN_MAX)
   const rest = alerts.filter((r) => !pinned.includes(r)).slice(0, INLINE_MAX)
   const today = new Date()
+  const active = TOPICS.find((t) => t.key === topic)
 
   const RegRow = ({ r }: { r: RegBoardItem }) => (
     <a
       href={r.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex flex-col gap-1 rounded-lg border border-red-100 bg-red-50/60 p-3 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-indigo-200 hover:bg-white hover:shadow-lg hover:shadow-indigo-100"
+      className="group flex flex-col gap-1 rounded-lg border border-red-100 bg-red-50/60 p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:border-indigo-200 hover:bg-white hover:shadow-lg hover:shadow-indigo-100"
     >
       <span className="flex flex-wrap items-center gap-1">
         <span className={"rounded px-1 py-px text-[10px] font-bold leading-4 " + (SEV[r.severity] ?? SEV.Medium)}>
@@ -148,9 +162,10 @@ export default function Page() {
         <span className="rounded bg-white px-1 py-px text-[10px] font-bold leading-4 text-gray-600">{r.agency}</span>
         <span className="text-[11px] text-gray-500">{r.category}</span>
       </span>
-      <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-900 transition-colors duration-200 group-hover:text-indigo-600">
+      <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-gray-900 transition-colors duration-200 group-hover:text-indigo-600">
         {pick(r.title, r.titleEn)}
       </p>
+      <p className="line-clamp-2 text-[12px] leading-relaxed text-gray-600">{pick(r.summary, r.summaryEn)}</p>
       {r.actions ? (
         <p className="line-clamp-1 border-l-2 border-red-500 pl-2 text-[12px] leading-relaxed text-gray-700">
           <b className="font-semibold">ACTION</b> {r.actions.split(" / ")[0]}
@@ -160,86 +175,124 @@ export default function Page() {
   )
 
   return (
-    <main className="mx-auto max-w-[1536px] px-4 pb-6 pt-4 sm:px-6 sm:pb-8">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
+    <div className="px-4 py-4 sm:px-6">
+      <style>{"@keyframes viewIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
 
-      <header className="mb-3 flex items-end justify-between" style={{ animation: "fadeUp .5s ease both" }}>
-        <div className="flex items-baseline gap-2">
-          <h1 className="text-[20px] font-bold tracking-tight text-gray-900">주요뉴스</h1>
-          <span className="num text-[12px] text-gray-500">
-            W{weekNo(today)} · {today.getMonth() + 1}/{today.getDate()}
-          </span>
-        </div>
-        <div className="flex gap-1 rounded-lg border border-gray-200 bg-white p-0.5">
-          {[7, 30].map((d) => (
-            <button
-              key={d}
-              type="button"
-              onClick={() => setDays(d)}
-              className={
-                "rounded-md px-2.5 py-1 text-[11px] font-medium transition-all duration-200 active:scale-95 " +
-                (days === d ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:text-indigo-600")
-              }
-            >
-              {d}일
-            </button>
-          ))}
-        </div>
-      </header>
+      <a href="/news" className="group inline-flex items-baseline gap-1">
+        <h1 className="text-[20px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
+          주요뉴스
+        </h1>
+        <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+      </a>
+      <p className="num mt-0.5 text-[12px] text-gray-500">
+        W{weekNo(today)} · {today.getMonth() + 1}/{today.getDate()} · SO WHAT이 달린 승인 기사만 노출
+      </p>
 
-      <section
-        className="rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md"
-        style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}
-      >
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-[132px_minmax(0,1fr)]">
-          <aside className="lg:border-r lg:border-gray-100 lg:pr-3">
-            <nav className="flex flex-wrap gap-0.5 lg:flex-col">
+      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(190px,0.8fr)_4fr]">
+        {/* ── 좌 : 메뉴판(경쟁사 가격과 동일 규격) ── */}
+        <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="px-3 py-3">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">주제</p>
+            <div className="flex flex-col gap-0.5">
               {TOPICS.map((t) => (
                 <button
-                  key={t}
+                  key={t.key}
                   type="button"
-                  onClick={() => setTopic(t)}
+                  onClick={() => setTopic(t.key)}
                   className={
-                    "flex items-center justify-between gap-1 rounded-md px-2 py-1.5 text-left text-[12px] transition-all duration-200 active:scale-[0.98] " +
-                    (topic === t
-                      ? "bg-indigo-50 font-semibold text-indigo-700"
-                      : "text-gray-600 hover:bg-gray-50 hover:text-indigo-600")
+                    "group rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 hover:-translate-y-px active:scale-[.99] " +
+                    (topic === t.key ? "bg-indigo-50" : "hover:bg-indigo-50/40")
                   }
                 >
-                  <span className="truncate">{t}</span>
-                  <span className="num text-[10px] text-gray-500">{counts[t] ?? 0}</span>
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className={
+                        "flex-1 text-[13px] transition-colors duration-200 " +
+                        (topic === t.key
+                          ? "font-semibold text-indigo-700"
+                          : "font-medium text-gray-800 group-hover:text-indigo-600")
+                      }
+                    >
+                      {t.label}
+                    </span>
+                    <span className="num shrink-0 rounded border border-gray-200 bg-gray-50 px-1 py-px text-[9px] font-semibold text-gray-500">
+                      {counts[t.key] ?? 0}
+                    </span>
+                  </span>
+                  <span className="block text-[11px] leading-snug text-gray-500">{t.desc}</span>
                 </button>
               ))}
-            </nav>
-
-            <div className="mt-3 hidden border-t border-gray-100 pt-3 lg:block">
-              <p className="mb-1.5 text-[11px] font-bold text-gray-900">규제 알림</p>
-              <div className="flex flex-col gap-1 px-2">
-                <span className="flex items-center justify-between text-[11px] text-gray-600">
-                  Critical
-                  <span className="num rounded bg-red-100 px-1 font-semibold text-red-700">
-                    {regs.filter((r) => r.severity === "Critical").length}
-                  </span>
-                </span>
-                <span className="flex items-center justify-between text-[11px] text-gray-600">
-                  High
-                  <span className="num rounded bg-amber-100 px-1 font-semibold text-amber-700">
-                    {regs.filter((r) => r.severity === "High").length}
-                  </span>
-                </span>
-              </div>
             </div>
-          </aside>
+          </div>
 
-          <div className="flex flex-col gap-2">
+          <div className="border-t border-gray-100 px-3 py-3">
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">규제 알림</p>
+            <div className="flex flex-col gap-1 px-1">
+              <span className="flex items-center justify-between text-[12px] text-gray-600">
+                Critical
+                <span className="num rounded bg-red-100 px-1 font-semibold text-red-700">
+                  {regs.filter((r) => r.severity === "Critical").length}
+                </span>
+              </span>
+              <span className="flex items-center justify-between text-[12px] text-gray-600">
+                High
+                <span className="num rounded bg-amber-100 px-1 font-semibold text-amber-700">
+                  {regs.filter((r) => r.severity === "High").length}
+                </span>
+              </span>
+              <span className="mt-1 text-[10px] leading-snug text-gray-400">
+                시행 D-7 이내만 피드 최상단 고정 · 최대 {PIN_MAX + INLINE_MAX}건 노출
+              </span>
+            </div>
+          </div>
+
+          <div className="border-t border-gray-100 px-3 py-2.5">
+            <div className="flex gap-1 rounded-lg border border-gray-200 p-0.5">
+              {[7, 30].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDays(d)}
+                  className={
+                    "flex-1 rounded-md py-1 text-[12px] font-medium transition-all duration-200 active:scale-95 " +
+                    (days === d ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:text-indigo-600")
+                  }
+                >
+                  최근 {d}일
+                </button>
+              ))}
+            </div>
+          </div>
+        </aside>
+
+        {/* ── 우 : 피드 카드 ── */}
+        <section
+          key={topic + days}
+          className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+          style={{ animation: "viewIn .32s cubic-bezier(.22,1,.36,1) both" }}
+        >
+          <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 pb-2">
+            <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
+              {active?.label}
+              <span className="num text-[11px] font-medium text-gray-500">{shown.length}건</span>
+            </h2>
+            <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
+              최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
+              <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
+                CONFIRMED
+              </span>
+            </span>
+          </header>
+
+          <div className="mt-3 flex flex-col gap-2.5">
             {pinned.map((r) => (
               <RegRow key={"p" + r.id} r={r} />
             ))}
 
             {feed === null ? (
               <>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} className="h-[92px] rounded-lg bg-gray-50" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="h-[168px] rounded-lg bg-gray-50" />
                 ))}
               </>
             ) : shown.length === 0 ? (
@@ -254,10 +307,10 @@ export default function Page() {
                     onKeyDown={(ev) => {
                       if (ev.key === "Enter") setModal(f)
                     }}
-                    className="group flex cursor-pointer gap-3 rounded-lg bg-gray-50 p-3 text-left transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-lg hover:shadow-indigo-100"
+                    className="group flex cursor-pointer gap-4 rounded-lg bg-gray-50 p-3.5 text-left transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-lg hover:shadow-indigo-100"
                   >
                     {f.image ? (
-                      <div className="hidden h-[70px] w-[104px] shrink-0 overflow-hidden rounded-md bg-gray-100 sm:block">
+                      <div className="hidden h-[140px] w-[210px] shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:block">
                         <img
                           src={f.image}
                           alt=""
@@ -270,15 +323,14 @@ export default function Page() {
                         />
                       </div>
                     ) : (
-                      <div className="hidden h-[70px] w-[104px] shrink-0 rounded-md bg-gray-100 sm:block" />
+                      <div className="hidden h-[140px] w-[210px] shrink-0 rounded-lg bg-gray-100 sm:block" />
                     )}
 
-                    <div className="min-w-0 flex-1">
-                      <p className="line-clamp-2 text-[14px] font-medium leading-snug text-gray-900 transition-colors duration-200 group-hover:text-indigo-600">
-                        {pick(f.title, f.titleEn)}
-                      </p>
-
-                      <div className="mt-1 flex flex-wrap items-center gap-1">
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <div className="flex flex-wrap items-center gap-1">
+                        <span className="rounded bg-indigo-50 px-1.5 py-px text-[10px] font-bold leading-4 text-indigo-700">
+                          {f.topic}
+                        </span>
                         <span className="text-[11px] text-gray-500">
                           {f.source} · {rel(f.date)}
                         </span>
@@ -290,7 +342,15 @@ export default function Page() {
                           ))}
                       </div>
 
-                      <p className="mt-1.5 border-l-2 border-indigo-500 pl-2 text-[12px] leading-relaxed text-gray-700">
+                      <p className="mt-1 line-clamp-2 text-[16px] font-semibold leading-snug text-gray-900 transition-colors duration-200 group-hover:text-indigo-600">
+                        {pick(f.title, f.titleEn)}
+                      </p>
+
+                      <p className="mt-1 line-clamp-3 text-[12.5px] leading-relaxed text-gray-600">
+                        {pick(f.summary, f.summaryEn)}
+                      </p>
+
+                      <p className="mt-auto line-clamp-2 border-l-2 border-indigo-500 pl-2 pt-1.5 text-[12px] leading-relaxed text-gray-700">
                         <span className="mr-1 text-[10px] font-bold tracking-wider text-indigo-600">SO WHAT</span>
                         {pick(f.ai, f.aiEn)}
                       </p>
@@ -303,8 +363,8 @@ export default function Page() {
               ))
             )}
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {modal ? (
         <div
@@ -330,7 +390,7 @@ export default function Page() {
 
             <div className="min-w-0 pr-8">
               <span className="flex flex-wrap items-center gap-1.5">
-                <span className="text-[11px] font-semibold text-indigo-600">{modal.topic}</span>
+                <span className="rounded bg-indigo-50 px-1.5 py-px text-[10px] font-bold leading-4 text-indigo-700">{modal.topic}</span>
                 {modal.confidence ? (
                   <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
                     {modal.confidence}
@@ -395,6 +455,6 @@ export default function Page() {
           </div>
         </div>
       ) : null}
-    </main>
+    </div>
   )
 }
