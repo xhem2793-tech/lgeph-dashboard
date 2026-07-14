@@ -804,6 +804,7 @@ export type CalEvent = {
   event: string
   releaseTime: string | null
   indicatorKey: string | null
+  kind: string
   actual: number | null
   previous: number | null
   forecast: string | null
@@ -823,6 +824,7 @@ export async function calendarEvents(from: string, to: string) {
     event: r.event as string,
     releaseTime: (r.release_time ?? null) as string | null,
     indicatorKey: (r.indicator_key ?? null) as string | null,
+    kind: (r.kind ?? "other") as string,
     actual: num(r.actual),
     previous: num(r.previous),
     forecast: (r.forecast ?? null) as string | null,
