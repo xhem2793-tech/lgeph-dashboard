@@ -6,7 +6,7 @@ import {
   indicatorChips,
   regBoard,
   todayBrief,
-  calendarUpcoming,
+  calendarMonth,
   analysisPosts,
   type FeedItem,
   type Chip,
@@ -80,17 +80,17 @@ export default function Page() {
   const [chips, setChips] = React.useState<Record<string, Chip>>({})
   const [regs, setRegs] = React.useState<RegBoardItem[]>([])
   const [brief, setBrief] = React.useState<Awaited<ReturnType<typeof todayBrief>>>(null)
-  const [events, setEvents] = React.useState<Awaited<ReturnType<typeof calendarUpcoming>>>([])
+  const [events, setEvents] = React.useState<Awaited<ReturnType<typeof calendarMonth>>>([])
   const [posts, setPosts] = React.useState<Awaited<ReturnType<typeof analysisPosts>>>([])
   const [hot, setHot] = React.useState<string | null>(null)
 
   React.useEffect(() => {
-    Promise.all([indicatorChips(), regBoard(), todayBrief(), calendarUpcoming(4), analysisPosts(2)])
+    Promise.all([indicatorChips(), regBoard(), todayBrief(), calendarMonth(), analysisPosts(2)])
       .then(([c, r, b, e, p]) => {
         setChips(c)
         setRegs(r)
         setBrief(b)
-        setEvents(e)
+        setEvents(e.filter((x) => !x.past).slice(0, 4))
         setPosts(p)
       })
       .catch(() => {})
@@ -138,7 +138,7 @@ export default function Page() {
       </p>
       {r.actions ? (
         <p className="line-clamp-1 border-l-2 border-red-500 pl-2 text-[12px] leading-relaxed text-gray-700">
-          <b className="font-semibold">ACTION</b> {r.actions.split("/")[0]}
+          <b className="font-semibold">ACTION</b> {r.actions.split(" / ")[0]}
         </p>
       ) : null}
     </a>
