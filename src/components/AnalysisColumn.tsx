@@ -5,7 +5,7 @@ import { createPortal } from "react-dom"
 import { analysisPosts, regAlerts, type RegAlert } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
-/** 4번째 열 — 위: 정부 규제 동향 1건 / 아래: 이번 주 분석 1건.
+/** 4번째 열 — 위: 규제 동향 1건 / 아래: 이번 주 분석 1건.
  *  규제(통관·관세·세무·표준)는 즉시 비용·리드타임으로 꽂힌다. 뉴스에 섞이면 묻히므로 상단 고정.
  *  두 카드 모두 본문 발췌 노출 — 제목만 보고 넘기는 일을 막는다. 원문 전재 금지(요약·해석·링크만).
  */
@@ -287,66 +287,6 @@ export default function AnalysisColumn() {
   return (
     <div className="flex flex-col gap-4 lg:px-3">
       <section>
-        <a href="/news?cat=규제" className="group mb-2 flex items-baseline gap-1">
-          <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-            정부 규제 동향
-          </span>
-          <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">
-            ›
-          </span>
-        </a>
-
-        {!regs ? (
-          <div className="h-[150px] rounded-lg bg-gray-50" />
-        ) : !reg ? (
-          <p className="py-6 text-[12px] text-gray-500">등재된 규제 동향 없음</p>
-        ) : (
-          <button type="button" onClick={() => setOpenReg(reg)} className={CARD_BTN}>
-            <span className="mb-1 flex flex-wrap items-center gap-1">
-              <span className="rounded bg-indigo-50 px-1 py-px text-[10px] font-bold leading-4 text-indigo-700">
-                {reg.agency}
-              </span>
-              <span className="rounded bg-gray-100 px-1 py-px text-[10px] font-bold leading-4 text-gray-600">
-                {reg.category}
-              </span>
-              <span className={"rounded px-1 py-px text-[10px] font-bold leading-4 " + (SEV[reg.severity] ?? SEV.Medium)}>
-                {reg.severity}
-              </span>
-              {dd ? (
-                <span
-                  className={
-                    "rounded px-1 py-px text-[10px] font-bold leading-4 " +
-                    (dd.urgent ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600")
-                  }
-                >
-                  {dd.text}
-                </span>
-              ) : null}
-            </span>
-
-            <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 transition-colors duration-200 group-hover:text-indigo-600">
-              {pick(reg.title, reg.titleEn)}
-            </p>
-
-            <p className="mt-1 line-clamp-3 text-[12px] leading-relaxed text-gray-600">
-              {pick(reg.summary, reg.summaryEn)}
-            </p>
-
-            {reg.implication ? (
-              <p className="mt-1.5 line-clamp-1 text-[11px] leading-4 text-indigo-700">
-                <b className="font-semibold">우리 영향 · </b>
-                {reg.implication}
-              </p>
-            ) : null}
-
-            <p className="mt-1 text-[11px] leading-4 text-gray-500">
-              {reg.source} · {fmt(reg.date)}
-            </p>
-          </button>
-        )}
-      </section>
-
-      <section className="border-t border-gray-100 pt-3">
         <a href="/news?cat=분석" className="group mb-2 flex items-baseline gap-1">
           <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
             {t("analysis_title")}
@@ -401,6 +341,66 @@ export default function AnalysisColumn() {
               <span className="min-w-0 truncate">{post.kind === "own" ? post.author ?? "경영기획" : post.source}</span>
               <span className="shrink-0">·</span>
               <span className="shrink-0">{fmt(post.publishedAt)}</span>
+            </p>
+          </button>
+        )}
+      </section>
+
+      <section className="border-t border-gray-100 pt-3">
+        <a href="/news?cat=규제" className="group mb-2 flex items-baseline gap-1">
+          <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
+            규제 동향
+          </span>
+          <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">
+            ›
+          </span>
+        </a>
+
+        {!regs ? (
+          <div className="h-[150px] rounded-lg bg-gray-50" />
+        ) : !reg ? (
+          <p className="py-6 text-[12px] text-gray-500">등재된 규제 동향 없음</p>
+        ) : (
+          <button type="button" onClick={() => setOpenReg(reg)} className={CARD_BTN}>
+            <span className="mb-1 flex flex-wrap items-center gap-1">
+              <span className="rounded bg-indigo-50 px-1 py-px text-[10px] font-bold leading-4 text-indigo-700">
+                {reg.agency}
+              </span>
+              <span className="rounded bg-gray-100 px-1 py-px text-[10px] font-bold leading-4 text-gray-600">
+                {reg.category}
+              </span>
+              <span className={"rounded px-1 py-px text-[10px] font-bold leading-4 " + (SEV[reg.severity] ?? SEV.Medium)}>
+                {reg.severity}
+              </span>
+              {dd ? (
+                <span
+                  className={
+                    "rounded px-1 py-px text-[10px] font-bold leading-4 " +
+                    (dd.urgent ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-600")
+                  }
+                >
+                  {dd.text}
+                </span>
+              ) : null}
+            </span>
+
+            <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 transition-colors duration-200 group-hover:text-indigo-600">
+              {pick(reg.title, reg.titleEn)}
+            </p>
+
+            <p className="mt-1 line-clamp-3 text-[12px] leading-relaxed text-gray-600">
+              {pick(reg.summary, reg.summaryEn)}
+            </p>
+
+            {reg.implication ? (
+              <p className="mt-1.5 line-clamp-1 text-[11px] leading-4 text-indigo-700">
+                <b className="font-semibold">우리 영향 · </b>
+                {reg.implication}
+              </p>
+            ) : null}
+
+            <p className="mt-1 text-[11px] leading-4 text-gray-500">
+              {reg.source} · {fmt(reg.date)}
             </p>
           </button>
         )}
