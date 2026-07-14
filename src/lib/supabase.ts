@@ -690,3 +690,31 @@ export async function regBoard(limit = 30): Promise<RegBoardItem[]> {
     url: r.url,
   }))
 }
+
+
+/** 이번 주(월~일) 요약 — 지표 발표(캘린더)와 규제 시행일을 한 줄에 섞어 본다.
+ *  "지나간 일"과 "남은 일정"을 나누면 주 단위로 무엇이 끝났고 무엇이 남았는지 한눈에 잡힌다. */
+export type WeekItem = {
+  src: "cal" | "reg"
+  date: string
+  category: string
+  label: string
+  labelEn: string | null
+  past: boolean
+  severity: string | null
+  agency: string | null
+}
+
+export async function weekDigest(): Promise<WeekItem[]> {
+  const rows = await sb("v_week_digest?select=*")
+  return (rows ?? []).map((r: any) => ({
+    src: r.src,
+    date: r.date,
+    category: r.category,
+    label: (r.label ?? "").trim(),
+    labelEn: r.label_en ? String(r.label_en).trim() : null,
+    past: Boolean(r.past),
+    severity: r.severity ?? null,
+    agency: r.agency ?? null,
+  }))
+}
