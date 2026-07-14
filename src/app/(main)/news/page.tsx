@@ -310,7 +310,7 @@ export default function Page() {
             ) : shown.length === 0 ? (
               <p className="py-10 text-center text-[12px] text-gray-500">해당 주제 기사 없음</p>
             ) : (
-              shown.map((f, i) => (
+              shown.map((f) => (
                 <React.Fragment key={f.id}>
                   <div
                     role="button"
