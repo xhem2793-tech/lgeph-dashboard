@@ -51,7 +51,6 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
 ]
 
 const ALL = GROUPS.flatMap((g) => g.items)
-const CATS = ["전체", "냉장고", "세탁기", "TV", "에어컨"]
 const BRANDS = ["LG", "Samsung", "Panasonic", "TCL", "Midea", "Hisense"]
 const SHOPS = ["Anson's", "Abenson", "SM Appliance"]
 
@@ -258,6 +257,12 @@ export default function Competitors() {
     const v = a.map(f).filter((x): x is number => x != null)
     return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null
   }
+  /** 카테고리는 리스팅에서 실제로 나온 것만 — 건수 많은 순 */
+  const CATS = React.useMemo(() => {
+    const m = new Map<string, number>()
+    ;(rows ?? []).forEach((r) => m.set(r.category, (m.get(r.category) ?? 0) + 1))
+    return ["전체", ...[...m.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k)]
+  }, [rows])
   const asOf = rows && rows[0] ? rows[0].d0 : "—"
   const active = ALL.find((v) => v.key === view)
 
@@ -308,47 +313,13 @@ export default function Competitors() {
             </Section>
           ))}
 
-          <Section title="카테고리">
-            <div className="flex flex-wrap gap-1.5">
-              {CATS.map((c) => (
-                <Chip key={c} on={cat === c} onClick={() => setCat(c)}>
-                  {c}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          <Section title="브랜드">
-            <div className="flex flex-wrap gap-1.5">
-              {BRANDS.map((b) => (
-                <Chip key={b} on={brands.includes(b)} onClick={() => toggle(brands, b, setBrands)}>
-                  {b}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          <Section title="유통">
-            <div className="flex flex-wrap gap-1.5">
-              {SHOPS.map((s) => (
-                <Chip key={s} on={shops.includes(s)} onClick={() => toggle(shops, s, setShops)}>
-                  {s === "SM Appliance" ? "SM" : s}
-                </Chip>
-              ))}
-            </div>
-          </Section>
-
-          <Section title="보기 옵션">
-            <Chip on={onlyMoved} onClick={() => setOnlyMoved(!onlyMoved)}>
-              가격 변동분만
-            </Chip>
-          </Section>
-
           <div className="border-t border-gray-100 px-3 py-2.5">
             <button
               type="button"
               onClick={() => {
                 setCat("전체")
+                setSeg("전체")
+                setBand("전체")
                 setBrands(["LG"])
                 setShops([...SHOPS])
                 setOnlyMoved(false)
@@ -393,6 +364,55 @@ export default function Competitors() {
               </div>
 
               <DistStrip rows={data} />
+
+              {/* 필터 바 — 매장이 실제로 진열을 나누는 축 순서: 카테고리 → 세그먼트 → 가격대 → 브랜드 → 유통 */}
+              <div className="mt-3 space-y-1.5 rounded-lg border border-gray-200 bg-gray-50/60 p-2.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">카테고리</span>
+                  {CATS.map((c) => (
+                    <Chip key={c} on={cat === c} onClick={() => { setCat(c); setSeg("전체") }}>
+                      {c}
+                    </Chip>
+                  ))}
+                </div>
+                {(SEGMENTS[cat] ?? []).length > 0 ? (
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">세그먼트</span>
+                    <Chip on={seg === "전체"} onClick={() => setSeg("전체")}>전체</Chip>
+                    {(SEGMENTS[cat] ?? []).map((s) => (
+                      <Chip key={s.t} on={seg === s.t} onClick={() => setSeg(s.t)}>
+                        {s.t}
+                      </Chip>
+                    ))}
+                  </div>
+                ) : null}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">가격대</span>
+                  <Chip on={band === "전체"} onClick={() => setBand("전체")}>전체</Chip>
+                  {BANDS.map((b) => (
+                    <Chip key={b.t} on={band === b.t} onClick={() => setBand(b.t)}>
+                      {b.t}
+                    </Chip>
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">브랜드</span>
+                  {BRANDS.map((b) => (
+                    <Chip key={b} on={brands.includes(b)} onClick={() => toggle(brands, b, setBrands)}>
+                      {b}
+                    </Chip>
+                  ))}
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">유통</span>
+                  {SHOPS.map((s) => (
+                    <Chip key={s} on={shops.includes(s)} onClick={() => toggle(shops, s, setShops)}>
+                      {s === "SM Appliance" ? "SM" : s}
+                    </Chip>
+                  ))}
+                  <Chip on={onlyMoved} onClick={() => setOnlyMoved(!onlyMoved)}>가격 변동분만</Chip>
+                </div>
+              </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <input
