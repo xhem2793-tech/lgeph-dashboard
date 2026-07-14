@@ -218,7 +218,7 @@ export default function Competitors() {
   const CATS = React.useMemo(() => {
     const m = new Map<string, number>()
     ;(rows ?? []).forEach((r) => m.set(r.category, (m.get(r.category) ?? 0) + 1))
-    return ["전체", ...[...m.entries()].sort((a, b) => b[1] - a[1]).map(([k]) => k)]
+    return ["전체", ...Array.from(m.entries()).sort((a, b) => b[1] - a[1]).map((e) => e[0])]
   }, [rows])
   const asOf = rows && rows[0] ? rows[0].d0 : "—"
   const active = ALL.find((v) => v.key === view)
