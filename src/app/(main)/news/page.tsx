@@ -130,6 +130,21 @@ function weekRange(d: Date) {
 }
 
 /** 이번 주 남은 일수(오늘 포함 X) · 주간 진행률 · 가장 급한 시행 D-day */
+/** 규제의 시행일 — dDay 로부터 역산(뷰가 effective_date 로 dDay 를 만든다) */
+function effDate(r: Doc) {
+  const t = new Date()
+  const base = new Date(t.getFullYear(), t.getMonth(), t.getDate() + (r.dDay ?? 0))
+  return (
+    base.getFullYear() +
+    "-" +
+    String(base.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(base.getDate()).padStart(2, "0")
+  )
+}
+
+const MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+
 function daysLeft(d: Date) {
   return 6 - ((d.getDay() + 6) % 7)
 }
@@ -567,7 +582,7 @@ export default function Page() {
 
   return (
     <div className="px-4 py-4 sm:px-6">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(190px,0.9fr)_minmax(0,3fr)_minmax(250px,1.1fr)]">
         {/* ── 좌 : 메뉴 ── */}
@@ -672,12 +687,66 @@ export default function Page() {
           className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-300 hover:shadow-md"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.1s" }}
         >
-          <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
-            <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
+          <header className="flex flex-wrap items-center gap-3 border-b border-gray-100 pb-2.5">
+            <h2 className="flex shrink-0 items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
               {mode === "product" ? prod : active?.label}
               <span className="num text-[11px] font-medium text-gray-500">{shown.length}건</span>
             </h2>
-            <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
+
+            {/* 정렬 — 제목 바로 옆(무엇을 먼저 보여줄지가 목록의 성격을 정한다) */}
+            <div className="flex shrink-0 gap-0.5 rounded-full border border-gray-200 p-0.5">
+              {([["new", "최신순"], ["impact", "영향도순"]] as const).map(([k, t]) => (
+                <button
+                  key={k}
+                  type="button"
+                  onClick={() => setSort(k)}
+                  className={
+                    "rounded-full px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " +
+                    (sort === k ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
+                  }
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+
+            {/* 검색 — 가운데, 끝은 동글게 */}
+            <div className="group relative mx-auto w-full max-w-[320px] flex-1">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                aria-hidden
+                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600"
+              >
+                <circle cx="11" cy="11" r="7" />
+                <path d="M20 20l-3.5-3.5" />
+              </svg>
+              <input
+                value={q}
+                onChange={(ev) => setQ(ev.target.value)}
+                placeholder="제목 · 본문 · SO WHAT · 출처 검색"
+                className="w-full rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]"
+              />
+              {q ? (
+                <button
+                  type="button"
+                  onClick={() => setQ("")}
+                  aria-label="검색어 지우기"
+                  className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90"
+                >
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                    <path d="M6 6l12 12M18 6L6 18" />
+                  </svg>
+                </button>
+              ) : null}
+            </div>
+
+            <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-500">
               최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
               <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
                 CONFIRMED
@@ -700,62 +769,11 @@ export default function Page() {
             </div>
           ) : null}
 
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <div className="flex gap-0.5 rounded-lg border border-gray-200 p-0.5">
-              {([["new", "최신순"], ["impact", "영향도순"]] as const).map(([k, t]) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setSort(k)}
-                  className={
-                    "rounded-md px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " +
-                    (sort === k ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
-                  }
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-            <span className="text-[10.5px] leading-snug text-gray-400">
-              {sort === "impact"
-                ? "영향도 = 주제 가중 × 연결지표 변동폭 × 신선도(14일 반감) · 규제는 severity × 시행 임박"
-                : "발행일 최신순"}
-            </span>
-            <div className="group relative min-w-[220px] flex-1">
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                aria-hidden
-                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3.5-3.5" />
-              </svg>
-              <input
-                value={q}
-                onChange={(ev) => setQ(ev.target.value)}
-                placeholder="제목 · 본문 · SO WHAT · 출처 검색"
-                className="w-full rounded-lg border border-gray-200 bg-gray-50 py-1.5 pl-8 pr-8 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]"
-              />
-              {q ? (
-                <button
-                  type="button"
-                  onClick={() => setQ("")}
-                  aria-label="검색어 지우기"
-                  className="absolute right-1.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M6 6l12 12M18 6L6 18" />
-                  </svg>
-                </button>
-              ) : null}
-            </div>
-          </div>
+          <p className="mt-2 text-[10.5px] leading-snug text-gray-400">
+            {sort === "impact"
+              ? "영향도 = 주제 가중 × 연결지표 변동폭 × 신선도(14일 반감) · 규제는 severity × 시행 임박"
+              : "발행일 최신순"}
+          </p>
 
           <div key={mode + menu + prod + sort + cur + q} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
             {feed === null ? (
@@ -1019,33 +1037,59 @@ export default function Page() {
               ) : (
                 <>
                   <div className="flex flex-col gap-1">
-                    {board.slice(0, 3).map((r) => (
+                    {board.slice(0, 3).map((r, i) => {
+                    const eff = r.dDay == null ? r.date : effDate(r)
+                    const urgent = r.dDay != null && r.dDay >= 0 && r.dDay <= 7
+                    return (
                       <button
                         key={r.id}
                         type="button"
                         onClick={() => setModal(r)}
-                        className={
-                          "group flex flex-col gap-1 rounded-md border-l-2 bg-white px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 active:scale-[.99] " +
-                          (r.severity === "Critical" ? "border-red-500" : r.severity === "High" ? "border-amber-400" : "border-gray-200")
-                        }
+                        style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.08 + "s" }}
+                        className="group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50"
                       >
-                        <span className="flex flex-wrap items-center gap-1">
-                          <span className={"rounded px-1 py-px text-[9px] font-bold leading-4 " + (SEV[r.severity ?? ""] ?? SEV.Medium)}>
-                            {r.severity}
-                          </span>
-                          {r.dDay != null ? (
-                            <span className={"num text-[9px] font-bold " + (r.dDay >= 0 && r.dDay <= 7 ? "text-red-600" : "text-gray-500")}>
-                              {r.dDay <= 0 ? "시행 중" : "D-" + r.dDay}
+                        {/* 대시보드 캘린더와 같은 날짜 블록 — 규제는 '시행일'이 곧 일정이다 */}
+                        <div
+                          className={
+                            "flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " +
+                            (urgent ? "bg-red-50 text-red-600" : r.dDay != null && r.dDay < 0 ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")
+                          }
+                        >
+                          <span className="text-[10px] font-bold uppercase leading-none">{MON[Number(eff.slice(5, 7)) - 1]}</span>
+                          <span className="num text-sm font-semibold leading-tight">{Number(eff.slice(8, 10))}</span>
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate break-normal text-[12px] font-normal leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600">
+                            {r.title.split("—")[0].trim()}
+                          </p>
+                          <div className="mt-1 flex flex-wrap items-center gap-1">
+                            <span
+                              className={
+                                "rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors duration-300 " +
+                                (r.severity === "Critical"
+                                  ? "bg-red-50 text-red-700"
+                                  : r.severity === "High"
+                                    ? "bg-amber-50 text-amber-700"
+                                    : "bg-gray-100 text-gray-500")
+                              }
+                            >
+                              {r.severity}
                             </span>
-                          ) : null}
-                          <span className="truncate text-[10px] text-gray-500">{r.agency}</span>
-                        </span>
-                        <p className="line-clamp-2 text-[12px] font-semibold leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-                          {r.title}
-                        </p>
+                            {r.dDay != null ? (
+                              <span className="num rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">
+                                {r.dDay <= 0 ? "시행 중" : "D-" + r.dDay}
+                              </span>
+                            ) : null}
+                            <span className="truncate rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">
+                              {r.agency}
+                            </span>
+                          </div>
+                        </div>
                       </button>
-                    ))}
-                  </div>
+                    )
+                  })}
+                </div>
                   <button
                     type="button"
                     onClick={() => setMenu("규제·정책")}
