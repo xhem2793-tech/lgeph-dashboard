@@ -261,17 +261,7 @@ export default function Competitors() {
     <div className="px-4 py-4 sm:px-6">
       <style>{"@keyframes viewIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}"}</style>
 
-      <a href="/competitors" className="group inline-flex items-baseline gap-1">
-        <h1 className="text-[20px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-          가격 동향
-        </h1>
-        <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
-      </a>
-      <p className="mt-0.5 text-[12px] text-gray-500">
-        Anson&apos;s · Abenson · SM 온라인 매장 일 1회 스크래핑
-      </p>
-
-      <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(190px,0.8fr)_4fr]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(190px,0.8fr)_4fr]">
         <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
           <Section title="보기">
             <div className="flex flex-col gap-0.5">
