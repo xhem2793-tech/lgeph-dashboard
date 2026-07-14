@@ -13,11 +13,18 @@ import {
 } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
-/** 주요뉴스 — 3분할(주제 메뉴 / 피드 / 규제 상시).
- *  각 행은 주제배지 · 제목 · 메타+지표칩 · 본문 2줄 · SO WHAT.
- *  좌·우 패널은 스크롤을 따라 붙고(sticky), 피드는 20건씩 페이지로 끊는다 —
- *  한 화면에 140건을 쏟으면 아무것도 안 읽힌다.
- *  애니메이션은 대시보드와 동일: fadeUp .5s ease(진입) · hover는 indigo-600 + 살짝 부상 · 클릭은 active:scale */
+/** 주요뉴스 — 3분할(주제 / 피드 / 규제 상시).
+ *
+ *  ■ 리스트의 역할은 "읽는 것"이 아니라 "열 것을 고르는 것"
+ *   그래서 행은 제목 · 메타 한 줄 · SO WHAT 한 줄까지만. 본문 요약은 모달에서 읽는다.
+ *   첫 기사만 리드 카드(큰 이미지 + 요약 2줄)로 두어 화면에 리듬을 만든다.
+ *
+ *  ■ 색은 신호가 있을 때만
+ *   지표칩은 행당 1개, ±1% 이상 움직였을 때만 색을 준다. 전부 칠하면 아무것도 강조되지 않는다.
+ *
+ *  ■ 기간 필터는 없앴다 — 페이지가 생긴 이상 창을 좁힐 이유가 없고,
+ *   창이 바뀔 때마다 좌측 카운트가 요동쳐 신뢰가 깨졌다. 대신 정렬(최신순/영향도순)을 둔다.
+ */
 
 type Topic = { key: string; label: string; desc: string }
 
@@ -31,23 +38,30 @@ const TOPICS: Topic[] = [
   { key: "에너지·전력", label: "에너지·전력", desc: "유가·전기요금·전력수급" },
 ]
 
-const PERIODS = [
-  { d: 7, t: "7일" },
-  { d: 30, t: "30일" },
-  { d: 90, t: "90일" },
-  { d: 0, t: "전체" },
-]
+/** 영향도 = 토픽 가중 × 지표 변동폭 × 신선도 감쇠. 최신이 곧 중요한 것은 아니다 */
+const W: Record<string, number> = {
+  "거시·금융": 1.0,
+  "에너지·전력": 1.0,
+  "CE·유통": 0.95,
+  B2B: 0.9,
+  "정치·정책": 0.85,
+  "기상·재난": 0.8,
+}
 
 const PAGE = 20
 
-function rel(s: string) {
+function ageDays(s: string) {
   const d = new Date(s + "T00:00:00+08:00").getTime()
   const n = new Date()
   const t = new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime()
-  const diff = Math.round((t - d) / 86400000)
-  if (diff <= 0) return "오늘"
-  if (diff === 1) return "어제"
-  if (diff < 7) return diff + "일 전"
+  return Math.max(0, Math.round((t - d) / 86400000))
+}
+
+function rel(s: string) {
+  const a = ageDays(s)
+  if (a <= 0) return "오늘"
+  if (a === 1) return "어제"
+  if (a < 7) return a + "일 전"
   return s.slice(5).replace("-", "/")
 }
 
@@ -62,103 +76,84 @@ const SEV: Record<string, string> = {
   Medium: "bg-gray-100 text-gray-600",
 }
 
-function ChipPill({ c, on, onHover }: { c: Chip; on: boolean; onHover: (k: string | null) => void }) {
-  const up = (c.deltaPct ?? 0) > 0
-  const flat = !c.deltaPct
+/** 지표칩 — 색은 ±1% 이상 움직였을 때만. 클릭하면 해당 지표로 이동 */
+function ChipPill({ c }: { c: Chip }) {
+  const dv = c.deltaPct ?? 0
+  const strong = Math.abs(dv) >= 1
+  const up = dv > 0
   return (
     <a
       href={"/economy?k=" + c.k}
       onClick={(e) => e.stopPropagation()}
-      onMouseEnter={() => onHover(c.k)}
-      onMouseLeave={() => onHover(null)}
-      className={
-        "inline-flex items-center gap-1 rounded-full border px-1.5 py-px text-[10px] leading-4 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 active:scale-95 " +
-        (on ? "border-indigo-300 bg-indigo-50 text-indigo-700" : "border-gray-200 text-gray-600")
-      }
+      className="inline-flex items-center gap-1 rounded-full border border-gray-200 px-1.5 py-px text-[10px] leading-4 text-gray-600 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-600 active:scale-95"
     >
-      <span className="font-medium">{c.label}</span>
-      <span className="num font-semibold text-gray-900">
+      <span>{c.label}</span>
+      <span className="num font-semibold text-gray-800">
         {c.unit === "₱" ? "₱" : ""}
         {c.value ?? "—"}
         {c.unit && c.unit !== "₱" ? c.unit : ""}
       </span>
-      {flat ? null : (
-        <span className={"num font-semibold " + (up ? "text-red-600" : "text-emerald-600")}>
-          {Math.abs(c.deltaPct as number).toFixed(1)}%{up ? "↑" : "↓"}
+      {dv ? (
+        <span className={"num font-semibold " + (strong ? (up ? "text-red-600" : "text-emerald-600") : "text-gray-400")}>
+          {Math.abs(dv).toFixed(1)}%{up ? "↑" : "↓"}
         </span>
-      )}
+      ) : null}
     </a>
   )
 }
 
-/** 이미지 없는 기사의 대표 비주얼 — 남의 사진을 빌려오지 않는다.
- *  주제색 + 도트 그리드 + 연결 지표(있으면) + 출처로 만든 자체 카드. */
-const TOPIC_ART: Record<string, { a: string; b: string; tag: string }> = {
-  "거시·금융": { a: "#4f46e5", b: "#312e81", tag: "MACRO" },
-  "정치·정책": { a: "#475569", b: "#1e293b", tag: "POLICY" },
-  B2B: { a: "#0284c7", b: "#0c4a6e", tag: "B2B" },
-  "CE·유통": { a: "#7c3aed", b: "#4c1d95", tag: "RETAIL" },
-  "기상·재난": { a: "#0d9488", b: "#134e4a", tag: "WEATHER" },
-  "에너지·전력": { a: "#f59e0b", b: "#b45309", tag: "ENERGY" },
+/** 대표 지표 1개 — 가장 크게 움직인 것 */
+function lead(f: FeedItem, chips: Record<string, Chip>): Chip | null {
+  const arr = f.chipKeys.map((k) => chips[k]).filter(Boolean)
+  if (!arr.length) return null
+  return [...arr].sort((a, b) => Math.abs(b.deltaPct ?? 0) - Math.abs(a.deltaPct ?? 0))[0]
 }
 
-function TopicArt({ f, chips, big }: { f: FeedItem; chips: Record<string, Chip>; big?: boolean }) {
-  const t = TOPIC_ART[f.topic] ?? { a: "#64748b", b: "#334155", tag: "NEWS" }
-  const keys = f.chipKeys.map((k) => chips[k]).filter(Boolean).slice(0, 2)
+/** 이미지 없는 기사의 대표 비주얼 — 남의 사진을 빌려오지 않는다.
+ *  저채도 톤 + 얇은 라벨. 사진과 나란히 놓아도 튀지 않게. */
+const ART: Record<string, { c: string; tag: string }> = {
+  "거시·금융": { c: "#eef2ff", tag: "MACRO" },
+  "정치·정책": { c: "#f1f5f9", tag: "POLICY" },
+  B2B: { c: "#eff6ff", tag: "B2B" },
+  "CE·유통": { c: "#f5f3ff", tag: "RETAIL" },
+  "기상·재난": { c: "#f0fdfa", tag: "WEATHER" },
+  "에너지·전력": { c: "#fffbeb", tag: "ENERGY" },
+}
+
+function TopicArt({ f, chip, big }: { f: FeedItem; chip: Chip | null; big?: boolean }) {
+  const a = ART[f.topic] ?? { c: "#f8fafc", tag: "NEWS" }
   return (
     <div
-      className="relative flex h-full w-full flex-col justify-between overflow-hidden rounded-lg p-3"
-      style={{
-        background:
-          "radial-gradient(120% 120% at 100% 0%, " + t.a + " 0%, " + t.b + " 70%)",
-      }}
+      className="flex h-full w-full flex-col justify-between overflow-hidden rounded-md border border-gray-200 p-2"
+      style={{ backgroundColor: a.c }}
     >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.18]"
-        style={{
-          backgroundImage: "radial-gradient(#fff 1px, transparent 1px)",
-          backgroundSize: "10px 10px",
-        }}
-      />
-      <span className="relative flex items-center justify-between">
-        <span className="rounded bg-white/15 px-1.5 py-px text-[9px] font-bold tracking-widest text-white/90 backdrop-blur-sm">
-          {t.tag}
+      <span className="text-[9px] font-semibold tracking-widest text-gray-500">{a.tag}</span>
+      {chip ? (
+        <span className={"num font-semibold leading-tight text-gray-700 " + (big ? "text-[14px]" : "text-[11px]")}>
+          {chip.label} {chip.unit === "₱" ? "₱" : ""}
+          {chip.value ?? "—"}
+          {chip.unit && chip.unit !== "₱" ? chip.unit : ""}
         </span>
-        <span className={"font-bold leading-none text-white/30 " + (big ? "text-[26px]" : "text-[18px]")}>
-          {String(Number(f.date.slice(5, 7))) + "/" + String(Number(f.date.slice(8, 10)))}
+      ) : (
+        <span className={"font-semibold leading-tight text-gray-600 " + (big ? "text-[14px]" : "text-[11px]")}>
+          {f.topic}
         </span>
-      </span>
-
-      <span className="relative flex flex-col gap-0.5">
-        {keys.length ? (
-          keys.map((c) => (
-            <span key={c.k} className="num text-[13px] font-semibold leading-tight text-white">
-              {c.label} {c.unit === "₱" ? "₱" : ""}
-              {c.value ?? "—"}
-              {c.unit && c.unit !== "₱" ? c.unit : ""}
-            </span>
-          ))
-        ) : (
-          <span className="text-[13px] font-semibold leading-tight text-white/90">{f.topic}</span>
-        )}
-      </span>
-
-      <span className="relative truncate text-[10px] text-white/60">{f.source}</span>
+      )}
+      <span className="num text-[9px] text-gray-400">{f.date.slice(5).replace("-", "/")}</span>
     </div>
   )
 }
 
 export default function Page() {
   const { pick } = useLang()
-  const [days, setDays] = React.useState(30)
   const [topic, setTopic] = React.useState("전체")
+  const [sort, setSort] = React.useState<"new" | "impact">("new")
   const [q, setQ] = React.useState("")
   const [page, setPage] = React.useState(1)
   const [feed, setFeed] = React.useState<FeedItem[] | null>(null)
   const [chips, setChips] = React.useState<Record<string, Chip>>({})
   const [regs, setRegs] = React.useState<RegBoardItem[]>([])
   const [stamp, setStamp] = React.useState<string | null>(null)
-  const [hot, setHot] = React.useState<string | null>(null)
   const [modal, setModal] = React.useState<FeedItem | null>(null)
   const [closing, setClosing] = React.useState(false)
 
@@ -186,16 +181,12 @@ export default function Page() {
         setStamp(f.news ?? null)
       })
       .catch(() => {})
+    newsFeed(0).then(setFeed).catch(() => setFeed([]))
   }, [])
 
   React.useEffect(() => {
-    setFeed(null)
-    newsFeed(days).then(setFeed).catch(() => setFeed([]))
-  }, [days])
-
-  React.useEffect(() => {
     setPage(1)
-  }, [topic, days, q])
+  }, [topic, sort, q])
 
   const rows = React.useMemo(() => (feed ?? []).filter((f) => f.ai && f.ai.trim().length > 0), [feed])
   const counts = React.useMemo(() => {
@@ -208,12 +199,19 @@ export default function Page() {
     let d = topic === "전체" ? rows : rows.filter((r) => r.topic === topic)
     const k = q.trim().toLowerCase()
     if (k) {
-      d = d.filter((r) =>
-        (r.title + " " + r.summary + " " + r.ai + " " + r.source).toLowerCase().includes(k),
-      )
+      d = d.filter((r) => (r.title + " " + r.summary + " " + r.ai + " " + r.source).toLowerCase().includes(k))
+    }
+    if (sort === "impact") {
+      const score = (f: FeedItem) => {
+        const c = lead(f, chips)
+        const mv = Math.min(6, Math.abs(c?.deltaPct ?? 0))
+        const decay = 1 / (1 + ageDays(f.date) / 14)
+        return (W[f.topic] ?? 0.8) * (1 + mv) * decay
+      }
+      d = [...d].sort((a, b) => score(b) - score(a))
     }
     return d
-  }, [rows, topic, q])
+  }, [rows, topic, q, sort, chips])
 
   const pages = Math.max(1, Math.ceil(shown.length / PAGE))
   const cur = Math.min(page, pages)
@@ -254,8 +252,8 @@ export default function Page() {
         </p>
       </div>
 
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(190px,0.9fr)_minmax(0,3fr)_minmax(260px,1.15fr)]">
-        {/* ── 좌 : 주제 메뉴 (스크롤 따라붙음) ── */}
+      <div className="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(190px,0.9fr)_minmax(0,3fr)_minmax(250px,1.1fr)]">
+        {/* ── 좌 : 주제 ── */}
         <aside
           className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}
@@ -277,16 +275,12 @@ export default function Page() {
                     <span
                       className={
                         "flex-1 text-[13px] transition-colors duration-300 " +
-                        (topic === t.key
-                          ? "font-semibold text-indigo-700"
-                          : "font-medium text-gray-800 group-hover:text-indigo-600")
+                        (topic === t.key ? "font-semibold text-indigo-700" : "font-medium text-gray-800 group-hover:text-indigo-600")
                       }
                     >
                       {t.label}
                     </span>
-                    <span className="num shrink-0 rounded border border-gray-200 bg-gray-50 px-1 py-px text-[9px] font-semibold text-gray-500">
-                      {counts[t.key] ?? 0}
-                    </span>
+                    <span className="num shrink-0 text-[10px] text-gray-400">{counts[t.key] ?? 0}</span>
                   </span>
                   <span className="block text-[11px] leading-snug text-gray-500">{t.desc}</span>
                 </button>
@@ -299,15 +293,11 @@ export default function Page() {
             <div className="flex flex-col gap-1 px-1">
               <span className="flex items-center justify-between text-[12px] text-gray-600">
                 Critical
-                <span className="num rounded bg-red-100 px-1 font-semibold text-red-700">
-                  {regs.filter((r) => r.severity === "Critical").length}
-                </span>
+                <span className="num font-semibold text-red-700">{regs.filter((r) => r.severity === "Critical").length}</span>
               </span>
               <span className="flex items-center justify-between text-[12px] text-gray-600">
                 High
-                <span className="num rounded bg-amber-100 px-1 font-semibold text-amber-700">
-                  {regs.filter((r) => r.severity === "High").length}
-                </span>
+                <span className="num font-semibold text-amber-700">{regs.filter((r) => r.severity === "High").length}</span>
               </span>
             </div>
           </div>
@@ -331,22 +321,19 @@ export default function Page() {
             </span>
           </header>
 
-          {/* 조회 바 — 기간 + 검색을 피드 바로 위에 (메뉴 맨 밑은 아무도 안 본다) */}
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <div className="flex gap-0.5 rounded-lg border border-gray-200 p-0.5">
-              {PERIODS.map((p) => (
+              {([["new", "최신순"], ["impact", "영향도순"]] as const).map(([k, t]) => (
                 <button
-                  key={p.d}
+                  key={k}
                   type="button"
-                  onClick={() => setDays(p.d)}
+                  onClick={() => setSort(k)}
                   className={
                     "rounded-md px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " +
-                    (days === p.d
-                      ? "bg-indigo-600 text-white shadow-sm"
-                      : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
+                    (sort === k ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
                   }
                 >
-                  {p.t}
+                  {t}
                 </button>
               ))}
             </div>
@@ -369,81 +356,85 @@ export default function Page() {
             </div>
           </div>
 
-          <div key={topic + days + cur + q} className="mt-3 flex flex-col gap-2.5" style={{ animation: "viewIn .32s cubic-bezier(.22,1,.36,1) both" }}>
+          <div key={topic + sort + cur + q} style={{ animation: "viewIn .32s cubic-bezier(.22,1,.36,1) both" }}>
             {feed === null ? (
-              <>
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="h-[168px] rounded-lg bg-gray-50" />
+              <div className="mt-3 flex flex-col gap-2">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="h-[74px] rounded-lg bg-gray-50" />
                 ))}
-              </>
+              </div>
             ) : slice.length === 0 ? (
               <p className="py-10 text-center text-[12px] text-gray-500">조건에 맞는 기사 없음</p>
             ) : (
-              slice.map((f) => (
-                <div
-                  key={f.id}
-                  role="button"
-                  tabIndex={0}
-                  onClick={() => setModal(f)}
-                  onKeyDown={(ev) => {
-                    if (ev.key === "Enter") setModal(f)
-                  }}
-                  className="group flex cursor-pointer gap-4 rounded-lg bg-gray-50 p-3.5 text-left transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-lg hover:shadow-indigo-100 active:scale-[.995]"
-                >
-                  {f.image ? (
-                    <div className="hidden h-[140px] w-[210px] shrink-0 overflow-hidden rounded-lg bg-gray-100 sm:block">
-                      <img
-                        src={f.image}
-                        alt=""
-                        loading="lazy"
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                        onError={(ev) => {
-                          const el = ev.currentTarget.parentElement
-                          if (el) el.style.display = "none"
-                        }}
-                      />
+              <div className="mt-3 flex flex-col divide-y divide-gray-100">
+                {slice.map((f, i) => {
+                  const c = lead(f, chips)
+                  const isLead = cur === 1 && i === 0
+                  return (
+                    <div
+                      key={f.id}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setModal(f)}
+                      onKeyDown={(ev) => {
+                        if (ev.key === "Enter") setModal(f)
+                      }}
+                      className="group -mx-2 flex cursor-pointer gap-3 rounded-lg px-2 py-3 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 active:scale-[.997]"
+                    >
+                      <div className={"shrink-0 overflow-hidden rounded-md bg-gray-100 " + (isLead ? "hidden h-[128px] w-[208px] sm:block" : "hidden h-[62px] w-[104px] sm:block")}>
+                        {f.image ? (
+                          <img
+                            src={f.image}
+                            alt=""
+                            loading="lazy"
+                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            onError={(ev) => {
+                              const el = ev.currentTarget
+                              el.style.display = "none"
+                            }}
+                          />
+                        ) : (
+                          <TopicArt f={f} chip={c} big={isLead} />
+                        )}
+                      </div>
+
+                      <div className="flex min-w-0 flex-1 flex-col justify-center">
+                        <p
+                          className={
+                            "line-clamp-2 font-semibold leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600 " +
+                            (isLead ? "text-[18px]" : "text-[14.5px]")
+                          }
+                        >
+                          {pick(f.title, f.titleEn)}
+                        </p>
+
+                        {isLead ? (
+                          <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-gray-600">
+                            {pick(f.summary, f.summaryEn)}
+                          </p>
+                        ) : null}
+
+                        <p className="mt-1 line-clamp-1 text-[12px] leading-relaxed text-gray-600">
+                          <span className="mr-1 text-[9.5px] font-bold tracking-wider text-indigo-600">SO WHAT</span>
+                          {pick(f.ai, f.aiEn)}
+                        </p>
+
+                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                          <span className="text-[10.5px] font-medium text-gray-500">{f.topic}</span>
+                          <span className="text-[10.5px] text-gray-300">·</span>
+                          <span className="text-[10.5px] text-gray-500">{f.source}</span>
+                          <span className="text-[10.5px] text-gray-300">·</span>
+                          <span className="num text-[10.5px] text-gray-500">{rel(f.date)}</span>
+                          {c ? <ChipPill c={c} /> : null}
+                        </div>
+                      </div>
                     </div>
-                  ) : (
-                    <div className="hidden h-[140px] w-[210px] shrink-0 sm:block">
-                      <TopicArt f={f} chips={chips} />
-                    </div>
-                  )}
-
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <div className="flex flex-wrap items-center gap-1">
-                      <span className="rounded bg-indigo-50 px-1.5 py-px text-[10px] font-bold leading-4 text-indigo-700">
-                        {f.topic}
-                      </span>
-                      <span className="text-[11px] text-gray-500">
-                        {f.source} · {rel(f.date)}
-                      </span>
-                      {f.chipKeys
-                        .map((k) => chips[k])
-                        .filter(Boolean)
-                        .map((c) => (
-                          <ChipPill key={c.k} c={c} on={hot === c.k} onHover={setHot} />
-                        ))}
-                    </div>
-
-                    <p className="mt-1 line-clamp-2 text-[16px] font-semibold leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-                      {pick(f.title, f.titleEn)}
-                    </p>
-
-                    <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-gray-600">
-                      {pick(f.summary, f.summaryEn)}
-                    </p>
-
-                    <p className="mt-auto line-clamp-2 border-l-2 border-indigo-500 pl-2 pt-1.5 text-[12px] leading-relaxed text-gray-700">
-                      <span className="mr-1 text-[10px] font-bold tracking-wider text-indigo-600">SO WHAT</span>
-                      {pick(f.ai, f.aiEn)}
-                    </p>
-                  </div>
-                </div>
-              ))
+                  )
+                })}
+              </div>
             )}
           </div>
 
-          {/* 페이지 — 20건씩 */}
           {feed && shown.length > PAGE ? (
             <div className="mt-4 flex items-center justify-center gap-1 border-t border-gray-100 pt-3">
               <button
@@ -465,9 +456,7 @@ export default function Page() {
                       onClick={() => go(p)}
                       className={
                         "num min-w-[26px] rounded-md px-1.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " +
-                        (p === cur
-                          ? "bg-indigo-600 text-white shadow-sm"
-                          : "text-gray-600 hover:-translate-y-0.5 hover:bg-indigo-50 hover:text-indigo-600")
+                        (p === cur ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:bg-indigo-50 hover:text-indigo-600")
                       }
                     >
                       {p}
@@ -486,7 +475,7 @@ export default function Page() {
           ) : null}
         </section>
 
-        {/* ── 우 : 규제 동향 (스크롤 따라붙음) ── */}
+        {/* ── 우 : 규제 동향 ── */}
         <aside
           className="h-fit lg:sticky lg:top-[88px]"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.15s" }}
@@ -495,15 +484,14 @@ export default function Page() {
             <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
               <p className="text-[14px] font-bold tracking-tight text-gray-900">규제 동향</p>
               <span className="num text-[10px] text-gray-500">
-                Critical {regs.filter((r) => r.severity === "Critical").length} · High{" "}
-                {regs.filter((r) => r.severity === "High").length}
+                Critical {regs.filter((r) => r.severity === "Critical").length} · High {regs.filter((r) => r.severity === "High").length}
               </span>
             </div>
             <div className="max-h-[calc(100vh-190px)] overflow-y-auto p-2">
               {regs.length === 0 ? (
                 <p className="py-8 text-center text-[12px] text-gray-500">등재된 규제 없음</p>
               ) : (
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1">
                   {board.map((r) => (
                     <a
                       key={r.id}
@@ -511,8 +499,8 @@ export default function Page() {
                       target="_blank"
                       rel="noopener noreferrer"
                       className={
-                        "group flex flex-col gap-1 rounded-lg border p-2.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/40 hover:shadow-sm active:scale-[.99] " +
-                        (r.severity === "Critical" ? "border-red-100 bg-red-50/60" : "border-gray-100 bg-gray-50")
+                        "group flex flex-col gap-1 rounded-md border-l-2 bg-white px-2.5 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 active:scale-[.99] " +
+                        (r.severity === "Critical" ? "border-red-500" : r.severity === "High" ? "border-amber-400" : "border-gray-200")
                       }
                     >
                       <span className="flex flex-wrap items-center gap-1">
@@ -522,8 +510,8 @@ export default function Page() {
                         {r.dDay != null ? (
                           <span
                             className={
-                              "rounded px-1 py-px text-[9px] font-bold leading-4 " +
-                              (r.dDay >= 0 && r.dDay <= 7 ? "bg-red-600 text-white" : "bg-gray-200 text-gray-600")
+                              "num text-[9px] font-bold " +
+                              (r.dDay >= 0 && r.dDay <= 7 ? "text-red-600" : "text-gray-500")
                             }
                           >
                             {r.dDay <= 0 ? "시행 중" : "D-" + r.dDay}
@@ -535,8 +523,8 @@ export default function Page() {
                         {pick(r.title, r.titleEn)}
                       </p>
                       {r.actions ? (
-                        <p className="line-clamp-1 text-[10px] leading-4 text-gray-600">
-                          <b className="font-semibold text-gray-700">ACTION</b> {r.actions.split(" / ")[0]}
+                        <p className="line-clamp-1 text-[10px] leading-4 text-gray-500">
+                          <b className="font-semibold text-gray-600">ACTION</b> {r.actions.split(" / ")[0]}
                         </p>
                       ) : null}
                     </a>
@@ -572,7 +560,7 @@ export default function Page() {
 
             <div className="min-w-0 pr-8">
               <span className="flex flex-wrap items-center gap-1.5">
-                <span className="rounded bg-indigo-50 px-1.5 py-px text-[10px] font-bold leading-4 text-indigo-700">{modal.topic}</span>
+                <span className="text-[11px] font-semibold text-indigo-600">{modal.topic}</span>
                 {modal.confidence ? (
                   <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
                     {modal.confidence}
@@ -582,7 +570,7 @@ export default function Page() {
                   .map((k) => chips[k])
                   .filter(Boolean)
                   .map((c) => (
-                    <ChipPill key={c.k} c={c} on={false} onHover={() => {}} />
+                    <ChipPill key={c.k} c={c} />
                   ))}
               </span>
               <h3 className="mt-1 text-lg font-bold leading-snug text-gray-900">{pick(modal.title, modal.titleEn)}</h3>
@@ -591,35 +579,26 @@ export default function Page() {
               </p>
             </div>
 
-            {modal.image ? (
-              <div className="mt-4 grid gap-5 md:grid-cols-3">
-                <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 md:col-span-1 md:aspect-auto md:h-full md:min-h-[150px]">
+            <div className="mt-4 grid gap-5 md:grid-cols-3">
+              <div className="h-[150px] w-full overflow-hidden rounded-xl bg-gray-100 md:col-span-1 md:h-full md:min-h-[150px]">
+                {modal.image ? (
                   <img
                     src={modal.image}
                     alt=""
                     className="h-full w-full object-cover"
                     onError={(ev) => {
-                      const el = ev.currentTarget.parentElement
-                      if (el) el.style.display = "none"
+                      ev.currentTarget.style.display = "none"
                     }}
                   />
-                </div>
-                <div className="min-w-0 md:col-span-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">본문 요약</p>
-                  <p className="mt-1 text-sm leading-relaxed text-gray-700">{pick(modal.summary, modal.summaryEn)}</p>
-                </div>
+                ) : (
+                  <TopicArt f={modal} chip={lead(modal, chips)} big />
+                )}
               </div>
-            ) : (
-              <div className="mt-4 grid gap-5 md:grid-cols-3">
-                <div className="h-[150px] w-full md:col-span-1 md:h-full md:min-h-[150px]">
-                  <TopicArt f={modal} chips={chips} big />
-                </div>
-                <div className="min-w-0 md:col-span-2">
-                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">본문 요약</p>
-                  <p className="mt-1 text-sm leading-relaxed text-gray-700">{pick(modal.summary, modal.summaryEn)}</p>
-                </div>
+              <div className="min-w-0 md:col-span-2">
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">본문 요약</p>
+                <p className="mt-1 text-sm leading-relaxed text-gray-700">{pick(modal.summary, modal.summaryEn)}</p>
               </div>
-            )}
+            </div>
 
             <div className="mt-4 rounded-xl bg-indigo-50 p-4">
               <p className="flex items-center gap-1 text-[11px] font-semibold text-indigo-600">
