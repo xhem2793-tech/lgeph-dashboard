@@ -400,6 +400,86 @@ function para(s: string): string[] {
   return out
 }
 
+/** 검색어 하이라이트 — 어디가 걸렸는지 눈으로 보이지 않으면 검색 결과를 신뢰할 수 없다 */
+function Hi({ text, q }: { text: string; q: string }) {
+  const k = q.trim()
+  if (!k || !text) return <>{text}</>
+  const parts = text.split(new RegExp("(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\export default function Page() {") + ")", "gi"))
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.toLowerCase() === k.toLowerCase() ? (
+          <mark key={i} className="rounded-sm bg-yellow-200 px-0.5 text-gray-900">
+            {p}
+          </mark>
+        ) : (
+          <React.Fragment key={i}>{p}</React.Fragment>
+        ),
+      )}
+    </>
+  )
+}
+
+function hitCount(x: Doc, q: string) {
+  const k = q.trim().toLowerCase()
+  if (!k) return 0
+  const s = (x.title + " " + x.summary + " " + x.so).toLowerCase()
+  let n = 0
+  let i = s.indexOf(k)
+  while (i >= 0) {
+    n++
+    i = s.indexOf(k, i + k.length)
+  }
+  return n
+}
+
+/** 같은 사건 묶기 — 날짜 ±2일 + 제목·요약 토큰 유사도. 시트(관점)가 다르면 묶지 않는다 */
+const STOP = /^(그|및|등|위해|대한|관련|올해|지난|이번|the|a|an|of|in|on|to|for|and|with|its|his|by)$/i
+
+function tokens(x: Doc) {
+  return new Set(
+    (x.title + " " + x.summary)
+      .toLowerCase()
+      .replace(/[^0-9a-z가-힣₱%.\s]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length >= 2 && !STOP.test(w)),
+  )
+}
+
+function jaccard(a: Set<string>, b: Set<string>) {
+  let inter = 0
+  a.forEach((w) => {
+    if (b.has(w)) inter++
+  })
+  const uni = a.size + b.size - inter
+  return uni === 0 ? 0 : inter / uni
+}
+
+type Group = { head: Doc; dups: Doc[] }
+
+function groupDocs(list: Doc[]): Group[] {
+  const used = new Set<string>()
+  const out: Group[] = []
+  const toks = new Map<string, Set<string>>()
+  list.forEach((x) => toks.set(x.id, tokens(x)))
+
+  for (const x of list) {
+    if (used.has(x.id)) continue
+    used.add(x.id)
+    const dups: Doc[] = []
+    for (const y of list) {
+      if (used.has(y.id)) continue
+      if (y.kind !== x.kind || y.topic !== x.topic) continue
+      if (Math.abs(ageDays(y.date) - ageDays(x.date)) > 2) continue
+      if (jaccard(toks.get(x.id)!, toks.get(y.id)!) < 0.42) continue
+      used.add(y.id)
+      dups.push(y)
+    }
+    out.push({ head: x, dups })
+  }
+  return out
+}
+
 export default function Page() {
   const { pick } = useLang()
   const [mode, setMode] = React.useState<"topic" | "product">("topic")
@@ -410,6 +490,7 @@ export default function Page() {
   const [focused, setFocused] = React.useState(false)
   /** 읽음 — 브라우저별로만 남는다(같은 화면을 여럿이 봐도 서로 영향 없음). 기기를 바꾸면 초기화 */
   const [read, setRead] = React.useState<Set<string>>(new Set())
+  const [openDup, setOpenDup] = React.useState<Set<string>>(new Set())
 
   React.useEffect(() => {
     try {
@@ -579,10 +660,13 @@ export default function Page() {
     return d
   }, [all, menu, q, sort, chips, mode, prod])
 
+  /** 같은 사건은 한 줄로 접는다 — 매체가 셋이면 세 줄이 아니라 "관련 2건" */
+  const groups = React.useMemo(() => groupDocs(shown), [shown])
   const unread = shown.filter((x) => !read.has(x.id)).length
-  const pages = Math.max(1, Math.ceil(shown.length / PAGE))
+  const hits = React.useMemo(() => (q.trim() ? shown.reduce((s, x) => s + hitCount(x, q), 0) : 0), [shown, q])
+  const pages = Math.max(1, Math.ceil(groups.length / PAGE))
   const cur = Math.min(page, pages)
-  const slice = shown.slice((cur - 1) * PAGE, cur * PAGE)
+  const slice = groups.slice((cur - 1) * PAGE, cur * PAGE)
 
   const board = React.useMemo(() => {
     const rank = { Critical: 0, High: 1, Medium: 2 } as Record<string, number>
@@ -714,7 +798,11 @@ export default function Page() {
             <h2 className="flex shrink-0 items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
               {mode === "product" ? prod : active?.label}
               <span className="num text-[11px] font-medium text-gray-500">{shown.length}건</span>
-              {unread > 0 ? (
+              {q.trim() ? (
+                <span className="num rounded-full bg-yellow-100 px-1.5 py-px text-[10px] font-semibold text-yellow-800">
+                  “{q.trim()}” {shown.length}건 · {hits}곳 일치
+                </span>
+              ) : unread > 0 ? (
                 <span className="num rounded-full bg-indigo-50 px-1.5 py-px text-[10px] font-semibold text-indigo-700">
                   안 읽음 {unread}
                 </span>
@@ -821,7 +909,8 @@ export default function Page() {
               <p className="py-10 text-center text-[12px] text-gray-500">조건에 맞는 항목 없음</p>
             ) : (
               <div className="mt-3 flex flex-col divide-y divide-gray-100">
-                {slice.map((d, i) => {
+                {slice.map((g, i) => {
+                  const d = g.head
                   const c = lead(d, chips)
                   const isLead = cur === 1 && i === 0
                   return (
@@ -895,11 +984,11 @@ export default function Page() {
                             (isLead ? "text-[22px]" : "text-[16px]")
                           }
                         >
-                          {d.title}
+                          <Hi text={d.title} q={q} />
                         </p>
 
                         {isLead ? (
-                          <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-600">{d.summary}</p>
+                          <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-600"><Hi text={d.summary} q={q} /></p>
                         ) : null}
 
                         {d.so ? (
@@ -907,7 +996,7 @@ export default function Page() {
                             <span className="mr-1 text-[10px] font-bold tracking-wider text-indigo-600">
                               {d.kind === "reg" ? "우리 영향" : d.kind === "insight" ? "왜 중요한가" : "SO WHAT"}
                             </span>
-                            {d.so}
+                            <Hi text={d.so} q={q} />
                           </p>
                         ) : null}
 
@@ -919,7 +1008,54 @@ export default function Page() {
                           <span className="text-[11.5px] text-gray-300">·</span>
                           <span className="num text-[11.5px] text-gray-500">{rel(d.date)}</span>
                           {c ? <ChipPill c={c} /> : null}
+
+                          {q.trim() && hitCount(d, q) > 0 ? (
+                            <span className="num rounded-full bg-yellow-100 px-1.5 py-px text-[10px] font-semibold text-yellow-800">
+                              일치 {hitCount(d, q)}
+                            </span>
+                          ) : null}
+
+                          {g.dups.length ? (
+                            <button
+                              type="button"
+                              onClick={(ev) => {
+                                ev.stopPropagation()
+                                setOpenDup((prev) => {
+                                  const n = new Set(prev)
+                                  if (n.has(d.id)) n.delete(d.id)
+                                  else n.add(d.id)
+                                  return n
+                                })
+                              }}
+                              className="rounded-full border border-gray-200 px-2 py-px text-[10.5px] text-indigo-600 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 hover:bg-indigo-50 active:scale-95"
+                            >
+                              관련 {g.dups.length}건 {openDup.has(d.id) ? "▴" : "▾"}
+                            </button>
+                          ) : null}
                         </div>
+
+                        {/* 같은 사건 — 제목·매체만 얇게. 클릭하면 그 기사 팝업 */}
+                        {g.dups.length && openDup.has(d.id) ? (
+                          <div className="mt-2 flex flex-col gap-1.5 border-l-2 border-gray-200 pl-2.5">
+                            {g.dups.map((x) => (
+                              <button
+                                key={x.id}
+                                type="button"
+                                onClick={(ev) => {
+                                  ev.stopPropagation()
+                                  markRead(x.id)
+                                  setModal(x)
+                                }}
+                                className="group/d flex items-baseline gap-2 text-left transition-colors duration-200"
+                              >
+                                <span className="line-clamp-1 text-[12.5px] text-gray-700 transition-colors duration-200 group-hover/d:text-indigo-600">
+                                  <Hi text={x.title} q={q} />
+                                </span>
+                                <span className="shrink-0 text-[10.5px] text-gray-400">{x.source}</span>
+                              </button>
+                            ))}
+                          </div>
+                        ) : null}
                       </div>
                     </div>
                   )
@@ -1213,14 +1349,18 @@ export default function Page() {
                 ) : null}
               </div>
 
-              <h3 className="mt-2 text-[24px] font-bold leading-[1.35] tracking-tight text-gray-900">{modal.title}</h3>
+              <h3 className="mt-2 text-[24px] font-bold leading-[1.35] tracking-tight text-gray-900">
+                <Hi text={modal.title} q={q} />
+              </h3>
 
               {modal.so ? (
                 <div className="mt-4 rounded-xl border-l-[3px] border-indigo-500 bg-indigo-50/60 px-4 py-3">
                   <p className="text-[10px] font-bold tracking-widest text-indigo-600">
                     {modal.kind === "reg" ? "우리 영향" : modal.kind === "insight" ? "왜 중요한가" : "SO WHAT"}
                   </p>
-                  <p className="mt-1 text-[15px] leading-[1.75] text-gray-800">{modal.so}</p>
+                  <p className="mt-1 text-[15px] leading-[1.75] text-gray-800">
+                    <Hi text={modal.so} q={q} />
+                  </p>
                 </div>
               ) : null}
 
@@ -1229,7 +1369,7 @@ export default function Page() {
                 <div className="mt-2 space-y-3">
                   {para(modal.summary).map((p, i) => (
                     <p key={i} className="text-[15px] leading-[1.8] text-gray-700">
-                      {p}
+                      <Hi text={p} q={q} />
                     </p>
                   ))}
                 </div>
