@@ -662,7 +662,6 @@ export default function Page() {
 
   /** 같은 사건은 한 줄로 접는다 — 매체가 셋이면 세 줄이 아니라 "관련 2건" */
   const groups = React.useMemo(() => groupDocs(shown), [shown])
-  const unread = shown.filter((x) => !read.has(x.id)).length
   const hits = React.useMemo(() => (q.trim() ? shown.reduce((s, x) => s + hitCount(x, q), 0) : 0), [shown, q])
   const pages = Math.max(1, Math.ceil(groups.length / PAGE))
   const cur = Math.min(page, pages)
@@ -794,17 +793,13 @@ export default function Page() {
           className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-300 hover:shadow-md"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.1s" }}
         >
-          <header className="flex flex-wrap items-center gap-3 border-b border-gray-100 pb-2.5">
+          <header className="relative flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-2.5">
             <h2 className="flex shrink-0 items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
               {mode === "product" ? prod : active?.label}
               <span className="num text-[11px] font-medium text-gray-500">{shown.length}건</span>
               {q.trim() ? (
                 <span className="num rounded-full bg-yellow-100 px-1.5 py-px text-[10px] font-semibold text-yellow-800">
                   “{q.trim()}” {shown.length}건 · {hits}곳 일치
-                </span>
-              ) : unread > 0 ? (
-                <span className="num rounded-full bg-indigo-50 px-1.5 py-px text-[10px] font-semibold text-indigo-700">
-                  안 읽음 {unread}
                 </span>
               ) : null}
             </h2>
@@ -829,9 +824,10 @@ export default function Page() {
             {/* 검색 — 가운데, 끝은 동글게 */}
             <div
               className={
-                "group relative mx-auto w-full flex-1 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " +
-                (focused || q ? "max-w-[416px]" : "max-w-[320px]")
+                "group absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] lg:block " +
+                (focused || q ? "w-[416px]" : "w-[320px]")
               }
+              style={{ marginTop: "-5px" }}
             >
               <svg
                 width="14"
@@ -891,6 +887,29 @@ export default function Page() {
               </div>
             </div>
           ) : null}
+
+          <div className="relative mt-3 lg:hidden">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              aria-hidden
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <path d="M20 20l-3.5-3.5" />
+            </svg>
+            <input
+              value={q}
+              onChange={(ev) => setQ(ev.target.value)}
+              placeholder="제목 · 본문 · SO WHAT · 출처 검색"
+              className="w-full rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 focus:border-indigo-400 focus:bg-white"
+            />
+          </div>
 
           <p className="mt-2 text-[10.5px] leading-snug text-gray-400">
             {sort === "impact"
