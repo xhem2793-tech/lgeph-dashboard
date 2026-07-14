@@ -794,31 +794,33 @@ export default function Page() {
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.1s" }}
         >
           <header className="relative flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-2.5">
-            <h2 className="flex shrink-0 items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
-              {mode === "product" ? prod : active?.label}
-              <span className="num text-[11px] font-medium text-gray-500">{shown.length}건</span>
-              {q.trim() ? (
-                <span className="num rounded-full bg-yellow-100 px-1.5 py-px text-[10px] font-semibold text-yellow-800">
-                  “{q.trim()}” {shown.length}건 · {hits}곳 일치
-                </span>
-              ) : null}
-            </h2>
+            <div className="flex shrink-0 items-center gap-3">
+              <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
+                {mode === "product" ? prod : active?.label}
+                <span className="num text-[11px] font-medium text-gray-500">{shown.length}건</span>
+                {q.trim() ? (
+                  <span className="num rounded-full bg-yellow-100 px-1.5 py-px text-[10px] font-semibold text-yellow-800">
+                    “{q.trim()}” {shown.length}건 · {hits}곳 일치
+                  </span>
+                ) : null}
+              </h2>
 
-            {/* 정렬 — 제목 바로 옆(무엇을 먼저 보여줄지가 목록의 성격을 정한다) */}
-            <div className="flex shrink-0 gap-0.5 rounded-full border border-gray-200 p-0.5">
-              {([["new", "최신순"], ["impact", "영향도순"]] as const).map(([k, t]) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setSort(k)}
-                  className={
-                    "rounded-full px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " +
-                    (sort === k ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
-                  }
-                >
-                  {t}
-                </button>
-              ))}
+              {/* 정렬 — 제목 바로 옆 */}
+              <div className="flex shrink-0 gap-0.5 rounded-full border border-gray-200 p-0.5">
+                {([["new", "최신순"], ["impact", "영향도순"]] as const).map(([k, t]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    onClick={() => setSort(k)}
+                    className={
+                      "rounded-full px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " +
+                      (sort === k ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
+                    }
+                  >
+                    {t}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* 검색 — 가운데, 끝은 동글게 */}
@@ -872,21 +874,6 @@ export default function Page() {
               </span>
             </span>
           </header>
-
-          {mode === "product" ? (
-            <div className="mt-3 rounded-lg bg-indigo-50/60 px-3 py-2.5">
-              <p className="mb-1 text-[10px] font-bold tracking-widest text-indigo-600">이 제품군에 지금 걸린 것</p>
-              <div className="flex flex-wrap items-center gap-1.5">
-                {(ALL_PRODUCTS.find((p) => p.key === prod)?.chips ?? [])
-                  .map((k) => chips[k])
-                  .filter(Boolean)
-                  .map((c) => (
-                    <ChipPill key={c.k} c={c} />
-                  ))}
-                <span className="text-[11px] text-gray-500">· 관련 기사 {shown.length}건</span>
-              </div>
-            </div>
-          ) : null}
 
           <div className="relative mt-3 lg:hidden">
             <svg
