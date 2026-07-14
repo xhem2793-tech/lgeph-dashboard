@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { competitorTable, type PriceRow } from "@/lib/supabase"
+import { competitorTable, freshness, fmtStamp, type PriceRow } from "@/lib/supabase"
 
 /** 경쟁사 가격 — 좌 1/4 메뉴판 + 우 3/4 콘텐츠.
  *
@@ -56,7 +56,7 @@ const SHOPS = ["Anson's", "Abenson", "SM Appliance"]
 
 const BADGE: Record<Status, { t: string; c: string }> = {
   live: { t: "LIVE", c: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  next: { t: "NEXT", c: "border-indigo-200 bg-indigo-50 text-indigo-600" },
+  next: { t: "SOON", c: "border-indigo-200 bg-indigo-50 text-indigo-600" },
   plan: { t: "PLAN", c: "border-gray-200 bg-gray-50 text-gray-500" },
 }
 
@@ -166,10 +166,14 @@ export default function Competitors() {
   const [shops, setShops] = React.useState<string[]>([...SHOPS])
   const [onlyMoved, setOnlyMoved] = React.useState(false)
   const [rows, setRows] = React.useState<PriceRow[] | null>(null)
+  const [stamp, setStamp] = React.useState<string | null>(null)
   const [q, setQ] = React.useState("")
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "deltaPct", asc: true })
 
   React.useEffect(() => {
+    freshness()
+      .then((f) => setStamp(f.prices ?? null))
+      .catch(() => {})
     competitorTable(4000)
       .then(setRows)
       .catch(() => setRows([]))
@@ -221,45 +225,48 @@ export default function Competitors() {
     <div className="px-4 py-4 sm:px-6">
       <style>{"@keyframes viewIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}"}</style>
 
-      <h1 className="text-[20px] font-bold tracking-tight text-gray-900">가격 동향</h1>
+      <a href="/competitors" className="group inline-flex items-baseline gap-1">
+        <h1 className="text-[20px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
+          가격 동향
+        </h1>
+        <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+      </a>
       <p className="mt-0.5 text-[12px] text-gray-500">
-        Anson&apos;s · Abenson · SM 온라인 매장 일 1회 스크래핑 · LG · Samsung · Panasonic · TCL · Midea · Hisense
+        Anson&apos;s · Abenson · SM 온라인 매장 일 1회 스크래핑
       </p>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-[minmax(190px,0.8fr)_4fr]">
         <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
-          {GROUPS.map((g) => (
-            <Section key={g.group} title={g.group}>
-              <div className="flex flex-col gap-0.5">
-                {g.items.map((it) => (
-                  <button
-                    key={it.key}
-                    type="button"
-                    onClick={() => setView(it.key)}
-                    className={
-                      "group rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 active:scale-[.99] " +
-                      (view === it.key ? "bg-indigo-50" : "hover:bg-gray-50")
-                    }
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <span className="num w-4 shrink-0 text-[10px] text-gray-400">{it.no}</span>
-                      <span
-                        className={
-                          "flex-1 text-[13px] transition-colors duration-200 " +
-                          (view === it.key
-                            ? "font-semibold text-indigo-700"
-                            : "font-medium text-gray-800 group-hover:text-indigo-600")
-                        }
-                      >
-                        {it.label}
-                      </span>
-                      <span className={"shrink-0 rounded border px-1 py-px text-[9px] font-semibold " + BADGE[it.status].c}>
-                        {BADGE[it.status].t}
-                      </span>
+          <Section title="보기">
+            <div className="flex flex-col gap-0.5">
+              {ALL.map((it) => (
+                <button
+                  key={it.key}
+                  type="button"
+                  onClick={() => setView(it.key)}
+                  className={
+                    "group rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 hover:-translate-y-px active:scale-[.99] " +
+                    (view === it.key ? "bg-indigo-50" : "hover:bg-indigo-50/40")
+                  }
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className={
+                        "flex-1 text-[13px] transition-colors duration-200 " +
+                        (view === it.key ? "font-semibold text-indigo-700" : "font-medium text-gray-800 group-hover:text-indigo-600")
+                      }
+                    >
+                      {it.label}
                     </span>
-                    <span className="ml-[22px] block text-[11px] leading-snug text-gray-500">{it.desc}</span>
-                  </button>
-                ))}
+                    <span className={"shrink-0 rounded border px-1 py-px text-[9px] font-semibold " + BADGE[it.status].c}>
+                      {BADGE[it.status].t}
+                    </span>
+                  </span>
+                  <span className="block text-[11px] leading-snug text-gray-500">{it.desc}</span>
+                </button>
+              ))}
+            </div>
+          </Section>
               </div>
             </Section>
           ))}
@@ -295,8 +302,11 @@ export default function Competitors() {
                 {BADGE[active?.status ?? "plan"].t}
               </span>
             </h2>
-            <span className="text-[11px] text-gray-500">
-              최종 갱신 {asOf} · {cat} · {brands.length ? brands.join("·") : "브랜드 미선택"} · {shops.length}개 유통
+            <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
+              최종 갱신 {stamp ? fmtStamp(stamp) : md(asOf)}
+              <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
+                CONFIRMED
+              </span>
             </span>
           </header>
 
@@ -419,7 +429,10 @@ export default function Competitors() {
                         const dn = (r.deltaPhp ?? 0) < 0
                         const dcol = dn ? "text-emerald-700" : up ? "text-red-700" : "text-gray-400"
                         return (
-                          <tr key={i} className="border-b border-gray-100 transition-colors duration-200 hover:bg-indigo-50/40">
+                          <tr
+                            key={i}
+                            className="border-b border-gray-100 transition-all duration-200 hover:-translate-y-px hover:bg-indigo-50/60 hover:text-indigo-700 hover:shadow-[0_1px_0_0_rgba(99,102,241,.25)]"
+                          >
                             <td className="whitespace-nowrap px-2 py-1 text-gray-500">{r.retailer}</td>
                             <td className="px-2 py-1 font-medium text-gray-800">{r.brand}</td>
                             <td className="px-2 py-1 text-gray-600">{r.category}</td>
