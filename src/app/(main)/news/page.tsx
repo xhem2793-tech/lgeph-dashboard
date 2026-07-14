@@ -481,7 +481,7 @@ export default function Page() {
 
   return (
     <div className="px-4 py-4 sm:px-6">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(190px,0.9fr)_minmax(0,3fr)_minmax(250px,1.1fr)]">
         {/* ── 좌 : 메뉴 ── */}
@@ -489,8 +489,13 @@ export default function Page() {
           className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}
         >
+          <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
+            <p className="text-[14px] font-bold tracking-tight text-gray-900">
+              주제 <span className="num text-[11px] font-medium text-gray-500">{all.length}</span>
+            </p>
+            <span className="text-[10px] text-gray-500">필터</span>
+          </div>
           <div className="px-3 py-3">
-            <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">주제</p>
             <div className="flex flex-col gap-0.5">
               {MENUS.map((m, i) => (
                 <React.Fragment key={m.key}>
@@ -522,7 +527,25 @@ export default function Page() {
           </div>
         </aside>
 
-        {/* ── 중앙 : 피드 ── */}
+        {/* ── 중앙 : 결론 앵커 + 피드 ── */}
+        <div className="flex min-w-0 flex-col gap-4">
+        {call ? (
+          <section
+            className="rounded-xl border-2 border-indigo-200 bg-white p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md"
+            style={{ animation: "fadeUp .5s ease both", animationDelay: "0.08s" }}
+          >
+            <div className="mb-1.5 flex items-baseline justify-between gap-2">
+              <p className="text-[14px] font-bold tracking-tight text-gray-900">이번 주 한 줄</p>
+              <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                {OURS}
+                <AiMark />
+                {call.owner ? "· " + call.owner : ""}
+              </span>
+            </div>
+            <p className="text-[13.5px] leading-relaxed text-gray-800">{call.text}</p>
+          </section>
+        ) : null}
+
         <section
           className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-300 hover:shadow-md"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.1s" }}
@@ -580,7 +603,7 @@ export default function Page() {
             </div>
           </div>
 
-          <div key={menu + sort + cur + q} style={{ animation: "viewIn .32s cubic-bezier(.22,1,.36,1) both" }}>
+          <div key={menu + sort + cur + q} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
             {feed === null ? (
               <div className="mt-3 flex flex-col gap-2">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -602,6 +625,11 @@ export default function Page() {
                       onClick={() => setModal(d)}
                       onKeyDown={(ev) => {
                         if (ev.key === "Enter") setModal(d)
+                      }}
+                      style={{
+                        animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards",
+                        animationDelay: Math.min(i, 10) * 0.035 + "s",
+                        willChange: "transform, opacity",
                       }}
                       className="group -mx-2 flex cursor-pointer gap-4 rounded-lg px-2 py-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 active:scale-[.997]"
                     >
@@ -723,15 +751,19 @@ export default function Page() {
             </div>
           ) : null}
         </section>
+        </div>
 
         {/* ── 우 : 이번 주 요약(위) + 규제 상위 3건(아래) ── */}
         <aside className="flex h-fit flex-col gap-4 lg:sticky lg:top-[88px]" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.15s" }}>
           {/* W## 이번 주 — 지표 발표와 규제 시행일을 한 줄에 섞어 본다 */}
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
             <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
-              <p className="text-[14px] font-bold tracking-tight text-gray-900">W{weekNo(today)} 이번 주</p>
-              <span className="num text-[10px] text-gray-500">
-                {weekRange(today)}
+              <p className="text-[14px] font-bold tracking-tight text-gray-900">
+                W{weekNo(today)} 이번 주 <span className="num text-[11px] font-medium text-gray-500">{weekRange(today)}</span>
+              </p>
+              <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                월 09:00 갱신
+                <AiMark />
               </span>
             </div>
 
@@ -780,17 +812,6 @@ export default function Page() {
               )}
             </div>
 
-            {call ? (
-              <div className="bg-indigo-50/60 px-3 py-2.5">
-                <p className="text-[9px] font-bold tracking-widest text-indigo-600">이번 주 한 줄</p>
-                <p className="mt-1 text-[11.5px] leading-relaxed text-gray-800">{call.text}</p>
-                <p className="mt-1 flex items-center gap-1 text-[9px] text-gray-500">
-                  {OURS}
-                  <AiMark />
-                  {call.owner ? "· " + call.owner : ""}
-                </p>
-              </div>
-            ) : null}
           </div>
 
           {/* 규제 동향 — 상단 3건만, 나머지는 메뉴로 */}
@@ -801,11 +822,13 @@ export default function Page() {
               className="group flex w-full items-baseline justify-between border-b border-gray-100 px-3 py-2.5 text-left transition-colors duration-300 hover:bg-indigo-50/40"
             >
               <p className="text-[14px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-                규제 동향 ›
+                규제 동향 › <span className="num text-[11px] font-medium text-gray-500">{regDocs.length}</span>
               </p>
-              <span className="num text-[10px] text-gray-500">
-                Critical {regDocs.filter((r) => r.severity === "Critical").length} · High{" "}
-                {regDocs.filter((r) => r.severity === "High").length}
+              <span className="flex items-center gap-1 text-[10px] text-gray-500">
+                최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
+                <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
+                  CONFIRMED
+                </span>
               </span>
             </button>
             <div className="p-2">
