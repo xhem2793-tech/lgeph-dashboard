@@ -88,6 +88,43 @@ function ChipPill({ c, on, onHover }: { c: Chip; on: boolean; onHover: (k: strin
   )
 }
 
+
+/** 이미지 없는 기사의 대표 비주얼 — 남의 사진을 빌려오지 않는다.
+ *  주제색 그라데이션 + 주제명 + 연결된 지표 키 + 출처로 만든 자체 카드(저작권·정직성 둘 다 해결). */
+const TOPIC_ART: Record<string, { g: string; icon: string }> = {
+  "거시·금융": { g: "from-indigo-600 to-indigo-800", icon: "₱" },
+  "정치·정책": { g: "from-slate-600 to-slate-800", icon: "§" },
+  B2B: { g: "from-sky-600 to-blue-800", icon: "▤" },
+  "CE·유통": { g: "from-violet-600 to-purple-800", icon: "◨" },
+  "기상·재난": { g: "from-teal-600 to-emerald-800", icon: "≈" },
+  "에너지·전력": { g: "from-amber-500 to-orange-700", icon: "⚡" },
+}
+
+function TopicArt({ f, chips, big }: { f: FeedItem; chips: Record<string, Chip>; big?: boolean }) {
+  const a = TOPIC_ART[f.topic] ?? { g: "from-gray-500 to-gray-700", icon: "•" }
+  const keys = f.chipKeys.map((k) => chips[k]).filter(Boolean).slice(0, 2)
+  return (
+    <div className={"flex h-full w-full flex-col justify-between overflow-hidden rounded-lg bg-gradient-to-br p-2.5 " + a.g}>
+      <span className="flex items-center justify-between">
+        <span className="text-[10px] font-bold uppercase tracking-wider text-white/70">{f.topic}</span>
+        <span className={"font-bold text-white/40 " + (big ? "text-[28px]" : "text-[20px]")}>{a.icon}</span>
+      </span>
+      {keys.length ? (
+        <span className="flex flex-col gap-0.5">
+          {keys.map((c) => (
+            <span key={c.k} className="num text-[12px] font-semibold leading-tight text-white">
+              {c.label} {c.unit === "₱" ? "₱" : ""}
+              {c.value ?? "—"}
+              {c.unit && c.unit !== "₱" ? c.unit : ""}
+            </span>
+          ))}
+        </span>
+      ) : null}
+      <span className="truncate text-[10px] text-white/70">{f.source}</span>
+    </div>
+  )
+}
+
 export default function Page() {
   const { pick } = useLang()
   const [days, setDays] = React.useState(30)
@@ -293,12 +330,14 @@ export default function Page() {
                           className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                           onError={(ev) => {
                             const el = ev.currentTarget.parentElement
-                            if (el) el.style.visibility = "hidden"
+                            if (el) el.style.display = "none"
                           }}
                         />
                       </div>
                     ) : (
-                      <div className="hidden h-[140px] w-[210px] shrink-0 rounded-lg bg-gray-100 sm:block" />
+                      <div className="hidden h-[140px] w-[210px] shrink-0 sm:block">
+                        <TopicArt f={f} chips={chips} />
+                      </div>
                     )}
 
                     <div className="flex min-w-0 flex-1 flex-col">
@@ -456,9 +495,14 @@ export default function Page() {
                 </div>
               </div>
             ) : (
-              <div className="mt-4">
-                <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">본문 요약</p>
-                <p className="mt-1 text-sm leading-relaxed text-gray-700">{pick(modal.summary, modal.summaryEn)}</p>
+              <div className="mt-4 grid gap-5 md:grid-cols-3">
+                <div className="h-[150px] w-full md:col-span-1 md:h-full md:min-h-[150px]">
+                  <TopicArt f={modal} chips={chips} big />
+                </div>
+                <div className="min-w-0 md:col-span-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-500">본문 요약</p>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-700">{pick(modal.summary, modal.summaryEn)}</p>
+                </div>
               </div>
             )}
 
