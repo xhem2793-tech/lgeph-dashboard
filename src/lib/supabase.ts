@@ -739,3 +739,59 @@ export async function weekDigest(): Promise<WeekItem[]> {
     agency: r.agency ?? null,
   }))
 }
+
+/* ── 프로모 강도 (가격 데이터에서 도출) ───────────────────────────── */
+export type PromoIntensity = {
+  brand: string
+  retailer: string
+  asOf: string
+  promoModels: number
+  listedModels: number
+  avgDiscount: number | null
+  promoModelsWow: number
+  avgDiscountWowPp: number | null
+}
+
+export async function promoIntensity(limit = 12) {
+  const rows = await sb(`v_promo_intensity?select=*&limit=${limit}`)
+  return rows.map((r) => ({
+    brand: r.brand as string,
+    retailer: r.retailer as string,
+    asOf: r.as_of as string,
+    promoModels: num(r.promo_models) ?? 0,
+    listedModels: num(r.listed_models) ?? 0,
+    avgDiscount: num(r.avg_discount_pct),
+    promoModelsWow: num(r.promo_models_wow) ?? 0,
+    avgDiscountWowPp: num(r.avg_discount_wow_pp),
+  })) as PromoIntensity[]
+}
+
+/* ── 유통사 프로모 캠페인 ─────────────────────────────────────────── */
+export type PromoCampaign = {
+  retailer: string
+  kind: string
+  title: string
+  url: string | null
+  brands: string[]
+  liveDiscounted: number | null
+  avgDiscount: number | null
+  maxDiscount: number | null
+  onSaleCount: number | null
+  collectedDate: string
+}
+
+export async function promoCampaigns() {
+  const rows = await sb('v_promo_campaigns?select=*')
+  return rows.map((r) => ({
+    retailer: r.retailer as string,
+    kind: r.kind as string,
+    title: r.title as string,
+    url: (r.url ?? null) as string | null,
+    brands: (r.brands ?? []) as string[],
+    liveDiscounted: num(r.live_discounted),
+    avgDiscount: num(r.avg_discount_pct),
+    maxDiscount: num(r.max_discount_pct),
+    onSaleCount: num(r.on_sale_count),
+    collectedDate: r.collected_date as string,
+  })) as PromoCampaign[]
+}
