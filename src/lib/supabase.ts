@@ -447,19 +447,21 @@ function clean(s: string) {
  *  "—"는 만들지 않는다. 표에서 행을 특정할 수 없으면 데이터가 쓸모없기 때문.
  */
 function pickCode(text: string) {
-  const bad = /^(KG|CU|FT|INCH|HP|TON|LED|OLED|QNED|SMART|TV|BUNDLE|MODEL|NEW|SALE|LG|SAMSUNG|SHARP|HISENSE|TCL|PANASONIC|MIDEA|CARRIER|SONY|WHIRLPOOL|CONDURA|FUJIDENZO)$/i
-  const c = (text || "")
-    .split(/[\s(),/_]+/)
-    .map((x) => x.replace(/[^A-Za-z0-9.-]/g, ""))
+  /** 모델코드는 숫자로 시작할 수 있다(24MR400-B, 100QNED86BS) — 숫자 시작을 막으면 안 된다.
+   *  대신 용량·인치·해상도 같은 "스펙 토큰"만 걸러낸다. */
+  const bad = /^(KG|CU|FT|INCH|HP|TON|LED|OLED|QNED|NANO|SMART|TV|BUNDLE|MODEL|NEW|SALE|LG|SAMSUNG|SHARP|HISENSE|TCL|PANASONIC|MIDEA|CARRIER|SONY|WHIRLPOOL|CONDURA|FUJIDENZO|UHD|FHD|HD|4K|8K)$/i
+  const unit = /^\d+(\.\d+)?(KG|L|W|K|CM|CUFT|CU|FT|HP|TON|INCH|IN|MM|HZ)$/i
+  const cands = (text || "")
+    .split(/[\s(),/_+]+/)
+    .map((x) => x.replace(/[^A-Za-z0-9.-]+$/g, "").replace(/^[^A-Za-z0-9]+/g, ""))
     .filter((u) => {
-      if (u.length < 4 || u.length > 22) return false
+      if (u.length < 4 || u.length > 24) return false
       if (!/[A-Za-z]/.test(u) || !/\d/.test(u)) return false
-      if (/^\d/.test(u)) return false
-      if (bad.test(u)) return false
-      if (/^\d+(KG|L|W|CUFT|INCH|HP)$/i.test(u)) return false
+      if (bad.test(u) || unit.test(u)) return false
+      if (/^(19|20)\d\d$/.test(u)) return false
       return (u.match(/\d/g) || []).length >= 2
     })
-  return c.length ? c[c.length - 1].toUpperCase() : ""
+  return cands.length ? cands[cands.length - 1].toUpperCase() : ""
 }
 
 function modelCode(model: string, url?: string | null) {
