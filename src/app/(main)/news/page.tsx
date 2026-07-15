@@ -851,13 +851,13 @@ export default function Page() {
                         willChange: "transform, opacity",
                       }}
                       className={
-                        "group flex items-start cursor-pointer gap-4 rounded-lg px-2 py-4 border-t border-gray-100 transition-all duration-300 ease-out hover:bg-indigo-50/40 active:scale-[.997] "
+                        "group flex items-start cursor-pointer gap-3.5 rounded-lg px-2 py-3.5 border-t border-gray-100 transition-all duration-300 ease-out hover:bg-indigo-50/40 active:scale-[.997] "
                       }
                     >
                       <div
                         className={
                           "shrink-0 overflow-hidden rounded-lg bg-gray-100 " +
-                          "hidden h-[62px] w-[82px] sm:block"
+                          "hidden h-[56px] w-[74px] sm:block"
                         }
                       >
                         {d.image ? (
@@ -897,7 +897,7 @@ export default function Page() {
                         <p
                           className={
                             "line-clamp-2 min-h-[2.7em] font-medium leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600 " +
-                            "text-[17px]"
+                            "text-[15.5px]"
                           }
                         >
                           <Hi text={d.title} q={q} />
@@ -907,9 +907,9 @@ export default function Page() {
 
                         
 
-                        <p className="mt-1 line-clamp-1 min-h-[1.45em] text-[13.5px] leading-snug text-gray-500">{d.so ? (<><span className="text-indigo-500">→ </span><Hi text={d.so} q={q} /></>) : null}</p>
+                        <p className="mt-1 line-clamp-1 min-h-[1.35em] text-[12.5px] leading-snug text-gray-500">{d.so ? (<><span className="text-indigo-500">→ </span><Hi text={d.so} q={q} /></>) : null}</p>
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          <span className="text-[12.5px] font-medium text-gray-500">{d.topic}</span>
+                          <span className="text-[12px] font-medium text-gray-500">{d.topic}</span>
                           <span className="text-[11.5px] text-gray-300">·</span>
                           <span className="text-[11.5px] text-gray-500">{d.source}</span>
                           {d.source === OURS || d.kind === "insight" ? <AiMark /> : null}
