@@ -403,7 +403,21 @@ function para(s: string): string[] {
 function Hi({ text, q }: { text: string; q: string }) {
   const k = q.trim()
   if (!k || !text) return <>{text}</>
-  const parts = text.split(new RegExp("(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\function SlideToggle({
+  const parts = text.split(new RegExp("(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "i"))
+  return (
+    <>
+      {parts.map((p, i) =>
+        p.toLowerCase() === k.toLowerCase() ? (
+          <mark key={i} className="rounded bg-amber-100 px-0.5 text-gray-900">{p}</mark>
+        ) : (
+          <React.Fragment key={i}>{p}</React.Fragment>
+        ),
+      )}
+    </>
+  )
+}
+
+function SlideToggle({
   options,
   value,
   onChange,
