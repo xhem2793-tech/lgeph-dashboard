@@ -366,7 +366,7 @@ function DocArt({ d, chip, big }: { d: Doc; chip: Chip | null; big?: boolean }) 
       <div className={"relative flex h-full flex-col justify-between " + (big ? "p-5" : "p-2.5")}>
         <span className="flex items-center gap-1">
           <span className="inline-block h-[5px] w-[5px] rounded-full" style={{ backgroundColor: a.accent }} />
-          <span className="text-[9px] font-bold tracking-[0.14em] text-gray-500">{a.tag}</span>
+          
         </span>
 
         <span className="flex flex-col">
@@ -786,7 +786,7 @@ export default function Page() {
                         </span>
                         <span className="num shrink-0 text-[10px] text-gray-400">{counts[m.key] ?? 0}</span>
                       </span>
-                      <span className="block text-[11px] leading-snug text-gray-500">{m.desc}</span>
+                      
                     </button>
                   </React.Fragment>
                 ))}
