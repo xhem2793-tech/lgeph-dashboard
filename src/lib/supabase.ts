@@ -812,6 +812,7 @@ export type CalEvent = {
   unit: string | null
   past: boolean
   today: boolean
+  sourceLabel: string | null
   agency: string | null
   summary: string | null
   implication: string | null
