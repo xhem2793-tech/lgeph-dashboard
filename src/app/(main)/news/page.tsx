@@ -851,7 +851,7 @@ export default function Page() {
                         willChange: "transform, opacity",
                       }}
                       className={
-                        "group flex cursor-pointer gap-3 rounded-lg px-2 py-3 border-t border-gray-100 transition-all duration-300 ease-out hover:bg-indigo-50/40 active:scale-[.997] "
+                        "group flex items-start cursor-pointer gap-3 rounded-lg px-2 py-3 border-t border-gray-100 transition-all duration-300 ease-out hover:bg-indigo-50/40 active:scale-[.997] "
                       }
                     >
                       <div
@@ -914,7 +914,7 @@ export default function Page() {
                           {d.source === OURS || d.kind === "insight" ? <AiMark /> : null}
                           <span className="text-[11.5px] text-gray-300">·</span>
                           <span className="num text-[11.5px] text-gray-500">{rel(d.date)}</span>
-                          {c ? <ChipPill c={c} /> : null}
+                          
 
                           {q.trim() && hitCount(d, q) > 0 ? (
                             <span className="num rounded-full bg-yellow-100 px-1.5 py-px text-[10px] font-semibold text-yellow-800">
