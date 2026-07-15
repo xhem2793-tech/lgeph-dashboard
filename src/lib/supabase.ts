@@ -723,6 +723,7 @@ export type WeekItem = {
   labelEn: string | null
   past: boolean
   severity: string | null
+  sourceLabel: string | null
   agency: string | null
 }
 
@@ -837,6 +838,7 @@ export async function calendarEvents(from: string, to: string) {
     unit: (r.unit ?? null) as string | null,
     past: Boolean(r.past),
     today: Boolean(r.today),
+    sourceLabel: (r.source_label ?? null) as string | null,
     agency: (r.agency ?? null) as string | null,
     summary: (r.summary ?? null) as string | null,
     implication: (r.implication ?? null) as string | null,
