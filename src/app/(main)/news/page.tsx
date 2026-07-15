@@ -481,7 +481,7 @@ function groupDocs(list: Doc[]): Group[] {
 
 export default function Page() {
   const { pick } = useLang()
-  const [mode, setMode] = React.useState<"topic" | "product">("topic")
+  const mode: "topic" | "product" = "topic"
   const [menu, setMenu] = React.useState("전체")
   const [prod, setProd] = React.useState("에어컨·RAC")
   const [sort, setSort] = React.useState<"new" | "impact">("new")
@@ -697,28 +697,9 @@ export default function Page() {
         >
           <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
             <p className="text-[14px] font-bold tracking-tight text-gray-900">
-              보기 <span className="num text-[11px] font-medium text-gray-500">{all.length}</span>
+              보기
             </p>
-            <span className="text-[10px] text-gray-500">주제 / 제품</span>
-          </div>
-
-          {/* 주제별 ↔ 제품별 — PD는 자기 제품군만 보면 된다 */}
-          <div className="px-3 pt-2.5">
-            <div className="flex gap-0.5 rounded-lg bg-gray-100 p-0.5">
-              {([["topic", "주제별"], ["product", "제품별"]] as const).map(([k, t]) => (
-                <button
-                  key={k}
-                  type="button"
-                  onClick={() => setMode(k)}
-                  className={
-                    "flex-1 rounded-md py-1 text-[11.5px] font-medium transition-all duration-300 ease-out active:scale-95 " +
-                    (mode === k ? "bg-white text-indigo-700 shadow-sm" : "text-gray-600 hover:text-indigo-600")
-                  }
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
+            
           </div>
 
           {mode === "topic" ? (
@@ -895,11 +876,6 @@ export default function Page() {
             />
           </div>
 
-          <p className="mt-2 text-[10.5px] leading-snug text-gray-400">
-            {sort === "impact"
-              ? "영향도 = 주제 가중 × 연결지표 변동폭 × 신선도(14일 반감) · 규제는 severity × 시행 임박"
-              : "발행일 최신순"}
-          </p>
 
           <div key={mode + menu + prod + sort + cur + q} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
             {feed === null ? (
