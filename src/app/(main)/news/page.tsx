@@ -857,7 +857,7 @@ export default function Page() {
                       <div
                         className={
                           "shrink-0 overflow-hidden rounded-lg bg-gray-100 " +
-                          "hidden h-[56px] w-[72px] sm:block"
+                          "hidden h-[60px] w-[80px] sm:block"
                         }
                       >
                         {d.image ? (
@@ -1022,7 +1022,7 @@ export default function Page() {
               className="group flex w-full items-baseline justify-between border-b border-gray-100 px-3 py-2.5 text-left transition-colors duration-300 hover:bg-indigo-50/40"
             >
               <p className="text-[14px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-                규제 동향 › <span className="num text-[11px] font-medium text-gray-500">{regDocs.length}</span>
+                정책 동향 › <span className="num text-[11px] font-medium text-gray-500">{regDocs.length}</span>
               </p>
               <span className="flex items-center gap-1 text-[10px] text-gray-500">
                 최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
@@ -1031,7 +1031,7 @@ export default function Page() {
             </button>
             <div className="p-2">
               {board.length === 0 ? (
-                <p className="py-6 text-center text-[12px] text-gray-500">등재된 규제 없음</p>
+                <p className="py-6 text-center text-[12px] text-gray-500">등재된 정책 없음</p>
               ) : (
                 <>
                   <div className="flex flex-col gap-1">
@@ -1058,7 +1058,7 @@ export default function Page() {
                         </div>
 
                         <div className="min-w-0 flex-1">
-                          <p className="truncate break-normal text-[12px] font-normal leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600">
+                          <p className="truncate break-normal text-[13px] font-semibold leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600">
                             {r.title.split("—")[0].trim()}
                           </p>
                           <div className="mt-1 flex flex-wrap items-center gap-1">
@@ -1093,7 +1093,7 @@ export default function Page() {
                     onClick={() => setMenu("규제·정책")}
                     className="mt-1.5 w-full rounded-md py-1.5 text-center text-[11px] text-indigo-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-50 active:scale-95"
                   >
-                    규제 {regDocs.length}건 전체 보기 ›
+                    정책 {regDocs.length}건 전체 보기 ›
                   </button>
                 </>
               )}
