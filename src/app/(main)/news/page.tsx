@@ -453,28 +453,9 @@ export default function Page() {
   const [sort, setSort] = React.useState<"new" | "impact">("new")
   const [q, setQ] = React.useState("")
   const [focused, setFocused] = React.useState(false)
-  /** 읽음 — 브라우저별로만 남는다(같은 화면을 여럿이 봐도 서로 영향 없음). 기기를 바꾸면 초기화 */
-  const [read, setRead] = React.useState<Set<string>>(new Set())
   const [openDup, setOpenDup] = React.useState<Set<string>>(new Set())
 
-  React.useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem("ax_read")
-      if (raw) setRead(new Set(JSON.parse(raw) as string[]))
-    } catch {}
-  }, [])
 
-  const markRead = React.useCallback((id: string) => {
-    setRead((prev) => {
-      if (prev.has(id)) return prev
-      const next = new Set(prev)
-      next.add(id)
-      try {
-        window.localStorage.setItem("ax_read", JSON.stringify(Array.from(next).slice(-2000)))
-      } catch {}
-      return next
-    })
-  }, [])
   const [page, setPage] = React.useState(1)
   const [feed, setFeed] = React.useState<FeedItem[] | null>(null)
   const [chips, setChips] = React.useState<Record<string, Chip>>({})
@@ -857,12 +838,10 @@ export default function Page() {
                       role="button"
                       tabIndex={0}
                       onClick={() => {
-                        markRead(d.id)
                         setModal(d)
                       }}
                       onKeyDown={(ev) => {
                         if (ev.key === "Enter") {
-                          markRead(d.id)
                           setModal(d)
                         }
                       }}
@@ -872,8 +851,7 @@ export default function Page() {
                         willChange: "transform, opacity",
                       }}
                       className={
-                        "group -mx-2 flex cursor-pointer gap-4 rounded-lg px-2 py-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 active:scale-[.997] " +
-                        (read.has(d.id) ? "opacity-60 hover:opacity-100" : "")
+                        "group -mx-2 flex cursor-pointer gap-4 rounded-lg px-2 py-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 active:scale-[.997] "
                       }
                     >
                       <div
@@ -981,7 +959,6 @@ export default function Page() {
                                 type="button"
                                 onClick={(ev) => {
                                   ev.stopPropagation()
-                                  markRead(x.id)
                                   setModal(x)
                                 }}
                                 className="group/d flex items-baseline gap-2 text-left transition-colors duration-200"
