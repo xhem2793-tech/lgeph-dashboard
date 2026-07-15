@@ -901,9 +901,7 @@ export default function Page() {
 
             <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-500">
               최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
-              <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
-                CONFIRMED
-              </span>
+              <span title="CONFIRMED" className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-bold text-emerald-700">C</span>
             </span>
           </header>
 
@@ -1244,9 +1242,7 @@ export default function Page() {
               </p>
               <span className="flex items-center gap-1 text-[10px] text-gray-500">
                 최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
-                <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
-                  CONFIRMED
-                </span>
+                <span title="CONFIRMED" className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-bold text-emerald-700">C</span>
               </span>
             </button>
             <div className="p-2">
