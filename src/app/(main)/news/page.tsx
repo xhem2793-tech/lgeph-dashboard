@@ -857,7 +857,7 @@ export default function Page() {
                       <div
                         className={
                           "shrink-0 overflow-hidden rounded-lg bg-gray-100 " +
-                          "hidden h-[48px] w-[62px] sm:block"
+                          "hidden h-[56px] w-[72px] sm:block"
                         }
                       >
                         {d.image ? (
@@ -896,8 +896,8 @@ export default function Page() {
 
                         <p
                           className={
-                            "line-clamp-2 min-h-[2.75em] font-semibold leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 " +
-                            "text-[14px]"
+                            "line-clamp-1 font-semibold leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 " +
+                            "text-[15px]"
                           }
                         >
                           <Hi text={d.title} q={q} />
