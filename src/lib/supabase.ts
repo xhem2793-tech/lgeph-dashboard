@@ -811,6 +811,12 @@ export type CalEvent = {
   unit: string | null
   past: boolean
   today: boolean
+  agency: string | null
+  summary: string | null
+  implication: string | null
+  actions: string | null
+  source: string | null
+  url: string | null
 }
 
 export async function calendarEvents(from: string, to: string) {
@@ -831,5 +837,11 @@ export async function calendarEvents(from: string, to: string) {
     unit: (r.unit ?? null) as string | null,
     past: Boolean(r.past),
     today: Boolean(r.today),
+    agency: (r.agency ?? null) as string | null,
+    summary: (r.summary ?? null) as string | null,
+    implication: (r.implication ?? null) as string | null,
+    actions: (r.actions ?? null) as string | null,
+    source: (r.source ?? null) as string | null,
+    url: (r.url ?? null) as string | null,
   })) as CalEvent[]
 }
