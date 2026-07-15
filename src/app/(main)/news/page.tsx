@@ -827,11 +827,11 @@ export default function Page() {
             ) : slice.length === 0 ? (
               <p className="py-10 text-center text-[12px] text-gray-500">조건에 맞는 항목 없음</p>
             ) : (
-              <div className="mt-3 flex flex-col divide-y divide-gray-100">
+              <div className="mt-3 grid grid-cols-1 gap-x-6 sm:grid-cols-2">
                 {slice.map((g, i) => {
                   const d = g.head
                   const c = lead(d, chips)
-                  const isLead = cur === 1 && i === 0
+                  
                   return (
                     <div
                       key={d.id}
@@ -851,13 +851,13 @@ export default function Page() {
                         willChange: "transform, opacity",
                       }}
                       className={
-                        "group -mx-2 flex cursor-pointer gap-4 rounded-lg px-2 py-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 active:scale-[.997] "
+                        "group flex cursor-pointer gap-3 rounded-lg px-2 py-3 border-t border-gray-100 transition-all duration-300 ease-out hover:bg-indigo-50/40 active:scale-[.997] "
                       }
                     >
                       <div
                         className={
                           "shrink-0 overflow-hidden rounded-lg bg-gray-100 " +
-                          (isLead ? "hidden h-[176px] w-[280px] sm:block" : "hidden h-[92px] w-[148px] sm:block")
+                          "hidden h-[52px] w-[68px] sm:block"
                         }
                       >
                         {d.image ? (
@@ -871,7 +871,7 @@ export default function Page() {
                             }}
                           />
                         ) : (
-                          <DocArt d={d} chip={c} big={isLead} />
+                          <DocArt d={d} chip={c} big={false} />
                         )}
                       </div>
 
@@ -897,24 +897,15 @@ export default function Page() {
                         <p
                           className={
                             "line-clamp-2 font-semibold leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600 " +
-                            (isLead ? "text-[18px]" : "text-[16px]")
+                            "text-[14.5px]"
                           }
                         >
                           <Hi text={d.title} q={q} />
                         </p>
 
-                        {isLead ? (
-                          <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-600"><Hi text={d.summary} q={q} /></p>
-                        ) : null}
+                        
 
-                        {d.so ? (
-                          <p className="mt-1.5 line-clamp-2 text-[13.5px] leading-relaxed text-gray-700">
-                            <span className="mr-1 text-[10px] font-bold tracking-wider text-indigo-600">
-                              {d.kind === "reg" ? "우리 영향" : d.kind === "insight" ? "왜 중요한가" : "SO WHAT"}
-                            </span>
-                            <Hi text={d.so} q={q} />
-                          </p>
-                        ) : null}
+                        
 
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                           <span className="text-[11.5px] font-medium text-gray-500">{d.topic}</span>
