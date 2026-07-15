@@ -346,15 +346,15 @@ export default function Calendar() {
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
           <div className="flex items-center gap-3">
             <h2 className="text-[17px] font-bold tracking-tight text-gray-900">이벤트 목록</h2>
-            <div className="flex overflow-hidden rounded-full border border-gray-200">
+            <div className="flex shrink-0 gap-0.5 rounded-full border border-gray-200 p-0.5">
               {(["past", "upcoming"] as const).map((b) => (
                 <button
                   key={b}
                   type="button"
                   onClick={() => { setBucket(b); setCat("전체") }}
                   className={
-                    "px-3.5 py-1 text-[12px] font-semibold transition-colors duration-300 active:scale-[.98] " +
-                    (bucket === b ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-indigo-600")
+                    "rounded-full px-3 py-1 text-[11.5px] font-medium transition-all duration-300 ease-out active:scale-95 " +
+                    (bucket === b ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
                   }
                 >
                   {b === "past" ? "지남" : "예정"} {counts[b]}
@@ -425,17 +425,17 @@ export default function Calendar() {
                         }
                         style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 14) * 22 + "ms" }}
                       >
-                        <td className="px-2 py-2.5 font-medium tabular-nums text-gray-600">{e.date.slice(5).replace("-", "/")}</td>
-                        <td className="px-2 py-2.5">
+                        <td className="h-[44px] px-2 align-middle font-medium tabular-nums text-gray-600">{e.date.slice(5).replace("-", "/")}</td>
+                        <td className="h-[44px] px-2 align-middle">
                           <span className={"rounded px-1.5 py-0.5 text-[10.5px] font-semibold " + t.bg + " " + t.fg}>{e.category}</span>
                         </td>
-                        <td className="px-2 py-2.5 text-[11.5px] text-gray-500">{KIND[e.kind] ?? "—"}</td>
-                        <td className="max-w-0 truncate px-2 py-2.5 font-medium text-gray-900">{e.event}</td>
-                        <td className="px-2 py-2.5 text-[11.5px] text-gray-400">{e.releaseTime ?? "—"}</td>
-                        <td className="px-2 py-2.5 text-right text-[11px] text-amber-500">{"★".repeat(e.importance)}</td>
-                        <td className="px-2 py-2.5 text-right tabular-nums text-gray-400">{e.forecast ?? "—"}</td>
-                        <td className={"px-2 py-2.5 text-right font-bold tabular-nums " + (up ? "text-rose-600" : down ? "text-emerald-600" : "text-gray-900")}>{fmtVal(e.actual, e.unit)}</td>
-                        <td className="px-2 py-2.5 text-right tabular-nums text-gray-500">{fmtVal(e.previous, e.unit)}</td>
+                        <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-500">{KIND[e.kind] ?? "—"}</td>
+                        <td className="max-w-0 truncate h-[44px] px-2 align-middle font-medium text-gray-900">{e.event}</td>
+                        <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-400">{e.releaseTime ?? "—"}</td>
+                        <td className="h-[44px] px-2 align-middle text-right text-[11px] text-amber-500">{"★".repeat(e.importance)}</td>
+                        <td className="h-[44px] px-2 align-middle text-right tabular-nums text-gray-400">{e.forecast ?? "—"}</td>
+                        <td className={"h-[44px] px-2 align-middle text-right font-bold tabular-nums " + (up ? "text-rose-600" : down ? "text-emerald-600" : "text-gray-900")}>{fmtVal(e.actual, e.unit)}</td>
+                        <td className="h-[44px] px-2 align-middle text-right tabular-nums text-gray-500">{fmtVal(e.previous, e.unit)}</td>
                       </tr>
                     </React.Fragment>
                   )
@@ -564,7 +564,7 @@ export default function Calendar() {
                       key={e.event}
                       type="button"
                       onClick={() => openEvent(e)}
-                      className="flex items-start gap-2.5 rounded-lg px-2 py-2.5 text-left transition-all duration-300 hover:-translate-y-px hover:bg-indigo-50/50 active:scale-[.99]"
+                      className="flex items-start gap-2.5 rounded-lg h-[44px] px-2 align-middle text-left transition-all duration-300 hover:-translate-y-px hover:bg-indigo-50/50 active:scale-[.99]"
                       style={{ animation: "rowIn .35s cubic-bezier(.22,1,.36,1) both", animationDelay: i * 40 + "ms" }}
                     >
                       <span className={"mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-semibold " + t.bg + " " + t.fg}>{e.category}</span>
