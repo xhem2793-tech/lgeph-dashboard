@@ -394,7 +394,7 @@ export default function Calendar() {
                   <th className="w-[62px] px-2 py-2 text-left">분류</th>
                   <th className="w-[76px] px-2 py-2 text-left">성격</th>
                   <th className="px-2 py-2 text-left">이벤트</th>
-                  <th className="w-[96px] px-2 py-2 text-left">출처</th>
+                  <th className="w-[64px] px-2 py-2 text-left">시간</th>
                   <th className="w-[52px] px-2 py-2 text-right">중요도</th>
                   <th className="w-[74px] px-2 py-2 text-right">예측</th>
                   <th className="w-[74px] px-2 py-2 text-right">실제</th>
@@ -431,7 +431,7 @@ export default function Calendar() {
                         </td>
                         <td className="px-2 py-2.5 text-[11.5px] text-gray-500">{KIND[e.kind] ?? "—"}</td>
                         <td className="max-w-0 truncate px-2 py-2.5 font-medium text-gray-900">{e.event}</td>
-                        <td className="px-2 py-2.5 text-[11.5px] text-gray-500">{e.sourceLabel ?? "—"}</td>
+                        <td className="px-2 py-2.5 text-[11.5px] text-gray-400">{e.releaseTime ?? "—"}</td>
                         <td className="px-2 py-2.5 text-right text-[11px] text-amber-500">{"★".repeat(e.importance)}</td>
                         <td className="px-2 py-2.5 text-right tabular-nums text-gray-400">{e.forecast ?? "—"}</td>
                         <td className={"px-2 py-2.5 text-right font-bold tabular-nums " + (up ? "text-rose-600" : down ? "text-emerald-600" : "text-gray-900")}>{fmtVal(e.actual, e.unit)}</td>
