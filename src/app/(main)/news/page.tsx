@@ -136,9 +136,6 @@ function effDate(r: Doc) {
 const MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 
 
-function weekProgress(d: Date) {
-  return Math.round((((d.getDay() + 6) % 7) + 1) * (100 / 7))
-}
 
 function isTomorrow(s: string, today: Date) {
   const t = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
