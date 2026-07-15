@@ -222,7 +222,7 @@ export default function Calendar() {
             className="mt-1.5 grid grid-cols-7 gap-1.5"
             style={{ animation: "viewIn .4s cubic-bezier(.16,1,.3,1) both" }}
           >
-            {cells.map((d, i) => {
+            {cells.map((d) => {
               const key = iso(d)
               const on = d >= range.from && d <= range.to
               const isToday = key === iso(today)
