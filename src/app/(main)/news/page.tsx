@@ -897,7 +897,7 @@ export default function Page() {
                         <p
                           className={
                             "line-clamp-2 font-semibold leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600 " +
-                            (isLead ? "text-[22px]" : "text-[16px]")
+                            (isLead ? "text-[18px]" : "text-[16px]")
                           }
                         >
                           <Hi text={d.title} q={q} />
