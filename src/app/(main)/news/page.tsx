@@ -650,7 +650,6 @@ export default function Page() {
   }, [regDocs])
 
   const today = new Date()
-  const active = MENUS.find((m) => m.key === menu)
 
   const go = (p: number) => {
     setPage(p)
@@ -748,8 +747,6 @@ export default function Page() {
           <header className="relative flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-2.5">
             <div className="flex shrink-0 items-center gap-3">
               <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
-                {mode === "product" ? prod : active?.label}
-                <span className="num text-[11px] font-medium text-gray-500">{shown.length}건</span>
                 {q.trim() ? (
                   <span className="num rounded-full bg-yellow-100 px-1.5 py-px text-[10px] font-semibold text-yellow-800">
                     “{q.trim()}” {shown.length}건 · {hits}곳 일치
