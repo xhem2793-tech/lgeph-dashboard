@@ -403,7 +403,47 @@ function para(s: string): string[] {
 function Hi({ text, q }: { text: string; q: string }) {
   const k = q.trim()
   if (!k || !text) return <>{text}</>
-  const parts = text.split(new RegExp("(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\export default function Page() {") + ")", "gi"))
+  const parts = text.split(new RegExp("(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\function SlideToggle({
+  options,
+  value,
+  onChange,
+}: {
+  options: { k: string; label: string }[]
+  value: string
+  onChange: (k: string) => void
+}) {
+  const refs = React.useRef<(HTMLButtonElement | null)[]>([])
+  const [style, setStyle] = React.useState<React.CSSProperties>({ opacity: 0 })
+  const idx = options.findIndex((o) => o.k === value)
+  React.useLayoutEffect(() => {
+    const el = refs.current[idx]
+    if (el) setStyle({ left: 0, width: el.offsetWidth, transform: `translateX(${el.offsetLeft}px)`, opacity: 1 })
+  }, [idx, options])
+  return (
+    <div className="relative flex shrink-0 rounded-full border border-gray-200 bg-gray-50 p-0.5">
+      <span
+        className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 shadow-sm transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]"
+        style={style}
+      />
+      {options.map((o, i) => (
+        <button
+          key={o.k}
+          ref={(el) => { refs.current[i] = el }}
+          type="button"
+          onClick={() => onChange(o.k)}
+          className={
+            "relative z-10 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors duration-300 active:scale-95 " +
+            (value === o.k ? "text-white" : "text-gray-600 hover:text-indigo-600")
+          }
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+export default function Page() {") + ")", "gi"))
   return (
     <>
       {parts.map((p, i) =>
@@ -805,21 +845,14 @@ export default function Page() {
               </h2>
 
               {/* 정렬 — 제목 바로 옆 */}
-              <div className="flex shrink-0 gap-0.5 rounded-full border border-gray-200 p-0.5">
-                {([["new", "최신순"], ["impact", "영향도순"]] as const).map(([k, t]) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => setSort(k)}
-                    className={
-                      "rounded-full px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " +
-                      (sort === k ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
-                    }
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
+              <SlideToggle
+                options={[
+                  { k: "new", label: "최신순" },
+                  { k: "impact", label: "영향도순" },
+                ]}
+                value={sort}
+                onChange={(k) => setSort(k as "new" | "impact")}
+              />
             </div>
 
             {/* 검색 — 가운데, 끝은 동글게 */}
