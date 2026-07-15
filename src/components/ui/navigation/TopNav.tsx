@@ -86,8 +86,8 @@ export function TopNav() {
             href={item.href}
             className={
               (isActive(item.href)
-                ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-400 "
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-50 ") +
+                ? "text-indigo-700 dark:text-indigo-400 "
+                : "text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-50 ") +
               "shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-sm active:scale-95"
             }
           >
