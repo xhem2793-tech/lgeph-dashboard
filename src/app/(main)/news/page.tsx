@@ -907,7 +907,7 @@ export default function Page() {
 
                         
 
-                        <p className="mt-1 line-clamp-1 min-h-[1.3em] text-[11px] leading-snug text-gray-500">{d.so ? (<><span className="text-indigo-500">→ </span><Hi text={d.so} q={q} /></>) : null}</p>
+                        <p className="mt-1 line-clamp-1 min-h-[1.3em] text-[11px] leading-snug text-gray-500">{d.so ? <Hi text={d.so} q={q} /> : null}</p>
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                           <span className="text-[10.5px] font-medium text-gray-500">{d.topic}</span>
                           <span className="text-[11.5px] text-gray-300">·</span>
