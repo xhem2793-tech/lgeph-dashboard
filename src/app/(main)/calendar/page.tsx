@@ -14,12 +14,13 @@ const CAT: Record<string, { bg: string; fg: string; dot: string }> = {
   경제: { bg: "bg-emerald-50", fg: "text-emerald-800", dot: "bg-emerald-500" },
   에너지: { bg: "bg-amber-50", fg: "text-amber-800", dot: "bg-amber-500" },
   유통: { bg: "bg-violet-50", fg: "text-violet-800", dot: "bg-violet-500" },
+  규제: { bg: "bg-red-50", fg: "text-red-800", dot: "bg-red-500" },
   공휴일: { bg: "bg-pink-50", fg: "text-pink-800", dot: "bg-pink-500" },
   B2B: { bg: "bg-cyan-50", fg: "text-cyan-800", dot: "bg-cyan-500" },
   기타: { bg: "bg-gray-100", fg: "text-gray-700", dot: "bg-gray-400" },
 }
 const tone = (c: string) => CAT[c] ?? CAT["기타"]
-const LEGEND = ["경제", "금융", "정치", "에너지", "유통", "공휴일"]
+const LEGEND = ["경제", "금융", "정치", "규제", "에너지", "공휴일"]
 const KIND: Record<string, string> = { release: "지표 발표", policy: "정책·규제", holiday: "공휴일" }
 
 const iso = (d: Date) => {
