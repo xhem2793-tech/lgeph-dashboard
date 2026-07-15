@@ -137,11 +137,6 @@ const MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT
 
 
 
-function isTomorrow(s: string, today: Date) {
-  const t = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1)
-  const p = (x: Date) => x.getFullYear() + "-" + String(x.getMonth() + 1).padStart(2, "0") + "-" + String(x.getDate()).padStart(2, "0")
-  return s === p(t)
-}
 
 
 
