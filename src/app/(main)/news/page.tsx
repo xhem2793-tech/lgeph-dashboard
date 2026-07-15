@@ -481,7 +481,6 @@ export default function Page() {
   const [regs, setRegs] = React.useState<RegBoardItem[]>([])
   const [posts, setPosts] = React.useState<Awaited<ReturnType<typeof analysisPosts>>>([])
   const [stamp, setStamp] = React.useState<string | null>(null)
-  const [showPast, setShowPast] = React.useState(false)
   const [modal, setModal] = React.useState<Doc | null>(null)
   const [closing, setClosing] = React.useState(false)
 
@@ -641,7 +640,6 @@ export default function Page() {
     })
   }, [regDocs])
 
-  const today = new Date()
 
   const go = (p: number) => {
     setPage(p)
