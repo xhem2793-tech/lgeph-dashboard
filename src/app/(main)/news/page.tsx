@@ -6,9 +6,7 @@ import {
   indicatorChips,
   regBoard,
   analysisPosts,
-  weekDigest,
   freshness,
-  type WeekItem,
   fmtStamp,
   type FeedItem,
   type Chip,
@@ -120,13 +118,6 @@ function rel(s: string) {
   return s.slice(5).replace("-", "/")
 }
 
-function weekRange(d: Date) {
-  const day = (d.getDay() + 6) % 7
-  const mon = new Date(d.getFullYear(), d.getMonth(), d.getDate() - day)
-  const sun = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6)
-  const f = (x: Date) => x.getMonth() + 1 + "/" + x.getDate()
-  return f(mon) + " – " + f(sun)
-}
 
 /** 이번 주 남은 일수(오늘 포함 X) · 주간 진행률 · 가장 급한 시행 D-day */
 /** 규제의 시행일 — dDay 로부터 역산(뷰가 effective_date 로 dDay 를 만든다) */
@@ -144,9 +135,6 @@ function effDate(r: Doc) {
 
 const MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 
-function daysLeft(d: Date) {
-  return 6 - ((d.getDay() + 6) % 7)
-}
 
 function weekProgress(d: Date) {
   return Math.round((((d.getDay() + 6) % 7) + 1) * (100 / 7))
@@ -158,21 +146,7 @@ function isTomorrow(s: string, today: Date) {
   return s === p(t)
 }
 
-function urgent(week: WeekItem[]) {
-  const regs = week.filter((w) => w.src === "reg" && !w.past)
-  if (!regs.length) return "—"
-  const now = new Date()
-  const t = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
-  const dd = regs
-    .map((w) => Math.round((new Date(w.date + "T00:00:00+08:00").getTime() - t) / 86400000))
-    .sort((a, b) => a - b)[0]
-  return dd <= 0 ? "오늘" : "D-" + dd
-}
 
-function weekNo(d: Date) {
-  const s = new Date(d.getFullYear(), 0, 1)
-  return Math.ceil(((d.getTime() - s.getTime()) / 86400000 + s.getDay() + 1) / 7)
-}
 
 const SEV: Record<string, string> = {
   Critical: "bg-red-100 text-red-700",
@@ -515,7 +489,6 @@ export default function Page() {
   const [regs, setRegs] = React.useState<RegBoardItem[]>([])
   const [posts, setPosts] = React.useState<Awaited<ReturnType<typeof analysisPosts>>>([])
   const [stamp, setStamp] = React.useState<string | null>(null)
-  const [week, setWeek] = React.useState<WeekItem[]>([])
   const [showPast, setShowPast] = React.useState(false)
   const [modal, setModal] = React.useState<Doc | null>(null)
   const [closing, setClosing] = React.useState(false)
@@ -537,13 +510,12 @@ export default function Page() {
   }, [closeModal])
 
   React.useEffect(() => {
-    Promise.all([indicatorChips(), regBoard(40), analysisPosts(20), freshness(), weekDigest()])
-      .then(([c, r, p, f, w]) => {
+    Promise.all([indicatorChips(), regBoard(40), analysisPosts(20), freshness()])
+      .then(([c, r, p, f]) => {
         setChips(c)
         setRegs(r)
         setPosts(p)
         setStamp(f.news ?? null)
-        setWeek(w)
       })
       .catch(() => {})
     newsFeed(0).then(setFeed).catch(() => setFeed([]))
@@ -1086,93 +1058,6 @@ export default function Page() {
 
         {/* ── 우 : 이번 주 요약(위) + 규제 상위 3건(아래) ── */}
         <aside className="flex h-fit flex-col gap-4 lg:sticky lg:top-[88px]" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.15s" }}>
-          {/* W## 이번 주 — 숫자로 먼저(진행·시행·급한 것), 그 다음 남은 일정 */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
-            <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
-              <p className="text-[14px] font-bold tracking-tight text-gray-900">
-                W{weekNo(today)} <span className="num text-[11px] font-medium text-gray-500">{weekRange(today)}</span>
-              </p>
-              <span className="num text-[10px] text-gray-500">{daysLeft(today)}일 남음</span>
-            </div>
-
-            <div className="border-b border-gray-100 px-3 py-2.5">
-              <div className="grid grid-cols-3 gap-1.5">
-                <div className="rounded-lg bg-gray-50 px-2 py-1.5">
-                  <p className="text-[9px] text-gray-500">발표</p>
-                  <p className="num text-[16px] font-semibold leading-tight text-gray-900">
-                    {week.filter((w) => w.src === "cal" && w.past).length}
-                    <span className="text-[10px] font-normal text-gray-400">/{week.filter((w) => w.src === "cal").length}</span>
-                  </p>
-                </div>
-                <div className="rounded-lg bg-gray-50 px-2 py-1.5">
-                  <p className="text-[9px] text-gray-500">규제 시행</p>
-                  <p className="num text-[16px] font-semibold leading-tight text-red-700">
-                    {week.filter((w) => w.src === "reg").length}
-                  </p>
-                </div>
-                <div className="rounded-lg bg-gray-50 px-2 py-1.5">
-                  <p className="text-[9px] text-gray-500">가장 급한</p>
-                  <p className="num text-[16px] font-semibold leading-tight text-red-700">{urgent(week)}</p>
-                </div>
-              </div>
-
-              <div className="mt-2 h-1 overflow-hidden rounded-full bg-gray-100">
-                <div className="h-full rounded-full bg-indigo-500 transition-all duration-700 ease-out" style={{ width: weekProgress(today) + "%" }} />
-              </div>
-              <p className="mt-1 text-[9px] text-gray-400">주간 진행 · {"일월화수목금토"[today.getDay()]}요일</p>
-            </div>
-
-            <div className="px-3 py-2.5">
-              <p className="mb-1.5 text-[10px] font-semibold tracking-wide text-gray-400">남은 일정</p>
-              {week.filter((w) => !w.past).length === 0 ? (
-                <p className="text-[11px] text-gray-400">남은 일정 없음</p>
-              ) : (
-                <div className="flex flex-col gap-2">
-                  {week
-                    .filter((w) => !w.past)
-                    .slice(0, 4)
-                    .map((w, i) => (
-                      <div key={i} className="flex gap-2">
-                        <span
-                          className={
-                            "num w-[42px] shrink-0 pt-px text-[10px] font-semibold " +
-                            (w.src === "reg" ? "text-red-600" : "text-indigo-600")
-                          }
-                        >
-                          {isTomorrow(w.date, today) ? "내일" : w.date.slice(5).replace("-", "/")}
-                        </span>
-                        <span className="line-clamp-2 flex-1 text-[11.5px] leading-snug text-gray-700">
-                          {pick(w.label, w.labelEn)}
-                          <span className="ml-1 text-[10px] text-gray-400">· {w.category}</span>
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              )}
-              {week.filter((w) => w.past).length ? (
-                <button
-                  type="button"
-                  onClick={() => setShowPast((v) => !v)}
-                  className="mt-2 w-full rounded-md py-1 text-center text-[10px] text-indigo-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-50 active:scale-95"
-                >
-                  {showPast ? "지난 일정 접기" : "지난 일정 " + week.filter((w) => w.past).length + "건 보기 ›"}
-                </button>
-              ) : null}
-              {showPast ? (
-                <div className="mt-1.5 flex flex-col gap-1.5 border-t border-gray-100 pt-2">
-                  {week
-                    .filter((w) => w.past)
-                    .map((w, i) => (
-                      <div key={i} className="flex gap-2">
-                        <span className="num w-[42px] shrink-0 pt-px text-[10px] text-gray-400">{w.date.slice(5).replace("-", "/")}</span>
-                        <span className="line-clamp-2 flex-1 text-[11px] leading-snug text-gray-500">{pick(w.label, w.labelEn)}</span>
-                      </div>
-                    ))}
-                </div>
-              ) : null}
-            </div>
-          </div>
-
           {/* 규제 동향 — 상단 3건만, 나머지는 메뉴로 */}
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
             <button
