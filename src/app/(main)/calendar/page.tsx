@@ -52,6 +52,7 @@ export default function Calendar() {
   const [bucket, setBucket] = React.useState<Bucket>("upcoming")
   const [cat, setCat] = React.useState("전체")
   const [open, setOpen] = React.useState<CalEvent | null>(null)
+  const [dayList, setDayList] = React.useState<{ date: string; events: CalEvent[] } | null>(null)
   const [month, setMonth] = React.useState(0)
 
   const today = React.useMemo(() => {
@@ -136,14 +137,6 @@ export default function Calendar() {
   }, [all, bucket, inBucket])
 
   /** 우측 위젯 — 다가오는 일정(오늘 이후 8건) + 이번 달 구성 */
-  const upcoming = React.useMemo(
-    () =>
-      all
-        .filter((r) => r.date >= iso(today))
-        .sort((a, b) => a.date.localeCompare(b.date) || b.importance - a.importance)
-        .slice(0, 8),
-    [all, today],
-  )
   const mix = React.useMemo(() => {
     const m: Record<string, number> = { release: 0, policy: 0, holiday: 0 }
     for (const r of inMonth) if (m[r.kind] !== undefined) m[r.kind]++
@@ -238,9 +231,10 @@ export default function Calendar() {
               return (
                 <div
                   key={key}
+                  onClick={() => on && evs.length > 0 && setDayList({ date: key, events: evs })}
                   className={
-                    "min-h-[108px] rounded-lg border p-2 transition-all duration-200 " +
-                    (on ? "bg-white hover:-translate-y-px hover:border-indigo-200 hover:shadow-sm " : "border-transparent bg-transparent ") +
+                    "h-[118px] overflow-hidden rounded-lg border p-2 transition-all duration-200 " +
+                    (on ? "cursor-pointer bg-white hover:-translate-y-px hover:border-indigo-200 hover:shadow-sm " : "border-transparent bg-transparent ") +
                     (isToday ? "border-indigo-400 bg-indigo-50/40 " : holiday && on ? "border-teal-200 bg-teal-50/40 " : on ? "border-gray-200 " : "")
                   }
                   
@@ -265,7 +259,7 @@ export default function Calendar() {
                           <button
                             key={e.event}
                             type="button"
-                            onClick={() => setOpen(e)}
+                            onClick={(ev) => { ev.stopPropagation(); setOpen(e) }}
                             className={
                               "mb-1 block w-full truncate rounded px-1.5 py-1 text-left text-[11.5px] font-semibold leading-tight transition-all duration-200 hover:-translate-y-px hover:brightness-95 active:scale-[.97] " +
                               t.bg + " " + t.fg
@@ -303,51 +297,6 @@ export default function Calendar() {
           className="flex flex-col gap-4"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "60ms" }}
         >
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
-              <h2 className="text-[15px] font-bold tracking-tight text-gray-900">다가오는 일정</h2>
-              <span className="text-[11px] text-gray-400">D-day</span>
-            </header>
-            <div className="mt-2 flex flex-col">
-              {upcoming.map((e, i) => {
-                const t = tone(e.category)
-                const dd = dday(e.date, today)
-                return (
-                  <button
-                    key={e.date + e.event}
-                    type="button"
-                    onClick={() => setOpen(e)}
-                    className="group flex items-start gap-2.5 rounded-lg px-1.5 py-2 text-left transition-all duration-200 hover:-translate-y-px hover:bg-indigo-50/50 active:scale-[.99]"
-                    style={{ animation: "rowIn .3s cubic-bezier(.16,1,.3,1) both", animationDelay: i * 30 + "ms" }}
-                  >
-                    <span
-                      className={
-                        "mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-bold tabular-nums " +
-                        (dd === 0 ? "bg-indigo-600 text-white" : dd <= 3 ? "bg-rose-50 text-rose-700" : "bg-gray-100 text-gray-600")
-                      }
-                    >
-                      {dd === 0 ? "오늘" : "D-" + dd}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[12.5px] font-semibold text-gray-900 group-hover:text-indigo-700">
-                        {e.importance >= 3 ? "★ " : ""}
-                        {head(e.event)}
-                      </span>
-                      <span className="mt-0.5 flex items-center gap-1.5 text-[10.5px] text-gray-500">
-                        <span className={"rounded px-1 py-px font-medium " + t.bg + " " + t.fg}>{e.category}</span>
-                        <span>{KIND[e.kind] ?? "—"}</span>
-                        <span className="tabular-nums">{e.date.slice(5).replace("-", "/")}</span>
-                      </span>
-                    </span>
-                  </button>
-                )
-              })}
-              {upcoming.length === 0 && (
-                <p className="py-8 text-center text-[12.5px] text-gray-400">예정 일정 없음</p>
-              )}
-            </div>
-          </div>
-
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
               <h2 className="text-[15px] font-bold tracking-tight text-gray-900">{label} 구성</h2>
@@ -493,7 +442,7 @@ export default function Calendar() {
                       </tr>
                     )}
                     <tr
-                      onClick={() => setOpen(e)}
+                      onClick={(ev) => { ev.stopPropagation(); setOpen(e) }}
                       className={
                         "cursor-pointer border-b border-gray-50 transition-colors duration-200 hover:bg-indigo-50/50 " +
                         (bucket === "past" ? "opacity-70 hover:opacity-100" : "")
@@ -576,10 +525,85 @@ export default function Calendar() {
                 </div>
               </div>
             )}
+            {(open.summary || open.implication || open.actions) && (
+              <div className="mt-4 space-y-3">
+                {open.summary && (
+                  <p className="text-[13px] leading-relaxed text-gray-700">{open.summary}</p>
+                )}
+                {open.implication && (
+                  <div className="rounded-lg border-l-2 border-indigo-500 bg-indigo-50/40 px-3 py-2">
+                    <p className="text-[11px] font-semibold text-indigo-700">시사점</p>
+                    <p className="mt-0.5 text-[12.5px] leading-relaxed text-gray-800">{open.implication}</p>
+                  </div>
+                )}
+                {open.actions && (
+                  <div className="rounded-lg border-l-2 border-emerald-500 bg-emerald-50/40 px-3 py-2">
+                    <p className="text-[11px] font-semibold text-emerald-700">대응 · Owner</p>
+                    <p className="mt-0.5 whitespace-pre-line text-[12.5px] leading-relaxed text-gray-800">{open.actions}</p>
+                  </div>
+                )}
+              </div>
+            )}
+            {open.url && (
+              <a
+                href={open.url}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-4 flex items-center justify-center gap-1 rounded-md border border-gray-200 py-2 text-[12.5px] font-medium text-indigo-600 transition-all duration-200 hover:-translate-y-px hover:border-indigo-300 active:scale-[.99]"
+              >
+                원문 보기 ↗
+              </a>
+            )}
             <button
               type="button"
               onClick={() => setOpen(null)}
               className="mt-5 w-full rounded-md border border-gray-200 py-2 text-[12.5px] font-medium text-gray-600 transition-all duration-200 hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 active:scale-[.99]"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {dayList && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setDayList(null)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-[520px] overflow-y-auto rounded-xl bg-white p-5 shadow-xl"
+            style={{ animation: "popIn .28s cubic-bezier(.16,1,.3,1) both" }}
+            onClick={(ev) => ev.stopPropagation()}
+          >
+            <div className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
+              <h3 className="text-[15px] font-bold text-gray-900">{dayList.date.slice(5).replace("-", "/")} 일정</h3>
+              <span className="text-[11px] text-gray-400">{dayList.events.length}건</span>
+            </div>
+            <div className="mt-2 flex flex-col">
+              {dayList.events.map((e) => {
+                const t = tone(e.category)
+                return (
+                  <button
+                    key={e.event}
+                    type="button"
+                    onClick={() => { setOpen(e); setDayList(null) }}
+                    className="flex items-start gap-2.5 rounded-lg px-2 py-2.5 text-left transition-all duration-200 hover:-translate-y-px hover:bg-indigo-50/50 active:scale-[.99]"
+                  >
+                    <span className={"mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-semibold " + t.bg + " " + t.fg}>{e.category}</span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13px] font-semibold leading-snug text-gray-900">
+                        {e.importance >= 3 ? "★ " : ""}{e.event}
+                      </span>
+                      <span className="mt-0.5 block text-[11px] text-gray-500">{KIND[e.kind] ?? "—"}{e.releaseTime ? " · " + e.releaseTime : ""}</span>
+                    </span>
+                  </button>
+                )
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={() => setDayList(null)}
+              className="mt-4 w-full rounded-md border border-gray-200 py-2 text-[12.5px] font-medium text-gray-600 transition-all duration-200 hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 active:scale-[.99]"
             >
               닫기
             </button>
