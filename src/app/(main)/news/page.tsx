@@ -896,7 +896,7 @@ export default function Page() {
 
                         <p
                           className={
-                            "line-clamp-2 font-semibold leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 " +
+                            "line-clamp-2 min-h-[2.75em] font-semibold leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 " +
                             "text-[14px]"
                           }
                         >
