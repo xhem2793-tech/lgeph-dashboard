@@ -896,8 +896,8 @@ export default function Page() {
 
                         <p
                           className={
-                            "line-clamp-2 min-h-[2.7em] font-medium leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600 " +
-                            "text-[13px]"
+                            "line-clamp-2 font-semibold leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 " +
+                            "text-[14px]"
                           }
                         >
                           <Hi text={d.title} q={q} />
@@ -907,7 +907,7 @@ export default function Page() {
 
                         
 
-                        <p className="mt-1 line-clamp-1 min-h-[1.3em] text-[11px] leading-snug text-gray-500">{d.so ? <Hi text={d.so} q={q} /> : null}</p>
+                        <p className="mt-1 line-clamp-1 text-[11.5px] leading-snug text-gray-500">{d.so ? <Hi text={d.so} q={q} /> : null}</p>
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                           <span className="text-[10.5px] font-medium text-gray-500">{d.topic}</span>
                           <span className="text-[11.5px] text-gray-300">·</span>
