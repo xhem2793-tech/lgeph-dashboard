@@ -49,6 +49,46 @@ const fmtVal = (v: number | null, unit: string | null) => {
 
 type Bucket = "past" | "upcoming"
 
+function SlideToggle({
+  options,
+  value,
+  onChange,
+}: {
+  options: { k: string; label: string }[]
+  value: string
+  onChange: (k: string) => void
+}) {
+  const refs = React.useRef<(HTMLButtonElement | null)[]>([])
+  const [style, setStyle] = React.useState<React.CSSProperties>({ opacity: 0 })
+  const idx = options.findIndex((o) => o.k === value)
+  React.useLayoutEffect(() => {
+    const el = refs.current[idx]
+    if (el) setStyle({ left: 0, width: el.offsetWidth, transform: `translateX(${el.offsetLeft}px)`, opacity: 1 })
+  }, [idx, options])
+  return (
+    <div className="relative flex shrink-0 rounded-full border border-gray-200 bg-gray-50 p-0.5">
+      <span
+        className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 shadow-sm transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]"
+        style={style}
+      />
+      {options.map((o, i) => (
+        <button
+          key={o.k}
+          ref={(el) => { refs.current[i] = el }}
+          type="button"
+          onClick={() => onChange(o.k)}
+          className={
+            "relative z-10 rounded-full px-3.5 py-1 text-[11.5px] font-medium transition-colors duration-300 active:scale-95 " +
+            (value === o.k ? "text-white" : "text-gray-600 hover:text-indigo-600")
+          }
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
 export default function Calendar() {
   const [rows, setRows] = React.useState<CalEvent[] | null>(null)
   const [stamp, setStamp] = React.useState<string | null>(null)
@@ -346,21 +386,14 @@ export default function Calendar() {
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
           <div className="flex items-center gap-3">
             <h2 className="text-[17px] font-bold tracking-tight text-gray-900">이벤트 목록</h2>
-            <div className="flex shrink-0 gap-0.5 rounded-full border border-gray-200 p-0.5">
-              {(["past", "upcoming"] as const).map((b) => (
-                <button
-                  key={b}
-                  type="button"
-                  onClick={() => { setBucket(b); setCat("전체") }}
-                  className={
-                    "rounded-full px-3 py-1 text-[11.5px] font-medium transition-all duration-300 ease-out active:scale-95 " +
-                    (bucket === b ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
-                  }
-                >
-                  {b === "past" ? "지남" : "예정"} {counts[b]}
-                </button>
-              ))}
-            </div>
+            <SlideToggle
+              options={[
+                { k: "past", label: "지남 " + counts.past },
+                { k: "upcoming", label: "예정 " + counts.upcoming },
+              ]}
+              value={bucket}
+              onChange={(k) => { setBucket(k as Bucket); setCat("전체") }}
+            />
           </div>
           <span className="text-[11px] text-gray-400">클릭 시 상세</span>
         </header>
