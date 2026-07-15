@@ -501,7 +501,7 @@ export default function Page() {
   const newsDocs: Doc[] = React.useMemo(
     () =>
       (feed ?? [])
-        .filter((f) => f.ai && f.ai.trim().length > 0)
+        .filter((f) => f.ai && f.ai.trim().length > 0 && f.source !== OURS)
         .map((f) => ({
           id: "n" + f.id,
           kind: "news" as Kind,
@@ -896,7 +896,7 @@ export default function Page() {
 
                         <p
                           className={
-                            "line-clamp-2 font-semibold leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600 " +
+                            "line-clamp-2 font-medium leading-snug text-gray-900 transition-colors duration-300 group-hover:text-indigo-600 " +
                             "text-[14.5px]"
                           }
                         >
