@@ -9,13 +9,13 @@ import { calendarEvents, freshness, fmtStamp, type CalEvent } from "@/lib/supaba
  */
 
 const CAT: Record<string, { bg: string; fg: string; dot: string }> = {
-  정치: { bg: "bg-rose-50", fg: "text-rose-800", dot: "bg-rose-500" },
+  정치: { bg: "bg-purple-50", fg: "text-purple-800", dot: "bg-purple-500" },
   금융: { bg: "bg-blue-50", fg: "text-blue-800", dot: "bg-blue-500" },
   경제: { bg: "bg-emerald-50", fg: "text-emerald-800", dot: "bg-emerald-500" },
   에너지: { bg: "bg-amber-50", fg: "text-amber-800", dot: "bg-amber-500" },
   유통: { bg: "bg-violet-50", fg: "text-violet-800", dot: "bg-violet-500" },
   규제: { bg: "bg-red-50", fg: "text-red-800", dot: "bg-red-500" },
-  공휴일: { bg: "bg-pink-50", fg: "text-pink-800", dot: "bg-pink-500" },
+  공휴일: { bg: "bg-teal-50", fg: "text-teal-800", dot: "bg-teal-500" },
   B2B: { bg: "bg-cyan-50", fg: "text-cyan-800", dot: "bg-cyan-500" },
   기타: { bg: "bg-gray-100", fg: "text-gray-700", dot: "bg-gray-400" },
 }
@@ -150,6 +150,22 @@ export default function Calendar() {
     return m
   }, [inMonth])
 
+  const triggers = React.useMemo(() => {
+    const out: { label: string; date: string; note: string; dot: string }[] = []
+    const y = today.getFullYear(), mo = today.getMonth(), dd = today.getDate()
+    const end = new Date(y, mo + 1, 0).getDate()
+    const nextPay = dd < 15 ? new Date(y, mo, 15) : dd < end ? new Date(y, mo + 1, 0) : new Date(y, mo + 1, 15)
+    out.push({ label: "급여일", date: iso(nextPay), note: "오프라인 가전 구매 스파이크", dot: "bg-emerald-500" })
+    const sales = ["2026-08-08", "2026-09-09", "2026-10-10", "2026-11-11", "2026-12-12"]
+    const ns = sales.find((s) => s >= iso(today))
+    if (ns) out.push({ label: "이커머스 대형세일", date: ns, note: ns.slice(5).replace("-", ".") + " 메가세일", dot: "bg-violet-500" })
+    const elec = all
+      .filter((r) => r.category === "에너지" && (r.event.includes("전기요금") || r.event.includes("Meralco")) && r.date >= iso(today))
+      .sort((a, b) => a.date.localeCompare(b.date))[0]
+    if (elec) out.push({ label: "전기요금 변동", date: elec.date, note: "냉방가전 사용부담 좌우", dot: "bg-amber-500" })
+    return out
+  }, [all, today])
+
   const crit = inMonth.filter((r) => r.importance >= 3).length
   const label = `${range.from.getFullYear()}년 ${range.from.getMonth() + 1}월`
 
@@ -159,6 +175,7 @@ export default function Calendar() {
         "@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}" +
         "@keyframes cellIn{from{opacity:0;transform:translateY(6px) scale(.99)}to{opacity:1;transform:none}}" +
         "@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}" +
+        "@keyframes viewIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}" +
         "@keyframes popIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}"
       }</style>
 
@@ -207,7 +224,11 @@ export default function Calendar() {
             ))}
           </div>
 
-          <div className="mt-1.5 grid grid-cols-7 gap-1.5">
+          <div
+            key={label}
+            className="mt-1.5 grid grid-cols-7 gap-1.5"
+            style={{ animation: "viewIn .4s cubic-bezier(.16,1,.3,1) both" }}
+          >
             {cells.map((d, i) => {
               const key = iso(d)
               const on = d >= range.from && d <= range.to
@@ -220,9 +241,9 @@ export default function Calendar() {
                   className={
                     "min-h-[108px] rounded-lg border p-2 transition-all duration-200 " +
                     (on ? "bg-white hover:-translate-y-px hover:border-indigo-200 hover:shadow-sm " : "border-transparent bg-transparent ") +
-                    (isToday ? "border-indigo-400 bg-indigo-50/40 " : holiday && on ? "border-pink-200 bg-pink-50/30 " : on ? "border-gray-200 " : "")
+                    (isToday ? "border-indigo-400 bg-indigo-50/40 " : holiday && on ? "border-teal-200 bg-teal-50/40 " : on ? "border-gray-200 " : "")
                   }
-                  style={{ animation: "cellIn .32s cubic-bezier(.16,1,.3,1) both", animationDelay: i * 8 + "ms" }}
+                  
                 >
                   {on && (
                     <>
@@ -350,6 +371,37 @@ export default function Calendar() {
               뉴스성 이벤트는 제외 — 지표 발표 · 정책·규제 시행 · 필리핀 공휴일만 캘린더에 표시
             </p>
           </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
+              <h2 className="text-[15px] font-bold tracking-tight text-gray-900">수요 선행</h2>
+              <span className="text-[11px] text-gray-400">가전 판매 트리거</span>
+            </header>
+            <div className="mt-2 flex flex-col">
+              {triggers.map((x, i) => {
+                const dd = dday(x.date, today)
+                return (
+                  <div
+                    key={x.label}
+                    className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:-translate-y-px hover:bg-indigo-50/40"
+                    style={{ animation: "rowIn .3s cubic-bezier(.16,1,.3,1) both", animationDelay: i * 40 + "ms" }}
+                  >
+                    <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[12.5px] font-semibold text-gray-900">{x.label}</span>
+                      <span className="block text-[10.5px] text-gray-500">{x.note}</span>
+                    </span>
+                    <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500">
+                      {dd === 0 ? "오늘" : "D-" + dd}
+                    </span>
+                  </div>
+                )
+              })}
+            </div>
+            <p className="mt-2 text-[11px] leading-relaxed text-gray-400">
+              캘린더 본문에는 없는 수요 트리거만 별도 표시 — 급여일·세일윈도우·전기요금
+            </p>
+          </div>
         </div>
       </div>
 
@@ -409,7 +461,7 @@ export default function Calendar() {
             해당 구간 이벤트 없음
           </div>
         ) : (
-          <div className="mt-2 overflow-x-auto">
+          <div key={bucket + cat} className="mt-2 overflow-x-auto" style={{ animation: "viewIn .4s cubic-bezier(.16,1,.3,1) both" }}>
             <table className="w-full min-w-[900px] text-[13px]">
               <thead>
                 <tr className="border-b border-gray-100 text-[11px] font-semibold text-gray-500">
@@ -435,7 +487,7 @@ export default function Calendar() {
                     <React.Fragment key={e.date + e.event}>
                     {showHead && (
                       <tr>
-                        <td colSpan={9} className="bg-gray-50/70 px-2 pb-1 pt-3 text-[11px] font-bold text-gray-500">
+                        <td colSpan={9} className="border-t border-gray-100 bg-gray-50/60 px-2 pb-1.5 pt-2.5 text-[11px] font-bold text-gray-500 first:border-t-0">
                           {seg === "week" ? "이번 주" : "예정"}
                         </td>
                       </tr>
