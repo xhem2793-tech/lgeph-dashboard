@@ -737,6 +737,7 @@ export async function weekDigest(): Promise<WeekItem[]> {
     labelEn: r.label_en ? String(r.label_en).trim() : null,
     past: Boolean(r.past),
     severity: r.severity ?? null,
+    sourceLabel: r.source_label ?? null,
     agency: r.agency ?? null,
   }))
 }
