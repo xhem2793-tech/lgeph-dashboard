@@ -481,7 +481,7 @@ function groupDocs(list: Doc[]): Group[] {
 
 export default function Page() {
   const { pick } = useLang()
-  const mode: "topic" | "product" = "topic"
+  const [mode] = React.useState<"topic" | "product">("topic")
   const [menu, setMenu] = React.useState("전체")
   const [prod, setProd] = React.useState("에어컨·RAC")
   const [sort, setSort] = React.useState<"new" | "impact">("new")
