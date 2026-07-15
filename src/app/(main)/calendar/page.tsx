@@ -43,12 +43,12 @@ const fmtVal = (v: number | null, unit: string | null) => {
   return String(v)
 }
 
-type Bucket = "past" | "week" | "next"
+type Bucket = "past" | "upcoming"
 
 export default function Calendar() {
   const [rows, setRows] = React.useState<CalEvent[] | null>(null)
   const [stamp, setStamp] = React.useState<string | null>(null)
-  const [bucket, setBucket] = React.useState<Bucket>("week")
+  const [bucket, setBucket] = React.useState<Bucket>("upcoming")
   const [cat, setCat] = React.useState("전체")
   const [open, setOpen] = React.useState<CalEvent | null>(null)
   const [month, setMonth] = React.useState(0)
@@ -112,20 +112,24 @@ export default function Calendar() {
   )
 
   const list = React.useMemo(() => {
-    const f = all.filter((r) => inBucket(r) === bucket && (cat === "전체" || r.category === cat))
+    const f = all.filter((r) => {
+      const b = inBucket(r)
+      const inSel = bucket === "past" ? b === "past" : b !== "past"
+      return inSel && (cat === "전체" || r.category === cat)
+    })
     return f.sort((a, b) =>
       bucket === "past" ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date),
     )
   }, [all, bucket, cat, inBucket])
 
   const counts = React.useMemo(() => {
-    const c: Record<Bucket, number> = { past: 0, week: 0, next: 0 }
-    for (const r of all) c[inBucket(r) as Bucket]++
-    return c
+    const c = { past: 0, week: 0, next: 0 }
+    for (const r of all) c[inBucket(r) as "past" | "week" | "next"]++
+    return { past: c.past, upcoming: c.week + c.next, week: c.week, next: c.next }
   }, [all, inBucket])
 
   const cats = React.useMemo(() => {
-    const s = new Set(all.filter((r) => inBucket(r) === bucket).map((r) => r.category))
+    const s = new Set(all.filter((r) => (bucket === "past" ? inBucket(r) === "past" : inBucket(r) !== "past")).map((r) => r.category))
     const extra = Array.from(s).filter((c) => !LEGEND.includes(c))
     return ["전체", ...LEGEND.filter((c) => s.has(c)), ...extra]
   }, [all, bucket, inBucket])
@@ -157,7 +161,7 @@ export default function Calendar() {
         "@keyframes popIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}"
       }</style>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
         <div
           className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
           style={{ animation: "fadeUp .5s ease both" }}
@@ -356,7 +360,7 @@ export default function Calendar() {
           <div className="flex items-center gap-3">
             <h2 className="text-[17px] font-bold tracking-tight text-gray-900">이벤트 목록</h2>
             <div className="flex overflow-hidden rounded-full border border-gray-200">
-              {(["past", "week", "next"] as const).map((b) => (
+              {(["past", "upcoming"] as const).map((b) => (
                 <button
                   key={b}
                   type="button"
@@ -369,7 +373,7 @@ export default function Calendar() {
                     (bucket === b ? "bg-indigo-600 text-white" : "text-gray-500 hover:text-indigo-600")
                   }
                 >
-                  {b === "past" ? "지남" : b === "week" ? "이번 주" : "예정"} {counts[b]}
+                  {b === "past" ? "지남" : "예정"} {counts[b]}
                 </button>
               ))}
             </div>
@@ -422,11 +426,20 @@ export default function Calendar() {
               <tbody>
                 {list.map((e, i) => {
                   const t = tone(e.category)
+                  const seg = inBucket(e)
+                  const showHead = bucket === "upcoming" && (i === 0 || inBucket(list[i - 1]) !== seg)
                   const up = e.actual !== null && e.previous !== null && e.actual > e.previous
                   const down = e.actual !== null && e.previous !== null && e.actual < e.previous
                   return (
+                    <React.Fragment key={e.date + e.event}>
+                    {showHead && (
+                      <tr>
+                        <td colSpan={9} className="bg-gray-50/70 px-2 pb-1 pt-3 text-[11px] font-bold text-gray-500">
+                          {seg === "week" ? "이번 주" : "예정"}
+                        </td>
+                      </tr>
+                    )}
                     <tr
-                      key={e.date + e.event}
                       onClick={() => setOpen(e)}
                       className={
                         "cursor-pointer border-b border-gray-50 transition-colors duration-200 hover:bg-indigo-50/50 " +
@@ -461,6 +474,7 @@ export default function Calendar() {
                         {"★".repeat(e.importance)}
                       </td>
                     </tr>
+                    </React.Fragment>
                   )
                 })}
               </tbody>
