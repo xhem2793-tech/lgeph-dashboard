@@ -140,18 +140,17 @@ export default function Calendar() {
       const inSel = query ? true : bucket === "past" ? b === "past" : b !== "past"
       const inCat = cat === "전체" || (axis === "dept" ? deptOf(r) === cat : r.category === cat)
       const inQ = !query || (r.event + " " + r.category + " " + (r.summary || "") + " " + (r.sourceLabel || "")).toLowerCase().includes(query.toLowerCase())
-      const inRange = r.date >= iso(range.from) && r.date <= iso(range.to)
-      return inSel && inCat && inQ && inRange
+      return inSel && inCat && inQ
     })
     return f.sort((a, b) =>
       bucket === "past" ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date),
     )
-  }, [all, bucket, cat, inBucket, axis, query, range.from, range.to])
+  }, [all, bucket, cat, inBucket, axis, query])
   const counts = React.useMemo(() => {
     const c = { past: 0, week: 0, next: 0 }
-    for (const r of all) { if (r.date >= iso(range.from) && r.date <= iso(range.to)) c[inBucket(r) as "past" | "week" | "next"]++ }
+    for (const r of all) c[inBucket(r) as "past" | "week" | "next"]++
     return { past: c.past, upcoming: c.week + c.next }
-  }, [all, inBucket, range.from, range.to])
+  }, [all, inBucket])
   const cats = React.useMemo(() => {
     if (axis === "dept") return ["전체", ...DEPTS]
     const s = new Set(all.filter((r) => (bucket === "past" ? inBucket(r) === "past" : inBucket(r) !== "past")).map((r) => r.category))
@@ -210,7 +209,7 @@ export default function Calendar() {
         "@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"
       }</style>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
         <div
           className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
           style={{ animation: "fadeUp .5s ease both" }}
