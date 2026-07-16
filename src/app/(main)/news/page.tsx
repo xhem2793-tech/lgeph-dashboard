@@ -122,19 +122,7 @@ function rel(s: string) {
 
 /** 이번 주 남은 일수(오늘 포함 X) · 주간 진행률 · 가장 급한 시행 D-day */
 /** 규제의 시행일 — dDay 로부터 역산(뷰가 effective_date 로 dDay 를 만든다) */
-function effDate(r: Doc) {
-  const t = new Date()
-  const base = new Date(t.getFullYear(), t.getMonth(), t.getDate() + (r.dDay ?? 0))
-  return (
-    base.getFullYear() +
-    "-" +
-    String(base.getMonth() + 1).padStart(2, "0") +
-    "-" +
-    String(base.getDate()).padStart(2, "0")
-  )
-}
 
-const MON = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 
 
 
@@ -611,16 +599,6 @@ export default function Page() {
   const cur = Math.min(page, pages)
   const slice = groups.slice((cur - 1) * PAGE, cur * PAGE)
 
-  const board = React.useMemo(() => {
-    const rank = { Critical: 0, High: 1, Medium: 2 } as Record<string, number>
-    return [...regDocs].sort((a, b) => {
-      const s = (rank[a.severity ?? ""] ?? 9) - (rank[b.severity ?? ""] ?? 9)
-      if (s !== 0) return s
-      const ad = a.dDay == null ? 9999 : a.dDay < 0 ? 9998 : a.dDay
-      const bd = b.dDay == null ? 9999 : b.dDay < 0 ? 9998 : b.dDay
-      return ad - bd
-    })
-  }, [regDocs])
 
 
   const go = (p: number) => {
