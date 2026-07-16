@@ -241,7 +241,7 @@ export default function Calendar() {
                     <>
                       <div
                         className={
-                          "mb-1.5 text-[13px] font-bold " +
+                          "mb-1.5 text-[13px] font-semibold " +
                           (isToday ? "text-indigo-600" : holiday ? "text-teal-600" : d.getDay() === 0 ? "text-rose-500" : "text-gray-700")
                         }
                       >
@@ -255,12 +255,11 @@ export default function Calendar() {
                             type="button"
                             onClick={(ev) => { ev.stopPropagation(); openEvent(e) }}
                             className={
-                              "mb-1 block w-full truncate rounded px-1.5 py-1 text-left text-[11.5px] font-semibold leading-tight transition-all duration-300 hover:-translate-y-px hover:brightness-95 active:scale-[.97] " +
-                              t.bg + " " + t.fg
+                              "mb-0.5 flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11.5px] font-medium leading-tight text-gray-700 transition-all duration-300 hover:bg-gray-100 active:scale-[.97] "
                             }
                             title={e.event}
                           >
-                            {e.importance >= 3 ? "★ " : ""}{head(e.event)}
+                            <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + t.dot} /><span className="min-w-0 truncate">{e.importance >= 3 ? "★ " : ""}{head(e.event)}</span>
                           </button>
                         )
                       })}
