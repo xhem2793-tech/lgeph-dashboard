@@ -140,17 +140,18 @@ export default function Calendar() {
       const inSel = query ? true : bucket === "past" ? b === "past" : b !== "past"
       const inCat = cat === "전체" || (axis === "dept" ? deptOf(r) === cat : r.category === cat)
       const inQ = !query || (r.event + " " + r.category + " " + (r.summary || "") + " " + (r.sourceLabel || "")).toLowerCase().includes(query.toLowerCase())
-      return inSel && inCat && inQ
+      const inRange = r.date >= iso(range.from) && r.date <= iso(range.to)
+      return inSel && inCat && inQ && inRange
     })
     return f.sort((a, b) =>
       bucket === "past" ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date),
     )
-  }, [all, bucket, cat, inBucket, axis, query])
+  }, [all, bucket, cat, inBucket, axis, query, range.from, range.to])
   const counts = React.useMemo(() => {
     const c = { past: 0, week: 0, next: 0 }
-    for (const r of all) c[inBucket(r) as "past" | "week" | "next"]++
+    for (const r of all) { if (r.date >= iso(range.from) && r.date <= iso(range.to)) c[inBucket(r) as "past" | "week" | "next"]++ }
     return { past: c.past, upcoming: c.week + c.next }
-  }, [all, inBucket])
+  }, [all, inBucket, range.from, range.to])
   const cats = React.useMemo(() => {
     if (axis === "dept") return ["전체", ...DEPTS]
     const s = new Set(all.filter((r) => (bucket === "past" ? inBucket(r) === "past" : inBucket(r) !== "past")).map((r) => r.category))
@@ -180,9 +181,9 @@ export default function Calendar() {
   const agenda = React.useMemo(() => {
     const t0 = iso(today)
     const t14 = iso(addDays(today, 14))
-    const items: { date: string; label: string; note: string; dot: string }[] = []
+    const items: { date: string; label: string; note: string; dot: string; ev?: CalEvent }[] = []
     for (const r of all) {
-      if (r.date >= t0 && r.date <= t14) items.push({ date: r.date, label: head(r.event), note: catLabel(r.category) + " · " + (KIND[r.kind] || ""), dot: tone(r.category).dot })
+      if (r.date >= t0 && r.date <= t14) items.push({ date: r.date, label: head(r.event), note: catLabel(r.category) + " · " + (KIND[r.kind] || ""), dot: tone(r.category).dot, ev: r })
     }
     for (const x of triggers) {
       if (x.date >= t0 && x.date <= t14) items.push({ date: x.date, label: x.label, note: x.note, dot: x.dot })
@@ -270,8 +271,9 @@ export default function Calendar() {
           </div>
 
           <div
+            key={label}
             className="mt-1.5 grid grid-cols-7 gap-1.5"
-            style={{ animation: "viewIn .3s ease both" }}
+            style={{ animation: "backIn .22s ease both" }}
           >
             {cells.map((d) => {
               const key = iso(d)
@@ -365,7 +367,7 @@ export default function Calendar() {
                   {agenda.map((x) => {
                     const dd = dday(x.date, today)
                     return (
-                      <div key={x.label + x.date} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors duration-200 hover:bg-indigo-50/40">
+                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
                         <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[12.5px] font-semibold text-gray-900">{x.label}</span>
@@ -399,7 +401,7 @@ export default function Calendar() {
               onChange={(k) => { setBucket(k as Bucket); setCat("전체") }}
             />
           </div>
-          <span className="text-[11px] text-gray-400">클릭 시 상세</span>
+          <span className="flex items-center gap-1.5 text-[11px] text-gray-400">최근 갱신 {stamp ? fmtStamp(stamp) : "—"}<span className="rounded bg-emerald-50 px-1 py-px text-[9px] font-bold text-emerald-600">C</span></span>
         </header>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
