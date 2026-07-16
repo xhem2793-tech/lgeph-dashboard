@@ -133,19 +133,6 @@ export default function Calendar() {
     },
     [week.from, week.to],
   )
-  const agenda = React.useMemo(() => {
-    const t0 = iso(today)
-    const t14 = iso(addDays(today, 14))
-    const items: { date: string; label: string; note: string; dot: string }[] = []
-    for (const r of all) {
-      if (r.date >= t0 && r.date <= t14) items.push({ date: r.date, label: head(r.event), note: catLabel(r.category) + " · " + (KIND[r.kind] || ""), dot: tone(r.category).dot })
-    }
-    for (const x of triggers) {
-      if (x.date >= t0 && x.date <= t14) items.push({ date: x.date, label: x.label, note: x.note, dot: x.dot })
-    }
-    items.sort((a, b) => a.date.localeCompare(b.date))
-    return items.slice(0, 10)
-  }, [all, triggers, today])
   const groupOf = (r: CalEvent) => (r.date >= week.from && r.date <= week.to ? "이번 주" : Number(r.date.slice(5, 7)) + "월")
   const list = React.useMemo(() => {
     const f = all.filter((r) => {
@@ -190,6 +177,19 @@ export default function Calendar() {
     if (elec) out.push({ label: "전기요금 변동", date: elec.date, note: "냉방가전 사용부담 좌우", dot: "bg-amber-500" })
     return out
   }, [all, today])
+  const agenda = React.useMemo(() => {
+    const t0 = iso(today)
+    const t14 = iso(addDays(today, 14))
+    const items: { date: string; label: string; note: string; dot: string }[] = []
+    for (const r of all) {
+      if (r.date >= t0 && r.date <= t14) items.push({ date: r.date, label: head(r.event), note: catLabel(r.category) + " · " + (KIND[r.kind] || ""), dot: tone(r.category).dot })
+    }
+    for (const x of triggers) {
+      if (x.date >= t0 && x.date <= t14) items.push({ date: x.date, label: x.label, note: x.note, dot: x.dot })
+    }
+    items.sort((a, b) => a.date.localeCompare(b.date))
+    return items.slice(0, 10)
+  }, [all, triggers, today])
 
   const crit = inMonth.filter((r) => r.importance >= 3).length
   const label =
