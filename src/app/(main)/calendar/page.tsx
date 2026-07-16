@@ -436,7 +436,7 @@ export default function Calendar() {
                         <td className="h-[44px] px-2 align-middle">
                           <span className={"rounded px-1.5 py-0.5 text-[10.5px] font-semibold " + t.bg + " " + t.fg}>{e.category}</span>
                         </td>
-                        <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-500">{KIND[e.kind] ?? "—"}</td>
+                        <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-500">{e.category} · {KIND[e.kind] ?? "—"}</td>
                         <td className="max-w-0 truncate h-[44px] px-2 align-middle font-medium text-gray-900">{e.event}</td>
                         <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-400">{e.releaseTime ?? "—"}</td>
                         <td className="h-[44px] px-2 align-middle text-right text-[11px] text-amber-500">{"★".repeat(e.importance)}</td>
@@ -563,20 +563,19 @@ export default function Calendar() {
                 <h3 className="text-[16px] font-bold text-gray-900">{dayList.date.slice(5).replace("-", "/")} 일정</h3>
                 <span className="text-[11px] text-gray-400">{dayList.events.length}건</span>
               </div>
-              <div className="flex flex-col overflow-y-auto px-4 py-2">
-                {dayList.events.map((e, i) => {
+              <div className="flex flex-col divide-y divide-gray-50 overflow-y-auto px-4 py-2">
+                {dayList.events.map((e) => {
                   const t = tone(e.category)
                   return (
                     <button
                       key={e.event}
                       type="button"
                       onClick={() => openEvent(e)}
-                      className="flex items-start gap-2.5 rounded-lg h-[44px] px-2 align-middle text-left transition-all duration-300 hover:-translate-y-px hover:bg-indigo-50/50 active:scale-[.99]"
-                      style={{ animation: "rowIn .35s cubic-bezier(.22,1,.36,1) both", animationDelay: i * 40 + "ms" }}
+                      className="flex items-start gap-2.5 rounded-lg px-2 py-2.5 text-left transition-colors duration-200 hover:bg-gray-50 active:scale-[.99]"
                     >
-                      <span className={"mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-semibold " + t.bg + " " + t.fg}>{e.category}</span>
+                      <span className={"mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full " + t.dot} />
                       <span className="min-w-0 flex-1">
-                        <span className="block text-[13px] font-semibold leading-snug text-gray-900">{e.importance >= 3 ? "★ " : ""}{e.event}</span>
+                        <span className="block line-clamp-1 text-[13px] font-semibold leading-snug text-gray-900">{e.importance >= 3 ? "★ " : ""}{e.event}</span>
                         <span className="mt-0.5 block text-[11px] text-gray-500">{KIND[e.kind] ?? "—"}{e.sourceLabel ? " · " + e.sourceLabel : ""}</span>
                       </span>
                     </button>
