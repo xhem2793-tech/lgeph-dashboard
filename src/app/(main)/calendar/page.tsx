@@ -272,7 +272,7 @@ export default function Calendar() {
           <div
             key={label}
             className="mt-1.5 grid grid-cols-7 gap-1.5"
-            style={{ animation: "backIn .22s ease both" }}
+            style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}
           >
             {cells.map((d) => {
               const key = iso(d)
@@ -363,10 +363,10 @@ export default function Calendar() {
                   <span className="text-[11px] text-gray-400">2주간</span>
                 </div>
                 <div className="flex flex-col">
-                  {agenda.map((x) => {
+                  {agenda.map((x, i) => {
                     const dd = dday(x.date, today)
                     return (
-                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
+                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.04 + "s" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
                         <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[12.5px] font-semibold text-gray-900">{x.label}</span>
@@ -426,7 +426,7 @@ export default function Calendar() {
         ) : list.length === 0 ? (
           <div className="flex min-h-[200px] items-center justify-center text-[13px] text-gray-400">해당 구간 이벤트 없음</div>
         ) : (
-          <div className="mt-2 overflow-x-auto">
+          <div key={bucket + cat + axis + query} className="mt-2 overflow-x-auto" style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
             <table className="w-full min-w-[760px] text-[13px]">
               <thead>
                 <tr className="border-b border-gray-100 text-[11px] font-semibold text-gray-500">
@@ -457,6 +457,7 @@ export default function Calendar() {
                       )}
                       <tr
                         onClick={() => openEvent(e)}
+                        style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.03 + "s" }}
                         className={
                           "cursor-pointer border-b border-gray-50 transition-colors duration-300 hover:bg-indigo-50/50 " +
                           (bucket === "past" ? "opacity-70 hover:opacity-100" : "")
