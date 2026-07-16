@@ -23,9 +23,6 @@ const tone = (c: string) => CAT[c] ?? CAT["기타"]
   const catLabel = (c: string) => (c === "규제" ? "정책" : c)
 const LEGEND = ["경제", "금융", "정치", "규제", "에너지", "공휴일"]
 const KIND: Record<string, string> = { release: "지표 발표", policy: "정책·규제", holiday: "공휴일" }
-const SEV = (i: number) => (i >= 3 ? "Critical" : i === 2 ? "High" : "Medium")
-const SEVCLS = (i: number) =>
-  i >= 3 ? "bg-red-600 text-white" : i === 2 ? "bg-amber-500 text-white" : "bg-gray-400 text-white"
 
 const iso = (d: Date) => {
   const p = (n: number) => String(n).padStart(2, "0")
@@ -465,10 +462,11 @@ export default function Calendar() {
         >
           {modal ? (
             <div
-              className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+              className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
               style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
               onClick={(ev) => ev.stopPropagation()}
             >
+              <span className={"absolute inset-y-0 left-0 w-1 " + tone(modal.category).dot} />
               <button
                 type="button"
                 onClick={closeModal}
@@ -481,39 +479,28 @@ export default function Calendar() {
               </button>
 
               <div className="flex w-full shrink-0 items-center gap-2 border-b border-gray-100 px-7 pb-3 pt-6 text-[12px] font-semibold">
-                <span className={"h-2 w-2 rounded-full " + tone(modal.category).dot} />
                 <span className="text-gray-800">{catLabel(modal.category)}</span>
                 <span className="text-gray-300">·</span>
                 <span className="text-gray-500">{KIND[modal.kind] || ""}</span>
                 {modal.importance >= 2 && (
-                  <span className={"ml-auto rounded px-1.5 py-0.5 text-[10.5px] font-bold " + SEVCLS(modal.importance)}>{SEV(modal.importance)}</span>
+                  <span className="ml-auto text-[12px] text-amber-500">{"★".repeat(modal.importance)}</span>
                 )}
               </div>
 
               <div className="overflow-y-auto px-7 pb-7 pt-5">
                 <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-gray-500">
-                  {modal.sourceLabel && <span className="font-semibold text-indigo-600">{modal.sourceLabel}</span>}
+                  {modal.sourceLabel && <span className="font-semibold text-gray-600">{modal.sourceLabel}</span>}
                   {modal.sourceLabel && <span className="text-gray-300">·</span>}
                   <span className="tabular-nums">{modal.date}</span>
-                  <span className="text-amber-500">{"★".repeat(modal.importance)}</span>
                 </div>
 
                 <h3 className="mt-2 text-[22px] font-bold leading-snug tracking-tight text-gray-900">{modal.event}</h3>
 
                 {modal.indicatorKey && (
-                  <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-gray-50 p-3 text-center">
-                    <div>
-                      <p className="text-[11px] text-gray-500">예측</p>
-                      <p className="text-[17px] font-bold text-gray-400">{modal.forecast ?? "—"}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] text-gray-500">실제</p>
-                      <p className="text-[17px] font-bold text-gray-900">{fmtVal(modal.actual, modal.unit)}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] text-gray-500">이전</p>
-                      <p className="text-[17px] font-bold text-gray-500">{fmtVal(modal.previous, modal.unit)}</p>
-                    </div>
+                  <div className="mt-4 inline-flex flex-wrap gap-4 rounded-lg bg-gray-50 px-3.5 py-2 text-[12px] tabular-nums">
+                    <span className="text-gray-400">예측 <span className="font-semibold text-gray-600">{modal.forecast || "—"}</span></span>
+                    <span className="text-indigo-500">실제 <span className="font-semibold">{fmtVal(modal.actual, modal.unit)}</span></span>
+                    <span className="text-gray-400">이전 <span className="font-semibold text-gray-500">{fmtVal(modal.previous, modal.unit)}</span></span>
                   </div>
                 )}
 
@@ -526,17 +513,11 @@ export default function Calendar() {
                 )}
 
                 {modal.implication && (
-                  <div className="mt-4 rounded-xl border-l-2 border-indigo-500 bg-indigo-50/50 px-4 py-3">
-                    <p className="text-[12px] font-bold text-indigo-700">시사점 · So What</p>
-                    <p className="mt-1 text-[13.5px] leading-relaxed text-gray-800">{modal.implication}</p>
-                  </div>
+                  <p className="mt-4 text-[13.5px] leading-relaxed text-gray-700"><span className="font-semibold text-indigo-600">시사점 </span>{modal.implication}</p>
                 )}
 
                 {modal.actions && (
-                  <div className="mt-3 rounded-xl border-l-2 border-emerald-500 bg-emerald-50/50 px-4 py-3">
-                    <p className="text-[12px] font-bold text-emerald-700">대응 · Owner</p>
-                    <p className="mt-1 whitespace-pre-line text-[13.5px] leading-relaxed text-gray-800">{modal.actions}</p>
-                  </div>
+                  <p className="mt-3 whitespace-pre-line text-[13.5px] leading-relaxed text-gray-700"><span className="font-semibold text-gray-900">대응 · Owner </span>{modal.actions}</p>
                 )}
 
                 {modal.url && (
