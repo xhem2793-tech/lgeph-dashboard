@@ -193,7 +193,7 @@ export default function Overview() {
                     </a>
                     <div className="flex flex-col divide-y divide-gray-100">
                       {nMain.slice(1, 9).map((n, i) => (
-                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group -mx-2 rounded-lg px-2 py-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40">
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group -mx-2 rounded-lg px-2 py-3.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40">
                           <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{pick(n.title, (n as any).titleEn)}</p>
                           <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-4 text-gray-400"><span className="min-w-0 truncate">{n.source}</span><span className="shrink-0">·</span><span className="shrink-0">{n.date}</span></p>
                         </button>
@@ -234,7 +234,7 @@ export default function Overview() {
                   ))}
                 </div>
               </div>
-              <div key={`${calTick}-${calTab}`} className="mt-2 flex flex-col gap-0.5">
+              <div key={`${calTick}-${calTab}`} className="mt-2 flex flex-col gap-1.5">
                 {calList.length === 0 ? (
                   <p className="py-6 text-center text-[12px] text-gray-400">{calTab === "past" ? t("cal_none_past") : t("cal_none_up")}</p>
                 ) : null}
