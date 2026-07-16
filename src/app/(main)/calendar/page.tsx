@@ -104,7 +104,7 @@ export default function Calendar() {
   React.useEffect(() => {
     setRows(null)
     calendarEvents(iso(addDays(range.from, -35)), iso(addDays(range.to, 35)))
-      .then((r) => setRows(r.filter((x) => x.kind !== "other")))
+      .then((r) => setRows(r.filter((x) => (x.kind !== "other" || x.category === "공휴일"))))
       .catch(() => setRows([]))
   }, [range.from, range.to])
 
