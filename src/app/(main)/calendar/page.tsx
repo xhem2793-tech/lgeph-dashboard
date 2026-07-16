@@ -27,7 +27,9 @@ const tone = (c: string) => CAT[c] ?? CAT["기타"]
     if (/에너지|유가|유류|할증료|전기|전력|항공|해운|운임|물류|가스|석유|WESM|NGCP/.test(s)) return "물류"
     if (/최저임금|금리|세법|물품세|관세|재정|환율|외환|금융|투자|규제|정책|예산|FDI/.test(s)) return "관리"
     if (/물가|CPI|인플레|소비|고용|실업|급여|프로모|판매|수요|소득|유통|가전/.test(s)) return "영업"
-    return "관리"
+    if (e.category === "에너지") return "물류"
+    if (["금융", "정치", "규제", "정책"].includes(e.category)) return "관리"
+    return "영업"
   }
 const LEGEND = ["경제", "금융", "정치", "규제", "에너지", "공휴일"]
 const KIND: Record<string, string> = { release: "지표 발표", policy: "정책·규제", holiday: "공휴일" }
@@ -65,6 +67,7 @@ export default function Calendar() {
   const [span, setSpan] = React.useState<"2주" | "한달">("2주")
   const [axis, setAxis] = React.useState<"topic" | "dept">("topic")
   const [query, setQuery] = React.useState("")
+  const [focused, setFocused] = React.useState(false)
   const [modal, setModal] = React.useState<CalEvent | null>(null)
   const [dayList, setDayList] = React.useState<{ date: string; events: CalEvent[] } | null>(null)
   const [closing, setClosing] = React.useState(false)
@@ -135,7 +138,7 @@ export default function Calendar() {
       const b = inBucket(r)
       const inSel = query ? true : bucket === "past" ? b === "past" : b !== "past"
       const inCat = cat === "전체" || (axis === "dept" ? deptOf(r) === cat : r.category === cat)
-      const inQ = !query || (r.event + " " + r.category).toLowerCase().includes(query.toLowerCase())
+      const inQ = !query || (r.event + " " + r.category + " " + (r.summary || "") + " " + (r.sourceLabel || "")).toLowerCase().includes(query.toLowerCase())
       return inSel && inCat && inQ
     })
     return f.sort((a, b) =>
@@ -227,11 +230,16 @@ export default function Calendar() {
                 </button>
               )}
             </div>
-            <div className="relative order-last w-full sm:order-none sm:w-56">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+            <div className={"group relative order-last w-full transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] sm:order-none " + (focused || query ? "sm:w-72" : "sm:w-56")}>
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
               </span>
-              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="이벤트 검색" className="w-full rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-[12.5px] text-gray-700 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100" />
+              <input value={query} onChange={(e) => setQuery(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="이벤트 · 출처 검색" className="w-full rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+              {query && (
+                <button type="button" onClick={() => setQuery("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                </button>
+              )}
             </div>
             <Segmented
               value={span}
@@ -385,17 +393,13 @@ export default function Calendar() {
               value={bucket}
               onChange={(k) => { setBucket(k as Bucket); setCat("전체") }}
             />
-            <Segmented
-              size="sm"
-              value={axis}
-              onChange={(k) => { setAxis(k as "topic" | "dept"); setCat("전체") }}
-              options={[{ k: "topic", label: "주제별" }, { k: "dept", label: "부서별" }]}
-            />
           </div>
           <span className="text-[11px] text-gray-400">클릭 시 상세</span>
         </header>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
+          <Segmented size="sm" value={axis} onChange={(k) => { setAxis(k as "topic" | "dept"); setCat("전체") }} options={[{ k: "topic", label: "주제별" }, { k: "dept", label: "부서별" }]} />
+          <span className="mx-1 h-5 w-px self-center bg-gray-200" />
           {cats.map((c) => (
             <button
               key={c}
