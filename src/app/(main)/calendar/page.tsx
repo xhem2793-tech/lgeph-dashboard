@@ -393,7 +393,7 @@ export default function Calendar() {
         ) : list.length === 0 ? (
           <div className="flex min-h-[200px] items-center justify-center text-[13px] text-gray-400">해당 구간 이벤트 없음</div>
         ) : (
-          <div key={bucket + cat} className="mt-2 overflow-x-auto" style={{ animation: "viewIn .4s cubic-bezier(.22,1,.36,1) both" }}>
+          <div className="mt-2 overflow-x-auto">
             <table className="w-full min-w-[900px] text-[13px]">
               <thead>
                 <tr className="border-b border-gray-100 text-[11px] font-semibold text-gray-500">
@@ -430,7 +430,6 @@ export default function Calendar() {
                           "cursor-pointer border-b border-gray-50 transition-colors duration-300 hover:bg-indigo-50/50 " +
                           (bucket === "past" ? "opacity-70 hover:opacity-100" : "")
                         }
-                        style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 14) * 22 + "ms" }}
                       >
                         <td className="h-[44px] px-2 align-middle font-medium tabular-nums text-gray-600">{e.date.slice(5).replace("-", "/")}</td>
                         <td className="h-[44px] px-2 align-middle">
