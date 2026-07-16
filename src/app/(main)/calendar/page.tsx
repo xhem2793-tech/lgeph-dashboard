@@ -133,6 +133,20 @@ export default function Calendar() {
     },
     [week.from, week.to],
   )
+  const agenda = React.useMemo(() => {
+    const t0 = iso(today)
+    const t14 = iso(addDays(today, 14))
+    const items: { date: string; label: string; note: string; dot: string }[] = []
+    for (const r of all) {
+      if (r.date >= t0 && r.date <= t14) items.push({ date: r.date, label: head(r.event), note: catLabel(r.category) + " · " + (KIND[r.kind] || ""), dot: tone(r.category).dot })
+    }
+    for (const x of triggers) {
+      if (x.date >= t0 && x.date <= t14) items.push({ date: x.date, label: x.label, note: x.note, dot: x.dot })
+    }
+    items.sort((a, b) => a.date.localeCompare(b.date))
+    return items.slice(0, 10)
+  }, [all, triggers, today])
+  const groupOf = (r: CalEvent) => (r.date >= week.from && r.date <= week.to ? "이번 주" : Number(r.date.slice(5, 7)) + "월")
   const list = React.useMemo(() => {
     const f = all.filter((r) => {
       const b = inBucket(r)
@@ -374,6 +388,28 @@ export default function Calendar() {
               캘린더 본문에는 없는 수요 트리거만 별도 표시 — 급여일·세일윈도우·전기요금
             </p>
           </div>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
+              <h2 className="text-[15px] font-bold tracking-tight text-gray-900">예정 일정</h2>
+              <span className="text-[11px] text-gray-400">2주간</span>
+            </header>
+            <div className="mt-2 flex flex-col">
+              {agenda.map((x) => {
+                const dd = dday(x.date, today)
+                return (
+                  <div key={x.label + x.date} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors duration-200 hover:bg-indigo-50/40">
+                    <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-[12.5px] font-semibold text-gray-900">{x.label}</span>
+                      <span className="block text-[10.5px] text-gray-500">{x.note}</span>
+                    </span>
+                    <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500">{dd === 0 ? "오늘" : "D-" + dd}</span>
+                  </div>
+                )
+              })}
+              {agenda.length === 0 && <p className="px-1.5 py-3 text-[11px] text-gray-400">2주간 예정된 일정 없음</p>}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -436,8 +472,7 @@ export default function Calendar() {
               <tbody>
                 {list.map((e, i) => {
                   const t = tone(e.category)
-                  const seg = inBucket(e)
-                  const showHead = bucket === "upcoming" && (i === 0 || inBucket(list[i - 1]) !== seg)
+                  const showHead = i === 0 || groupOf(list[i - 1]) !== groupOf(e)
                   const up = e.actual !== null && e.previous !== null && e.actual > e.previous
                   const down = e.actual !== null && e.previous !== null && e.actual < e.previous
                   return (
@@ -445,7 +480,7 @@ export default function Calendar() {
                       {showHead && (
                         <tr>
                           <td colSpan={8} className="border-t border-gray-100 bg-gray-50/60 px-2 pb-1.5 pt-2.5 text-[11px] font-bold text-gray-500 first:border-t-0">
-                            {seg === "week" ? "이번 주" : "예정"}
+                            {groupOf(e)}
                           </td>
                         </tr>
                       )}
@@ -511,7 +546,7 @@ export default function Calendar() {
                 <span className="text-gray-300">·</span>
                 <span className="text-gray-500">{KIND[modal.kind] || ""}</span>
                 {modal.importance >= 2 && (
-                  <span className="ml-auto text-[12px] text-amber-500">{"★".repeat(modal.importance)}</span>
+                  <span className="text-[12px] text-amber-500">{"★".repeat(modal.importance)}</span>
                 )}
               </div>
 
