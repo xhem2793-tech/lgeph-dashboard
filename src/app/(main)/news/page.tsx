@@ -13,6 +13,7 @@ import {
   type RegBoardItem,
 } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
+import { Segmented } from "@/components/Segmented"
 
 /** 주요뉴스 — 좌 메뉴 / 피드 / 규제 상시.
  *
@@ -726,21 +727,7 @@ export default function Page() {
               </h2>
 
               {/* 정렬 — 제목 바로 옆 */}
-              <div className="flex shrink-0 gap-0.5 rounded-full border border-gray-200 p-0.5">
-                {([["new", "최신순"], ["impact", "영향도순"]] as const).map(([k, t]) => (
-                  <button
-                    key={k}
-                    type="button"
-                    onClick={() => setSort(k)}
-                    className={
-                      "rounded-full px-2.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " +
-                      (sort === k ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:text-indigo-600")
-                    }
-                  >
-                    {t}
-                  </button>
-                ))}
-              </div>
+              <Segmented value={sort} onChange={(k) => setSort(k as "new" | "impact")} options={[{ k: "new", label: "최신순" }, { k: "impact", label: "영향도순" }]} size="sm" />
             </div>
 
             {/* 검색 — 가운데, 끝은 동글게 */}
