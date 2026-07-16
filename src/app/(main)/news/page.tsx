@@ -1101,7 +1101,7 @@ export default function Page() {
             style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
             onClick={(ev) => ev.stopPropagation()}
           >
-            <span className={"absolute inset-y-0 left-0 z-10 w-1 " + (({ 경제: "bg-emerald-500", 금융: "bg-blue-500", 정치: "bg-purple-500", 규제: "bg-red-500", 정책: "bg-red-500", 에너지: "bg-amber-500", 유통: "bg-violet-500" } as Record<string, string>)[modal.topic] || "bg-indigo-500")} />
+            <span className={"absolute inset-y-0 left-0 z-10 w-1 " + (/금융|거시/.test(modal.topic) ? "bg-blue-500" : /정치/.test(modal.topic) ? "bg-purple-500" : /규제|정책/.test(modal.topic) ? "bg-red-500" : /에너지|전력/.test(modal.topic) ? "bg-amber-500" : /유통|CE/.test(modal.topic) ? "bg-violet-500" : /B2B/.test(modal.topic) ? "bg-teal-500" : /기상|재난/.test(modal.topic) ? "bg-orange-500" : "bg-indigo-500")} />
             <button
               type="button"
               onClick={closeModal}
