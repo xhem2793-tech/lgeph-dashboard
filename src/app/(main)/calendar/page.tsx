@@ -436,7 +436,7 @@ export default function Calendar() {
                         <td className="h-[44px] px-2 align-middle">
                           <span className={"rounded px-1.5 py-0.5 text-[10.5px] font-semibold " + t.bg + " " + t.fg}>{e.category}</span>
                         </td>
-                        <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-500">{e.category} · {KIND[e.kind] ?? "—"}</td>
+                        <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-500">{KIND[e.kind] ?? "—"}</td>
                         <td className="max-w-0 truncate h-[44px] px-2 align-middle font-medium text-gray-900">{e.event}</td>
                         <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-400">{e.releaseTime ?? "—"}</td>
                         <td className="h-[44px] px-2 align-middle text-right text-[11px] text-amber-500">{"★".repeat(e.importance)}</td>
