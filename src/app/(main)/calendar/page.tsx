@@ -56,6 +56,7 @@ export default function Calendar() {
   const [bucket, setBucket] = React.useState<Bucket>("upcoming")
   const [cat, setCat] = React.useState("전체")
   const [month, setMonth] = React.useState(0)
+  const [span, setSpan] = React.useState<"2주" | "한달">("2주")
   const [modal, setModal] = React.useState<CalEvent | null>(null)
   const [dayList, setDayList] = React.useState<{ date: string; events: CalEvent[] } | null>(null)
   const [closing, setClosing] = React.useState(false)
@@ -72,9 +73,13 @@ export default function Calendar() {
   }, [])
 
   const range = React.useMemo(() => {
+    if (span === "2주") {
+      const sun = addDays(today, -today.getDay() + month * 14)
+      return { from: sun, to: addDays(sun, 13) }
+    }
     const s = new Date(today.getFullYear(), today.getMonth() + month, 1)
     return { from: s, to: new Date(today.getFullYear(), today.getMonth() + month + 1, 0) }
-  }, [today, month])
+  }, [today, month, span])
 
   const week = React.useMemo(() => {
     const s = addDays(today, -today.getDay())
@@ -159,7 +164,10 @@ export default function Calendar() {
   }, [all, today])
 
   const crit = inMonth.filter((r) => r.importance >= 3).length
-  const label = `${range.from.getFullYear()}년 ${range.from.getMonth() + 1}월`
+  const label =
+    span === "2주"
+      ? `${range.from.getMonth() + 1}/${range.from.getDate()} – ${range.to.getMonth() + 1}/${range.to.getDate()}`
+      : `${range.from.getFullYear()}년 ${range.from.getMonth() + 1}월`
 
   return (
     <div className="mx-auto max-w-[1536px] px-4 pb-6 pt-6 sm:px-6 sm:pb-8 sm:pt-8">
@@ -204,10 +212,16 @@ export default function Calendar() {
                   onClick={() => setMonth(0)}
                   className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700 transition-all duration-300 hover:-translate-y-px active:scale-95"
                 >
-                  이번 달
+                  {span === "2주" ? "이번 주" : "이번 달"}
                 </button>
               )}
             </div>
+            <Segmented
+              value={span}
+              onChange={(k) => { setSpan(k as "2주" | "한달"); setMonth(0) }}
+              options={[{ k: "2주", label: "2주" }, { k: "한달", label: "한달" }]}
+              size="sm"
+            />
           </header>
 
           <div className="mt-3 grid grid-cols-7 gap-1.5 text-[11.5px] font-semibold text-gray-400">
@@ -232,7 +246,7 @@ export default function Calendar() {
                   key={key}
                   onClick={() => on && evs.length > 0 && setDayList({ date: key, events: evs })}
                   className={
-                    "h-[118px] overflow-hidden rounded-lg border p-2 transition-all duration-300 " +
+                    (span === "2주" ? "min-h-[150px] " : "h-[118px] ") + "overflow-hidden rounded-lg border p-2 transition-all duration-300 " +
                     (on ? "cursor-pointer bg-white hover:-translate-y-px hover:border-indigo-200 hover:shadow-sm " : "border-transparent bg-transparent ") +
                     (isToday ? "border-indigo-400 bg-indigo-50/40 " : holiday && on ? "border-teal-200 bg-teal-50/40 " : on ? "border-gray-200 " : "")
                   }
@@ -247,7 +261,7 @@ export default function Calendar() {
                       >
                         {d.getDate()}
                       </div>
-                      {evs.slice(0, 3).map((e) => {
+                      {evs.slice(0, span === "2주" ? 6 : 3).map((e) => {
                         const t = tone(e.category)
                         return (
                           <button
@@ -263,8 +277,8 @@ export default function Calendar() {
                           </button>
                         )
                       })}
-                      {evs.length > 3 && (
-                        <span className="block px-1 text-[10.5px] font-medium text-gray-400">+{evs.length - 3}건</span>
+                      {evs.length > (span === "2주" ? 6 : 3) && (
+                        <span className="block px-1 text-[10.5px] font-medium text-gray-400">+{evs.length - (span === "2주" ? 6 : 3)}건</span>
                     )}
                     </>
                   )}
@@ -468,14 +482,14 @@ export default function Calendar() {
                 </svg>
               </button>
 
-              <div className={"flex h-[104px] w-full shrink-0 items-end px-7 pb-3 " + tone(modal.category).band}>
-                <div className="flex items-center gap-2 text-[12px] font-semibold">
-                  <span className="rounded-full bg-white/70 px-2 py-0.5">{modal.category}</span>
-                  <span>{KIND[modal.kind] ?? ""}</span>
-                  {modal.category === "규제" && (
-                    <span className={"rounded px-1.5 py-0.5 text-[11px] font-bold " + SEVCLS(modal.importance)}>{SEV(modal.importance)}</span>
-                  )}
-                </div>
+              <div className="flex w-full shrink-0 items-center gap-2 border-b border-gray-100 px-7 pb-3 pt-6 text-[12px] font-semibold">
+                <span className={"h-2 w-2 rounded-full " + tone(modal.category).dot} />
+                <span className="text-gray-800">{modal.category}</span>
+                <span className="text-gray-300">·</span>
+                <span className="text-gray-500">{KIND[modal.kind] || ""}</span>
+                {modal.importance >= 2 && (
+                  <span className={"ml-auto rounded px-1.5 py-0.5 text-[10.5px] font-bold " + SEVCLS(modal.importance)}>{SEV(modal.importance)}</span>
+                )}
               </div>
 
               <div className="overflow-y-auto px-7 pb-7 pt-5">
