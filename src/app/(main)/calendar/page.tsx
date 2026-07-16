@@ -337,6 +337,7 @@ export default function Calendar() {
           </div>
         </div>
 
+      <div
         className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
         style={{ animation: "fadeUp .5s ease both", animationDelay: "140ms" }}
       >
@@ -372,56 +373,6 @@ export default function Calendar() {
             </button>
           ))}
         </div>
-          </div>
-        <div className="flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both", animationDelay: "80ms" }}>
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
-              <h2 className="text-[15px] font-bold tracking-tight text-gray-900">{label} 구성</h2>
-              <span className="text-[11px] text-gray-400">최종 갱신 {stamp ? fmtStamp(stamp) : "—"}</span>
-            </header>
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-              {[
-                { k: "release", n: mix.release, c: "text-emerald-700 bg-emerald-50" },
-                { k: "policy", n: mix.policy, c: "text-gray-700 bg-gray-50" },
-                { k: "holiday", n: mix.holiday, c: "text-teal-700 bg-teal-50" },
-              ].map((x) => (
-                <div key={x.k} className={"rounded-lg py-3 " + x.c}>
-                  <p className="text-[20px] font-bold tabular-nums">{x.n}</p>
-                  <p className="mt-0.5 text-[11px] font-medium">{KIND[x.k]}</p>
-                </div>
-              ))}
-            </div>
-            <p className="mt-3 text-[11px] leading-relaxed text-gray-400">
-              뉴스성 이벤트는 제외 — 지표 발표 · 정책·규제 시행 · 필리핀 공휴일만 캘린더에 표시
-            </p>
-              <div className="mt-4 border-t border-gray-100 pt-3">
-                <div className="mb-1 flex items-baseline justify-between">
-                  <h3 className="text-[12px] font-bold text-gray-700">예정 일정</h3>
-                  <span className="text-[11px] text-gray-400">2주간</span>
-                </div>
-                <div className="flex flex-col">
-                  {agenda.map((x, i) => {
-                    const dd = dday(x.date, today)
-                    return (
-                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.04 + "s" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
-                        <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[12.5px] font-semibold text-gray-900">{x.label}</span>
-                          <span className="block text-[10.5px] text-gray-500">{x.note}</span>
-                        </span>
-                        <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500">{dd === 0 ? "오늘" : "D-" + dd}</span>
-                      </div>
-                    )
-                  })}
-                  {agenda.length === 0 && <p className="px-1.5 py-3 text-[11px] text-gray-400">2주간 예정된 일정 없음</p>}
-                </div>
-              </div>
-          </div>
-
-        </div>
-      </div>
-
-      <div
 
         {rows === null ? (
           <div className="flex min-h-[240px] items-center justify-center text-[13px] text-gray-400">불러오는 중</div>
@@ -490,6 +441,55 @@ export default function Calendar() {
           예측은 공식 기관 전망이 확보된 건만 표기 — 미확보 시 &quot;—&quot; 유지(추정치 생성 금지)
         </p>
       </div>
+          </div>
+        <div className="flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both", animationDelay: "80ms" }}>
+          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
+              <h2 className="text-[15px] font-bold tracking-tight text-gray-900">{label} 구성</h2>
+              <span className="text-[11px] text-gray-400">최종 갱신 {stamp ? fmtStamp(stamp) : "—"}</span>
+            </header>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+              {[
+                { k: "release", n: mix.release, c: "text-emerald-700 bg-emerald-50" },
+                { k: "policy", n: mix.policy, c: "text-gray-700 bg-gray-50" },
+                { k: "holiday", n: mix.holiday, c: "text-teal-700 bg-teal-50" },
+              ].map((x) => (
+                <div key={x.k} className={"rounded-lg py-3 " + x.c}>
+                  <p className="text-[20px] font-bold tabular-nums">{x.n}</p>
+                  <p className="mt-0.5 text-[11px] font-medium">{KIND[x.k]}</p>
+                </div>
+              ))}
+            </div>
+            <p className="mt-3 text-[11px] leading-relaxed text-gray-400">
+              뉴스성 이벤트는 제외 — 지표 발표 · 정책·규제 시행 · 필리핀 공휴일만 캘린더에 표시
+            </p>
+              <div className="mt-4 border-t border-gray-100 pt-3">
+                <div className="mb-1 flex items-baseline justify-between">
+                  <h3 className="text-[12px] font-bold text-gray-700">예정 일정</h3>
+                  <span className="text-[11px] text-gray-400">2주간</span>
+                </div>
+                <div className="flex flex-col">
+                  {agenda.map((x, i) => {
+                    const dd = dday(x.date, today)
+                    return (
+                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.04 + "s" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
+                        <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[12.5px] font-semibold text-gray-900">{x.label}</span>
+                          <span className="block text-[10.5px] text-gray-500">{x.note}</span>
+                        </span>
+                        <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500">{dd === 0 ? "오늘" : "D-" + dd}</span>
+                      </div>
+                    )
+                  })}
+                  {agenda.length === 0 && <p className="px-1.5 py-3 text-[11px] text-gray-400">2주간 예정된 일정 없음</p>}
+                </div>
+              </div>
+          </div>
+
+        </div>
+      </div>
+
 
       {(dayList || modal) && (
         <div
