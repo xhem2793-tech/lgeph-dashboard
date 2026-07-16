@@ -210,6 +210,7 @@ export default function Calendar() {
       }</style>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+          <div className="flex min-w-0 flex-col gap-4">
         <div
           className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
           style={{ animation: "fadeUp .5s ease both" }}
@@ -336,6 +337,42 @@ export default function Calendar() {
           </div>
         </div>
 
+        className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+        style={{ animation: "fadeUp .5s ease both", animationDelay: "140ms" }}
+      >
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
+          <div className="flex items-center gap-3">
+            <h2 className="text-[17px] font-bold tracking-tight text-gray-900">이벤트 목록</h2>
+            <Segmented size="sm"
+              options={[
+                { k: "past", label: "지남 " + counts.past },
+                { k: "upcoming", label: "예정 " + counts.upcoming },
+              ]}
+              value={bucket}
+              onChange={(k) => { setBucket(k as Bucket); setCat("전체") }}
+            />
+          </div>
+          <span className="flex items-center gap-1.5 text-[11px] text-gray-400">최근 갱신 {stamp ? fmtStamp(stamp) : "—"}<span className="rounded bg-emerald-50 px-1 py-px text-[9px] font-bold text-emerald-600">C</span></span>
+        </header>
+
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          <Segmented size="sm" value={axis} onChange={(k) => { setAxis(k as "topic" | "dept"); setCat("전체") }} options={[{ k: "topic", label: "주제별" }, { k: "dept", label: "부서별" }]} />
+          <span className="mx-1 h-5 w-px self-center bg-gray-200" />
+          {cats.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setCat(c)}
+              className={
+                "rounded-md px-2.5 py-1 text-[12px] font-semibold transition-all duration-300 hover:-translate-y-px active:scale-[.98] " +
+                (cat === c ? "bg-indigo-600 text-white" : "border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600")
+              }
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+          </div>
         <div className="flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both", animationDelay: "80ms" }}>
           <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
             <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
@@ -385,41 +422,6 @@ export default function Calendar() {
       </div>
 
       <div
-        className="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm lg:w-[calc(100%-302px)]"
-        style={{ animation: "fadeUp .5s ease both", animationDelay: "140ms" }}
-      >
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
-          <div className="flex items-center gap-3">
-            <h2 className="text-[17px] font-bold tracking-tight text-gray-900">이벤트 목록</h2>
-            <Segmented size="sm"
-              options={[
-                { k: "past", label: "지남 " + counts.past },
-                { k: "upcoming", label: "예정 " + counts.upcoming },
-              ]}
-              value={bucket}
-              onChange={(k) => { setBucket(k as Bucket); setCat("전체") }}
-            />
-          </div>
-          <span className="flex items-center gap-1.5 text-[11px] text-gray-400">최근 갱신 {stamp ? fmtStamp(stamp) : "—"}<span className="rounded bg-emerald-50 px-1 py-px text-[9px] font-bold text-emerald-600">C</span></span>
-        </header>
-
-        <div className="mt-3 flex flex-wrap gap-1.5">
-          <Segmented size="sm" value={axis} onChange={(k) => { setAxis(k as "topic" | "dept"); setCat("전체") }} options={[{ k: "topic", label: "주제별" }, { k: "dept", label: "부서별" }]} />
-          <span className="mx-1 h-5 w-px self-center bg-gray-200" />
-          {cats.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCat(c)}
-              className={
-                "rounded-md px-2.5 py-1 text-[12px] font-semibold transition-all duration-300 hover:-translate-y-px active:scale-[.98] " +
-                (cat === c ? "bg-indigo-600 text-white" : "border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600")
-              }
-            >
-              {c}
-            </button>
-          ))}
-        </div>
 
         {rows === null ? (
           <div className="flex min-h-[240px] items-center justify-center text-[13px] text-gray-400">불러오는 중</div>
