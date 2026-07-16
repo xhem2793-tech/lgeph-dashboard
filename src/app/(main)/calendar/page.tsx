@@ -103,7 +103,7 @@ export default function Calendar() {
 
   React.useEffect(() => {
     setRows(null)
-    calendarEvents(iso(addDays(today, -120)), iso(addDays(today, 240)))
+    calendarEvents(iso(new Date(today.getFullYear(), today.getMonth(), 1)), iso(new Date(today.getFullYear(), today.getMonth() + 3, 0)))
       .then((r) => setRows(r.filter((x) => (x.kind !== "other" || x.category === "공휴일"))))
       .catch(() => setRows([]))
   }, [today])
@@ -219,14 +219,14 @@ export default function Calendar() {
               <div className="flex items-center gap-1">
                 <button
                   type="button"
-                  onClick={() => setMonth((m) => m - 1)}
+                  onClick={() => setMonth((m) => Math.max(0, m - 1))}
                   className="rounded-md border border-gray-200 px-2 py-0.5 text-[13px] font-semibold text-gray-500 transition-all duration-300 hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 active:scale-95"
                 >
                   ‹
                 </button>
                 <button
                   type="button"
-                  onClick={() => setMonth((m) => m + 1)}
+                  onClick={() => setMonth((m) => Math.min(span === "한달" ? 2 : 4, m + 1))}
                   className="rounded-md border border-gray-200 px-2 py-0.5 text-[13px] font-semibold text-gray-500 transition-all duration-300 hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 active:scale-95"
                 >
                   ›
@@ -356,60 +356,30 @@ export default function Calendar() {
             <p className="mt-3 text-[11px] leading-relaxed text-gray-400">
               뉴스성 이벤트는 제외 — 지표 발표 · 정책·규제 시행 · 필리핀 공휴일만 캘린더에 표시
             </p>
+              <div className="mt-4 border-t border-gray-100 pt-3">
+                <div className="mb-1 flex items-baseline justify-between">
+                  <h3 className="text-[12px] font-bold text-gray-700">예정 일정</h3>
+                  <span className="text-[11px] text-gray-400">2주간</span>
+                </div>
+                <div className="flex flex-col">
+                  {agenda.map((x) => {
+                    const dd = dday(x.date, today)
+                    return (
+                      <div key={x.label + x.date} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors duration-200 hover:bg-indigo-50/40">
+                        <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-[12.5px] font-semibold text-gray-900">{x.label}</span>
+                          <span className="block text-[10.5px] text-gray-500">{x.note}</span>
+                        </span>
+                        <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500">{dd === 0 ? "오늘" : "D-" + dd}</span>
+                      </div>
+                    )
+                  })}
+                  {agenda.length === 0 && <p className="px-1.5 py-3 text-[11px] text-gray-400">2주간 예정된 일정 없음</p>}
+                </div>
+              </div>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <header className="flex items-baseline justify-b-between border-b border-gray-100 pb-2.5">
-              <h2 className="text-[15px] font-bold tracking-tight text-gray-900">수요 선행</h2>
-              <span className="text-[11px] text-gray-400">가전 판매 트리거</span>
-            </header>
-            <div className="mt-2 flex flex-col">
-              {triggers.map((x, i) => {
-                const dd = dday(x.date, today)
-                return (
-                  <div
-                    key={x.label}
-                    className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-300 hover:-translate-y-px hover:bg-indigo-50/40"
-                    style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: 120 + i * 60 + "ms" }}
-                  >
-                    <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[12.5px] font-semibold text-gray-900">{x.label}</span>
-                      <span className="block text-[10.5px] text-gray-500">{x.note}</span>
-                    </span>
-                    <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500">
-                      {dd === 0 ? "오늘" : "D-" + dd}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-gray-400">
-              캘린더 본문에는 없는 수요 트리거만 별도 표시 — 급여일·세일윈도우·전기요금
-            </p>
-          </div>
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
-              <h2 className="text-[15px] font-bold tracking-tight text-gray-900">예정 일정</h2>
-              <span className="text-[11px] text-gray-400">2주간</span>
-            </header>
-            <div className="mt-2 flex flex-col">
-              {agenda.map((x) => {
-                const dd = dday(x.date, today)
-                return (
-                  <div key={x.label + x.date} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors duration-200 hover:bg-indigo-50/40">
-                    <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[12.5px] font-semibold text-gray-900">{x.label}</span>
-                      <span className="block text-[10.5px] text-gray-500">{x.note}</span>
-                    </span>
-                    <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500">{dd === 0 ? "오늘" : "D-" + dd}</span>
-                  </div>
-                )
-              })}
-              {agenda.length === 0 && <p className="px-1.5 py-3 text-[11px] text-gray-400">2주간 예정된 일정 없음</p>}
-            </div>
-          </div>
         </div>
       </div>
 
