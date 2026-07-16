@@ -523,7 +523,7 @@ export default function Calendar() {
                   <span className="tabular-nums">{modal.date}</span>
                 </div>
 
-                <h3 className="mt-2 text-[22px] font-bold leading-snug tracking-tight text-gray-900">{modal.event}</h3>
+                <h3 className="mt-2 text-[20px] font-semibold leading-snug tracking-tight text-gray-900">{modal.event}</h3>
 
                 {modal.indicatorKey && (
                   <div className="mt-4 inline-flex flex-wrap gap-4 rounded-lg bg-gray-50 px-3.5 py-2 text-[12px] tabular-nums">
@@ -533,20 +533,28 @@ export default function Calendar() {
                   </div>
                 )}
 
+                {modal.implication && (
+                  <div className="mt-4 border-l-2 border-indigo-300 pl-3">
+                    <p className="text-[10.5px] font-semibold tracking-wide text-indigo-600">시사점</p>
+                    <p className="mt-1 text-[14px] leading-[1.7] text-gray-800">{modal.implication}</p>
+                  </div>
+                )}
+                
                 {modal.summary && (
-                  <div className="mt-4 space-y-3">
+                  <div className="mt-4 space-y-2">
+                    <p className="text-[10.5px] font-semibold tracking-wide text-gray-400">본문 요약</p>
                     {para(modal.summary).map((p, k) => (
-                      <p key={k} className="text-[14px] leading-[1.75] text-gray-700">{p}</p>
+                      <p key={k} className="text-[13px] leading-[1.7] text-gray-600">{p}</p>
                     ))}
                   </div>
                 )}
 
-                {modal.implication && (
-                  <p className="mt-4 text-[13.5px] leading-relaxed text-gray-700"><span className="font-semibold text-indigo-600">시사점 </span>{modal.implication}</p>
-                )}
 
                 {modal.actions && (
-                  <p className="mt-3 whitespace-pre-line text-[13.5px] leading-relaxed text-gray-700"><span className="font-semibold text-gray-900">대응 · Owner </span>{modal.actions}</p>
+                  <div className="mt-4">
+                    <p className="text-[10.5px] font-semibold tracking-wide text-gray-400">대응 · Owner</p>
+                    <p className="mt-1 whitespace-pre-line text-[13px] leading-[1.7] text-gray-600">{modal.actions}</p>
+                  </div>
                 )}
 
                 {modal.url && (
