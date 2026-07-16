@@ -816,7 +816,7 @@ export default function Page() {
                         willChange: "transform, opacity",
                       }}
                       className={
-                        "group flex items-start cursor-pointer gap-3 rounded-lg px-2 py-2.5 border-t border-gray-100 transition-all duration-300 ease-out hover:bg-indigo-50/40 active:scale-[.997] "
+                        "group flex items-start cursor-pointer gap-3 rounded-lg px-2 py-4 border-t border-gray-100 transition-all duration-300 ease-out hover:bg-indigo-50/40 active:scale-[.997] "
                       }
                     >
                       <div
