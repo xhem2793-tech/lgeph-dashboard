@@ -632,7 +632,7 @@ export default function Page() {
     <div className="px-4 py-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)_286px]">
+      <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
         {/* ── 좌 : 메뉴 ── */}
         <aside
           className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]"
@@ -999,94 +999,7 @@ export default function Page() {
         </section>
         </div>
 
-        {/* ── 우 : 이번 주 요약(위) + 규제 상위 3건(아래) ── */}
-        <aside className="flex h-fit flex-col gap-4 lg:sticky lg:top-[88px]" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.15s" }}>
-          {/* 규제 동향 — 상단 3건만, 나머지는 메뉴로 */}
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
-            <button
-              type="button"
-              onClick={() => setMenu("규제·정책")}
-              className="group flex w-full items-baseline justify-between border-b border-gray-100 px-3 py-2.5 text-left transition-colors duration-300 hover:bg-indigo-50/40"
-            >
-              <p className="text-[14px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
-                정책 동향 › <span className="num text-[11px] font-medium text-gray-500">{regDocs.length}</span>
-              </p>
-              <span className="flex items-center gap-1 text-[10px] text-gray-500">
-                최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
-                <span title="CONFIRMED" className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-bold text-emerald-700">C</span>
-              </span>
-            </button>
-            <div className="p-2">
-              {board.length === 0 ? (
-                <p className="py-6 text-center text-[12px] text-gray-500">등재된 정책 없음</p>
-              ) : (
-                <>
-                  <div className="flex flex-col gap-1">
-                    {board.slice(0, 3).map((r, i) => {
-                    const eff = r.dDay == null ? r.date : effDate(r)
-                    const urgent = r.dDay != null && r.dDay >= 0 && r.dDay <= 7
-                    return (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => setModal(r)}
-                        style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.08 + "s" }}
-                        className="group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50"
-                      >
-                        {/* 대시보드 캘린더와 같은 날짜 블록 — 규제는 '시행일'이 곧 일정이다 */}
-                        <div
-                          className={
-                            "flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " +
-                            (urgent ? "bg-red-50 text-red-600" : r.dDay != null && r.dDay < 0 ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")
-                          }
-                        >
-                          <span className="text-[10px] font-bold uppercase leading-none">{MON[Number(eff.slice(5, 7)) - 1]}</span>
-                          <span className="num text-sm font-semibold leading-tight">{Number(eff.slice(8, 10))}</span>
-                        </div>
 
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate break-normal text-[13px] font-semibold leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600">
-                            {r.title.split("—")[0].trim()}
-                          </p>
-                          <div className="mt-1 flex flex-wrap items-center gap-1">
-                            <span
-                              className={
-                                "rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors duration-300 " +
-                                (r.severity === "Critical"
-                                  ? "bg-red-50 text-red-700"
-                                  : r.severity === "High"
-                                    ? "bg-amber-50 text-amber-700"
-                                    : "bg-gray-100 text-gray-500")
-                              }
-                            >
-                              {r.severity}
-                            </span>
-                            {r.dDay != null ? (
-                              <span className="num rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">
-                                {r.dDay <= 0 ? "시행 중" : "D-" + r.dDay}
-                              </span>
-                            ) : null}
-                            <span className="truncate rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">
-                              {r.agency}
-                            </span>
-                          </div>
-                        </div>
-                      </button>
-                    )
-                  })}
-                </div>
-                  <button
-                    type="button"
-                    onClick={() => setMenu("규제·정책")}
-                    className="mt-1.5 w-full rounded-md py-1.5 text-center text-[11px] text-indigo-600 transition-all duration-300 hover:-translate-y-0.5 hover:bg-indigo-50 active:scale-95"
-                  >
-                    정책 {regDocs.length}건 전체 보기 ›
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-        </aside>
       </div>
 
       {/* ── 팝업 : 뉴스·규제·인사이트 공통 ── */}
