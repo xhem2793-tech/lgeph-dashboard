@@ -245,17 +245,6 @@ export default function Calendar() {
                 </button>
               )}
             </div>
-            <div className={"group absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] lg:block " + (focused || query ? "w-[416px]" : "w-[320px]")} style={{ marginTop: "-5px" }}>
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-              </span>
-              <input value={query} onChange={(e) => setQuery(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="이벤트 · 출처 검색" className="w-full rounded-full border border-gray-200 bg-gray-50 py-1 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
-              {query && (
-                <button type="button" onClick={() => setQuery("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-                </button>
-              )}
-            </div>
             <Segmented
               value={span}
               onChange={(k) => { setSpan(k as "2주" | "한달"); setMonth(0) }}
@@ -341,7 +330,7 @@ export default function Calendar() {
         className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
         style={{ animation: "fadeUp .5s ease both", animationDelay: "140ms" }}
       >
-        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
+        <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
           <div className="flex items-center gap-3">
             <h2 className="text-[17px] font-bold tracking-tight text-gray-900">이벤트 목록</h2>
             <Segmented size="sm"
@@ -353,6 +342,36 @@ export default function Calendar() {
               onChange={(k) => { setBucket(k as Bucket); setCat("전체") }}
             />
           </div>
+              {/* 검색 — 이벤트 목록 중앙 */}
+              <div
+                className={
+                  "group absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] lg:block " +
+                  (focused || query ? "w-[416px]" : "w-[320px]")
+                }
+                style={{ marginTop: "-5px" }}
+              >
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+                </span>
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onFocus={() => setFocused(true)}
+                  onBlur={() => setFocused(false)}
+                  placeholder="이벤트 · 출처 검색"
+                  className="w-full rounded-full border border-gray-200 bg-gray-50 py-1 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]"
+                />
+                {query && (
+                  <button
+                    type="button"
+                    onClick={() => setQuery("")}
+                    aria-label="검색어 지우기"
+                    className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                  </button>
+                )}
+              </div>
           <span className="flex items-center gap-1.5 text-[11px] text-gray-400">최근 갱신 {stamp ? fmtStamp(stamp) : "—"}<span className="rounded bg-emerald-50 px-1 py-px text-[9px] font-bold text-emerald-600">C</span></span>
         </header>
 
