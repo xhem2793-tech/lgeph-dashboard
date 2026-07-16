@@ -1155,19 +1155,22 @@ export default function Page() {
                 ) : null}
               </div>
 
-              <h3 className="mt-2 text-[24px] font-bold leading-[1.35] tracking-tight text-gray-900">
+              <h3 className="mt-2 text-[20px] font-semibold leading-[1.35] tracking-tight text-gray-900">
                 <Hi text={modal.title} q={q} />
               </h3>
 
               {modal.so ? (
-                <p className="mt-4 text-[15px] leading-[1.75] text-gray-700"><span className="font-semibold text-indigo-600">{modal.kind === "reg" ? "우리 영향" : modal.kind === "insight" ? "왜 중요한가" : "SO WHAT"} </span><Hi text={modal.so} q={q} /></p>
+                <div className="mt-4 border-l-2 border-indigo-300 pl-3">
+                  <p className="text-[10.5px] font-semibold tracking-wide text-indigo-600">시사점</p>
+                  <p className="mt-1 text-[14px] leading-[1.7] text-gray-800"><Hi text={modal.so} q={q} /></p>
+                </div>
               ) : null}
 
               <div className="mt-5">
-                <p className="text-[10px] font-bold tracking-widest text-gray-400">본문 요약</p>
-                <div className="mt-2 space-y-3">
+                <p className="text-[10.5px] font-semibold tracking-wide text-gray-400">본문 요약</p>
+                <div className="mt-1 space-y-2">
                   {para(modal.summary).map((p, i) => (
-                    <p key={i} className="text-[15px] leading-[1.8] text-gray-700">
+                    <p key={i} className="text-[13px] leading-[1.7] text-gray-600">
                       <Hi text={p} q={q} />
                     </p>
                   ))}
@@ -1175,7 +1178,10 @@ export default function Page() {
               </div>
 
               {modal.action ? (
-                <p className="mt-5 text-[14px] leading-[1.7] text-gray-700"><span className="font-semibold text-gray-900">ACTION </span>{modal.action}</p>
+                <div className="mt-4">
+                  <p className="text-[10.5px] font-semibold tracking-wide text-gray-400">대응</p>
+                  <p className="mt-1 text-[13px] leading-[1.7] text-gray-600">{modal.action}</p>
+                </div>
               ) : null}
 
               {modal.chipKeys.map((k) => chips[k]).filter(Boolean).length ? (
