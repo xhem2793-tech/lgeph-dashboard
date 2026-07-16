@@ -103,10 +103,10 @@ export default function Calendar() {
 
   React.useEffect(() => {
     setRows(null)
-    calendarEvents(iso(addDays(range.from, -35)), iso(addDays(range.to, 35)))
+    calendarEvents(iso(addDays(today, -120)), iso(addDays(today, 240)))
       .then((r) => setRows(r.filter((x) => (x.kind !== "other" || x.category === "공휴일"))))
       .catch(() => setRows([]))
-  }, [range.from, range.to])
+  }, [today])
 
   const all = rows ?? []
   const inMonth = React.useMemo(
