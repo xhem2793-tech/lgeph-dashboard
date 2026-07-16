@@ -21,6 +21,14 @@ const CAT: Record<string, { bg: string; fg: string; dot: string; band: string }>
 }
 const tone = (c: string) => CAT[c] ?? CAT["기타"]
   const catLabel = (c: string) => (c === "규제" ? "정책" : c)
+  const DEPTS = ["영업", "물류", "관리"]
+  const deptOf = (e: CalEvent) => {
+    const s = e.category + " " + e.event
+    if (/에너지|유가|유류|할증료|전기|전력|항공|해운|운임|물류|가스|석유|WESM|NGCP/.test(s)) return "물류"
+    if (/최저임금|금리|세법|물품세|관세|재정|환율|외환|금융|투자|규제|정책|예산|FDI/.test(s)) return "관리"
+    if (/물가|CPI|인플레|소비|고용|실업|급여|프로모|판매|수요|소득|유통|가전/.test(s)) return "영업"
+    return "관리"
+  }
 const LEGEND = ["경제", "금융", "정치", "규제", "에너지", "공휴일"]
 const KIND: Record<string, string> = { release: "지표 발표", policy: "정책·규제", holiday: "공휴일" }
 
@@ -55,6 +63,8 @@ export default function Calendar() {
   const [cat, setCat] = React.useState("전체")
   const [month, setMonth] = React.useState(0)
   const [span, setSpan] = React.useState<"2주" | "한달">("2주")
+  const [axis, setAxis] = React.useState<"topic" | "dept">("topic")
+  const [query, setQuery] = React.useState("")
   const [modal, setModal] = React.useState<CalEvent | null>(null)
   const [dayList, setDayList] = React.useState<{ date: string; events: CalEvent[] } | null>(null)
   const [closing, setClosing] = React.useState(false)
@@ -123,23 +133,26 @@ export default function Calendar() {
   const list = React.useMemo(() => {
     const f = all.filter((r) => {
       const b = inBucket(r)
-      const inSel = bucket === "past" ? b === "past" : b !== "past"
-      return inSel && (cat === "전체" || r.category === cat)
+      const inSel = query ? true : bucket === "past" ? b === "past" : b !== "past"
+      const inCat = cat === "전체" || (axis === "dept" ? deptOf(r) === cat : r.category === cat)
+      const inQ = !query || (r.event + " " + r.category).toLowerCase().includes(query.toLowerCase())
+      return inSel && inCat && inQ
     })
     return f.sort((a, b) =>
       bucket === "past" ? b.date.localeCompare(a.date) : a.date.localeCompare(b.date),
     )
-  }, [all, bucket, cat, inBucket])
+  }, [all, bucket, cat, inBucket, axis, query])
   const counts = React.useMemo(() => {
     const c = { past: 0, week: 0, next: 0 }
     for (const r of all) c[inBucket(r) as "past" | "week" | "next"]++
     return { past: c.past, upcoming: c.week + c.next }
   }, [all, inBucket])
   const cats = React.useMemo(() => {
+    if (axis === "dept") return ["전체", ...DEPTS]
     const s = new Set(all.filter((r) => (bucket === "past" ? inBucket(r) === "past" : inBucket(r) !== "past")).map((r) => r.category))
     const extra = Array.from(s).filter((c) => !LEGEND.includes(c))
     return ["전체", ...LEGEND.filter((c) => s.has(c)), ...extra]
-  }, [all, bucket, inBucket])
+  }, [all, bucket, inBucket, axis])
   const mix = React.useMemo(() => {
     const m: Record<string, number> = { release: 0, policy: 0, holiday: 0 }
     for (const r of inMonth) if (m[r.kind] !== undefined) m[r.kind]++
@@ -213,6 +226,12 @@ export default function Calendar() {
                   {span === "2주" ? "이번 주" : "이번 달"}
                 </button>
               )}
+            </div>
+            <div className="relative order-last w-full sm:order-none sm:w-56">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-4-4" /></svg>
+              </span>
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="이벤트 검색" className="w-full rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-[12.5px] text-gray-700 outline-none transition focus:border-indigo-300 focus:bg-white focus:ring-2 focus:ring-indigo-100" />
             </div>
             <Segmented
               value={span}
@@ -365,6 +384,12 @@ export default function Calendar() {
               ]}
               value={bucket}
               onChange={(k) => { setBucket(k as Bucket); setCat("전체") }}
+            />
+            <Segmented
+              size="sm"
+              value={axis}
+              onChange={(k) => { setAxis(k as "topic" | "dept"); setCat("전체") }}
+              options={[{ k: "topic", label: "주제별" }, { k: "dept", label: "부서별" }]}
             />
           </div>
           <span className="text-[11px] text-gray-400">클릭 시 상세</span>
