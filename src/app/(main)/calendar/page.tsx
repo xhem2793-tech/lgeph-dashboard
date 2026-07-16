@@ -200,7 +200,7 @@ export default function Calendar() {
           className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
           style={{ animation: "fadeUp .5s ease both" }}
         >
-          <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
+          <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
                 <button
@@ -230,7 +230,7 @@ export default function Calendar() {
                 </button>
               )}
             </div>
-            <div className={"group relative order-last w-full transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] sm:order-none " + (focused || query ? "sm:w-72" : "sm:w-56")}>
+            <div className={"group absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] lg:block " + (focused || query ? "w-[416px]" : "w-[320px]")}>
               <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
               </span>
@@ -379,7 +379,7 @@ export default function Calendar() {
       </div>
 
       <div
-        className="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+        className="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm lg:w-[calc(100%-302px)]"
         style={{ animation: "fadeUp .5s ease both", animationDelay: "140ms" }}
       >
         <header className="flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
