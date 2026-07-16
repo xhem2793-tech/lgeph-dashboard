@@ -256,9 +256,8 @@ export default function Calendar() {
           </div>
 
           <div
-            key={label}
             className="mt-1.5 grid grid-cols-7 gap-1.5"
-            style={{ animation: "viewIn .45s cubic-bezier(.22,1,.36,1) both" }}
+            style={{ animation: "viewIn .3s ease both" }}
           >
             {cells.map((d) => {
               const key = iso(d)
