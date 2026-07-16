@@ -1097,10 +1097,11 @@ export default function Page() {
           onClick={closeModal}
         >
           <div
-            className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
             style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
             onClick={(ev) => ev.stopPropagation()}
           >
+            <span className={"absolute inset-y-0 left-0 z-10 w-1 " + (({ 경제: "bg-emerald-500", 금융: "bg-blue-500", 정치: "bg-purple-500", 규제: "bg-red-500", 정책: "bg-red-500", 에너지: "bg-amber-500", 유통: "bg-violet-500" } as Record<string, string>)[modal.topic] || "bg-indigo-500")} />
             <button
               type="button"
               onClick={closeModal}
@@ -1159,14 +1160,7 @@ export default function Page() {
               </h3>
 
               {modal.so ? (
-                <div className="mt-4 rounded-xl border-l-[3px] border-indigo-500 bg-indigo-50/60 px-4 py-3">
-                  <p className="text-[10px] font-bold tracking-widest text-indigo-600">
-                    {modal.kind === "reg" ? "우리 영향" : modal.kind === "insight" ? "왜 중요한가" : "SO WHAT"}
-                  </p>
-                  <p className="mt-1 text-[15px] leading-[1.75] text-gray-800">
-                    <Hi text={modal.so} q={q} />
-                  </p>
-                </div>
+                <p className="mt-4 text-[15px] leading-[1.75] text-gray-700"><span className="font-semibold text-indigo-600">{modal.kind === "reg" ? "우리 영향" : modal.kind === "insight" ? "왜 중요한가" : "SO WHAT"} </span><Hi text={modal.so} q={q} /></p>
               ) : null}
 
               <div className="mt-5">
@@ -1181,10 +1175,7 @@ export default function Page() {
               </div>
 
               {modal.action ? (
-                <div className="mt-5 rounded-xl border border-gray-200 bg-gray-50 px-4 py-3">
-                  <p className="text-[10px] font-bold tracking-widest text-gray-500">ACTION</p>
-                  <p className="mt-1 text-[14px] leading-[1.7] text-gray-700">{modal.action}</p>
-                </div>
+                <p className="mt-5 text-[14px] leading-[1.7] text-gray-700"><span className="font-semibold text-gray-900">ACTION </span>{modal.action}</p>
               ) : null}
 
               {modal.chipKeys.map((k) => chips[k]).filter(Boolean).length ? (
