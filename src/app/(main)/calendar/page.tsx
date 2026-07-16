@@ -20,6 +20,7 @@ const CAT: Record<string, { bg: string; fg: string; dot: string; band: string }>
   기타: { bg: "bg-gray-100", fg: "text-gray-700", dot: "bg-gray-400", band: "bg-gray-100 text-gray-800" },
 }
 const tone = (c: string) => CAT[c] ?? CAT["기타"]
+  const catLabel = (c: string) => (c === "규제" ? "정책" : c)
 const LEGEND = ["경제", "금융", "정치", "규제", "에너지", "공휴일"]
 const KIND: Record<string, string> = { release: "지표 발표", policy: "정책·규제", holiday: "공휴일" }
 const SEV = (i: number) => (i >= 3 ? "Critical" : i === 2 ? "High" : "Medium")
@@ -291,7 +292,7 @@ export default function Calendar() {
             {LEGEND.map((c) => (
               <span key={c} className="flex items-center gap-1">
                 <span className={"h-1.5 w-1.5 rounded-full " + tone(c).dot} />
-                {c}
+                {catLabel(c)}
               </span>
             ))}
           </div>
@@ -306,7 +307,7 @@ export default function Calendar() {
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               {[
                 { k: "release", n: mix.release, c: "text-emerald-700 bg-emerald-50" },
-                { k: "policy", n: mix.policy, c: "text-red-700 bg-red-50" },
+                { k: "policy", n: mix.policy, c: "text-gray-700 bg-gray-50" },
                 { k: "holiday", n: mix.holiday, c: "text-teal-700 bg-teal-50" },
               ].map((x) => (
                 <div key={x.k} className={"rounded-lg py-3 " + x.c}>
@@ -394,14 +395,13 @@ export default function Calendar() {
           <div className="flex min-h-[200px] items-center justify-center text-[13px] text-gray-400">해당 구간 이벤트 없음</div>
         ) : (
           <div className="mt-2 overflow-x-auto">
-            <table className="w-full min-w-[900px] text-[13px]">
+            <table className="w-full min-w-[760px] text-[13px]">
               <thead>
                 <tr className="border-b border-gray-100 text-[11px] font-semibold text-gray-500">
                   <th className="w-[70px] px-2 py-2 text-left">날짜</th>
                   <th className="w-[62px] px-2 py-2 text-left">분류</th>
                   <th className="w-[76px] px-2 py-2 text-left">성격</th>
                   <th className="px-2 py-2 text-left">이벤트</th>
-                  <th className="w-[64px] px-2 py-2 text-left">시간</th>
                   <th className="w-[52px] px-2 py-2 text-right">중요도</th>
                   <th className="w-[74px] px-2 py-2 text-right">예측</th>
                   <th className="w-[74px] px-2 py-2 text-right">실제</th>
@@ -419,7 +419,7 @@ export default function Calendar() {
                     <React.Fragment key={e.date + e.event}>
                       {showHead && (
                         <tr>
-                          <td colSpan={9} className="border-t border-gray-100 bg-gray-50/60 px-2 pb-1.5 pt-2.5 text-[11px] font-bold text-gray-500 first:border-t-0">
+                          <td colSpan={8} className="border-t border-gray-100 bg-gray-50/60 px-2 pb-1.5 pt-2.5 text-[11px] font-bold text-gray-500 first:border-t-0">
                             {seg === "week" ? "이번 주" : "예정"}
                           </td>
                         </tr>
@@ -433,11 +433,10 @@ export default function Calendar() {
                       >
                         <td className="h-[44px] px-2 align-middle font-medium tabular-nums text-gray-600">{e.date.slice(5).replace("-", "/")}</td>
                         <td className="h-[44px] px-2 align-middle">
-                          <span className={"rounded px-1.5 py-0.5 text-[10.5px] font-semibold " + t.bg + " " + t.fg}>{e.category}</span>
+                          <span className="flex items-center gap-1.5"><span className={"h-1.5 w-1.5 shrink-0 rounded-full " + t.dot} /><span className="text-[11.5px] text-gray-600">{catLabel(e.category)}</span></span>
                         </td>
                         <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-500">{KIND[e.kind] ?? "—"}</td>
                         <td className="max-w-0 truncate h-[44px] px-2 align-middle font-medium text-gray-900">{e.event}</td>
-                        <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-400">{e.releaseTime ?? "—"}</td>
                         <td className="h-[44px] px-2 align-middle text-right text-[11px] text-amber-500">{"★".repeat(e.importance)}</td>
                         <td className="h-[44px] px-2 align-middle text-right tabular-nums text-gray-400">{e.forecast ?? "—"}</td>
                         <td className={"h-[44px] px-2 align-middle text-right font-bold tabular-nums " + (up ? "text-rose-600" : down ? "text-emerald-600" : "text-gray-900")}>{fmtVal(e.actual, e.unit)}</td>
@@ -483,7 +482,7 @@ export default function Calendar() {
 
               <div className="flex w-full shrink-0 items-center gap-2 border-b border-gray-100 px-7 pb-3 pt-6 text-[12px] font-semibold">
                 <span className={"h-2 w-2 rounded-full " + tone(modal.category).dot} />
-                <span className="text-gray-800">{modal.category}</span>
+                <span className="text-gray-800">{catLabel(modal.category)}</span>
                 <span className="text-gray-300">·</span>
                 <span className="text-gray-500">{KIND[modal.kind] || ""}</span>
                 {modal.importance >= 2 && (
