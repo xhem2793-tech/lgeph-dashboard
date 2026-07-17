@@ -417,6 +417,12 @@ export default function DailyIndicators() {
   const today = React.useRef(new Date()).current
   const [raw, setRaw] = React.useState<Record<string, { date: string; value: number }[]> | null>(null)
   const [range, setRange] = React.useState<RangeKey>("7d")
+  const rangeBtns = React.useRef<(HTMLButtonElement | null)[]>([])
+  const [ind, setInd] = React.useState({ left: 0, width: 0 })
+  React.useLayoutEffect(() => {
+    const el = rangeBtns.current[RANGES.findIndex((r) => r.key === range)]
+    if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth })
+  }, [range])
 
   React.useEffect(() => {
     ;(async () => {
@@ -494,9 +500,10 @@ export default function DailyIndicators() {
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <div className="flex items-baseline gap-2">
                   
-                  <div className="inline-flex gap-1 rounded-full bg-gray-100 p-1">
-                    {RANGES.map((r) => (
-                      <button key={r.key} onClick={() => setRange(r.key)} className={"rounded-full px-3 py-1 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " + (range === r.key ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-indigo-600")}>{t(("r_" + r.key) as "r_7d")}</button>
+                  <div className="relative flex shrink-0 rounded-full border border-gray-200 bg-gray-50 p-0.5">
+                    <span className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 shadow-sm transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]" style={{ left: ind.left, width: ind.width }} />
+                    {RANGES.map((r, i) => (
+                      <button key={r.key} ref={(el) => (rangeBtns.current[i] = el)} onClick={() => setRange(r.key)} className={"relative z-10 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors duration-300 active:scale-95 " + (range === r.key ? "text-white" : "text-gray-600 hover:text-indigo-600")}>{t(("r_" + r.key) as "r_7d")}</button>
                     ))}
                   </div>
                 </div>
