@@ -87,7 +87,7 @@ function MetricCard({ card, series, en }: { card: Card; series?: Series; en: boo
     .reverse()
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-[14px] font-bold tracking-tight text-gray-900">{label}</h3>
@@ -121,7 +121,7 @@ function MetricCard({ card, series, en }: { card: Card; series?: Series; en: boo
       </div>
 
       {cur.length > 1 ? (
-        <div className="mt-3">
+        <div className="mt-3" style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }}>
           {hasPrev && (
             <div className="mb-1 flex items-center justify-end gap-3 text-[10px]">
               <span className="flex items-center gap-1 text-gray-400"><span className="inline-block h-2 w-2 rounded-sm bg-gray-300" />{String(Number(yr) - 1)}</span>
@@ -520,15 +520,17 @@ export default function Page() {
   return (
     <div className="p-0 sm:pb-10 sm:pt-4 lg:pt-3">
       <div className="px-4 py-4 sm:px-6">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
 
       <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside
           className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}
         >
+          <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
+            <p className="text-[14px] font-bold tracking-tight text-gray-900">{en ? "View" : "보기"}</p>
+          </div>
           <div className="px-3 py-3">
-            <p className="mb-2 px-1 text-[14px] font-bold tracking-tight text-gray-900">{en ? "View" : "보기"}</p>
             <nav className="flex flex-col gap-0.5">
               {NAV.map((n) => (
                 <React.Fragment key={n.id}>
