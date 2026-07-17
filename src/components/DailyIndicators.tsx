@@ -503,7 +503,7 @@ export default function DailyIndicators() {
                   <div className="relative flex shrink-0 rounded-full border border-gray-200 bg-gray-50 p-0.5">
                     <span className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 shadow-sm transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]" style={{ left: ind.left, width: ind.width }} />
                     {RANGES.map((r, i) => (
-                      <button key={r.key} ref={(el) => (rangeBtns.current[i] = el)} onClick={() => setRange(r.key)} className={"relative z-10 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors duration-300 active:scale-95 " + (range === r.key ? "text-white" : "text-gray-600 hover:text-indigo-600")}>{t(("r_" + r.key) as "r_7d")}</button>
+                      <button key={r.key} ref={(el) => { rangeBtns.current[i] = el }} onClick={() => setRange(r.key)} className={"relative z-10 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors duration-300 active:scale-95 " + (range === r.key ? "text-white" : "text-gray-600 hover:text-indigo-600")}>{t(("r_" + r.key) as "r_7d")}</button>
                     ))}
                   </div>
                 </div>
