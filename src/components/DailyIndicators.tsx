@@ -420,8 +420,18 @@ export default function DailyIndicators() {
   const rangeBtns = React.useRef<(HTMLButtonElement | null)[]>([])
   const [ind, setInd] = React.useState({ left: 0, width: 0 })
   React.useLayoutEffect(() => {
-    const el = rangeBtns.current[RANGES.findIndex((r) => r.key === range)]
-    if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth })
+    const measure = () => {
+      const el = rangeBtns.current[RANGES.findIndex((r) => r.key === range)]
+      if (el) setInd({ left: el.offsetLeft, width: el.offsetWidth })
+    }
+    measure()
+    const id = requestAnimationFrame(measure)
+    if (typeof document !== "undefined" && document.fonts) document.fonts.ready.then(measure)
+    window.addEventListener("resize", measure)
+    return () => {
+      cancelAnimationFrame(id)
+      window.removeEventListener("resize", measure)
+    }
   }, [range])
 
   React.useEffect(() => {
