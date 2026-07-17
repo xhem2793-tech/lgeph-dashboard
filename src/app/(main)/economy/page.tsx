@@ -5,7 +5,6 @@ import DailyIndicators from "@/components/DailyIndicators"
 import { ProChart, CountUp } from "@/components/ProChartCore"
 import { homeBand, econSeries, macroMonthly } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
-import { HBars, Bars, Gauge, CHART_COLORS } from "@/components/Charts"
 
 /** 경제지표 페이지 — 주요뉴스형 좌측 메뉴 + 메뉴별 분리 뷰(카드).
  *
