@@ -2,302 +2,331 @@
 
 import React, { useEffect, useMemo, useState } from "react"
 import DailyIndicators from "@/components/DailyIndicators"
-import { ProChart, CountUp } from "@/components/ProChartCore"
-import { homeBand, econSeries, macroMonthly } from "@/lib/supabase"
+import { homeBand, pricesDomain } from "@/lib/supabase"
+import type { PricesDomain } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
-/** 경제지표 페이지 — 주요뉴스형 좌측 메뉴 + 메뉴별 분리 뷰(카드).
- *
- *  ■ 겹침 해결(블룸버그 원칙: 같은 데이터, 세 가지 역할)
- *   · 원본  = 상세 차트 + 12개월 표 + 출처. 한 지표당 딱 한 번.
- *   · 참조  = 배지(현재값) + 원본 뷰로 이동. 차트 없음.
- *   · 파생  = 여러 지표를 조합해 만든 새 숫자. 구성요소 차트 없음.
- *
- *  ■ 우리만의 강점 = 사업 레이더(파생). 블룸버그엔 없는, 가전 영업 관점 산출지표.
- *  ■ 색은 방향이 아니라 사업영향 — 원가·물가↑=로즈, 수요·구매력 개선=에메랄드.
+/** 경제지표 페이지 — 도메인 메뉴(리스트형) + 물가·생활비 도메인 상세.
+ *  색=사업영향(원가·물가↑=로즈, 수요·구매력↑=에메랄드, 중립=인디고).
+ *  물가 헤드라인=YoY(표준)+6개월 전망콘(BSP 공식앵커, ESTIMATED).
+ *  당월/누적 토글=기여도 기준 + 헤드라인 보조수치. 롤링 24개월(18실적+6전망).
  */
 
 type Card = Awaited<ReturnType<typeof homeBand>>[number]
-type Series = Awaited<ReturnType<typeof econSeries>>[string]
-
-const ORIGIN: Record<string, string[]> = {
-  macro: ["cci", "durable", "retgva", "congva", "remit"],
-  cost: ["cpi", "elec", "foodinf", "riceinf", "lpginf", "traninf"],
-  appliance: ["appinf", "acinf", "ppiapp"],
-}
 
 const NAV = [
-  { id: "core", ko: "물가·생활비", en: "Prices", count: 10 },
-  { id: "today", ko: "오늘의 수치", en: "Today", count: 3 },
-  { id: "macro", ko: "시장·수요 환경", en: "Demand", count: 5 },
-  { id: "cost", ko: "원가·물가 압력", en: "Cost & CPI", count: 6 },
-  { id: "appliance", ko: "가전 가격 신호", en: "Appliance", count: 3 },
-  { id: "radar", ko: "사업 레이더", en: "Radar", count: 4, star: true, divider: true },
-  { id: "all", ko: "전체 경제지표", en: "All indicators", count: 16 },
+  { id: "core", ko: "핵심 요약", sub: "오늘의 수치 + 대표 지표 한 화면", count: "KPI 12" },
+  { id: "prices", ko: "물가·생활비", sub: "CPI 10품목 + 지역별 물가 히트맵", count: "10+지역20" },
+  { id: "growth", ko: "성장·경기", sub: "GDP 부문분해·투자·가동률·건축허가", count: "14" },
+  { id: "rates", ko: "금리·통화·신용", sub: "BSP 3금리·M3·대출(소비자/카드)", count: "9" },
+  { id: "labor", ko: "고용·소득·송금", sub: "실업·최저임금·OFW 송금(구성별)", count: "11" },
+  { id: "sentiment", ko: "소비·기업 심리", sub: "CCI·BCI·내구재 구매의향(장기)", count: "5" },
+  { id: "appliance", ko: "가전 선행지표", sub: "가전 PPI·수입액·가전/에어컨 물가", count: "8" },
+  { id: "market", ko: "가전시장·제품별", sub: "에어컨·냉장고·TV·세탁기별 LG점유·ASP·할인갭", count: "1,900+", accent: true },
+  { id: "radar", ko: "사업 레이더", sub: "원가압박·OFW구매력·실질물가·TCO", count: "파생", star: true },
 ]
 
-const scale = (key: string, v: number) => (key === "remit" ? v / 1e9 : v)
-
-function decimals(c: Card) {
-  const m = /\.(\d+)/.exec(c.value ?? "")
-  return m ? Math.min(m[1].length, 2) : c.suffix === "%" ? 1 : 0
-}
-
-function periodLabel(iso: string, freq: string) {
-  const y = iso.slice(2, 4)
-  const mo = Number(iso.slice(5, 7))
-  return freq === "분기" ? `${Math.floor((mo - 1) / 3) + 1}Q${y}` : `${mo}월`
-}
-
-function tone(dir: string, delta: number | null) {
-  if (delta == null || delta === 0 || dir === "neutral") return { cls: "text-gray-400", arrow: "" }
-  const up = delta > 0
-  const bad = dir === "bad" ? up : !up
-  return { cls: bad ? "text-rose-600" : "text-emerald-600", arrow: up ? "↑" : "↓" }
-}
-
-const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v))
 const num = (s: string | undefined) => {
   const v = parseFloat((s ?? "").replace(/[^0-9.\-]/g, ""))
   return Number.isFinite(v) ? v : 0
 }
-
-function MetricCard({ card, series, en }: { card: Card; series?: Series; en: boolean }) {
-  const [open, setOpen] = useState(false)
-  const label = en ? card.labelEn : card.label
-  const dec = decimals(card)
-  const unit = en ? "MoM" : "전월비"
-  const unitY = en ? "YoY" : "전년비"
-
-  const cur = series ? series.points.map((v) => scale(card.key, v)) : []
-  const prevArr = series ? series.prev.map((v) => (v == null ? NaN : scale(card.key, v))) : []
-  const hasPrev = prevArr.length === cur.length && prevArr.length > 0 && prevArr.every((v) => Number.isFinite(v))
-  const labels = series ? series.dates.map((d) => periodLabel(d, card.freq)) : []
-  const yr = series && series.dates.length ? series.dates[series.dates.length - 1].slice(0, 4) : ""
-
-  const tMom = tone(card.dir, card.deltaMom ?? null)
-  const tYoy = tone(card.dir, card.deltaYoy ?? null)
-
-  const rows = labels
-    .map((lb, i) => ({
-      lb,
-      v: cur[i],
-      mom: i > 0 ? cur[i] - cur[i - 1] : null,
-      yoy: hasPrev ? cur[i] - prevArr[i] : null,
-    }))
-    .reverse()
-
-  return (
-    <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h3 className="text-[14px] font-bold tracking-tight text-gray-900">{label}</h3>
-          <p className="mt-0.5 text-[10px] text-gray-400">
-            {card.asOf?.slice(0, 7).replace("-", ".")} · {card.freq} · PSA/BSP
-          </p>
-        </div>
-        <div className="shrink-0 text-right">
-          <p className="text-[20px] font-bold leading-none tabular-nums text-gray-900">
-            {card.prefix}
-            <CountUp value={num(card.value)} suffix="" decimals={dec} />
-            <span className="text-[13px] font-semibold text-gray-500">{card.suffix}</span>
-          </p>
-          <div className="mt-1 flex items-center justify-end gap-2 text-[11px] font-semibold tabular-nums">
-            {card.deltaMom != null && (
-              <span className={tMom.cls}>
-                {unit} {Math.abs(card.deltaMom).toFixed(1)}
-                {card.deltaUnit}
-                {tMom.arrow}
-              </span>
-            )}
-            {card.deltaYoy != null && (
-              <span className={tYoy.cls}>
-                {unitY} {Math.abs(card.deltaYoy).toFixed(1)}
-                {card.deltaUnit}
-                {tYoy.arrow}
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {cur.length > 1 ? (
-        <div className="mt-3" style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }}>
-          {hasPrev && (
-            <div className="mb-1 flex items-center justify-end gap-3 text-[10px]">
-              <span className="flex items-center gap-1 text-gray-400"><span className="inline-block h-2 w-2 rounded-sm bg-gray-300" />{String(Number(yr) - 1)}</span>
-              <span className="flex items-center gap-1 text-gray-500"><span className="inline-block h-2 w-2 rounded-sm bg-indigo-500" />{yr}</span>
-            </div>
-          )}
-          <ProChart
-            cur={cur}
-            prev={hasPrev ? prevArr : undefined}
-            labels={labels}
-            unit={card.suffix}
-            curName={yr}
-            prevName={String(Number(yr) - 1)}
-            decimals={dec}
-          />
-        </div>
-      ) : (
-        <p className="mt-3 text-[12px] text-gray-400">시계열 준비 중</p>
-      )}
-
-      {rows.length > 0 && (
-        <div className="mt-2">
-          <button
-            onClick={() => setOpen((o) => !o)}
-            className="text-[11px] font-medium text-indigo-600 transition-colors hover:text-indigo-700"
-          >
-            {open ? (en ? "Hide table ▲" : "표 접기 ▲") : en ? "Monthly table ▼" : "월별 표 ▼"}
-          </button>
-          {open && (
-            <div className="mt-2 overflow-hidden rounded-lg border border-gray-100">
-              <table className="w-full text-[11px] tabular-nums">
-                <thead>
-                  <tr className="bg-gray-50 text-gray-500">
-                    <th className="px-2 py-1.5 text-left font-medium">{en ? "Period" : "기준"}</th>
-                    <th className="px-2 py-1.5 text-right font-medium">{en ? "Value" : "값"}</th>
-                    <th className="px-2 py-1.5 text-right font-medium">{unit}</th>
-                    <th className="px-2 py-1.5 text-right font-medium">{unitY}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {rows.map((r, i) => (
-                    <tr key={i} className="text-gray-700">
-                      <td className="px-2 py-1.5 text-left text-gray-500">{r.lb}</td>
-                      <td className="px-2 py-1.5 text-right font-semibold">{r.v.toFixed(dec)}</td>
-                      <td className="px-2 py-1.5 text-right text-gray-500">
-                        {r.mom == null ? "–" : (r.mom > 0 ? "+" : "") + r.mom.toFixed(1)}
-                      </td>
-                      <td className="px-2 py-1.5 text-right text-gray-500">
-                        {r.yoy == null ? "–" : (r.yoy > 0 ? "+" : "") + r.yoy.toFixed(1)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
+const addMonths = (iso: string, n: number) => {
+  const d = new Date(iso + "T00:00:00")
+  d.setMonth(d.getMonth() + n)
+  return d.toISOString().slice(0, 10)
 }
+const moShort = (iso: string) => Number(iso.slice(5, 7)) + "월"
 
-function RefBadge({ card, onGo, note, en }: { card: Card; onGo: () => void; note: string; en: boolean }) {
-  const label = en ? card.labelEn : card.label
+/* ============ 알약+슬라이드 토글 (당월/누적) ============ */
+function BasisToggle({ value, onChange }: { value: "mom" | "ytd"; onChange: (v: "mom" | "ytd") => void }) {
   return (
-    <button
-      onClick={onGo}
-      className="group flex items-center justify-between gap-3 rounded-lg border border-gray-150 bg-gray-50 px-3 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/40"
-    >
-      <div className="min-w-0">
-        <p className="truncate text-[12px] font-semibold text-gray-700">{label}</p>
-        <p className="truncate text-[10px] text-gray-400">{note}</p>
-      </div>
-      <div className="shrink-0 text-right">
-        <p className="text-[13px] font-bold tabular-nums text-gray-900">
-          {card.prefix}
-          {card.value}
-          {card.suffix}
-        </p>
-        <p className="text-[10px] text-indigo-500 group-hover:text-indigo-600">{en ? "detail →" : "원본 →"}</p>
-      </div>
-    </button>
-  )
-}
-
-function DerivedCard({
-  title,
-  formula,
-  value,
-  sub,
-  sowhat,
-  good,
-  children,
-}: {
-  title: string
-  formula: string
-  value: string
-  sub?: string
-  sowhat: string
-  good: boolean
-  children?: React.ReactNode
-}) {
-  return (
-    <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h3 className="text-[13px] font-bold tracking-tight text-violet-900">{title}</h3>
-          <p className="mt-0.5 font-mono text-[10px] text-violet-400">{formula}</p>
-        </div>
-        <span className="shrink-0 rounded-full bg-violet-100 px-2 py-0.5 text-[9px] font-semibold text-violet-600">
-          산출·참고
-        </span>
-      </div>
-      <p className={"mt-2 text-[22px] font-bold leading-none tabular-nums " + (good ? "text-emerald-600" : "text-rose-600")}>
-        {value}
-      </p>
-      {sub && <p className="mt-1 text-[11px] text-violet-500">{sub}</p>}
-      {children}
-      <p className="mt-2 border-t border-violet-100 pt-2 text-[11px] leading-snug text-violet-700">{sowhat}</p>
-    </div>
-  )
-}
-
-function RefStrip({ children, en }: { children: React.ReactNode; en: boolean }) {
-  return (
-    <div className="mt-4">
-      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">{en ? "Reference" : "참조 지표"}</p>
-      <div className="grid gap-2 sm:grid-cols-2">{children}</div>
-    </div>
-  )
-}
-
-function Skel() {
-  return (
-    <div className="grid gap-3 xl:grid-cols-2">
-      {Array.from({ length: 2 }).map((_, i) => (
-        <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />
+    <div className="relative inline-flex rounded-full border border-gray-200 bg-gray-50 p-0.5 text-[11px] font-semibold">
+      <span
+        className="absolute inset-y-0.5 rounded-full bg-indigo-600 shadow-sm transition-all duration-300 ease-out"
+        style={{ left: value === "mom" ? "2px" : "50%", width: "calc(50% - 2px)" }}
+      />
+      {(["mom", "ytd"] as const).map((k) => (
+        <button
+          key={k}
+          onClick={() => onChange(k)}
+          className={"relative z-10 w-14 rounded-full py-1 transition-colors duration-300 " + (value === k ? "text-white" : "text-gray-500 hover:text-gray-700")}
+        >
+          {k === "mom" ? "당월" : "누적"}
+        </button>
       ))}
     </div>
   )
 }
 
-function MacroCard({ label, unit, s, note }: { label: string; unit: string; s?: { dates: string[]; values: number[] }; note?: string }) {
-  const vals = s?.values ?? []
-  const last = vals.length ? vals[vals.length - 1] : null
-  const mom = vals.length > 1 ? vals[vals.length - 1] - vals[vals.length - 2] : null
-  const labels = (s?.dates ?? []).map((x) => Number(x.slice(5, 7)) + "월")
-  const yr = s?.dates?.length ? s.dates[s.dates.length - 1].slice(0, 4) : ""
-  const bad = (mom ?? 0) > 0
+/* ============ 헤드라인 팬차트 (YoY 실적 + 6M 전망콘) ============ */
+function FanChart({ actual, adates, fdates, forecast }: { actual: (number | null)[]; adates: string[]; fdates: string[]; forecast: number[] }) {
+  const W = 560, H = 150, padT = 10, padB = 18, padL = 6, cH = H - padT - padB
+  const all = [...actual.filter((v): v is number => v != null), ...forecast]
+  const max = Math.max(...all, 8), min = Math.min(...all, 0)
+  const span = max - min || 1
+  const n = actual.length + forecast.length
+  const step = (W - padL) / (n - 1)
+  const y = (v: number) => padT + (max - v) / span * cH
+  const x = (i: number) => padL + i * step
+  const zeroY = y(0)
+  const aPts: string[] = []
+  actual.forEach((v, i) => { if (v != null) aPts.push(x(i) + "," + y(v)) })
+  const lastActualIdx = actual.length - 1
+  const lastActualVal = actual[lastActualIdx]
+  const fStart = actual.length
+  const fPts = forecast.map((v, i) => x(fStart + i) + "," + y(v))
+  const coneUp = forecast.map((v, i) => x(fStart + i) + "," + y(v + 0.4 * (i + 1)))
+  const coneDn = forecast.map((v, i) => x(fStart + i) + "," + y(v - 0.4 * (i + 1))).reverse()
+  const anchor = lastActualVal != null ? x(lastActualIdx) + "," + y(lastActualVal) : fPts[0]
+  const conePath = "M" + anchor + " L" + coneUp.join(" L") + " L" + coneDn.join(" L") + " Z"
+  const gridV = [0, 2, 4, 6, 8].filter((g) => g <= max + 0.5)
+  const ticks = [0, 5, 11, 17, 23]
+  const labels24 = adates.map(moShort).concat(fdates.map(moShort))
   return (
-    <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="text-[13px] font-bold tracking-tight text-gray-900">{label}</h3>
-        <div className="shrink-0 text-right">
-          <p className="text-[18px] font-bold leading-none tabular-nums text-gray-900">
-            {last == null ? "–" : last.toFixed(1)}
-            <span className="text-[10px] font-medium text-gray-400">{unit}</span>
-          </p>
-          {mom != null && (
-            <p className={"mt-0.5 text-[10px] font-semibold tabular-nums " + (bad ? "text-rose-600" : "text-emerald-600")}>
-              전월 {mom > 0 ? "+" : ""}
-              {mom.toFixed(1)}
-              {unit}
-            </p>
-          )}
+    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }} aria-hidden>
+      <rect x={padL} y={y(4)} width={W - padL} height={Math.max(0, y(2) - y(4))} fill="rgba(99,102,241,0.06)" />
+      {gridV.map((g) => (
+        <g key={g}>
+          <line x1={padL} y1={y(g)} x2={W} y2={y(g)} stroke="#eef1f4" />
+          <text x={0} y={y(g) + 3} fontSize="7" fill="#94a3b8">{g}</text>
+        </g>
+      ))}
+      {min < 0 && <line x1={padL} y1={zeroY} x2={W} y2={zeroY} stroke="#cbd5e1" />}
+      <line x1={x(lastActualIdx)} y1={padT} x2={x(lastActualIdx)} y2={H - padB} stroke="#e2e8f0" strokeDasharray="2,2" />
+      <path d={conePath} fill="rgba(99,102,241,0.12)" style={{ transition: "d .5s ease" }} />
+      <polyline points={aPts.join(" ")} fill="none" stroke="#6366f1" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+      <polyline points={(anchor + " " + fPts.join(" "))} fill="none" stroke="#6366f1" strokeWidth="2" strokeDasharray="4,3" strokeLinecap="round" />
+      {lastActualVal != null && <circle cx={x(lastActualIdx)} cy={y(lastActualVal)} r="3.4" fill="#6366f1" />}
+      {ticks.map((i) => (
+        <text key={i} x={x(i)} y={H - 4} fontSize="6.5" fill="#94a3b8" textAnchor="middle">{labels24[i]}</text>
+      ))}
+    </svg>
+  )
+}
+
+/* ============ 지역 히트맵 ============ */
+function RegionHeatmap({ rows }: { rows: Record<string, number>[] }) {
+  const cols: [string, string][] = [
+    ["전체", "inf_all_items"], ["식품", "inf_food"], ["쌀", "inf_rice"],
+    ["전기", "inf_electricity"], ["가전", "inf_appliances"], ["에어컨", "inf_aircon"],
+  ]
+  const top = [...rows].sort((a, b) => num(String(b.inf_all_items)) - num(String(a.inf_all_items))).slice(0, 6)
+  const shade = (v: number) => "rgba(225,29,72," + (0.06 + Math.max(0, Math.min(1, v / 25)) * 0.8).toFixed(3) + ")"
+  return (
+    <div className="mt-2 grid gap-0.5" style={{ gridTemplateColumns: "auto repeat(6,1fr)" }}>
+      <div />
+      {cols.map(([c]) => <div key={c} className="text-center text-[7.5px] text-gray-400">{c}</div>)}
+      {top.map((r, ri) => (
+        <React.Fragment key={ri}>
+          <div className="flex items-center justify-end pr-1 text-right text-[7.5px] text-gray-500">{String(r.geo).replace("Region ", "")}</div>
+          {cols.map(([, key]) => {
+            const v = num(String(r[key]))
+            const t = Math.max(0, Math.min(1, v / 25))
+            return (
+              <div key={key} className="flex h-[15px] items-center justify-center rounded-sm text-[7px] tabular-nums" style={{ background: shade(v), color: t > 0.55 ? "#fff" : "#334155" }}>
+                {v.toFixed(1)}
+              </div>
+            )
+          })}
+        </React.Fragment>
+      ))}
+    </div>
+  )
+}
+
+/* ============ 지역 분포 ============ */
+function RegionDist({ rows }: { rows: Record<string, number>[] }) {
+  const vals = rows.map((r) => num(String(r.inf_all_items))).filter((v) => v > 0)
+  if (!vals.length) return null
+  const lo = Math.min(...vals), hi = Math.max(...vals)
+  const mean = vals.reduce((a, b) => a + b, 0) / vals.length
+  const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length)
+  const px = (v: number) => ((v - lo) / (hi - lo || 1)) * 100
+  return (
+    <div>
+      <div className="mt-1 flex gap-3 text-[9px] text-gray-400">
+        <div>평균<b className="block text-[13px] text-gray-800">{mean.toFixed(1)}</b></div>
+        <div>범위<b className="block text-[13px] text-gray-800">{lo.toFixed(1)}–{hi.toFixed(1)}</b></div>
+        <div>σ<b className="block text-[13px] text-gray-800">{sd.toFixed(1)}</b></div>
+      </div>
+      <div className="relative mt-3 h-9">
+        <div className="absolute inset-x-0 bottom-3 border-t border-gray-200" />
+        <div className="absolute bottom-0 top-0.5 border-l border-dashed border-rose-400" style={{ left: px(mean) + "%" }} />
+        {vals.map((v, i) => (
+          <div key={i} className="absolute h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-indigo-400/50" style={{ left: px(v) + "%", top: 12 + (i % 3) * 6 }} />
+        ))}
+        <span className="absolute bottom-0 left-0 text-[8px] text-gray-400">{lo.toFixed(1)}</span>
+        <span className="absolute bottom-0 right-0 text-[8px] text-gray-400">{hi.toFixed(1)}</span>
+      </div>
+    </div>
+  )
+}
+
+/* ============ 실질 지표 (가로형) ============ */
+function RealBars({ yoy, policyRate, remitYoY }: { yoy: number; policyRate: number | null; remitYoY: number | null }) {
+  const rows: { name: string; sub: string; v: number | null }[] = [
+    { name: "정책금리", sub: (policyRate ?? "?") + "−" + yoy.toFixed(1), v: policyRate != null ? +(policyRate - yoy).toFixed(2) : null },
+    { name: "송금", sub: remitYoY != null ? remitYoY.toFixed(1) + "−" + yoy.toFixed(1) : "확인 후 기입", v: remitYoY != null ? +(remitYoY - yoy).toFixed(2) : null },
+    { name: "대출금리", sub: "확인 후 기입", v: null },
+    { name: "예금금리", sub: "확인 후 기입", v: null },
+    { name: "최저임금", sub: "확인 후 기입", v: null },
+  ]
+  const MAX = 5
+  return (
+    <div className="mt-2 grid grid-cols-5 gap-1">
+      {rows.map((r) => {
+        const has = r.v != null
+        const neg = has && (r.v as number) < 0
+        const h = has ? Math.min(38, (Math.abs(r.v as number) / MAX) * 38) : 0
+        return (
+          <div key={r.name} className="flex flex-col items-center">
+            <div className="relative h-[76px] w-full">
+              <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-gray-200" />
+              {has && (
+                <div
+                  className="absolute left-[22%] w-[56%] rounded-sm"
+                  style={{ height: h, [neg ? "top" : "bottom"]: "50%", background: neg ? "linear-gradient(180deg,rgba(225,29,72,.55),rgba(225,29,72,.9))" : "linear-gradient(180deg,rgba(5,150,105,.9),rgba(5,150,105,.55))" } as React.CSSProperties}
+                />
+              )}
+              <div className="absolute inset-x-0 text-center text-[9.5px] font-extrabold tabular-nums" style={{ [neg ? "top" : "bottom"]: `${38 + h + 2}px`, color: has ? (neg ? "#e11d48" : "#059669") : "#cbd5e1" } as React.CSSProperties}>
+                {has ? ((r.v as number) > 0 ? "+" : "") + (r.v as number).toFixed(1) : "—"}
+              </div>
+            </div>
+            <div className="mt-1 text-center text-[8px] font-semibold text-gray-600">
+              {r.name}
+              <span className="block text-[6.5px] font-normal text-gray-400">{r.sub}</span>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/* ============ 물가·생활비 도메인 ============ */
+function PricesView({ data, byKey }: { data: PricesDomain; byKey: Record<string, Card> }) {
+  const [basis, setBasis] = useState<"mom" | "ytd">("mom")
+  const all = data.idx["CPI_all_items"]
+
+  const m = useMemo(() => {
+    if (!all || all.values.length < 13) return null
+    const v = all.values, dts = all.dates
+    const nLast = v.length - 1
+    const yoy = +((v[nLast] / v[nLast - 12] - 1) * 100).toFixed(1)
+    const mom = v.map((x, i) => (i >= 1 ? +((x / v[i - 1] - 1) * 100).toFixed(2) : null))
+    const ytd = v.map((x, i) => {
+      const yr = dts[i].slice(0, 4)
+      let base = -1
+      for (let j = i; j >= 0; j--) if (dts[j].slice(0, 4) === yr && dts[j].slice(5, 7) === "01") { base = j - 1; break }
+      return base >= 0 ? +((x / v[base] - 1) * 100).toFixed(2) : null
+    })
+    const fdates = [1, 2, 3, 4, 5, 6].map((k) => addMonths(dts[nLast], k))
+    const series = basis === "mom" ? mom : ytd
+    const finite = series.filter((z): z is number => z != null)
+    const last6 = finite.slice(-6)
+    const avg = last6.reduce((a, b) => a + b, 0) / (last6.length || 1)
+    const fc = basis === "mom"
+      ? fdates.map(() => +avg.toFixed(2))
+      : fdates.map((_, i) => +((series[nLast] ?? avg) + avg * (i + 1)).toFixed(2))
+    const momNow = mom[nLast] ?? 0
+    const ytdNow = ytd[nLast] ?? 0
+    return { yoy, series, adates: dts, fdates, fc, momNow, ytdNow, lastDate: dts[nLast] }
+  }, [all, basis])
+
+  if (!m) return <p className="text-[12px] text-gray-400">데이터 로딩 중…</p>
+
+  const appinf = num(byKey.appinf?.value), cpi = num(byKey.cpi?.value)
+  const gap = +(appinf - cpi).toFixed(1)
+  const remit = byKey.remit, fx = byKey.fx, cci = byKey.cci, durable = byKey.durable, food = byKey.foodinf
+  const peso = remit && fx ? (num(remit.value) * num(fx.value)) : null
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-[14px] font-bold text-gray-900">물가·생활비 <span className="text-[9px] font-normal text-gray-400">· {m.lastDate.slice(0, 7).replace("-", ".")} · PSA/BSP</span></div>
+        <BasisToggle value={basis} onChange={setBasis} />
+      </div>
+
+      <div className="grid gap-2.5 md:grid-cols-[1.75fr_1fr]">
+        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md">
+          <div className="flex items-center gap-1.5 text-[12px] font-bold text-gray-900">
+            전체 물가
+            <span className="rounded bg-rose-50 px-1.5 py-0.5 text-[8px] font-bold text-rose-600">목표 상회</span>
+            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[8px] font-bold text-slate-500">전망 EST</span>
+          </div>
+          <div className="mt-0.5 text-[23px] font-bold tabular-nums text-gray-900">
+            {m.yoy}<span className="text-[10px] font-medium text-gray-400">% YoY · 목표 2–4% · 전망앵커 BSP 6.4→4.5%</span>
+          </div>
+          <div className="mt-0.5 text-[10px] tabular-nums text-gray-500">
+            당월 {m.momNow > 0 ? "+" : ""}{m.momNow.toFixed(1)}% · 올해누적 {m.ytdNow > 0 ? "+" : ""}{m.ytdNow.toFixed(1)}%
+          </div>
+          <FanChart actual={m.series} adates={m.adates} fdates={m.fdates} forecast={m.fc} />
+          <div className="mt-1 flex flex-wrap gap-2.5 text-[8px] text-gray-400">
+            <span><span className="mr-1 inline-block h-0 w-3 border-t-2 border-indigo-500 align-middle" />실적</span>
+            <span><span className="mr-1 inline-block h-0 w-3 border-t-2 border-dashed border-indigo-500 align-middle" />전망(추세연장·EST)</span>
+            <span>◦ 롤링 24개월(18실적+6전망) · 목표밴드 2–4%</span>
+          </div>
+        </div>
+
+        <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="flex items-center gap-1.5 px-3 pb-1.5 pt-2.5">
+            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700">● 중립·지연</span>
+            <span className="text-[11px] font-bold text-gray-900">가전 수요</span>
+          </div>
+          <div className="border-b border-gray-100 px-3 pb-2">
+            <div className="text-[9px] text-gray-400">실질가격 갭 · 가전−전체</div>
+            <div className={"text-[24px] font-extrabold leading-tight tabular-nums " + (gap < 0 ? "text-emerald-600" : "text-rose-600")}>{gap > 0 ? "+" : ""}{gap}<span className="text-[10px] font-semibold text-gray-400">%p</span></div>
+          </div>
+          <div className="flex flex-col gap-1.5 px-3 py-2 text-[10px] text-gray-600">
+            {peso != null && <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />OFW 구매력<span className="ml-auto font-bold tabular-nums text-gray-800">₱{peso.toFixed(0)}B</span></div>}
+            {food && <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" />필수재(식품)<span className="ml-auto font-bold tabular-nums text-gray-800">{food.value}%</span></div>}
+            {durable && <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" />내구재 의향<span className="ml-auto font-bold tabular-nums text-gray-800">{durable.value}</span></div>}
+            {cci && <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" />소비자신뢰<span className="ml-auto font-bold tabular-nums text-gray-800">{cci.value}</span></div>}
+          </div>
+          <div className="mt-auto px-3 pb-2.5 text-[9px] font-semibold text-indigo-500">저가·필수형 우선 ▸</div>
         </div>
       </div>
-      {vals.length > 1 ? (
-        <div className="mt-2" style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }}>
-          <ProChart cur={vals} labels={labels} unit={unit} curName={yr} prevName="" decimals={1} />
+
+      <div className="grid gap-2.5 md:grid-cols-[1.35fr_1fr]">
+        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+          <div className="text-[11.5px] font-bold text-gray-900">품목별 기여도 <span className="text-[8px] font-normal text-gray-400">· {basis === "mom" ? "당월" : "누적"} · 선=전체지수</span></div>
+          <div className="mt-2 flex h-[130px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-200 bg-gray-50/60 text-center">
+            <div className="flex gap-1">
+              {[10, 16, 22, 14, 8].map((h, i) => <div key={i} className="w-2.5 animate-pulse rounded-sm bg-gray-200" style={{ height: h * 2, animationDelay: i * 120 + "ms" }} />)}
+            </div>
+            <div className="text-[10px] font-semibold text-gray-500">PSA 공식 가중치 수집 중</div>
+            <div className="text-[8.5px] text-gray-400">COICOP-2018 부문 가중치 적재 후 정식 기여도 분해</div>
+          </div>
         </div>
-      ) : (
-        <p className="mt-2 text-[11px] text-gray-400">시계열 로딩…</p>
-      )}
-      {note && <p className="mt-auto pt-2 text-[10px] leading-snug text-gray-400">{note}</p>}
+        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+          <div className="flex items-center gap-1.5 text-[11.5px] font-bold text-gray-900">실질 지표 <span className="ml-auto rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[8px] font-normal text-gray-500">물가 <b className="text-rose-600">{m.yoy}%</b></span></div>
+          <RealBars yoy={m.yoy} policyRate={data.policyRate} remitYoY={remit?.deltaYoy ?? null} />
+          <div className="mt-1 flex justify-between text-[7px] text-gray-400"><span>−5 압박</span><span>0</span><span>+5 여유</span></div>
+        </div>
+      </div>
+
+      <div className="grid gap-2.5 md:grid-cols-[1.25fr_1fr]">
+        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+          <div className="text-[11.5px] font-bold text-gray-900">지역 × 품목 <span className="text-[8px] font-normal text-gray-400">· 물가 상위 {Math.min(6, data.region.length)}개 지역</span></div>
+          <RegionHeatmap rows={data.region} />
+        </div>
+        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
+          <div className="text-[11.5px] font-bold text-gray-900">지역 물가 분포 <span className="text-[8px] font-normal text-gray-400">· 전국 {data.region.length}곳</span></div>
+          <RegionDist rows={data.region} />
+        </div>
+      </div>
+
+      <p className="text-[9px] leading-snug text-gray-400">색=사업영향(원가·물가↑ 로즈, 수요·구매력↑ 에메랄드) · 전망·기대는 ESTIMATED · 실질 대출/예금/임금은 확인 후 기입</p>
+    </div>
+  )
+}
+
+/* ============ 준비 중 도메인 ============ */
+function Soon({ label }: { label: string }) {
+  return (
+    <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 text-center">
+      <div className="text-[13px] font-bold text-gray-500">{label}</div>
+      <div className="text-[11px] text-gray-400">물가·생활비 템플릿을 이 도메인에도 적용 예정</div>
     </div>
   )
 }
@@ -305,348 +334,67 @@ function MacroCard({ label, unit, s, note }: { label: string; unit: string; s?: 
 export default function Page() {
   const { lang } = useLang()
   const en = lang === "en"
+  const [active, setActive] = useState("prices")
   const [band, setBand] = useState<Card[] | null>(null)
-  const [series, setSeries] = useState<Record<string, Series>>({})
-  const [active, setActive] = useState("core")
-  const [q, setQ] = useState("")
-  const [macro, setMacro] = useState<Record<string, { dates: string[]; values: number[] }>>({})
-  useEffect(() => {
-    macroMonthly([
-      "INF_all_items",
-      "INF_food",
-      "INF_rice",
-      "INF_electricity",
-      "INF_lpg",
-      "INF_transport",
-      "INF_restaurants",
-      "INF_housing_utilities",
-      "INF_household_appliances",
-      "INF_aircon",
-    ])
-      .then(setMacro)
-      .catch(() => {})
-  }, [])
+  const [prices, setPrices] = useState<PricesDomain | null>(null)
 
   useEffect(() => {
-    Promise.all([homeBand(), econSeries()])
-      .then(([b, s]) => {
-        setBand(b)
-        setSeries(s)
-      })
-      .catch(() => setBand([]))
+    homeBand().then(setBand).catch(() => setBand([]))
+    pricesDomain().then(setPrices).catch(() => setPrices({ idx: {}, forecast: [], policyRate: null, region: [] }))
   }, [])
 
   const byKey = useMemo(() => {
-    const m: Record<string, Card> = {}
-    ;(band ?? []).forEach((c) => (m[c.key] = c))
-    return m
+    const map: Record<string, Card> = {}
+    ;(band ?? []).forEach((c) => (map[c.key] = c))
+    return map
   }, [band])
 
-  const d = useMemo(() => {
-    const appN = num(byKey.appinf?.value)
-    const cpiN = num(byKey.cpi?.value)
-    const remitN = num(byKey.remit?.value)
-    const fxN = num(byKey.fx?.value)
-    const oilN = num(byKey.oil?.value)
-    const elecN = num(byKey.elec?.value)
-    const acN = num(byKey.acinf?.value)
-    const ap = series.appinf
-    const cp = series.cpi
-    let gapSeries: number[] = []
-    let gapLabels: string[] = []
-    if (ap && cp) {
-      const n = Math.min(ap.points.length, cp.points.length)
-      const ao = ap.points.slice(ap.points.length - n)
-      const co = cp.points.slice(cp.points.length - n)
-      const dts = ap.dates.slice(ap.dates.length - n)
-      gapSeries = ao.map((v, i) => +(v - co[i]).toFixed(2))
-      gapLabels = dts.map((x) => periodLabel(x, "월별"))
-    }
-    const fxS = clamp((fxN - 55) / (65 - 55), 0, 1) * 100
-    const oilS = clamp((oilN - 50) / (80 - 50), 0, 1) * 100
-    const elecS = clamp(elecN / 15, 0, 1) * 100
-    const costIdx = 0.4 * fxS + 0.3 * oilS + 0.3 * elecS
-    return { gap: +(appN - cpiN).toFixed(1), gapSeries, gapLabels, peso: remitN * fxN, costIdx, fxS, oilS, elecS, acN, elecN }
-  }, [byKey, series])
-
-  const originCards = (sec: string) => ORIGIN[sec].map((k) => byKey[k]).filter(Boolean) as Card[]
-  const loading = band === null
-
-  const filtered = (band ?? []).filter((c) => {
-    const s = (c.label + c.labelEn + c.key).toLowerCase()
-    return s.includes(q.toLowerCase())
-  })
-
   function view() {
-    if (active === "core")
-      return (
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <MacroCard label="전체 물가" unit="%" s={macro.INF_all_items} note="가전 구매 여력의 바닥 지표 — 낮아야 가처분소득 여유" />
-          <MacroCard label="식품" unit="%" s={macro.INF_food} note="필수지출 1순위 — 오르면 내구재 소비 후순위" />
-          <MacroCard label="쌀" unit="%" s={macro.INF_rice} />
-          <MacroCard label="전기료" unit="%" s={macro.INF_electricity} note="에어컨·냉장고 운영비 직결 — 고효율 소구 근거" />
-          <MacroCard label="LPG" unit="%" s={macro.INF_lpg} />
-          <MacroCard label="운송" unit="%" s={macro.INF_transport} note="물류비 — 유통 판가 압력" />
-          <MacroCard label="외식·숙박" unit="%" s={macro.INF_restaurants} />
-          <MacroCard label="주거·수도·연료" unit="%" s={macro.INF_housing_utilities} />
-          <MacroCard label="가전제품" unit="%" s={macro.INF_household_appliances} note="가전 판가 추세 — 낮을수록 실질가격 매력↑" />
-          <MacroCard label="에어컨" unit="%" s={macro.INF_aircon} note="RAC 판가 — 성수기 프로모 판단" />
-        </div>
-      )
-    if (active === "today") return <DailyIndicators />
-    if (active === "macro")
-      return (
-        <>
-          {loading ? (
-            <Skel />
-          ) : (
-            <div className="grid gap-3 xl:grid-cols-2">
-              {originCards("macro").map((c) => (
-                <MetricCard key={c.key} card={c} series={series[c.key]} en={en} />
-              ))}
-            </div>
-          )}
-          {!loading && byKey.foodinf && (
-            <RefStrip en={en}>
-              <RefBadge card={byKey.foodinf} onGo={() => setActive("cost")} en={en} note={en ? "disposable income" : "필수지출 경쟁 → 원가·물가"} />
-            </RefStrip>
-          )}
-        </>
-      )
-    if (active === "cost")
-      return (
-        <>
-          {loading ? (
-            <Skel />
-          ) : (
-            <div className="grid gap-3 xl:grid-cols-2">
-              {originCards("cost").map((c) => (
-                <MetricCard key={c.key} card={c} series={series[c.key]} en={en} />
-              ))}
-            </div>
-          )}
-          {!loading && (byKey.fx || byKey.oil) && (
-            <RefStrip en={en}>
-              {byKey.fx && <RefBadge card={byKey.fx} onGo={() => setActive("today")} en={en} note={en ? "import cost" : "수입원가 → 오늘의 수치"} />}
-              {byKey.oil && <RefBadge card={byKey.oil} onGo={() => setActive("today")} en={en} note={en ? "logistics/fuel" : "물류·연료 → 오늘의 수치"} />}
-            </RefStrip>
-          )}
-        </>
-      )
-    if (active === "appliance")
-      return (
-        <>
-          {loading ? (
-            <Skel />
-          ) : (
-            <div className="grid gap-3 xl:grid-cols-2">
-              {originCards("appliance").map((c) => (
-                <MetricCard key={c.key} card={c} series={series[c.key]} en={en} />
-              ))}
-            </div>
-          )}
-          {!loading && byKey.cpi && (
-            <RefStrip en={en}>
-              <RefBadge card={byKey.cpi} onGo={() => setActive("cost")} en={en} note={en ? "real-price baseline" : "실질가격 기준선 → 원가·물가"} />
-            </RefStrip>
-          )}
-        </>
-      )
-    if (active === "radar")
-      return (
-        <>
-          {loading ? (
-            <Skel />
-          ) : (
-            <div className="grid gap-3 xl:grid-cols-2">
-              <DerivedCard
-                title={en ? "Real appliance-price gap" : "가전 실질물가 갭"}
-                formula="가전물가 − 전체물가(CPI)"
-                value={(d.gap > 0 ? "+" : "") + d.gap + "%p"}
-                good={d.gap < 0}
-                sowhat={
-                  d.gap < 0
-                    ? "가전이 전체 물가보다 싸짐 = 실질가격 하락, 구매 유인 개선. 프로모 없이도 상대 매력 상승."
-                    : "가전이 전체 물가보다 비싸짐 = 실질가격 상승, 구매 저항. 판가·프로모 점검 필요."
-                }
-              >
-                {d.gapSeries.length > 1 && (
-                  <div className="mt-2">
-                    <ProChart cur={d.gapSeries} labels={d.gapLabels} unit="%p" curName={en ? "gap" : "갭"} prevName="" decimals={1} />
-                  </div>
-                )}
-              </DerivedCard>
-
-              <DerivedCard
-                title={en ? "OFW peso purchasing power" : "OFW 페소 구매력"}
-                formula="송금액($) × 환율(₱/$)"
-                value={"₱" + d.peso.toFixed(0) + "B"}
-                sub={`$${num(byKey.remit?.value).toFixed(2)}B × ₱${num(byKey.fx?.value).toFixed(2)}`}
-                good
-                sowhat="송금 달러가 페소로 바뀌는 힘. 페소 약세일수록 현지 구매력↑ — 송금 가구의 가전 구매 여력 확대."
-              />
-
-              <DerivedCard
-                title={en ? "Cost-pressure index" : "원가압박 지수"}
-                formula="환율·40% + 유가·30% + 전기·30% (0–100)"
-                value={d.costIdx.toFixed(0)}
-                sub="0=완화 · 100=최고 압박"
-                good={d.costIdx < 50}
-                sowhat="수입원가·물류·운영비를 하나로 합친 압박도. 높을수록 판가 인상 또는 마진 방어 압력."
-              >
-                <div className="mt-2 space-y-1">
-                  {[
-                    { l: "환율", v: d.fxS },
-                    { l: "유가", v: d.oilS },
-                    { l: "전기", v: d.elecS },
-                  ].map((b) => (
-                    <div key={b.l} className="flex items-center gap-2">
-                      <span className="w-8 text-[10px] text-violet-500">{b.l}</span>
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-violet-100">
-                        <div className="h-full rounded-full bg-violet-500" style={{ width: `${b.v.toFixed(0)}%` }} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </DerivedCard>
-
-              <DerivedCard
-                title={en ? "Aircon total burden" : "에어컨 총부담 신호"}
-                formula="구입(에어컨물가) + 운영(전기요금)"
-                value={d.acN.toFixed(1) + " / " + d.elecN.toFixed(1) + "%"}
-                sub="구입 물가 / 전기요금 상승률"
-                good={d.acN < 3}
-                sowhat={
-                  d.elecN > 8
-                    ? "구입가는 안정적이나 전기요금 급등으로 총소유비용(TCO) 부담↑ — 고효율·인버터 소구가 유효."
-                    : "구입·운영 모두 안정권 — 에어컨 판촉에 우호적."
-                }
-              />
-            </div>
-          )}
-          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-700">
-            ※ 사업 레이더는 공식 지표를 조합한 산출·해석 지표 (AI INTERPRETED). 원자료는 각 원본 섹션 참조, 최종 판단은 담당자.
-          </p>
-        </>
-      )
-    return (
-      <>
-        <input
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder={en ? "Search indicator…" : "지표 검색…"}
-          className="mb-3 w-full max-w-xs rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none focus:border-indigo-300"
-        />
-        {loading ? (
-          <Skel />
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-            <table className="w-full text-[12px] tabular-nums">
-              <thead>
-                <tr className="border-b border-gray-100 bg-gray-50 text-gray-500">
-                  <th className="px-3 py-2 text-left font-medium">{en ? "Indicator" : "지표"}</th>
-                  <th className="px-3 py-2 text-right font-medium">{en ? "Value" : "현재값"}</th>
-                  <th className="px-3 py-2 text-right font-medium">{en ? "MoM" : "전월비"}</th>
-                  <th className="px-3 py-2 text-right font-medium">{en ? "YoY" : "전년비"}</th>
-                  <th className="px-3 py-2 text-right font-medium">{en ? "As of" : "기준"}</th>
-                  <th className="px-3 py-2 text-right font-medium">{en ? "Freq" : "빈도"}</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {filtered.map((c) => {
-                  const tm = tone(c.dir, c.deltaMom ?? null)
-                  const ty = tone(c.dir, c.deltaYoy ?? null)
-                  return (
-                    <tr key={c.key} className="text-gray-700 hover:bg-gray-50/60">
-                      <td className="px-3 py-2 text-left font-semibold text-gray-800">{en ? c.labelEn : c.label}</td>
-                      <td className="px-3 py-2 text-right font-bold text-gray-900">
-                        {c.prefix}
-                        {c.value}
-                        {c.suffix}
-                      </td>
-                      <td className={"px-3 py-2 text-right font-semibold " + tm.cls}>
-                        {c.deltaMom == null ? "–" : Math.abs(c.deltaMom).toFixed(1) + (c.deltaUnit ?? "") + tm.arrow}
-                      </td>
-                      <td className={"px-3 py-2 text-right font-semibold " + ty.cls}>
-                        {c.deltaYoy == null ? "–" : Math.abs(c.deltaYoy).toFixed(1) + (c.deltaUnit ?? "") + ty.arrow}
-                      </td>
-                      <td className="px-3 py-2 text-right text-gray-400">{c.asOf?.slice(0, 7).replace("-", ".")}</td>
-                      <td className="px-3 py-2 text-right text-gray-400">{c.freq}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-            {filtered.length === 0 && <p className="px-3 py-6 text-center text-[12px] text-gray-400">검색 결과 없음</p>}
-          </div>
-        )}
-        <p className="mt-2 text-[10px] leading-snug text-gray-400">
-          색은 사업영향 기준 · 원가·물가↑=로즈, 수요·구매력 개선=에메랄드
-        </p>
-      </>
-    )
+    if (active === "core") return <DailyIndicators />
+    if (active === "prices") {
+      if (!prices || band === null) return <div className="h-64 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />
+      return <PricesView data={prices} byKey={byKey} />
+    }
+    const label = NAV.find((n) => n.id === active)?.ko ?? ""
+    return <Soon label={label} />
   }
 
   return (
-    <div className="p-0 sm:pb-10 sm:pt-4 lg:pt-3">
-      <div className="px-4 py-4 sm:px-6">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
-
-      <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside
-          className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]"
-          style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}
-        >
-          <div className="flex items-baseline justify-between border-b border-gray-100 px-3 py-2.5">
-            <p className="text-[14px] font-bold tracking-tight text-gray-900">{en ? "View" : "보기"}</p>
-          </div>
-          <div className="px-3 py-3">
+    <main className="px-4 pb-10 pt-3 sm:px-6">
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
+      <div className="grid items-start gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
+        <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]">
+          <div className="px-2.5 py-3">
+            <p className="mb-2 px-1.5 text-[14px] font-bold tracking-tight text-gray-900">{en ? "View" : "보기"}</p>
             <nav className="flex flex-col gap-0.5">
-              {NAV.map((n) => (
-                <React.Fragment key={n.id}>
-                  {n.divider && <div className="my-1 border-t border-gray-100" />}
-                  <button
-                    onClick={() => setActive(n.id)}
-                    className={
-                      "group w-full rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
-                      (active === n.id ? "bg-indigo-50" : "hover:bg-indigo-50/40")
-                    }
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <span
-                        className={
-                          "flex-1 text-[13px] transition-colors duration-300 " +
-                          (active === n.id ? "font-semibold text-indigo-700" : "font-medium text-gray-800 group-hover:text-indigo-600")
-                        }
-                      >
-                        {n.star && <span className="text-amber-500">★ </span>}
-                        {en ? n.en : n.ko}
-                      </span>
-                      <span className="num shrink-0 text-[10px] text-gray-400">{n.count}</span>
+              {NAV.map((n, i) => (
+                <button
+                  key={n.id}
+                  onClick={() => setActive(n.id)}
+                  style={{ animation: "fadeUp .4s ease both", animationDelay: `${i * 40}ms` }}
+                  className={
+                    "group w-full rounded-lg px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                    (active === n.id ? "bg-indigo-50 ring-1 ring-indigo-100" : "hover:bg-indigo-50/40")
+                  }
+                >
+                  <span className="flex items-center gap-1.5">
+                    <span className={"flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700" : "font-semibold text-gray-800 group-hover:text-indigo-600")}>
+                      {n.star && <span className="text-amber-500">★ </span>}
+                      {n.accent && <span className="text-violet-500">◆ </span>}
+                      {n.ko}
                     </span>
-                  </button>
-                </React.Fragment>
+                    <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums " + (active === n.id ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400")}>{n.count}</span>
+                  </span>
+                  <span className="mt-0.5 block text-[10px] leading-tight text-gray-400">{n.sub}</span>
+                </button>
               ))}
             </nav>
-            <p className="mt-3 border-t border-gray-100 px-1 pt-2 text-[10px] leading-relaxed text-gray-400">
-              {en
-                ? "Origin = full chart+table. Reference = badge. Derived = computed."
-                : "원본=상세 차트·표 · 참조=배지 · 파생=산출값. 같은 지표를 두 번 그리지 않음."}
-            </p>
           </div>
         </aside>
-
-        <div className="flex min-w-0 flex-col gap-4">
-          <section
-            key={active}
-            className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-300 hover:shadow-md"
-            style={{ animation: "fadeUp .5s ease both", animationDelay: "0.1s" }}
-          >
-            {view()}
-          </section>
+        <div className="min-w-0">
+          <div key={active} style={{ animation: "fadeUp .4s ease both" }}>{view()}</div>
         </div>
       </div>
-      </div>
-    </div>
+    </main>
   )
 }
