@@ -122,6 +122,12 @@ function MetricCard({ card, series, en }: { card: Card; series?: Series; en: boo
 
       {cur.length > 1 ? (
         <div className="mt-3">
+          {hasPrev && (
+            <div className="mb-1 flex items-center justify-end gap-3 text-[10px]">
+              <span className="flex items-center gap-1 text-gray-400"><span className="inline-block h-2 w-2 rounded-sm bg-gray-300" />{String(Number(yr) - 1)}</span>
+              <span className="flex items-center gap-1 text-gray-500"><span className="inline-block h-2 w-2 rounded-sm bg-indigo-500" />{yr}</span>
+            </div>
+          )}
           <ProChart
             cur={cur}
             prev={hasPrev ? prevArr : undefined}
