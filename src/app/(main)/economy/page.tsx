@@ -2,17 +2,18 @@
 
 import React, { useEffect, useMemo, useState } from "react"
 import DailyIndicators from "@/components/DailyIndicators"
-import { homeBand, pricesDomain } from "@/lib/supabase"
+import { ProChart, CountUp } from "@/components/ProChartCore"
+import { homeBand, pricesDomain, macroMonthly } from "@/lib/supabase"
 import type { PricesDomain } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
-/** 경제지표 페이지 — 도메인 메뉴(리스트형) + 물가·생활비 도메인 상세.
- *  색=사업영향(원가·물가↑=로즈, 수요·구매력↑=에메랄드, 중립=인디고).
- *  물가 헤드라인=YoY(표준)+6개월 전망콘(BSP 공식앵커, ESTIMATED).
- *  당월/누적 토글=기여도 기준 + 헤드라인 보조수치. 롤링 24개월(18실적+6전망).
+/** 경제지표 페이지 — 도메인 메뉴 + 물가·생활비 도메인.
+ *  차트는 환율·유가·날씨(DailyIndicators)와 동일한 ProChart 사용 — 2025 vs 2026 이중선.
+ *  색=사업영향(원가·물가↑=로즈, 수요·구매력↑=에메랄드).
  */
 
 type Card = Awaited<ReturnType<typeof homeBand>>[number]
+type Mon = Record<string, { dates: string[]; values: number[] }>
 
 const NAV = [
   { id: "core", ko: "핵심 요약", sub: "오늘의 수치 + 대표 지표 한 화면", count: "KPI 12" },
@@ -30,303 +31,208 @@ const num = (s: string | undefined) => {
   const v = parseFloat((s ?? "").replace(/[^0-9.\-]/g, ""))
   return Number.isFinite(v) ? v : 0
 }
-const addMonths = (iso: string, n: number) => {
-  const d = new Date(iso + "T00:00:00")
-  d.setMonth(d.getMonth() + n)
-  return d.toISOString().slice(0, 10)
-}
-const moShort = (iso: string) => Number(iso.slice(5, 7)) + "월"
+const MONTHS = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
 
-/* ============ 알약+슬라이드 토글 (당월/누적) ============ */
-function BasisToggle({ value, onChange }: { value: "mom" | "ytd"; onChange: (v: "mom" | "ytd") => void }) {
-  return (
-    <div className="relative inline-flex rounded-full border border-gray-200 bg-gray-50 p-0.5 text-[11px] font-semibold">
-      <span
-        className="absolute inset-y-0.5 rounded-full bg-indigo-600 shadow-sm transition-all duration-300 ease-out"
-        style={{ left: value === "mom" ? "2px" : "50%", width: "calc(50% - 2px)" }}
-      />
-      {(["mom", "ytd"] as const).map((k) => (
-        <button
-          key={k}
-          onClick={() => onChange(k)}
-          className={"relative z-10 w-14 rounded-full py-1 transition-colors duration-300 " + (value === k ? "text-white" : "text-gray-500 hover:text-gray-700")}
-        >
-          {k === "mom" ? "당월" : "누적"}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-/* ============ 헤드라인 팬차트 (YoY 실적 + 6M 전망콘) ============ */
-function FanChart({ actual, adates, fdates, forecast }: { actual: (number | null)[]; adates: string[]; fdates: string[]; forecast: number[] }) {
-  const W = 560, H = 150, padT = 10, padB = 18, padL = 6, cH = H - padT - padB
-  const all = [...actual.filter((v): v is number => v != null), ...forecast]
-  const max = Math.max(...all, 8), min = Math.min(...all, 0)
-  const span = max - min || 1
-  const n = actual.length + forecast.length
-  const step = (W - padL) / (n - 1)
-  const y = (v: number) => padT + (max - v) / span * cH
-  const x = (i: number) => padL + i * step
-  const zeroY = y(0)
-  const aPts: string[] = []
-  actual.forEach((v, i) => { if (v != null) aPts.push(x(i) + "," + y(v)) })
-  const lastActualIdx = actual.length - 1
-  const lastActualVal = actual[lastActualIdx]
-  const fStart = actual.length
-  const fPts = forecast.map((v, i) => x(fStart + i) + "," + y(v))
-  const coneUp = forecast.map((v, i) => x(fStart + i) + "," + y(v + 0.4 * (i + 1)))
-  const coneDn = forecast.map((v, i) => x(fStart + i) + "," + y(v - 0.4 * (i + 1))).reverse()
-  const anchor = lastActualVal != null ? x(lastActualIdx) + "," + y(lastActualVal) : fPts[0]
-  const conePath = "M" + anchor + " L" + coneUp.join(" L") + " L" + coneDn.join(" L") + " Z"
-  const gridV = [0, 2, 4, 6, 8].filter((g) => g <= max + 0.5)
-  const ticks = [0, 5, 11, 17, 23]
-  const labels24 = adates.map(moShort).concat(fdates.map(moShort))
-  return (
-    <svg viewBox={`0 0 ${W} ${H}`} className="w-full" style={{ height: H }} aria-hidden>
-      <rect x={padL} y={y(4)} width={W - padL} height={Math.max(0, y(2) - y(4))} fill="rgba(99,102,241,0.06)" />
-      {gridV.map((g) => (
-        <g key={g}>
-          <line x1={padL} y1={y(g)} x2={W} y2={y(g)} stroke="#eef1f4" />
-          <text x={0} y={y(g) + 3} fontSize="7" fill="#94a3b8">{g}</text>
-        </g>
-      ))}
-      {min < 0 && <line x1={padL} y1={zeroY} x2={W} y2={zeroY} stroke="#cbd5e1" />}
-      <line x1={x(lastActualIdx)} y1={padT} x2={x(lastActualIdx)} y2={H - padB} stroke="#e2e8f0" strokeDasharray="2,2" />
-      <path d={conePath} fill="rgba(99,102,241,0.12)" style={{ transition: "d .5s ease" }} />
-      <polyline points={aPts.join(" ")} fill="none" stroke="#6366f1" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-      <polyline points={(anchor + " " + fPts.join(" "))} fill="none" stroke="#6366f1" strokeWidth="2" strokeDasharray="4,3" strokeLinecap="round" />
-      {lastActualVal != null && <circle cx={x(lastActualIdx)} cy={y(lastActualVal)} r="3.4" fill="#6366f1" />}
-      {ticks.map((i) => (
-        <text key={i} x={x(i)} y={H - 4} fontSize="6.5" fill="#94a3b8" textAnchor="middle">{labels24[i]}</text>
-      ))}
-    </svg>
-  )
-}
-
-/* ============ 지역 히트맵 ============ */
-function RegionHeatmap({ rows }: { rows: Record<string, number>[] }) {
-  const cols: [string, string][] = [
-    ["전체", "inf_all_items"], ["식품", "inf_food"], ["쌀", "inf_rice"],
-    ["전기", "inf_electricity"], ["가전", "inf_appliances"], ["에어컨", "inf_aircon"],
-  ]
-  const top = [...rows].sort((a, b) => num(String(b.inf_all_items)) - num(String(a.inf_all_items))).slice(0, 6)
-  const shade = (v: number) => "rgba(225,29,72," + (0.06 + Math.max(0, Math.min(1, v / 25)) * 0.8).toFixed(3) + ")"
-  return (
-    <div className="mt-2 grid gap-0.5" style={{ gridTemplateColumns: "auto repeat(6,1fr)" }}>
-      <div />
-      {cols.map(([c]) => <div key={c} className="text-center text-[7.5px] text-gray-400">{c}</div>)}
-      {top.map((r, ri) => (
-        <React.Fragment key={ri}>
-          <div className="flex items-center justify-end pr-1 text-right text-[7.5px] text-gray-500">{String(r.geo).replace("Region ", "")}</div>
-          {cols.map(([, key]) => {
-            const v = num(String(r[key]))
-            const t = Math.max(0, Math.min(1, v / 25))
-            return (
-              <div key={key} className="flex h-[15px] items-center justify-center rounded-sm text-[7px] tabular-nums" style={{ background: shade(v), color: t > 0.55 ? "#fff" : "#334155" }}>
-                {v.toFixed(1)}
-              </div>
-            )
-          })}
-        </React.Fragment>
-      ))}
-    </div>
-  )
-}
-
-/* ============ 지역 분포 ============ */
-function RegionDist({ rows }: { rows: Record<string, number>[] }) {
-  const vals = rows.map((r) => num(String(r.inf_all_items))).filter((v) => v > 0)
-  if (!vals.length) return null
-  const lo = Math.min(...vals), hi = Math.max(...vals)
-  const mean = vals.reduce((a, b) => a + b, 0) / vals.length
-  const sd = Math.sqrt(vals.reduce((a, b) => a + (b - mean) ** 2, 0) / vals.length)
-  const px = (v: number) => ((v - lo) / (hi - lo || 1)) * 100
-  return (
-    <div>
-      <div className="mt-1 flex gap-3 text-[9px] text-gray-400">
-        <div>평균<b className="block text-[13px] text-gray-800">{mean.toFixed(1)}</b></div>
-        <div>범위<b className="block text-[13px] text-gray-800">{lo.toFixed(1)}–{hi.toFixed(1)}</b></div>
-        <div>σ<b className="block text-[13px] text-gray-800">{sd.toFixed(1)}</b></div>
-      </div>
-      <div className="relative mt-3 h-9">
-        <div className="absolute inset-x-0 bottom-3 border-t border-gray-200" />
-        <div className="absolute bottom-0 top-0.5 border-l border-dashed border-rose-400" style={{ left: px(mean) + "%" }} />
-        {vals.map((v, i) => (
-          <div key={i} className="absolute h-1.5 w-1.5 -translate-x-1/2 rounded-full bg-indigo-400/50" style={{ left: px(v) + "%", top: 12 + (i % 3) * 6 }} />
-        ))}
-        <span className="absolute bottom-0 left-0 text-[8px] text-gray-400">{lo.toFixed(1)}</span>
-        <span className="absolute bottom-0 right-0 text-[8px] text-gray-400">{hi.toFixed(1)}</span>
-      </div>
-    </div>
-  )
-}
-
-/* ============ 실질 지표 (가로형) ============ */
-function RealBars({ yoy, policyRate, remitYoY }: { yoy: number; policyRate: number | null; remitYoY: number | null }) {
-  const rows: { name: string; sub: string; v: number | null }[] = [
-    { name: "정책금리", sub: (policyRate ?? "?") + "−" + yoy.toFixed(1), v: policyRate != null ? +(policyRate - yoy).toFixed(2) : null },
-    { name: "송금", sub: remitYoY != null ? remitYoY.toFixed(1) + "−" + yoy.toFixed(1) : "확인 후 기입", v: remitYoY != null ? +(remitYoY - yoy).toFixed(2) : null },
-    { name: "대출금리", sub: "확인 후 기입", v: null },
-    { name: "예금금리", sub: "확인 후 기입", v: null },
-    { name: "최저임금", sub: "확인 후 기입", v: null },
-  ]
-  const MAX = 5
-  return (
-    <div className="mt-2 grid grid-cols-5 gap-1">
-      {rows.map((r) => {
-        const has = r.v != null
-        const neg = has && (r.v as number) < 0
-        const h = has ? Math.min(38, (Math.abs(r.v as number) / MAX) * 38) : 0
-        return (
-          <div key={r.name} className="flex flex-col items-center">
-            <div className="relative h-[76px] w-full">
-              <div className="absolute inset-x-0 top-1/2 border-t border-dashed border-gray-200" />
-              {has && (
-                <div
-                  className="absolute left-[22%] w-[56%] rounded-sm"
-                  style={{ height: h, [neg ? "top" : "bottom"]: "50%", background: neg ? "linear-gradient(180deg,rgba(225,29,72,.55),rgba(225,29,72,.9))" : "linear-gradient(180deg,rgba(5,150,105,.9),rgba(5,150,105,.55))" } as React.CSSProperties}
-                />
-              )}
-              <div className="absolute inset-x-0 text-center text-[9.5px] font-extrabold tabular-nums" style={{ [neg ? "top" : "bottom"]: `${38 + h + 2}px`, color: has ? (neg ? "#e11d48" : "#059669") : "#cbd5e1" } as React.CSSProperties}>
-                {has ? ((r.v as number) > 0 ? "+" : "") + (r.v as number).toFixed(1) : "—"}
-              </div>
-            </div>
-            <div className="mt-1 text-center text-[8px] font-semibold text-gray-600">
-              {r.name}
-              <span className="block text-[6.5px] font-normal text-gray-400">{r.sub}</span>
-            </div>
-          </div>
-        )
-      })}
-    </div>
-  )
+/** 월별 시계열을 연도 오버레이(2025·2026)로 분해 */
+function yearOverlay(dates: string[], values: number[]) {
+  const y25: (number | null)[] = Array(12).fill(null)
+  const y26: (number | null)[] = Array(12).fill(null)
+  dates.forEach((d, i) => {
+    const yr = d.slice(0, 4), mo = Number(d.slice(5, 7)) - 1
+    if (yr === "2025") y25[mo] = values[i]
+    else if (yr === "2026") y26[mo] = values[i]
+  })
+  return { y25, y26 }
 }
 
 /* ============ 물가·생활비 도메인 ============ */
-function PricesView({ data, byKey }: { data: PricesDomain; byKey: Record<string, Card> }) {
-  const [basis, setBasis] = useState<"mom" | "ytd">("mom")
-  const all = data.idx["CPI_all_items"]
+function PricesView({ data, inf, byKey }: { data: PricesDomain; inf: Mon; byKey: Record<string, Card> }) {
+  const infAll = inf["INF_all_items"]
 
-  const m = useMemo(() => {
-    if (!all || all.values.length < 13) return null
-    const v = all.values, dts = all.dates
-    const nLast = v.length - 1
-    const yoy = +((v[nLast] / v[nLast - 12] - 1) * 100).toFixed(1)
-    const mom = v.map((x, i) => (i >= 1 ? +((x / v[i - 1] - 1) * 100).toFixed(2) : null))
-    const ytd = v.map((x, i) => {
-      const yr = dts[i].slice(0, 4)
-      let base = -1
-      for (let j = i; j >= 0; j--) if (dts[j].slice(0, 4) === yr && dts[j].slice(5, 7) === "01") { base = j - 1; break }
-      return base >= 0 ? +((x / v[base] - 1) * 100).toFixed(2) : null
-    })
-    const fdates = [1, 2, 3, 4, 5, 6].map((k) => addMonths(dts[nLast], k))
-    const series = basis === "mom" ? mom : ytd
-    const finite = series.filter((z): z is number => z != null)
-    const last6 = finite.slice(-6)
-    const avg = last6.reduce((a, b) => a + b, 0) / (last6.length || 1)
-    const fc = basis === "mom"
-      ? fdates.map(() => +avg.toFixed(2))
-      : fdates.map((_, i) => +((series[nLast] ?? avg) + avg * (i + 1)).toFixed(2))
-    const momNow = mom[nLast] ?? 0
-    const ytdNow = ytd[nLast] ?? 0
-    return { yoy, series, adates: dts, fdates, fc, momNow, ytdNow, lastDate: dts[nLast] }
-  }, [all, basis])
+  const h = useMemo(() => {
+    if (!infAll || !infAll.values.length) return null
+    const { y25, y26 } = yearOverlay(infAll.dates, infAll.values)
+    let lastMo = -1
+    for (let i = 11; i >= 0; i--) if (y26[i] != null) { lastMo = i; break }
+    const cur = lastMo >= 0 ? (y26[lastMo] as number) : 0
+    const prevYr = lastMo >= 0 && y25[lastMo] != null ? (y25[lastMo] as number) : null
+    const delta = prevYr != null ? +(cur - prevYr).toFixed(1) : null
+    const start = Math.max(0, lastMo - 5)
+    const curArr: number[] = [], prevArr: number[] = [], labs: string[] = []
+    for (let m = start; m <= lastMo; m++) {
+      curArr.push((y26[m] ?? 0) as number)
+      prevArr.push((y25[m] ?? 0) as number)
+      labs.push(MONTHS[m])
+    }
+    return { cur, prevYr, delta, lastMo, curArr, prevArr, labs }
+  }, [infAll])
 
-  if (!m) return <p className="text-[12px] text-gray-400">데이터 로딩 중…</p>
+  if (!h) return <div className="h-72 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />
 
+  const up = (h.delta ?? 0) > 0
   const appinf = num(byKey.appinf?.value), cpi = num(byKey.cpi?.value)
   const gap = +(appinf - cpi).toFixed(1)
   const remit = byKey.remit, fx = byKey.fx, cci = byKey.cci, durable = byKey.durable, food = byKey.foodinf
-  const peso = remit && fx ? (num(remit.value) * num(fx.value)) : null
+  const peso = remit && fx ? num(remit.value) * num(fx.value) : null
+  const realPolicy = data.policyRate != null ? +(data.policyRate - h.cur).toFixed(1) : null
+
+  const cols: [string, string][] = [["전체", "inf_all_items"], ["식품", "inf_food"], ["쌀", "inf_rice"], ["전기", "inf_electricity"], ["가전", "inf_appliances"], ["에어컨", "inf_aircon"]]
+  const topReg = [...data.region].sort((a, b) => num(String(b.inf_all_items)) - num(String(a.inf_all_items))).slice(0, 6)
+  const regVals = data.region.map((r) => num(String(r.inf_all_items))).filter((v) => v > 0)
+  const rMean = regVals.length ? regVals.reduce((a, b) => a + b, 0) / regVals.length : 0
+  const rLo = regVals.length ? Math.min(...regVals) : 0
+  const rHi = regVals.length ? Math.max(...regVals) : 0
+  const shade = (v: number) => "rgba(225,29,72," + (0.06 + Math.max(0, Math.min(1, v / 25)) * 0.82).toFixed(3) + ")"
 
   return (
-    <div className="flex flex-col gap-2.5">
-      <div className="flex items-center justify-between gap-2">
-        <div className="text-[14px] font-bold text-gray-900">물가·생활비 <span className="text-[9px] font-normal text-gray-400">· {m.lastDate.slice(0, 7).replace("-", ".")} · PSA/BSP</span></div>
-        <BasisToggle value={basis} onChange={setBasis} />
-      </div>
-
-      <div className="grid gap-2.5 md:grid-cols-[1.75fr_1fr]">
-        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-shadow hover:shadow-md">
-          <div className="flex items-center gap-1.5 text-[12px] font-bold text-gray-900">
-            전체 물가
-            <span className="rounded bg-rose-50 px-1.5 py-0.5 text-[8px] font-bold text-rose-600">목표 상회</span>
-            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[8px] font-bold text-slate-500">전망 EST</span>
-          </div>
-          <div className="mt-0.5 text-[23px] font-bold tabular-nums text-gray-900">
-            {m.yoy}<span className="text-[10px] font-medium text-gray-400">% YoY · 목표 2–4% · 전망앵커 BSP 6.4→4.5%</span>
-          </div>
-          <div className="mt-0.5 text-[10px] tabular-nums text-gray-500">
-            당월 {m.momNow > 0 ? "+" : ""}{m.momNow.toFixed(1)}% · 올해누적 {m.ytdNow > 0 ? "+" : ""}{m.ytdNow.toFixed(1)}%
-          </div>
-          <FanChart actual={m.series} adates={m.adates} fdates={m.fdates} forecast={m.fc} />
-          <div className="mt-1 flex flex-wrap gap-2.5 text-[8px] text-gray-400">
-            <span><span className="mr-1 inline-block h-0 w-3 border-t-2 border-indigo-500 align-middle" />실적</span>
-            <span><span className="mr-1 inline-block h-0 w-3 border-t-2 border-dashed border-indigo-500 align-middle" />전망(추세연장·EST)</span>
-            <span>◦ 롤링 24개월(18실적+6전망) · 목표밴드 2–4%</span>
-          </div>
-        </div>
-
-        <div className="flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
-          <div className="flex items-center gap-1.5 px-3 pb-1.5 pt-2.5">
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[9px] font-bold text-amber-700">● 중립·지연</span>
-            <span className="text-[11px] font-bold text-gray-900">가전 수요</span>
-          </div>
-          <div className="border-b border-gray-100 px-3 pb-2">
-            <div className="text-[9px] text-gray-400">실질가격 갭 · 가전−전체</div>
-            <div className={"text-[24px] font-extrabold leading-tight tabular-nums " + (gap < 0 ? "text-emerald-600" : "text-rose-600")}>{gap > 0 ? "+" : ""}{gap}<span className="text-[10px] font-semibold text-gray-400">%p</span></div>
-          </div>
-          <div className="flex flex-col gap-1.5 px-3 py-2 text-[10px] text-gray-600">
-            {peso != null && <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />OFW 구매력<span className="ml-auto font-bold tabular-nums text-gray-800">₱{peso.toFixed(0)}B</span></div>}
-            {food && <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" />필수재(식품)<span className="ml-auto font-bold tabular-nums text-gray-800">{food.value}%</span></div>}
-            {durable && <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" />내구재 의향<span className="ml-auto font-bold tabular-nums text-gray-800">{durable.value}</span></div>}
-            {cci && <div className="flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-rose-500" />소비자신뢰<span className="ml-auto font-bold tabular-nums text-gray-800">{cci.value}</span></div>}
-          </div>
-          <div className="mt-auto px-3 pb-2.5 text-[9px] font-semibold text-indigo-500">저가·필수형 우선 ▸</div>
-        </div>
-      </div>
-
-      <div className="grid gap-2.5 md:grid-cols-[1.35fr_1fr]">
-        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-          <div className="text-[11.5px] font-bold text-gray-900">품목별 기여도 <span className="text-[8px] font-normal text-gray-400">· {basis === "mom" ? "당월" : "누적"} · 선=전체지수</span></div>
-          <div className="mt-2 flex h-[130px] flex-col items-center justify-center gap-1.5 rounded-lg border border-dashed border-gray-200 bg-gray-50/60 text-center">
-            <div className="flex gap-1">
-              {[10, 16, 22, 14, 8].map((h, i) => <div key={i} className="w-2.5 animate-pulse rounded-sm bg-gray-200" style={{ height: h * 2, animationDelay: i * 120 + "ms" }} />)}
+    <div className="flex flex-col gap-4">
+      <div className="grid gap-4 lg:grid-cols-[1.9fr_1fr]">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <h3 className="text-[15px] font-bold tracking-tight text-gray-900">전체 물가</h3>
+              {h.delta != null && (
+                <span className={"inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[12px] font-bold " + (up ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600")}>
+                  {up ? "▲" : "▼"}{Math.abs(h.delta)}%p
+                </span>
+              )}
             </div>
-            <div className="text-[10px] font-semibold text-gray-500">PSA 공식 가중치 수집 중</div>
-            <div className="text-[8.5px] text-gray-400">COICOP-2018 부문 가중치 적재 후 정식 기여도 분해</div>
+            <div className="flex items-center gap-2.5 text-[11px] text-gray-400">
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-gray-300" />2025</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-indigo-500" />2026</span>
+            </div>
+          </div>
+          <div className="mt-1.5 flex items-end gap-2">
+            <p className="text-[28px] font-bold leading-none tabular-nums text-gray-900">
+              <CountUp value={h.cur} decimals={1} />
+              <span className="text-[15px] font-semibold text-gray-500">%</span>
+            </p>
+            {h.prevYr != null && <p className="pb-0.5 text-[12px] text-gray-400">전년 동월 {h.prevYr}%</p>}
+          </div>
+          <div className="mt-3">
+            <ProChart cur={h.curArr} prev={h.prevArr} labels={h.labs} unit="%" curName="2026" prevName="2025" decimals={1} />
+          </div>
+          <p className="mt-2 border-t border-gray-100 pt-2 text-[11px] text-gray-400">출처 PSA CPI · 전년비(YoY) · BSP 목표 2–4%</p>
+        </div>
+
+        <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <h3 className="text-[15px] font-bold text-gray-900">가전 수요</h3>
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">중립·지연</span>
+          </div>
+          <div className="mt-2">
+            <p className="text-[12px] text-gray-500">가전 실질가격 갭 <span className="text-gray-400">(가전−전체)</span></p>
+            <p className={"text-[26px] font-bold leading-none tabular-nums " + (gap < 0 ? "text-emerald-600" : "text-rose-600")}>
+              {gap > 0 ? "+" : ""}{gap}<span className="text-[14px] font-semibold text-gray-500">%p</span>
+            </p>
+            <p className="mt-1 text-[11px] text-gray-400">{gap < 0 ? "가전이 전체보다 저렴 → 실질 매력↑" : "가전이 전체보다 비쌈 → 구매 저항"}</p>
+          </div>
+          <div className="mt-3 flex flex-col gap-2 border-t border-gray-100 pt-3 text-[12px]">
+            {peso != null && <div className="flex items-center gap-2 text-gray-600"><span className="h-2 w-2 rounded-full bg-emerald-500" />OFW 구매력<span className="ml-auto font-bold tabular-nums text-gray-900">₱{peso.toFixed(0)}B</span></div>}
+            {food && <div className="flex items-center gap-2 text-gray-600"><span className="h-2 w-2 rounded-full bg-rose-500" />필수재(식품)<span className="ml-auto font-bold tabular-nums text-gray-900">{food.value}%</span></div>}
+            {durable && <div className="flex items-center gap-2 text-gray-600"><span className="h-2 w-2 rounded-full bg-rose-500" />내구재 구매의향<span className="ml-auto font-bold tabular-nums text-gray-900">{durable.value}</span></div>}
+            {cci && <div className="flex items-center gap-2 text-gray-600"><span className="h-2 w-2 rounded-full bg-rose-500" />소비자신뢰 CCI<span className="ml-auto font-bold tabular-nums text-gray-900">{cci.value}</span></div>}
+          </div>
+          <p className="mt-auto pt-3 text-[12px] font-semibold text-indigo-600">→ 저가·필수형 우선, 프리미엄은 심리 반등 후</p>
+        </div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <h3 className="text-[15px] font-bold text-gray-900">품목별 물가</h3>
+            <span className="text-[11px] text-gray-400">전년비 %, 6월</span>
+          </div>
+          <div className="mt-3 flex flex-col gap-2.5">
+            {[["식품", "INF_food"], ["쌀", "INF_rice"], ["전기", "INF_electricity"], ["LPG", "INF_lpg"], ["운송", "INF_transport"], ["가전", "INF_household_appliances"]].map(([label, key]) => {
+              const s = inf[key]
+              const v = s && s.values.length ? s.values[s.values.length - 1] : null
+              const w = v != null ? Math.min(100, (Math.abs(v) / 35) * 100) : 0
+              return (
+                <div key={key} className="flex items-center gap-3">
+                  <span className="w-12 shrink-0 text-[13px] text-gray-600">{label}</span>
+                  <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100">
+                    <div className="h-full rounded bg-indigo-400 transition-all duration-500" style={{ width: w + "%" }} />
+                  </div>
+                  <span className="w-14 shrink-0 text-right text-[13px] font-bold tabular-nums text-gray-900">{v != null ? v.toFixed(1) + "%" : "–"}</span>
+                </div>
+              )
+            })}
+          </div>
+          <p className="mt-3 border-t border-gray-100 pt-2 text-[11px] text-gray-400">부문별 기여도 분해는 PSA 공식 가중치 적재 후 제공</p>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <h3 className="text-[15px] font-bold text-gray-900">실질 지표</h3>
+            <span className="text-[11px] text-gray-400">명목 − 물가 {h.cur}%</span>
+          </div>
+          <div className="mt-3 flex items-end gap-2">
+            <p className={"text-[26px] font-bold leading-none tabular-nums " + ((realPolicy ?? 0) < 0 ? "text-rose-600" : "text-emerald-600")}>
+              {realPolicy != null ? (realPolicy > 0 ? "+" : "") + realPolicy : "–"}<span className="text-[14px] font-semibold text-gray-500">%p</span>
+            </p>
+            <p className="pb-0.5 text-[12px] text-gray-500">실질 정책금리 <span className="text-gray-400">(BSP {data.policyRate ?? "–"}% − 물가)</span></p>
+          </div>
+          <p className="mt-1 text-[11px] text-gray-400">{(realPolicy ?? 0) < 0 ? "실질금리 마이너스 = 완화적이나 물가 재가속에 인하 지연" : "실질금리 플러스 = 긴축적"}</p>
+          <div className="mt-3 flex flex-wrap gap-1.5 border-t border-gray-100 pt-3">
+            {["실질 대출금리", "실질 예금금리", "실질 최저임금", "실질 송금"].map((n) => (
+              <span key={n} className="rounded-full bg-gray-100 px-2.5 py-1 text-[11px] text-gray-400">{n} · 확인 후 기입</span>
+            ))}
           </div>
         </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-          <div className="flex items-center gap-1.5 text-[11.5px] font-bold text-gray-900">실질 지표 <span className="ml-auto rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[8px] font-normal text-gray-500">물가 <b className="text-rose-600">{m.yoy}%</b></span></div>
-          <RealBars yoy={m.yoy} policyRate={data.policyRate} remitYoY={remit?.deltaYoy ?? null} />
-          <div className="mt-1 flex justify-between text-[7px] text-gray-400"><span>−5 압박</span><span>0</span><span>+5 여유</span></div>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <h3 className="text-[15px] font-bold text-gray-900">지역 × 품목 물가</h3>
+            <span className="text-[11px] text-gray-400">전년비 %, 상위 6개 지역</span>
+          </div>
+          <div className="mt-3 grid gap-1" style={{ gridTemplateColumns: "auto repeat(6,1fr)" }}>
+            <div />
+            {cols.map(([c]) => <div key={c} className="pb-1 text-center text-[11px] font-medium text-gray-400">{c}</div>)}
+            {topReg.map((r, ri) => (
+              <React.Fragment key={ri}>
+                <div className="flex items-center justify-end pr-2 text-right text-[11px] text-gray-600">{String(r.geo).replace(/\(.*/, "").replace("Region ", "").trim().slice(0, 10)}</div>
+                {cols.map(([, key]) => {
+                  const v = num(String(r[key]))
+                  const t = Math.max(0, Math.min(1, v / 25))
+                  return <div key={key} className="flex h-7 items-center justify-center rounded text-[11px] font-medium tabular-nums" style={{ background: shade(v), color: t > 0.55 ? "#fff" : "#334155" }}>{v.toFixed(1)}</div>
+                })}
+              </React.Fragment>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <h3 className="text-[15px] font-bold text-gray-900">지역 물가 분포 <span className="text-[11px] font-normal text-gray-400">전국 {data.region.length}곳</span></h3>
+          <div className="mt-3 flex gap-5">
+            <div><p className="text-[11px] text-gray-400">평균</p><p className="text-[22px] font-bold tabular-nums text-gray-900">{rMean.toFixed(1)}<span className="text-[12px] text-gray-400">%</span></p></div>
+            <div><p className="text-[11px] text-gray-400">범위</p><p className="text-[22px] font-bold tabular-nums text-gray-900">{rLo.toFixed(1)}–{rHi.toFixed(1)}</p></div>
+          </div>
+          <div className="relative mt-5 h-12">
+            <div className="absolute inset-x-0 bottom-4 border-t border-gray-200" />
+            <div className="absolute bottom-1 top-0 border-l border-dashed border-rose-400" style={{ left: (((rMean - rLo) / (rHi - rLo || 1)) * 100) + "%" }} />
+            {regVals.map((v, i) => (
+              <div key={i} className="absolute h-2 w-2 -translate-x-1/2 rounded-full bg-indigo-400/60" style={{ left: (((v - rLo) / (rHi - rLo || 1)) * 100) + "%", top: 8 + (i % 3) * 8 }} />
+            ))}
+            <span className="absolute bottom-0 left-0 text-[10px] text-gray-400">{rLo.toFixed(1)}%</span>
+            <span className="absolute bottom-0 right-0 text-[10px] text-gray-400">{rHi.toFixed(1)}%</span>
+          </div>
+          <p className="mt-2 text-[11px] text-gray-400">지역 편차 {(rHi - rLo).toFixed(1)}%p · 점선=전국 평균</p>
         </div>
       </div>
 
-      <div className="grid gap-2.5 md:grid-cols-[1.25fr_1fr]">
-        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-          <div className="text-[11.5px] font-bold text-gray-900">지역 × 품목 <span className="text-[8px] font-normal text-gray-400">· 물가 상위 {Math.min(6, data.region.length)}개 지역</span></div>
-          <RegionHeatmap rows={data.region} />
-        </div>
-        <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm">
-          <div className="text-[11.5px] font-bold text-gray-900">지역 물가 분포 <span className="text-[8px] font-normal text-gray-400">· 전국 {data.region.length}곳</span></div>
-          <RegionDist rows={data.region} />
-        </div>
-      </div>
-
-      <p className="text-[9px] leading-snug text-gray-400">색=사업영향(원가·물가↑ 로즈, 수요·구매력↑ 에메랄드) · 전망·기대는 ESTIMATED · 실질 대출/예금/임금은 확인 후 기입</p>
+      <p className="text-[11px] leading-relaxed text-gray-400">색=사업영향(원가·물가↑ 로즈, 수요·구매력↑ 에메랄드) · 실질 대출/예금/임금·송금은 데이터 확인 후 기입</p>
     </div>
   )
 }
 
-/* ============ 준비 중 도메인 ============ */
 function Soon({ label }: { label: string }) {
   return (
     <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 text-center">
-      <div className="text-[13px] font-bold text-gray-500">{label}</div>
-      <div className="text-[11px] text-gray-400">물가·생활비 템플릿을 이 도메인에도 적용 예정</div>
+      <div className="text-[14px] font-bold text-gray-500">{label}</div>
+      <div className="text-[12px] text-gray-400">물가·생활비 템플릿을 이 도메인에도 적용 예정</div>
     </div>
   )
 }
@@ -337,10 +243,12 @@ export default function Page() {
   const [active, setActive] = useState("prices")
   const [band, setBand] = useState<Card[] | null>(null)
   const [prices, setPrices] = useState<PricesDomain | null>(null)
+  const [inf, setInf] = useState<Mon>({})
 
   useEffect(() => {
     homeBand().then(setBand).catch(() => setBand([]))
     pricesDomain().then(setPrices).catch(() => setPrices({ idx: {}, forecast: [], policyRate: null, region: [] }))
+    macroMonthly(["INF_all_items", "INF_food", "INF_rice", "INF_electricity", "INF_lpg", "INF_transport", "INF_household_appliances"]).then(setInf).catch(() => setInf({}))
   }, [])
 
   const byKey = useMemo(() => {
@@ -352,11 +260,10 @@ export default function Page() {
   function view() {
     if (active === "core") return <DailyIndicators />
     if (active === "prices") {
-      if (!prices || band === null) return <div className="h-64 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />
-      return <PricesView data={prices} byKey={byKey} />
+      if (!prices || band === null) return <div className="h-72 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />
+      return <PricesView data={prices} inf={inf} byKey={byKey} />
     }
-    const label = NAV.find((n) => n.id === active)?.ko ?? ""
-    return <Soon label={label} />
+    return <Soon label={NAV.find((n) => n.id === active)?.ko ?? ""} />
   }
 
   return (
