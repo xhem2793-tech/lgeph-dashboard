@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react"
 import DailyIndicators from "@/components/DailyIndicators"
 import { ProChart, CountUp } from "@/components/ProChartCore"
-import { homeBand, econSeries } from "@/lib/supabase"
+import { homeBand, econSeries, macroMonthly } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 import { HBars, Bars, Gauge, CHART_COLORS } from "@/components/Charts"
 
@@ -28,7 +28,7 @@ const ORIGIN: Record<string, string[]> = {
 }
 
 const NAV = [
-  { id: "core", ko: "핵심 요약", en: "Overview", count: 12 },
+  { id: "core", ko: "물가·생활비", en: "Prices", count: 10 },
   { id: "today", ko: "오늘의 수치", en: "Today", count: 3 },
   { id: "macro", ko: "시장·수요 환경", en: "Demand", count: 5 },
   { id: "cost", ko: "원가·물가 압력", en: "Cost & CPI", count: 6 },
@@ -266,6 +266,43 @@ function Skel() {
   )
 }
 
+function MacroCard({ label, unit, s, note }: { label: string; unit: string; s?: { dates: string[]; values: number[] }; note?: string }) {
+  const vals = s?.values ?? []
+  const last = vals.length ? vals[vals.length - 1] : null
+  const mom = vals.length > 1 ? vals[vals.length - 1] - vals[vals.length - 2] : null
+  const labels = (s?.dates ?? []).map((x) => Number(x.slice(5, 7)) + "월")
+  const yr = s?.dates?.length ? s.dates[s.dates.length - 1].slice(0, 4) : ""
+  const bad = (mom ?? 0) > 0
+  return (
+    <div className="flex h-full flex-col rounded-xl bg-[#f9fafb] p-3.5 transition-all duration-300 ease-out hover:-translate-y-1 hover:bg-white hover:shadow-[0_12px_34px_-12px_rgba(99,102,241,0.4)]">
+      <div className="flex items-start justify-between gap-2">
+        <h3 className="text-[13px] font-bold tracking-tight text-gray-900">{label}</h3>
+        <div className="shrink-0 text-right">
+          <p className="text-[18px] font-bold leading-none tabular-nums text-gray-900">
+            {last == null ? "–" : last.toFixed(1)}
+            <span className="text-[10px] font-medium text-gray-400">{unit}</span>
+          </p>
+          {mom != null && (
+            <p className={"mt-0.5 text-[10px] font-semibold tabular-nums " + (bad ? "text-rose-600" : "text-emerald-600")}>
+              전월 {mom > 0 ? "+" : ""}
+              {mom.toFixed(1)}
+              {unit}
+            </p>
+          )}
+        </div>
+      </div>
+      {vals.length > 1 ? (
+        <div className="mt-2" style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }}>
+          <ProChart cur={vals} labels={labels} unit={unit} curName={yr} prevName="" decimals={1} />
+        </div>
+      ) : (
+        <p className="mt-2 text-[11px] text-gray-400">시계열 로딩…</p>
+      )}
+      {note && <p className="mt-auto pt-2 text-[10px] leading-snug text-gray-400">{note}</p>}
+    </div>
+  )
+}
+
 export default function Page() {
   const { lang } = useLang()
   const en = lang === "en"
@@ -273,6 +310,23 @@ export default function Page() {
   const [series, setSeries] = useState<Record<string, Series>>({})
   const [active, setActive] = useState("core")
   const [q, setQ] = useState("")
+  const [macro, setMacro] = useState<Record<string, { dates: string[]; values: number[] }>>({})
+  useEffect(() => {
+    macroMonthly([
+      "INF_all_items",
+      "INF_food",
+      "INF_rice",
+      "INF_electricity",
+      "INF_lpg",
+      "INF_transport",
+      "INF_restaurants",
+      "INF_housing_utilities",
+      "INF_household_appliances",
+      "INF_aircon",
+    ])
+      .then(setMacro)
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     Promise.all([homeBand(), econSeries()])
@@ -327,65 +381,17 @@ export default function Page() {
   function view() {
     if (active === "core")
       return (
-        <div className="grid gap-3 lg:grid-cols-3">
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm lg:col-span-3">
-            <h3 className="mb-2.5 text-[13px] font-bold tracking-tight text-gray-900">핵심 지표 <span className="text-[10px] font-normal text-gray-400">현재값</span></h3>
-            <div className="grid grid-cols-3 gap-x-4 gap-y-2.5 sm:grid-cols-4 lg:grid-cols-8">
-              {(band ?? []).map((c) => (
-                <div key={c.key}>
-                  <p className="truncate text-[10px] text-gray-400">{en ? c.labelEn : c.label}</p>
-                  <p className="text-[15px] font-bold leading-tight tabular-nums text-gray-900">
-                    {c.prefix}
-                    {c.value}
-                    <span className="text-[10px] font-medium text-gray-400">{c.suffix}</span>
-                  </p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <h3 className="mb-2 text-[13px] font-bold tracking-tight text-gray-900">물가 품목별 <span className="text-[10px] font-normal text-gray-400">YoY %</span></h3>
-            <HBars
-              data={[
-                { label: "LPG", value: num(byKey.lpginf?.value) },
-                { label: "쌀", value: num(byKey.riceinf?.value) },
-                { label: "운송", value: num(byKey.traninf?.value) },
-                { label: "전기", value: num(byKey.elec?.value) },
-                { label: "전체", value: num(byKey.cpi?.value) },
-                { label: "식품", value: num(byKey.foodinf?.value) },
-                { label: "가전", value: num(byKey.appinf?.value) },
-                { label: "에어컨", value: num(byKey.acinf?.value) },
-              ].sort((a, b) => b.value - a.value)}
-              unit="%"
-              decimals={1}
-              color={CHART_COLORS.rose}
-              highlight="가전"
-            />
-            <p className="mt-2 text-[10px] leading-snug text-gray-400">가전·에어컨 물가가 전체보다 낮으면 실질가격 매력 상승</p>
-          </section>
-
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <h3 className="mb-1 text-[13px] font-bold tracking-tight text-gray-900">부문 성장률 <span className="text-[10px] font-normal text-gray-400">YoY %</span></h3>
-            <Bars
-              data={[
-                { label: "소매도매", value: num(byKey.retgva?.value) },
-                { label: "건설", value: num(byKey.congva?.value) },
-              ]}
-              pos={CHART_COLORS.emer}
-              neg={CHART_COLORS.rose}
-              unit="%"
-            />
-            <p className="mt-2 text-[10px] leading-snug text-gray-400">가전 수요와 직결되는 유통·건설 경기</p>
-          </section>
-
-          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <h3 className="mb-2 text-[13px] font-bold tracking-tight text-gray-900">소비심리 · 원가압박</h3>
-            <div className="flex flex-wrap items-center justify-around gap-3">
-              <Gauge value={num(byKey.cci?.value)} min={-60} max={10} sub="소비자신뢰(CCI)" color={CHART_COLORS.rose} />
-              <Gauge value={d.costIdx} min={0} max={100} sub="원가압박 지수" color={CHART_COLORS.rose} />
-            </div>
-          </section>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <MacroCard label="전체 물가" unit="%" s={macro.INF_all_items} note="가전 구매 여력의 바닥 지표 — 낮아야 가처분소득 여유" />
+          <MacroCard label="식품" unit="%" s={macro.INF_food} note="필수지출 1순위 — 오르면 내구재 소비 후순위" />
+          <MacroCard label="쌀" unit="%" s={macro.INF_rice} />
+          <MacroCard label="전기료" unit="%" s={macro.INF_electricity} note="에어컨·냉장고 운영비 직결 — 고효율 소구 근거" />
+          <MacroCard label="LPG" unit="%" s={macro.INF_lpg} />
+          <MacroCard label="운송" unit="%" s={macro.INF_transport} note="물류비 — 유통 판가 압력" />
+          <MacroCard label="외식·숙박" unit="%" s={macro.INF_restaurants} />
+          <MacroCard label="주거·수도·연료" unit="%" s={macro.INF_housing_utilities} />
+          <MacroCard label="가전제품" unit="%" s={macro.INF_household_appliances} note="가전 판가 추세 — 낮을수록 실질가격 매력↑" />
+          <MacroCard label="에어컨" unit="%" s={macro.INF_aircon} note="RAC 판가 — 성수기 프로모 판단" />
         </div>
       )
     if (active === "today") return <DailyIndicators />
