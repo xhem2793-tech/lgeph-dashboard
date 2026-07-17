@@ -144,3 +144,21 @@ import { Segmented } from "@/components/Segmented"
 8. 색은 §1 팔레트/카테고리 맵에서만(색=신호는 dot·얇은 바)
 9. 문체·Confidence·So What(§5)
 10. 배포 후 commits ✓ 및 라이브 육안 확인
+
+
+---
+
+## 11. 페이지 + 사이드바 레이아웃 (표준) — 주요 뉴스·경제지표 공통
+
+새 목록/멀티뷰 페이지는 이 골격을 그대로 복제한다. 기준 페이지 = 주요 뉴스, 경제지표.
+
+- **컨테이너**: main = px-4 pb-10 pt-3 sm:px-6. 페이지 제목(h1) 없음 — 제목은 좌측 메뉴가 담당(우측 섹션헤더 중복 금지).
+- **그리드**: grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]
+- **좌측 메뉴(aside)**: h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]. 등장 애니메이션 = 패널 전체 플로팅: style animation fadeUp .5s ease both / animation-delay 0.05s (개별 항목 스태거 금지).
+  - 헤더 "보기" 14px 볼드. nav flex flex-col gap-0.5.
+  - 항목 버튼: group w-full rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] + 활성 bg-indigo-50 / 비활성 hover:bg-indigo-50/40.
+  - 라벨: flex-1 text-[13px] transition-colors duration-300 — 활성 font-semibold text-indigo-700 / 비활성 font-medium text-gray-800 group-hover:text-indigo-600. 우측 카운트 num text-[10px] text-gray-400.
+- **우측 콘텐츠**: div flex min-w-0 flex-col gap-4 안에 단일 section으로 감싼다 → min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-300 hover:shadow-md, style animation fadeUp .5s ease both / animation-delay 0.1s. 뷰 전환 시 key=활성ID로 재마운트(매번 플로팅).
+- **기간/정렬 토글(알약 스위치)**: inline-flex gap-1 rounded-full bg-gray-100 p-1; 버튼 rounded-full px-3 py-1 text-xs font-medium transition-all duration-300 ease-out active:scale-95, 활성 bg-indigo-600 text-white shadow-sm / 비활성 text-gray-500 hover:text-indigo-600. (뉴스 최신순/영향도순과 동일)
+- **메뉴 = 뷰 분리(탭형)**: 한 번에 한 뷰만 렌더. 스크롤 앵커 금지.
+- **keyframes fadeUp**: from opacity 0 translateY(12px) → to opacity 1 none. 공용 컴포넌트 미마운트 대비해 페이지에 style 태그로 주입.
