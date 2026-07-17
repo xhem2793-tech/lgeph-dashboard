@@ -5,6 +5,7 @@ import DailyIndicators from "@/components/DailyIndicators"
 import { ProChart, CountUp } from "@/components/ProChartCore"
 import { homeBand, econSeries } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
+import { HBars, Bars, Gauge, CHART_COLORS } from "@/components/Charts"
 
 /** 경제지표 페이지 — 주요뉴스형 좌측 메뉴 + 메뉴별 분리 뷰(카드).
  *
@@ -27,6 +28,7 @@ const ORIGIN: Record<string, string[]> = {
 }
 
 const NAV = [
+  { id: "core", ko: "핵심 요약", en: "Overview", count: 12 },
   { id: "today", ko: "오늘의 수치", en: "Today", count: 3 },
   { id: "macro", ko: "시장·수요 환경", en: "Demand", count: 5 },
   { id: "cost", ko: "원가·물가 압력", en: "Cost & CPI", count: 6 },
@@ -269,7 +271,7 @@ export default function Page() {
   const en = lang === "en"
   const [band, setBand] = useState<Card[] | null>(null)
   const [series, setSeries] = useState<Record<string, Series>>({})
-  const [active, setActive] = useState("today")
+  const [active, setActive] = useState("core")
   const [q, setQ] = useState("")
 
   useEffect(() => {
@@ -323,6 +325,69 @@ export default function Page() {
   })
 
   function view() {
+    if (active === "core")
+      return (
+        <div className="grid gap-3 lg:grid-cols-3">
+          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm lg:col-span-3">
+            <h3 className="mb-2.5 text-[13px] font-bold tracking-tight text-gray-900">핵심 지표 <span className="text-[10px] font-normal text-gray-400">현재값</span></h3>
+            <div className="grid grid-cols-3 gap-x-4 gap-y-2.5 sm:grid-cols-4 lg:grid-cols-8">
+              {(band ?? []).map((c) => (
+                <div key={c.key}>
+                  <p className="truncate text-[10px] text-gray-400">{en ? c.labelEn : c.label}</p>
+                  <p className="text-[15px] font-bold leading-tight tabular-nums text-gray-900">
+                    {c.prefix}
+                    {c.value}
+                    <span className="text-[10px] font-medium text-gray-400">{c.suffix}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <h3 className="mb-2 text-[13px] font-bold tracking-tight text-gray-900">물가 품목별 <span className="text-[10px] font-normal text-gray-400">YoY %</span></h3>
+            <HBars
+              data={[
+                { label: "LPG", value: num(byKey.lpginf?.value) },
+                { label: "쌀", value: num(byKey.riceinf?.value) },
+                { label: "운송", value: num(byKey.traninf?.value) },
+                { label: "전기", value: num(byKey.elec?.value) },
+                { label: "전체", value: num(byKey.cpi?.value) },
+                { label: "식품", value: num(byKey.foodinf?.value) },
+                { label: "가전", value: num(byKey.appinf?.value) },
+                { label: "에어컨", value: num(byKey.acinf?.value) },
+              ].sort((a, b) => b.value - a.value)}
+              unit="%"
+              decimals={1}
+              color={CHART_COLORS.rose}
+              highlight="가전"
+            />
+            <p className="mt-2 text-[10px] leading-snug text-gray-400">가전·에어컨 물가가 전체보다 낮으면 실질가격 매력 상승</p>
+          </section>
+
+          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <h3 className="mb-1 text-[13px] font-bold tracking-tight text-gray-900">부문 성장률 <span className="text-[10px] font-normal text-gray-400">YoY %</span></h3>
+            <Bars
+              data={[
+                { label: "소매도매", value: num(byKey.retgva?.value) },
+                { label: "건설", value: num(byKey.congva?.value) },
+              ]}
+              pos={CHART_COLORS.emer}
+              neg={CHART_COLORS.rose}
+              unit="%"
+            />
+            <p className="mt-2 text-[10px] leading-snug text-gray-400">가전 수요와 직결되는 유통·건설 경기</p>
+          </section>
+
+          <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+            <h3 className="mb-2 text-[13px] font-bold tracking-tight text-gray-900">소비심리 · 원가압박</h3>
+            <div className="flex flex-wrap items-center justify-around gap-3">
+              <Gauge value={num(byKey.cci?.value)} min={-60} max={10} sub="소비자신뢰(CCI)" color={CHART_COLORS.rose} />
+              <Gauge value={d.costIdx} min={0} max={100} sub="원가압박 지수" color={CHART_COLORS.rose} />
+            </div>
+          </section>
+        </div>
+      )
     if (active === "today") return <DailyIndicators />
     if (active === "macro")
       return (
