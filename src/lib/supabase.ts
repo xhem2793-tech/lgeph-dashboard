@@ -871,3 +871,75 @@ export async function macroMonthly(inds: string[], n = 18) {
   }
   return out
 }
+
+
+// ============================================================
+// 물가·생활비 도메인 데이터 (economy /prices)
+// ============================================================
+
+const CPI_KEYS = [
+  "CPI_all_items",
+  "CPI_food",
+  "CPI_rice",
+  "CPI_housing_utilities",
+  "CPI_electricity",
+  "CPI_lpg",
+  "CPI_transport",
+  "CPI_restaurants",
+  "CPI_household_appliances",
+  "CPI_aircon",
+] as const
+
+export type CpiSeries = Record<string, { dates: string[]; values: number[] }>
+
+export type PricesDomain = {
+  idx: CpiSeries
+  forecast: { source: string; date: string; value: number }[]
+  policyRate: number | null
+  region: Record<string, number>[]
+}
+
+export async function pricesDomain(): Promise<PricesDomain> {
+  const list = CPI_KEYS.map((s) => encodeURIComponent(s)).join(",")
+
+  const idxRows = (await sb(
+    "macro_indicators?geo_level=eq.national&indicator=in.(" +
+      list +
+      ")&order=period_date.asc&select=indicator,period_date,value"
+  )) as { indicator: string; period_date: string; value: number }[]
+
+  const idx: CpiSeries = {}
+  for (const r of idxRows) {
+    const g = (idx[r.indicator] = idx[r.indicator] || { dates: [], values: [] })
+    g.dates.push(r.period_date)
+    g.values.push(Number(r.value))
+  }
+
+  const fcRows = (await sb(
+    "macro_indicators?indicator=in.(cpi_inflation_forecast,cpi_forecast_adb)&order=period_date.asc&select=indicator,period_date,value,source"
+  )) as { indicator: string; period_date: string; value: number; source: string }[]
+  const forecast = fcRows.map((r) => ({
+    source: r.source || r.indicator,
+    date: r.period_date,
+    value: Number(r.value),
+  }))
+
+  const prRows = (await sb(
+    "macro_indicators?indicator=eq.BSP_policy_rate&order=period_date.desc&limit=1&select=value"
+  )) as { value: number }[]
+  const policyRate = prRows.length ? Number(prRows[0].value) : null
+
+  const regRows = (await sb(
+    "v_cost_of_living_regional?order=period_date.desc&select=geo,period_date,inf_all_items,inf_food,inf_rice,inf_electricity,inf_lpg,inf_transport,inf_appliances,inf_aircon"
+  )) as Record<string, number>[]
+  const seen = new Set<string>()
+  const region: Record<string, number>[] = []
+  for (const r of regRows) {
+    const k = String((r as any).geo)
+    if (seen.has(k)) continue
+    seen.add(k)
+    region.push(r)
+  }
+
+  return { idx, forecast, policyRate, region }
+}
