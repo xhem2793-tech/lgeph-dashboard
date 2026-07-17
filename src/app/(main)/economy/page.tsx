@@ -32,8 +32,8 @@ const num = (s: string | undefined) => {
   return Number.isFinite(v) ? v : 0
 }
 const addMonths = (iso: string, n: number) => {
-  const d = new Date(iso + "T00:00:00")
-  d.setMonth(d.getMonth() + n)
+  const p = iso.split("-").map(Number)
+  const d = new Date(Date.UTC(p[0], p[1] - 1 + n, 1))
   return d.toISOString().slice(0, 10)
 }
 const yyMo = (iso: string) => iso.slice(2, 4) + "." + iso.slice(5, 7)
@@ -104,21 +104,20 @@ function PricesView({ data, inf, byKey }: { data: PricesDomain; inf: Mon; byKey:
   const h = useMemo(() => {
     if (!infAll || infAll.values.length < 2) return null
     const dts = infAll.dates, vals = infAll.values
-    const lastIso = dts[dts.length - 1]
-    const cur = vals[vals.length - 1]
+    const N = Math.min(18, vals.length)
+    const aDates = dts.slice(vals.length - N)
+    const aVals = vals.slice(vals.length - N)
+    const cur = aVals[aVals.length - 1]
     const prevYr = vals.length > 12 ? vals[vals.length - 13] : null
     const delta = prevYr != null ? +(cur - prevYr).toFixed(1) : null
-    const START = -17
-    const axis: string[] = []
-    for (let k = START; k <= 6; k++) axis.push(addMonths(lastIso, k))
-    const byDate: Record<string, number> = {}
-    dts.forEach((d, i) => (byDate[d] = vals[i]))
-    const actual = axis.map((d) => (byDate[d] != null ? byDate[d] : null))
-    const boundary = 17
+    const lastIso = aDates[aDates.length - 1]
     const target2027 = 4.5
     const stepDown = (cur - target2027) / 18
-    const forecast: (number | null)[] = axis.map((_, i) => (i > boundary ? +(cur - stepDown * (i - boundary)).toFixed(2) : null))
-    const labels = axis.map(yyMo)
+    const total = N + 6
+    const boundary = N - 1
+    const actual: (number | null)[] = Array.from({ length: total }, (_, i) => (i < N ? aVals[i] : null))
+    const forecast: (number | null)[] = Array.from({ length: total }, (_, i) => (i >= N ? +(cur - stepDown * (i - boundary)).toFixed(2) : null))
+    const labels = aDates.map(yyMo).concat([1, 2, 3, 4, 5, 6].map((k) => yyMo(addMonths(lastIso, k))))
     return { cur, prevYr, delta, actual, forecast, labels, boundary, expect: target2027 }
   }, [infAll])
 
