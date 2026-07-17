@@ -512,7 +512,8 @@ export default function Page() {
   }
 
   return (
-    <main className="px-4 pb-10 pt-3 sm:px-6">
+    <div className="p-0 sm:pb-10 sm:pt-4 lg:pt-3">
+      <div className="px-4 py-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
 
       <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
@@ -567,6 +568,7 @@ export default function Page() {
           </section>
         </div>
       </div>
-    </main>
+      </div>
+    </div>
   )
 }
