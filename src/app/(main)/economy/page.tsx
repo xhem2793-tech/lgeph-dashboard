@@ -516,16 +516,18 @@ export default function Page() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
 
       <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]">
+        <aside
+          className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]"
+          style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}
+        >
           <div className="px-3 py-3">
             <p className="mb-2 px-1 text-[14px] font-bold tracking-tight text-gray-900">{en ? "View" : "보기"}</p>
             <nav className="flex flex-col gap-0.5">
-              {NAV.map((n, i) => (
+              {NAV.map((n) => (
                 <React.Fragment key={n.id}>
                   {n.divider && <div className="my-1 border-t border-gray-100" />}
                   <button
                     onClick={() => setActive(n.id)}
-                    style={{ animation: "fadeUp .4s ease both", animationDelay: (i * 45) + "ms" }}
                     className={
                       "group w-full rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
                       (active === n.id ? "bg-indigo-50" : "hover:bg-indigo-50/40")
@@ -555,10 +557,14 @@ export default function Page() {
           </div>
         </aside>
 
-        <div className="min-w-0">
-          <div key={active} style={{ animation: "fadeUp .4s ease both" }}>
+        <div className="flex min-w-0 flex-col gap-4">
+          <section
+            key={active}
+            className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition-shadow duration-300 hover:shadow-md"
+            style={{ animation: "fadeUp .5s ease both", animationDelay: "0.1s" }}
+          >
             {view()}
-          </div>
+          </section>
         </div>
       </div>
     </main>
