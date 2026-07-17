@@ -1,16 +1,16 @@
 "use client"
 
-import React, { useEffect, useMemo, useRef, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import DailyIndicators from "@/components/DailyIndicators"
 import { ProChart, CountUp } from "@/components/ProChartCore"
 import { homeBand, econSeries } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
-/** 경제지표 페이지 — 뉴스형 좌측 메뉴 + 섹션.
+/** 경제지표 페이지 — 주요뉴스형 좌측 메뉴 + 메뉴별 분리 뷰(카드).
  *
  *  ■ 겹침 해결(블룸버그 원칙: 같은 데이터, 세 가지 역할)
  *   · 원본  = 상세 차트 + 12개월 표 + 출처. 한 지표당 딱 한 번.
- *   · 참조  = 배지(현재값) + "원본 보기" 링크. 차트 없음.
+ *   · 참조  = 배지(현재값) + 원본 뷰로 이동. 차트 없음.
  *   · 파생  = 여러 지표를 조합해 만든 새 숫자. 구성요소 차트 없음.
  *
  *  ■ 우리만의 강점 = 사업 레이더(파생). 블룸버그엔 없는, 가전 영업 관점 산출지표.
@@ -20,7 +20,6 @@ import { useLang } from "@/lib/i18n"
 type Card = Awaited<ReturnType<typeof homeBand>>[number]
 type Series = Awaited<ReturnType<typeof econSeries>>[string]
 
-/* ── 섹션 구성: 각 지표는 '원본' 섹션에 딱 한 번만 배치 ── */
 const ORIGIN: Record<string, string[]> = {
   macro: ["cci", "durable", "retgva", "congva", "remit"],
   cost: ["cpi", "elec", "foodinf", "riceinf", "lpginf", "traninf"],
@@ -28,12 +27,12 @@ const ORIGIN: Record<string, string[]> = {
 }
 
 const NAV = [
-  { id: "today", ko: "오늘의 수치", en: "Today", note: "환율·유가·날씨" },
-  { id: "macro", ko: "시장·수요 환경", en: "Demand", note: "성장·소비심리·송금" },
-  { id: "cost", ko: "원가·물가 압력", en: "Cost & CPI", note: "물가·전기·연료" },
-  { id: "appliance", ko: "가전 가격 신호", en: "Appliance", note: "가전·에어컨·PPI" },
-  { id: "radar", ko: "사업 레이더", en: "Radar", note: "가전 영업 산출지표", star: true },
-  { id: "all", ko: "전체 경제지표", en: "All indicators", note: "16개 한눈에" },
+  { id: "today", ko: "오늘의 수치", en: "Today", count: 3 },
+  { id: "macro", ko: "시장·수요 환경", en: "Demand", count: 5 },
+  { id: "cost", ko: "원가·물가 압력", en: "Cost & CPI", count: 6 },
+  { id: "appliance", ko: "가전 가격 신호", en: "Appliance", count: 3 },
+  { id: "radar", ko: "사업 레이더", en: "Radar", count: 4, star: true, divider: true },
+  { id: "all", ko: "전체 경제지표", en: "All indicators", count: 16 },
 ]
 
 const scale = (key: string, v: number) => (key === "remit" ? v / 1e9 : v)
@@ -88,7 +87,7 @@ function MetricCard({ card, series, en }: { card: Card; series?: Series; en: boo
     .reverse()
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h3 className="text-[14px] font-bold tracking-tight text-gray-900">{label}</h3>
@@ -179,12 +178,12 @@ function MetricCard({ card, series, en }: { card: Card; series?: Series; en: boo
   )
 }
 
-function RefBadge({ card, href, note, en }: { card: Card; href: string; note: string; en: boolean }) {
+function RefBadge({ card, onGo, note, en }: { card: Card; onGo: () => void; note: string; en: boolean }) {
   const label = en ? card.labelEn : card.label
   return (
-    <a
-      href={href}
-      className="group flex items-center justify-between gap-3 rounded-lg border border-gray-150 bg-gray-50 px-3 py-2 transition-colors hover:border-indigo-200 hover:bg-indigo-50/40"
+    <button
+      onClick={onGo}
+      className="group flex items-center justify-between gap-3 rounded-lg border border-gray-150 bg-gray-50 px-3 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 hover:bg-indigo-50/40"
     >
       <div className="min-w-0">
         <p className="truncate text-[12px] font-semibold text-gray-700">{label}</p>
@@ -198,7 +197,7 @@ function RefBadge({ card, href, note, en }: { card: Card; href: string; note: st
         </p>
         <p className="text-[10px] text-indigo-500 group-hover:text-indigo-600">{en ? "detail →" : "원본 →"}</p>
       </div>
-    </a>
+    </button>
   )
 }
 
@@ -220,7 +219,7 @@ function DerivedCard({
   children?: React.ReactNode
 }) {
   return (
-    <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-4">
+    <div className="rounded-xl border border-violet-200 bg-violet-50/40 p-4 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div>
           <h3 className="text-[13px] font-bold tracking-tight text-violet-900">{title}</h3>
@@ -252,6 +251,25 @@ function SectionHead({ title, desc, star }: { title: string; desc: string; star?
   )
 }
 
+function RefStrip({ children, en }: { children: React.ReactNode; en: boolean }) {
+  return (
+    <div className="mt-4">
+      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">{en ? "Reference" : "참조 지표"}</p>
+      <div className="grid gap-2 sm:grid-cols-2">{children}</div>
+    </div>
+  )
+}
+
+function Skel() {
+  return (
+    <div className="grid gap-3 xl:grid-cols-2">
+      {Array.from({ length: 2 }).map((_, i) => (
+        <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />
+      ))}
+    </div>
+  )
+}
+
 export default function Page() {
   const { lang } = useLang()
   const en = lang === "en"
@@ -259,7 +277,6 @@ export default function Page() {
   const [series, setSeries] = useState<Record<string, Series>>({})
   const [active, setActive] = useState("today")
   const [q, setQ] = useState("")
-  const secRefs = useRef<Record<string, HTMLElement | null>>({})
 
   useEffect(() => {
     Promise.all([homeBand(), econSeries()])
@@ -269,19 +286,6 @@ export default function Page() {
       })
       .catch(() => setBand([]))
   }, [])
-
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) setActive((e.target as HTMLElement).id)
-        })
-      },
-      { rootMargin: "-20% 0px -70% 0px", threshold: 0 },
-    )
-    Object.values(secRefs.current).forEach((el) => el && obs.observe(el))
-    return () => obs.disconnect()
-  }, [band])
 
   const byKey = useMemo(() => {
     const m: Record<string, Card> = {}
@@ -317,280 +321,287 @@ export default function Page() {
   }, [byKey, series])
 
   const originCards = (sec: string) => ORIGIN[sec].map((k) => byKey[k]).filter(Boolean) as Card[]
-  const setRef = (id: string) => (el: HTMLElement | null) => {
-    secRefs.current[id] = el
-  }
+  const loading = band === null
 
   const filtered = (band ?? []).filter((c) => {
     const s = (c.label + c.labelEn + c.key).toLowerCase()
     return s.includes(q.toLowerCase())
   })
 
-  const loading = band === null
+  function view() {
+    if (active === "today")
+      return (
+        <>
+          <SectionHead
+            title={en ? "Today's numbers" : "오늘의 수치"}
+            desc={en ? "Daily FX · weekly fuel · weather" : "매일 갱신되는 환율·유가·날씨 — 가장 빠른 신호"}
+          />
+          <DailyIndicators />
+        </>
+      )
+    if (active === "macro")
+      return (
+        <>
+          <SectionHead
+            title={en ? "Demand environment" : "시장·수요 환경"}
+            desc={en ? "Growth · confidence · remittances" : "가전 수요를 떠받치는 성장·소비심리·구매력"}
+          />
+          {loading ? (
+            <Skel />
+          ) : (
+            <div className="grid gap-3 xl:grid-cols-2">
+              {originCards("macro").map((c) => (
+                <MetricCard key={c.key} card={c} series={series[c.key]} en={en} />
+              ))}
+            </div>
+          )}
+          {!loading && byKey.foodinf && (
+            <RefStrip en={en}>
+              <RefBadge card={byKey.foodinf} onGo={() => setActive("cost")} en={en} note={en ? "disposable income" : "필수지출 경쟁 → 원가·물가"} />
+            </RefStrip>
+          )}
+        </>
+      )
+    if (active === "cost")
+      return (
+        <>
+          <SectionHead
+            title={en ? "Cost & CPI pressure" : "원가·물가 압력"}
+            desc={en ? "Consumer prices, power, fuel" : "소비자물가·전기·연료 — 판가와 가처분소득을 함께 압박"}
+          />
+          {loading ? (
+            <Skel />
+          ) : (
+            <div className="grid gap-3 xl:grid-cols-2">
+              {originCards("cost").map((c) => (
+                <MetricCard key={c.key} card={c} series={series[c.key]} en={en} />
+              ))}
+            </div>
+          )}
+          {!loading && (byKey.fx || byKey.oil) && (
+            <RefStrip en={en}>
+              {byKey.fx && <RefBadge card={byKey.fx} onGo={() => setActive("today")} en={en} note={en ? "import cost" : "수입원가 → 오늘의 수치"} />}
+              {byKey.oil && <RefBadge card={byKey.oil} onGo={() => setActive("today")} en={en} note={en ? "logistics/fuel" : "물류·연료 → 오늘의 수치"} />}
+            </RefStrip>
+          )}
+        </>
+      )
+    if (active === "appliance")
+      return (
+        <>
+          <SectionHead
+            title={en ? "Appliance price signal" : "가전 가격 신호"}
+            desc={en ? "Appliance/aircon CPI, producer price" : "가전·에어컨 소비자물가와 생산자물가 — 판가 여력"}
+          />
+          {loading ? (
+            <Skel />
+          ) : (
+            <div className="grid gap-3 xl:grid-cols-2">
+              {originCards("appliance").map((c) => (
+                <MetricCard key={c.key} card={c} series={series[c.key]} en={en} />
+              ))}
+            </div>
+          )}
+          {!loading && byKey.cpi && (
+            <RefStrip en={en}>
+              <RefBadge card={byKey.cpi} onGo={() => setActive("cost")} en={en} note={en ? "real-price baseline" : "실질가격 기준선 → 원가·물가"} />
+            </RefStrip>
+          )}
+        </>
+      )
+    if (active === "radar")
+      return (
+        <>
+          <SectionHead
+            star
+            title={en ? "Business radar" : "사업 레이더"}
+            desc={en ? "Our own indices — not on Bloomberg" : "가전 영업 관점으로 지표를 조합한 산출지표 — 우리만의 강점"}
+          />
+          {loading ? (
+            <Skel />
+          ) : (
+            <div className="grid gap-3 xl:grid-cols-2">
+              <DerivedCard
+                title={en ? "Real appliance-price gap" : "가전 실질물가 갭"}
+                formula="가전물가 − 전체물가(CPI)"
+                value={(d.gap > 0 ? "+" : "") + d.gap + "%p"}
+                good={d.gap < 0}
+                sowhat={
+                  d.gap < 0
+                    ? "가전이 전체 물가보다 싸짐 = 실질가격 하락, 구매 유인 개선. 프로모 없이도 상대 매력 상승."
+                    : "가전이 전체 물가보다 비싸짐 = 실질가격 상승, 구매 저항. 판가·프로모 점검 필요."
+                }
+              >
+                {d.gapSeries.length > 1 && (
+                  <div className="mt-2">
+                    <ProChart cur={d.gapSeries} labels={d.gapLabels} unit="%p" curName={en ? "gap" : "갭"} prevName="" decimals={1} />
+                  </div>
+                )}
+              </DerivedCard>
+
+              <DerivedCard
+                title={en ? "OFW peso purchasing power" : "OFW 페소 구매력"}
+                formula="송금액($) × 환율(₱/$)"
+                value={"₱" + d.peso.toFixed(0) + "B"}
+                sub={`$${num(byKey.remit?.value).toFixed(2)}B × ₱${num(byKey.fx?.value).toFixed(2)}`}
+                good
+                sowhat="송금 달러가 페소로 바뀌는 힘. 페소 약세일수록 현지 구매력↑ — 송금 가구의 가전 구매 여력 확대."
+              />
+
+              <DerivedCard
+                title={en ? "Cost-pressure index" : "원가압박 지수"}
+                formula="환율·40% + 유가·30% + 전기·30% (0–100)"
+                value={d.costIdx.toFixed(0)}
+                sub="0=완화 · 100=최고 압박"
+                good={d.costIdx < 50}
+                sowhat="수입원가·물류·운영비를 하나로 합친 압박도. 높을수록 판가 인상 또는 마진 방어 압력."
+              >
+                <div className="mt-2 space-y-1">
+                  {[
+                    { l: "환율", v: d.fxS },
+                    { l: "유가", v: d.oilS },
+                    { l: "전기", v: d.elecS },
+                  ].map((b) => (
+                    <div key={b.l} className="flex items-center gap-2">
+                      <span className="w-8 text-[10px] text-violet-500">{b.l}</span>
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-violet-100">
+                        <div className="h-full rounded-full bg-violet-500" style={{ width: `${b.v.toFixed(0)}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </DerivedCard>
+
+              <DerivedCard
+                title={en ? "Aircon total burden" : "에어컨 총부담 신호"}
+                formula="구입(에어컨물가) + 운영(전기요금)"
+                value={d.acN.toFixed(1) + " / " + d.elecN.toFixed(1) + "%"}
+                sub="구입 물가 / 전기요금 상승률"
+                good={d.acN < 3}
+                sowhat={
+                  d.elecN > 8
+                    ? "구입가는 안정적이나 전기요금 급등으로 총소유비용(TCO) 부담↑ — 고효율·인버터 소구가 유효."
+                    : "구입·운영 모두 안정권 — 에어컨 판촉에 우호적."
+                }
+              />
+            </div>
+          )}
+          <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-700">
+            ※ 사업 레이더는 공식 지표를 조합한 산출·해석 지표 (AI INTERPRETED). 원자료는 각 원본 섹션 참조, 최종 판단은 담당자.
+          </p>
+        </>
+      )
+    return (
+      <>
+        <SectionHead
+          title={en ? "All indicators" : "전체 경제지표"}
+          desc={en ? "Every tracked indicator in one table" : "추적 중인 16개 지표를 한 표로 — 검색·비교용"}
+        />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={en ? "Search indicator…" : "지표 검색…"}
+          className="mb-3 w-full max-w-xs rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none focus:border-indigo-300"
+        />
+        {loading ? (
+          <Skel />
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+            <table className="w-full text-[12px] tabular-nums">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50 text-gray-500">
+                  <th className="px-3 py-2 text-left font-medium">{en ? "Indicator" : "지표"}</th>
+                  <th className="px-3 py-2 text-right font-medium">{en ? "Value" : "현재값"}</th>
+                  <th className="px-3 py-2 text-right font-medium">{en ? "MoM" : "전월비"}</th>
+                  <th className="px-3 py-2 text-right font-medium">{en ? "YoY" : "전년비"}</th>
+                  <th className="px-3 py-2 text-right font-medium">{en ? "As of" : "기준"}</th>
+                  <th className="px-3 py-2 text-right font-medium">{en ? "Freq" : "빈도"}</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-50">
+                {filtered.map((c) => {
+                  const tm = tone(c.dir, c.deltaMom ?? null)
+                  const ty = tone(c.dir, c.deltaYoy ?? null)
+                  return (
+                    <tr key={c.key} className="text-gray-700 hover:bg-gray-50/60">
+                      <td className="px-3 py-2 text-left font-semibold text-gray-800">{en ? c.labelEn : c.label}</td>
+                      <td className="px-3 py-2 text-right font-bold text-gray-900">
+                        {c.prefix}
+                        {c.value}
+                        {c.suffix}
+                      </td>
+                      <td className={"px-3 py-2 text-right font-semibold " + tm.cls}>
+                        {c.deltaMom == null ? "–" : Math.abs(c.deltaMom).toFixed(1) + (c.deltaUnit ?? "") + tm.arrow}
+                      </td>
+                      <td className={"px-3 py-2 text-right font-semibold " + ty.cls}>
+                        {c.deltaYoy == null ? "–" : Math.abs(c.deltaYoy).toFixed(1) + (c.deltaUnit ?? "") + ty.arrow}
+                      </td>
+                      <td className="px-3 py-2 text-right text-gray-400">{c.asOf?.slice(0, 7).replace("-", ".")}</td>
+                      <td className="px-3 py-2 text-right text-gray-400">{c.freq}</td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+            {filtered.length === 0 && <p className="px-3 py-6 text-center text-[12px] text-gray-400">검색 결과 없음</p>}
+          </div>
+        )}
+        <p className="mt-2 text-[10px] leading-snug text-gray-400">
+          색은 사업영향 기준 · 원가·물가↑=로즈, 수요·구매력 개선=에메랄드
+        </p>
+      </>
+    )
+  }
 
   return (
     <main className="px-4 pb-10 pt-0 sm:px-6">
       <h1 className="mb-3 text-lg font-bold tracking-tight text-gray-900">{en ? "Economy" : "경제지표"}</h1>
 
-      <div className="grid gap-6 lg:grid-cols-[200px_minmax(0,1fr)]">
-        <aside className="lg:sticky lg:top-4 lg:h-fit">
-          <nav className="flex flex-col gap-0.5">
-            {NAV.map((n) => (
-              <a
-                key={n.id}
-                href={`#${n.id}`}
-                className={
-                  "rounded-lg px-3 py-2 transition-colors " +
-                  (active === n.id ? "bg-indigo-50 text-indigo-700" : "text-gray-600 hover:bg-gray-50")
-                }
-              >
-                <span className="flex items-center gap-1.5 text-[13px] font-semibold">
-                  {n.star && <span className="text-amber-500">★</span>}
-                  {en ? n.en : n.ko}
-                </span>
-                <span className="mt-0.5 block text-[10px] text-gray-400">{n.note}</span>
-              </a>
-            ))}
-          </nav>
-          <p className="mt-3 hidden px-3 text-[10px] leading-relaxed text-gray-400 lg:block">
-            {en
-              ? "Origin = full chart+table (once). Reference = badge+link. Derived = computed."
-              : "원본=상세 차트·표(한 번) · 참조=배지·링크 · 파생=산출값. 같은 지표를 두 번 그리지 않음."}
-          </p>
+      <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
+        <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]">
+          <div className="px-3 py-3">
+            <p className="mb-2 px-1 text-[14px] font-bold tracking-tight text-gray-900">{en ? "View" : "보기"}</p>
+            <nav className="flex flex-col gap-0.5">
+              {NAV.map((n) => (
+                <React.Fragment key={n.id}>
+                  {n.divider && <div className="my-1 border-t border-gray-100" />}
+                  <button
+                    onClick={() => setActive(n.id)}
+                    className={
+                      "group w-full rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                      (active === n.id ? "bg-indigo-50" : "hover:bg-indigo-50/40")
+                    }
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span
+                        className={
+                          "flex-1 text-[13px] transition-colors duration-300 " +
+                          (active === n.id ? "font-semibold text-indigo-700" : "font-medium text-gray-800 group-hover:text-indigo-600")
+                        }
+                      >
+                        {n.star && <span className="text-amber-500">★ </span>}
+                        {en ? n.en : n.ko}
+                      </span>
+                      <span className="num shrink-0 text-[10px] text-gray-400">{n.count}</span>
+                    </span>
+                  </button>
+                </React.Fragment>
+              ))}
+            </nav>
+            <p className="mt-3 border-t border-gray-100 px-1 pt-2 text-[10px] leading-relaxed text-gray-400">
+              {en
+                ? "Origin = full chart+table. Reference = badge. Derived = computed."
+                : "원본=상세 차트·표 · 참조=배지 · 파생=산출값. 같은 지표를 두 번 그리지 않음."}
+            </p>
+          </div>
         </aside>
 
-        <div className="min-w-0 space-y-10">
-          <section id="today" ref={setRef("today")} className="scroll-mt-4">
-            <SectionHead
-              title={en ? "Today's numbers" : "오늘의 수치"}
-              desc={en ? "Daily FX · weekly fuel · weather" : "매일 갱신되는 환율·유가·날씨 — 가장 빠른 신호"}
-            />
-            <DailyIndicators />
-          </section>
-
-          <section id="macro" ref={setRef("macro")} className="scroll-mt-4">
-            <SectionHead
-              title={en ? "Demand environment" : "시장·수요 환경"}
-              desc={en ? "Growth · confidence · remittances" : "가전 수요를 떠받치는 성장·소비심리·구매력"}
-            />
-            {loading ? (
-              <Skel />
-            ) : (
-              <div className="grid gap-3 xl:grid-cols-2">
-                {originCards("macro").map((c) => (
-                  <MetricCard key={c.key} card={c} series={series[c.key]} en={en} />
-                ))}
-              </div>
-            )}
-            {!loading && byKey.foodinf && (
-              <RefStrip en={en}>
-                <RefBadge card={byKey.foodinf} href="#cost" en={en} note={en ? "disposable income" : "필수지출 경쟁 → 원가·물가"} />
-              </RefStrip>
-            )}
-          </section>
-
-          <section id="cost" ref={setRef("cost")} className="scroll-mt-4">
-            <SectionHead
-              title={en ? "Cost & CPI pressure" : "원가·물가 압력"}
-              desc={en ? "Consumer prices, power, fuel" : "소비자물가·전기·연료 — 판가와 가처분소득을 함께 압박"}
-            />
-            {loading ? (
-              <Skel />
-            ) : (
-              <div className="grid gap-3 xl:grid-cols-2">
-                {originCards("cost").map((c) => (
-                  <MetricCard key={c.key} card={c} series={series[c.key]} en={en} />
-                ))}
-              </div>
-            )}
-            {!loading && (byKey.fx || byKey.oil) && (
-              <RefStrip en={en}>
-                {byKey.fx && <RefBadge card={byKey.fx} href="#today" en={en} note={en ? "import cost" : "수입원가 → 오늘의 수치"} />}
-                {byKey.oil && <RefBadge card={byKey.oil} href="#today" en={en} note={en ? "logistics/fuel" : "물류·연료 → 오늘의 수치"} />}
-              </RefStrip>
-            )}
-          </section>
-
-          <section id="appliance" ref={setRef("appliance")} className="scroll-mt-4">
-            <SectionHead
-              title={en ? "Appliance price signal" : "가전 가격 신호"}
-              desc={en ? "Appliance/aircon CPI, producer price" : "가전·에어컨 소비자물가와 생산자물가 — 판가 여력"}
-            />
-            {loading ? (
-              <Skel />
-            ) : (
-              <div className="grid gap-3 xl:grid-cols-2">
-                {originCards("appliance").map((c) => (
-                  <MetricCard key={c.key} card={c} series={series[c.key]} en={en} />
-                ))}
-              </div>
-            )}
-            {!loading && byKey.cpi && (
-              <RefStrip en={en}>
-                <RefBadge card={byKey.cpi} href="#cost" en={en} note={en ? "real-price baseline" : "실질가격 기준선 → 원가·물가"} />
-              </RefStrip>
-            )}
-          </section>
-
-          <section id="radar" ref={setRef("radar")} className="scroll-mt-4">
-            <SectionHead
-              star
-              title={en ? "Business radar" : "사업 레이더"}
-              desc={en ? "Our own indices — not on Bloomberg" : "가전 영업 관점으로 지표를 조합한 산출지표 — 우리만의 강점"}
-            />
-            {loading ? (
-              <Skel />
-            ) : (
-              <div className="grid gap-3 xl:grid-cols-2">
-                <DerivedCard
-                  title={en ? "Real appliance-price gap" : "가전 실질물가 갭"}
-                  formula="가전물가 − 전체물가(CPI)"
-                  value={(d.gap > 0 ? "+" : "") + d.gap + "%p"}
-                  good={d.gap < 0}
-                  sowhat={
-                    d.gap < 0
-                      ? "가전이 전체 물가보다 싸짐 = 실질가격 하락, 구매 유인 개선. 프로모 없이도 상대 매력 상승."
-                      : "가전이 전체 물가보다 비싸짐 = 실질가격 상승, 구매 저항. 판가·프로모 점검 필요."
-                  }
-                >
-                  {d.gapSeries.length > 1 && (
-                    <div className="mt-2">
-                      <ProChart cur={d.gapSeries} labels={d.gapLabels} unit="%p" curName={en ? "gap" : "갭"} prevName="" decimals={1} />
-                    </div>
-                  )}
-                </DerivedCard>
-
-                <DerivedCard
-                  title={en ? "OFW peso purchasing power" : "OFW 페소 구매력"}
-                  formula="송금액($) × 환율(₱/$)"
-                  value={"₱" + d.peso.toFixed(0) + "B"}
-                  sub={`$${num(byKey.remit?.value).toFixed(2)}B × ₱${num(byKey.fx?.value).toFixed(2)}`}
-                  good
-                  sowhat="송금 달러가 페소로 바뀌는 힘. 페소 약세일수록 현지 구매력↑ — 송금 가구의 가전 구매 여력 확대."
-                />
-
-                <DerivedCard
-                  title={en ? "Cost-pressure index" : "원가압박 지수"}
-                  formula="환율·40% + 유가·30% + 전기·30% (0–100)"
-                  value={d.costIdx.toFixed(0)}
-                  sub="0=완화 · 100=최고 압박"
-                  good={d.costIdx < 50}
-                  sowhat="수입원가·물류·운영비를 하나로 합친 압박도. 높을수록 판가 인상 또는 마진 방어 압력."
-                >
-                  <div className="mt-2 space-y-1">
-                    {[
-                      { l: "환율", v: d.fxS },
-                      { l: "유가", v: d.oilS },
-                      { l: "전기", v: d.elecS },
-                    ].map((b) => (
-                      <div key={b.l} className="flex items-center gap-2">
-                        <span className="w-8 text-[10px] text-violet-500">{b.l}</span>
-                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-violet-100">
-                          <div className="h-full rounded-full bg-violet-500" style={{ width: `${b.v.toFixed(0)}%` }} />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </DerivedCard>
-
-                <DerivedCard
-                  title={en ? "Aircon total burden" : "에어컨 총부담 신호"}
-                  formula="구입(에어컨물가) + 운영(전기요금)"
-                  value={d.acN.toFixed(1) + " / " + d.elecN.toFixed(1) + "%"}
-                  sub="구입 물가 / 전기요금 상승률"
-                  good={d.acN < 3}
-                  sowhat={
-                    d.elecN > 8
-                      ? "구입가는 안정적이나 전기요금 급등으로 총소유비용(TCO) 부담↑ — 고효율·인버터 소구가 유효."
-                      : "구입·운영 모두 안정권 — 에어컨 판촉에 우호적."
-                  }
-                />
-              </div>
-            )}
-            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-snug text-amber-700">
-              ※ 사업 레이더는 공식 지표를 조합한 산출·해석 지표 (AI INTERPRETED). 원자료는 각 원본 섹션 참조, 최종 판단은 담당자.
-            </p>
-          </section>
-
-          <section id="all" ref={setRef("all")} className="scroll-mt-4">
-            <SectionHead
-              title={en ? "All indicators" : "전체 경제지표"}
-              desc={en ? "Every tracked indicator in one table" : "추적 중인 16개 지표를 한 표로 — 검색·비교용"}
-            />
-            <input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder={en ? "Search indicator…" : "지표 검색…"}
-              className="mb-3 w-full max-w-xs rounded-lg border border-gray-200 px-3 py-2 text-[13px] outline-none focus:border-indigo-300"
-            />
-            {loading ? (
-              <Skel />
-            ) : (
-              <div className="overflow-hidden rounded-xl border border-gray-200 bg-white">
-                <table className="w-full text-[12px] tabular-nums">
-                  <thead>
-                    <tr className="border-b border-gray-100 bg-gray-50 text-gray-500">
-                      <th className="px-3 py-2 text-left font-medium">{en ? "Indicator" : "지표"}</th>
-                      <th className="px-3 py-2 text-right font-medium">{en ? "Value" : "현재값"}</th>
-                      <th className="px-3 py-2 text-right font-medium">{en ? "MoM" : "전월비"}</th>
-                      <th className="px-3 py-2 text-right font-medium">{en ? "YoY" : "전년비"}</th>
-                      <th className="px-3 py-2 text-right font-medium">{en ? "As of" : "기준"}</th>
-                      <th className="px-3 py-2 text-right font-medium">{en ? "Freq" : "빈도"}</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {filtered.map((c) => {
-                      const tm = tone(c.dir, c.deltaMom ?? null)
-                      const ty = tone(c.dir, c.deltaYoy ?? null)
-                      return (
-                        <tr key={c.key} className="text-gray-700 hover:bg-gray-50/60">
-                          <td className="px-3 py-2 text-left font-semibold text-gray-800">{en ? c.labelEn : c.label}</td>
-                          <td className="px-3 py-2 text-right font-bold text-gray-900">
-                            {c.prefix}
-                            {c.value}
-                            {c.suffix}
-                          </td>
-                          <td className={"px-3 py-2 text-right font-semibold " + tm.cls}>
-                            {c.deltaMom == null ? "–" : Math.abs(c.deltaMom).toFixed(1) + (c.deltaUnit ?? "") + tm.arrow}
-                          </td>
-                          <td className={"px-3 py-2 text-right font-semibold " + ty.cls}>
-                            {c.deltaYoy == null ? "–" : Math.abs(c.deltaYoy).toFixed(1) + (c.deltaUnit ?? "") + ty.arrow}
-                          </td>
-                          <td className="px-3 py-2 text-right text-gray-400">{c.asOf?.slice(0, 7).replace("-", ".")}</td>
-                          <td className="px-3 py-2 text-right text-gray-400">{c.freq}</td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-                {filtered.length === 0 && <p className="px-3 py-6 text-center text-[12px] text-gray-400">검색 결과 없음</p>}
-              </div>
-            )}
-            <p className="mt-2 text-[10px] leading-snug text-gray-400">
-              색은 사업영향 기준 · 원가·물가↑=로즈, 수요·구매력 개선=에메랄드
-            </p>
-          </section>
+        <div className="min-w-0">
+          <div key={active} style={{ animation: "fadeUp .4s ease both" }}>
+            {view()}
+          </div>
         </div>
       </div>
     </main>
-  )
-}
-
-function RefStrip({ children, en }: { children: React.ReactNode; en: boolean }) {
-  return (
-    <div className="mt-3">
-      <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-wide text-gray-400">{en ? "Reference" : "참조 지표"}</p>
-      <div className="grid gap-2 sm:grid-cols-2">{children}</div>
-    </div>
-  )
-}
-
-function Skel() {
-  return (
-    <div className="grid gap-3 xl:grid-cols-2">
-      {Array.from({ length: 2 }).map((_, i) => (
-        <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />
-      ))}
-    </div>
   )
 }
