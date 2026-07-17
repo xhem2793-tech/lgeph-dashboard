@@ -849,3 +849,25 @@ export async function calendarEvents(from: string, to: string) {
     url: (r.url ?? null) as string | null,
   })) as CalEvent[]
 }
+
+export async function macroMonthly(inds: string[], n = 18) {
+  const list = inds.map((s) => encodeURIComponent(s)).join(",")
+  const path =
+    "macro_indicators?geo_level=eq.national&indicator=in.(" +
+    list +
+    ")&order=period_date.asc&select=indicator,period_date,value"
+  const rows = (await sb(path)) as { indicator: string; period_date: string; value: number }[]
+  const out: Record<string, { dates: string[]; values: number[] }> = {}
+  for (const r of rows) {
+    const g = (out[r.indicator] = out[r.indicator] || { dates: [], values: [] })
+    g.dates.push(r.period_date)
+    g.values.push(Number(r.value))
+  }
+  for (const k in out) {
+    if (out[k].dates.length > n) {
+      out[k].dates = out[k].dates.slice(-n)
+      out[k].values = out[k].values.slice(-n)
+    }
+  }
+  return out
+}
