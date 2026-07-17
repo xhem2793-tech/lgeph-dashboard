@@ -239,18 +239,6 @@ function DerivedCard({
   )
 }
 
-function SectionHead({ title, desc, star }: { title: string; desc: string; star?: boolean }) {
-  return (
-    <div className="mb-3">
-      <h2 className="flex items-center gap-1.5 text-[16px] font-bold tracking-tight text-gray-900">
-        {star && <span className="text-amber-500">★</span>}
-        {title}
-      </h2>
-      <p className="mt-0.5 text-[12px] text-gray-500">{desc}</p>
-    </div>
-  )
-}
-
 function RefStrip({ children, en }: { children: React.ReactNode; en: boolean }) {
   return (
     <div className="mt-4">
@@ -329,23 +317,10 @@ export default function Page() {
   })
 
   function view() {
-    if (active === "today")
-      return (
-        <>
-          <SectionHead
-            title={en ? "Today's numbers" : "오늘의 수치"}
-            desc={en ? "Daily FX · weekly fuel · weather" : "매일 갱신되는 환율·유가·날씨 — 가장 빠른 신호"}
-          />
-          <DailyIndicators />
-        </>
-      )
+    if (active === "today") return <DailyIndicators />
     if (active === "macro")
       return (
         <>
-          <SectionHead
-            title={en ? "Demand environment" : "시장·수요 환경"}
-            desc={en ? "Growth · confidence · remittances" : "가전 수요를 떠받치는 성장·소비심리·구매력"}
-          />
           {loading ? (
             <Skel />
           ) : (
@@ -365,10 +340,6 @@ export default function Page() {
     if (active === "cost")
       return (
         <>
-          <SectionHead
-            title={en ? "Cost & CPI pressure" : "원가·물가 압력"}
-            desc={en ? "Consumer prices, power, fuel" : "소비자물가·전기·연료 — 판가와 가처분소득을 함께 압박"}
-          />
           {loading ? (
             <Skel />
           ) : (
@@ -389,10 +360,6 @@ export default function Page() {
     if (active === "appliance")
       return (
         <>
-          <SectionHead
-            title={en ? "Appliance price signal" : "가전 가격 신호"}
-            desc={en ? "Appliance/aircon CPI, producer price" : "가전·에어컨 소비자물가와 생산자물가 — 판가 여력"}
-          />
           {loading ? (
             <Skel />
           ) : (
@@ -412,11 +379,6 @@ export default function Page() {
     if (active === "radar")
       return (
         <>
-          <SectionHead
-            star
-            title={en ? "Business radar" : "사업 레이더"}
-            desc={en ? "Our own indices — not on Bloomberg" : "가전 영업 관점으로 지표를 조합한 산출지표 — 우리만의 강점"}
-          />
           {loading ? (
             <Skel />
           ) : (
@@ -493,10 +455,6 @@ export default function Page() {
       )
     return (
       <>
-        <SectionHead
-          title={en ? "All indicators" : "전체 경제지표"}
-          desc={en ? "Every tracked indicator in one table" : "추적 중인 16개 지표를 한 표로 — 검색·비교용"}
-        />
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -554,19 +512,20 @@ export default function Page() {
   }
 
   return (
-    <main className="px-4 pb-10 pt-0 sm:px-6">
-      <h1 className="mb-3 text-lg font-bold tracking-tight text-gray-900">{en ? "Economy" : "경제지표"}</h1>
+    <main className="px-4 pb-10 pt-3 sm:px-6">
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
 
       <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]">
           <div className="px-3 py-3">
             <p className="mb-2 px-1 text-[14px] font-bold tracking-tight text-gray-900">{en ? "View" : "보기"}</p>
             <nav className="flex flex-col gap-0.5">
-              {NAV.map((n) => (
+              {NAV.map((n, i) => (
                 <React.Fragment key={n.id}>
                   {n.divider && <div className="my-1 border-t border-gray-100" />}
                   <button
                     onClick={() => setActive(n.id)}
+                    style={{ animation: "fadeUp .4s ease both", animationDelay: (i * 45) + "ms" }}
                     className={
                       "group w-full rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
                       (active === n.id ? "bg-indigo-50" : "hover:bg-indigo-50/40")
