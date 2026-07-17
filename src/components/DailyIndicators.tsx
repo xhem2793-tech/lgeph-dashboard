@@ -493,10 +493,10 @@ export default function DailyIndicators() {
         <div style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <div className="flex items-baseline gap-2">
-                  <h1 className="cursor-default text-lg font-bold tracking-tight text-gray-900">{t("daily_title")}</h1>
-                  <div className="inline-flex rounded-lg bg-gray-100/80 p-0.5 backdrop-blur">
+                  
+                  <div className="inline-flex gap-1 rounded-full bg-gray-100 p-1">
                     {RANGES.map((r) => (
-                      <button key={r.key} onClick={() => setRange(r.key)} className={"rounded-md px-3 py-1.5 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " + (range === r.key ? "scale-[1.03] bg-white text-indigo-600 shadow-md" : "text-gray-500 hover:-translate-y-0.5 hover:bg-white/70 hover:text-indigo-600 hover:shadow-sm")}>{t(("r_" + r.key) as "r_7d")}</button>
+                      <button key={r.key} onClick={() => setRange(r.key)} className={"rounded-full px-3 py-1 text-xs font-medium transition-all duration-300 ease-out active:scale-95 " + (range === r.key ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-indigo-600")}>{t(("r_" + r.key) as "r_7d")}</button>
                     ))}
                   </div>
                 </div>
