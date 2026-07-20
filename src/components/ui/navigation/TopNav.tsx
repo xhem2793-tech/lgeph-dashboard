@@ -6,11 +6,12 @@ import { usePathname } from "next/navigation"
 import React from "react"
 import { useLang } from "@/lib/i18n"
 
-const NAV_KEY: Record<string, "nav_overview" | "nav_economy" | "nav_news" | "nav_competitors" | "nav_calendar" | "nav_appendix"> = {
+const NAV_KEY: Record<string, "nav_overview" | "nav_economy" | "nav_news" | "nav_competitors" | "nav_competitor_ads" | "nav_calendar" | "nav_appendix"> = {
   "/overview": "nav_overview",
   "/economy": "nav_economy",
   "/news": "nav_news",
   "/competitors": "nav_competitors",
+  "/competitor-ads": "nav_competitor_ads",
   "/calendar": "nav_calendar",
   "/appendix": "nav_appendix",
 }
