@@ -212,10 +212,6 @@ export default function Page() {
     <main className="mx-auto max-w-[1536px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
-      <div className="mb-3">
-        <h1 className="text-[17px] font-bold tracking-tight text-gray-900">경쟁사 동향</h1>
-      </div>
-
       <div className="mb-4 overflow-x-auto pb-0.5">
         <Segmented value={brand} onChange={setBrand} options={BRANDS.map((b) => ({ k: b, label: b }))} size="sm" />
       </div>
