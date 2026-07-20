@@ -5,9 +5,9 @@ import { competitorAds } from "@/lib/supabase"
 import type { CompAd } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 
-/** 경쟁사 동향 — 경쟁 6개 브랜드 활성 광고를 진행중/새로시작/종료예정 3버킷으로.
- *  브랜드=상단 알약 토글(Segmented), 광고 성격=좌측 메뉴 리스트(§4), 카드/모달=DESIGN.md §3·§4, 모션 §2.
- *  데이터: v_competitor_ads_board (Meta 광고 라이브러리 자체 수집). 색=신호.
+/** 경쟁사 동향 — 경쟁 6개 브랜드 활성 광고.
+ *  브랜드=상단 알약 토글(Segmented), 광고 성격=좌측 메뉴(§4), 상태 필터 pill + 카드/월별 보기 토글.
+ *  카드/모달=DESIGN.md §3·§4, 모션 §2. 색=신호. 데이터: v_competitor_ads_board.
  */
 
 type Bucket = { key: string; label: string; text: string; dot: string; bar: string; band: string; hint: string }
@@ -25,6 +25,12 @@ const CATS: { key: string; type: string | null; label: string; sub: string }[] =
   { key: "roadshow", type: "roadshow", label: "행사·로드쇼", sub: "매장행사·투어" },
   { key: "other", type: "other", label: "기타", sub: "분류 외" },
 ]
+const STATI: { key: string; label: string }[] = [
+  { key: "전체", label: "전체" },
+  { key: "진행중", label: "진행중" },
+  { key: "새로시작", label: "새로시작" },
+  { key: "종료예정", label: "종료예정" },
+]
 const AD_TYPE: Record<string, string> = { promo: "프로모", launch: "신제품", brand: "브랜드", roadshow: "로드쇼", other: "기타" }
 const initials = (s: string) => (s || "").trim().slice(0, 2).toUpperCase()
 
@@ -41,7 +47,7 @@ function Card({ a, bk, onOpen }: { a: CompAd; bk: Bucket | undefined; onOpen: ()
   return (
     <button
       onClick={onOpen}
-      className="group flex w-full overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 hover:shadow-md active:scale-[.99]"
+      className="group flex h-full w-full overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 hover:shadow-md active:scale-[.99]"
     >
       <span className={"w-1 shrink-0 " + (bk ? bk.bar : "bg-gray-300")} />
       <span className="min-w-0 flex-1 p-3.5">
@@ -167,6 +173,8 @@ export default function Page() {
   const [ads, setAds] = useState<CompAd[] | null>(null)
   const [brand, setBrand] = useState("전체")
   const [cat, setCat] = useState("all")
+  const [stat, setStat] = useState("전체")
+  const [view, setView] = useState("card")
   const [sel, setSel] = useState<CompAd | null>(null)
 
   useEffect(() => {
@@ -179,18 +187,43 @@ export default function Page() {
     [ads, brand, catType],
   )
   const catCount = (c: { type: string | null }) => (ads ?? []).filter((a) => (brand === "전체" || a.brand === brand) && (c.type === null || a.ad_type === c.type)).length
-  const bucket = (k: string) => filtered.filter((a) => a.status === k).sort((a, b) => (a.days_to_end ?? 999) - (b.days_to_end ?? 999))
+  const statusCount = (k: string) => filtered.filter((a) => k === "전체" || a.status === k).length
+  const bkOf = (s: string) => BUCKETS.find((b) => b.key === s)
+  const PRIO: Record<string, number> = { 종료예정: 0, 새로시작: 1, 진행중: 2 }
+  const shown = filtered
+    .filter((a) => stat === "전체" || a.status === stat)
+    .sort((a, b) => (PRIO[a.status] ?? 9) - (PRIO[b.status] ?? 9) || (a.days_to_end ?? 999) - (b.days_to_end ?? 999))
+
+  const TYPE_ORDER = ["brand", "promo", "launch", "roadshow", "other"]
+  const groups = (() => {
+    if (view === "card") return [] as { k: string; label: string; items: CompAd[] }[]
+    const keyOf = (a: CompAd) => (view === "month" ? (a.ad_started_on ? a.ad_started_on.slice(0, 7) : "상시") : view === "type" ? a.ad_type : a.brand)
+    const m = new Map<string, CompAd[]>()
+    for (const a of shown) {
+      const k = keyOf(a)
+      const arr = m.get(k)
+      if (arr) arr.push(a); else m.set(k, [a])
+    }
+    let keys = [...m.keys()]
+    if (view === "month") keys = keys.sort((x, y) => (x === "상시" ? 1 : y === "상시" ? -1 : y.localeCompare(x)))
+    else if (view === "type") keys = keys.sort((x, y) => ((TYPE_ORDER.indexOf(x) + 1 || 99) - (TYPE_ORDER.indexOf(y) + 1 || 99)))
+    else keys = keys.sort((x, y) => BRANDS.indexOf(x) - BRANDS.indexOf(y))
+    const label = (k: string) =>
+      view === "month"
+        ? (k === "상시" ? "상시 · 게재일 미상" : Number(k.slice(0, 4)) + "년 " + Number(k.slice(5, 7)) + "월")
+        : view === "type"
+          ? (AD_TYPE[k] ?? k)
+          : k
+    return keys.map((k) => ({ k, label: label(k), items: m.get(k) ?? [] }))
+  })()
 
   return (
     <main className="mx-auto max-w-[1536px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
       <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
-        <div>
-          <h1 className="text-[17px] font-bold tracking-tight text-gray-900">경쟁사 동향</h1>
-          <p className="mt-0.5 text-[11.5px] text-gray-500">Meta 광고 라이브러리 · 활성 광고 · 경쟁 6개 브랜드</p>
-        </div>
-        <p className="text-[10.5px] text-gray-400">주간 수집</p>
+        <h1 className="text-[17px] font-bold tracking-tight text-gray-900">경쟁사 동향</h1>
+        <p className="text-[10.5px] text-gray-400">Meta 광고 라이브러리 · 주간 수집</p>
       </div>
 
       <div className="mb-4 overflow-x-auto pb-0.5">
@@ -225,31 +258,67 @@ export default function Page() {
         </aside>
 
         <div className="min-w-0">
-          {ads === null ? (
-            <div className="grid gap-4 md:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="h-64 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />)}</div>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-3">
-              {BUCKETS.map((bk) => {
-                const list = bucket(bk.key)
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap gap-1.5">
+              {STATI.map((s) => {
+                const on = stat === s.key
+                const bk = bkOf(s.key)
                 return (
-                  <div key={bk.key} className="rounded-2xl border border-gray-200 bg-gray-50/70 p-2.5">
-                    <div className="mb-2.5 flex items-center gap-2 px-1.5 pt-1">
-                      <span className={"h-2 w-2 rounded-full " + bk.dot} />
-                      <span className={"text-[13px] font-bold " + bk.text}>{bk.label}</span>
-                      <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-gray-500">{list.length}</span>
-                    </div>
-                    <div className="flex flex-col gap-2.5">
-                      {list.length === 0 ? (
-                        <div className="rounded-xl border border-dashed border-gray-200 p-5 text-center text-[11px] leading-relaxed text-gray-400">{bk.hint}<br />해당 광고 없음</div>
-                      ) : list.map((a, i) => (
-                        <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .5s ease both", animationDelay: (Math.min(i, 12) * 45) + "ms" }}>
-                          <Card a={a} bk={bk} onOpen={() => setSel(a)} />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                  <button
+                    key={s.key}
+                    onClick={() => setStat(s.key)}
+                    className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[12px] transition-all duration-300 ease-out active:scale-95 " + (on ? "border-transparent bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-600 hover:-translate-y-px hover:border-indigo-200")}
+                  >
+                    {bk && <span className={"h-1.5 w-1.5 rounded-full " + bk.dot} />}
+                    {s.label}
+                    <span className={on ? "text-indigo-400" : "text-gray-400"}>{statusCount(s.key)}</span>
+                  </button>
                 )
               })}
+            </div>
+            <div className="flex shrink-0 gap-0.5 rounded-lg bg-gray-100 p-0.5">
+              {[["card", "카드"], ["month", "월별"], ["type", "제품별"], ["brand", "브랜드별"]].map(([k, l]) => (
+                <button
+                  key={k}
+                  onClick={() => setView(k)}
+                  className={"rounded-md px-2.5 py-1 text-[12px] transition-all duration-300 ease-out " + (view === k ? "bg-white font-bold text-indigo-700 shadow-sm" : "text-gray-500 hover:text-gray-800")}
+                >
+                  {l}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {ads === null ? (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-32 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
+          ) : shown.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center text-[12px] text-gray-400">해당 조건의 광고 없음</div>
+          ) : view !== "card" ? (
+            <div className="flex flex-col gap-5">
+              {groups.map((g) => (
+                <div key={g.k}>
+                  <div className="mb-2.5 flex items-center gap-2">
+                    <span className="text-[13px] font-bold text-gray-800">{g.label}</span>
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500">{g.items.length}</span>
+                    <span className="h-px flex-1 bg-gray-100" />
+                  </div>
+                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {g.items.map((a, i) => (
+                      <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .5s ease both", animationDelay: (Math.min(i, 14) * 35) + "ms" }}>
+                        <Card a={a} bk={bkOf(a.status)} onOpen={() => setSel(a)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {shown.map((a, i) => (
+                <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .5s ease both", animationDelay: (Math.min(i, 14) * 35) + "ms" }}>
+                  <Card a={a} bk={bkOf(a.status)} onOpen={() => setSel(a)} />
+                </div>
+              ))}
             </div>
           )}
 
