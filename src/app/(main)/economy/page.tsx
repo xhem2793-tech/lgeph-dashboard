@@ -107,7 +107,7 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
           </g>
         </g>
       )}
-      {actual.map((v, i) => (val(i) != null ? (
+      {actual.map((_, i) => (val(i) != null ? (
         <rect key={"hit" + i} x={x(i) - 16} y={padT} width="32" height={cH} fill="transparent" style={{ cursor: "pointer" }} onMouseEnter={() => setHi(i)} />
       ) : null))}
       {ticks.map((i) => (
