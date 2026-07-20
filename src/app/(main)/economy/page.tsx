@@ -2,15 +2,12 @@
 
 import React, { useEffect, useMemo, useState } from "react"
 import DailyIndicators from "@/components/DailyIndicators"
-import { CountUp } from "@/components/ProChartCore"
+import { ProChart, CountUp } from "@/components/ProChartCore"
 import { homeBand, pricesDomain, macroMonthly } from "@/lib/supabase"
 import type { PricesDomain } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 
-/** 경제지표 페이지 — 도메인 메뉴 + 물가·생활비.
- *  헤드라인=롤링 24개월(18실적 단일선 + 6전망 점선) + 기대 인플레이션 기준선, 드로잉 애니메이션.
- *  점·라인·디자인은 환율·유가(ProChart) 스타일 링 점. 색=사업영향.
- */
+/** 경제지표 — 물가·생활비. 헤드라인 = 유가·환율과 동일한 ProChart(2025 vs 2026). */
 
 type Card = Awaited<ReturnType<typeof homeBand>>[number]
 type Mon = Record<string, { dates: string[]; values: number[] }>
@@ -31,117 +28,34 @@ const num = (s: string | undefined) => {
   const v = parseFloat((s ?? "").replace(/[^0-9.\-]/g, ""))
   return Number.isFinite(v) ? v : 0
 }
-const addMonths = (iso: string, n: number) => {
-  const p = iso.split("-").map(Number)
-  const d = new Date(Date.UTC(p[0], p[1] - 1 + n, 1))
-  return d.toISOString().slice(0, 10)
-}
-const yyMo = (iso: string) => iso.slice(2, 4) + "." + iso.slice(5, 7)
+const MONTHS = ["1월", "2월", "3월", "4월", "5월", "6월", "7월", "8월", "9월", "10월", "11월", "12월"]
 
-/* ============ 롤링 24개월 라인 (실적 단일선 + 전망 점선 + 기대선) — ProChart 링 점 스타일 ============ */
-function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
-  actual: (number | null)[]; forecast: (number | null)[]; labels: string[]; boundary: number; expect: number; mounted: boolean
-}) {
-  const [hi, setHi] = useState<number | null>(null)
-  const W = 700, H = 176, padL = 24, padR = 12, padT = 14, padB = 20
-  const cW = W - padL - padR, cH = H - padT - padB
-  const n = actual.length
-  const fin = [...actual, ...forecast, expect].filter((v): v is number => v != null)
-  const max = Math.max(...fin, 8), min = 0
-  const span = max - min || 1
-  const x = (i: number) => padL + (i * cW) / (n - 1)
-  const y = (v: number) => padT + ((max - v) / span) * cH
-  const val = (i: number) => (actual[i] != null ? actual[i] : forecast[i]) as number | null
-  const aPts = actual.map((v, i) => (v != null ? x(i) + "," + y(v) : null)).filter(Boolean) as string[]
-  const anchor = actual[boundary] != null ? x(boundary) + "," + y(actual[boundary] as number) : null
-  const fSeq = forecast.map((v, i) => (v != null ? x(i) + "," + y(v) : null)).filter(Boolean) as string[]
-  const fLine = anchor ? [anchor, ...fSeq] : fSeq
-  const grid = [0, 2, 4, 6, 8].filter((g) => g <= max + 0.4)
-  const ticks = [0, 6, 12, boundary, n - 1]
-  const areaPath = aPts.length > 1 ? "M " + aPts.join(" L ") + " L " + x(boundary) + "," + y(0) + " L " + x(0) + "," + y(0) + " Z" : ""
-  const aXY = actual.map((v, i) => (v != null ? [x(i), y(v)] : null)).filter(Boolean) as number[][]
-  let lineLen = 0
-  for (let k = 1; k < aXY.length; k++) lineLen += Math.hypot(aXY[k][0] - aXY[k - 1][0], aXY[k][1] - aXY[k - 1][1])
-  const hv = hi != null ? val(hi) : null
-  const tipX = hi != null ? Math.max(padL + 30, Math.min(W - padR - 30, x(hi))) : 0
-
-  return (
-    <svg viewBox={"0 0 " + W + " " + H} className="w-full" style={{ height: 176 }} onMouseLeave={() => setHi(null)}>
-      <defs>
-        <linearGradient id="cpiGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <rect x={padL} y={y(4)} width={cW} height={Math.max(0, y(2) - y(4))} fill="rgba(99,102,241,0.05)" />
-      {grid.map((g) => (
-        <g key={g}>
-          <line x1={padL} y1={y(g)} x2={W - padR} y2={y(g)} stroke="#f1f3f6" />
-          <text x={3} y={y(g) + 4} fontSize="12" fill="#9ca3af">{g}</text>
-        </g>
-      ))}
-      <line x1={padL} y1={y(expect)} x2={W - padR} y2={y(expect)} stroke="#f59e0b" strokeWidth="1.4" strokeDasharray="3,3" opacity="0.85" />
-      <text x={W - padR} y={y(expect) - 6} fontSize="12.5" fontWeight="700" fill="#b45309" textAnchor="end">기대 인플레 {expect}%</text>
-      <line x1={x(boundary)} y1={padT} x2={x(boundary)} y2={H - padB} stroke="#e5e7eb" strokeDasharray="3,3" />
-      {areaPath && <path d={areaPath} fill="url(#cpiGrad)" style={{ opacity: mounted ? 1 : 0, transition: "opacity .7s ease .5s" }} />}
-      <polyline points={aPts.join(" ")} fill="none" stroke="#6366f1" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"
-        style={{ strokeDasharray: lineLen, strokeDashoffset: mounted ? 0 : lineLen, transition: "stroke-dashoffset 1.5s cubic-bezier(.22,1,.36,1)" }} />
-      {fLine.length > 1 && (
-        <polyline points={fLine.join(" ")} fill="none" stroke="#818cf8" strokeWidth="2.4" strokeDasharray="5,4" strokeLinecap="round"
-          style={{ opacity: mounted ? 1 : 0, transition: "opacity .6s ease .9s" }} />
-      )}
-      {actual.map((v, i) => (v != null && i === boundary ? (
-        <circle key={"h" + i} cx={x(i)} cy={y(v)} r="9" fill="rgba(99,102,241,0.15)" style={{ opacity: mounted ? 1 : 0, transition: "opacity .4s ease 1.1s" }} />
-      ) : null))}
-      {actual.map((v, i) => v != null ? (
-        <circle key={"a" + i} cx={x(i)} cy={y(v)} r={hi === i ? 6.5 : i === boundary ? 6 : 5} fill={i === boundary || hi === i ? "#6366f1" : "#fff"} stroke="#6366f1" strokeWidth={i === boundary ? 2 : 2.2}
-          style={{ opacity: mounted ? 1 : 0, transition: "opacity .32s ease " + (0.4 + i * 0.045) + "s, r .15s ease, fill .15s ease" }} />
-      ) : null)}
-      {forecast.map((v, i) => v != null ? (
-        <circle key={"f" + i} cx={x(i)} cy={y(v)} r={hi === i ? 5 : 4} fill={hi === i ? "#818cf8" : "#fff"} stroke="#a5b4fc" strokeWidth="1.9"
-          style={{ opacity: mounted ? 1 : 0, transition: "opacity .32s ease " + (1.1 + (i - boundary) * 0.06) + "s" }} />
-      ) : null)}
-      <g style={{ opacity: hi != null && hv != null ? 1 : 0, transition: "opacity .15s cubic-bezier(.4,0,.2,1)", pointerEvents: "none" }}>
-        <line x1={x(hi != null ? hi : boundary)} y1={padT} x2={x(hi != null ? hi : boundary)} y2={H - padB} stroke="#c7d2fe" strokeWidth="1" />
-        <g transform={"translate(" + (hi != null ? tipX : 0) + "," + padT + ")"}>
-          <rect x="-34" y="-1" width="68" height="34" rx="6" fill="#fff" stroke="#e5e7eb" strokeWidth="1" />
-          <text x="0" y="12" fontSize="9.5" fill="#9ca3af" textAnchor="middle">{hi != null ? labels[hi] : ""}</text>
-          <text x="0" y="26" fontSize="12.5" fontWeight="800" fill="#4f46e5" textAnchor="middle">{hi != null && hv != null ? (hv as number).toFixed(1) + "%" : ""}</text>
-        </g>
-      </g>
-      {actual.map((_, i) => (val(i) != null ? (
-        <rect key={"hit" + i} x={x(i) - 16} y={padT} width="32" height={cH} fill="transparent" style={{ cursor: "pointer" }} onMouseEnter={() => setHi(i)} />
-      ) : null))}
-      {ticks.map((i) => (
-        <text key={i} x={x(i)} y={H - 4} fontSize="12" fill="#9ca3af" textAnchor="middle">{labels[i]}</text>
-      ))}
-    </svg>
-  )
+function yearOverlay(dates: string[], values: number[]) {
+  const y25: (number | null)[] = Array(12).fill(null)
+  const y26: (number | null)[] = Array(12).fill(null)
+  dates.forEach((d, i) => {
+    const yr = d.slice(0, 4), mo = Number(d.slice(5, 7)) - 1
+    if (yr === "2025") y25[mo] = values[i]
+    else if (yr === "2026") y26[mo] = values[i]
+  })
+  return { y25, y26 }
 }
 
-/* ============ 물가·생활비 도메인 ============ */
 function PricesView({ data, inf, byKey }: { data: PricesDomain; inf: Mon; byKey: Record<string, Card> }) {
   const [mounted, setMounted] = useState(false)
   const infAll = inf["INF_all_items"]
 
   const h = useMemo(() => {
     if (!infAll || infAll.values.length < 2) return null
-    const dts = infAll.dates, vals = infAll.values
-    const N = Math.min(18, vals.length)
-    const aDates = dts.slice(vals.length - N)
-    const aVals = vals.slice(vals.length - N)
-    const cur = aVals[aVals.length - 1]
-    const prevYr = vals.length > 12 ? vals[vals.length - 13] : null
+    const { y25, y26 } = yearOverlay(infAll.dates, infAll.values)
+    let last = -1
+    for (let i = 11; i >= 0; i--) if (y26[i] != null) { last = i; break }
+    const cur = last >= 0 ? (y26[last] as number) : 0
+    const prevYr = last >= 0 && y25[last] != null ? (y25[last] as number) : null
     const delta = prevYr != null ? +(cur - prevYr).toFixed(1) : null
-    const lastIso = aDates[aDates.length - 1]
-    const target2027 = 4.5
-    const stepDown = (cur - target2027) / 18
-    const total = N + 6
-    const boundary = N - 1
-    const actual: (number | null)[] = Array.from({ length: total }, (_, i) => (i < N ? aVals[i] : null))
-    const forecast: (number | null)[] = Array.from({ length: total }, (_, i) => (i >= N ? +(cur - stepDown * (i - boundary)).toFixed(2) : null))
-    const labels = aDates.map(yyMo).concat([1, 2, 3, 4, 5, 6].map((k) => yyMo(addMonths(lastIso, k))))
-    return { cur, prevYr, delta, actual, forecast, labels, boundary, expect: target2027 }
+    const curArr = y26.slice(0, last + 1) as number[]
+    const prevArr = y25 as number[]
+    return { cur, prevYr, delta, curArr, prevArr }
   }, [infAll])
 
   useEffect(() => {
@@ -180,24 +94,22 @@ function PricesView({ data, inf, byKey }: { data: PricesDomain; inf: Mon; byKey:
                   {up ? "▲" : "▼"}{Math.abs(h.delta)}%p
                 </span>
               )}
-              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-500">전망 EST</span>
             </div>
-            <div className="flex items-center gap-2 text-[10px] text-gray-400">
-              <span className="flex items-center gap-1"><span className="inline-block h-0.5 w-3 rounded bg-indigo-500" />실적</span>
-              <span className="flex items-center gap-1"><span className="inline-block h-0 w-3 border-t-2 border-dashed border-indigo-400" />전망</span>
-              <span className="flex items-center gap-1"><span className="inline-block h-0 w-3 border-t border-dashed border-amber-500" />기대</span>
+            <div className="flex items-center gap-2.5 text-[11px] text-gray-400">
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-gray-300" />2025</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-indigo-500" />2026</span>
             </div>
           </div>
-          <div className="mt-1 flex items-end gap-2">
-            <p className="text-[26px] font-bold leading-none tabular-nums text-gray-900">
-              <CountUp value={h.cur} decimals={1} /><span className="text-[13px] font-semibold text-gray-500">%</span>
+          <div className="mt-1.5 flex items-end gap-2">
+            <p className="text-[28px] font-bold leading-none tabular-nums text-gray-900">
+              <CountUp value={h.cur} decimals={1} /><span className="text-[15px] font-semibold text-gray-500">%</span>
             </p>
-            {h.prevYr != null && <p className="pb-0.5 text-[11px] text-gray-400">전년 동월 {h.prevYr}%</p>}
+            {h.prevYr != null && <p className="pb-1 text-[12px] text-gray-400">전년 동월 {h.prevYr}%</p>}
           </div>
-          <div className="mt-1">
-            <FanChart actual={h.actual} forecast={h.forecast} labels={h.labels} boundary={h.boundary} expect={h.expect} mounted={mounted} />
+          <div className="mt-3">
+            <ProChart cur={h.curArr} prev={h.prevArr} labels={MONTHS} unit="%" curName="2026" prevName="2025" decimals={1} />
           </div>
-          <p className="mt-0.5 border-t border-gray-100 pt-2 text-[10px] text-gray-400">출처 PSA CPI · 전년비(YoY) · 롤링 24개월(18실적+6전망) · 기대 인플레 BSP 4.5%(2027, EST)</p>
+          <p className="mt-2 border-t border-gray-100 pt-2 text-[11px] text-gray-400">출처 PSA CPI · 전년비(YoY) · 2025 vs 2026 · BSP 목표 2–4%</p>
         </div>
 
         <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
@@ -308,7 +220,7 @@ function PricesView({ data, inf, byKey }: { data: PricesDomain; inf: Mon; byKey:
         </div>
       </div>
 
-      <p className="text-[11px] leading-relaxed text-gray-400">색=사업영향(원가·물가↑ 로즈, 수요·구매력↑ 에메랄드) · 전망은 ESTIMATED · 실질 대출/예금/임금·송금은 데이터 확인 후 기입</p>
+      <p className="text-[11px] leading-relaxed text-gray-400">색=사업영향(원가·물가↑ 로즈, 수요·구매력↑ 에메랄드) · 실질 대출/예금/임금·송금은 데이터 확인 후 기입</p>
     </div>
   )
 }
@@ -390,4 +302,3 @@ export default function Page() {
     </main>
   )
 }
-
