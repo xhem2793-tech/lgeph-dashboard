@@ -38,20 +38,11 @@ const addMonths = (iso: string, n: number) => {
 }
 const yyMo = (iso: string) => iso.slice(2, 4) + "." + iso.slice(5, 7)
 
-function useMounted() {
-  const [m, setM] = useState(false)
-  useEffect(() => {
-    const t = setTimeout(() => setM(true), 60)
-    return () => clearTimeout(t)
-  }, [])
-  return m
-}
-
 /* ============ 롤링 24개월 라인 (실적 단일선 + 전망 점선 + 기대선) — ProChart 링 점 스타일 ============ */
 function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
   actual: (number | null)[]; forecast: (number | null)[]; labels: string[]; boundary: number; expect: number; mounted: boolean
 }) {
-  const W = 700, H = 128, padL = 20, padR = 8, padT = 8, padB = 16
+  const W = 700, H = 172, padL = 22, padR = 10, padT = 14, padB = 26
   const cW = W - padL - padR, cH = H - padT - padB
   const n = actual.length
   const fin = [...actual, ...forecast, expect].filter((v): v is number => v != null)
@@ -69,16 +60,16 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
   const areaPath = aPts.length > 1 ? "M " + aPts.join(" L ") + " L " + x(boundary) + "," + y(0) + " L " + x(0) + "," + y(0) + " Z" : ""
 
   return (
-    <svg viewBox={"0 0 " + W + " " + H} className="w-full" style={{ height: 128 }} aria-hidden>
+    <svg viewBox={"0 0 " + W + " " + H} className="w-full" style={{ height: 172 }} aria-hidden>
       <rect x={padL} y={y(4)} width={cW} height={Math.max(0, y(2) - y(4))} fill="rgba(99,102,241,0.05)" />
       {grid.map((g) => (
         <g key={g}>
           <line x1={padL} y1={y(g)} x2={W - padR} y2={y(g)} stroke="#f1f3f6" />
-          <text x={2} y={y(g) + 3} fontSize="9" fill="#9ca3af">{g}</text>
+          <text x={2} y={y(g) + 3} fontSize="11" fill="#9ca3af">{g}</text>
         </g>
       ))}
-      <line x1={padL} y1={y(expect)} x2={W - padR} y2={y(expect)} stroke="#f59e0b" strokeWidth="1" strokeDasharray="2,3" opacity="0.7" />
-      <text x={W - padR} y={y(expect) - 3} fontSize="8.5" fill="#b45309" textAnchor="end">기대 {expect}%</text>
+      <line x1={padL} y1={y(expect)} x2={W - padR} y2={y(expect)} stroke="#f59e0b" strokeWidth="1.4" strokeDasharray="3,3" opacity="0.85" />
+      <text x={W - padR} y={y(expect) - 6} fontSize="12.5" fontWeight="700" fill="#b45309" textAnchor="end">기대 인플레 {expect}%</text>
       <defs>
         <linearGradient id="cpiGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
@@ -105,7 +96,7 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
           style={{ opacity: mounted ? 1 : 0, transition: "opacity .3s ease " + (1.1 + (i - boundary) * 0.06) + "s" }} />
       ) : null)}
       {ticks.map((i) => (
-        <text key={i} x={x(i)} y={H - 4} fontSize="9" fill="#9ca3af" textAnchor="middle">{labels[i]}</text>
+        <text key={i} x={x(i)} y={H - 6} fontSize="11" fill="#9ca3af" textAnchor="middle">{labels[i]}</text>
       ))}
     </svg>
   )
@@ -113,7 +104,7 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
 
 /* ============ 물가·생활비 도메인 ============ */
 function PricesView({ data, inf, byKey }: { data: PricesDomain; inf: Mon; byKey: Record<string, Card> }) {
-  const mounted = useMounted()
+  const [mounted, setMounted] = useState(false)
   const infAll = inf["INF_all_items"]
 
   const h = useMemo(() => {
@@ -135,6 +126,12 @@ function PricesView({ data, inf, byKey }: { data: PricesDomain; inf: Mon; byKey:
     const labels = aDates.map(yyMo).concat([1, 2, 3, 4, 5, 6].map((k) => yyMo(addMonths(lastIso, k))))
     return { cur, prevYr, delta, actual, forecast, labels, boundary, expect: target2027 }
   }, [infAll])
+
+  useEffect(() => {
+    if (!h) return
+    const id = requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)))
+    return () => cancelAnimationFrame(id)
+  }, [h])
 
   if (!h) return <div className="h-80 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />
 
