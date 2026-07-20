@@ -42,7 +42,8 @@ const yyMo = (iso: string) => iso.slice(2, 4) + "." + iso.slice(5, 7)
 function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
   actual: (number | null)[]; forecast: (number | null)[]; labels: string[]; boundary: number; expect: number; mounted: boolean
 }) {
-  const W = 700, H = 172, padL = 22, padR = 10, padT = 14, padB = 26
+  const [hi, setHi] = useState<number | null>(null)
+  const W = 700, H = 176, padL = 24, padR = 12, padT = 14, padB = 20
   const cW = W - padL - padR, cH = H - padT - padB
   const n = actual.length
   const fin = [...actual, ...forecast, expect].filter((v): v is number => v != null)
@@ -50,7 +51,7 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
   const span = max - min || 1
   const x = (i: number) => padL + (i * cW) / (n - 1)
   const y = (v: number) => padT + ((max - v) / span) * cH
-
+  const val = (i: number) => (actual[i] != null ? actual[i] : forecast[i]) as number | null
   const aPts = actual.map((v, i) => (v != null ? x(i) + "," + y(v) : null)).filter(Boolean) as string[]
   const anchor = actual[boundary] != null ? x(boundary) + "," + y(actual[boundary] as number) : null
   const fSeq = forecast.map((v, i) => (v != null ? x(i) + "," + y(v) : null)).filter(Boolean) as string[]
@@ -58,45 +59,59 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
   const grid = [0, 2, 4, 6, 8].filter((g) => g <= max + 0.4)
   const ticks = [0, 6, 12, boundary, n - 1]
   const areaPath = aPts.length > 1 ? "M " + aPts.join(" L ") + " L " + x(boundary) + "," + y(0) + " L " + x(0) + "," + y(0) + " Z" : ""
+  const hv = hi != null ? val(hi) : null
+  const tipX = hi != null ? Math.max(padL + 30, Math.min(W - padR - 30, x(hi))) : 0
 
   return (
-    <svg viewBox={"0 0 " + W + " " + H} className="w-full" style={{ height: 172 }} aria-hidden>
-      <rect x={padL} y={y(4)} width={cW} height={Math.max(0, y(2) - y(4))} fill="rgba(99,102,241,0.05)" />
-      {grid.map((g) => (
-        <g key={g}>
-          <line x1={padL} y1={y(g)} x2={W - padR} y2={y(g)} stroke="#f1f3f6" />
-          <text x={2} y={y(g) + 3} fontSize="11" fill="#9ca3af">{g}</text>
-        </g>
-      ))}
-      <line x1={padL} y1={y(expect)} x2={W - padR} y2={y(expect)} stroke="#f59e0b" strokeWidth="1.4" strokeDasharray="3,3" opacity="0.85" />
-      <text x={W - padR} y={y(expect) - 6} fontSize="12.5" fontWeight="700" fill="#b45309" textAnchor="end">기대 인플레 {expect}%</text>
+    <svg viewBox={"0 0 " + W + " " + H} className="w-full" style={{ height: 176 }} onMouseLeave={() => setHi(null)}>
       <defs>
         <linearGradient id="cpiGrad" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
           <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
         </linearGradient>
       </defs>
+      <rect x={padL} y={y(4)} width={cW} height={Math.max(0, y(2) - y(4))} fill="rgba(99,102,241,0.05)" />
+      {grid.map((g) => (
+        <g key={g}>
+          <line x1={padL} y1={y(g)} x2={W - padR} y2={y(g)} stroke="#f1f3f6" />
+          <text x={3} y={y(g) + 4} fontSize="12" fill="#9ca3af">{g}</text>
+        </g>
+      ))}
+      <line x1={padL} y1={y(expect)} x2={W - padR} y2={y(expect)} stroke="#f59e0b" strokeWidth="1.4" strokeDasharray="3,3" opacity="0.85" />
+      <text x={W - padR} y={y(expect) - 6} fontSize="12.5" fontWeight="700" fill="#b45309" textAnchor="end">기대 인플레 {expect}%</text>
       <line x1={x(boundary)} y1={padT} x2={x(boundary)} y2={H - padB} stroke="#e5e7eb" strokeDasharray="3,3" />
       {areaPath && <path d={areaPath} fill="url(#cpiGrad)" style={{ opacity: mounted ? 1 : 0, transition: "opacity .7s ease .5s" }} />}
       <polyline points={aPts.join(" ")} fill="none" stroke="#6366f1" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"
-        style={{ strokeDasharray: 2000, strokeDashoffset: mounted ? 0 : 2000, transition: "stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1)" }} />
+        style={{ strokeDasharray: 2000, strokeDashoffset: mounted ? 0 : 2000, transition: "stroke-dashoffset 1.3s cubic-bezier(.22,1,.36,1)" }} />
       {fLine.length > 1 && (
-        <polyline points={fLine.join(" ")} fill="none" stroke="#818cf8" strokeWidth="2" strokeDasharray="5,4" strokeLinecap="round"
+        <polyline points={fLine.join(" ")} fill="none" stroke="#818cf8" strokeWidth="2.4" strokeDasharray="5,4" strokeLinecap="round"
           style={{ opacity: mounted ? 1 : 0, transition: "opacity .6s ease .9s" }} />
       )}
       {actual.map((v, i) => (v != null && i === boundary ? (
         <circle key={"h" + i} cx={x(i)} cy={y(v)} r="9" fill="rgba(99,102,241,0.15)" style={{ opacity: mounted ? 1 : 0, transition: "opacity .4s ease 1.1s" }} />
       ) : null))}
       {actual.map((v, i) => v != null ? (
-        <circle key={"a" + i} cx={x(i)} cy={y(v)} r={i === boundary ? 6 : 5} fill={i === boundary ? "#6366f1" : "#fff"} stroke="#6366f1" strokeWidth={i === boundary ? 2 : 2.2}
-          style={{ opacity: mounted ? 1 : 0, transition: "opacity .3s ease " + (0.4 + i * 0.05) + "s" }} />
+        <circle key={"a" + i} cx={x(i)} cy={y(v)} r={hi === i ? 6.5 : i === boundary ? 6 : 5} fill={i === boundary || hi === i ? "#6366f1" : "#fff"} stroke="#6366f1" strokeWidth={i === boundary ? 2 : 2.2}
+          style={{ opacity: mounted ? 1 : 0, transition: "opacity .32s ease " + (0.4 + i * 0.045) + "s" }} />
       ) : null)}
       {forecast.map((v, i) => v != null ? (
-        <circle key={"f" + i} cx={x(i)} cy={y(v)} r="4" fill="#fff" stroke="#a5b4fc" strokeWidth="1.9"
-          style={{ opacity: mounted ? 1 : 0, transition: "opacity .3s ease " + (1.1 + (i - boundary) * 0.06) + "s" }} />
+        <circle key={"f" + i} cx={x(i)} cy={y(v)} r={hi === i ? 5 : 4} fill={hi === i ? "#818cf8" : "#fff"} stroke="#a5b4fc" strokeWidth="1.9"
+          style={{ opacity: mounted ? 1 : 0, transition: "opacity .32s ease " + (1.1 + (i - boundary) * 0.06) + "s" }} />
       ) : null)}
+      {hi != null && hv != null && (
+        <g>
+          <line x1={x(hi)} y1={padT} x2={x(hi)} y2={H - padB} stroke="#c7d2fe" strokeWidth="1" />
+          <g transform={"translate(" + tipX + "," + padT + ")"}>
+            <rect x="-30" y="-4" width="60" height="20" rx="5" fill="#111827" opacity="0.92" />
+            <text x="0" y="10" fontSize="11" fontWeight="700" fill="#fff" textAnchor="middle">{labels[hi]} {(hv as number).toFixed(1)}%</text>
+          </g>
+        </g>
+      )}
+      {actual.map((v, i) => (val(i) != null ? (
+        <rect key={"hit" + i} x={x(i) - 16} y={padT} width="32" height={cH} fill="transparent" style={{ cursor: "pointer" }} onMouseEnter={() => setHi(i)} />
+      ) : null))}
       {ticks.map((i) => (
-        <text key={i} x={x(i)} y={H - 6} fontSize="11" fill="#9ca3af" textAnchor="middle">{labels[i]}</text>
+        <text key={i} x={x(i)} y={H - 4} fontSize="12" fill="#9ca3af" textAnchor="middle">{labels[i]}</text>
       ))}
     </svg>
   )
@@ -177,10 +192,10 @@ function PricesView({ data, inf, byKey }: { data: PricesDomain; inf: Mon; byKey:
             </p>
             {h.prevYr != null && <p className="pb-0.5 text-[11px] text-gray-400">전년 동월 {h.prevYr}%</p>}
           </div>
-          <div className="mt-2">
+          <div className="mt-1">
             <FanChart actual={h.actual} forecast={h.forecast} labels={h.labels} boundary={h.boundary} expect={h.expect} mounted={mounted} />
           </div>
-          <p className="mt-1 border-t border-gray-100 pt-2 text-[10px] text-gray-400">출처 PSA CPI · 전년비(YoY) · 롤링 24개월(18실적+6전망) · 기대 인플레 BSP 4.5%(2027, EST)</p>
+          <p className="mt-0.5 border-t border-gray-100 pt-2 text-[10px] text-gray-400">출처 PSA CPI · 전년비(YoY) · 롤링 24개월(18실적+6전망) · 기대 인플레 BSP 4.5%(2027, EST)</p>
         </div>
 
         <div className="flex flex-col rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
