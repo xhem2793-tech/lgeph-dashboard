@@ -6,16 +6,18 @@ import type { CompAd } from "@/lib/supabase"
 
 /** 경쟁사 동향 — 경쟁 6개 브랜드 활성 광고를 진행중/새로시작/종료예정 3버킷으로.
  *  데이터: v_competitor_ads_board (Meta 광고 라이브러리 자체 수집). 카드 클릭 → 상세 팝업.
- *  색=신호: 진행중 emerald · 새로시작 indigo · 종료예정 amber.
+ *  디자인: DESIGN.md 준수 — 카드 §4, news-style 모달 §3, 모션 §2. 색=신호.
  */
 
-const BUCKETS: { key: string; label: string; cls: string; dot: string; hint: string }[] = [
-  { key: "진행중", label: "진행중", cls: "text-emerald-700", dot: "bg-emerald-500", hint: "상시·기간 미정 광고. 계속 노출 중" },
-  { key: "새로시작", label: "새로시작", cls: "text-indigo-700", dot: "bg-indigo-500", hint: "최근 7일 내 게재 시작한 신규 광고" },
-  { key: "종료예정", label: "종료예정", cls: "text-amber-700", dot: "bg-amber-500", hint: "종료이이 명시된 세일·행사 (D-day)" },
+type Bucket = { key: string; label: string; text: string; dot: string; bar: string; band: string; hint: string }
+const BUCKETS: Bucket[] = [
+  { key: "진행중", label: "진행중", text: "text-emerald-700", dot: "bg-emerald-500", bar: "bg-emerald-500", band: "bg-emerald-50", hint: "상시·기간 미정 광고 · 계속 노출 중" },
+  { key: "새로시작", label: "새로시작", text: "text-indigo-700", dot: "bg-indigo-500", bar: "bg-indigo-500", band: "bg-indigo-50", hint: "최근 7일 내 게재 시작한 신규 광고" },
+  { key: "종료예정", label: "종료예정", text: "text-amber-700", dot: "bg-amber-500", bar: "bg-amber-500", band: "bg-amber-50", hint: "종료일 명시된 세일·행사 · D-day" },
 ]
 const BRANDS = ["전체", "Samsung", "TCL", "Hisense", "Midea", "Sharp", "Panasonic"]
 const AD_TYPE: Record<string, string> = { promo: "프로모", launch: "신제품", brand: "브랜드", roadshow: "로드쇼", other: "기타" }
+const initials = (s: string) => (s || "").trim().slice(0, 2).toUpperCase()
 
 const clean = (s: string | null | undefined) =>
   (s || "").replace(/&#8211;|&#8212;/g, "–").replace(/&amp;/g, "&").replace(/&#\d+;|&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim()
@@ -26,53 +28,127 @@ function footer(a: CompAd) {
   return "상시"
 }
 
-function Card({ a, onOpen }: { a: CompAd; onOpen: () => void }) {
+function Card({ a, bk, onOpen }: { a: CompAd; bk: Bucket | undefined; onOpen: () => void }) {
   return (
-    <button onClick={onOpen} className="group w-full rounded-xl border border-gray-200 bg-white p-3 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-md">
-      <div className="flex items-center gap-2">
-        <span className="text-[13px] font-bold text-gray-900">{a.brand}</span>
-        <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
-        {a.page_name !== a.brand && <span className="truncate text-[10px] text-gray-400">· {a.page_name}</span>}
-      </div>
-      <p className="mt-1.5 line-clamp-2 text-[12.5px] font-medium leading-snug text-gray-800">{clean(a.headline)}</p>
-      {a.offer && <span className="mt-1.5 inline-block rounded bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">{clean(a.offer)}</span>}
-      <div className="mt-2 flex items-center gap-1.5 border-t border-gray-100 pt-2 text-[10.5px] text-gray-400">
-        <span>{footer(a)}</span>
-        {a.confidence && <span className="ml-auto">{a.confidence === "CONFIRMED" ? "확인" : "AI"}</span>}
-      </div>
+    <button
+      onClick={onOpen}
+      className="group flex w-full overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 hover:shadow-md active:scale-[.99]"
+    >
+      <span className={"w-1 shrink-0 " + (bk ? bk.bar : "bg-gray-300")} />
+      <span className="min-w-0 flex-1 p-3.5">
+        <span className="flex items-center gap-2">
+          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-indigo-50 text-[9.5px] font-bold text-indigo-600">{initials(a.brand)}</span>
+          <span className="text-[13px] font-bold tracking-tight text-gray-900">{a.brand}</span>
+          <span className="rounded border border-gray-200 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+          {bk && (
+            <span className={"ml-auto inline-flex items-center gap-1 text-[10px] font-semibold " + bk.text}>
+              <span className={"h-1.5 w-1.5 rounded-full " + bk.dot} />
+              {a.days_to_end != null && a.days_to_end >= 0 ? "D-" + a.days_to_end : bk.label}
+            </span>
+          )}
+        </span>
+        <span className="mt-2 block line-clamp-2 text-[12.5px] font-medium leading-snug text-gray-800">{clean(a.headline)}</span>
+        {a.offer && (
+          <span className="mt-2 inline-block rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">{clean(a.offer)}</span>
+        )}
+        <span className="mt-2.5 flex items-center gap-1.5 border-t border-gray-100 pt-2 text-[10.5px] text-gray-400">
+          <span>{footer(a)}</span>
+          {a.confidence && <span className="ml-auto">{a.confidence === "CONFIRMED" ? "확인" : "AI"}</span>}
+        </span>
+      </span>
     </button>
   )
 }
 
 function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
+  const [closing, setClosing] = useState(false)
+  const bk = BUCKETS.find((b) => b.key === a.status)
   const impl = a.body && a.body.includes("[실무]") ? a.body.split("[실무]") : null
   const bodyMain = impl ? clean(impl[0]) : clean(a.body)
   const bodyImpl = impl ? clean(impl.slice(1).join(" ")) : null
-  const bk = BUCKETS.find((b) => b.key === a.status)
+  const close = () => { setClosing(true); setTimeout(onClose, 230) }
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close() }
+    window.addEventListener("keydown", onKey)
+    return () => window.removeEventListener("keydown", onKey)
+  }, [])
+
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-black/40 p-4 sm:p-8" onClick={onClose}>
-      <div className="w-full max-w-[440px] rounded-2xl border border-gray-200 bg-white p-5 shadow-xl" style={{ animation: "popin .22s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <span className="text-[16px] font-extrabold text-gray-900">{a.brand}</span>
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[11px] font-semibold text-gray-500">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+    <div
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-gray-900/40 p-4 backdrop-blur-sm sm:p-8"
+      style={{ animation: (closing ? "backOut" : "backIn") + " .22s ease both" }}
+      onClick={close}
+    >
+      <div
+        className="w-full max-w-[460px] overflow-hidden rounded-2xl bg-white shadow-2xl"
+        style={{ animation: (closing ? "modalOut" : "modalIn") + " .34s cubic-bezier(.22,1,.36,1) both" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className={"px-5 pb-4 pt-4 " + (bk ? bk.band : "bg-gray-50")}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/70 text-[11px] font-bold text-gray-700">{initials(a.brand)}</span>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[15px] font-bold tracking-tight text-gray-900">{a.brand}</span>
+                  <span className="rounded border border-gray-300/60 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+                </div>
+                <div className="mt-0.5 text-[11px] text-gray-500">{a.page_name}</div>
+              </div>
+            </div>
+            <button onClick={close} aria-label="닫기" className="rounded-full p-1 text-gray-400 transition-colors hover:bg-white/60 hover:text-gray-700">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
           </div>
-          <button onClick={onClose} className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600">✕</button>
+          {bk && (
+            <span className={"mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-bold " + bk.text}>
+              <span className={"h-1.5 w-1.5 rounded-full " + bk.dot} />
+              {bk.label}{a.days_to_end != null && a.days_to_end >= 0 ? " · D-" + a.days_to_end : ""}
+            </span>
+          )}
         </div>
-        <div className="mt-1 flex items-center gap-2 text-[12px] text-gray-400">
-          <span>{a.page_name}</span>
-          {bk && <span className={"ml-auto inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold " + bk.cls}><span className={"h-1.5 w-1.5 rounded-full " + bk.dot} />{bk.label}{a.days_to_end != null && a.days_to_end >= 0 ? " D-" + a.days_to_end : ""}</span>}
+
+        <div className="px-5 py-4">
+          <p className="text-[14px] font-bold leading-snug text-gray-900">{clean(a.headline)}</p>
+          {a.offer && (
+            <span className="mt-2.5 inline-block rounded-md bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-700">{clean(a.offer)}</span>
+          )}
+
+          <div className="mt-3.5 grid grid-cols-2 gap-x-4 gap-y-2.5 border-t border-gray-100 pt-3.5">
+            {a.ad_started_on && (
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-wide text-gray-400">게재 시작</div>
+                <div className="mt-0.5 text-[12.5px] font-semibold text-gray-800">{a.ad_started_on}{a.days_since_start != null ? <span className="font-normal text-gray-400"> · {a.days_since_start}일차</span> : null}</div>
+              </div>
+            )}
+            {a.ends_on && (
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-wide text-gray-400">종료일</div>
+                <div className="mt-0.5 text-[12.5px] font-semibold text-gray-800">{a.ends_on}</div>
+              </div>
+            )}
+            {a.venue && (
+              <div>
+                <div className="text-[10px] font-medium uppercase tracking-wide text-gray-400">장소</div>
+                <div className="mt-0.5 text-[12.5px] font-semibold text-gray-800">{a.venue}</div>
+              </div>
+            )}
+          </div>
+
+          {bodyMain && (
+            <div className="mt-3.5 rounded-xl bg-gray-50 p-3.5 text-[12.5px] leading-relaxed text-gray-700">{bodyMain}</div>
+          )}
+          {bodyImpl && (
+            <div className="mt-2.5 rounded-xl bg-indigo-50/70 p-3.5 text-[12.5px] leading-relaxed text-indigo-800">
+              <span className="font-bold">실무</span> {bodyImpl}
+            </div>
+          )}
+          <p className="mt-3.5 flex items-center gap-1.5 border-t border-gray-100 pt-3 text-[10.5px] text-gray-400">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="9" /><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18" /></svg>
+            Meta 광고 라이브러리(자체 수집) · {a.confidence || "—"}{a.ad_url ? " · 상세 링크 보유" : ""}
+          </p>
         </div>
-        <p className="mt-3 text-[14px] font-bold leading-snug text-gray-900">{clean(a.headline)}</p>
-        {a.offer && <span className="mt-2 inline-block rounded-md bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-700">{clean(a.offer)}</span>}
-        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 border-t border-gray-100 pt-3 text-[12px] text-gray-500">
-          {a.ad_started_on && <span>게재 시작 <b className="text-gray-700">{a.ad_started_on}</b>{a.days_since_start != null ? ` (${a.days_since_start}일차)` : ""}</span>}
-          {a.ends_on && <span>종료 <b className="text-gray-700">{a.ends_on}</b></span>}
-          {a.venue && <span>장소 <b className="text-gray-700">{a.venue}</b></span>}
-        </div>
-        {bodyMain && <div className="mt-3 rounded-lg bg-gray-50 p-3 text-[12.5px] leading-relaxed text-gray-700">{bodyMain}</div>}
-        {bodyImpl && <div className="mt-2 rounded-lg bg-indigo-50/60 p-3 text-[12.5px] leading-relaxed text-indigo-800"><b>[실무]</b> {bodyImpl}</div>}
-        <p className="mt-3 border-t border-gray-100 pt-2 text-[11px] text-gray-400">출처 Meta 광고 라이브러리(자체 수집) · {a.confidence || "—"}{a.ad_url ? " · 상세 링크 보유" : ""}</p>
       </div>
     </div>
   )
@@ -92,41 +168,48 @@ export default function Page() {
   const bucket = (k: string) => filtered.filter((a) => a.status === k).sort((a, b) => (a.days_to_end ?? 999) - (b.days_to_end ?? 999))
 
   return (
-    <main className="px-4 pb-10 pt-3 sm:px-6">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes popin{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:none}}"}</style>
+    <main className="mx-auto max-w-[1536px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-[18px] font-extrabold text-gray-900">경쟁사 동향 <span className="text-[11px] font-medium text-gray-400">· Meta 광고 라이브러리 · 활성 광고</span></h1>
-        <p className="text-[10.5px] text-gray-400">주간 수집 · 경쟁 6개 브랜드</p>
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h1 className="text-[17px] font-bold tracking-tight text-gray-900">경쟁사 동향</h1>
+          <p className="mt-0.5 text-[11.5px] text-gray-500">Meta 광고 라이브러리 · 활성 광고 · 경쟁 6개 브랜드</p>
+        </div>
+        <p className="text-[10.5px] text-gray-400">주간 수집</p>
       </div>
 
-      <div className="mb-4 flex flex-wrap gap-1.5">
+      <div className="mb-5 flex flex-wrap gap-1.5">
         {BRANDS.map((b) => (
-          <button key={b} onClick={() => setBrand(b)} className={"rounded-lg border px-2.5 py-1 text-[12px] transition-colors " + (brand === b ? "border-transparent bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50")}>
+          <button
+            key={b}
+            onClick={() => setBrand(b)}
+            className={"rounded-lg border px-2.5 py-1 text-[12px] transition-all duration-300 ease-out active:scale-95 " + (brand === b ? "border-transparent bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-600 hover:-translate-y-px hover:border-indigo-200")}
+          >
             {b} <span className={brand === b ? "text-indigo-400" : "text-gray-400"}>{brandCount(b)}</span>
           </button>
         ))}
       </div>
 
       {ads === null ? (
-        <div className="grid gap-4 md:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="h-64 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
+        <div className="grid gap-4 md:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="h-64 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />)}</div>
       ) : (
         <div className="grid gap-4 md:grid-cols-3">
           {BUCKETS.map((bk) => {
             const list = bucket(bk.key)
             return (
-              <div key={bk.key} className="rounded-2xl border border-gray-200 bg-gray-50/60 p-2.5">
-                <div className="mb-2 flex items-center gap-2 px-1.5 pt-1">
+              <div key={bk.key} className="rounded-2xl border border-gray-200 bg-gray-50/70 p-2.5">
+                <div className="mb-2.5 flex items-center gap-2 px-1.5 pt-1">
                   <span className={"h-2 w-2 rounded-full " + bk.dot} />
-                  <span className={"text-[13px] font-bold " + bk.cls}>{bk.label}</span>
-                  <span className="ml-auto text-[12px] font-semibold text-gray-400">{list.length}</span>
+                  <span className={"text-[13px] font-bold " + bk.text}>{bk.label}</span>
+                  <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-gray-500">{list.length}</span>
                 </div>
                 <div className="flex flex-col gap-2.5">
                   {list.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-gray-200 p-4 text-center text-[11px] leading-relaxed text-gray-400">{bk.hint}<br />해당 광고 없음</div>
+                    <div className="rounded-xl border border-dashed border-gray-200 p-5 text-center text-[11px] leading-relaxed text-gray-400">{bk.hint}<br />해당 광고 없음</div>
                   ) : list.map((a, i) => (
-                    <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 12) * 40) + "ms" }}>
-                      <Card a={a} onOpen={() => setSel(a)} />
+                    <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .5s ease both", animationDelay: (Math.min(i, 12) * 45) + "ms" }}>
+                      <Card a={a} bk={bk} onOpen={() => setSel(a)} />
                     </div>
                   ))}
                 </div>
@@ -136,7 +219,7 @@ export default function Page() {
         </div>
       )}
 
-      <p className="mt-4 text-[10.5px] leading-relaxed text-gray-400">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 종료일은 문구/세일명 명시분만 · 게재 시작일은 Meta 게재 시작 기준</p>
+      <p className="mt-5 text-[10.5px] leading-relaxed text-gray-400">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 종료일은 문구/세일명 명시분만 · 게재 시작일은 Meta 게재 시작 기준</p>
 
       {sel && <Modal a={sel} onClose={() => setSel(null)} />}
     </main>
