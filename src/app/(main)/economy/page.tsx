@@ -59,6 +59,9 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
   const grid = [0, 2, 4, 6, 8].filter((g) => g <= max + 0.4)
   const ticks = [0, 6, 12, boundary, n - 1]
   const areaPath = aPts.length > 1 ? "M " + aPts.join(" L ") + " L " + x(boundary) + "," + y(0) + " L " + x(0) + "," + y(0) + " Z" : ""
+  const aXY = actual.map((v, i) => (v != null ? [x(i), y(v)] : null)).filter(Boolean) as number[][]
+  let lineLen = 0
+  for (let k = 1; k < aXY.length; k++) lineLen += Math.hypot(aXY[k][0] - aXY[k - 1][0], aXY[k][1] - aXY[k - 1][1])
   const hv = hi != null ? val(hi) : null
   const tipX = hi != null ? Math.max(padL + 30, Math.min(W - padR - 30, x(hi))) : 0
 
@@ -82,7 +85,7 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
       <line x1={x(boundary)} y1={padT} x2={x(boundary)} y2={H - padB} stroke="#e5e7eb" strokeDasharray="3,3" />
       {areaPath && <path d={areaPath} fill="url(#cpiGrad)" style={{ opacity: mounted ? 1 : 0, transition: "opacity .7s ease .5s" }} />}
       <polyline points={aPts.join(" ")} fill="none" stroke="#6366f1" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"
-        style={{ strokeDasharray: 2000, strokeDashoffset: mounted ? 0 : 2000, transition: "stroke-dashoffset 1.3s cubic-bezier(.22,1,.36,1)" }} />
+        style={{ strokeDasharray: lineLen, strokeDashoffset: mounted ? 0 : lineLen, transition: "stroke-dashoffset 1.5s cubic-bezier(.22,1,.36,1)" }} />
       {fLine.length > 1 && (
         <polyline points={fLine.join(" ")} fill="none" stroke="#818cf8" strokeWidth="2.4" strokeDasharray="5,4" strokeLinecap="round"
           style={{ opacity: mounted ? 1 : 0, transition: "opacity .6s ease .9s" }} />
