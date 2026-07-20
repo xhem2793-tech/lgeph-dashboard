@@ -6,7 +6,7 @@ import type { CompAd } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 
 /** 경쟁사 동향 — 경쟁 6개 브랜드 활성 광고.
- *  브랜드=상단 알약 토글(Segmented), 광고 성격=좌측 메뉴(§4), 상태 필터 pill + 카드/월별 보기 토글.
+ *  필터: 브랜드(상단 Segmented) · 광고 성격(좌측 메뉴) · 상태(pill) · 게재월(pill). 고른 것만 카드로.
  *  카드/모달=DESIGN.md §3·§4, 모션 §2. 색=신호. 데이터: v_competitor_ads_board.
  */
 
@@ -22,7 +22,8 @@ const CATS: { key: string; type: string | null; label: string; sub: string }[] =
   { key: "brand", type: "brand", label: "브랜드", sub: "브랜드 인지·이미지" },
   { key: "promo", type: "promo", label: "프로모", sub: "할인·번들·세일" },
   { key: "launch", type: "launch", label: "신제품", sub: "런칭·출시" },
-  { key: "roadshow", type: "roadshow", label: "행사·로드쇼", sub: "매장행사·투어" },
+  { key: "campaign", type: "campaign", label: "캠페인", sub: "통합 마케팅" },
+  { key: "event", type: "event", label: "행사", sub: "매장행사·로드쇼" },
   { key: "other", type: "other", label: "기타", sub: "분류 외" },
 ]
 const STATI: { key: string; label: string }[] = [
@@ -31,7 +32,7 @@ const STATI: { key: string; label: string }[] = [
   { key: "새로시작", label: "새로시작" },
   { key: "종료예정", label: "종료예정" },
 ]
-const AD_TYPE: Record<string, string> = { promo: "프로모", launch: "신제품", brand: "브랜드", roadshow: "로드쇼", other: "기타" }
+const AD_TYPE: Record<string, string> = { promo: "프로모", launch: "신제품", brand: "브랜드", campaign: "캠페인", event: "행사", roadshow: "로드쇼", other: "기타" }
 const initials = (s: string) => (s || "").trim().slice(0, 2).toUpperCase()
 
 const clean = (s: string | null | undefined) =>
@@ -174,7 +175,7 @@ export default function Page() {
   const [brand, setBrand] = useState("전체")
   const [cat, setCat] = useState("all")
   const [stat, setStat] = useState("전체")
-  const [view, setView] = useState("card")
+  const [month, setMonth] = useState("전체")
   const [sel, setSel] = useState<CompAd | null>(null)
 
   useEffect(() => {
@@ -182,11 +183,12 @@ export default function Page() {
   }, [])
 
   const catType = CATS.find((c) => c.key === cat)?.type ?? null
+  const mMatch = (a: CompAd, m: string) => m === "전체" || (m === "상시" ? !a.ad_started_on : (a.ad_started_on ?? "").slice(0, 7) === m)
   const filtered = useMemo(
-    () => (ads ?? []).filter((a) => (brand === "전체" || a.brand === brand) && (catType === null || a.ad_type === catType)),
-    [ads, brand, catType],
+    () => (ads ?? []).filter((a) => (brand === "전체" || a.brand === brand) && (catType === null || a.ad_type === catType) && mMatch(a, month)),
+    [ads, brand, catType, month],
   )
-  const catCount = (c: { type: string | null }) => (ads ?? []).filter((a) => (brand === "전체" || a.brand === brand) && (c.type === null || a.ad_type === c.type)).length
+  const catCount = (c: { type: string | null }) => (ads ?? []).filter((a) => (brand === "전체" || a.brand === brand) && mMatch(a, month) && (c.type === null || a.ad_type === c.type)).length
   const statusCount = (k: string) => filtered.filter((a) => k === "전체" || a.status === k).length
   const bkOf = (s: string) => BUCKETS.find((b) => b.key === s)
   const PRIO: Record<string, number> = { 종료예정: 0, 새로시작: 1, 진행중: 2 }
@@ -194,36 +196,24 @@ export default function Page() {
     .filter((a) => stat === "전체" || a.status === stat)
     .sort((a, b) => (PRIO[a.status] ?? 9) - (PRIO[b.status] ?? 9) || (a.days_to_end ?? 999) - (b.days_to_end ?? 999))
 
-  const TYPE_ORDER = ["brand", "promo", "launch", "roadshow", "other"]
-  const groups = (() => {
-    if (view === "card") return [] as { k: string; label: string; items: CompAd[] }[]
-    const keyOf = (a: CompAd) => (view === "month" ? (a.ad_started_on ? a.ad_started_on.slice(0, 7) : "상시") : view === "type" ? a.ad_type : a.brand)
-    const m = new Map<string, CompAd[]>()
-    for (const a of shown) {
-      const k = keyOf(a)
-      const arr = m.get(k)
-      if (arr) arr.push(a); else m.set(k, [a])
-    }
-    let keys = [...m.keys()]
-    if (view === "month") keys = keys.sort((x, y) => (x === "상시" ? 1 : y === "상시" ? -1 : y.localeCompare(x)))
-    else if (view === "type") keys = keys.sort((x, y) => ((TYPE_ORDER.indexOf(x) + 1 || 99) - (TYPE_ORDER.indexOf(y) + 1 || 99)))
-    else keys = keys.sort((x, y) => BRANDS.indexOf(x) - BRANDS.indexOf(y))
-    const label = (k: string) =>
-      view === "month"
-        ? (k === "상시" ? "상시 · 게재일 미상" : Number(k.slice(0, 4)) + "년 " + Number(k.slice(5, 7)) + "월")
-        : view === "type"
-          ? (AD_TYPE[k] ?? k)
-          : k
-    return keys.map((k) => ({ k, label: label(k), items: m.get(k) ?? [] }))
+  const months = (() => {
+    const set = new Set<string>()
+    let sangsi = false
+    for (const a of (ads ?? [])) { if (a.ad_started_on) set.add(a.ad_started_on.slice(0, 7)); else sangsi = true }
+    const arr = [...set].sort((x, y) => y.localeCompare(x))
+    const opts = ["전체", ...arr]
+    if (sangsi) opts.push("상시")
+    return opts
   })()
+  const monthLabel = (m: string) => (m === "전체" ? "전체" : m === "상시" ? "상시" : m.slice(0, 4) + "." + m.slice(5, 7))
+  const monthCount = (m: string) => (ads ?? []).filter((a) => (brand === "전체" || a.brand === brand) && (catType === null || a.ad_type === catType) && mMatch(a, m)).length
 
   return (
     <main className="mx-auto max-w-[1536px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
-      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
+      <div className="mb-3">
         <h1 className="text-[17px] font-bold tracking-tight text-gray-900">경쟁사 동향</h1>
-        <p className="text-[10.5px] text-gray-400">Meta 광고 라이브러리 · 주간 수집</p>
       </div>
 
       <div className="mb-4 overflow-x-auto pb-0.5">
@@ -258,60 +248,48 @@ export default function Page() {
         </aside>
 
         <div className="min-w-0">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex flex-wrap gap-1.5">
-              {STATI.map((s) => {
-                const on = stat === s.key
-                const bk = bkOf(s.key)
-                return (
-                  <button
-                    key={s.key}
-                    onClick={() => setStat(s.key)}
-                    className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[12px] transition-all duration-300 ease-out active:scale-95 " + (on ? "border-transparent bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-600 hover:-translate-y-px hover:border-indigo-200")}
-                  >
-                    {bk && <span className={"h-1.5 w-1.5 rounded-full " + bk.dot} />}
-                    {s.label}
-                    <span className={on ? "text-indigo-400" : "text-gray-400"}>{statusCount(s.key)}</span>
-                  </button>
-                )
-              })}
-            </div>
-            <div className="flex shrink-0 gap-0.5 rounded-lg bg-gray-100 p-0.5">
-              {[["card", "카드"], ["month", "월별"], ["type", "제품별"], ["brand", "브랜드별"]].map(([k, l]) => (
+          <div className="mb-2.5 flex flex-wrap gap-1.5">
+            {STATI.map((s) => {
+              const on = stat === s.key
+              const bk = bkOf(s.key)
+              return (
                 <button
-                  key={k}
-                  onClick={() => setView(k)}
-                  className={"rounded-md px-2.5 py-1 text-[12px] transition-all duration-300 ease-out " + (view === k ? "bg-white font-bold text-indigo-700 shadow-sm" : "text-gray-500 hover:text-gray-800")}
+                  key={s.key}
+                  onClick={() => setStat(s.key)}
+                  className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[12px] transition-all duration-300 ease-out active:scale-95 " + (on ? "border-transparent bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-600 hover:-translate-y-px hover:border-indigo-200")}
                 >
-                  {l}
+                  {bk && <span className={"h-1.5 w-1.5 rounded-full " + bk.dot} />}
+                  {s.label}
+                  <span className={on ? "text-indigo-400" : "text-gray-400"}>{statusCount(s.key)}</span>
                 </button>
-              ))}
-            </div>
+              )
+            })}
+          </div>
+
+          <div className="mb-4 flex flex-wrap items-center gap-1.5">
+            <span className="mr-0.5 flex items-center gap-1 text-[11px] font-semibold text-gray-400">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg>
+              게재월
+            </span>
+            {months.map((m) => {
+              const on = month === m
+              return (
+                <button
+                  key={m}
+                  onClick={() => setMonth(m)}
+                  className={"inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[12px] tabular-nums transition-all duration-300 ease-out active:scale-95 " + (on ? "border-transparent bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-600 hover:-translate-y-px hover:border-indigo-200")}
+                >
+                  {monthLabel(m)}
+                  <span className={on ? "text-indigo-400" : "text-gray-400"}>{monthCount(m)}</span>
+                </button>
+              )
+            })}
           </div>
 
           {ads === null ? (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-32 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
           ) : shown.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center text-[12px] text-gray-400">해당 조건의 광고 없음</div>
-          ) : view !== "card" ? (
-            <div className="flex flex-col gap-5">
-              {groups.map((g) => (
-                <div key={g.k}>
-                  <div className="mb-2.5 flex items-center gap-2">
-                    <span className="text-[13px] font-bold text-gray-800">{g.label}</span>
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-semibold text-gray-500">{g.items.length}</span>
-                    <span className="h-px flex-1 bg-gray-100" />
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {g.items.map((a, i) => (
-                      <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .5s ease both", animationDelay: (Math.min(i, 14) * 35) + "ms" }}>
-                        <Card a={a} bk={bkOf(a.status)} onOpen={() => setSel(a)} />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
               {shown.map((a, i) => (
