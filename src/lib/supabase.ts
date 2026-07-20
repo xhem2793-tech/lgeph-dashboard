@@ -943,3 +943,27 @@ export async function pricesDomain(): Promise<PricesDomain> {
 
   return { idx, forecast, policyRate, region }
 }
+
+// ── 경쟁사 동향(광고) — v_competitor_ads_board ──
+export type CompAd = {
+  brand: string
+  page_name: string
+  ad_type: string
+  headline: string
+  body: string | null
+  offer: string | null
+  status: string
+  days_since_start: number | null
+  days_to_end: number | null
+  ends_on: string | null
+  ad_started_on: string | null
+  venue: string | null
+  ad_url: string | null
+  confidence: string | null
+}
+
+export async function competitorAds(): Promise<CompAd[]> {
+  return (await sb(
+    "v_competitor_ads_board?select=brand,page_name,ad_type,headline,body,offer,status,days_since_start,days_to_end,ends_on,ad_started_on,venue,ad_url,confidence"
+  )) as CompAd[]
+}
