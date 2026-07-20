@@ -66,6 +66,7 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
   const fLine = anchor ? [anchor, ...fSeq] : fSeq
   const grid = [0, 2, 4, 6, 8].filter((g) => g <= max + 0.4)
   const ticks = [0, 6, 12, boundary, n - 1]
+  const areaPath = aPts.length > 1 ? "M " + aPts.join(" L ") + " L " + x(boundary) + "," + y(0) + " L " + x(0) + "," + y(0) + " Z" : ""
 
   return (
     <svg viewBox={"0 0 " + W + " " + H} className="w-full" style={{ height: 128 }} aria-hidden>
@@ -78,19 +79,29 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
       ))}
       <line x1={padL} y1={y(expect)} x2={W - padR} y2={y(expect)} stroke="#f59e0b" strokeWidth="1" strokeDasharray="2,3" opacity="0.7" />
       <text x={W - padR} y={y(expect) - 3} fontSize="8.5" fill="#b45309" textAnchor="end">기대 {expect}%</text>
+      <defs>
+        <linearGradient id="cpiGrad" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
+          <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+        </linearGradient>
+      </defs>
       <line x1={x(boundary)} y1={padT} x2={x(boundary)} y2={H - padB} stroke="#e5e7eb" strokeDasharray="3,3" />
-      <polyline points={aPts.join(" ")} fill="none" stroke="#6366f1" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+      {areaPath && <path d={areaPath} fill="url(#cpiGrad)" style={{ opacity: mounted ? 1 : 0, transition: "opacity .7s ease .5s" }} />}
+      <polyline points={aPts.join(" ")} fill="none" stroke="#6366f1" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"
         style={{ strokeDasharray: 2000, strokeDashoffset: mounted ? 0 : 2000, transition: "stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1)" }} />
       {fLine.length > 1 && (
         <polyline points={fLine.join(" ")} fill="none" stroke="#818cf8" strokeWidth="2" strokeDasharray="5,4" strokeLinecap="round"
           style={{ opacity: mounted ? 1 : 0, transition: "opacity .6s ease .9s" }} />
       )}
+      {actual.map((v, i) => (v != null && i === boundary ? (
+        <circle key={"h" + i} cx={x(i)} cy={y(v)} r="9" fill="rgba(99,102,241,0.15)" style={{ opacity: mounted ? 1 : 0, transition: "opacity .4s ease 1.1s" }} />
+      ) : null))}
       {actual.map((v, i) => v != null ? (
-        <circle key={"a" + i} cx={x(i)} cy={y(v)} r={i === boundary ? 4 : 3.1} fill={i === boundary ? "#6366f1" : "#fff"} stroke="#6366f1" strokeWidth="1.7"
+        <circle key={"a" + i} cx={x(i)} cy={y(v)} r={i === boundary ? 6 : 5} fill={i === boundary ? "#6366f1" : "#fff"} stroke="#6366f1" strokeWidth={i === boundary ? 2 : 2.2}
           style={{ opacity: mounted ? 1 : 0, transition: "opacity .3s ease " + (0.4 + i * 0.05) + "s" }} />
       ) : null)}
       {forecast.map((v, i) => v != null ? (
-        <circle key={"f" + i} cx={x(i)} cy={y(v)} r="2.8" fill="#fff" stroke="#a5b4fc" strokeWidth="1.5"
+        <circle key={"f" + i} cx={x(i)} cy={y(v)} r="4" fill="#fff" stroke="#a5b4fc" strokeWidth="1.9"
           style={{ opacity: mounted ? 1 : 0, transition: "opacity .3s ease " + (1.1 + (i - boundary) * 0.06) + "s" }} />
       ) : null)}
       {ticks.map((i) => (
@@ -145,7 +156,7 @@ function PricesView({ data, inf, byKey }: { data: PricesDomain; inf: Mon; byKey:
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid gap-4 lg:grid-cols-[1.9fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-2">
         <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-2">
