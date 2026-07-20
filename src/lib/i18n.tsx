@@ -58,6 +58,7 @@ export const DICT = {
   nav_economy: { ko: "주요 지표", en: "Indicators" },
   nav_news: { ko: "주요 뉴스", en: "News" },
   nav_competitors: { ko: "가격 동향", en: "Prices" },
+  nav_competitor_ads: { ko: "경쟁사 동향", en: "Competitor Ads" },
   nav_calendar: { ko: "캘린더", en: "Calendar" },
   nav_appendix: { ko: "부록", en: "Appendix" },
   search_ph: { ko: "지표·뉴스·키워드 검색", en: "Search indicators, news, keywords" },
