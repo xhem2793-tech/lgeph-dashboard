@@ -95,21 +95,20 @@ function FanChart({ actual, forecast, labels, boundary, expect, mounted }: {
       ) : null))}
       {actual.map((v, i) => v != null ? (
         <circle key={"a" + i} cx={x(i)} cy={y(v)} r={hi === i ? 6.5 : i === boundary ? 6 : 5} fill={i === boundary || hi === i ? "#6366f1" : "#fff"} stroke="#6366f1" strokeWidth={i === boundary ? 2 : 2.2}
-          style={{ opacity: mounted ? 1 : 0, transition: "opacity .32s ease " + (0.4 + i * 0.045) + "s" }} />
+          style={{ opacity: mounted ? 1 : 0, transition: "opacity .32s ease " + (0.4 + i * 0.045) + "s, r .15s ease, fill .15s ease" }} />
       ) : null)}
       {forecast.map((v, i) => v != null ? (
         <circle key={"f" + i} cx={x(i)} cy={y(v)} r={hi === i ? 5 : 4} fill={hi === i ? "#818cf8" : "#fff"} stroke="#a5b4fc" strokeWidth="1.9"
           style={{ opacity: mounted ? 1 : 0, transition: "opacity .32s ease " + (1.1 + (i - boundary) * 0.06) + "s" }} />
       ) : null)}
-      {hi != null && hv != null && (
-        <g>
-          <line x1={x(hi)} y1={padT} x2={x(hi)} y2={H - padB} stroke="#c7d2fe" strokeWidth="1" />
-          <g transform={"translate(" + tipX + "," + padT + ")"}>
-            <rect x="-30" y="-4" width="60" height="20" rx="5" fill="#111827" opacity="0.92" />
-            <text x="0" y="10" fontSize="11" fontWeight="700" fill="#fff" textAnchor="middle">{labels[hi]} {(hv as number).toFixed(1)}%</text>
-          </g>
+      <g style={{ opacity: hi != null && hv != null ? 1 : 0, transition: "opacity .15s cubic-bezier(.4,0,.2,1)", pointerEvents: "none" }}>
+        <line x1={x(hi != null ? hi : boundary)} y1={padT} x2={x(hi != null ? hi : boundary)} y2={H - padB} stroke="#c7d2fe" strokeWidth="1" />
+        <g transform={"translate(" + (hi != null ? tipX : 0) + "," + padT + ")"}>
+          <rect x="-34" y="-1" width="68" height="34" rx="6" fill="#fff" stroke="#e5e7eb" strokeWidth="1" />
+          <text x="0" y="12" fontSize="9.5" fill="#9ca3af" textAnchor="middle">{hi != null ? labels[hi] : ""}</text>
+          <text x="0" y="26" fontSize="12.5" fontWeight="800" fill="#4f46e5" textAnchor="middle">{hi != null && hv != null ? (hv as number).toFixed(1) + "%" : ""}</text>
         </g>
-      )}
+      </g>
       {actual.map((_, i) => (val(i) != null ? (
         <rect key={"hit" + i} x={x(i) - 16} y={padT} width="32" height={cH} fill="transparent" style={{ cursor: "pointer" }} onMouseEnter={() => setHi(i)} />
       ) : null))}
