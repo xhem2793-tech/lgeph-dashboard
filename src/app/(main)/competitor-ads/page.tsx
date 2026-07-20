@@ -200,7 +200,7 @@ export default function Page() {
     const set = new Set<string>()
     let sangsi = false
     for (const a of (ads ?? [])) { if (a.ad_started_on) set.add(a.ad_started_on.slice(0, 7)); else sangsi = true }
-    const arr = [...set].sort((x, y) => y.localeCompare(x))
+    const arr = Array.from(set).sort((x, y) => y.localeCompare(x))
     const opts = ["전체", ...arr]
     if (sangsi) opts.push("상시")
     return opts
