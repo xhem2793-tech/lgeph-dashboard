@@ -3,10 +3,11 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { competitorAds } from "@/lib/supabase"
 import type { CompAd } from "@/lib/supabase"
+import { Segmented } from "@/components/Segmented"
 
 /** 경쟁사 동향 — 경쟁 6개 브랜드 활성 광고를 진행중/새로시작/종료예정 3버킷으로.
- *  데이터: v_competitor_ads_board (Meta 광고 라이브러리 자체 수집). 카드 클릭 → 상세 팝업.
- *  디자인: DESIGN.md 준수 — 카드 §4, news-style 모달 §3, 모션 §2. 색=신호.
+ *  브랜드=상단 알약 토글(Segmented), 광고 성격=좌측 메뉴 리스트(§4), 카드/모달=DESIGN.md §3·§4, 모션 §2.
+ *  데이터: v_competitor_ads_board (Meta 광고 라이브러리 자체 수집). 색=신호.
  */
 
 type Bucket = { key: string; label: string; text: string; dot: string; bar: string; band: string; hint: string }
@@ -16,6 +17,14 @@ const BUCKETS: Bucket[] = [
   { key: "종료예정", label: "종료예정", text: "text-amber-700", dot: "bg-amber-500", bar: "bg-amber-500", band: "bg-amber-50", hint: "종료일 명시된 세일·행사 · D-day" },
 ]
 const BRANDS = ["전체", "Samsung", "TCL", "Hisense", "Midea", "Sharp", "Panasonic"]
+const CATS: { key: string; type: string | null; label: string; sub: string }[] = [
+  { key: "all", type: null, label: "전체", sub: "모든 광고" },
+  { key: "brand", type: "brand", label: "브랜드", sub: "브랜드 인지·이미지" },
+  { key: "promo", type: "promo", label: "프로모", sub: "할인·번들·세일" },
+  { key: "launch", type: "launch", label: "신제품", sub: "런칭·출시" },
+  { key: "roadshow", type: "roadshow", label: "행사·로드쇼", sub: "매장행사·투어" },
+  { key: "other", type: "other", label: "기타", sub: "분류 외" },
+]
 const AD_TYPE: Record<string, string> = { promo: "프로모", launch: "신제품", brand: "브랜드", roadshow: "로드쇼", other: "기타" }
 const initials = (s: string) => (s || "").trim().slice(0, 2).toUpperCase()
 
@@ -157,21 +166,26 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
 export default function Page() {
   const [ads, setAds] = useState<CompAd[] | null>(null)
   const [brand, setBrand] = useState("전체")
+  const [cat, setCat] = useState("all")
   const [sel, setSel] = useState<CompAd | null>(null)
 
   useEffect(() => {
     competitorAds().then(setAds).catch(() => setAds([]))
   }, [])
 
-  const filtered = useMemo(() => (ads ?? []).filter((a) => brand === "전체" || a.brand === brand), [ads, brand])
-  const brandCount = (b: string) => (ads ?? []).filter((a) => b === "전체" || a.brand === b).length
+  const catType = CATS.find((c) => c.key === cat)?.type ?? null
+  const filtered = useMemo(
+    () => (ads ?? []).filter((a) => (brand === "전체" || a.brand === brand) && (catType === null || a.ad_type === catType)),
+    [ads, brand, catType],
+  )
+  const catCount = (c: { type: string | null }) => (ads ?? []).filter((a) => (brand === "전체" || a.brand === brand) && (c.type === null || a.ad_type === c.type)).length
   const bucket = (k: string) => filtered.filter((a) => a.status === k).sort((a, b) => (a.days_to_end ?? 999) - (b.days_to_end ?? 999))
 
   return (
     <main className="mx-auto max-w-[1536px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
         <div>
           <h1 className="text-[17px] font-bold tracking-tight text-gray-900">경쟁사 동향</h1>
           <p className="mt-0.5 text-[11.5px] text-gray-500">Meta 광고 라이브러리 · 활성 광고 · 경쟁 6개 브랜드</p>
@@ -179,47 +193,69 @@ export default function Page() {
         <p className="text-[10.5px] text-gray-400">주간 수집</p>
       </div>
 
-      <div className="mb-5 flex flex-wrap gap-1.5">
-        {BRANDS.map((b) => (
-          <button
-            key={b}
-            onClick={() => setBrand(b)}
-            className={"rounded-lg border px-2.5 py-1 text-[12px] transition-all duration-300 ease-out active:scale-95 " + (brand === b ? "border-transparent bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-600 hover:-translate-y-px hover:border-indigo-200")}
-          >
-            {b} <span className={brand === b ? "text-indigo-400" : "text-gray-400"}>{brandCount(b)}</span>
-          </button>
-        ))}
+      <div className="mb-4 overflow-x-auto pb-0.5">
+        <Segmented value={brand} onChange={setBrand} options={BRANDS.map((b) => ({ k: b, label: b }))} size="sm" />
       </div>
 
-      {ads === null ? (
-        <div className="grid gap-4 md:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="h-64 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />)}</div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-3">
-          {BUCKETS.map((bk) => {
-            const list = bucket(bk.key)
-            return (
-              <div key={bk.key} className="rounded-2xl border border-gray-200 bg-gray-50/70 p-2.5">
-                <div className="mb-2.5 flex items-center gap-2 px-1.5 pt-1">
-                  <span className={"h-2 w-2 rounded-full " + bk.dot} />
-                  <span className={"text-[13px] font-bold " + bk.text}>{bk.label}</span>
-                  <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-gray-500">{list.length}</span>
-                </div>
-                <div className="flex flex-col gap-2.5">
-                  {list.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-gray-200 p-5 text-center text-[11px] leading-relaxed text-gray-400">{bk.hint}<br />해당 광고 없음</div>
-                  ) : list.map((a, i) => (
-                    <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .5s ease both", animationDelay: (Math.min(i, 12) * 45) + "ms" }}>
-                      <Card a={a} bk={bk} onOpen={() => setSel(a)} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      )}
+      <div className="grid gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
+        <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]">
+          <div className="px-2.5 py-3">
+            <div className="mb-2 px-1.5 text-[14px] font-bold tracking-tight text-gray-900">광고 성격</div>
+            <div className="flex flex-col gap-0.5">
+              {CATS.map((c, i) => {
+                const on = cat === c.key
+                const n = catCount(c)
+                return (
+                  <button
+                    key={c.key}
+                    onClick={() => setCat(c.key)}
+                    style={{ animation: "fadeUp .4s ease both", animationDelay: (i * 40) + "ms" }}
+                    className={"group w-full rounded-lg px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " + (on ? "bg-indigo-50 ring-1 ring-indigo-100" : "hover:bg-indigo-50/40")}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span className={"flex-1 text-[13px] " + (on ? "font-bold text-indigo-700" : "font-semibold text-gray-800 group-hover:text-gray-900")}>{c.label}</span>
+                      <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums " + (on ? "bg-indigo-100 text-indigo-600" : n === 0 ? "bg-gray-50 text-gray-300" : "bg-gray-100 text-gray-500")}>{n}</span>
+                    </span>
+                    <span className="mt-0.5 block text-[10px] leading-tight text-gray-400">{c.sub}</span>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </aside>
 
-      <p className="mt-5 text-[10.5px] leading-relaxed text-gray-400">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 종료일은 문구/세일명 명시분만 · 게재 시작일은 Meta 게재 시작 기준</p>
+        <div className="min-w-0">
+          {ads === null ? (
+            <div className="grid gap-4 md:grid-cols-3">{[0, 1, 2].map((i) => <div key={i} className="h-64 animate-pulse rounded-2xl border border-gray-100 bg-gray-50" />)}</div>
+          ) : (
+            <div className="grid gap-4 md:grid-cols-3">
+              {BUCKETS.map((bk) => {
+                const list = bucket(bk.key)
+                return (
+                  <div key={bk.key} className="rounded-2xl border border-gray-200 bg-gray-50/70 p-2.5">
+                    <div className="mb-2.5 flex items-center gap-2 px-1.5 pt-1">
+                      <span className={"h-2 w-2 rounded-full " + bk.dot} />
+                      <span className={"text-[13px] font-bold " + bk.text}>{bk.label}</span>
+                      <span className="ml-auto rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-gray-500">{list.length}</span>
+                    </div>
+                    <div className="flex flex-col gap-2.5">
+                      {list.length === 0 ? (
+                        <div className="rounded-xl border border-dashed border-gray-200 p-5 text-center text-[11px] leading-relaxed text-gray-400">{bk.hint}<br />해당 광고 없음</div>
+                      ) : list.map((a, i) => (
+                        <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .5s ease both", animationDelay: (Math.min(i, 12) * 45) + "ms" }}>
+                          <Card a={a} bk={bk} onOpen={() => setSel(a)} />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+
+          <p className="mt-5 text-[10.5px] leading-relaxed text-gray-400">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 종료일은 문구/세일명 명시분만 · 게재 시작일은 Meta 게재 시작 기준</p>
+        </div>
+      </div>
 
       {sel && <Modal a={sel} onClose={() => setSel(null)} />}
     </main>
