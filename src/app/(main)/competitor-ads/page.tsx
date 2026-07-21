@@ -24,7 +24,6 @@ const TYPES = [
 const AD_TYPE: Record<string, string> = { promo: "프로모", launch: "신제품", brand: "브랜드", campaign: "캠페인", event: "행사", roadshow: "로드쇼", other: "기타" }
 const PRODS = ["에어컨(RAC)", "TV·AV", "세탁·건조", "냉장고", "에어케어", "기타"]
 const prodLabel = (c: string) => (c === "에어컨(RAC)" ? "에어컨" : c)
-const initials = (s: string) => (s || "").trim().slice(0, 2).toUpperCase()
 const clean = (s: string | null | undefined) =>
   (s || "").replace(/&#8211;|&#8212;/g, "–").replace(/&amp;/g, "&").replace(/&#\d+;|&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim()
 const ymLabel = (ym: string) => Number(ym.slice(0, 4)) + "년 " + Number(ym.slice(5, 7)) + "월"
