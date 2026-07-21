@@ -59,10 +59,10 @@ function Thumb({ a }: { a: CompAd }) {
   const st = stOf(a.status)
   const showImg = !!a.image_url && !err
   return (
-    <div className="relative aspect-[16/10] w-full overflow-hidden bg-indigo-50">
+    <div className="relative aspect-[16/9] w-full overflow-hidden bg-indigo-50">
       {showImg
         ? <img src={a.image_url || ""} alt="" onError={() => setErr(true)} className="h-full w-full object-cover" />
-        : <div className="flex h-full w-full items-center justify-center text-[24px] font-bold text-indigo-300">{initials(a.brand)}</div>}
+        : <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 bg-gradient-to-br from-indigo-500 to-violet-600"><span className="text-[20px] font-bold tracking-tight text-white">{a.brand}</span><span className="text-[9px] font-medium text-white/70">광고 이미지 없음</span></div>}
       {st && (
         <span className={"absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-0.5 text-[9px] font-bold " + st.text}>
           <span className={"h-1.5 w-1.5 rounded-full " + st.dot} />
@@ -244,11 +244,11 @@ export default function Page() {
           </div>
 
           {ads === null ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
           ) : shown.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center text-[12px] text-gray-400">해당 조건의 광고 없음</div>
           ) : (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {shown.map((a, i) => (
                 <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .45s ease both", animationDelay: (Math.min(i, 16) * 30) + "ms" }}>
                   <Card a={a} onOpen={() => setSel(a)} />
