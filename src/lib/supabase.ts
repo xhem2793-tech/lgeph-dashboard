@@ -960,10 +960,12 @@ export type CompAd = {
   venue: string | null
   ad_url: string | null
   confidence: string | null
+  image_url: string | null
+  category: string | null
 }
 
 export async function competitorAds(): Promise<CompAd[]> {
   return (await sb(
-    "v_competitor_ads_board?select=brand,page_name,ad_type,headline,body,offer,status,days_since_start,days_to_end,ends_on,ad_started_on,venue,ad_url,confidence"
+    "v_competitor_ads_board?select=brand,page_name,ad_type,headline,body,offer,status,days_since_start,days_to_end,ends_on,ad_started_on,venue,ad_url,confidence,image_url,category"
   )) as CompAd[]
 }
