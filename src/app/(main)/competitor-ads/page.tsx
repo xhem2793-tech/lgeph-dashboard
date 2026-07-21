@@ -220,16 +220,7 @@ export default function Page() {
         </aside>
 
         <div className="min-w-0" style={{animation:"fadeUp .5s ease both"}}>
-          <div className="relative mb-3 flex flex-wrap items-center gap-2">
-            {/* 검색 — 가운데, 끝은 동글게 (주요뉴스 카피) */}
-            <div className={"group absolute left-1/2 top-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] lg:block " + (focused || q ? "w-[416px]" : "w-[320px]")}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-              <input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="브랜드 · 제목 · 프로모 · 장소 검색" className="w-full rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
-              {q ? (
-                <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
-              ) : null}
-            </div>
-            <button onClick={() => setMonthIdx(-1)} className={"rounded-lg border px-2.5 py-1.5 text-[12px] transition-colors " + (monthSel === null ? "border-indigo-200 bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50")}>전체</button>
+          <div className="relative mb-3 flex items-center gap-2"><div className="flex items-center gap-3"><Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: "최신순" }, { k: "ending", label: "종료임박순" }]} size="sm" /><span className="text-[11px] text-gray-400">조건 일치 <b className="font-semibold text-gray-700">{shown.length}건</b></span></div><div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2"><button onClick={() => setMonthIdx(-1)} className={"rounded-lg border px-2.5 py-1.5 text-[12px] transition-colors " + (monthSel === null ? "border-indigo-200 bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50")}>전체</button>
             <div className="inline-flex items-center overflow-hidden rounded-lg border border-gray-300 bg-white">
               <button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label="이전 달" className="flex h-8 w-7 items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-30" disabled={months.length === 0 || monthIdx >= months.length - 1}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>
@@ -239,12 +230,7 @@ export default function Page() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
               </button>
             </div>
-            <span className="text-[10.5px] text-gray-400">게재월</span>
-            <div className="ml-auto flex items-center gap-3">
-              <span className="text-[11px] text-gray-400">조건 일치 <b className="font-semibold text-gray-700">{shown.length}건</b></span>
-              <Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: "최신순" }, { k: "ending", label: "종료임박순" }]} size="sm" />
-            </div>
-          </div>
+            <span className="text-[10.5px] text-gray-400">게재월</span></div><div className="group relative ml-auto hidden lg:flex items-center justify-end"><input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="브랜드 · 제목 · 프로모 · 장소 검색" className={"h-9 rounded-full border text-[12px] outline-none transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] pl-4 pr-11 " + (focused || q ? "w-[300px] border-indigo-400 bg-white shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" : "w-9 cursor-pointer border-transparent bg-transparent placeholder:opacity-0 group-hover:w-[300px] group-hover:border-gray-200 group-hover:bg-gray-50 group-hover:placeholder:opacity-100")} />{q ? (<button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-11 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>) : null}<div className="pointer-events-none absolute right-0 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm transition-transform duration-300 group-hover:scale-110"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg></div></div></div>
 
           <div key={(ads === null ? "L" : "R") + fBrand.join() + fType.join() + fProd.join() + fStat.join() + String(monthSel) + sort + q} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
           {ads === null ? (
