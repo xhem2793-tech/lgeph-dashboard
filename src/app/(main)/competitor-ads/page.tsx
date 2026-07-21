@@ -59,7 +59,7 @@ function Thumb({ a }: { a: CompAd }) {
   const st = stOf(a.status)
   const showImg = !!a.image_url && !err
   return (
-    <div className="relative h-[84px] w-full overflow-hidden bg-indigo-50">
+    <div className="relative aspect-[16/10] w-full overflow-hidden bg-indigo-50">
       {showImg
         ? <img src={a.image_url || ""} alt="" onError={() => setErr(true)} className="h-full w-full object-cover" />
         : <div className="flex h-full w-full items-center justify-center text-[24px] font-bold text-indigo-300">{initials(a.brand)}</div>}
@@ -80,6 +80,7 @@ function period(a: CompAd) {
   return "상시"
 }
 const briefBody = (b: string | null) => clean((b || "").split("[실무]")[0])
+const offerShort = (o: string | null) => clean(o).replace(/\s*\([^)]*\)\s*$/, "")
 
 function Card({ a, onOpen }: { a: CompAd; onOpen: () => void }) {
   const conf = a.confidence === "CONFIRMED" ? "확인" : a.confidence ? "AI" : ""
@@ -99,7 +100,7 @@ function Card({ a, onOpen }: { a: CompAd; onOpen: () => void }) {
           )}
         </div>
         <p className="mt-1.5 line-clamp-2 text-[12px] font-medium leading-snug text-gray-800">{clean(a.headline)}</p>
-        {a.offer && <span className="mt-1.5 inline-block rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-emerald-700">{clean(a.offer)}</span>}
+        {a.offer && <span className="mt-1.5 max-w-full self-start truncate rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-emerald-700">{offerShort(a.offer)}</span>}
         {brief && <p className="mt-2 line-clamp-2 text-[10.5px] leading-relaxed text-gray-500">{brief}</p>}
         <div className="mt-auto flex items-center gap-1.5 border-t border-gray-100 pt-2 text-[10px] text-gray-400">
           {a.venue ? (
@@ -243,7 +244,7 @@ export default function Page() {
           </div>
 
           {ads === null ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-48 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
           ) : shown.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center text-[12px] text-gray-400">해당 조건의 광고 없음</div>
           ) : (
