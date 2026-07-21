@@ -163,6 +163,8 @@ export default function Page() {
   const [fStat, setFStat] = useState<string[]>([])
   const [monthIdx, setMonthIdx] = useState(-1)
   const [sort, setSort] = useState("latest")
+  const [q, setQ] = useState("")
+  const [focused, setFocused] = useState(false)
   const [sel, setSel] = useState<CompAd | null>(null)
 
   useEffect(() => { competitorAds().then(setAds).catch(() => setAds([])) }, [])
@@ -175,8 +177,10 @@ export default function Page() {
   const monthSel = monthIdx >= 0 && monthIdx < months.length ? months[monthIdx] : null
 
   const inArr = (arr: string[], v: string) => arr.length === 0 || arr.includes(v)
+  const qq = q.trim().toLowerCase()
+  const matchQ = (a: CompAd) => !qq || [a.brand, a.headline, a.body, a.offer, a.venue, a.category, AD_TYPE[a.ad_type]].some((s) => (s || "").toLowerCase().includes(qq))
   const filtered = all.filter((a) =>
-    inArr(fBrand, a.brand) && inArr(fType, a.ad_type) && inArr(fProd, a.category || "기타") && inArr(fStat, a.status) &&
+    inArr(fBrand, a.brand) && inArr(fType, a.ad_type) && inArr(fProd, a.category || "기타") && inArr(fStat, a.status) && matchQ(a) &&
     (monthSel === null || (a.ad_started_on || "").slice(0, 7) === monthSel),
   )
   const shown = filtered.slice().sort((a, b) => {
@@ -198,7 +202,7 @@ export default function Page() {
 
   return (
     <main className="mx-auto max-w-[1536px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
       <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)]">
         <aside className="h-fit rounded-xl border border-gray-200 bg-white px-2 py-2 shadow-sm lg:sticky lg:top-[80px]">
@@ -216,7 +220,15 @@ export default function Page() {
         </aside>
 
         <div className="min-w-0">
-          <div className="mb-3 flex flex-wrap items-center gap-2">
+          <div className="relative mb-3 flex flex-wrap items-center gap-2">
+            {/* 검색 — 가운데, 끝은 동글게 (주요뉴스 카피) */}
+            <div className={"group absolute left-1/2 top-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] lg:block " + (focused || q ? "w-[416px]" : "w-[320px]")}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+              <input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="브랜드 · 제목 · 프로모 · 장소 검색" className="w-full rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+              {q ? (
+                <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+              ) : null}
+            </div>
             <button onClick={() => setMonthIdx(-1)} className={"rounded-lg border px-2.5 py-1.5 text-[12px] transition-colors " + (monthSel === null ? "border-indigo-200 bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50")}>전체</button>
             <div className="inline-flex items-center overflow-hidden rounded-lg border border-gray-300 bg-white">
               <button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label="이전 달" className="flex h-8 w-7 items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-30" disabled={months.length === 0 || monthIdx >= months.length - 1}>
@@ -234,10 +246,11 @@ export default function Page() {
             </div>
           </div>
 
+          <div key={fBrand.join() + fType.join() + fProd.join() + fStat.join() + String(monthSel) + sort + q} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
           {ads === null ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
           ) : shown.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center text-[12px] text-gray-400">해당 조건의 광고 없음</div>
+            <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center text-[12px] text-gray-400">{qq ? "검색 결과 없음" : "해당 조건의 광고 없음"}</div>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {shown.map((a, i) => (
@@ -247,6 +260,7 @@ export default function Page() {
               ))}
             </div>
           )}
+          </div>
 
           <p className="mt-5 text-[10.5px] leading-relaxed text-gray-400">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 썸네일 없으면 브랜드 이니셜 · 제목 한글 번역 · 클릭 시 상세</p>
         </div>
