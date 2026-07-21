@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { competitorAds } from "@/lib/supabase"
 import type { CompAd } from "@/lib/supabase"
 
-/** 경쟁사 동향 — 좌측 체크박스 패싏 사이드바(브랜드·성격·제품·상태 멀티선택) + 상단 게재월 스테퍼·정렬 토글.
+/** 경쟁사 동향 — 좌측 체크박스 패싯 사이드바(브랜드·성격·제품·상태 멀티선택) + 상단 게재월 스테퍼·정렬 토글.
  *  3열 반응형 썸네일 갤러리(image_url 없으면 브랜드 이니셜). 카드 클릭 → 심플 팝업. 제목 한글.
  *  DESIGN.md §2·§3 모션·모달, 색=신호. 데이터: v_competitor_ads_board.
  */
@@ -74,17 +74,43 @@ function Thumb({ a }: { a: CompAd }) {
   )
 }
 
+function period(a: CompAd) {
+  if (a.days_to_end != null && a.days_to_end >= 0) return "종료 D-" + a.days_to_end
+  if (a.ad_started_on) return "게재 " + (a.days_since_start != null ? a.days_since_start + "일차" : a.ad_started_on)
+  return "상시"
+}
+const briefBody = (b: string | null) => clean((b || "").split("[실무]")[0])
+
 function Card({ a, onOpen }: { a: CompAd; onOpen: () => void }) {
+  const conf = a.confidence === "CONFIRMED" ? "확인" : a.confidence ? "AI" : ""
+  const openSrc = (e: React.MouseEvent) => { e.stopPropagation(); if (a.ad_url) window.open(a.ad_url, "_blank", "noopener") }
+  const brief = briefBody(a.body)
   return (
-    <button onClick={onOpen} className="group block h-full w-full overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 hover:shadow-md active:scale-[.99]">
+    <button onClick={onOpen} className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 hover:shadow-md active:scale-[.99]">
       <Thumb a={a} />
-      <div className="p-2.5">
+      <div className="flex flex-1 flex-col p-2.5">
         <div className="flex items-center gap-1.5">
           <span className="text-[12px] font-bold tracking-tight text-gray-900">{a.brand}</span>
           <span className="rounded border border-gray-200 px-1.5 py-0.5 text-[9.5px] font-medium text-gray-500">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+          {a.ad_url && (
+            <span onClick={openSrc} aria-label="원문 보기" className="ml-auto text-gray-300 transition-colors hover:text-indigo-500">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
+            </span>
+          )}
         </div>
         <p className="mt-1.5 line-clamp-2 text-[12px] font-medium leading-snug text-gray-800">{clean(a.headline)}</p>
         {a.offer && <span className="mt-1.5 inline-block rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-emerald-700">{clean(a.offer)}</span>}
+        {brief && <p className="mt-2 line-clamp-2 text-[10.5px] leading-relaxed text-gray-500">{brief}</p>}
+        <div className="mt-auto flex items-center gap-1.5 border-t border-gray-100 pt-2 text-[10px] text-gray-400">
+          {a.venue ? (
+            <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z" /><circle cx="12" cy="11" r="2" /></svg><span className="truncate">{a.venue}</span></>
+          ) : (
+            <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="shrink-0"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg><span>{period(a)}</span></>
+          )}
+          {a.ad_url ? (
+            <span onClick={openSrc} className="ml-auto inline-flex items-center gap-0.5 text-indigo-500 hover:text-indigo-700">원문<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M7 7h10v10" /></svg></span>
+          ) : conf ? <span className="ml-auto">{conf}</span> : null}
+        </div>
       </div>
     </button>
   )
@@ -217,7 +243,7 @@ export default function Page() {
           </div>
 
           {ads === null ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-48 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
           ) : shown.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center text-[12px] text-gray-400">해당 조건의 광고 없음</div>
           ) : (
