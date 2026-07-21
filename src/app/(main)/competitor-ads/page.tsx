@@ -201,11 +201,11 @@ export default function Page() {
   const clearAll = () => { setFBrand([]); setFType([]); setFProd([]); setFStat([]); setMonthIdx(-1) }
 
   return (
-    <main className="mx-auto max-w-[1536px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
+    <main className="mx-auto max-w-[1536px] px-4 pb-12 pt-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
       <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-xl border border-gray-200 bg-white px-2 py-2 shadow-sm lg:sticky lg:top-[80px]">
+        <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit rounded-xl border border-gray-200 bg-white px-2 py-2 shadow-sm lg:sticky lg:top-[80px]">
           <div className="mb-1.5 flex items-center justify-between border-b border-gray-100 px-1.5 pb-2.5">
             <span className="text-[16px] font-bold tracking-tight text-gray-900">필터</span>
             {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 hover:text-indigo-600">초기화</button>}
@@ -219,7 +219,7 @@ export default function Page() {
           <Facet title="상태" options={statOpts} selected={fStat} onToggle={(v) => toggle(fStat, setFStat, v)} />
         </aside>
 
-        <div className="min-w-0">
+        <div className="min-w-0" style={{animation:"fadeUp .5s ease both"}}>
           <div className="relative mb-3 flex flex-wrap items-center gap-2">
             {/* 검색 — 가운데, 끝은 동글게 (주요뉴스 카피) */}
             <div className={"group absolute left-1/2 top-1/2 z-10 hidden -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] lg:block " + (focused || q ? "w-[416px]" : "w-[320px]")}>
