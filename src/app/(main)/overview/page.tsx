@@ -86,7 +86,7 @@ export default function Overview() {
   const calList = cal.filter((e: any) => (calTab === "past" ? e.past : !e.past)).slice(0, 10)
 
   return (
-    <main className="mx-auto max-w-[1536px] px-4 pb-4 pt-0 sm:px-6 sm:pb-6 sm:pt-0">
+    <main className="mx-auto max-w-[1536px] px-4 pb-4 pt-1 sm:px-6 sm:pb-6 sm:pt-1">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes chartSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
       {(
         <>
