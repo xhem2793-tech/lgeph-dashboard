@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { competitorAds } from "@/lib/supabase"
 import type { CompAd } from "@/lib/supabase"
+import { Segmented } from "@/components/Segmented"
 
 /** 경쟁사 동향 — 좌측 체크박스 패싯 사이드바(브랜드·성격·제품·상태 멀티선택) + 상단 게재월 스테퍼·정렬 토글.
  *  3열 반응형 썸네일 갤러리(image_url 없으면 브랜드 이니셜). 카드 클릭 → 심플 팝업. 제목 한글.
@@ -92,11 +93,6 @@ function Card({ a, onOpen }: { a: CompAd; onOpen: () => void }) {
         <div className="flex items-center gap-1.5">
           <span className="text-[12px] font-bold tracking-tight text-gray-900">{a.brand}</span>
           <span className="rounded border border-gray-200 px-1.5 py-0.5 text-[9.5px] font-medium text-gray-500">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
-          {a.ad_url && (
-            <span onClick={openSrc} aria-label="원문 보기" className="ml-auto text-gray-300 transition-colors hover:text-indigo-500">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 3h6v6M10 14L21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /></svg>
-            </span>
-          )}
         </div>
         <p className="mt-1.5 line-clamp-2 text-[12px] font-medium leading-snug text-gray-800">{clean(a.headline)}</p>
         {a.offer && <span className="mt-1.5 max-w-full self-start truncate rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-emerald-700">{offerShort(a.offer)}</span>}
@@ -206,8 +202,8 @@ export default function Page() {
 
       <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)]">
         <aside className="h-fit rounded-xl border border-gray-200 bg-white px-2 py-2 shadow-sm lg:sticky lg:top-[80px]">
-          <div className="flex items-center justify-between px-1.5 pb-1">
-            <span className="text-[13px] font-bold tracking-tight text-gray-900">필터</span>
+          <div className="mb-1.5 flex items-center justify-between border-b border-gray-100 px-1.5 pb-2.5">
+            <span className="text-[16px] font-bold tracking-tight text-gray-900">필터</span>
             {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 hover:text-indigo-600">초기화</button>}
           </div>
           <Facet title="브랜드" options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} />
@@ -234,11 +230,7 @@ export default function Page() {
             <span className="text-[10.5px] text-gray-400">게재월</span>
             <div className="ml-auto flex items-center gap-3">
               <span className="text-[11px] text-gray-400">조건 일치 <b className="font-semibold text-gray-700">{shown.length}건</b></span>
-              <div className="flex shrink-0 gap-0.5 rounded-lg bg-gray-100 p-0.5">
-                {[["latest", "최신순"], ["ending", "종료임박순"]].map(([k, l]) => (
-                  <button key={k} onClick={() => setSort(k)} className={"rounded-md px-2.5 py-1 text-[12px] transition-all duration-300 ease-out " + (sort === k ? "bg-white font-bold text-indigo-700 shadow-sm" : "text-gray-500 hover:text-gray-800")}>{l}</button>
-                ))}
-              </div>
+              <Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: "최신순" }, { k: "ending", label: "종료임박순" }]} size="sm" />
             </div>
           </div>
 
