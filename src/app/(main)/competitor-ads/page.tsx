@@ -1,10 +1,10 @@
 "use client"
 
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 import { competitorAds } from "@/lib/supabase"
 import type { CompAd } from "@/lib/supabase"
 
-/** 경쟁사 동향 — 필터 툴바(브랜드·성격·제품·상태 멀티선택) + 게재월 스테퍼 + 정렬 토글.
+/** 경쟁사 동향 — 좌측 체크박스 패싏 사이드바(브랜드·성격·제품·상태 멀티선택) + 상단 게재월 스테퍼·정렬 토글.
  *  3열 반응형 썸네일 갤러리(image_url 없으면 브랜드 이니셜). 카드 클릭 → 심플 팝업. 제목 한글.
  *  DESIGN.md §2·§3 모션·모달, 색=신호. 데이터: v_competitor_ads_board.
  */
@@ -29,42 +29,27 @@ const clean = (s: string | null | undefined) =>
   (s || "").replace(/&#8211;|&#8212;/g, "–").replace(/&amp;/g, "&").replace(/&#\d+;|&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim()
 const ymLabel = (ym: string) => Number(ym.slice(0, 4)) + "년 " + Number(ym.slice(5, 7)) + "월"
 
-function Dropdown({ label, options, selected, onToggle, onClear }: { label: string; options: { value: string; label: string; count: number }[]; selected: string[]; onToggle: (v: string) => void; onClear: () => void }) {
-  const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const h = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false) }
-    document.addEventListener("mousedown", h)
-    return () => document.removeEventListener("mousedown", h)
-  }, [])
-  const on = selected.length > 0
+type Opt = { value: string; label: string; count: number; dot?: string }
+function Facet({ title, options, selected, onToggle }: { title: string; options: Opt[]; selected: string[]; onToggle: (v: string) => void }) {
+  if (options.length === 0) return null
   return (
-    <div ref={ref} className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] transition-colors " + (on ? "border-indigo-200 bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50")}
-      >
-        {label}
-        {on ? <span className="rounded-full bg-indigo-600 px-1.5 text-[10px] font-semibold text-white">{selected.length}</span> : <span className="text-gray-400">전체</span>}
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" className="text-gray-400"><path d="M6 9l6 6 6-6" /></svg>
-      </button>
-      {open && (
-        <div className="absolute left-0 top-9 z-20 w-44 rounded-xl border border-gray-200 bg-white p-1.5 shadow-xl" style={{ animation: "popin .16s ease both" }}>
-          {on && <button onClick={onClear} className="mb-1 w-full rounded-md px-2 py-1 text-left text-[11px] text-gray-400 hover:bg-gray-50 hover:text-gray-600">전체 해제</button>}
-          {options.map((o) => {
-            const ck = selected.includes(o.value)
-            return (
-              <button key={o.value} onClick={() => onToggle(o.value)} className={"flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[12px] " + (ck ? "bg-indigo-50" : "hover:bg-gray-50")}>
-                <span className={"flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border " + (ck ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300")}>
-                  {ck && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><path d="M5 13l4 4L19 7" /></svg>}
-                </span>
-                <span className={"flex-1 " + (ck ? "font-semibold text-indigo-700" : "text-gray-700")}>{o.label}</span>
-                <span className="text-[10.5px] text-gray-400">{o.count}</span>
-              </button>
-            )
-          })}
-        </div>
-      )}
+    <div className="py-2">
+      <div className="mb-1 px-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">{title}</div>
+      <div className="flex flex-col">
+        {options.map((o, i) => {
+          const ck = selected.includes(o.value)
+          return (
+            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[5px] text-left text-[12px] transition-colors hover:bg-indigo-50/50">
+              <span className={"flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors " + (ck ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 group-hover:border-gray-400")}>
+                {ck && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><path d="M5 13l4 4L19 7" /></svg>}
+              </span>
+              {o.dot && <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + o.dot} />}
+              <span className={"flex-1 truncate " + (ck ? "font-semibold text-indigo-700" : "text-gray-700")}>{o.label}</span>
+              <span className="text-[10px] tabular-nums text-gray-400">{o.count}</span>
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }
@@ -181,80 +166,73 @@ export default function Page() {
     return 0
   })
 
-  const brandOpts = BRANDS.map((b) => ({ value: b, label: b, count: cnt((a) => a.brand === b) })).filter((o) => o.count > 0)
-  const typeOpts = TYPES.map((t) => ({ value: t.k, label: t.label, count: cnt((a) => a.ad_type === t.k) })).filter((o) => o.count > 0)
-  const prodOpts = PRODS.map((p) => ({ value: p, label: prodLabel(p), count: cnt((a) => (a.category || "기타") === p) })).filter((o) => o.count > 0)
-  const statOpts = STATUS.map((s) => ({ value: s.key, label: s.label, count: cnt((a) => a.status === s.key) })).filter((o) => o.count > 0)
+  const brandOpts: Opt[] = BRANDS.map((b) => ({ value: b, label: b, count: cnt((a) => a.brand === b) })).filter((o) => o.count > 0)
+  const typeOpts: Opt[] = TYPES.map((t) => ({ value: t.k, label: t.label, count: cnt((a) => a.ad_type === t.k) })).filter((o) => o.count > 0)
+  const prodOpts: Opt[] = PRODS.map((p) => ({ value: p, label: prodLabel(p), count: cnt((a) => (a.category || "기타") === p) })).filter((o) => o.count > 0)
+  const statOpts: Opt[] = STATUS.map((s) => ({ value: s.key, label: s.label, count: cnt((a) => a.status === s.key), dot: s.dot })).filter((o) => o.count > 0)
 
-  const chips = brandOpts.filter((o) => fBrand.includes(o.value)).map((o) => ({ f: "b", v: o.value, label: o.value }))
-    .concat(fType.map((v) => ({ f: "t", v, label: AD_TYPE[v] ?? v })))
-    .concat(fProd.map((v) => ({ f: "p", v, label: prodLabel(v) })))
-    .concat(fStat.map((v) => ({ f: "s", v, label: v })))
-  const removeChip = (f: string, v: string) => {
-    if (f === "b") toggle(fBrand, setFBrand, v)
-    else if (f === "t") toggle(fType, setFType, v)
-    else if (f === "p") toggle(fProd, setFProd, v)
-    else toggle(fStat, setFStat, v)
-  }
+  const anyFilter = fBrand.length + fType.length + fProd.length + fStat.length > 0 || monthSel !== null
   const clearAll = () => { setFBrand([]); setFType([]); setFProd([]); setFStat([]); setMonthIdx(-1) }
 
   return (
     <main className="mx-auto max-w-[1536px] px-4 pb-12 pt-6 sm:px-6 sm:pt-8">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes popin{from{opacity:0;transform:translateY(-4px) scale(.98)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <Dropdown label="브랜드" options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} onClear={() => setFBrand([])} />
-        <Dropdown label="성격" options={typeOpts} selected={fType} onToggle={(v) => toggle(fType, setFType, v)} onClear={() => setFType([])} />
-        <Dropdown label="제품" options={prodOpts} selected={fProd} onToggle={(v) => toggle(fProd, setFProd, v)} onClear={() => setFProd([])} />
-        <Dropdown label="상태" options={statOpts} selected={fStat} onToggle={(v) => toggle(fStat, setFStat, v)} onClear={() => setFStat([])} />
-
-        <div className="flex items-center gap-1.5">
-          <button onClick={() => setMonthIdx(-1)} className={"rounded-lg border px-2.5 py-1.5 text-[12px] transition-colors " + (monthSel === null ? "border-indigo-200 bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50")}>전체</button>
-          <div className="inline-flex items-center overflow-hidden rounded-lg border border-gray-300 bg-white">
-            <button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label="이전 달" className="flex h-8 w-7 items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-30" disabled={months.length === 0 || monthIdx >= months.length - 1}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>
-            </button>
-            <span className={"min-w-[104px] border-x border-gray-200 px-2 text-center text-[12px] font-semibold " + (monthSel ? "text-indigo-700" : "text-gray-400")}>{monthSel ? ymLabel(monthSel) : "전체 기간"}</span>
-            <button onClick={() => setMonthIdx((i) => (i <= 0 ? 0 : i - 1))} aria-label="다음 달" className="flex h-8 w-7 items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-30" disabled={monthIdx <= 0}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
-            </button>
+      <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)]">
+        <aside className="h-fit rounded-xl border border-gray-200 bg-white px-2 py-2 shadow-sm lg:sticky lg:top-[80px]">
+          <div className="flex items-center justify-between px-1.5 pb-1">
+            <span className="text-[13px] font-bold tracking-tight text-gray-900">필터</span>
+            {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 hover:text-indigo-600">초기화</button>}
           </div>
-        </div>
+          <Facet title="브랜드" options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} />
+          <div className="mx-1.5 h-px bg-gray-100" />
+          <Facet title="광고 성격" options={typeOpts} selected={fType} onToggle={(v) => toggle(fType, setFType, v)} />
+          <div className="mx-1.5 h-px bg-gray-100" />
+          <Facet title="제품별" options={prodOpts} selected={fProd} onToggle={(v) => toggle(fProd, setFProd, v)} />
+          <div className="mx-1.5 h-px bg-gray-100" />
+          <Facet title="상태" options={statOpts} selected={fStat} onToggle={(v) => toggle(fStat, setFStat, v)} />
+        </aside>
 
-        <div className="ml-auto flex shrink-0 gap-0.5 rounded-lg bg-gray-100 p-0.5">
-          {[["latest", "최신순"], ["ending", "종료임박순"]].map(([k, l]) => (
-            <button key={k} onClick={() => setSort(k)} className={"rounded-md px-2.5 py-1 text-[12px] transition-all duration-300 ease-out " + (sort === k ? "bg-white font-bold text-indigo-700 shadow-sm" : "text-gray-500 hover:text-gray-800")}>{l}</button>
-          ))}
-        </div>
-      </div>
-
-      <div className="mb-4 flex min-h-[22px] flex-wrap items-center gap-1.5">
-        {chips.length > 0 && <span className="text-[10.5px] text-gray-400">선택</span>}
-        {chips.map((c) => (
-          <span key={c.f + c.v} className="inline-flex items-center gap-1 rounded-full bg-indigo-50 py-0.5 pl-2.5 pr-1 text-[11px] font-medium text-indigo-700">
-            {c.label}
-            <button onClick={() => removeChip(c.f, c.v)} aria-label="제거" className="rounded-full p-0.5 hover:bg-indigo-100"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
-          </span>
-        ))}
-        {chips.length > 0 && <button onClick={clearAll} className="text-[10.5px] text-gray-500 underline hover:text-gray-800">모두 지우기</button>}
-        <span className="ml-auto text-[11px] text-gray-400">조건 일치 <b className="font-semibold text-gray-700">{shown.length}건</b></span>
-      </div>
-
-      {ads === null ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">{[0, 1, 2, 3, 4, 5, 6, 7].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
-      ) : shown.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center text-[12px] text-gray-400">해당 조건의 광고 없음</div>
-      ) : (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-          {shown.map((a, i) => (
-            <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .45s ease both", animationDelay: (Math.min(i, 16) * 30) + "ms" }}>
-              <Card a={a} onOpen={() => setSel(a)} />
+        <div className="min-w-0">
+          <div className="mb-3 flex flex-wrap items-center gap-2">
+            <button onClick={() => setMonthIdx(-1)} className={"rounded-lg border px-2.5 py-1.5 text-[12px] transition-colors " + (monthSel === null ? "border-indigo-200 bg-indigo-50 font-bold text-indigo-700" : "border-gray-200 bg-white text-gray-700 hover:bg-gray-50")}>전체</button>
+            <div className="inline-flex items-center overflow-hidden rounded-lg border border-gray-300 bg-white">
+              <button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label="이전 달" className="flex h-8 w-7 items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-30" disabled={months.length === 0 || monthIdx >= months.length - 1}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg>
+              </button>
+              <span className={"min-w-[104px] border-x border-gray-200 px-2 text-center text-[12px] font-semibold " + (monthSel ? "text-indigo-700" : "text-gray-400")}>{monthSel ? ymLabel(monthSel) : "전체 기간"}</span>
+              <button onClick={() => setMonthIdx((i) => (i <= 0 ? 0 : i - 1))} aria-label="다음 달" className="flex h-8 w-7 items-center justify-center text-gray-500 hover:bg-gray-50 disabled:opacity-30" disabled={monthIdx <= 0}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg>
+              </button>
             </div>
-          ))}
-        </div>
-      )}
+            <span className="text-[10.5px] text-gray-400">게재월</span>
+            <div className="ml-auto flex items-center gap-3">
+              <span className="text-[11px] text-gray-400">조건 일치 <b className="font-semibold text-gray-700">{shown.length}건</b></span>
+              <div className="flex shrink-0 gap-0.5 rounded-lg bg-gray-100 p-0.5">
+                {[["latest", "최신순"], ["ending", "종료임박순"]].map(([k, l]) => (
+                  <button key={k} onClick={() => setSort(k)} className={"rounded-md px-2.5 py-1 text-[12px] transition-all duration-300 ease-out " + (sort === k ? "bg-white font-bold text-indigo-700 shadow-sm" : "text-gray-500 hover:text-gray-800")}>{l}</button>
+                ))}
+              </div>
+            </div>
+          </div>
 
-      <p className="mt-5 text-[10.5px] leading-relaxed text-gray-400">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 썸네일 없으면 브랜드 이니셜 · 제목 한글 번역 · 클릭 시 상세</p>
+          {ads === null ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
+          ) : shown.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center text-[12px] text-gray-400">해당 조건의 광고 없음</div>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {shown.map((a, i) => (
+                <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .45s ease both", animationDelay: (Math.min(i, 16) * 30) + "ms" }}>
+                  <Card a={a} onOpen={() => setSel(a)} />
+                </div>
+              ))}
+            </div>
+          )}
+
+          <p className="mt-5 text-[10.5px] leading-relaxed text-gray-400">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 썸네일 없으면 브랜드 이니셜 · 제목 한글 번역 · 클릭 시 상세</p>
+        </div>
+      </div>
 
       {sel && <Modal a={sel} onClose={() => setSel(null)} />}
     </main>
