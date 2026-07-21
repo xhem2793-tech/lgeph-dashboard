@@ -1,6 +1,6 @@
 export default function Page() {
   return (
-    <div>
+    <div className="pt-4">
       <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-50">
         부록
       </h1>
