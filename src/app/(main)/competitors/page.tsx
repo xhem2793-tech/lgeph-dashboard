@@ -163,7 +163,7 @@ function Kpi({ label, value, sub }: { label: string; value: string; sub?: string
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border-t border-gray-100 px-3 py-3 first:border-t-0">
-      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wide text-gray-400">{title}</p>
+      <p className="mb-2 text-[14px] font-bold tracking-tight text-gray-900">{title}</p>
       {children}
     </div>
   )
