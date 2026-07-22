@@ -215,7 +215,7 @@ export default function Page() {
       <div className="grid gap-4 lg:grid-cols-[210px_minmax(0,1fr)]">
         <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit rounded-xl border border-gray-200 bg-white px-2 py-2 shadow-sm lg:sticky lg:top-[80px]">
           <div className="mb-1.5 flex items-center justify-between border-b border-gray-100 px-1.5 pb-2.5">
-            <span className="text-[16px] font-bold tracking-tight text-gray-900">필터</span>
+            <span className="text-[14px] font-bold tracking-tight text-gray-900">필터</span>
             {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 hover:text-indigo-600">초기화</button>}
           </div>
           <Facet title="브랜드" options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} />
