@@ -344,9 +344,6 @@ export default function Competitors() {
     })
   }, [rows, cat, seg, band, brands, shops, onlyMoved, q, sort])
 
-  const moved = data.filter((r) => r.deltaPct != null && r.deltaPct !== 0)
-  const cuts = moved.filter((r) => (r.deltaPct ?? 0) < 0)
-  const hikes = moved.filter((r) => (r.deltaPct ?? 0) > 0)
   const avg = (a: PriceRow[], f: (r: PriceRow) => number | null) => {
     const v = a.map(f).filter((x): x is number => x != null)
     return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null
@@ -411,9 +408,13 @@ export default function Competitors() {
 
         <div className="flex min-w-0 flex-col gap-4">
         {view === "movers" ? (() => {
-          const nMoved = cuts.length + hikes.length
-          const lgDisc = avg(data.filter((r) => r.brand === "LG"), (r) => r.discountPct)
-          const cxDisc = avg(data.filter((r) => r.brand !== "LG"), (r) => r.discountPct)
+          const R = rows || []
+          const cu = R.filter((r) => (r.deltaPct ?? 0) < 0).length
+          const hi = R.filter((r) => (r.deltaPct ?? 0) > 0).length
+          const nMoved = cu + hi
+          const total = R.length
+          const lgDisc = avg(R.filter((r) => r.brand === "LG"), (r) => r.discountPct)
+          const cxDisc = avg(R.filter((r) => r.brand !== "LG"), (r) => r.discountPct)
           return (
             <div onClick={() => setPriceOpen((v) => !v)} className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white shadow-sm transition-shadow hover:shadow-md">
               <div className="flex items-center gap-3 px-4 py-3">
@@ -424,9 +425,9 @@ export default function Competitors() {
                 {!priceOpen && (
                   <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700">
                     {nMoved === 0 ? (
-                      <><b className="font-semibold text-gray-900">시장 가격 보합</b> — 관측 {data.length}개 중 오늘 변동 없음 · LG 할인 {pct(lgDisc)} vs 경쟁 {pct(cxDisc)}</>
+                      <><b className="font-semibold text-gray-900">시장 가격 보합</b> — 관측 {total}개 중 오늘 변동 없음 · LG 할인 {pct(lgDisc)} vs 경쟁 {pct(cxDisc)}</>
                     ) : (
-                      <><b className="font-semibold text-gray-900">오늘 변동 {nMoved}건</b> (인하 {cuts.length}·인상 {hikes.length}) — 관측 {data.length}개 · LG 할인 {pct(lgDisc)} vs 경쟁 {pct(cxDisc)}</>
+                      <><b className="font-semibold text-gray-900">오늘 변동 {nMoved}건</b> (인하 {cu}·인상 {hi}) — 관측 {total}개 · LG 할인 {pct(lgDisc)} vs 경쟁 {pct(cxDisc)}</>
                     )}
                   </div>
                 )}
@@ -436,11 +437,11 @@ export default function Competitors() {
                 <div className="overflow-hidden">
                   <div className="border-t border-indigo-100/70 px-4 pb-3.5 pt-3">
                     <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-gray-500">
-                      <span>관측 <b className="text-gray-800">{data.length}</b></span>
-                      <span>오늘 변동 <b className="text-gray-800">{nMoved}건</b> (인하 {cuts.length}·인상 {hikes.length})</span>
+                      <span>관측 <b className="text-gray-800">{total}</b></span>
+                      <span>오늘 변동 <b className="text-gray-800">{nMoved}건</b> (인하 {cu}·인상 {hi})</span>
                       <span>LG 할인 <b className="text-gray-800">{pct(lgDisc)}</b> vs 경쟁 {pct(cxDisc)}</span>
                     </div>
-                    <p className="text-[12.5px] leading-relaxed text-gray-700">관측 <b className="text-gray-900">{data.length}개 리스팅</b> 기준, 오늘 가격 변동은 <b className="text-gray-900">{nMoved}건</b>(인하 {cuts.length}·인상 {hikes.length}). LG 자사 리스팅 평균 할인율은 <b className="text-gray-900">{pct(lgDisc)}</b>로 경쟁({pct(cxDisc)})과 비교됩니다.</p>
+                    <p className="text-[12.5px] leading-relaxed text-gray-700">관측 <b className="text-gray-900">{total}개 리스팅</b> 기준, 오늘 가격 변동은 <b className="text-gray-900">{nMoved}건</b>(인하 {cu}·인상 {hi}). LG 자사 리스팅 평균 할인율은 <b className="text-gray-900">{pct(lgDisc)}</b>로 경쟁({pct(cxDisc)})과 비교됩니다.</p>
                     <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-relaxed text-indigo-700"><span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 시사점</span><span>변동 건수·폭과 경쟁사 SRP 복귀 시점을 주시. 대량 인하 신호 유무로 성수기 프로모 개시 타이밍을 판단.</span></p>
                   </div>
                 </div>
