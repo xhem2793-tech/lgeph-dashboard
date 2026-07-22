@@ -220,9 +220,9 @@ export default function Page() {
           </div>
           <Facet title="브랜드" options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} />
           <div className="mx-1.5 h-px bg-gray-100" />
-          <Facet title="광고 성격" options={typeOpts} selected={fType} onToggle={(v) => toggle(fType, setFType, v)} />
+          <Facet title="제품" options={prodOpts} selected={fProd} onToggle={(v) => toggle(fProd, setFProd, v)} />
           <div className="mx-1.5 h-px bg-gray-100" />
-          <Facet title="제품별" options={prodOpts} selected={fProd} onToggle={(v) => toggle(fProd, setFProd, v)} />
+          <Facet title="카테고리" options={typeOpts} selected={fType} onToggle={(v) => toggle(fType, setFType, v)} />
           <div className="mx-1.5 h-px bg-gray-100" />
           <Facet title="상태" options={statOpts} selected={fStat} onToggle={(v) => toggle(fStat, setFStat, v)} />
         </aside>
