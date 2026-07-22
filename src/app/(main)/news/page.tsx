@@ -710,13 +710,14 @@ export default function Page() {
               <Segmented value={sort} onChange={(k) => setSort(k as "new" | "impact")} options={[{ k: "new", label: "최신순" }, { k: "impact", label: "영향도순" }]} size="sm" />
             </div>
 
-            {/* 검색 — 가운데, 끝은 동글게 */}
+            <div className="flex items-center gap-3">
+            {/* 검색 · 우측 */}
             <div
               className={
-                "group absolute left-1/2 top-1/2 hidden -translate-x-1/2 -translate-y-1/2 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] lg:block " +
+                "group relative hidden transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] lg:block " +
                 (focused || q ? "w-[416px]" : "w-[320px]")
               }
-              style={{ marginTop: "-5px" }}
+              
             >
               <svg
                 width="14"
@@ -758,6 +759,7 @@ export default function Page() {
               최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
               <span title="CONFIRMED" className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-bold text-emerald-700">C</span>
             </span>
+          </div>
           </header>
 
           <div className="relative mt-3 lg:hidden">
