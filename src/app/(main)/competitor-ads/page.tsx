@@ -34,12 +34,12 @@ function Facet({ title, options, selected, onToggle }: { title: string; options:
   if (options.length === 0) return null
   return (
     <div className="py-2">
-      <div className="mb-1 px-1.5 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">{title}</div>
+      <div className="mb-1 px-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{title}</div>
       <div className="flex flex-col">
         {options.map((o, i) => {
           const ck = selected.includes(o.value)
           return (
-            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[5px] text-left text-[12px] transition-colors hover:bg-indigo-50/50">
+            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[6px] text-left text-[13px] font-medium transition-colors hover:bg-indigo-50/50">
               <span className={"flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors " + (ck ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 group-hover:border-gray-400")}>
                 {ck && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><path d="M5 13l4 4L19 7" /></svg>}
               </span>
