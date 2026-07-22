@@ -177,18 +177,16 @@ function Chip({ on, children, onClick }: { on: boolean; children: React.ReactNod
 }
 
 const COLS: { k: string; t: string; num?: boolean }[] = [
-  { k: "retailer", t: "유통" },
   { k: "brand", t: "브랜드" },
   { k: "category", t: "카테고리" },
   { k: "code", t: "모델코드" },
-  { k: "srp", t: "SRP", num: true },
-  { k: "spark", t: "3일 추이" },
-  { k: "p2", t: "D-2", num: true },
+  { k: "retailer", t: "유통" },
   { k: "p1", t: "D-1", num: true },
   { k: "p0", t: "당일", num: true },
   { k: "deltaPhp", t: "전일변동₱", num: true },
   { k: "deltaPct", t: "전일변동%", num: true },
-  { k: "delta3Pct", t: "3일변동%", num: true },
+  { k: "spark", t: "3일 추이" },
+  { k: "srp", t: "SRP", num: true },
   { k: "discountPct", t: "할인율", num: true },
 ]
 
@@ -589,15 +587,12 @@ export default function Competitors() {
                             key={i}
                             className="border-b border-gray-100 transition-all duration-200 hover:-translate-y-px hover:bg-indigo-50/60 hover:text-indigo-700 hover:shadow-[0_1px_0_0_rgba(99,102,241,.25)]"
                           >
-                            <td className="whitespace-nowrap px-2 py-1 text-gray-500">{r.retailer}</td>
                             <td className="px-2 py-1 font-medium text-gray-800">{r.brand}</td>
                             <td className="px-2 py-1 text-gray-600">{r.category}</td>
                             <td className="whitespace-nowrap px-2 py-1 font-medium text-gray-800" title={r.model}>
                               {r.code}
                             </td>
-                            <td className="num px-2 py-1 text-right text-gray-400">{peso(r.srp)}</td>
-                            <td className="px-2 py-1"><Spark p2={r.p2} p1={r.p1} p0={r.p0} /></td>
-                            <td className="num px-2 py-1 text-right text-gray-500">{peso(r.p2)}</td>
+                            <td className="whitespace-nowrap px-2 py-1 text-gray-500">{r.retailer}</td>
                             <td className="num px-2 py-1 text-right text-gray-500">{peso(r.p1)}</td>
                             <td className="num px-2 py-1 text-right font-semibold text-gray-900">{peso(r.p0)}</td>
                             <td className={"num px-2 py-1 text-right " + dcol}>
@@ -606,14 +601,8 @@ export default function Competitors() {
                             <td className={"num px-2 py-1 text-right font-semibold " + dcol}>
                               {r.deltaPct == null || r.deltaPct === 0 ? "—" : pct(r.deltaPct)}
                             </td>
-                            <td
-                              className={
-                                "num px-2 py-1 text-right " +
-                                ((r.delta3Pct ?? 0) < 0 ? "text-emerald-700" : (r.delta3Pct ?? 0) > 0 ? "text-red-700" : "text-gray-400")
-                              }
-                            >
-                              {r.delta3Pct == null || r.delta3Pct === 0 ? "—" : pct(r.delta3Pct)}
-                            </td>
+                            <td className="px-2 py-1"><Spark p2={r.p2} p1={r.p1} p0={r.p0} /></td>
+                            <td className="num px-2 py-1 text-right text-gray-400">{peso(r.srp)}</td>
                             <td className="num px-2 py-1 text-right text-gray-600">
                               {r.discountPct == null ? "—" : r.discountPct.toFixed(0) + "%"}
                             </td>
