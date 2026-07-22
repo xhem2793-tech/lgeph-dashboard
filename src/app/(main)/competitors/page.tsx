@@ -308,6 +308,7 @@ export default function Competitors() {
   const [rows, setRows] = React.useState<PriceRow[] | null>(null)
   const [stamp, setStamp] = React.useState<string | null>(null)
   const [q, setQ] = React.useState("")
+  const [priceOpen, setPriceOpen] = React.useState(false)
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "deltaPct", asc: true })
   const [promo, setPromo] = React.useState<PromoIntensity[] | null>(null)
   const [camps, setCamps] = React.useState<PromoCampaign[]>([])
@@ -373,35 +374,28 @@ export default function Competitors() {
     <div className="mx-auto max-w-[1536px] px-4 pb-6 pt-4 sm:px-6 sm:pb-8">
       <style>{"@keyframes viewIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(190px,0.8fr)_4fr]">
+      <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
           <Section title="보기">
             <div className="flex flex-col gap-0.5">
-              {ALL.map((it) => (
-                <button
-                  key={it.key}
-                  type="button"
-                  onClick={() => setView(it.key)}
-                  className={
-                    "group rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 hover:-translate-y-px active:scale-[.99] " +
-                    (view === it.key ? "bg-indigo-50" : "hover:bg-indigo-50/40")
-                  }
-                >
-                  <span className="flex items-center gap-1.5">
-                    <span
+              {GROUPS.map((g) => (
+                <div key={g.group} className="mt-1.5 first:mt-0">
+                  <div className="px-1.5 pb-0.5 pt-1 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">{g.group}</div>
+                  {g.items.map((it) => (
+                    <button
+                      key={it.key}
+                      type="button"
+                      onClick={() => setView(it.key)}
                       className={
-                        "flex-1 text-[13px] transition-colors duration-200 " +
-                        (view === it.key ? "font-semibold text-indigo-700" : "font-medium text-gray-800 group-hover:text-indigo-600")
+                        "group flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 hover:-translate-y-px active:scale-[.99] " +
+                        (view === it.key ? "bg-indigo-50" : "hover:bg-indigo-50/40")
                       }
                     >
-                      {it.label}
-                    </span>
-                    <span className={"shrink-0 rounded border px-1 py-px text-[9px] font-semibold " + BADGE[it.status].c}>
-                      {BADGE[it.status].t}
-                    </span>
-                  </span>
-                  <span className="block text-[11px] leading-snug text-gray-500">{it.desc}</span>
-                </button>
+                      <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (it.status === "live" ? "bg-emerald-500" : "bg-gray-300")} />
+                      <span className={"flex-1 truncate text-[13px] transition-colors duration-200 " + (view === it.key ? "font-semibold text-indigo-700" : "font-medium text-gray-600")}>{it.label}</span>
+                    </button>
+                  ))}
+                </div>
               ))}
             </div>
           </Section>
@@ -425,6 +419,45 @@ export default function Competitors() {
           </div>
         </aside>
 
+        <div className="flex min-w-0 flex-col gap-4">
+        {view === "movers" ? (() => {
+          const nMoved = cuts.length + hikes.length
+          const lgDisc = avg(data.filter((r) => r.brand === "LG"), (r) => r.discountPct)
+          const cxDisc = avg(data.filter((r) => r.brand !== "LG"), (r) => r.discountPct)
+          return (
+            <div onClick={() => setPriceOpen((v) => !v)} className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white shadow-sm transition-shadow hover:shadow-md">
+              <div className="flex items-center gap-3 px-4 py-3">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
+                </div>
+                <span className="shrink-0 text-[12px] font-bold text-gray-900">가격 읽기</span>
+                {!priceOpen && (
+                  <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700">
+                    {nMoved === 0 ? (
+                      <><b className="font-semibold text-gray-900">시장 가격 보합</b> — 관측 {data.length}개 중 오늘 변동 없음 · LG 할인 {pct(lgDisc)} vs 경쟁 {pct(cxDisc)}</>
+                    ) : (
+                      <><b className="font-semibold text-gray-900">오늘 변동 {nMoved}건</b> (인하 {cuts.length}·인상 {hikes.length}) — 관측 {data.length}개 · LG 할인 {pct(lgDisc)} vs 경쟁 {pct(cxDisc)}</>
+                    )}
+                  </div>
+                )}
+                <span className="ml-auto shrink-0 text-[11px] font-medium text-indigo-600">더보기 <span className={"inline-block transition-transform " + (priceOpen ? "rotate-180" : "")}>▾</span></span>
+              </div>
+              <div className="grid transition-[grid-template-rows] duration-300 ease-out" style={{ gridTemplateRows: priceOpen ? "1fr" : "0fr" }}>
+                <div className="overflow-hidden">
+                  <div className="border-t border-indigo-100/70 px-4 pb-3.5 pt-3">
+                    <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-gray-500">
+                      <span>관측 <b className="text-gray-800">{data.length}</b></span>
+                      <span>오늘 변동 <b className="text-gray-800">{nMoved}건</b> (인하 {cuts.length}·인상 {hikes.length})</span>
+                      <span>LG 할인 <b className="text-gray-800">{pct(lgDisc)}</b> vs 경쟁 {pct(cxDisc)}</span>
+                    </div>
+                    <p className="text-[12.5px] leading-relaxed text-gray-700">관측 <b className="text-gray-900">{data.length}개 리스팅</b> 기준, 오늘 가격 변동은 <b className="text-gray-900">{nMoved}건</b>(인하 {cuts.length}·인상 {hikes.length}). LG 자사 리스팅 평균 할인율은 <b className="text-gray-900">{pct(lgDisc)}</b>로 경쟁({pct(cxDisc)})과 비교됩니다.</p>
+                    <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-relaxed text-indigo-700"><span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 시사점</span><span>변동 건수·폭과 경쟁사 SRP 복귀 시점을 주시. 대량 인하 신호 유무로 성수기 프로모 개시 타이밍을 판단.</span></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })() : null}
         <section
           key={view}
           className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
@@ -454,12 +487,7 @@ export default function Competitors() {
             </div>
           ) : (
             <>
-              <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <Kpi label="평균가" value={peso(avg(data, (r) => r.p0))} sub={data.length + "개 리스팅"} />
-                <Kpi label="평균 할인율" value={pct(avg(data, (r) => r.discountPct))} sub="SRP 대비" />
-                <Kpi label="인하" value={String(cuts.length)} sub={"평균 " + pct(avg(cuts, (r) => r.deltaPct))} />
-                <Kpi label="인상" value={String(hikes.length)} sub={"평균 " + pct(avg(hikes, (r) => r.deltaPct))} />
-              </div>
+              
 
 
               {/* 필터 바 — 매장이 실제로 진열을 나누는 축 순서: 카테고리 → 세그먼트 → 가격대 → 브랜드 → 유통 */}
@@ -611,6 +639,7 @@ export default function Competitors() {
             </>
           )}
         </section>
+        </div>
       </div>
     </div>
   )
