@@ -150,16 +150,6 @@ function Spark({ p2, p1, p0 }: { p2: number | null; p1: number | null; p0: numbe
   )
 }
 
-function Kpi({ label, value, sub }: { label: string; value: string; sub?: string }) {
-  return (
-    <div className="rounded-lg border border-gray-200 bg-gray-50/60 px-3 py-2">
-      <p className="text-[10px] font-semibold uppercase tracking-wide text-gray-400">{label}</p>
-      <p className="num mt-0.5 text-[17px] font-semibold text-gray-900">{value}</p>
-      {sub ? <p className="text-[10px] text-gray-500">{sub}</p> : null}
-    </div>
-  )
-}
-
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div className="border-t border-gray-100 px-3 py-3 first:border-t-0">
