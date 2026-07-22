@@ -361,7 +361,7 @@ export default function Competitors() {
       <style>{"@keyframes viewIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
 
       <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
+        <aside style={{ animation: "viewIn .45s ease both" }} className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
           <Section title="보기">
             <div className="flex flex-col gap-0.5">
               {GROUPS.map((g) => (
@@ -405,7 +405,7 @@ export default function Competitors() {
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-col gap-4">
+        <div style={{ animation: "viewIn .45s ease both", animationDelay: ".06s" }} className="flex min-w-0 flex-col gap-4">
         {view === "movers" ? (() => {
           const R = rows || []
           const cu = R.filter((r) => (r.deltaPct ?? 0) < 0).length
@@ -570,7 +570,7 @@ export default function Competitors() {
                       ))}
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody key={cat + brands.join() + shops.join() + band + seg + sort.k + String(sort.asc) + q + String(onlyMoved)}>
                     {rows === null ? (
                       <tr>
                         <td colSpan={COLS.length} className="px-2 py-10 text-center text-[12px] text-gray-400">
@@ -591,6 +591,7 @@ export default function Competitors() {
                         return (
                           <tr
                             key={i}
+                            style={{ animation: "rowIn .28s ease both", animationDelay: Math.min(i, 24) * 0.02 + "s" }}
                             className="border-b border-gray-100 transition-all duration-200 hover:-translate-y-px hover:bg-indigo-50/60 hover:text-indigo-700 hover:shadow-[0_1px_0_0_rgba(99,102,241,.25)]"
                           >
                             <td className="px-2 py-1 font-medium text-gray-800">{r.brand}</td>
