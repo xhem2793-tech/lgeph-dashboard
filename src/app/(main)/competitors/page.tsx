@@ -481,52 +481,52 @@ export default function Competitors() {
 
 
               {/* 필터 바 — 매장이 실제로 진열을 나누는 축 순서: 카테고리 → 세그먼트 → 가격대 → 브랜드 → 유통 */}
-              <div className="mt-3 space-y-1.5 rounded-lg border border-gray-200 bg-gray-50/60 p-2.5">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">카테고리</span>
-                  {CATS.map((c) => (
-                    <Chip key={c} on={cat === c} onClick={() => { setCat(c); setSeg("전체") }}>
-                      {c}
-                    </Chip>
-                  ))}
-                </div>
-                {(SEGMENTS[cat] ?? []).length > 0 ? (
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">세그먼트</span>
-                    <Chip on={seg === "전체"} onClick={() => setSeg("전체")}>전체</Chip>
-                    {(SEGMENTS[cat] ?? []).map((s) => (
-                      <Chip key={s.t} on={seg === s.t} onClick={() => setSeg(s.t)}>
-                        {s.t}
-                      </Chip>
+              <div className="mt-3 flex flex-wrap items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50/60 px-2.5 py-2">
+                <details className="relative">
+                  <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] text-gray-600 transition-colors hover:border-indigo-300 [&::-webkit-details-marker]:hidden"><span className="font-semibold text-gray-400">카테고리</span> <span className="text-gray-800">{cat}</span> <span className="text-gray-300">▾</span></summary>
+                  <div className="absolute left-0 top-full z-30 mt-1 flex max-w-[320px] flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                    {CATS.map((c) => (
+                      <Chip key={c} on={cat === c} onClick={() => { setCat(c); setSeg("전체") }}>{c}</Chip>
                     ))}
                   </div>
+                </details>
+                {(SEGMENTS[cat] ?? []).length > 0 ? (
+                  <details className="relative">
+                    <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] text-gray-600 transition-colors hover:border-indigo-300 [&::-webkit-details-marker]:hidden"><span className="font-semibold text-gray-400">세그먼트</span> <span className="text-gray-800">{seg}</span> <span className="text-gray-300">▾</span></summary>
+                    <div className="absolute left-0 top-full z-30 mt-1 flex max-w-[320px] flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                      <Chip on={seg === "전체"} onClick={() => setSeg("전체")}>전체</Chip>
+                      {(SEGMENTS[cat] ?? []).map((s) => (
+                        <Chip key={s.t} on={seg === s.t} onClick={() => setSeg(s.t)}>{s.t}</Chip>
+                      ))}
+                    </div>
+                  </details>
                 ) : null}
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">가격대</span>
-                  <Chip on={band === "전체"} onClick={() => setBand("전체")}>전체</Chip>
-                  {BANDS.map((b) => (
-                    <Chip key={b.t} on={band === b.t} onClick={() => setBand(b.t)}>
-                      {b.t}
-                    </Chip>
-                  ))}
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">브랜드</span>
-                  {BRANDS.map((b) => (
-                    <Chip key={b} on={brands.includes(b)} onClick={() => toggle(brands, b, setBrands)}>
-                      {b}
-                    </Chip>
-                  ))}
-                </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="w-14 shrink-0 text-[10px] font-semibold uppercase tracking-wide text-gray-400">유통</span>
-                  {SHOPS.map((s) => (
-                    <Chip key={s} on={shops.includes(s)} onClick={() => toggle(shops, s, setShops)}>
-                      {s === "SM Appliance" ? "SM" : s}
-                    </Chip>
-                  ))}
-                  <Chip on={onlyMoved} onClick={() => setOnlyMoved(!onlyMoved)}>가격 변동분만</Chip>
-                </div>
+                <details className="relative">
+                  <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] text-gray-600 transition-colors hover:border-indigo-300 [&::-webkit-details-marker]:hidden"><span className="font-semibold text-gray-400">가격대</span> <span className="text-gray-800">{band}</span> <span className="text-gray-300">▾</span></summary>
+                  <div className="absolute left-0 top-full z-30 mt-1 flex max-w-[320px] flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                    <Chip on={band === "전체"} onClick={() => setBand("전체")}>전체</Chip>
+                    {BANDS.map((b) => (
+                      <Chip key={b.t} on={band === b.t} onClick={() => setBand(b.t)}>{b.t}</Chip>
+                    ))}
+                  </div>
+                </details>
+                <details className="relative">
+                  <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] text-gray-600 transition-colors hover:border-indigo-300 [&::-webkit-details-marker]:hidden"><span className="font-semibold text-gray-400">브랜드</span> <span className="text-gray-800">{brands.length === BRANDS.length ? "전체" : brands.length + "개"}</span> <span className="text-gray-300">▾</span></summary>
+                  <div className="absolute left-0 top-full z-30 mt-1 flex max-w-[320px] flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                    {BRANDS.map((b) => (
+                      <Chip key={b} on={brands.includes(b)} onClick={() => toggle(brands, b, setBrands)}>{b}</Chip>
+                    ))}
+                  </div>
+                </details>
+                <details className="relative">
+                  <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] text-gray-600 transition-colors hover:border-indigo-300 [&::-webkit-details-marker]:hidden"><span className="font-semibold text-gray-400">유통</span> <span className="text-gray-800">{shops.length === SHOPS.length ? "전체" : shops.length + "곳"}</span> <span className="text-gray-300">▾</span></summary>
+                  <div className="absolute left-0 top-full z-30 mt-1 flex max-w-[320px] flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
+                    {SHOPS.map((s) => (
+                      <Chip key={s} on={shops.includes(s)} onClick={() => toggle(shops, s, setShops)}>{s === "SM Appliance" ? "SM" : s}</Chip>
+                    ))}
+                  </div>
+                </details>
+                <Chip on={onlyMoved} onClick={() => setOnlyMoved(!onlyMoved)}>가격 변동분만</Chip>
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
