@@ -159,19 +159,45 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   )
 }
 
-function Chip({ on, children, onClick }: { on: boolean; children: React.ReactNode; onClick: () => void }) {
+function FacetMenu({ label, value, active, children }: { label: string; value: string; active: boolean; children: React.ReactNode }) {
+  return (
+    <details className="group relative">
+      <summary
+        className={
+          "flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] transition-colors [&::-webkit-details-marker]:hidden " +
+          (active ? "border-indigo-200 bg-indigo-50" : "border-gray-200 bg-white hover:border-indigo-300")
+        }
+      >
+        <span className={"font-semibold " + (active ? "text-indigo-400" : "text-gray-400")}>{label}</span>
+        <span className={"font-semibold " + (active ? "text-indigo-700" : "text-gray-800")}>{value}</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" className="text-gray-300 transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
+      </summary>
+      <div className="absolute left-0 top-[calc(100%+6px)] z-30 max-h-[280px] w-[190px] overflow-auto rounded-[10px] border border-gray-200 bg-white p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.10)]">
+        {children}
+      </div>
+    </details>
+  )
+}
+
+function Opt({ on, count, multi, onClick, children }: { on: boolean; count?: number | null; multi?: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={
-        "rounded-md border px-2 py-1 text-[12px] transition-all duration-200 active:scale-95 " +
-        (on
-          ? "border-indigo-200 bg-indigo-50 font-medium text-indigo-700"
-          : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:text-indigo-600")
+        "flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-[12.5px] transition-colors " +
+        (on && !multi ? "bg-indigo-50 font-semibold text-indigo-700" : "text-gray-600 hover:bg-gray-50")
       }
     >
-      {children}
+      <span className="flex items-center gap-2">
+        {multi ? (
+          <span className={"flex h-[15px] w-[15px] items-center justify-center rounded border " + (on ? "border-indigo-600 bg-indigo-600" : "border-gray-300")}>
+            {on ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg> : null}
+          </span>
+        ) : null}
+        {children}
+      </span>
+      {count != null ? <span className="num text-[10px] text-gray-400">{count}</span> : null}
     </button>
   )
 }
@@ -453,7 +479,7 @@ export default function Competitors() {
           className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
           style={{ animation: "viewIn .32s cubic-bezier(.22,1,.36,1) both" }}
         >
-          <header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 pb-2">
+          {view !== "movers" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 pb-2">
             <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
               {active?.label}
               <span className={"rounded border px-1 py-px text-[9px] font-semibold " + BADGE[active?.status ?? "plan"].c}>
@@ -466,7 +492,7 @@ export default function Competitors() {
                 CONFIRMED
               </span>
             </span>
-          </header>
+          </header>)}
 
           {view === "promo" ? (
             <PromoView rows={promo} camps={camps} />
@@ -481,74 +507,48 @@ export default function Competitors() {
 
 
               {/* 필터 바 — 매장이 실제로 진열을 나누는 축 순서: 카테고리 → 세그먼트 → 가격대 → 브랜드 → 유통 */}
-              <div className="mt-3 flex flex-wrap items-center gap-1.5 rounded-lg border border-gray-200 bg-gray-50/60 px-2.5 py-2">
-                <details className="relative">
-                  <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] text-gray-600 transition-colors hover:border-indigo-300 [&::-webkit-details-marker]:hidden"><span className="font-semibold text-gray-400">카테고리</span> <span className="text-gray-800">{cat}</span> <span className="text-gray-300">▾</span></summary>
-                  <div className="absolute left-0 top-full z-30 mt-1 flex max-w-[320px] flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
-                    {CATS.map((c) => (
-                      <Chip key={c} on={cat === c} onClick={() => { setCat(c); setSeg("전체") }}>{c}</Chip>
-                    ))}
-                  </div>
-                </details>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
+                <FacetMenu label="카테고리" value={cat} active={cat !== "전체"}>
+                  {CATS.map((c) => (
+                    <Opt key={c} on={cat === c} count={rows ? (c === "전체" ? rows.length : rows.filter((r) => r.category === c).length) : null} onClick={() => { setCat(c); setSeg("전체") }}>{c}</Opt>
+                  ))}
+                </FacetMenu>
                 {(SEGMENTS[cat] ?? []).length > 0 ? (
-                  <details className="relative">
-                    <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] text-gray-600 transition-colors hover:border-indigo-300 [&::-webkit-details-marker]:hidden"><span className="font-semibold text-gray-400">세그먼트</span> <span className="text-gray-800">{seg}</span> <span className="text-gray-300">▾</span></summary>
-                    <div className="absolute left-0 top-full z-30 mt-1 flex max-w-[320px] flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
-                      <Chip on={seg === "전체"} onClick={() => setSeg("전체")}>전체</Chip>
-                      {(SEGMENTS[cat] ?? []).map((s) => (
-                        <Chip key={s.t} on={seg === s.t} onClick={() => setSeg(s.t)}>{s.t}</Chip>
-                      ))}
-                    </div>
-                  </details>
+                  <FacetMenu label="세그먼트" value={seg} active={seg !== "전체"}>
+                    <Opt on={seg === "전체"} onClick={() => setSeg("전체")}>전체</Opt>
+                    {(SEGMENTS[cat] ?? []).map((s) => (
+                      <Opt key={s.t} on={seg === s.t} onClick={() => setSeg(s.t)}>{s.t}</Opt>
+                    ))}
+                  </FacetMenu>
                 ) : null}
-                <details className="relative">
-                  <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] text-gray-600 transition-colors hover:border-indigo-300 [&::-webkit-details-marker]:hidden"><span className="font-semibold text-gray-400">가격대</span> <span className="text-gray-800">{band}</span> <span className="text-gray-300">▾</span></summary>
-                  <div className="absolute left-0 top-full z-30 mt-1 flex max-w-[320px] flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
-                    <Chip on={band === "전체"} onClick={() => setBand("전체")}>전체</Chip>
-                    {BANDS.map((b) => (
-                      <Chip key={b.t} on={band === b.t} onClick={() => setBand(b.t)}>{b.t}</Chip>
-                    ))}
-                  </div>
-                </details>
-                <details className="relative">
-                  <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] text-gray-600 transition-colors hover:border-indigo-300 [&::-webkit-details-marker]:hidden"><span className="font-semibold text-gray-400">브랜드</span> <span className="text-gray-800">{brands.length === BRANDS.length ? "전체" : brands.length + "개"}</span> <span className="text-gray-300">▾</span></summary>
-                  <div className="absolute left-0 top-full z-30 mt-1 flex max-w-[320px] flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
-                    {BRANDS.map((b) => (
-                      <Chip key={b} on={brands.includes(b)} onClick={() => toggle(brands, b, setBrands)}>{b}</Chip>
-                    ))}
-                  </div>
-                </details>
-                <details className="relative">
-                  <summary className="flex cursor-pointer list-none items-center gap-1 rounded-full border border-gray-200 bg-white px-3 py-1 text-[12px] text-gray-600 transition-colors hover:border-indigo-300 [&::-webkit-details-marker]:hidden"><span className="font-semibold text-gray-400">유통</span> <span className="text-gray-800">{shops.length === SHOPS.length ? "전체" : shops.length + "곳"}</span> <span className="text-gray-300">▾</span></summary>
-                  <div className="absolute left-0 top-full z-30 mt-1 flex max-w-[320px] flex-wrap gap-1 rounded-lg border border-gray-200 bg-white p-2 shadow-lg">
-                    {SHOPS.map((s) => (
-                      <Chip key={s} on={shops.includes(s)} onClick={() => toggle(shops, s, setShops)}>{s === "SM Appliance" ? "SM" : s}</Chip>
-                    ))}
-                  </div>
-                </details>
-                <Chip on={onlyMoved} onClick={() => setOnlyMoved(!onlyMoved)}>가격 변동분만</Chip>
-              </div>
-
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <div className="relative">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" /></svg>
-                  <input
-                    value={q}
-                    onChange={(ev) => setQ(ev.target.value)}
-                    onFocus={() => setFocused(true)}
-                    onBlur={() => setFocused(false)}
-                    placeholder="모델코드·모델명 검색"
-                    className={"rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white " + (focused || q ? "w-[416px]" : "w-[320px]")}
-                  />
-                </div>
-                <span className="num text-[11px] text-gray-500">{data.length}행</span>
-                <button
-                  type="button"
-                  onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")}
-                  className="ml-auto rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[12px] font-medium text-emerald-700 transition-all duration-200 hover:bg-emerald-100 active:scale-95"
-                >
-                  엑셀(CSV) 내보내기
+                <FacetMenu label="가격대" value={band} active={band !== "전체"}>
+                  <Opt on={band === "전체"} onClick={() => setBand("전체")}>전체</Opt>
+                  {BANDS.map((b) => (
+                    <Opt key={b.t} on={band === b.t} onClick={() => setBand(b.t)}>{b.t}</Opt>
+                  ))}
+                </FacetMenu>
+                <FacetMenu label="브랜드" value={brands.length === BRANDS.length ? "전체" : brands.length + "개"} active={brands.length !== BRANDS.length}>
+                  {BRANDS.map((b) => (
+                    <Opt key={b} multi on={brands.includes(b)} count={rows ? rows.filter((r) => r.brand === b).length : null} onClick={() => toggle(brands, b, setBrands)}>{b}</Opt>
+                  ))}
+                </FacetMenu>
+                <FacetMenu label="유통" value={shops.length === SHOPS.length ? "전체" : shops.length + "곳"} active={shops.length !== SHOPS.length}>
+                  {SHOPS.map((s) => (
+                    <Opt key={s} multi on={shops.includes(s)} count={rows ? rows.filter((r) => r.retailer === s).length : null} onClick={() => toggle(shops, s, setShops)}>{s === "SM Appliance" ? "SM" : s}</Opt>
+                  ))}
+                </FacetMenu>
+                <button type="button" onClick={() => setOnlyMoved(!onlyMoved)} className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium transition-colors " + (onlyMoved ? "border-indigo-200 bg-indigo-50 text-indigo-700" : "border-transparent bg-gray-100 text-gray-500 hover:bg-gray-200")}>
+                  <span className={"flex h-4 w-7 items-center rounded-full px-0.5 transition-colors " + (onlyMoved ? "bg-indigo-600" : "bg-gray-300")}><span className={"h-3 w-3 rounded-full bg-white transition-transform " + (onlyMoved ? "translate-x-3" : "")} /></span>
+                  변동분만
                 </button>
+                <div className="ml-auto flex items-center gap-2.5">
+                  <div className="relative">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" /></svg>
+                    <input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델코드·모델명 검색" className={"rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white " + (focused || q ? "w-[360px]" : "w-[260px]")} />
+                  </div>
+                  <span className="whitespace-nowrap text-[11px] text-gray-400"><b className="text-gray-700">{data.length}</b>행{stamp ? " · 최종 " + fmtStamp(stamp) : ""} <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span></span>
+                  <button type="button" onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")} className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 transition hover:border-emerald-300 hover:text-emerald-700">엑셀</button>
+                </div>
               </div>
 
               <div className="mt-2 max-h-[600px] overflow-auto rounded-lg border border-gray-200">
