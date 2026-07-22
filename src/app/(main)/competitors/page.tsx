@@ -297,6 +297,7 @@ export default function Competitors() {
   const [stamp, setStamp] = React.useState<string | null>(null)
   const [q, setQ] = React.useState("")
   const [priceOpen, setPriceOpen] = React.useState(false)
+  const [focused, setFocused] = React.useState(false)
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "deltaPct", asc: true })
   const [promo, setPromo] = React.useState<PromoIntensity[] | null>(null)
   const [camps, setCamps] = React.useState<PromoCampaign[]>([])
@@ -529,12 +530,17 @@ export default function Competitors() {
               </div>
 
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                <input
-                  value={q}
-                  onChange={(ev) => setQ(ev.target.value)}
-                  placeholder="모델코드·모델명 검색"
-                  className="w-56 rounded-md border border-gray-200 px-2 py-1 text-[12px] outline-none transition-colors duration-200 focus:border-indigo-300"
-                />
+                <div className="relative">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" /></svg>
+                  <input
+                    value={q}
+                    onChange={(ev) => setQ(ev.target.value)}
+                    onFocus={() => setFocused(true)}
+                    onBlur={() => setFocused(false)}
+                    placeholder="모델코드·모델명 검색"
+                    className={"rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white " + (focused || q ? "w-[416px]" : "w-[320px]")}
+                  />
+                </div>
                 <span className="num text-[11px] text-gray-500">{data.length}행</span>
                 <button
                   type="button"
