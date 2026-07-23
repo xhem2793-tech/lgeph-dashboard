@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react"
 import DailyIndicators from "@/components/DailyIndicators"
+import FxView from "@/components/FxView"
 import { ProChart, CountUp } from "@/components/ProChartCore"
 import { homeBand, pricesDomain, macroMonthly } from "@/lib/supabase"
 import type { PricesDomain } from "@/lib/supabase"
@@ -15,6 +16,7 @@ type Mon = Record<string, { dates: string[]; values: number[] }>
 const NAV = [
   { id: "core", ko: "핵심 요약", sub: "오늘의 수치 + 대표 지표 한 화면", count: "KPI 12" },
   { id: "prices", ko: "물가·생활비", sub: "CPI 10품목 + 지역별 물가 히트맵", count: "10+지역20" },
+  { id: "fx", ko: "환율·원가", sub: "역내 통화 비교·실효환율·수입원가 영향", count: "FX" },
   { id: "growth", ko: "성장·경기", sub: "GDP 부문분해·투자·가동률·건축허가", count: "14" },
   { id: "rates", ko: "금리·통화·신용", sub: "BSP 3금리·M3·대출(소비자/카드)", count: "9" },
   { id: "labor", ko: "고용·소득·송금", sub: "실업·최저임금·OFW 송금(구성별)", count: "11" },
@@ -256,6 +258,7 @@ export default function Page() {
 
   function view() {
     if (active === "core") return <DailyIndicators />
+    if (active === "fx") return <FxView />
     if (active === "prices") {
       if (!prices || band === null) return <div className="h-80 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />
       return <PricesView data={prices} inf={inf} byKey={byKey} />
