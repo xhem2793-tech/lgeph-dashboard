@@ -13,17 +13,17 @@ import { useLang } from "@/lib/i18n"
 type Card = Awaited<ReturnType<typeof homeBand>>[number]
 type Mon = Record<string, { dates: string[]; values: number[] }>
 
-const NAV = [
-  { id: "core", ko: "핵심 요약", sub: "오늘의 수치 + 대표 지표 한 화면", count: "KPI 12" },
-  { id: "prices", ko: "물가·생활비", sub: "CPI 10품목 + 지역별 물가 히트맵", count: "10+지역20" },
-  { id: "fx", ko: "환율·원가", sub: "역내 통화 비교·실효환율·수입원가 영향", count: "FX" },
-  { id: "growth", ko: "성장·경기", sub: "GDP 부문분해·투자·가동률·건축허가", count: "14" },
-  { id: "rates", ko: "금리·통화·신용", sub: "BSP 3금리·M3·대출(소비자/카드)", count: "9" },
-  { id: "labor", ko: "고용·소득·송금", sub: "실업·최저임금·OFW 송금(구성별)", count: "11" },
-  { id: "sentiment", ko: "소비·기업 심리", sub: "CCI·BCI·내구재 구매의향(장기)", count: "5" },
-  { id: "appliance", ko: "가전 선행지표", sub: "가전 PPI·수입액·가전/에어컨 물가", count: "8" },
-  { id: "market", ko: "가전시장·제품별", sub: "에어컨·냉장고·TV·세탁기별 LG점유·ASP·할인갭", count: "1,900+", accent: true },
-  { id: "radar", ko: "사업 레이더", sub: "원가압박·OFW구매력·실질물가·TCO", count: "파생", star: true },
+const NAV: { id: string; ko: string; sub: string; count: string; accent?: boolean; star?: boolean; subs: string[] }[] = [
+  { id: "core", ko: "핵심 요약", sub: "오늘의 수치 + 대표 지표 한 화면", count: "KPI 12", subs: ["환율·유가·날씨", "대표 지표 스코어카드"] },
+  { id: "prices", ko: "물가·생활비", sub: "CPI 10품목 + 지역별 물가 히트맵", count: "10+지역20", subs: ["소비자물가 CPI", "품목별 물가", "지역 히트맵", "실질 지표"] },
+  { id: "fx", ko: "환율·원가", sub: "역내 통화 비교·실효환율·수입원가 영향", count: "FX", subs: ["₱/USD 추이", "동남아 6개국 통화", "실효환율 NEER·REER", "수입 원가 영향"] },
+  { id: "growth", ko: "성장·경기", sub: "GDP 부문분해·투자·가동률·건축허가", count: "14", subs: ["GDP 성장률", "투자·건축허가", "가동률"] },
+  { id: "rates", ko: "금리·통화·신용", sub: "BSP 3금리·M3·대출(소비자/카드)", count: "9", subs: ["기준금리 BSP", "M3·통화량", "가계·카드 대출"] },
+  { id: "labor", ko: "고용·소득·송금", sub: "실업·최저임금·OFW 송금(구성별)", count: "11", subs: ["실업률", "최저임금", "OFW 송금"] },
+  { id: "sentiment", ko: "소비·기업 심리", sub: "CCI·BCI·내구재 구매의향(장기)", count: "5", subs: ["소비자신뢰 CCI", "기업심리 BCI", "내구재 구매의향"] },
+  { id: "appliance", ko: "가전 선행지표", sub: "가전 PPI·수입액·가전/에어컨 물가", count: "8", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
+  { id: "market", ko: "가전시장·제품별", sub: "에어컨·냉장고·TV·세탁기별 LG점유·ASP·할인갭", count: "1,900+", accent: true, subs: ["LG 점유·ASP", "제품별 할인갭"] },
+  { id: "radar", ko: "사업 레이더", sub: "원가압박·OFW구매력·실질물가·TCO", count: "파생", star: true, subs: ["원가압박 지수", "실질 구매력·TCO"] },
 ]
 
 const num = (s: string | undefined) => {
@@ -275,25 +275,33 @@ export default function Page() {
             <p className="mb-2 px-1.5 text-[14px] font-bold tracking-tight text-gray-900">{en ? "View" : "보기"}</p>
             <nav className="flex flex-col gap-0.5">
               {NAV.map((n, i) => (
-                <button
-                  key={n.id}
-                  onClick={() => setActive(n.id)}
-                  style={{ animation: "fadeUp .4s ease both", animationDelay: (i * 40) + "ms" }}
-                  className={
-                    "group w-full rounded-lg px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
-                    (active === n.id ? "bg-indigo-50 ring-1 ring-indigo-100" : "hover:bg-indigo-50/40")
-                  }
-                >
-                  <span className="flex items-center gap-1.5">
-                    <span className={"flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700" : "font-semibold text-gray-800 group-hover:text-indigo-600")}>
-                      {n.star && <span className="text-amber-500">★ </span>}
-                      {n.accent && <span className="text-violet-500">◆ </span>}
-                      {n.ko}
+                <div key={n.id}>
+                  <button
+                    onClick={() => setActive(n.id)}
+                    style={{ animation: "fadeUp .4s ease both", animationDelay: (i * 40) + "ms" }}
+                    className={
+                      "group w-full rounded-lg px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                      (active === n.id ? "bg-indigo-50 ring-1 ring-indigo-100" : "hover:bg-indigo-50/40")
+                    }
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <span className={"flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700" : "font-semibold text-gray-800 group-hover:text-indigo-600")}>
+                        {n.star && <span className="text-amber-500">★ </span>}
+                        {n.accent && <span className="text-violet-500">◆ </span>}
+                        {n.ko}
+                      </span>
+                      <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums " + (active === n.id ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400")}>{n.count}</span>
                     </span>
-                    <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums " + (active === n.id ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400")}>{n.count}</span>
-                  </span>
-                  <span className="mt-0.5 block text-[10px] leading-tight text-gray-400">{n.sub}</span>
-                </button>
+                    <span className="mt-0.5 block text-[10px] leading-tight text-gray-400">{n.sub}</span>
+                  </button>
+                  {active === n.id && (
+                    <div className="mb-1 ml-3 mt-0.5 flex flex-col border-l border-indigo-100 pl-2">
+                      {n.subs.map((su) => (
+                        <span key={su} className="rounded py-[3px] pl-1.5 text-[11.5px] font-medium text-gray-500 transition-colors hover:text-indigo-600">· {su}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </nav>
           </div>
