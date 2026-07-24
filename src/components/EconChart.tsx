@@ -11,7 +11,7 @@ const GRID = "#eceef1"
 export const IND = "#6366f1" // 주 시리즈(핵심요약 동일)
 
 // .dark 클래스를 감시해 SVG 내부 하드코딩 색(그리드·흰 핀·크로스헤어)을 테마 반응형으로 — 토글 시 재그리기
-function useIsDark() {
+export function useIsDark() {
   const [dark, setDark] = React.useState(false)
   React.useEffect(() => {
     const root = document.documentElement
@@ -23,7 +23,7 @@ function useIsDark() {
   }, [])
   return dark
 }
-const chartColors = (dark: boolean) => ({
+export const chartColors = (dark: boolean) => ({
   grid: dark ? "#232a33" : GRID,       // 그리드선
   halo: dark ? "#0b0f16" : "#fff",     // 점·핀 배경(카드색 컷아웃)
   cross: dark ? "#4b5563" : "#c3c8d0", // 크로스헤어
