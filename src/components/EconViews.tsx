@@ -10,7 +10,7 @@ import { ChartCard, Lg, SLine, moLabel } from "@/components/EconChart"
  *  각 카드는 지표 1~3계열을 한 축에 겹쳐 그림. 창(1Y/2Y/전체) 토글 공용. */
 
 type Mon = Record<string, { dates: string[]; values: number[] }>
-const WIN = [{ k: "1Y", n: 12 }, { k: "2Y", n: 24 }, { k: "전체", n: 60 }]
+const WIN = [{ k: "1Y", n: 12 }, { k: "2Y", n: 24 }, { k: "5Y", n: 60 }, { k: "전체", n: 132 }]
 
 // 시리즈 팔레트(환율과 동일 계열)
 const C = { ind: "#6366f1", rose: "#dc2626", blue: "#0284c7", emer: "#059669", amber: "#d99400", violet: "#7c3aed", teal: "#0f766e", brown: "#a1795b" }
@@ -47,7 +47,7 @@ function latestOf(d: Mon, key: string): { v: number; date: string } | null {
 function useMacro(keys: string[]) {
   const [d, setD] = useState<Mon>({})
   const [loaded, setLoaded] = useState(false)
-  useEffect(() => { macroMonthly(keys, 60).then((r) => { setD(r); setLoaded(true) }).catch(() => setLoaded(true)) }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { macroMonthly(keys, 132).then((r) => { setD(r); setLoaded(true) }).catch(() => setLoaded(true)) }, []) // eslint-disable-line react-hooks/exhaustive-deps
   return { d, loaded }
 }
 
