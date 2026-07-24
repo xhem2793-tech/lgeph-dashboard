@@ -13,7 +13,6 @@ import { Segmented } from "@/components/Segmented"
 type Strip = { asOf: string | null; pairs: Record<string, any>; peers: any[] }
 const nf = (v: number, d = 1) => (v > 0 ? "+" : "") + v.toFixed(d)
 // 핵심요약 ProChart와 동일한 시각 팔레트(선·점·그리드)
-const SURFACE = "#f9fafb"  // 점 채움(핵심요약 동일)
 const GRID = "#eceef1"
 
 // ── 실측 데이터 (2021.7–2026.6 월별) ──────────────────────────────────────
@@ -54,23 +53,20 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
     const everyN = n <= 8 ? 1 : n <= 16 ? 2 : Math.ceil(n / 7)
     labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": "middle", "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) })
     const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: "#c3c8d0", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 }); svg.appendChild(cross)
-    // 점 크기: 핵심요약(slots≤7?4:3) 어법을 다구간(최대 60개월)까지 확장
-    const base = n <= 7 ? 4 : n <= 13 ? 3 : n <= 26 ? 2.4 : n <= 40 ? 1.9 : 1.5
-    // 라인(선굵기 = 핵심요약 현재선 2 / 보조선 1.6) + 모든 점에 상시 점
-    const dotsByS: SVGElement[][] = []
-    series.forEach((s, si) => {
+    // 라인만 상시 표시(선굵기 = 핵심요약 현재선 2 / 보조선 1.6). 점은 호버 시에만.
+    // 선 그리기 애니메이션도 핵심요약과 동일(1500ms · cubic-bezier(.22,1,.36,1) · delay .18s)
+    series.forEach((s) => {
       const w = s.w ?? 1.6
       const pts = s.data.map((v, i) => [X(i), Y(v)])
       const pl = el("polyline", { points: pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "), fill: "none", stroke: s.color, "stroke-width": w, "stroke-linejoin": "round", "stroke-linecap": "round" }); svg.appendChild(pl)
       const len = (pl as unknown as SVGPolylineElement).getTotalLength()
       pl.style.strokeDasharray = String(len); pl.style.strokeDashoffset = String(len)
-      pl.style.transition = "stroke-dashoffset 1200ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = 0.18 + si * 0.06 + "s"
+      pl.style.transition = "stroke-dashoffset 1500ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = "0.18s"
       requestAnimationFrame(() => requestAnimationFrame(() => { pl.style.strokeDashoffset = "0" }))
-      const dots = pts.map(([x, y]) => {
-        const c = el("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: base, fill: SURFACE, stroke: s.color, "stroke-width": 1.5 })
-        c.style.transition = "r .15s, fill .15s"; svg.appendChild(c); return c
-      })
-      dotsByS.push(dots)
+    })
+    // 호버 활성점: 시리즈당 1개, 평소 opacity 0 (핵심요약 호버와 동일한 어법)
+    const adots: SVGElement[] = series.map((s) => {
+      const c = el("circle", { r: 4.2, fill: s.color, stroke: "#fff", "stroke-width": 1.6, opacity: 0 }); svg.appendChild(c); return c
     })
     const head = document.createElement("div"); head.className = "mb-1 text-[11px] font-medium text-gray-400"; tip.appendChild(head)
     const valNodes: HTMLElement[] = []
@@ -81,21 +77,20 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
       const v = document.createElement("b"); v.className = "ml-auto tabular-nums font-semibold text-gray-800"
       row.appendChild(dot); row.appendChild(nm); row.appendChild(v); tip.appendChild(row); valNodes.push(v)
     })
-    const resetDot = (i: number) => { if (i < 0) return; dotsByS.forEach((dots) => { const c = dots[i]; if (c) { c.setAttribute("r", String(base)); c.setAttribute("fill", SURFACE) } }) }
     let active = -1, curX = X(0), tgtX = X(0), cOp = 0, tOp = 0, curTop = T, tgtTop = T, rectW = 300, rectH = 120, raf = 0
     const place = (i: number) => {
-      resetDot(active)
       active = i; head.textContent = "20" + labels[i]
       const tops: number[] = []
       series.forEach((s, si) => {
         const v = s.data[i]; valNodes[si].textContent = v.toFixed(decimals) + unit; const y = Y(v); tops.push(y)
-        const c = dotsByS[si][i]; if (c) { c.setAttribute("r", String(base + 2.4)); c.setAttribute("fill", s.color) } // 활성점 확대·솔리드(핵심요약 호버)
+        adots[si].setAttribute("cx", X(i).toFixed(1)); adots[si].setAttribute("cy", y.toFixed(1))
       })
       tgtTop = tops.length ? Math.min(...tops) : T
     }
     const loop = () => {
       curX += (tgtX - curX) * 0.3; curTop += (tgtTop - curTop) * 0.3; cOp += (tOp - cOp) * 0.3
       cross.setAttribute("x1", curX.toFixed(1)); cross.setAttribute("x2", curX.toFixed(1)); cross.setAttribute("opacity", cOp.toFixed(2))
+      adots.forEach((d) => d.setAttribute("opacity", cOp.toFixed(2)))
       const sx = rectW / 300, sy = rectH / 100
       tip.style.left = (curX * sx).toFixed(1) + "px"; tip.style.top = (curTop * sy - 12).toFixed(1) + "px"; tip.style.transform = "translate(-50%,-100%)"
       raf = requestAnimationFrame(loop)
@@ -107,7 +102,7 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
       const i = Math.max(0, Math.min(n - 1, Math.round((px - L) / (R - L) * (n - 1))))
       tgtX = X(i); if (i !== active) place(i); tOp = 1; tip.style.opacity = "1"
     }
-    const leave = () => { tOp = 0; tip.style.opacity = "0"; resetDot(active); active = -1 }
+    const leave = () => { tOp = 0; tip.style.opacity = "0"; active = -1 }
     svg.addEventListener("pointermove", move); svg.addEventListener("pointerdown", move); svg.addEventListener("pointerleave", leave)
     return () => { cancelAnimationFrame(raf); svg.removeEventListener("pointermove", move); svg.removeEventListener("pointerdown", move); svg.removeEventListener("pointerleave", leave) }
   }, [series, labels, decimals, unit])
@@ -172,11 +167,11 @@ export default function FxView() {
   const fxusd = [{ name: "₱/USD", color: "#6366f1", w: 2, data: lastN(DATA.fxusd, n) }]
   const won = [{ name: "₩/₱", color: "#0f766e", w: 3, data: lastN(DATA.extra.wonperpeso, n) }]
   const asia = [
-    { name: "위안 CNY", color: "#dc2626", w: 2.6, data: idx100(lastN(DATA.asia.cny, n)) },
+    { name: "위안 CNY", color: "#dc2626", w: 2, data: idx100(lastN(DATA.asia.cny, n)) },
     { name: "루피 INR", color: "#7c3aed", data: idx100(lastN(DATA.asia.inr, n)) },
   ]
   const jpyeur = [
-    { name: "엔 JPY", color: "#0284c7", w: 2.6, data: idx100(lastN(DATA.extra.pesoperjpy, n)) },
+    { name: "엔 JPY", color: "#0284c7", w: 2, data: idx100(lastN(DATA.extra.pesoperjpy, n)) },
     { name: "유로 EUR", color: "#b45309", data: idx100(lastN(DATA.extra.pesopereur, n)) },
   ]
   const eer = [
