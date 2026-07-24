@@ -40,18 +40,24 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
       const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
     }
     const everyN = n <= 8 ? 1 : n <= 16 ? 2 : Math.ceil(n / 7)
-    labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": "middle", "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) })
+    labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const an = i === n - 1 ? "end" : i === 0 ? "start" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) }) // 양끝 라벨은 end/start 정렬로 뷰박스 밖 짤림 방지
     const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: "#c3c8d0", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 }); svg.appendChild(cross)
     // 라인만 상시 표시. 선 그리기 애니메이션은 핵심요약과 동일.
     series.forEach((s) => {
       const w = s.w ?? 1.6
-      const pts = s.data.map((v, i) => [X(i), Y(v)])
-      const pl = el("polyline", { points: pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "), fill: "none", stroke: s.color, "stroke-width": w, "stroke-linejoin": "round", "stroke-linecap": "round" }); svg.appendChild(pl)
-      const len = (pl as unknown as SVGPolylineElement).getTotalLength()
-      pl.style.strokeDasharray = String(len); pl.style.strokeDashoffset = String(len)
-      void (pl as unknown as SVGGraphicsElement).getBoundingClientRect() // 강제 reflow로 시작 상태 확정(async 로드 시 첫 페인트 누락 방지)
-      pl.style.transition = "stroke-dashoffset 1500ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = "0.18s"
-      pl.style.strokeDashoffset = "0"
+      // 결측(NaN)에서 선을 끊어 유한 구간별 폴리라인으로 분할 — 축이 다른 시리즈도 정확히 표현
+      const segs: number[][][] = []; let cur: number[][] = []
+      s.data.forEach((v, i) => { if (Number.isFinite(v)) cur.push([X(i), Y(v)]); else { if (cur.length) segs.push(cur); cur = [] } })
+      if (cur.length) segs.push(cur)
+      segs.forEach((pts) => {
+        if (pts.length === 1) { svg.appendChild(el("circle", { cx: pts[0][0].toFixed(1), cy: pts[0][1].toFixed(1), r: Math.max(1.6, w), fill: s.color })); return }
+        const pl = el("polyline", { points: pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "), fill: "none", stroke: s.color, "stroke-width": w, "stroke-linejoin": "round", "stroke-linecap": "round" }); svg.appendChild(pl)
+        const len = (pl as unknown as SVGPolylineElement).getTotalLength()
+        pl.style.strokeDasharray = String(len); pl.style.strokeDashoffset = String(len)
+        void (pl as unknown as SVGGraphicsElement).getBoundingClientRect() // 강제 reflow로 시작 상태 확정(async 로드 시 첫 페인트 누락 방지)
+        pl.style.transition = "stroke-dashoffset 1500ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = "0.18s"
+        pl.style.strokeDashoffset = "0"
+      })
     })
     // 끝점 라벨 카드 — 특정 시리즈(예: 필리핀)의 우측 끝 위치를 소형 핀 카드로 표기(굵은선 강조 대체)
     series.forEach((s) => {
@@ -87,15 +93,17 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
       active = i; head.textContent = labels[i] ?? ""
       const tops: number[] = []
       series.forEach((s, si) => {
-        const v = s.data[i]; valNodes[si].textContent = (Number.isFinite(v) ? v.toFixed(decimals) : "–") + unit; const y = Y(v); tops.push(y)
-        adots[si].setAttribute("cx", X(i).toFixed(1)); adots[si].setAttribute("cy", y.toFixed(1))
+        const v = s.data[i]; const fin = Number.isFinite(v)
+        valNodes[si].textContent = (fin ? v.toFixed(decimals) : "–") + unit
+        if (fin) { const y = Y(v); tops.push(y); adots[si].setAttribute("cx", X(i).toFixed(1)); adots[si].setAttribute("cy", y.toFixed(1)); adots[si].dataset.on = "1" }
+        else adots[si].dataset.on = "" // 결측점은 활성점 숨김
       })
       tgtTop = tops.length ? Math.min(...tops) : T
     }
     const loop = () => {
       curX += (tgtX - curX) * 0.3; curTop += (tgtTop - curTop) * 0.3; cOp += (tOp - cOp) * 0.3
       cross.setAttribute("x1", curX.toFixed(1)); cross.setAttribute("x2", curX.toFixed(1)); cross.setAttribute("opacity", cOp.toFixed(2))
-      adots.forEach((d) => d.setAttribute("opacity", cOp.toFixed(2)))
+      adots.forEach((d) => d.setAttribute("opacity", (d.dataset.on ? cOp : 0).toFixed(2)))
       const sx = rectW / 300, sy = rectH / 100
       tip.style.left = (curX * sx).toFixed(1) + "px"; tip.style.top = (curTop * sy - 12).toFixed(1) + "px"; tip.style.transform = "translate(-50%,-100%)"
       raf = requestAnimationFrame(loop)
@@ -154,7 +162,7 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
     }
     svg.appendChild(el("line", { x1: L, y1: y0, x2: R, y2: y0, stroke: "#9ca3af", "stroke-width": 1 })) // 0 기준선
     const everyN = n <= 8 ? 1 : n <= 16 ? 2 : Math.ceil(n / 7)
-    labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": "middle", "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) })
+    labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const an = i === n - 1 ? "end" : i === 0 ? "start" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) }) // 양끝 라벨 짤림 방지
     const bars = data.map((v, i) => {
       const x = X(i) - bw / 2
       const top = Math.min(Y(v), y0), h = Math.abs(Y(v) - y0)
