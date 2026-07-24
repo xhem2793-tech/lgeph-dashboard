@@ -137,12 +137,7 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
       <FxChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />
       <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
       <div className="mt-2 border-l-2 border-indigo-300 pl-2.5">
-        <div className="flex items-center gap-1.5">
-          <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + AI_DOT[tone]} />
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-indigo-500"><path d="M12 2l1.9 5.7L19.6 9l-5.7 1.9L12 16l-1.9-5.1L4.4 9l5.7-1.3z" /><path d="M19 15l.8 2.2L22 18l-2.2.9L19 21l-.9-2.1L16 18l2.1-.8z" /></svg>
-          <span className="text-[9.5px] font-bold uppercase tracking-wide text-gray-400">AI 분석</span>
-        </div>
-        <p className="mt-0.5 text-[11px] leading-relaxed text-gray-600">{ai}</p>
+        <p className="text-[11px] leading-relaxed text-gray-600"><span className={"mr-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full align-middle " + AI_DOT[tone]} />{ai}</p>
       </div>
       <p className="mt-auto border-t border-gray-100 pt-2 text-[10px] leading-relaxed text-gray-400">{src}</p>
     </div>

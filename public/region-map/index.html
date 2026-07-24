@@ -696,30 +696,37 @@ let W=0,H=0,path,g,gLabels,features,selected=null;
 d3.json("data/ph-regions.geojson").then(geo=>{
   document.getElementById("loading").remove();
   features = geo.features;
-  // 고정 viewBox — stage 픽셀 측정에 의존하지 않음(로드 타이밍에 따른 세로 드리프트 방지)
-  W=1200; H=820;
-  svg.attr("viewBox",`0 0 ${W} ${H}`).attr("preserveAspectRatio","xMidYMid meet");
-
-  const proj=d3.geoMercator().fitExtent([[40,60],[W-40,H-60]],geo);
-  path=d3.geoPath(proj);
   g=svg.append("g").attr("class","zoomlayer");
   gLabels=svg.append("g");
 
   g.selectAll("path.region")
     .data(features).join("path")
     .attr("class","region")
-    .attr("d",path)
     .attr("data-name",d=>d.properties.REGION)
     .on("mouseenter",(e,d)=>{ if(!selected) showLabel(d,false); })
     .on("mouseleave",(e,d)=>{ if(!selected) hideLabels(); })
     .on("click",(e,d)=>selectRegion(d));
+
+  // 스테이지를 꽉 채우되(원래 크기), 크기 변할 때마다 재핏 → 로드 타이밍 드리프트 없음
+  function fitMap(){
+    const st=document.querySelector(".stage"); const w=st.clientWidth, h=st.clientHeight;
+    if(!w||!h) return;
+    W=w; H=h;
+    svg.attr("viewBox",`0 0 ${W} ${H}`);
+    const proj=d3.geoMercator().fitExtent([[30,52],[W-30,H-44]],geo);
+    path=d3.geoPath(proj);
+    g.selectAll("path.region").attr("d",path);
+    if(!selected) hideLabels();
+  }
+  fitMap();
+  try{ new ResizeObserver(()=>{ if(!selected) fitMap(); }).observe(document.querySelector(".stage")); }
+  catch(e){ window.addEventListener("resize",()=>{ if(!selected) fitMap(); }); }
 
   buildList();
   buildMapTabs();
   applyChoropleth(curMapMetric);
   loadEconomic();
   loadRegionalCpi();
-  window.addEventListener("resize",()=>{ /* keep simple: reload layout */ });
 });
 
 function centroidXY(d){ return path.centroid(d); }

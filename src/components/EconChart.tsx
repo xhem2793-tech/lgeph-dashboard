@@ -107,6 +107,75 @@ export function Lg({ c, t, b }: { c: string; t: string; b?: boolean }) {
   return <span className="inline-flex items-center gap-1.5" style={{ color: b ? "#4f46e5" : "#6b7280", fontWeight: b ? 700 : 500 }}><span className="inline-block h-0 w-3" style={{ borderTop: "2.4px solid " + c }} />{t}</span>
 }
 
+// ── 정부 표준 막대차트 — 증가율·수입액 등 이산값(0 기준선·양수 indigo/음수 rose·호버) ──
+export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }: { data: number[]; labels: string[]; color?: string; decimals?: number; unit?: string }) {
+  const svgRef = React.useRef<SVGSVGElement | null>(null)
+  const tipRef = React.useRef<HTMLDivElement | null>(null)
+  React.useEffect(() => {
+    const svg = svgRef.current, tip = tipRef.current
+    if (!svg || !tip) return
+    while (svg.firstChild) svg.removeChild(svg.firstChild)
+    tip.innerHTML = ""
+    const NS = "http://www.w3.org/2000/svg"
+    const n = data.length
+    if (!n) return
+    const L = 36, R = 292, T = 8, B = 80
+    const el = (t: string, a: Record<string, string | number>) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, String(a[k])); return e }
+    const vals = data.filter((v) => Number.isFinite(v))
+    let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals)
+    if (lo === hi) hi += 1
+    const span = hi - lo; lo -= span * 0.06; hi += span * 0.12
+    const X = (i: number) => L + ((i + 0.5) / n) * (R - L)
+    const Y = (v: number) => B - ((v - lo) / (hi - lo)) * (B - T)
+    const bw = Math.max(2, ((R - L) / n) * 0.62)
+    const y0 = Y(0)
+    const dec2 = hi - lo < 20 ? 1 : 0
+    for (let k = 0; k <= 5; k++) {
+      const v = lo + ((hi - lo) * k) / 5, y = Y(v)
+      svg.appendChild(el("line", { x1: L, y1: y, x2: R, y2: y, stroke: GRID, "stroke-width": 1 }))
+      const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
+    }
+    svg.appendChild(el("line", { x1: L, y1: y0, x2: R, y2: y0, stroke: "#9ca3af", "stroke-width": 1 })) // 0 기준선
+    const everyN = n <= 8 ? 1 : n <= 16 ? 2 : Math.ceil(n / 7)
+    labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": "middle", "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) })
+    const bars = data.map((v, i) => {
+      const x = X(i) - bw / 2
+      const top = Math.min(Y(v), y0), h = Math.abs(Y(v) - y0)
+      const c = v >= 0 ? color : "#e11d48"
+      const r = el("rect", { x: x.toFixed(1), y: y0.toFixed(1), width: bw.toFixed(1), height: 0, rx: 1.4, fill: c, opacity: 0.9 })
+      r.style.transition = "height .7s cubic-bezier(.16,1,.3,1), y .7s cubic-bezier(.16,1,.3,1)"; r.style.transitionDelay = 0.1 + Math.min(i, 24) * 0.012 + "s"
+      svg.appendChild(r)
+      void (r as unknown as SVGGraphicsElement).getBoundingClientRect()
+      r.setAttribute("y", top.toFixed(1)); r.setAttribute("height", h.toFixed(1))
+      return { r, c }
+    })
+    const head = document.createElement("div"); head.className = "mb-0.5 text-[11px] font-medium text-gray-400"; tip.appendChild(head)
+    const valRow = document.createElement("div"); valRow.className = "text-[13px] font-bold tabular-nums"; tip.appendChild(valRow)
+    let rectW = 300, rectH = 120, active = -1
+    const move = (e: PointerEvent) => {
+      const rect = svg.getBoundingClientRect(); rectW = rect.width; rectH = rect.height
+      const px = ((e.clientX - rect.left) / rect.width) * 300
+      const i = Math.max(0, Math.min(n - 1, Math.floor((px - L) / ((R - L) / n))))
+      if (i !== active) {
+        active = i
+        bars.forEach((b, j) => b.r.setAttribute("opacity", j === i ? "1" : "0.32"))
+        head.textContent = labels[i]; valRow.textContent = (Number.isFinite(data[i]) ? data[i].toFixed(decimals) : "–") + unit; valRow.style.color = bars[i].c
+      }
+      const sx = rectW / 300, sy = rectH / 100
+      tip.style.left = (X(i) * sx).toFixed(1) + "px"; tip.style.top = (Math.min(Y(data[i]), y0) * sy - 10).toFixed(1) + "px"; tip.style.transform = "translate(-50%,-100%)"; tip.style.opacity = "1"
+    }
+    const leave = () => { active = -1; bars.forEach((b) => b.r.setAttribute("opacity", "0.9")); tip.style.opacity = "0" }
+    svg.addEventListener("pointermove", move); svg.addEventListener("pointerdown", move); svg.addEventListener("pointerleave", leave)
+    return () => { svg.removeEventListener("pointermove", move); svg.removeEventListener("pointerdown", move); svg.removeEventListener("pointerleave", leave) }
+  }, [data, labels, color, decimals, unit])
+  return (
+    <div className="relative mt-1" style={{ touchAction: "none" }}>
+      <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
+      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 min-w-[80px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-center shadow-lg transition-opacity" style={{ opacity: 0 }} />
+    </div>
+  )
+}
+
 // 색=신호(DESIGN §1): 채운 배지·틴트 카드 금지 — 강조는 indigo, 신호는 dot
 export type Tone = "rose" | "amber" | "emerald"
 const AI_DOT: Record<Tone, string> = { rose: "bg-rose-500", amber: "bg-amber-500", emerald: "bg-emerald-500" }
@@ -129,12 +198,7 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
       <LineChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />
       <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
       <div className="mt-2 border-l-2 border-indigo-300 pl-2.5">
-        <div className="flex items-center gap-1.5">
-          <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + AI_DOT[tone]} />
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-indigo-500"><path d="M12 2l1.9 5.7L19.6 9l-5.7 1.9L12 16l-1.9-5.1L4.4 9l5.7-1.3z" /><path d="M19 15l.8 2.2L22 18l-2.2.9L19 21l-.9-2.1L16 18l2.1-.8z" /></svg>
-          <span className="text-[9.5px] font-bold uppercase tracking-wide text-gray-400">AI 분석</span>
-        </div>
-        <p className="mt-0.5 text-[11px] leading-relaxed text-gray-600">{ai}</p>
+        <p className="text-[11px] leading-relaxed text-gray-600"><span className={"mr-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full align-middle " + AI_DOT[tone]} />{ai}</p>
       </div>
       <p className="mt-auto border-t border-gray-100 pt-2 text-[10px] leading-relaxed text-gray-400">{src}</p>
     </div>
