@@ -284,27 +284,17 @@ export default function Page() {
                     onClick={() => setActive(n.id)}
                     style={{ animation: "fadeUp .4s ease both", animationDelay: (i * 40) + "ms" }}
                     className={
-                      "group w-full rounded-lg px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                      "group flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
                       (active === n.id ? "bg-indigo-50 ring-1 ring-indigo-100" : "hover:bg-indigo-50/40")
                     }
                   >
-                    <span className="flex items-center gap-1.5">
-                      <span className={"flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700" : "font-semibold text-gray-800 group-hover:text-indigo-600")}>
-                        {n.star && <span className="text-amber-500">★ </span>}
-                        {n.accent && <span className="text-violet-500">◆ </span>}
-                        {n.ko}
-                      </span>
-                      <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums " + (active === n.id ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400")}>{n.count}</span>
+                    <span className={"flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700" : "font-semibold text-gray-800 group-hover:text-indigo-600")}>
+                      {n.star && <span className="text-amber-500">★ </span>}
+                      {n.accent && <span className="text-violet-500">◆ </span>}
+                      {n.ko}
                     </span>
-                    <span className="mt-0.5 block text-[10px] leading-tight text-gray-400">{n.sub}</span>
+                    <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums " + (active === n.id ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400")}>{n.count}</span>
                   </button>
-                  {active === n.id && (
-                    <div className="mb-1 ml-3 mt-0.5 flex flex-col border-l border-indigo-100 pl-2">
-                      {n.subs.map((su) => (
-                        <span key={su} className="rounded py-[3px] pl-1.5 text-[11.5px] font-medium text-gray-500 transition-colors hover:text-indigo-600">· {su}</span>
-                      ))}
-                    </div>
-                  )}
                 </div>
               ))}
             </nav>
