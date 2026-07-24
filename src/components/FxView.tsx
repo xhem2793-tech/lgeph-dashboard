@@ -121,9 +121,8 @@ function Lg({ c, t, b }: { c: string; t: string; b?: boolean }) {
 
 // 색=신호(DESIGN §1): 채운 배지·틴트 카드 금지 — 강조는 indigo, 신호는 dot
 type Tone = "rose" | "amber" | "emerald"
-const AI_DOT: Record<Tone, string> = { rose: "bg-rose-500", amber: "bg-amber-500", emerald: "bg-emerald-500" }
 
-function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, meaning, ai, tone, src }: {
+function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, meaning, ai, src }: {
   title: string; unit?: string; legend: React.ReactNode; series: SLine[]; labels: string[]; decimals?: number; seriesUnit?: string
   meaning: React.ReactNode; ai: React.ReactNode; tone: Tone; src: React.ReactNode
 }) {
@@ -137,7 +136,7 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
       <FxChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />
       <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
       <div className="mt-2 border-l-2 border-indigo-300 pl-2.5">
-        <p className="text-[11px] leading-relaxed text-gray-600"><span className={"mr-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full align-middle " + AI_DOT[tone]} />{ai}</p>
+        <p className="text-[11px] leading-relaxed text-gray-600">{ai}</p>
       </div>
       <p className="mt-auto border-t border-gray-100 pt-2 text-[10px] leading-relaxed text-gray-400">{src}</p>
     </div>
