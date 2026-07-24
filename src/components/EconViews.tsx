@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { macroMonthly, calendarUpcoming } from "@/lib/supabase"
+import { macroMonthly, calendarUpcoming, seaCompare } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 import { ChartCard, Lg, SLine, moLabel } from "@/components/EconChart"
 
@@ -19,7 +19,7 @@ const f1 = (v?: number) => (v == null ? "–" : v.toFixed(1))
 const f0 = (v?: number) => (v == null ? "–" : v.toFixed(0))
 const B = (s: React.ReactNode) => <b className="font-semibold text-gray-900 dark:text-gray-50">{s}</b> // 값 강조
 
-type Spec = { key: string; name: string; color: string; w?: number; tf?: (v: number) => number }
+type Spec = { key: string; name: string; color: string; w?: number; tf?: (v: number) => number; endLabel?: string }
 /** 여러 지표를 한 카드에 정렬해 SLine[] + labels 생성. 시계열(2점 이상)만 라인으로.
  *  windowYears = 표시 기간(년). 포인트 수가 아니라 **실제 시간** 기준으로 잘라 분기·연간·월별이 섞여도 토글이 일관됨. */
 function build(d: Mon, windowYears: number, specs: Spec[]): { series: SLine[]; labels: string[] } {
@@ -36,7 +36,7 @@ function build(d: Mon, windowYears: number, specs: Spec[]): { series: SLine[]; l
   if (axis.length < 2) axis = allDates.slice(-Math.min(2, allDates.length))
   const series = present.map((s) => {
     const m = new Map(d[s.key].dates.map((dt, i) => [dt, d[s.key].values[i]]))
-    return { name: s.name, color: s.color, w: s.w, data: axis.map((dt) => { const v = m.get(dt); return v == null ? NaN : (s.tf ? s.tf(v) : v) }) }
+    return { name: s.name, color: s.color, w: s.w, endLabel: s.endLabel, data: axis.map((dt) => { const v = m.get(dt); return v == null ? NaN : (s.tf ? s.tf(v) : v) }) }
   })
   const labels = axis.map(moLabel)
   return { series, labels }
@@ -314,10 +314,24 @@ export function RatesView() {
 // 국민계정·성장 — GDP·소비·투자·건설·산업·유통
 // ══════════════════════════════════════════════════════════════════════
 const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "services_gva_yoy", "retail_sales_growth", "gdp_per_capita_usd"]
+// 동남아 6개국 비교 — 필리핀 강조(굵은선+끝점 핀), 나머지 색 구분
+const SEA_SPECS: Spec[] = [
+  { key: "Philippines", name: "필리핀", color: C.ind, w: 2.4, endLabel: "필리핀" },
+  { key: "Indonesia", name: "인니", color: C.rose },
+  { key: "Thailand", name: "태국", color: C.blue },
+  { key: "Vietnam", name: "베트남", color: C.emer },
+  { key: "Malaysia", name: "말련", color: C.amber },
+  { key: "Singapore", name: "싱가포르", color: C.violet },
+]
 export function GrowthView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(GROWTH_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
+  const [sea, setSea] = useState<Record<string, Mon>>({})
+  useEffect(() => { Promise.all(["gdp_per_capita_ppp", "gdp_per_capita_usd", "gdp_total_ppp"].map((k) => seaCompare(k).then((r) => [k, r] as const))).then((rs) => setSea(Object.fromEntries(rs))) }, [])
+  const seaPPP = build(sea.gdp_per_capita_ppp ?? {}, n, SEA_SPECS.map((s) => ({ ...s, tf: (v: number) => v / 1000 })))
+  const seaNom = build(sea.gdp_per_capita_usd ?? {}, n, SEA_SPECS.map((s) => ({ ...s, tf: (v: number) => v / 1000 })))
+  const seaTot = build(sea.gdp_total_ppp ?? {}, n, SEA_SPECS.map((s) => ({ ...s, tf: (v: number) => v / 1e9 })))
   // 같은 단위(전년비 %)끼리만 겹침 — 스케일 다른 지표(가동률 레벨·건축허가 금액)는 별도 카드로 분리
   const gdp = build(d, n, [{ key: "gdp_growth_yoy", name: "GDP 성장률", color: C.ind, w: 2 }]) // GDP 단독(COVID 저점 등 스케일 독립)
   const demand = build(d, n, [{ key: "household_consumption_yoy", name: "민간소비", color: C.ind, w: 2 }, { key: "gross_capital_formation_yoy", name: "총투자", color: C.blue }])
@@ -424,6 +438,29 @@ export function GrowthView() {
           meaning={<>소매판매 성장률 — <b className="text-gray-700 dark:text-gray-200">가전 포함 소비재 실판매 대리지표</b></>}
           ai={<>소매판매 반등은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 실수요 회복 신호</b> → 프로모·진열 확대 적기, 둔화 시 보급형 방어</>}
           tone="emerald" src={src("PSA 소매판매 · 연간")} />
+      )}
+        </> },
+        { key: "sea", label: "동남아 비교", node: <>
+      {seaPPP.series.length > 0 && (
+        <ChartCard seg="CE" title="1인당 GDP (PPP) — 동남아 6개국" unit="천 int$ · 연간" labels={seaPPP.labels} series={seaPPP.series} decimals={1} seriesUnit="k"
+          legend={<>{SEA_SPECS.map((s) => <Lg key={s.key} c={s.color} t={s.name} b={s.key === "Philippines"} />)}</>}
+          meaning={<>구매력평가(PPP) 1인당 GDP — <b className="text-gray-700 dark:text-gray-200">역내 실질 생활수준·가전 구매력 순위</b></>}
+          ai={<>필리핀은 역내 <b className="font-semibold text-amber-600 dark:text-amber-400">하위권(태국·말련 대비 낮음)</b>이나 성장 지속 → 보급형 주력 + 중산층 확대 구간 프리미엄 침투 여지</>}
+          tone="amber" src={src("World Bank 1인당 GDP(PPP) · 연간")} />
+      )}
+      {seaNom.series.length > 0 && (
+        <ChartCard seg="CE" title="1인당 GDP (명목) — 동남아 6개국" unit="천 US$ · 연간" labels={seaNom.labels} series={seaNom.series} decimals={1} seriesUnit="k"
+          legend={<>{SEA_SPECS.map((s) => <Lg key={s.key} c={s.color} t={s.name} b={s.key === "Philippines"} />)}</>}
+          meaning={<>명목 달러 1인당 GDP — <b className="text-gray-700 dark:text-gray-200">환율 반영 실제 달러 구매력·수입가전 접근성</b></>}
+          ai={<>명목 기준 필리핀 위치는 <b className="font-semibold text-amber-600 dark:text-amber-400">환율(페소 약세)에 민감</b> → 페소 약세기 수입 프리미엄가 부담↑, 현지화·보급형 방어</>}
+          tone="amber" src={src("World Bank 1인당 GDP(명목) · 연간")} />
+      )}
+      {seaTot.series.length > 0 && (
+        <ChartCard seg="B2B" title="국가 GDP 규모 (PPP) — 동남아 6개국" unit="십억 int$ · 연간" labels={seaTot.labels} series={seaTot.series} decimals={0} seriesUnit="B"
+          legend={<>{SEA_SPECS.map((s) => <Lg key={s.key} c={s.color} t={s.name} b={s.key === "Philippines"} />)}</>}
+          meaning={<>경제 총규모(PPP) — <b className="text-gray-700 dark:text-gray-200">역내 시장 크기·잠재 수요 총량 순위</b></>}
+          ai={<>필리핀은 인구 대국이나 총 GDP는 인니에 크게 못 미침 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">1억 인구 기반 성장 잠재력 = 중장기 가전 시장 확대 여력</b></>}
+          tone="emerald" src={src("World Bank GDP(PPP) · 연간")} />
       )}
         </> },
       ]} />

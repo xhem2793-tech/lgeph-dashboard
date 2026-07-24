@@ -872,6 +872,20 @@ export async function macroMonthly(inds: string[], n = 18) {
   return out
 }
 
+// 동남아 국가 비교(geo_level='country_sea') — 특정 지표를 6개국 시계열로. { [geo]: {dates, values} }
+export async function seaCompare(indicator: string) {
+  const path =
+    "macro_indicators?geo_level=eq.country_sea&indicator=eq." + encodeURIComponent(indicator) +
+    "&order=period_date.asc&select=geo,period_date,value"
+  const rows = (await sb(path)) as { geo: string; period_date: string; value: number }[]
+  const out: Record<string, { dates: string[]; values: number[] }> = {}
+  for (const r of rows) {
+    const g = (out[r.geo] = out[r.geo] || { dates: [], values: [] })
+    g.dates.push(r.period_date); g.values.push(Number(r.value))
+  }
+  return out
+}
+
 
 // ============================================================
 // 물가·생활비 도메인 데이터 (economy /prices)

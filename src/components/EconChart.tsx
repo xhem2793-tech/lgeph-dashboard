@@ -51,7 +51,10 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     let lo = Math.min(...all), hi = Math.max(...all)
     if (lo === hi) { lo -= 1; hi += 1 }
     const pad = (hi - lo) * 0.1; lo -= pad; hi += pad
-    const X = (i: number) => (n <= 1 ? (L + R) / 2 : L + (i / (n - 1)) * (R - L))
+    // x축은 index가 아니라 **실제 시간** 비례 — 연간+분기/월별 혼합 시 라벨·점이 시간에 맞게 배치(한쪽 몰림 방지)
+    const tms = labels.map((lb) => { const p = String(lb).split("."); return Number(p[0]) * 12 + (Number(p[1]) || 1) })
+    const t0 = tms[0], tspan = (tms[n - 1] - t0) || 1
+    const X = (i: number) => (n <= 1 ? (L + R) / 2 : L + ((tms[i] - t0) / tspan) * (R - L))
     const Y = (v: number) => B - ((v - lo) / (hi - lo)) * (B - T)
     const dec2 = hi - lo < 20 ? 1 : 0
     for (let k = 0; k <= 5; k++) {
@@ -148,7 +151,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     const move = (e: PointerEvent) => {
       const rect = svg.getBoundingClientRect(); rectW = rect.width; rectH = rect.height
       const px = ((e.clientX - rect.left) / rect.width) * 300
-      const i = Math.max(0, Math.min(n - 1, Math.round((px - L) / (R - L) * (n - 1))))
+      let i = 0, best = Infinity; for (let k = 0; k < n; k++) { const dx = Math.abs(X(k) - px); if (dx < best) { best = dx; i = k } } // 시간축 → 최근접 점
       tgtX = X(i); if (i !== active) place(i); tOp = 1; tip.style.opacity = "1"
     }
     const leave = () => { tOp = 0; tip.style.opacity = "0"; active = -1 }
@@ -199,12 +202,9 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
       const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
     }
     svg.appendChild(el("line", { x1: L, y1: y0, x2: R, y2: y0, stroke: "#9ca3af", "stroke-width": 1 })) // 0 기준선
-    const yearFirst: number[] = []; let ly = ""
-    labels.forEach((lb, i) => { const y = String(lb || "").split(".")[0]; if (y && y !== ly) { yearFirst.push(i); ly = y } })
-    let showIdx: number[]
-    if (yearFirst.length >= 3) { const step = Math.max(1, Math.ceil(yearFirst.length / 8)); showIdx = yearFirst.filter((_, k) => k % step === 0) }
-    else { const k = Math.min(5, n); showIdx = Array.from({ length: k }, (_, j) => Math.round((j * (n - 1)) / (k - 1 || 1))) }
-    const showSet = new Set(showIdx)
+    // 막대는 index 균등 배치 → 라벨도 index 균등 분산(연간+분기 혼합 시 몰림 방지)
+    const kL = Math.min(6, n)
+    const showSet = new Set(Array.from({ length: kL }, (_, j) => Math.round((j * (n - 1)) / (kL - 1 || 1))))
     labels.forEach((lb, i) => { if (!showSet.has(i)) return; const an = i <= 1 ? "start" : i >= n - 2 ? "end" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) })
     const bars = data.map((v, i) => {
       const x = X(i) - bw / 2
