@@ -282,7 +282,7 @@ export function RatesView() {
 // ══════════════════════════════════════════════════════════════════════
 // 국민계정·성장 — GDP·소비·투자·건설·산업·유통
 // ══════════════════════════════════════════════════════════════════════
-const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "services_gva_yoy"]
+const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "services_gva_yoy", "retail_sales_growth"]
 export function GrowthView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(GROWTH_KEYS)
@@ -297,7 +297,8 @@ export function GrowthView() {
   const permit = build(d, n, [{ key: "permits_nonresidential_floorarea", name: "비주거 착공면적", color: C.ind, w: 2, tf: (v) => v / 1e6 }])
   const permitV = build(d, n, [{ key: "permits_residential_value", name: "주거 건축허가액", color: C.violet, w: 2, tf: (v) => v / 1e6 }]) // 천PHP→십억₱
   const va = build(d, n, [{ key: "manufacturing_va_growth", name: "제조업", color: C.ind, w: 2 }, { key: "industry_va_growth", name: "산업", color: C.rose }, { key: "services_va_growth", name: "서비스", color: C.emer }])
-  const empty = !gdp.series.length && !demand.series.length && !cons.series.length && !ind.series.length && !cap.series.length && !ret.series.length && !permit.series.length && !permitV.series.length && !va.series.length
+  const rsale = build(d, n, [{ key: "retail_sales_growth", name: "소매판매 증가율", color: C.ind, w: 2 }]) // 연간 6년(COVID 저점)
+  const empty = !gdp.series.length && !demand.series.length && !cons.series.length && !ind.series.length && !cap.series.length && !ret.series.length && !permit.series.length && !permitV.series.length && !va.series.length && !rsale.series.length
   return (
     <Shell title="국민계정·성장" sub="GDP·소비·투자·건설허가·산업·유통 — 가전 수요 파이" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ headline: <><b className="font-semibold text-gray-900">국민계정으로 본 가전 수요 파이</b> — 소비·투자·건설허가가 시장 크기를 결정</>, lg: <>민간소비·주거 착공 회복은 <b className="font-semibold">가전 신규수요 선행</b> → 성장 밀집 지역 채널·재고 선점, 둔화 시 보급형 방어</> }}
@@ -370,6 +371,13 @@ export function GrowthView() {
           ai={<>제조·서비스 업황 개선은 <b className="font-semibold text-emerald-600">기업 설비·시설 투자 여력</b> → B2B 상업용·산업용 수요 우호</>}
           tone="emerald" src={src("PSA 국민계정 부문별 GVA · 연간")} />
       )}
+      {rsale.series.length > 0 && (
+        <ChartCard seg="CE" title="소매판매 증가율" unit="전년비 % · 연간" labels={rsale.labels} series={rsale.series} decimals={1} seriesUnit="%"
+          legend={<Lg c={C.ind} t="소매판매 증가율" b />}
+          meaning={<>소매판매 성장률 — <b className="text-gray-700">가전 포함 소비재 실판매 대리지표</b></>}
+          ai={<>소매판매 반등은 <b className="font-semibold text-emerald-600">가전 실수요 회복 신호</b> → 프로모·진열 확대 적기, 둔화 시 보급형 방어</>}
+          tone="emerald" src={src("PSA 소매판매 · 연간")} />
+      )}
     </Shell>
   )
 }
@@ -377,9 +385,9 @@ export function GrowthView() {
 // ══════════════════════════════════════════════════════════════════════
 // 고용·임금·소득 — 실업·참가·OFW 송금·인구
 // ══════════════════════════════════════════════════════════════════════
-const LABOR_KEYS = ["unemployment_rate", "underemployment_rate", "labor_force_participation_rate", "employed_persons", "ofw_cash_remittance", "ofw_cash_remittance_growth_yoy", "ofw_personal_remittance", "remittances_usd", "population", "urban_population_pct"]
+const LABOR_KEYS = ["unemployment_rate", "underemployment_rate", "labor_force_participation_rate", "employed_persons", "ofw_cash_remittance", "ofw_cash_remittance_growth_yoy", "ofw_personal_remittance", "remittances_usd", "population", "urban_population_pct", "min_wage_php", "households_mn", "household_size", "internet_penetration", "electrification_rate", "poverty_rate", "fertility_rate", "median_age"]
 export function LaborView() {
-  const [win, setWin] = useState("2Y")
+  const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(LABOR_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
   const un = build(d, n, [{ key: "unemployment_rate", name: "실업률", color: C.ind, w: 2 }, { key: "underemployment_rate", name: "불완전고용", color: C.rose }])
@@ -388,7 +396,11 @@ export function LaborView() {
   const remL = build(d, n, [{ key: "ofw_cash_remittance", name: "OFW 현금송금", color: C.emer, w: 2 }])
   const remY = build(d, n, [{ key: "remittances_usd", name: "연간 송금액", color: C.emer, w: 2, tf: (v) => v / 1e9 }]) // USD→십억$, 연간 장기(15년)
   const pop = build(d, n, [{ key: "population", name: "인구", color: C.ind, w: 2, tf: (v) => v / 1e6 }]) // 명→백만명, 연간
-  const empty = !un.series.length && !lf.series.length && !rem.series.length && !remL.series.length && !remY.series.length && !pop.series.length
+  const wage = build(d, n, [{ key: "min_wage_php", name: "최저임금(일급)", color: C.ind, w: 2 }]) // PHP/일, 11년
+  const hh = build(d, n, [{ key: "households_mn", name: "가구 수", color: C.ind, w: 2 }]) // 백만가구, 11년
+  const infra = build(d, n, [{ key: "internet_penetration", name: "인터넷", color: C.ind, w: 2 }, { key: "electrification_rate", name: "전기", color: C.emer }]) // %, 보급률
+  const pov = build(d, n, [{ key: "poverty_rate", name: "빈곤율", color: C.ind, w: 2 }]) // %, 소득계층
+  const empty = !un.series.length && !lf.series.length && !rem.series.length && !remL.series.length && !remY.series.length && !pop.series.length && !wage.series.length && !hh.series.length && !infra.series.length && !pov.series.length
   return (
     <Shell title="고용·임금·소득" sub="실업·경제활동참가·OFW 송금 — 가전 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ headline: <><b className="font-semibold text-gray-900">고용·OFW 송금 = 가전 구매력의 원천</b> — 소득 안정과 송금이 수요를 견인</>, lg: <>실업 하락·송금 증가는 가처분소득↑ → <b className="font-semibold">송금 성수기(4Q·연말) 프리미엄 집중</b> · 페소 약세와 겹치면 환산 구매력 추가 상승</> }}
@@ -396,7 +408,9 @@ export function LaborView() {
         { key: "unemployment_rate", label: "실업률", fmt: (v) => v + "%", tone: "rose" },
         { key: "underemployment_rate", label: "불완전고용", fmt: (v) => v + "%", tone: "rose" },
         { key: "ofw_cash_remittance_growth_yoy", label: "OFW 송금 YoY", fmt: (v) => v + "%", tone: "emerald" },
-        { key: "labor_force_participation_rate", label: "경제활동참가", fmt: (v) => v + "%", tone: "emerald" },
+        { key: "min_wage_php", label: "최저임금", fmt: (v) => "₱" + v.toFixed(0), tone: "emerald" },
+        { key: "households_mn", label: "가구 수", fmt: (v) => v.toFixed(1) + "백만", tone: "emerald" },
+        { key: "poverty_rate", label: "빈곤율", fmt: (v) => v + "%", tone: "rose" },
       ]}>
       {un.series.length > 0 && (
         <ChartCard seg="CE" title="실업·불완전고용률" unit="%" labels={un.labels} series={un.series} decimals={1} seriesUnit="%"
@@ -439,6 +453,34 @@ export function LaborView() {
           meaning={<>총인구(장기) — <b className="text-gray-700">가구 형성·가전 보급 대수의 기저 수요</b></>}
           ai={<>인구·가구 증가는 <b className="font-semibold text-emerald-600">가전 대당 보급 여지의 지속 확대</b> → 신규 가구 겨냥 보급형·초도수요 전략</>}
           tone="emerald" src={src("World Bank 인구 · 연간")} />
+      )}
+      {wage.series.length > 0 && (
+        <ChartCard seg="CE" title="최저임금 (일급)" unit="₱/일 · 연간" labels={wage.labels} series={wage.series} decimals={0} seriesUnit="₱"
+          legend={<Lg c={C.ind} t="최저임금(일급)" b />}
+          meaning={<>법정 최저임금 추이 — <b className="text-gray-700">저소득 가구의 가전 구매력 하한</b></>}
+          ai={<>최저임금 인상은 <b className="font-semibold text-emerald-600">보급형·필수 가전 구매력 직접 확대</b> → 임금 인상기 진입가 라인업 프로모 효과적</>}
+          tone="emerald" src={src("DOLE 지역별 최저임금(NCR) · 연간")} />
+      )}
+      {hh.series.length > 0 && (
+        <ChartCard seg="CE" title="가구 수" unit="백만가구 · 연간" labels={hh.labels} series={hh.series} decimals={1} seriesUnit="백만"
+          legend={<Lg c={C.ind} t="가구 수" b />}
+          meaning={<>총 가구 수 — <b className="text-gray-700">가전 보급 대수의 직접 모수(1가구=1대 기준)</b></>}
+          ai={<>가구 수 증가는 <b className="font-semibold text-emerald-600">신규 가전 초도수요의 구조적 확대</b> → 신혼·1인가구 겨냥 소형·보급형 라인업</>}
+          tone="emerald" src={src("PSA 가구조사 · 연간")} />
+      )}
+      {infra.series.length > 0 && (
+        <ChartCard seg="CE" title="인터넷·전기 보급률" unit="% · 연간" labels={infra.labels} series={infra.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="인터넷" b /><Lg c={C.emer} t="전기" /></>}
+          meaning={<>전기·인터넷 보급률 — <b className="text-gray-700">가전·스마트가전 보급의 인프라 전제</b></>}
+          ai={<>전기·인터넷 보급 확대는 <b className="font-semibold text-emerald-600">지방·저소득 신규 가전 시장 개방</b> → 미보급 지역 진입가 라인업·스마트가전 침투 여지</>}
+          tone="emerald" src={src("World Bank 인프라 보급률 · 연간")} />
+      )}
+      {pov.series.length > 0 && (
+        <ChartCard seg="CE" title="빈곤율" unit="% · 연간" labels={pov.labels} series={pov.series} decimals={1} seriesUnit="%"
+          legend={<Lg c={C.ind} t="빈곤율" b />}
+          meaning={<>빈곤 인구 비율 — <b className="text-gray-700">가전 구매 가능 소비층 저변의 역지표</b></>}
+          ai={<>빈곤율 하락은 <b className="font-semibold text-emerald-600">중산층 편입·가전 구매층 확대</b> → 진입가→중급 업그레이드 수요 확대 기대</>}
+          tone="emerald" src={src("PSA 빈곤통계 · 연간")} />
       )}
     </Shell>
   )
