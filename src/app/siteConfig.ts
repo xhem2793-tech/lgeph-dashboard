@@ -10,13 +10,12 @@ export const siteConfig = {
     settings: "/settings",
   },
   nav: [
-    { name: "대시보드", href: "/overview" },
     { name: "경제지표", href: "/economy" },
-    { name: "주요뉴스", href: "/news" },
+    { name: "뉴스", href: "/news" },
     { name: "경쟁사 가격", href: "/competitors" },
-    { name: "경쟁사 동향", href: "/competitor-ads" },
+    { name: "경쟁사 광고", href: "/competitor-ads" },
     { name: "캘린더", href: "/calendar" },
-    { name: "부록", href: "/appendix" },
+    { name: "자료", href: "/appendix" },
   ],
   externalLink: {
     blocks: "https://blocks.tremor.so/templates#dashboard",

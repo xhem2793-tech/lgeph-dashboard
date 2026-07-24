@@ -55,12 +55,12 @@ export function useLang() {
 
 export const DICT = {
   nav_overview: { ko: "대시보드", en: "Overview" },
-  nav_economy: { ko: "주요 지표", en: "Indicators" },
-  nav_news: { ko: "주요 뉴스", en: "News" },
-  nav_competitors: { ko: "가격 동향", en: "Prices" },
-  nav_competitor_ads: { ko: "경쟁사 동향", en: "Competitor Ads" },
+  nav_economy: { ko: "경제지표", en: "Indicators" },
+  nav_news: { ko: "뉴스", en: "News" },
+  nav_competitors: { ko: "경쟁사 가격", en: "Rival Prices" },
+  nav_competitor_ads: { ko: "경쟁사 광고", en: "Rival Ads" },
   nav_calendar: { ko: "캘린더", en: "Calendar" },
-  nav_appendix: { ko: "부록", en: "Appendix" },
+  nav_appendix: { ko: "자료", en: "Appendix" },
   search_ph: { ko: "지표·뉴스·키워드 검색", en: "Search indicators, news, keywords" },
   org: { ko: "LGE-PH 경영기획", en: "LGE-PH Strategy" },
   brief_title: { ko: "금주 브리핑", en: "This Week's Briefing" },

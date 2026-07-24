@@ -28,7 +28,6 @@ export default function RegionMapView() {
 
       <section
         className="min-w-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm transition-shadow duration-300 hover:shadow-md"
-        style={{ animation: "fadeUp .5s ease both" }}
       >
         {/* 우리 디자인 셸 헤더(주요뉴스·환율과 동일 어법) */}
         <header className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
