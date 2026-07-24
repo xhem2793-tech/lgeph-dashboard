@@ -41,17 +41,30 @@ function useMacro(keys: string[]) {
 
 // ── 접이식 배너(환율 페이지와 동일) ───────────────────────────────────────
 type BannerDef = { headline: React.ReactNode; lg?: React.ReactNode }
-function Banner({ headline, lg }: BannerDef) {
+function Banner({ headline, lg, d, kpiDefs }: BannerDef & { d: Mon; kpiDefs?: KpiDef[] }) {
   const [open, setOpen] = useState(false)
+  const items = (kpiDefs ?? []).map((k) => ({ ...k, cur: latestOf(d, k.key) })).filter((k) => k.cur)
+  const tc = (t?: string) => (t === "rose" ? "text-rose-600" : t === "emerald" ? "text-emerald-600" : t === "amber" ? "text-amber-600" : "text-gray-900")
   return (
-    <div onClick={() => setOpen((v) => !v)} className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white shadow-sm transition-shadow hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}>
-      <div className="flex items-center gap-3 px-4 py-3">
+    <div className="overflow-hidden rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+      <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg>
         </div>
         <div className="min-w-0 flex-1 text-[13px] text-gray-700">{headline}</div>
         {lg && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}
       </div>
+      {items.length > 0 && (
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-t border-indigo-100/70 bg-white/50 px-4 py-2.5">
+          {items.map((k) => (
+            <div key={k.key} className="flex items-baseline gap-1.5">
+              <span className="text-[10.5px] font-medium text-gray-500">{k.label}</span>
+              <span className={"text-[15px] font-bold tabular-nums " + tc(k.tone)}>{k.fmt(k.cur!.v)}</span>
+            </div>
+          ))}
+          <span className="ml-auto text-[10px] text-gray-400">{moLabel(items[0].cur!.date)} 기준</span>
+        </div>
+      )}
       {lg && (
         <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
           <div className="overflow-hidden">
@@ -68,30 +81,7 @@ function Banner({ headline, lg }: BannerDef) {
   )
 }
 
-// ── 우측 위젯: 핵심 KPI 카드 (환율 핵심 KPI와 동일 어법) ───────────────────
-function KpiCard({ d, defs, title }: { d: Mon; defs: KpiDef[]; title: string }) {
-  const items = defs.map((k) => ({ ...k, cur: latestOf(d, k.key) })).filter((k) => k.cur)
-  if (!items.length) return null
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
-      <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
-        <h2 className="text-[15px] font-bold tracking-tight text-gray-900">{title} 핵심 KPI</h2>
-        <span className="text-[11px] text-gray-400">{moLabel(items[0].cur!.date)} 기준</span>
-      </header>
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        {items.map((k) => (
-          <div key={k.key} className="rounded-lg bg-gray-50 px-3 py-2.5">
-            <p className="text-[11px] font-medium text-gray-500">{k.label}</p>
-            <p className={"mt-0.5 text-[18px] font-bold leading-none tabular-nums " + (k.tone === "rose" ? "text-rose-600" : k.tone === "emerald" ? "text-emerald-600" : k.tone === "amber" ? "text-amber-600" : "text-gray-900")}>{k.fmt(k.cur!.v)}</p>
-          </div>
-        ))}
-      </div>
-      <p className="mt-2.5 text-[10.5px] leading-relaxed text-gray-400">Supabase macro_indicators 실측 · 최신 관측치</p>
-    </div>
-  )
-}
-
-// ── 우측 위젯: 경제 일정 (모든 카테고리 공통) ─────────────────────────────
+// ── 우측 위젯: 경제 일정 (모든 카테고리 공통 위젯 하나) ────────────────────
 function AgendaCard() {
   const [ev, setEv] = useState<{ date: string; event: string; category: string }[]>([])
   useEffect(() => { calendarUpcoming(6).then((r) => setEv(r.map((x) => ({ date: x.date, event: x.event, category: x.category })))).catch(() => setEv([])) }, [])
@@ -129,7 +119,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
-      {banner && <Banner {...banner} />}
+      {banner && <Banner {...banner} d={d} kpiDefs={loaded ? kpiDefs : undefined} />}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
         <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 pb-2.5">
@@ -154,7 +144,6 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
           )}
         </section>
         <aside className="flex flex-col gap-4">
-          {loaded && kpiDefs && <KpiCard d={d} defs={kpiDefs} title={title} />}
           <AgendaCard />
         </aside>
       </div>
@@ -174,7 +163,7 @@ export function ApplianceView() {
   const { d, loaded } = useMacro(APPLIANCE_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
   const ppi = build(d, n, [{ key: "PPI_domestic_appliances", name: "가전 PPI", color: C.ind, w: 2 }, { key: "PPI_electrical", name: "전기기기", color: C.rose }, { key: "PPI_electronics", name: "전자", color: C.blue }])
-  const imp = build(d, n, [{ key: "imports_home_appliances", name: "가전 수입", color: C.ind, w: 2 }, { key: "imports_consumer_electronics", name: "가전용 전자", color: C.violet }])
+  const imp = build(d, n, [{ key: "imports_home_appliances", name: "가전 수입", color: C.ind, w: 2 }]) // 연간 무역통계 → 막대
   const inf = build(d, n, [{ key: "INF_household_appliances", name: "가전 물가", color: C.ind, w: 2 }, { key: "INF_aircon", name: "에어컨", color: C.rose }, { key: "INF_all_items", name: "전체 CPI", color: C.brown }])
   const elec = build(d, n, [{ key: "meralco_residential_rate", name: "가정용 전기료", color: C.ind, w: 2 }])
   const empty = !ppi.series.length && !imp.series.length && !inf.series.length && !elec.series.length
@@ -195,8 +184,8 @@ export function ApplianceView() {
           tone="rose" src={src("PSA 생산자물가지수(PPI) · 월별")} />
       )}
       {imp.series.length > 0 && (
-        <ChartCard title="가전·전자 수입액" unit="수입 규모" labels={imp.labels} series={imp.series}
-          legend={<><Lg c={C.ind} t="가전 수입" b /><Lg c={C.violet} t="가전용 전자" /></>}
+        <ChartCard title="가전 수입액" unit="연간 · 무역통계" kind="bar" labels={imp.labels} series={imp.series}
+          legend={<Lg c={C.ind} t="가전 완제품 수입" b />}
           meaning={<>완제품·부품 수입 규모 — <b className="text-gray-700">시장 공급량·경쟁 강도 선행</b></>}
           ai={<>수입 급증은 중국계 물량 유입 신호 → <b className="font-semibold text-amber-600">채널 재고·가격 경쟁 압박</b>, 프로모 타이밍·SKU 방어 필요</>}
           tone="amber" src={src("PSA 수출입통계 · 월별")} />

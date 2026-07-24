@@ -181,9 +181,9 @@ export type Tone = "rose" | "amber" | "emerald"
 const AI_DOT: Record<Tone, string> = { rose: "bg-rose-500", amber: "bg-amber-500", emerald: "bg-emerald-500" }
 
 // 차트 카드(환율과 동일): 차트 → 의미 → AI 분석 → 고정 출처
-export function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, meaning, ai, tone, src, idx = 0 }: {
+export function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, meaning, ai, tone, src, idx = 0, kind = "line" }: {
   title: string; unit?: string; legend: React.ReactNode; series: SLine[]; labels: string[]; decimals?: number; seriesUnit?: string
-  meaning: React.ReactNode; ai: React.ReactNode; tone: Tone; src: React.ReactNode; idx?: number
+  meaning: React.ReactNode; ai: React.ReactNode; tone: Tone; src: React.ReactNode; idx?: number; kind?: "line" | "bar"
 }) {
   return (
     <div
@@ -195,7 +195,9 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
         {unit && <span className="text-[10.5px] font-medium text-gray-400">{unit}</span>}
       </div>
       <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">{legend}</div>
-      <LineChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />
+      {kind === "bar"
+        ? <BarChart data={series[0]?.data ?? []} labels={labels} color={series[0]?.color} decimals={decimals} unit={seriesUnit} />
+        : <LineChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />}
       <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
       <div className="mt-2 border-l-2 border-indigo-300 pl-2.5">
         <p className="text-[11px] leading-relaxed text-gray-600"><span className={"mr-1.5 inline-block h-1.5 w-1.5 shrink-0 rounded-full align-middle " + AI_DOT[tone]} />{ai}</p>
