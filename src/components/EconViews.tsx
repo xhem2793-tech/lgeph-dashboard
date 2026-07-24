@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { macroMonthly } from "@/lib/supabase"
+import { macroMonthly, calendarUpcoming } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 import { ChartCard, Lg, SLine, moLabel, tail } from "@/components/EconChart"
 
@@ -32,22 +32,6 @@ function latestOf(d: Mon, key: string): { v: number; date: string } | null {
   const g = d[key]; if (!g || !g.values.length) return null
   return { v: g.values[g.values.length - 1], date: g.dates[g.dates.length - 1] }
 }
-function KpiRow({ d, defs }: { d: Mon; defs: KpiDef[] }) {
-  const items = defs.map((k) => ({ ...k, cur: latestOf(d, k.key) })).filter((k) => k.cur)
-  if (!items.length) return null
-  return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-      {items.map((k, i) => (
-        <div key={k.key} className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: Math.min(i, 8) * 0.04 + "s" }}>
-          <p className="text-[11px] font-medium text-gray-500">{k.label}</p>
-          <p className={"mt-0.5 text-[20px] font-bold leading-none tabular-nums " + (k.tone === "rose" ? "text-rose-600" : k.tone === "emerald" ? "text-emerald-600" : k.tone === "amber" ? "text-amber-600" : "text-gray-900")}>{k.fmt(k.cur!.v)}</p>
-          <p className="mt-1 text-[10px] text-gray-400">{moLabel(k.cur!.date)} 기준</p>
-        </div>
-      ))}
-    </div>
-  )
-}
-
 function useMacro(keys: string[]) {
   const [d, setD] = useState<Mon>({})
   const [loaded, setLoaded] = useState(false)
@@ -55,35 +39,126 @@ function useMacro(keys: string[]) {
   return { d, loaded }
 }
 
-// ── 공용 셸(헤더 + 창 토글 + 카드 그리드) ─────────────────────────────────
-function Shell({ title, sub, win, setWin, loaded, empty, kpi, children }: { title: string; sub: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; kpi?: React.ReactNode; children: React.ReactNode }) {
+// ── 접이식 배너(환율 페이지와 동일) ───────────────────────────────────────
+type BannerDef = { headline: React.ReactNode; lg?: React.ReactNode }
+function Banner({ headline, lg }: BannerDef) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div onClick={() => setOpen((v) => !v)} className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white shadow-sm transition-shadow hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}>
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg>
+        </div>
+        <div className="min-w-0 flex-1 text-[13px] text-gray-700">{headline}</div>
+        {lg && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}
+      </div>
+      {lg && (
+        <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
+          <div className="overflow-hidden">
+            <div className="border-t border-indigo-100/70 px-4 pb-3.5 pt-3">
+              <p className="flex items-start gap-1.5 text-[12.5px] leading-relaxed text-indigo-700">
+                <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 관점</span>
+                <span>{lg}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── 우측 위젯: 핵심 KPI 카드 (환율 핵심 KPI와 동일 어법) ───────────────────
+function KpiCard({ d, defs, title }: { d: Mon; defs: KpiDef[]; title: string }) {
+  const items = defs.map((k) => ({ ...k, cur: latestOf(d, k.key) })).filter((k) => k.cur)
+  if (!items.length) return null
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+      <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
+        <h2 className="text-[15px] font-bold tracking-tight text-gray-900">{title} 핵심 KPI</h2>
+        <span className="text-[11px] text-gray-400">{moLabel(items[0].cur!.date)} 기준</span>
+      </header>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {items.map((k) => (
+          <div key={k.key} className="rounded-lg bg-gray-50 px-3 py-2.5">
+            <p className="text-[11px] font-medium text-gray-500">{k.label}</p>
+            <p className={"mt-0.5 text-[18px] font-bold leading-none tabular-nums " + (k.tone === "rose" ? "text-rose-600" : k.tone === "emerald" ? "text-emerald-600" : k.tone === "amber" ? "text-amber-600" : "text-gray-900")}>{k.fmt(k.cur!.v)}</p>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2.5 text-[10.5px] leading-relaxed text-gray-400">Supabase macro_indicators 실측 · 최신 관측치</p>
+    </div>
+  )
+}
+
+// ── 우측 위젯: 경제 일정 (모든 카테고리 공통) ─────────────────────────────
+function AgendaCard() {
+  const [ev, setEv] = useState<{ date: string; event: string; category: string }[]>([])
+  useEffect(() => { calendarUpcoming(6).then((r) => setEv(r.map((x) => ({ date: x.date, event: x.event, category: x.category })))).catch(() => setEv([])) }, [])
+  if (!ev.length) return null
+  const now = new Date()
+  const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
+  const dday = (iso: string) => Math.round((new Date(iso + "T00:00:00").getTime() - today0) / 86400000)
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both", animationDelay: "80ms" }}>
+      <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
+        <h2 className="text-[15px] font-bold tracking-tight text-gray-900">경제 일정</h2>
+        <span className="text-[11px] text-gray-400">지표 발표</span>
+      </header>
+      <div className="mt-2 flex flex-col">
+        {ev.map((x, i) => {
+          const dd = dday(x.date)
+          return (
+            <div key={i} style={{ animation: "fadeUp .5s ease both", animationDelay: 60 + i * 40 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40">
+              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-[12.5px] font-semibold text-gray-900">{x.event}</span>
+                <span className="block text-[10.5px] text-gray-500">{x.category}</span>
+              </span>
+              <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500">{dd === 0 ? "오늘" : dd > 0 ? "D-" + dd : "D+" + -dd}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ── 공용 셸 — 환율 페이지와 동일 레이아웃(배너 + 좌 차트 | 우 위젯 286px) ──
+function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, children }: { title: string; sub: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; banner?: BannerDef; kpiDefs?: KpiDef[]; d: Mon; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
-      {loaded && kpi}
-      <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
-        <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 pb-2.5">
-          <span className="h-[18px] w-1 rounded bg-indigo-500" />
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900">{title}</h2>
-          <span className="text-[11px] font-semibold text-gray-400">{sub}</span>
-          <span className="ml-auto">
-            <Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k }))} />
-          </span>
-        </header>
-        {!loaded ? (
-          <div className="grid gap-4 sm:grid-cols-2">
-            {[0, 1, 2, 3].map((i) => <div key={i} className="h-72 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}
-          </div>
-        ) : empty ? (
-          <div className="flex h-52 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 text-center">
-            <div className="text-[14px] font-bold text-gray-500">데이터 적재 대기</div>
-            <div className="text-[12px] text-gray-400">해당 지표가 아직 Supabase에 없음 · 수집 후 자동 표시</div>
-          </div>
-        ) : (
-          <div className="grid items-stretch gap-4 sm:grid-cols-2">{children}</div>
-        )}
-      </section>
-      <p className="text-[11px] leading-relaxed text-gray-400">출처 PSA·BSP·PSA-FIES·PSA-BLES·PSA-PPI 등 공식통계(Supabase macro_indicators) · 색=사업영향(원가·부담↑ rose, 수요·구매력↑ emerald)</p>
+      {banner && <Banner {...banner} />}
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+        <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+          <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 pb-2.5">
+            <span className="h-[18px] w-1 rounded bg-indigo-500" />
+            <h2 className="text-[16px] font-bold tracking-tight text-gray-900">{title}</h2>
+            <span className="text-[11px] font-semibold text-gray-400">{sub}</span>
+            <span className="ml-auto">
+              <Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k }))} />
+            </span>
+          </header>
+          {!loaded ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {[0, 1, 2, 3].map((i) => <div key={i} className="h-72 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}
+            </div>
+          ) : empty ? (
+            <div className="flex h-52 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 text-center">
+              <div className="text-[14px] font-bold text-gray-500">데이터 적재 대기</div>
+              <div className="text-[12px] text-gray-400">해당 지표가 아직 Supabase에 없음 · 수집 후 자동 표시</div>
+            </div>
+          ) : (
+            <div className="grid items-stretch gap-4 sm:grid-cols-2">{children}</div>
+          )}
+        </section>
+        <aside className="flex flex-col gap-4">
+          {loaded && kpiDefs && <KpiCard d={d} defs={kpiDefs} title={title} />}
+          <AgendaCard />
+        </aside>
+      </div>
+      <p className="text-[11px] leading-relaxed text-gray-400">출처 PSA·BSP 공식통계(Supabase macro_indicators) · 색=사업영향(원가·부담↑ rose, 수요·구매력↑ emerald)</p>
     </div>
   )
 }
@@ -104,13 +179,14 @@ export function ApplianceView() {
   const elec = build(d, n, [{ key: "meralco_residential_rate", name: "가정용 전기료", color: C.ind, w: 2 }])
   const empty = !ppi.series.length && !imp.series.length && !inf.series.length && !elec.series.length
   return (
-    <Shell title="가전 선행지표" sub="생산자물가·수입액·가전물가·전기료 — 원가·공급 선행" win={win} setWin={setWin} loaded={loaded} empty={empty}
-      kpi={<KpiRow d={d} defs={[
+    <Shell title="가전 선행지표" sub="생산자물가·수입액·가전물가·전기료 — 원가·공급 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
+      banner={{ headline: <><b className="font-semibold text-gray-900">가전 원가·공급 선행지표</b> — PPI·수입·전기료로 원가/경쟁 압박을 조기 포착</>, lg: <>PPI·수입 급등은 원가·중국계 물량 신호 → <b className="font-semibold">조달 헤지·프로모 타이밍</b> 선제 대응 · 전기료↑엔 고효율 프리미엄 소구</> }}
+      kpiDefs={[
         { key: "INF_household_appliances", label: "가전 물가 YoY", fmt: (v) => v + "%", tone: "rose" },
         { key: "INF_aircon", label: "에어컨 물가 YoY", fmt: (v) => v + "%", tone: "rose" },
         { key: "PPI_domestic_appliances", label: "가전 PPI YoY", fmt: (v) => v + "%", tone: "rose" },
         { key: "meralco_residential_rate", label: "전기료", fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
-      ]} />}>
+      ]}>
       {ppi.series.length > 0 && (
         <ChartCard title="가전 생산자물가 PPI" unit="지수" labels={ppi.labels} series={ppi.series}
           legend={<><Lg c={C.ind} t="가전 PPI" b /><Lg c={C.rose} t="전기기기" /><Lg c={C.blue} t="전자" /></>}
@@ -157,14 +233,15 @@ export function RatesView() {
   const call = build(d, n, [{ key: "interbank_call_rate", name: "콜금리", color: C.ind, w: 2 }])
   const empty = !pol.series.length && !m3.series.length && !loan.series.length && !call.series.length
   return (
-    <Shell title="통화·금리·신용" sub="기준금리·통화량 M3·가계신용 — 할부·카드 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty}
-      kpi={<KpiRow d={d} defs={[
+    <Shell title="통화·금리·신용" sub="기준금리·통화량 M3·가계신용 — 할부·카드 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
+      banner={{ headline: <><b className="font-semibold text-gray-900">통화·신용 = 가전 구매력 엔진</b> — 정책금리·M3·가계신용이 할부/카드 수요를 좌우</>, lg: <>금리 인하·카드/소비자대출 확장기엔 <b className="font-semibold">무이자 할부·프리미엄 푸시</b>가 유효 · 콜금리 급등 시 유통 운전자금 부담 관찰</> }}
+      kpiDefs={[
         { key: "BSP_policy_rate", label: "정책금리 RRP", fmt: (v) => v + "%", tone: "amber" },
         { key: "m3_growth_yoy", label: "통화량 M3", fmt: (v) => v + "%", tone: "emerald" },
         { key: "consumer_loan_growth_yoy", label: "소비자대출", fmt: (v) => v + "%", tone: "emerald" },
         { key: "credit_card_loan_growth_yoy", label: "신용카드 대출", fmt: (v) => v + "%", tone: "emerald" },
         { key: "bank_loan_growth_yoy", label: "은행 총대출", fmt: (v) => v + "%", tone: "emerald" },
-      ]} />}>
+      ]}>
       {pol.series.length > 0 && (
         <ChartCard title="BSP 정책금리 corridor" unit="%" labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
           legend={<><Lg c={C.ind} t="정책금리 RRP" b /><Lg c={C.rose} t="상한 OLF" /><Lg c={C.blue} t="하한 ODF" /></>}
@@ -211,13 +288,14 @@ export function GrowthView() {
   const ret = build(d, n, [{ key: "wholesale_retail_trade_yoy", name: "도소매 거래", color: C.ind, w: 2 }, { key: "retail_gva_growth", name: "소매 부가가치", color: C.teal }])
   const empty = !gdp.series.length && !cons.series.length && !ind.series.length && !ret.series.length
   return (
-    <Shell title="국민계정·성장" sub="GDP·소비·투자·건설허가·산업·유통 — 가전 수요 파이" win={win} setWin={setWin} loaded={loaded} empty={empty}
-      kpi={<KpiRow d={d} defs={[
+    <Shell title="국민계정·성장" sub="GDP·소비·투자·건설허가·산업·유통 — 가전 수요 파이" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
+      banner={{ headline: <><b className="font-semibold text-gray-900">국민계정으로 본 가전 수요 파이</b> — 소비·투자·건설허가가 시장 크기를 결정</>, lg: <>민간소비·주거 착공 회복은 <b className="font-semibold">가전 신규수요 선행</b> → 성장 밀집 지역 채널·재고 선점, 둔화 시 보급형 방어</> }}
+      kpiDefs={[
         { key: "gdp_growth_yoy", label: "GDP 성장률", fmt: (v) => v + "%", tone: "emerald" },
         { key: "household_consumption_yoy", label: "민간소비", fmt: (v) => v + "%", tone: "emerald" },
         { key: "gross_capital_formation_yoy", label: "총투자", fmt: (v) => v + "%", tone: "emerald" },
         { key: "capacity_utilization", label: "가동률", fmt: (v) => v + "%", tone: "amber" },
-      ]} />}>
+      ]}>
       {gdp.series.length > 0 && (
         <ChartCard title="GDP·소비·투자 성장률" unit="전년비 %" labels={gdp.labels} series={gdp.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="GDP 성장률" b /><Lg c={C.emer} t="민간소비" /><Lg c={C.blue} t="총투자" /></>}
@@ -264,13 +342,14 @@ export function LaborView() {
   const remL = build(d, n, [{ key: "ofw_cash_remittance", name: "OFW 현금송금", color: C.emer, w: 2 }])
   const empty = !un.series.length && !lf.series.length && !rem.series.length && !remL.series.length
   return (
-    <Shell title="고용·임금·소득" sub="실업·경제활동참가·OFW 송금 — 가전 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty}
-      kpi={<KpiRow d={d} defs={[
+    <Shell title="고용·임금·소득" sub="실업·경제활동참가·OFW 송금 — 가전 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
+      banner={{ headline: <><b className="font-semibold text-gray-900">고용·OFW 송금 = 가전 구매력의 원천</b> — 소득 안정과 송금이 수요를 견인</>, lg: <>실업 하락·송금 증가는 가처분소득↑ → <b className="font-semibold">송금 성수기(4Q·연말) 프리미엄 집중</b> · 페소 약세와 겹치면 환산 구매력 추가 상승</> }}
+      kpiDefs={[
         { key: "unemployment_rate", label: "실업률", fmt: (v) => v + "%", tone: "rose" },
         { key: "underemployment_rate", label: "불완전고용", fmt: (v) => v + "%", tone: "rose" },
         { key: "ofw_cash_remittance_growth_yoy", label: "OFW 송금 YoY", fmt: (v) => v + "%", tone: "emerald" },
         { key: "labor_force_participation_rate", label: "경제활동참가", fmt: (v) => v + "%", tone: "emerald" },
-      ]} />}>
+      ]}>
       {un.series.length > 0 && (
         <ChartCard title="실업·불완전고용률" unit="%" labels={un.labels} series={un.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="실업률" b /><Lg c={C.rose} t="불완전고용" /></>}
@@ -316,12 +395,13 @@ export function SentimentView() {
   const dur = build(d, n, [{ key: "durables_buying_intention", name: "내구재 구매의향", color: C.ind, w: 2 }])
   const empty = !cci.series.length && !bci.series.length && !dur.series.length
   return (
-    <Shell title="기업·소비 심리" sub="소비자심리 CCI·기업심리 BCI·내구재 구매의향 — 수요 선행" win={win} setWin={setWin} loaded={loaded} empty={empty}
-      kpi={<KpiRow d={d} defs={[
+    <Shell title="기업·소비 심리" sub="소비자심리 CCI·기업심리 BCI·내구재 구매의향 — 수요 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
+      banner={{ headline: <><b className="font-semibold text-gray-900">소비·기업 심리 = 수요의 3~6개월 선행</b> — 내구재 구매의향이 실판매를 예고</>, lg: <>내구재 구매의향·CCI 반등 초입에 <b className="font-semibold">신제품·프리미엄 출시 타이밍</b> · 악화 시 가성비·필수형 우선</> }}
+      kpiDefs={[
         { key: "consumer_confidence_index", label: "소비자심리 CCI", fmt: (v) => String(v), tone: "emerald" },
         { key: "business_confidence_index", label: "기업심리 BCI", fmt: (v) => String(v), tone: "emerald" },
         { key: "durables_buying_intention", label: "내구재 구매의향", fmt: (v) => String(v), tone: "emerald" },
-      ]} />}>
+      ]}>
       {dur.series.length > 0 && (
         <ChartCard title="내구재 구매의향" unit="지수" labels={dur.labels} series={dur.series} decimals={1}
           legend={<Lg c={C.ind} t="내구재 구매의향" b />}
