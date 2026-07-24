@@ -51,8 +51,13 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
       svg.appendChild(el("line", { x1: L, y1: y, x2: R, y2: y, stroke: CO.grid, "stroke-width": 1 }))
       const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
     }
-    const everyN = n <= 8 ? 1 : n <= 16 ? 2 : Math.ceil(n / 7)
-    labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const an = i === n - 1 ? "end" : i === 0 ? "start" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) }) // 양끝 라벨 짤림 방지
+    const yearFirst: number[] = []; let ly = ""
+    labels.forEach((lb, i) => { const y = String(lb || "").split(".")[0]; if (y && y !== ly) { yearFirst.push(i); ly = y } })
+    let showIdx: number[]
+    if (yearFirst.length >= 3) { const step = Math.max(1, Math.ceil(yearFirst.length / 8)); showIdx = yearFirst.filter((_, k) => k % step === 0) }
+    else { const k = Math.min(5, n); showIdx = Array.from({ length: k }, (_, j) => Math.round((j * (n - 1)) / (k - 1 || 1))) }
+    const showSet = new Set(showIdx)
+    labels.forEach((lb, i) => { if (!showSet.has(i)) return; const an = i <= 1 ? "start" : i >= n - 2 ? "end" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) })
     const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: CO.cross, "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 }); svg.appendChild(cross)
     // 라인 + 주 시리즈 그라디언트 면적 + 적응형 점(EconChart와 동일 어법)
     const gid = "fxg" + Math.random().toString(36).slice(2, 8)
