@@ -256,7 +256,9 @@ export function RatesView() {
         { key: "consumer_loan_growth_yoy", label: "소비자대출", fmt: (v) => v + "%", tone: "emerald" },
         { key: "credit_card_loan_growth_yoy", label: "신용카드 대출", fmt: (v) => v + "%", tone: "emerald" },
         { key: "bank_loan_growth_yoy", label: "은행 총대출", fmt: (v) => v + "%", tone: "emerald" },
-      ]}>
+      ]}
+      sections={[
+        { key: "rate_credit", label: "금리·신용", node: <>
       {pol.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="BSP 정책금리 (RRP)" unit="% · 월별" labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
           legend={<Lg c={C.ind} t="정책금리 RRP" b />}
@@ -278,6 +280,8 @@ export function RatesView() {
           ai={<>신용침투는 10년간 28%→50% 확대 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">할부·카드 기반 내구재 구매 여력 구조적 상승</b> → 프리미엄 할부 프로모 지속 유효</>}
           tone="emerald" src={src("World Bank 민간신용(%GDP) · 연간 · 월별 대출증가율은 상단 KPI")} />
       )}
+        </> },
+        { key: "money_ext", label: "통화·대외", node: <>
       {m3.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="통화량 M3 증가율" unit="전년비 % · 연간" labels={m3.labels} series={m3.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="광의통화(M3)" b />}
@@ -306,7 +310,8 @@ export function RatesView() {
           ai={<>FDI 확대는 고용·소득·소비 기반 강화 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">중장기 가전 수요 저변 확장</b>, 급감 시 투자·내수 둔화 경계</>}
           tone="emerald" src={src("BSP·World Bank FDI 순유입 · 연간")} />
       )}
-    </Shell>
+        </> },
+      ]} />
   )
 }
 
@@ -321,7 +326,6 @@ const SEA_SPECS: Spec[] = [
   { key: "Thailand", name: "태국", color: C.blue },
   { key: "Vietnam", name: "베트남", color: C.emer },
   { key: "Malaysia", name: "말련", color: C.amber },
-  { key: "Singapore", name: "싱가포르", color: C.violet },
 ]
 export function GrowthView() {
   const [win, setWin] = useState("전체")
@@ -500,7 +504,9 @@ export function LaborView() {
         { key: "min_wage_php", label: "최저임금", fmt: (v) => "₱" + v.toFixed(0), tone: "emerald" },
         { key: "households_mn", label: "가구 수", fmt: (v) => v.toFixed(1) + "백만", tone: "emerald" },
         { key: "poverty_rate", label: "빈곤율", fmt: (v) => v + "%", tone: "rose" },
-      ]}>
+      ]}
+      sections={[
+        { key: "emp_rem", label: "고용·송금", node: <>
       {un.series.length > 0 && (
         <ChartCard seg="CE" title="실업·불완전고용률" unit="%" labels={un.labels} series={un.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="실업률" b /><Lg c={C.rose} t="불완전고용" /></>}
@@ -543,6 +549,8 @@ export function LaborView() {
           ai={<>송금은 10년 넘게 <b className="font-semibold text-emerald-600 dark:text-emerald-400">우상향 = 내구재 구매력 구조적 확대</b> → 프리미엄 침투 여지 지속 확대</>}
           tone="emerald" src={src("World Bank · BSP 해외송금 · 연간")} />
       )}
+        </> },
+        { key: "income", label: "임금·가구", node: <>
       {pop.series.length > 0 && (
         <ChartCard seg="CE" title="인구" unit="백만명 · 연간" labels={pop.labels} series={pop.series} decimals={1} seriesUnit="백만명"
           legend={<Lg c={C.ind} t="인구" b />}
@@ -564,6 +572,8 @@ export function LaborView() {
           ai={<>가구 수 증가는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">신규 가전 초도수요의 구조적 확대</b> → 신혼·1인가구 겨냥 소형·보급형 라인업</>}
           tone="emerald" src={src("PSA 가구조사 · 연간")} />
       )}
+        </> },
+        { key: "demo", label: "인구·구조", node: <>
       {infra.series.length > 0 && (
         <ChartCard seg="CE" title="인터넷·전기 보급률" unit="% · 연간" labels={infra.labels} series={infra.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="인터넷" b /><Lg c={C.emer} t="전기" /></>}
@@ -599,7 +609,8 @@ export function LaborView() {
           ai={<>가구원수·출산율 하락은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가구 분화 = 가구 수↑ = 소형·1인용 가전 대수 확대</b> → 소형·프리미엄 소가전 라인업 강화</>}
           tone="emerald" src={src("PSA·World Bank 가구·출산율 · 연간")} />
       )}
-    </Shell>
+        </> },
+      ]} />
   )
 }
 
@@ -676,7 +687,9 @@ export function PricesView() {
         { key: "INF_electricity", label: "전기", fmt: (v) => v + "%", tone: "rose" },
         { key: "oil_diesel", label: "경유", fmt: (v) => "₱" + v.toFixed(1), tone: "amber" },
         { key: "meralco_residential_rate", label: "전기료", fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
-      ]}>
+      ]}
+      sections={[
+        { key: "cpi", label: "소비자물가", node: <>
       {allI.series.length > 0 && (
         <ChartCard seg="CE" title="전체 물가 (헤드라인 CPI)" unit="전년비 %" labels={allI.labels} series={allI.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="전체" b />}
@@ -698,6 +711,15 @@ export function PricesView() {
           ai={<>쌀값 급등은 체감물가·정책개입(수입관세·상한제)을 촉발 → <b className="font-semibold text-amber-600 dark:text-amber-400">소비심리 위축 신호</b>, 안정 시 재량소비 여력 반등</>}
           tone="amber" src={src("PSA CPI 상승률(쌀) · 월별")} />
       )}
+      {dine.series.length > 0 && (
+        <ChartCard seg="CE" title="외식·숙박 vs 전체 물가" unit="전년비 %" labels={dine.labels} series={dine.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="외식·숙박" b /><Lg c={C.brown} t="전체 물가" /></>}
+          meaning={<>서비스 물가 대표(외식) — <b className="text-gray-700 dark:text-gray-200">서비스發 물가 압력·근원물가 방향</b></>}
+          ai={<>외식 물가가 전체보다 높으면 <b className="font-semibold text-amber-600 dark:text-amber-400">서비스發 끈적한 물가</b> → 금리 인하 지연·구매력 회복 지체 신호</>}
+          tone="rose" src={src("PSA CPI 상승률(외식·숙박) · 월별")} />
+      )}
+        </> },
+        { key: "energy", label: "에너지·주거", node: <>
       {energy.series.length > 0 && (
         <ChartCard seg="CE" title="에너지·이동 물가 (전기·LPG·운송)" unit="전년비 %" labels={energy.labels} series={energy.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="전기" b /><Lg c={C.rose} t="LPG" /><Lg c={C.blue} t="운송" /></>}
@@ -712,13 +734,6 @@ export function PricesView() {
           ai={<>가전 물가가 전체·주거보다 낮으면 <b className="font-semibold text-emerald-600 dark:text-emerald-400">실질 저렴 → 구매 매력↑</b>, 높으면 보급형·프로모 강화</>}
           tone="rose" src={src("PSA CPI 상승률(주거·가전·에어컨) · 월별")} />
       )}
-      {dine.series.length > 0 && (
-        <ChartCard seg="CE" title="외식·숙박 vs 전체 물가" unit="전년비 %" labels={dine.labels} series={dine.series} decimals={1} seriesUnit="%"
-          legend={<><Lg c={C.ind} t="외식·숙박" b /><Lg c={C.brown} t="전체 물가" /></>}
-          meaning={<>서비스 물가 대표(외식) — <b className="text-gray-700 dark:text-gray-200">서비스發 물가 압력·근원물가 방향</b></>}
-          ai={<>외식 물가가 전체보다 높으면 <b className="font-semibold text-amber-600 dark:text-amber-400">서비스發 끈적한 물가</b> → 금리 인하 지연·구매력 회복 지체 신호</>}
-          tone="rose" src={src("PSA CPI 상승률(외식·숙박) · 월별")} />
-      )}
       {elec.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="가정용 전기요금 (Meralco)" unit="₱/kWh · 월별" labels={elec.labels} series={elec.series} decimals={2} seriesUnit="₱"
           legend={<Lg c={C.ind} t="가정용 전기료" b />}
@@ -726,6 +741,8 @@ export function PricesView() {
           ai={<>전기료 상승 추세엔 <b className="font-semibold text-emerald-600 dark:text-emerald-400">고효율·인버터 프리미엄 소구</b>가 유효 → TCO(총소유비용) 절감 메시지 강화</>}
           tone="amber" src={src("Meralco 가정용 요금 · 월별")} />
       )}
+        </> },
+        { key: "oil", label: "유가", node: <>
       {oil.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="유가 (경유·휘발유·등유)" unit="₱/L · 월별" labels={oil.labels} series={oil.series} decimals={1} seriesUnit="₱"
           legend={<><Lg c={C.ind} t="경유" b /><Lg c={C.rose} t="휘발유" /><Lg c={C.amber} t="등유" /></>}
@@ -740,6 +757,7 @@ export function PricesView() {
           ai={<>휘발유가 상승은 방문설치·A/S 물류비와 소비자 이동비용을 함께 압박 → <b className="font-semibold text-amber-600 dark:text-amber-400">서비스 물류원가·체감 구매력 점검</b>, 하락기엔 프로모 여력</>}
           tone="amber" src={src("DOE 주간 유가(RON95·RON91) · 월평균")} />
       )}
-    </Shell>
+        </> },
+      ]} />
   )
 }
