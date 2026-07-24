@@ -4,6 +4,7 @@ import { useState } from "react"
 import DailyIndicators from "@/components/DailyIndicators"
 import FxView from "@/components/FxView"
 import RegionMapView from "@/components/RegionMapView"
+import RegionPriceExtras from "@/components/RegionPriceExtras"
 import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView, PricesView } from "@/components/EconViews"
 import { useLang } from "@/lib/i18n"
 
@@ -39,7 +40,7 @@ export default function Page() {
   const [active, setActive] = useState("regions")
 
   function view() {
-    if (active === "regions") return <RegionMapView />
+    if (active === "regions") return <div className="flex flex-col gap-3"><RegionMapView /><RegionPriceExtras /></div>
     if (active === "core") return <DailyIndicators />
     if (active === "fx") return <FxView />
     if (active === "prices") return <PricesView />
