@@ -42,9 +42,7 @@
   .kpiover .kv.down{color:#e11d48}
   .zoomlayer{animation:rin .8s ease .12s both}
   .brand{animation:ovin .6s cubic-bezier(.16,1,.3,1) both;animation-delay:.12s}
-  /* 색상 지표 카드: 평소 숨김 → 지도 hover 시 부드럽게 등장, 지표 선택하면 사라짐 */
-  .mapctrl{opacity:0;transform:translateY(-8px) scale(.98);pointer-events:none;transition:opacity .55s cubic-bezier(.16,1,.3,1),transform .55s cubic-bezier(.16,1,.3,1)}
-  .stage:hover .mapctrl:not(.picked){opacity:1;transform:none;pointer-events:auto}
+  /* 색상 지표: 평소 최소화 아이콘 → hover 시 세로 목록 펼침, 지표 클릭 시 다시 최소화 */
   .panel{animation:ovin .55s cubic-bezier(.16,1,.3,1) both;animation-delay:.2s}
 
   .app{display:grid;grid-template-columns:1fr 400px;flex:1;min-height:0}
@@ -103,14 +101,18 @@
   .hint .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}
 
   /* choropleth control card */
-  .mapctrl{position:absolute;top:114px;left:30px;z-index:5;background:rgba(255,255,255,.97);backdrop-filter:blur(7px);border:1px solid var(--hair);border-radius:12px;padding:0;box-shadow:0 6px 22px rgba(0,0,0,.09);width:248px;overflow:hidden}
-  .mc-head{display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px 4px;background:none;border:none;font-family:inherit;color:inherit}
-  .mc-head .mc-lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:800;white-space:nowrap}
-  .mc-head .mc-cur{font-size:12px;font-weight:800;color:var(--accent);white-space:nowrap}
+  .mapctrl{position:absolute;top:114px;left:30px;z-index:5;background:rgba(255,255,255,.97);backdrop-filter:blur(7px);border:1px solid var(--hair);border-radius:12px;padding:0;box-shadow:0 6px 22px rgba(0,0,0,.09);width:auto;overflow:hidden;transition:box-shadow .3s ease}
+  .mapctrl:hover{box-shadow:0 9px 28px rgba(0,0,0,.13)}
+  .mc-head{display:flex;align-items:center;gap:7px;padding:8px 12px;background:none;border:none;font-family:inherit;color:inherit;white-space:nowrap;cursor:default}
+  .mc-head .mc-ico{width:15px;height:15px;color:var(--accent);flex:none}
+  .mc-head .mc-lbl{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800}
+  .mc-head .mc-cur{font-size:12px;font-weight:800;color:var(--accent)}
   .mc-head .mc-chev{display:none}
-  .mc-body{display:block;padding:2px 14px 13px}
-  .mc-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
-  .mc-tab{padding:6px 10px;border:1.2px solid var(--hair);background:var(--panel);border-radius:7px;font-size:11.5px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .14s}
+  .mc-body{display:none;padding:0 8px 8px;animation:mcbody .3s cubic-bezier(.16,1,.3,1)}
+  @keyframes mcbody{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+  .mapctrl:hover:not(.picked) .mc-body{display:block}
+  .mc-tabs{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+  .mc-tab{padding:7px 11px;border:1.2px solid var(--hair);background:var(--panel);border-radius:8px;font-size:11.5px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .15s;text-align:left;width:158px}
   .mc-tab:hover{border-color:var(--accent);color:var(--accent)}
   .mc-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
   .legend .lg-bar{height:10px;border-radius:5px;margin-bottom:5px}
@@ -296,11 +298,11 @@
       <div class="ko"><div class="kk" id="hl-thirdk">총 매장</div><div class="kv" id="hl-third">—</div></div>
     </div>
     <div class="mapctrl" id="mapctrl">
-      <button class="mc-head" id="mc-head" type="button">
-        <span class="mc-lbl">색상 지표</span>
+      <div class="mc-head" id="mc-head">
+        <svg class="mc-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+        <span class="mc-lbl">색상</span>
         <span class="mc-cur" id="mc-cur">기본</span>
-        <svg class="mc-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-      </button>
+      </div>
       <div class="mc-body">
       <div class="mc-tabs" id="mapmetrics"></div>
       <div class="legend" id="legend"></div>
@@ -617,8 +619,8 @@ function buildMapTabs(){
     b.onclick=()=>{ applyChoropleth(m.key); document.getElementById("mapctrl").classList.add("picked"); }; // 선택하면 사라짐
     box.appendChild(b);
   });
-  const st=document.querySelector(".stage");
-  if(st && !st._mcBound){ st._mcBound=true; st.addEventListener("mouseleave",()=>document.getElementById("mapctrl").classList.remove("picked")); }
+  const mc=document.getElementById("mapctrl");
+  if(mc && !mc._mcBound){ mc._mcBound=true; mc.addEventListener("mouseleave",()=>mc.classList.remove("picked")); }
 }
 function insightTags(name){
   const t=[], e=ECON[name]||{}, gap=potentialGap(name), g=growthVal(name), pc=percapIndex(name);
