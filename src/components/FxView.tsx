@@ -12,6 +12,8 @@ import { Segmented } from "@/components/Segmented"
 
 type Strip = { asOf: string | null; pairs: Record<string, any>; peers: any[] }
 const nf = (v: number, d = 1) => (v > 0 ? "+" : "") + v.toFixed(d)
+// 핵심요약 ProChart와 동일한 시각 팔레트(선·점·그리드)
+const SURFACE = "#f9fafb"  // 점 채움(핵심요약 동일)
 const GRID = "#eceef1"
 
 // ── 실측 데이터 (2021.7–2026.6 월별) ──────────────────────────────────────
@@ -34,36 +36,43 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
     tip.innerHTML = ""
     const NS = "http://www.w3.org/2000/svg"
     const n = labels.length
-    const padL = 32, plotR = 294, T = 8, B = 78
+    const L = 36, R = 292, T = 8, B = 80 // 핵심요약 ProChart와 동일 프레임
     const el = (t: string, a: Record<string, string | number>) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, String(a[k])); return e }
-    const all = series.flatMap((s) => s.data)
+    const all = series.flatMap((s) => s.data).filter((v) => Number.isFinite(v))
     let lo = Math.min(...all), hi = Math.max(...all)
     if (lo === hi) { lo -= 1; hi += 1 }
-    const pad = (hi - lo) * 0.12; lo -= pad; hi += pad
-    const X = (i: number) => padL + (n <= 1 ? 0 : (i / (n - 1)) * (plotR - padL))
+    const pad = (hi - lo) * 0.1; lo -= pad; hi += pad
+    const X = (i: number) => (n <= 1 ? (L + R) / 2 : L + (i / (n - 1)) * (R - L))
     const Y = (v: number) => B - ((v - lo) / (hi - lo)) * (B - T)
-    const dec2 = hi - lo < 8 ? 1 : 0
-    for (let k = 0; k <= 4; k++) {
-      const v = lo + ((hi - lo) * k) / 4, y = Y(v)
-      svg.appendChild(el("line", { x1: padL, y1: y, x2: plotR, y2: y, stroke: GRID, "stroke-width": 1 }))
-      const tl = el("text", { x: padL - 5, y: y + 3, "text-anchor": "end", "font-size": 8.5, fill: "#b6bcc6" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
+    const dec2 = hi - lo < 20 ? 1 : 0
+    // 그리드 5분할 + 축 라벨(핵심요약 어법: #eceef1 / #9ca3af / 9px)
+    for (let k = 0; k <= 5; k++) {
+      const v = lo + ((hi - lo) * k) / 5, y = Y(v)
+      svg.appendChild(el("line", { x1: L, y1: y, x2: R, y2: y, stroke: GRID, "stroke-width": 1 }))
+      const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
     }
-    const every = Math.max(1, Math.ceil(n / 7))
-    labels.forEach((lb, i) => { if ((n - 1 - i) % every !== 0) return; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": "middle", "font-size": 8.5, fill: "#b6bcc6" }); tx.textContent = lb; svg.appendChild(tx) })
+    const everyN = n <= 8 ? 1 : n <= 16 ? 2 : Math.ceil(n / 7)
+    labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": "middle", "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) })
     const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: "#c3c8d0", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 }); svg.appendChild(cross)
-    // 라인 + (호버 시에만 나타나는) 시리즈별 활성 점 1개
-    const adots: SVGElement[] = []
+    // 점 크기: 핵심요약(slots≤7?4:3) 어법을 다구간(최대 60개월)까지 확장
+    const base = n <= 7 ? 4 : n <= 13 ? 3 : n <= 26 ? 2.4 : n <= 40 ? 1.9 : 1.5
+    // 라인(선굵기 = 핵심요약 현재선 2 / 보조선 1.6) + 모든 점에 상시 점
+    const dotsByS: SVGElement[][] = []
     series.forEach((s, si) => {
-      const w = s.w ?? 2
+      const w = s.w ?? 1.6
       const pts = s.data.map((v, i) => [X(i), Y(v)])
       const pl = el("polyline", { points: pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "), fill: "none", stroke: s.color, "stroke-width": w, "stroke-linejoin": "round", "stroke-linecap": "round" }); svg.appendChild(pl)
       const len = (pl as unknown as SVGPolylineElement).getTotalLength()
       pl.style.strokeDasharray = String(len); pl.style.strokeDashoffset = String(len)
-      pl.style.transition = "stroke-dashoffset 1000ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = 0.08 + si * 0.05 + "s"
+      pl.style.transition = "stroke-dashoffset 1200ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = 0.18 + si * 0.06 + "s"
       requestAnimationFrame(() => requestAnimationFrame(() => { pl.style.strokeDashoffset = "0" }))
-      const ad = el("circle", { r: 3.4, fill: "#fff", stroke: s.color, "stroke-width": 2, opacity: 0 }); svg.appendChild(ad); adots.push(ad)
+      const dots = pts.map(([x, y]) => {
+        const c = el("circle", { cx: x.toFixed(1), cy: y.toFixed(1), r: base, fill: SURFACE, stroke: s.color, "stroke-width": 1.5 })
+        c.style.transition = "r .15s, fill .15s"; svg.appendChild(c); return c
+      })
+      dotsByS.push(dots)
     })
-    const head = document.createElement("div"); head.className = "mb-1 text-[10.5px] font-medium text-gray-400"; tip.appendChild(head)
+    const head = document.createElement("div"); head.className = "mb-1 text-[11px] font-medium text-gray-400"; tip.appendChild(head)
     const valNodes: HTMLElement[] = []
     series.forEach((s) => {
       const row = document.createElement("div"); row.className = "flex items-center gap-2 text-[11px] leading-4"
@@ -72,17 +81,21 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
       const v = document.createElement("b"); v.className = "ml-auto tabular-nums font-semibold text-gray-800"
       row.appendChild(dot); row.appendChild(nm); row.appendChild(v); tip.appendChild(row); valNodes.push(v)
     })
+    const resetDot = (i: number) => { if (i < 0) return; dotsByS.forEach((dots) => { const c = dots[i]; if (c) { c.setAttribute("r", String(base)); c.setAttribute("fill", SURFACE) } }) }
     let active = -1, curX = X(0), tgtX = X(0), cOp = 0, tOp = 0, curTop = T, tgtTop = T, rectW = 300, rectH = 120, raf = 0
     const place = (i: number) => {
+      resetDot(active)
       active = i; head.textContent = "20" + labels[i]
       const tops: number[] = []
-      series.forEach((s, si) => { const v = s.data[i]; valNodes[si].textContent = v.toFixed(decimals) + unit; const y = Y(v); tops.push(y); adots[si].setAttribute("cx", X(i).toFixed(1)); adots[si].setAttribute("cy", y.toFixed(1)) })
+      series.forEach((s, si) => {
+        const v = s.data[i]; valNodes[si].textContent = v.toFixed(decimals) + unit; const y = Y(v); tops.push(y)
+        const c = dotsByS[si][i]; if (c) { c.setAttribute("r", String(base + 2.4)); c.setAttribute("fill", s.color) } // 활성점 확대·솔리드(핵심요약 호버)
+      })
       tgtTop = tops.length ? Math.min(...tops) : T
     }
     const loop = () => {
       curX += (tgtX - curX) * 0.3; curTop += (tgtTop - curTop) * 0.3; cOp += (tOp - cOp) * 0.3
       cross.setAttribute("x1", curX.toFixed(1)); cross.setAttribute("x2", curX.toFixed(1)); cross.setAttribute("opacity", cOp.toFixed(2))
-      adots.forEach((d) => d.setAttribute("opacity", cOp.toFixed(2)))
       const sx = rectW / 300, sy = rectH / 100
       tip.style.left = (curX * sx).toFixed(1) + "px"; tip.style.top = (curTop * sy - 12).toFixed(1) + "px"; tip.style.transform = "translate(-50%,-100%)"
       raf = requestAnimationFrame(loop)
@@ -91,10 +104,10 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
     const move = (e: PointerEvent) => {
       const rect = svg.getBoundingClientRect(); rectW = rect.width; rectH = rect.height
       const px = ((e.clientX - rect.left) / rect.width) * 300
-      const i = Math.max(0, Math.min(n - 1, Math.round((px - padL) / (plotR - padL) * (n - 1))))
+      const i = Math.max(0, Math.min(n - 1, Math.round((px - L) / (R - L) * (n - 1))))
       tgtX = X(i); if (i !== active) place(i); tOp = 1; tip.style.opacity = "1"
     }
-    const leave = () => { tOp = 0; tip.style.opacity = "0"; active = -1 }
+    const leave = () => { tOp = 0; tip.style.opacity = "0"; resetDot(active); active = -1 }
     svg.addEventListener("pointermove", move); svg.addEventListener("pointerdown", move); svg.addEventListener("pointerleave", leave)
     return () => { cancelAnimationFrame(raf); svg.removeEventListener("pointermove", move); svg.removeEventListener("pointerdown", move); svg.removeEventListener("pointerleave", leave) }
   }, [series, labels, decimals, unit])
@@ -107,12 +120,12 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
 }
 
 function Lg({ c, t, b }: { c: string; t: string; b?: boolean }) {
-  return <span className="inline-flex items-center gap-1.5" style={{ color: b ? "#4f46e5" : "#6b7280", fontWeight: b ? 700 : 500 }}><span className="inline-block h-0 w-3" style={{ borderTop: "2.4px solid " + c }} />{t}</span>
+  return <span className="inline-flex items-center gap-1.5" style={{ color: b ? "#6366f1" : "#6b7280", fontWeight: b ? 700 : 500 }}><span className="inline-block h-0 w-3" style={{ borderTop: "2.4px solid " + c }} />{t}</span>
 }
 
-type Tone = "rose" | "amber" | "teal"
-const AI_BOX: Record<Tone, string> = { rose: "border-rose-300 bg-rose-50/50", amber: "border-amber-300 bg-amber-50/50", teal: "border-teal-300 bg-teal-50/50" }
-const AI_TAG: Record<Tone, string> = { rose: "text-rose-600", amber: "text-amber-600", teal: "text-teal-700" }
+// 색=신호(DESIGN §1): 채운 배지·틴트 카드 금지 — 강조는 indigo, 신호는 dot
+type Tone = "rose" | "amber" | "emerald"
+const AI_DOT: Record<Tone, string> = { rose: "bg-rose-500", amber: "bg-amber-500", emerald: "bg-emerald-500" }
 
 function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, meaning, ai, tone, src }: {
   title: string; unit?: string; legend: React.ReactNode; series: SLine[]; labels: string[]; decimals?: number; seriesUnit?: string
@@ -127,10 +140,11 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
       <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">{legend}</div>
       <FxChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />
       <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
-      <div className={"mt-2 rounded-lg border-l-2 px-2.5 py-1.5 " + AI_BOX[tone]}>
-        <div className="flex items-center gap-1">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className={AI_TAG[tone]}><path d="M12 2l1.9 5.7L19.6 9l-5.7 1.9L12 16l-1.9-5.1L4.4 9l5.7-1.3z" /><path d="M19 15l.8 2.2L22 18l-2.2.9L19 21l-.9-2.1L16 18l2.1-.8z" /></svg>
-          <span className={"text-[9.5px] font-bold tracking-wide " + AI_TAG[tone]}>AI 분석</span>
+      <div className="mt-2 border-l-2 border-indigo-300 pl-2.5">
+        <div className="flex items-center gap-1.5">
+          <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + AI_DOT[tone]} />
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" className="text-indigo-500"><path d="M12 2l1.9 5.7L19.6 9l-5.7 1.9L12 16l-1.9-5.1L4.4 9l5.7-1.3z" /><path d="M19 15l.8 2.2L22 18l-2.2.9L19 21l-.9-2.1L16 18l2.1-.8z" /></svg>
+          <span className="text-[9.5px] font-bold uppercase tracking-wide text-gray-400">AI 분석</span>
         </div>
         <p className="mt-0.5 text-[11px] leading-relaxed text-gray-600">{ai}</p>
       </div>
@@ -148,14 +162,14 @@ export default function FxView() {
   const n = WINDOWS.find((w) => w.k === win)!.n
   const labels = lastN(DATA.labels, n)
   const region = [
-    { name: "필리핀", color: "#4f46e5", w: 3, data: strengthOf(lastN(DATA.region.ph, n)) },
+    { name: "필리핀", color: "#6366f1", w: 2, data: strengthOf(lastN(DATA.region.ph, n)) },
     { name: "인니", color: "#dc2626", data: strengthOf(lastN(DATA.region.id, n)) },
     { name: "말련", color: "#0284c7", data: strengthOf(lastN(DATA.region.my, n)) },
     { name: "태국", color: "#0f766e", data: strengthOf(lastN(DATA.region.th, n)) },
     { name: "베트남", color: "#d99400", data: strengthOf(lastN(DATA.region.vn, n)) },
     { name: "싱가포르", color: "#7c3aed", data: strengthOf(lastN(DATA.region.sg, n)) },
   ]
-  const fxusd = [{ name: "₱/USD", color: "#4f46e5", w: 3, data: lastN(DATA.fxusd, n) }]
+  const fxusd = [{ name: "₱/USD", color: "#6366f1", w: 2, data: lastN(DATA.fxusd, n) }]
   const won = [{ name: "₩/₱", color: "#0f766e", w: 3, data: lastN(DATA.extra.wonperpeso, n) }]
   const asia = [
     { name: "위안 CNY", color: "#dc2626", w: 2.6, data: idx100(lastN(DATA.asia.cny, n)) },
@@ -166,7 +180,7 @@ export default function FxView() {
     { name: "유로 EUR", color: "#b45309", data: idx100(lastN(DATA.extra.pesopereur, n)) },
   ]
   const eer = [
-    { name: "NEER 명목", color: "#4f46e5", w: 2.6, data: lastN(DATA.eer.neer, n) },
+    { name: "NEER 명목", color: "#6366f1", w: 2, data: lastN(DATA.eer.neer, n) },
     { name: "REER 실질", color: "#a1795b", data: lastN(DATA.eer.reer, n) },
   ]
 
@@ -176,13 +190,13 @@ export default function FxView() {
   const neerNow = DATA.eer.neer[59], neer12 = DATA.eer.neer[47]
   const reerNow = DATA.eer.reer[59], reer12 = DATA.eer.reer[47]
   const fx12 = DATA.fxusd[47]
-  const KPI: { n: string; v: number; d: string; tone: "rose" | "teal" | "amber" | "gray"; dec: number }[] = [
+  const KPI: { n: string; v: number; d: string; tone: "rose" | "emerald" | "amber" | "gray"; dec: number }[] = [
     { n: "₱ / USD", v: usdphp, d: nf(usdphp - fx12, 1), tone: "rose", dec: 1 },
-    { n: "₩ / ₱", v: krwphp, d: nf(krwphp - DATA.extra.wonperpeso[47], 2), tone: "teal", dec: 2 },
+    { n: "₩ / ₱", v: krwphp, d: nf(krwphp - DATA.extra.wonperpeso[47], 2), tone: "emerald", dec: 2 },
     { n: "페소 NEER", v: neerNow, d: nf(neerNow - neer12, 1), tone: "rose", dec: 1 },
     { n: "페소 REER", v: reerNow, d: nf(reerNow - reer12, 1), tone: "amber", dec: 1 },
   ]
-  const toneBg: Record<string, string> = { rose: "bg-rose-50 text-rose-700", teal: "bg-teal-50 text-teal-700", amber: "bg-amber-50 text-amber-700", gray: "bg-gray-50 text-gray-600" }
+  const toneTxt: Record<string, string> = { rose: "text-rose-600", emerald: "text-emerald-600", amber: "text-amber-600", gray: "text-gray-500" }
   const AGENDA: { label: string; note: string; date: string; dot: string }[] = [
     { label: "BSP 통화정책회의", note: "금리 → 페소 방향 좌우", date: "2026-08-14", dot: "bg-rose-500" },
     { label: "미국 CPI 발표", note: "달러·페소 변동성", date: "2026-08-12", dot: "bg-amber-500" },
@@ -240,19 +254,19 @@ export default function FxView() {
           </header>
           <div className="grid items-stretch gap-4 sm:grid-cols-2">
             <ChartCard title="동남아 6개국 통화 강도" unit="대미달러 · 창 시작=100" labels={labels} series={region} tone="rose"
-              legend={<><Lg c="#4f46e5" t="필리핀" b /><Lg c="#dc2626" t="인니" /><Lg c="#0284c7" t="말련" /><Lg c="#0f766e" t="태국" /><Lg c="#d99400" t="베트남" /><Lg c="#7c3aed" t="싱가포르" /></>}
+              legend={<><Lg c="#6366f1" t="필리핀" b /><Lg c="#dc2626" t="인니" /><Lg c="#0284c7" t="말련" /><Lg c="#0f766e" t="태국" /><Lg c="#d99400" t="베트남" /><Lg c="#7c3aed" t="싱가포르" /></>}
               meaning={<>각국 통화의 대미달러 가치를 창 시작=100으로 지수화 — <b className="text-gray-700">아래로 갈수록 약세</b>.</>}
               ai={<>페소는 5년간 대미달러 약 18% 절하로 <b className="font-semibold text-rose-600">역내 최대 낙폭</b>. 페소로 결제하지 않는 한 경쟁국 대비 원가 방어력이 약함 → 헤지·현지조달 확대 검토.</>}
               src={<><b className="font-semibold text-gray-500">자료</b> Alpha Vantage 월별 양자환율</>} />
             <ChartCard title="₱/USD 기본 환율" unit="달러당 페소" labels={labels} series={fxusd} seriesUnit="" decimals={2} tone="rose"
-              legend={<Lg c="#4f46e5" t="₱/USD 월 종가" b />}
+              legend={<Lg c="#6366f1" t="₱/USD 월 종가" b />}
               meaning={<>조달·결제의 기준 환율. <b className="text-gray-700">오를수록 페소 약세</b>.</>}
               ai={<>₱/USD가 <b className="font-semibold text-rose-600">60선을 넘어 사상 최저권</b>. 달러결제 부품·완제품 원가가 구조적 상방 → 판가 전가 여력·달러 헤지 비율 점검.</>}
               src={<><b className="font-semibold text-gray-500">자료</b> Alpha Vantage 월별 (USD/PHP) · 일별 BSP fx_daily</>} />
-            <ChartCard title="원/페소 (한국 조달)" unit="페소당 원" labels={labels} series={won} seriesUnit="" decimals={2} tone="teal"
+            <ChartCard title="원/페소 (한국 조달)" unit="페소당 원" labels={labels} series={won} seriesUnit="" decimals={2} tone="emerald"
               legend={<Lg c="#0f766e" t="₩/₱ 월 종가" b />}
               meaning={<>페소로 살 수 있는 원. <b className="text-gray-700">오를수록 페소가 원에 강세</b>(한국 조달 유리).</>}
-              ai={<>원/페소 25선으로 <b className="font-semibold text-teal-700">페소가 원에 상대적 강세</b> → 한국 조달분(비중 大) 원가는 상대적 완충. 원 약세 지속 시 한국 소싱 확대가 유리.</>}
+              ai={<>원/페소 25선으로 <b className="font-semibold text-emerald-600">페소가 원에 상대적 강세</b> → 한국 조달분(비중 大) 원가는 상대적 완충. 원 약세 지속 시 한국 소싱 확대가 유리.</>}
               src={<><b className="font-semibold text-gray-500">자료</b> Alpha Vantage 월별 (USD/KRW ÷ USD/PHP)</>} />
             <ChartCard title="위안·루피의 대페소 가치" unit="창 시작=100" labels={labels} series={asia} tone="rose"
               legend={<><Lg c="#dc2626" t="위안 CNY/₱" /><Lg c="#7c3aed" t="루피 INR/₱" /></>}
@@ -262,10 +276,10 @@ export default function FxView() {
             <ChartCard title="엔·유로의 대페소 가치" unit="창 시작=100" labels={labels} series={jpyeur} tone="amber"
               legend={<><Lg c="#0284c7" t="엔 JPY/₱" /><Lg c="#b45309" t="유로 EUR/₱" /></>}
               meaning={<>일본·유럽 조달통화의 대페소 가치 — <b className="text-gray-700">오를수록 조달비 상승</b>.</>}
-              ai={<>엔은 대페소 <b className="font-semibold text-teal-700">약세</b>로 일본 조달·부품 원가 우호적, 유로는 <b className="font-semibold text-amber-600">+18% 강세</b>로 유럽 조달 부담. 통화 국면에 맞춰 소싱 믹스 조정.</>}
+              ai={<>엔은 대페소 <b className="font-semibold text-emerald-600">약세</b>로 일본 조달·부품 원가 우호적, 유로는 <b className="font-semibold text-amber-600">+18% 강세</b>로 유럽 조달 부담. 통화 국면에 맞춰 소싱 믹스 조정.</>}
               src={<><b className="font-semibold text-gray-500">자료</b> Alpha Vantage 월별 · 대페소 환산, 창 시작=100</>} />
             <ChartCard title="페소 실효환율 NEER·REER" unit="BIS · 2020=100" labels={labels} series={eer} tone="amber"
-              legend={<><Lg c="#4f46e5" t="NEER 명목" b /><Lg c="#a1795b" t="REER 실질" /></>}
+              legend={<><Lg c="#6366f1" t="NEER 명목" b /><Lg c="#a1795b" t="REER 실질" /></>}
               meaning={<><b className="text-gray-700">NEER</b>=교역가중 명목가치(원가 종합압력), <b className="text-gray-700">REER</b>=물가반영 실질가치(구매력·수요).</>}
               ai={<>명목(NEER) 96.8→88.7 약세지만 실질(REER)은 98선 유지 — <b className="font-semibold text-amber-600">물가가 명목 약세를 상쇄</b>. 원가는 오르는데 실질 구매력은 정체 → 저가·필수형 우선, 프리미엄은 심리 반등 후.</>}
               src={<><b className="font-semibold text-gray-500">자료</b> BIS 실효환율 공식통계 (Broad, 64개국)</>} />
@@ -284,7 +298,7 @@ export default function FxView() {
                 <div key={k.n} className="rounded-lg bg-gray-50 px-3 py-2.5">
                   <p className="text-[11px] font-medium text-gray-500">{k.n}</p>
                   <p className="mt-0.5 text-[19px] font-bold leading-none tabular-nums text-gray-900"><CountUp value={k.v} decimals={k.dec} /></p>
-                  <span className={"mt-1 inline-block rounded px-1.5 py-0.5 text-[10px] font-bold tabular-nums " + toneBg[k.tone]}>{k.d}</span>
+                  <span className={"mt-1 inline-flex items-center gap-0.5 text-[11px] font-bold tabular-nums " + toneTxt[k.tone]}>{k.d.replace(/^[+-]/, "")}<span className="text-[10px]">{k.d.startsWith("-") ? "↓" : "↑"}</span></span>
                 </div>
               ))}
             </div>
