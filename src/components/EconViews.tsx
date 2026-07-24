@@ -310,7 +310,7 @@ export function RatesView() {
 // ══════════════════════════════════════════════════════════════════════
 // 국민계정·성장 — GDP·소비·투자·건설·산업·유통
 // ══════════════════════════════════════════════════════════════════════
-const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "services_gva_yoy", "retail_sales_growth", "gdp_per_capita_usd"]
+const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "services_gva_yoy", "retail_sales_growth", "gdp_per_capita_usd", "office_vacancy_ncr"]
 // 동남아 6개국 비교 — 필리핀 강조(굵은선+끝점 핀), 나머지 색 구분
 const SEA_SPECS: Spec[] = [
   { key: "Philippines", name: "필리핀", color: C.ind, w: 2.4, endLabel: "필리핀" },
@@ -340,7 +340,8 @@ export function GrowthView() {
   const va = build(d, n, [{ key: "manufacturing_va_growth", name: "제조업", color: C.ind, w: 2 }, { key: "industry_va_growth", name: "산업", color: C.rose }, { key: "services_va_growth", name: "서비스", color: C.emer }])
   const rsale = build(d, n, [{ key: "retail_sales_growth", name: "소매판매 증가율", color: C.ind, w: 2 }]) // 연간 6년(COVID 저점)
   const pcap = build(d, n, [{ key: "gdp_per_capita_usd", name: "1인당 GDP", color: C.ind, w: 2 }]) // USD, 연간 — 구매력·시장규모
-  const empty = !gdp.series.length && !demand.series.length && !cons.series.length && !ind.series.length && !cap.series.length && !ret.series.length && !permit.series.length && !permitV.series.length && !va.series.length && !rsale.series.length && !pcap.series.length
+  const office = build(d, n, [{ key: "office_vacancy_ncr", name: "오피스 공실률", color: C.rose, w: 2 }]) // 민간자료(Colliers)
+  const empty = !gdp.series.length && !demand.series.length && !cons.series.length && !ind.series.length && !cap.series.length && !ret.series.length && !permit.series.length && !permitV.series.length && !va.series.length && !rsale.series.length && !pcap.series.length && !office.series.length
   return (
     <Shell title="국민계정·성장" sub="GDP·소비·투자·건설허가·산업·유통 — 가전 수요 파이" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ summary: (kv) => <>GDP {B(f1(kv.gdp_growth_yoy) + "%")}·민간소비 {B(f1(kv.household_consumption_yoy) + "%")}·투자 {B(f1(kv.gross_capital_formation_yoy) + "%")}, 가동률 {B(f1(kv.capacity_utilization) + "%")} — {(kv.gdp_growth_yoy ?? 0) < 4 ? "성장 둔화로 가전 수요 파이 축소 국면" : "성장 견조, 수요 파이 확대 국면"}</>, headline: <><b className="font-semibold text-gray-900 dark:text-gray-50">국민계정으로 본 가전 수요 파이</b></>, lg: <>민간소비·주거 착공 회복은 <b className="font-semibold">가전 신규수요 선행</b> → 성장 밀집 지역 채널·재고 선점, 둔화 시 보급형 방어</> }}
@@ -418,6 +419,13 @@ export function GrowthView() {
           meaning={<>상업·산업 신축 착공면적 — <b className="text-gray-700 dark:text-gray-200">B2B 냉난방·빌트인 수요의 선행</b></>}
           ai={<>비주거 착공 확대는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">상업용 HVAC·빌트인 프로젝트 수요 선행</b> → B2B 파이프라인·입찰 선제 대응</>}
           tone="emerald" src={src("PSA 건축허가(비주거) · 분기")} />
+      )}
+      {office.series.length > 0 && (
+        <ChartCard seg="B2B" title="오피스 공실률 (메트로 마닐라)" unit="% · 분기 · 민간자료" labels={office.labels} series={office.series} decimals={1} seriesUnit="%"
+          legend={<Lg c={C.rose} t="오피스 공실률" b />}
+          meaning={<>상업용 오피스 공실률 — <b className="text-gray-700 dark:text-gray-200">B2B 상업용 HVAC·빌트인 수요의 역지표</b></>}
+          ai={<>공실률 하락은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">오피스 임대·신규 입주 회복 = 상업용 냉난방·가전 수요</b>, 상승 시 B2B 프로젝트 지연 경계 · <b className="text-gray-500 dark:text-gray-400">민간자료(Colliers)</b></>}
+          tone="amber" src={src("Colliers PH Office · 분기 · 민간자료")} />
       )}
         </> },
         { key: "trade", label: "유통", node: <>
