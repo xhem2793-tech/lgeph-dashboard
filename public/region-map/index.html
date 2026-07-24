@@ -703,20 +703,21 @@ function showTip(e,d){
       html+=`<div class="rt-big">${m.fmt(v)}</div>`;
       html+=`<div class="rt-sub">${m.label}${per?" · "+per:""}</div>`;
       const gap=v-avg;
-      html+=`<div class="rt-note">전국 ${sorted.length}개 중 <b>${rank}위</b> · 평균 ${m.fmt(+avg.toFixed(1))} 대비 <b>${(gap>0?"+":"")+gap.toFixed(1)}%p ${hi?"높음":lo?"낮음":"비슷"}</b> <span class="rt-tag ok">${isInf?"확인 PSA":"확인"}</span></div>`;
+      html+=`<div class="rt-note">전국 ${sorted.length}개 중 <b>${rank}위</b> · 평균 ${m.fmt(+avg.toFixed(1))} 대비 <b>${(gap>0?"+":"")+gap.toFixed(1)}%p ${hi?"높음":lo?"낮음":"비슷"}</b> <span class="rt-tag ok">확인</span></div>`;
       if(isInf){
-        // 왜 높은지/낮은지: 이 지역의 다른 품목 물가가 전국 평균 대비 어떤지로 배경 설명(데이터)
+        // 이 지역의 top 물가 드라이버(품목) 식별 → 드라이버별 구체 LGE 함의
         const cats={food_cpi:"식품",elec_cpi:"전기",transport_cpi:"운송",rice_cpi:"쌀",aircon_cpi:"에어컨",appl_cpi:"가전"};
+        const impl={ 전기:"전기료 부담 큰 지역 → 고효율·인버터 절감액 소구가 특히 유효", 식품:"필수재(식품) 압박 큰 지역 → 가전은 후순위, 보급형·할부 우선", 운송:"물류비 전가 지역 → 조달·배송 원가·판가 방어에 민감", 쌀:"생활물가 부담 지역 → 저가·필수형 수요 중심", 에어컨:"냉방 물가 급등 지역 → 에어컨 판가·성수기 프로모 민감", 가전:"가전 소매가 상승 지역 → 할부·번들로 구매저항 완화" };
         const catAvg=(ck)=>{ const a=features.map(f=>mVal(f.properties.REGION,ck)).filter(x=>!isNaN(x)); return a.length?a.reduce((p,q)=>p+q,0)/a.length:NaN; };
-        const drv=[]; for(const ck in cats){ if(ck===m.key) continue; const rv=mVal(name,ck), ca=catAvg(ck); if(isNaN(rv)||isNaN(ca)) continue; drv.push({l:cats[ck],diff:rv-ca,v:rv}); }
+        const drv=[]; for(const ck in cats){ const rv=mVal(name,ck), ca=catAvg(ck); if(isNaN(rv)||isNaN(ca)) continue; drv.push({l:cats[ck],diff:rv-ca,v:rv,ck}); }
         drv.sort((a,b)=>b.diff-a.diff);
         let bg;
-        if(hi){ const t=drv.filter(x=>x.diff>0.3).slice(0,2); bg = t.length ? `이 지역은 <b>${t.map(x=>x.l+" "+x.v.toFixed(1)+"%").join(", ")}</b> 물가도 전국 평균을 웃돎 → 물류·에너지·식료 비용이 전반 물가를 함께 밀어올린 것으로 해석` : `특정 품목이 아닌 광범위한 상승 압력으로 해석`; }
-        else if(lo){ const t=drv.filter(x=>x.diff<-0.3).slice(-2).reverse(); bg = t.length ? `이 지역은 <b>${t.map(x=>x.l+" "+x.v.toFixed(1)+"%").join(", ")}</b> 물가가 전국 평균을 밑돎 → 비용 압력이 낮아 물가가 안정된 것으로 해석` : `전반적으로 비용 압력이 낮은 것으로 해석`; }
-        else bg = `주요 품목 물가가 전국 평균 수준`;
+        if(hi){ const t=drv[0]; bg = (t&&t.diff>0.2) ? `<b>${t.l} ${t.v.toFixed(1)}%</b>(평균 +${t.diff.toFixed(1)}%p)가 이 지역 물가를 주도 — ${impl[t.l]}` : `특정 품목 없이 전반적 상승 압력 — 광역 프로모로 대응`; }
+        else if(lo){ const t=drv[drv.length-1]; bg = (t&&t.diff<-0.2) ? `<b>${t.l} ${t.v.toFixed(1)}%</b> 등 비용 압력 낮음(평균 ${t.diff.toFixed(1)}%p) — 물가 안정, 프리미엄·신제품 여력 상대 양호` : `전반 비용 압력 낮음 — 프리미엄 소구 여지`; }
+        else bg = `주요 품목이 평균 수준 — 표준 라인업 유지`;
         html+=`<div class="rt-why">${bg} <span class="rt-tag est">추정</span></div>`;
       } else {
-        html+=`<div class="rt-why">${hi?"인구·경제 규모가 커 전국 기여가 큰 핵심 경제권으로 해석":lo?"인구·산업 기반이 작아 기여가 낮은 것으로 해석":"평균 수준"} <span class="rt-tag est">추정</span></div>`;
+        html+=`<div class="rt-why">${hi?"인구·경제 규모가 큰 핵심 경제권 → 플래그십·신제품 우선 배치":lo?"인구·산업 기반이 작아 침투 확대 여지 → 거점 딜러부터 라인업 상향":"평균 수준 → 표준 운영"} <span class="rt-tag est">추정</span></div>`;
       }
     } else {
       html+=`<div class="rt-note">해당 월 데이터 없음</div>`;
