@@ -1,0 +1,9 @@
+{
+  "_comment": "워크북/시트 export가 이 파일을 덮어쓰면 헤드라인 KPI가 자동 반영됩니다. sell=총 셀아웃, yoy=전년 대비 성장률(+/-), stores=총 매장 수, share=전국 기여도. regions 키는 지도의 REGION 명과 일치해야 합니다.",
+  "national": { "period": "Jan–Dec 2024", "sell": "₱8.9B", "yoy": "+8.4%", "stores": "412개" },
+  "regions": {
+    "Metropolitan Manila": { "sell": "₱2.6B", "yoy": "+9.1%", "share": "31%" },
+    "CALABARZON (Region IV-A)": { "sell": "₱1.3B", "yoy": "+8.6%", "share": "15%" },
+    "Central Luzon (Region III)": { "sell": "₱0.98B", "yoy": "+7.9%", "share": "11%" }
+  }
+}

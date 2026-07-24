@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>필리핀 지역 지도</title>
+<script src="./vendor/d3.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --bg:#f4f3ef;
+    --panel:#ffffff;
+    --ink:#141414;
+    --line:#141414;
+    --muted:#7b7a74;
+    --hair:#e6e4dd;
+    --accent:#1c6b63;
+    --accent-tint:#d9ebe8;
+    --accent-soft:#eef6f4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Pretendard',-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;
+    background:var(--bg);color:var(--ink);
+    -webkit-font-smoothing:antialiased;
+    overflow:hidden;
+    display:flex;flex-direction:column;
+  }
+  a{color:var(--accent)}
+  a:hover{color:#134b45}
+
+  /* KPI headline strip */
+  .kpibar{display:flex;align-items:center;gap:26px;padding:15px 30px;background:#141414;color:#fff;flex:none;z-index:10}
+  .kpibar .ctx{display:flex;flex-direction:column;min-width:0}
+  .kpibar .ctx-row{display:flex;align-items:center;gap:9px}
+  .kpibar .ctx-tag{font-size:10px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:5px;background:var(--accent);color:#fff;white-space:nowrap;flex:none}
+  .kpibar .ctx-name{font-size:19px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+  .kpibar .ctx-per{font-size:11px;color:rgba(255,255,255,.5);margin-top:4px;font-style:italic}
+  .kpicards{display:flex;margin-left:auto}
+  .kpicard{padding:2px 26px;border-left:1px solid rgba(255,255,255,.14);text-align:right}
+  .kpicard:first-child{border-left:none}
+  .kpicard .kk{font-size:11px;color:rgba(255,255,255,.5);font-weight:600;letter-spacing:.01em}
+  .kpicard .kv{font-size:23px;font-weight:800;margin-top:4px;letter-spacing:-.02em;white-space:nowrap}
+  .kpicard .kv.up{color:#63d3ab}
+  .kpicard .kv.down{color:#f0857a}
+
+  .app{display:grid;grid-template-columns:1fr 400px;flex:1;min-height:0}
+
+  /* ---- MAP SIDE ---- */
+  .stage{position:relative;overflow:hidden;background:var(--bg)}
+  .stage::before{
+    content:"";position:absolute;inset:0;
+    background-image:radial-gradient(var(--hair) 1px,transparent 1px);
+    background-size:26px 26px;opacity:.55;pointer-events:none;
+  }
+  .brand{
+    position:absolute;top:26px;left:30px;z-index:5;pointer-events:none;
+  }
+  .brand .ki{font-size:11px;letter-spacing:.32em;color:var(--muted);font-weight:600;text-transform:uppercase}
+  .brand h1{font-size:26px;font-weight:800;letter-spacing:-.01em;margin-top:6px;line-height:1.05}
+  .brand .sub{font-size:12.5px;color:var(--muted);margin-top:7px}
+
+  .backbtn{
+    position:absolute;top:26px;right:30px;z-index:6;
+    display:inline-flex;align-items:center;gap:8px;
+    padding:9px 15px;border:1.5px solid var(--line);background:var(--panel);
+    border-radius:999px;font-size:13px;font-weight:600;color:var(--ink);
+    cursor:pointer;opacity:0;transform:translateY(-6px);pointer-events:none;
+    transition:opacity .3s,transform .3s,background .15s;
+  }
+  .backbtn.show{opacity:1;transform:none;pointer-events:auto}
+  .backbtn:hover{background:var(--ink);color:#fff}
+  .backbtn svg{width:14px;height:14px}
+
+  svg.map{display:block;width:100%;height:100%;position:relative;z-index:1}
+  .zoomlayer{transition:transform .95s cubic-bezier(.65,0,.18,1);transform-box:view-box;transform-origin:0 0}
+  .region{
+    fill:var(--panel);stroke:var(--line);stroke-width:1;stroke-linejoin:round;
+    vector-effect:non-scaling-stroke;
+    cursor:pointer;transition:fill .22s ease;
+  }
+  .region:hover{filter:brightness(1.08);stroke-width:2.2}
+  .region.selected{fill:var(--accent)!important;stroke:var(--line);filter:none}
+  .region.dimmed{fill:#eceae4!important;opacity:.5}
+  .region.dimmed:hover{fill:#e4e2db}
+
+  .label{
+    font-size:12px;font-weight:700;fill:var(--ink);
+    paint-order:stroke;stroke:#fff;stroke-width:3.5px;stroke-linejoin:round;
+    pointer-events:none;text-anchor:middle;
+    opacity:0;transition:opacity .18s;
+  }
+  .label.show{opacity:1}
+  .label.sel{fill:#fff;stroke:var(--accent);stroke-width:3px}
+
+  .hint{
+    position:absolute;bottom:24px;left:30px;z-index:5;
+    font-size:12px;color:var(--muted);display:flex;align-items:center;gap:9px;
+  }
+  .hint .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}
+
+  /* choropleth control card */
+  .mapctrl{position:absolute;bottom:24px;left:30px;z-index:5;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:14px 16px 13px;box-shadow:0 4px 18px rgba(0,0,0,.08);width:288px}
+  .mapctrl .mc-t{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:10px}
+  .mc-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .mc-tab{padding:6px 10px;border:1.2px solid var(--hair);background:var(--panel);border-radius:7px;font-size:11.5px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .14s}
+  .mc-tab:hover{border-color:var(--accent);color:var(--accent)}
+  .mc-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .legend .lg-bar{height:10px;border-radius:5px;margin-bottom:5px}
+  .legend .lg-sc{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:600}
+  .mc-hint{margin-top:11px;font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .mc-hint .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
+
+  /* management insight tags */
+  .tags{display:flex;flex-wrap:wrap;gap:8px}
+  .tag{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:700;border:1px solid}
+  .tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.8}
+  .tag.pos{background:var(--accent-soft);border-color:var(--accent-tint);color:var(--accent)}
+  .tag.warn{background:#fbeeeb;border-color:#f2d3cc;color:#b8503f}
+  .tag.neu{background:#f2f1ec;border-color:var(--hair);color:#6a6960}
+
+  /* ---- PANEL SIDE ---- */
+  .panel{
+    background:var(--panel);border-left:1.5px solid var(--line);
+    display:flex;flex-direction:column;height:100vh;overflow:hidden;position:relative;
+  }
+  .panel-head{padding:30px 32px 22px;border-bottom:1px solid var(--hair)}
+  .panel-head .ey{font-size:11px;letter-spacing:.28em;color:var(--muted);font-weight:600;text-transform:uppercase}
+  .panel-head .ttl{font-size:20px;font-weight:800;margin-top:9px;letter-spacing:-.01em}
+
+  .panel-body{flex:1;overflow-y:auto;overflow-x:hidden}
+  .panel-body::-webkit-scrollbar{width:8px}
+  .panel-body::-webkit-scrollbar-thumb{background:#dcdad3;border-radius:8px}
+
+  /* region list (default) */
+  .list{padding:12px 0}
+  .list-item{
+    display:flex;align-items:center;gap:13px;
+    padding:12px 32px;cursor:pointer;border:none;background:none;width:100%;text-align:left;
+    font-family:inherit;transition:background .14s;
+  }
+  .list-item:hover{background:var(--accent-soft)}
+  .list-item .code{
+    flex:none;width:44px;height:30px;display:flex;align-items:center;justify-content:center;
+    border:1.3px solid var(--line);border-radius:6px;font-size:11px;font-weight:800;
+  }
+  .list-item .nm{font-size:14px;font-weight:600;line-height:1.25}
+  .list-item .nm small{display:block;font-size:11px;font-weight:500;color:var(--muted);margin-top:2px}
+  .list-item.active{background:var(--accent);}
+  .list-item.active .nm{color:#fff}
+  .list-item.active .nm small{color:rgba(255,255,255,.75)}
+  .list-item.active .code{border-color:#fff;color:#fff}
+
+  /* detail view */
+  .detail{padding:0;opacity:0;transform:translateX(14px);transition:opacity .35s,transform .35s;pointer-events:none;position:absolute;inset:0;top:0;background:var(--panel);display:flex;flex-direction:column}
+  .detail.show{opacity:1;transform:none;pointer-events:auto}
+  .detail-head{padding:28px 32px 22px;border-bottom:1px solid var(--hair);background:var(--accent);color:#fff}
+  .detail-head .code2{display:inline-block;padding:4px 11px;border:1.3px solid rgba(255,255,255,.6);border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.08em}
+  .detail-head h2{font-size:25px;font-weight:800;margin-top:14px;letter-spacing:-.01em;line-height:1.1}
+  .detail-head .en{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:6px}
+  .detail-scroll{flex:1;overflow-y:auto;padding:26px 32px 40px}
+
+  .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:12px;overflow:hidden}
+  .stat{background:var(--panel);padding:16px 17px}
+  .stat .k{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+  .stat .v{font-size:21px;font-weight:800;margin-top:5px;letter-spacing:-.01em}
+  .stat .v small{font-size:12px;font-weight:600;color:var(--muted);margin-left:3px}
+
+  /* executive summary */
+  .summary{background:var(--accent-soft);border:1px solid var(--accent-tint);border-radius:12px;padding:16px 17px}
+  .sum-line{font-size:13.5px;line-height:1.55;font-weight:600;color:#22322f;margin-bottom:12px}
+  .sum-line b{color:var(--accent);font-weight:800}
+  .summary .tags{gap:7px}
+
+  /* key business KPIs */
+  .kpigrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:12px;overflow:hidden;margin-top:16px}
+  .kc{background:var(--panel);padding:15px 16px}
+  .kc-k{font-size:11px;color:var(--muted);font-weight:600}
+  .kc-k small{font-weight:500;opacity:.8}
+  .kc-v{font-size:22px;font-weight:800;margin-top:5px;letter-spacing:-.02em}
+  .kc-v.up{color:var(--accent)} .kc-v.down{color:#c2503f}
+
+  /* compact geography line */
+  .geo{display:grid;grid-template-columns:1fr 1fr;gap:9px 18px;margin-top:15px;padding-top:15px;border-top:1px solid var(--hair)}
+  .geo .gi{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+  .geo .gk{font-size:12px;color:var(--muted);font-weight:600}
+  .geo .gv{font-size:13.5px;font-weight:700;text-align:right}
+
+  /* data source badges */
+  .srcnote{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:13px}
+  .srcnote .sb{font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px}
+  .srcnote .sb-in{background:#ececff;color:#4b45a8}
+  .srcnote .sb-ec{background:var(--accent-soft);color:var(--accent)}
+
+  .sec{margin-top:26px}
+  .sec .lb{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:11px;display:flex;align-items:center;justify-content:space-between}
+  .sec .lb .avgkey{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.04em;font-weight:600;text-transform:none;color:var(--muted)}
+  .sec .lb .avgkey i{display:inline-block;width:2px;height:11px;background:var(--ink);opacity:.5}
+  .sec p{font-size:14px;line-height:1.7;color:#333}
+  /* economic indicator bars */
+  .metrics{display:flex;flex-direction:column;gap:15px}
+  .metric .mrow{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;gap:10px}
+  .metric .mlabel{font-size:12.5px;font-weight:600;color:#3a3a3a}
+  .metric .mval{font-size:15px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+  .metric .mval small{font-size:11px;font-weight:600;color:var(--muted);margin-left:2px}
+  .mbar{position:relative;height:8px;background:var(--accent-soft);border-radius:999px}
+  .mfill{height:100%;background:var(--accent);border-radius:999px;width:0;transition:width .7s cubic-bezier(.5,0,.15,1)}
+  .mtick{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.5;border-radius:2px}
+  .mrank{font-size:10.5px;font-weight:700;color:var(--accent);margin-top:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{padding:7px 13px;background:var(--accent-soft);border:1px solid var(--accent-tint);border-radius:999px;font-size:12.5px;font-weight:600;color:var(--accent)}
+  .pchip{cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .14s,color .14s}
+  .pchip:hover{background:var(--accent);color:#fff}
+  .pchip .arw{font-size:11px;opacity:.7}
+  .pchip.off{cursor:default;background:#f2f1ec;border-color:var(--hair);color:#a9a8a1}
+  .pchip.off:hover{background:#f2f1ec;color:#a9a8a1}
+  .pchip.off .arw{display:none}
+
+  /* merged province → city → dealer block */
+  .provblk{border:1px solid var(--hair);border-radius:10px;padding:12px 14px;margin-bottom:9px;transition:border-color .14s}
+  .provblk.has:hover{border-color:var(--accent)}
+  .provhead{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .provblk.has .provhead{cursor:pointer}
+  .pv-name{font-size:13.5px;font-weight:700;display:flex;flex-direction:column;min-width:0}
+  .pv-name small{font-size:10.5px;font-weight:500;color:var(--muted);margin-top:2px}
+  .pv-cta{font-size:11.5px;font-weight:800;color:var(--accent);white-space:nowrap}
+  .provblk.has:hover .pv-cta{text-decoration:underline}
+  .pv-soon{font-size:10.5px;color:var(--muted);background:#f2f1ec;padding:3px 8px;border-radius:5px;white-space:nowrap}
+  .pv-cities{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .pv-city{font-size:11.5px;color:#4a4a4a;background:var(--accent-soft);border:1px solid var(--accent-tint);padding:4px 9px;border-radius:6px}
+
+  /* dealer dashboard view */
+  .dealer{opacity:0;transform:translateX(14px);transition:opacity .35s,transform .35s;pointer-events:none;position:absolute;inset:0;background:var(--panel);display:flex;flex-direction:column}
+  .dealer.show{opacity:1;transform:none;pointer-events:auto}
+  .dealer-head{padding:24px 32px 20px;border-bottom:1px solid var(--hair);background:#141414;color:#fff}
+  .dealer-head .up{font-size:11px;letter-spacing:.06em;color:rgba(255,255,255,.6);font-weight:600}
+  .dealer-head h2{font-size:24px;font-weight:800;margin-top:8px;letter-spacing:-.01em}
+  .dealer-head .period{font-size:11.5px;color:rgba(255,255,255,.55);margin-top:6px;font-style:italic}
+  .sumstrip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.15);margin-top:16px;border-radius:9px;overflow:hidden}
+  .sumstrip .s{background:#141414;padding:10px 8px;text-align:center}
+  .sumstrip .s .sk{font-size:9.5px;color:rgba(255,255,255,.55);font-weight:600;letter-spacing:.02em}
+  .sumstrip .s .sv{font-size:16px;font-weight:800;margin-top:3px}
+  .dealer-scroll{flex:1;overflow-y:auto;padding:18px 0 40px}
+  .cattabs{display:flex;gap:7px;overflow-x:auto;padding:4px 32px 16px;position:sticky;top:0;background:var(--panel);z-index:2}
+  .cattabs::-webkit-scrollbar{height:0}
+  .cattab{flex:none;padding:8px 14px;border:1.3px solid var(--hair);background:var(--panel);border-radius:999px;font-size:12.5px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .14s;white-space:nowrap}
+  .cattab:hover{border-color:var(--accent);color:var(--accent)}
+  .cattab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .catbody{padding:4px 32px}
+  .gma-line{font-size:12px;color:var(--muted);margin-bottom:16px;display:flex;align-items:baseline;gap:7px}
+  .gma-line b{font-size:17px;font-weight:800;color:var(--ink)}
+  .dbar{margin-bottom:11px}
+  .dbar .drow{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+  .dbar .dname{font-size:12.5px;font-weight:700}
+  .dbar .dpct{font-size:13px;font-weight:800}
+  .dtrack{height:9px;background:var(--accent-soft);border-radius:999px;overflow:hidden}
+  .dfill{height:100%;border-radius:999px;width:0;transition:width .6s cubic-bezier(.5,0,.15,1)}
+  .dbar.top .dfill{background:var(--accent)}
+  .dbar .dfill{background:#b9cfcb}
+  .dbar.top .dname{color:var(--accent)}
+  .insight{margin-top:20px;background:var(--accent-soft);border:1px solid var(--accent-tint);border-left:3px solid var(--accent);border-radius:10px;padding:15px 16px}
+  .insight .it{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:800;margin-bottom:7px;display:flex;align-items:center;gap:6px}
+  .insight p{font-size:13px;line-height:1.65;color:#2c3c3a}
+
+  .note{margin-top:28px;font-size:11.5px;color:var(--muted);line-height:1.6;padding-top:16px;border-top:1px dashed var(--hair)}
+
+  .loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px;z-index:20;background:var(--bg)}
+</style>
+</head>
+<body>
+<div class="kpibar">
+  <div class="ctx">
+    <div class="ctx-row"><span class="ctx-tag" id="hl-tag">전국</span><span class="ctx-name" id="hl-name">필리핀 전국</span></div>
+    <div class="ctx-per" id="hl-per">Jan–Dec 2024 · Sell-out</div>
+  </div>
+  <div class="kpicards">
+    <div class="kpicard"><div class="kk">총 셀아웃</div><div class="kv" id="hl-sell">—</div></div>
+    <div class="kpicard"><div class="kk">전년 대비 성장률</div><div class="kv up" id="hl-yoy">—</div></div>
+    <div class="kpicard"><div class="kk" id="hl-thirdk">총 매장 수</div><div class="kv" id="hl-third">—</div></div>
+  </div>
+</div>
+<div class="app">
+  <div class="stage">
+    <div class="brand">
+      <div class="ki">Republic of the Philippines</div>
+      <h1>필리핀 행정 지역</h1>
+      <div class="sub">17개 지역 · 지역을 클릭하면 확대되며 세부 정보를 보여줍니다</div>
+    </div>
+    <button class="backbtn" id="back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      <span>전체 지도</span>
+    </button>
+    <svg class="map" id="map"></svg>
+    <div class="mapctrl">
+      <div class="mc-t">지역별 현황 · 색상 지표</div>
+      <div class="mc-tabs" id="mapmetrics"></div>
+      <div class="legend" id="legend"></div>
+      <div class="mc-hint"><span class="dot"></span> 색이 진할수록 값이 큼 · 지역 클릭 시 확대</div>
+    </div>
+    <div class="loading" id="loading">지도 불러오는 중…</div>
+  </div>
+
+  <aside class="panel">
+    <div class="panel-head">
+      <div class="ey">Regions</div>
+      <div class="ttl">지역 목록</div>
+    </div>
+    <div class="panel-body">
+      <div class="list" id="list"></div>
+    </div>
+    <div class="detail" id="detail">
+      <div class="detail-head">
+        <span class="code2" id="d-code">—</span>
+        <h2 id="d-name">지역명</h2>
+        <div class="en" id="d-en">Region</div>
+      </div>
+      <div class="detail-scroll">
+        <div class="summary">
+          <div class="sum-line" id="d-summary">—</div>
+          <div class="tags" id="d-tags"></div>
+        </div>
+        <div class="kpigrid">
+          <div class="kc"><div class="kc-k">총 셀아웃</div><div class="kc-v" id="k-sell">—</div></div>
+          <div class="kc"><div class="kc-k">전년 대비 성장률</div><div class="kc-v" id="k-yoy">—</div></div>
+          <div class="kc"><div class="kc-k">전국 기여도</div><div class="kc-v" id="k-share">—</div></div>
+          <div class="kc"><div class="kc-k">1인당 셀아웃 <small>지수·전국=100</small></div><div class="kc-v" id="k-pc">—</div></div>
+        </div>
+        <div class="sec">
+          <div class="lb">시장·경제 지표 <span class="avgkey"><i></i> 전국 평균</span></div>
+          <div class="srcnote"><span class="sb sb-in">셀아웃·성장 = 2024 내부</span><span class="sb sb-ec" id="econ-src">경제 데이터: 폴백(내장 근사치)</span></div>
+          <div class="metrics" id="d-derived"></div>
+          <div class="metrics" id="d-metrics" style="margin-top:15px"></div>
+        </div>
+        <div class="sec">
+          <div class="lb">지역 개요</div>
+          <p id="d-intro">—</p>
+          <div class="geo" id="d-geo"></div>
+        </div>
+        <div class="sec">
+          <div class="lb">주요 산업</div>
+          <div class="chips" id="d-ind"></div>
+        </div>
+        <div class="sec" id="d-prov-sec">
+          <div class="lb">주(Province) · 주요 도시 · 딜러</div>
+          <div id="d-prov"></div>
+        </div>
+        <div class="note" id="d-note">※ 내부 데이터(셀아웃·매장·딜러)는 2024년 기준, 경제 데이터(인구·물가·소득)는 최신(Supabase) 기준입니다. 현재 값은 연동 전 근사치입니다.</div>
+      </div>
+    </div>
+
+    <div class="dealer" id="dealer">
+      <div class="dealer-head">
+        <div class="up" id="dl-up">CALABARZON (Region IV-A)</div>
+        <h2 id="dl-name">리잘 (Rizal)</h2>
+        <div class="period">Jan–Dec 2024 Sell-out Data · 딜러별 점유율</div>
+        <div class="sumstrip">
+          <div class="s"><div class="sk">평균소득</div><div class="sv" id="dl-inc">—</div></div>
+          <div class="s"><div class="sk">인구(GMA)</div><div class="sv" id="dl-pop">—</div></div>
+          <div class="s"><div class="sk">지점(GMA)</div><div class="sv" id="dl-br">—</div></div>
+          <div class="s"><div class="sk">셀아웃(GMA)</div><div class="sv" id="dl-sell">—</div></div>
+        </div>
+      </div>
+      <div class="dealer-scroll">
+        <div class="cattabs" id="dl-tabs"></div>
+        <div class="catbody" id="dl-body"></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+// ── Korean data keyed by GeoJSON "REGION" property ──────────────────────
+const DATA = {
+  "Metropolitan Manila":{ko:"메트로 마닐라 (수도권)",code:"NCR",cap:"마닐라 (수도)",pop:"1,348만",area:"620 km²",den:"21,700명/km²",intro:"필리핀의 정치·경제·행정 중심지로, 국가 GDP의 약 3분의 1이 집중된 최대 도시권입니다. 마카티·BGC 등 핵심 상업지구가 위치합니다.",ind:["금융","서비스","행정","IT·BPO"],cities:["마닐라","케손시티","마카티","타기그"]},
+  "CALABARZON (Region IV-A)":{ko:"칼라바르손",code:"IV-A",cap:"칼람바",pop:"1,641만",area:"16,576 km²",den:"990명/km²",intro:"수도권에 인접한 최대 인구 지역으로, 대규모 산업단지가 밀집한 제조업 벨트입니다.",ind:["제조업","전자","자동차부품","농업"],cities:["칼람바","안티폴로","바탕가스","리파"]},
+  "Central Luzon (Region III)":{ko:"중부 루손",code:"III",cap:"산페르난도",pop:"1,221만",area:"22,015 km²",den:"555명/km²",intro:"루손 중부의 광활한 평야 지대로 '필리핀의 곡창지대'로 불립니다. 클라크 경제특구가 위치합니다.",ind:["농업(쌀)","제조업","물류","항공"],cities:["앙헬레스","산페르난도","올롱가포","말롤로스"]},
+  "Central Visayas (Region VII)":{ko:"중부 비사야스",code:"VII",cap:"세부시티",pop:"803만",area:"15,895 km²",den:"505명/km²",intro:"세부를 중심으로 한 관광·물류·IT 허브. 아름다운 해변과 역사 유적으로 유명합니다.",ind:["관광","IT·BPO","가구","조선"],cities:["세부시티","라푸라푸","만다우에","탈리사이"]},
+  "Davao Region (Region XI)":{ko:"다바오 지역",code:"XI",cap:"다바오시티",pop:"532만",area:"20,357 km²",den:"261명/km²",intro:"민다나오 남동부의 중심 지역으로, 필리핀 최대 면적의 도시 다바오시티가 위치합니다.",ind:["농업(바나나)","수출","항만","관광"],cities:["다바오시티","타굼","디고스","마티"]},
+  "Bicol Region (Region V)":{ko:"비콜 지역",code:"V",cap:"레가스피",pop:"614만",area:"18,155 km²",den:"338명/km²",intro:"완벽한 원뿔형의 마욘 화산으로 유명한 루손 남동부 지역입니다.",ind:["농업","관광","어업","지열발전"],cities:["레가스피","나가","소르소곤","이리가"]},
+  "Cagayan Valley (Region II)":{ko:"카가얀 밸리",code:"II",cap:"투게가라오",pop:"371만",area:"28,229 km²",den:"131명/km²",intro:"루손 북동부의 대하천 유역으로 농업이 발달한 지역입니다.",ind:["농업(옥수수·쌀)","임업","어업"],cities:["투게가라오","일라간","카우아얀","산티아고"]},
+  "Caraga (Region XIII)":{ko:"카라가",code:"XIII",cap:"부투안",pop:"296만",area:"21,478 km²",den:"138명/km²",intro:"민다나오 북동부의 광물·임업 자원이 풍부한 지역입니다.",ind:["광업","임업","농업","어업"],cities:["부투안","수리가오","비슬리그","바양간"]},
+  "Cordillera Administrative Region (CAR)":{ko:"코르디예라 행정구역",code:"CAR",cap:"바기오",pop:"179만",area:"19,422 km²",den:"92명/km²",intro:"루손 북부 산악지대의 유일한 내륙 지역으로, 계단식 논과 고산도시 바기오로 유명합니다.",ind:["광업","고산농업","관광"],cities:["바기오","타북","라트리니다드"]},
+  "Ilocos Region (Region I)":{ko:"일로코스 지역",code:"I",cap:"산페르난도",pop:"521만",area:"13,013 km²",den:"400명/km²",intro:"루손 북서 해안을 따라 이어진 지역으로 스페인 식민 유산과 해안 풍경이 어우러집니다.",ind:["농업","어업","관광","담배"],cities:["다구판","비간","라오아그","산페르난도"]},
+  "Eastern Visayas (Region VIII)":{ko:"동부 비사야스",code:"VIII",cap:"타클로반",pop:"453만",area:"23,251 km²",den:"195명/km²",intro:"레이테·사마르 섬을 포함한 지역으로 역사적 상륙지와 자연 경관을 지닙니다.",ind:["농업(코코넛)","어업","광업"],cities:["타클로반","오르목","칼바용","보롱안"]},
+  "Western Visayas (Region VI)":{ko:"서부 비사야스",code:"VI",cap:"일로일로시티",pop:"788만",area:"20,794 km²",den:"379명/km²",intro:"파나이 섬과 네그로스 서부를 아우르는 지역으로, 사탕수수 산업과 축제로 유명합니다.",ind:["농업(사탕수수)","관광","제당","어업"],cities:["일로일로시티","바콜로드","로하스","실라이"]},
+  "Northern Mindanao (Region X)":{ko:"북부 민다나오",code:"X",cap:"카가얀데오로",pop:"518만",area:"20,496 km²",den:"253명/km²",intro:"민다나오 북부의 산업·물류 관문으로, 급성장하는 카가얀데오로가 중심입니다.",ind:["제조업","농업","물류","가공식품"],cities:["카가얀데오로","일리간","말레이발라이","발린가사그"]},
+  "SOCCSKSARGEN (Region XII)":{ko:"속사르헨",code:"XII",cap:"코로나달",pop:"482만",area:"22,514 km²",den:"214명/km²",intro:"민다나오 중남부의 농업 중심 지역으로, 파인애플·옥수수 대규모 생산지입니다.",ind:["농업(파인애플)","수산가공","광업"],cities:["제네럴산토스","코로나달","키다파완","타쿠롱"]},
+  "Zamboanga Peninsula (Region IX)":{ko:"삼보앙가 반도",code:"IX",cap:"팍파간",pop:"387만",area:"17,047 km²",den:"227명/km²",intro:"민다나오 서부 반도 지역으로 정어리 어업과 무역항으로 알려져 있습니다.",ind:["어업(정어리)","무역","농업","고무"],cities:["삼보앙가시티","팍파간","디폴로그","이피"]},
+  "MIMAROPA (Region IV-B)":{ko:"미마로파",code:"IV-B",cap:"칼라판",pop:"302만",area:"29,621 km²",den:"102명/km²",intro:"팔라완·민도로 등 섬으로 이루어진 지역으로, 세계적 다이빙 명소와 청정 자연을 자랑합니다.",ind:["관광","어업","광업(니켈)","농업"],cities:["푸에르토프린세사","칼라판","산호세"]},
+  "Autonomous Region of Muslim Mindanao (ARMM)":{ko:"방사모로 (BARMM)",code:"BARMM",cap:"코타바토시티",pop:"485만",area:"12,700 km²",den:"382명/km²",intro:"필리핀 유일의 자치 지역으로, 무슬림 민다나오의 독자적 문화와 역사를 지닙니다.",ind:["농업","어업","해조류","무역"],cities:["코타바토시티","마라위","라미탄","호로"]},
+};
+
+// ═══ 경제 데이터 레이어 (최신 · Supabase) ═══════════════════════════════
+// 인구·물가·소득 등은 Supabase 최신 데이터를 사용. 아래 값은 로드 전 폴백(근사치).
+// wage: 최저임금 일급(₱) · income: 월평균 가구소득(₱) · grdp: 경제기여도(GRDP 비중 %)
+// mid: 중산층 비중(%) · cpi: 물가 수준(전국 평균=100)
+const ECON = {
+  "Metropolitan Manila":{wage:645,income:32000,grdp:31,mid:48,cpi:118},
+  "CALABARZON (Region IV-A)":{wage:520,income:27000,grdp:15,mid:40,cpi:106},
+  "Central Luzon (Region III)":{wage:500,income:25000,grdp:11,mid:38,cpi:102},
+  "Central Visayas (Region VII)":{wage:468,income:20000,grdp:6.5,mid:33,cpi:99},
+  "Davao Region (Region XI)":{wage:476,income:20000,grdp:4,mid:34,cpi:97},
+  "Bicol Region (Region V)":{wage:395,income:17000,grdp:2,mid:26,cpi:94},
+  "Cagayan Valley (Region II)":{wage:460,income:19000,grdp:1.8,mid:32,cpi:95},
+  "Caraga (Region XIII)":{wage:400,income:16500,grdp:1.3,mid:25,cpi:93},
+  "Cordillera Administrative Region (CAR)":{wage:470,income:24000,grdp:1.8,mid:40,cpi:104},
+  "Ilocos Region (Region I)":{wage:435,income:21000,grdp:3,mid:34,cpi:97},
+  "Eastern Visayas (Region VIII)":{wage:405,income:16000,grdp:2,mid:24,cpi:93},
+  "Western Visayas (Region VI)":{wage:480,income:19000,grdp:4,mid:30,cpi:96},
+  "Northern Mindanao (Region X)":{wage:461,income:18500,grdp:4.5,mid:30,cpi:95},
+  "SOCCSKSARGEN (Region XII)":{wage:368,income:16500,grdp:2.5,mid:26,cpi:92},
+  "Zamboanga Peninsula (Region IX)":{wage:381,income:16000,grdp:2,mid:24,cpi:93},
+  "MIMAROPA (Region IV-B)":{wage:355,income:17500,grdp:1.5,mid:27,cpi:96},
+  "Autonomous Region of Muslim Mindanao (ARMM)":{wage:341,income:12000,grdp:1.2,mid:15,cpi:91},
+};
+const METRICS=[
+  {key:"wage",  label:"최저임금 (일급)",     fmt:v=>"₱"+v.toLocaleString()},
+  {key:"income",label:"월평균 가구소득",     fmt:v=>"₱"+v.toLocaleString()+"|/월"},
+  {key:"grdp",  label:"경제 기여도 (GRDP)",  fmt:v=>v+"%"},
+  {key:"mid",   label:"중산층 비중",         fmt:v=>v+"%"},
+  {key:"cpi",   label:"물가 수준 (전국=100)",fmt:v=>String(v)},
+];
+const ECON_STAT={};
+function computeEconStats(){
+  METRICS.forEach(m=>{
+    const vals=Object.values(ECON).map(e=>e[m.key]).filter(v=>v!=null);
+    const max=Math.max(...vals), avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+    const sorted=[...vals].sort((a,b)=>b-a);
+    ECON_STAT[m.key]={max,avg,sorted};
+  });
+}
+computeEconStats();
+
+// Supabase 최신 경제데이터 연동. 값을 채우고 enabled:true 로 켜면 자동 반영됩니다.
+// 테이블 행 컬럼(예): region, pop, wage, income, grdp, mid, cpi  (region 은 지도의 REGION 명과 일치)
+const SUPABASE={ url:"", anonKey:"", table:"region_economics", enabled:false };
+let econMeta={source:"폴백(내장 근사치)", updated:""};
+async function loadEconomic(){
+  try{
+    let rows=null;
+    if(SUPABASE.enabled && SUPABASE.url){
+      const r=await fetch(`${SUPABASE.url}/rest/v1/${SUPABASE.table}?select=*`,
+        {headers:{apikey:SUPABASE.anonKey,Authorization:"Bearer "+SUPABASE.anonKey}});
+      if(r.ok){ rows=await r.json(); econMeta={source:"Supabase(최신)",updated:""}; }
+    }
+    if(!rows){
+      const j=await fetch("data/economic.json").then(x=>x.ok?x.json():null).catch(()=>null);
+      if(j){ rows=Array.isArray(j)?j:(j.regions||j.rows); if(j.updated) econMeta={source:j.source||"economic.json(최신)",updated:j.updated}; }
+    }
+    if(!rows) return;
+    const arr=Array.isArray(rows)?rows:Object.entries(rows).map(([region,v])=>({region,...v}));
+    arr.forEach(row=>{
+      const name=row.region; if(!name) return;
+      ECON[name]=ECON[name]||{};
+      ["wage","income","grdp","mid","cpi"].forEach(k=>{ if(row[k]!=null) ECON[name][k]=row[k]; });
+      if(row.pop!=null && DATA[name]) DATA[name].pop=row.pop;
+    });
+    computeEconStats();
+    refreshEconViews();
+  }catch(e){ console.warn("경제데이터 로드 건너뜀:",e); }
+}
+function refreshEconViews(){
+  const src=document.getElementById("econ-src"); if(src) src.textContent="경제 데이터: "+econMeta.source+(econMeta.updated?(" · "+econMeta.updated):"");
+  if(curMapMetric && curMapMetric!=="none") applyChoropleth(curMapMetric);
+  if(selected) showDetail(selected.properties.REGION);
+}
+
+const svg = d3.select("#map");
+let level="map";
+
+// ── Headline KPI (전국/지역) · 워크북이 data/headline.json 으로 덮어쓰기 가능 ──
+const NATIONAL={period:"Jan–Dec 2024",sell:"₱8.9B",yoy:"+8.4%",stores:"412개"};
+const YOY={
+  "Metropolitan Manila":"+9.1%","CALABARZON (Region IV-A)":"+8.6%","Central Luzon (Region III)":"+7.9%",
+  "Central Visayas (Region VII)":"+6.4%","Davao Region (Region XI)":"+7.1%","Bicol Region (Region V)":"+4.2%",
+  "Cagayan Valley (Region II)":"+3.8%","Caraga (Region XIII)":"+5.0%","Cordillera Administrative Region (CAR)":"+6.0%",
+  "Ilocos Region (Region I)":"+4.9%","Eastern Visayas (Region VIII)":"-1.2%","Western Visayas (Region VI)":"+5.5%",
+  "Northern Mindanao (Region X)":"+6.8%","SOCCSKSARGEN (Region XII)":"+3.1%","Zamboanga Peninsula (Region IX)":"-0.6%",
+  "MIMAROPA (Region IV-B)":"+2.4%","Autonomous Region of Muslim Mindanao (ARMM)":"+1.5%"
+};
+let OVERRIDE=null;
+d3.json("data/headline.json").then(j=>{ OVERRIDE=j; renderHeadline(selected?selected.properties.REGION:null); }).catch(()=>{});
+
+function headlineFor(name){
+  if(!name){
+    const n=Object.assign({},NATIONAL,(OVERRIDE&&OVERRIDE.national)||{});
+    return {tag:"전국",label:"필리핀 전국",period:n.period,sell:n.sell,yoy:n.yoy,
+            yoyUp:!n.yoy.startsWith("-"),thirdK:"총 매장 수",thirdV:n.stores};
+  }
+  const o=(OVERRIDE&&OVERRIDE.regions&&OVERRIDE.regions[name])||{};
+  const e=ECON[name]||{}, info=DATA[name]||{};
+  const share=o.share!=null?o.share:(e.grdp!=null?e.grdp+"%":"—");
+  const sell=o.sell!=null?o.sell:(e.grdp!=null?"₱"+(e.grdp*0.29).toFixed(1)+"B":"—");
+  const yoy=o.yoy!=null?o.yoy:(YOY[name]||"+6.0%");
+  return {tag:"지역",label:info.ko||name,period:NATIONAL.period,sell,yoy,
+          yoyUp:!yoy.startsWith("-"),thirdK:"전국 기여도",thirdV:share};
+}
+function renderHeadline(name){
+  const h=headlineFor(name);
+  document.getElementById("hl-tag").textContent=h.tag;
+  document.getElementById("hl-name").textContent=h.label;
+  document.getElementById("hl-per").textContent=h.period+" · Sell-out";
+  document.getElementById("hl-sell").textContent=h.sell;
+  const y=document.getElementById("hl-yoy");
+  y.className="kv "+(h.yoyUp?"up":"down");
+  y.textContent=(h.yoyUp?"▲ ":"▼ ")+h.yoy.replace(/[+-]/,"");
+  document.getElementById("hl-thirdk").textContent=h.thirdK;
+  document.getElementById("hl-third").textContent=h.thirdV;
+}
+renderHeadline(null);
+
+// ── Derived indicators & choropleth ─────────────────────────────────────
+function popMillions(name){ const p=DATA[name]?.pop||""; const n=parseFloat((""+p).replace(/[^0-9.]/g,"")); return isNaN(n)?0:n/100; }
+function totalPopM(){ return Object.keys(DATA).reduce((s,n)=>s+popMillions(n),0); }
+function popShare(name){ const t=totalPopM(); return t? popMillions(name)/t*100 : 0; }
+function contribution(name){ return ECON[name]?.grdp||0; }
+function potentialGap(name){ return popShare(name)-contribution(name); }
+function percapAvg(){ const r=Object.keys(DATA).map(n=>popMillions(n)?contribution(n)/popMillions(n):0); return r.reduce((a,b)=>a+b,0)/r.length; }
+function percapIndex(name){ const a=percapAvg(); return (a&&popMillions(name))? contribution(name)/popMillions(name)/a*100 : 0; }
+function realDemand(name){ return contribution(name)/((ECON[name]?.cpi||100)/100); }
+function growthVal(name){ return parseFloat(YOY[name]); }
+
+const MAPMETRICS=[
+  {key:"none",     label:"기본(화이트)", none:true},
+  {key:"growth",   label:"성장률",       div:true, val:growthVal,    fmt:v=>(v>0?"+":"")+v.toFixed(1)+"%"},
+  {key:"contrib",  label:"전국 기여도",  val:contribution, fmt:v=>v+"%"},
+  {key:"percap",   label:"1인당 셀아웃", val:percapIndex,  fmt:v=>Math.round(v)},
+  {key:"potential",label:"성장 여력",    val:potentialGap, fmt:v=>(v>0?"+":"")+v.toFixed(1)+"p"}
+];
+let curMapMetric="none";
+function metricColor(m,v,ext){
+  if(m.div){
+    const maxAbs=Math.max(Math.abs(ext.min),Math.abs(ext.max))||1, t=v/maxAbs;
+    return t>=0 ? d3.interpolateRgb("#f4f3ef","#1c6b63")(0.12+0.88*Math.min(1,t))
+                : d3.interpolateRgb("#f4f3ef","#c2503f")(0.12+0.88*Math.min(1,-t));
+  }
+  const t=(v-ext.min)/((ext.max-ext.min)||1);
+  return d3.interpolateRgb("#e7f0ee","#164f49")(0.08+0.92*t);
+}
+function applyChoropleth(key){
+  curMapMetric=key;
+  const m=MAPMETRICS.find(x=>x.key===key);
+  document.querySelectorAll("#mapmetrics .mc-tab").forEach(b=>b.classList.toggle("on",b.dataset.k===key));
+  if(m.none){
+    if(!selected) g.selectAll("path.region").style("fill",null);
+    document.getElementById("legend").innerHTML="";
+    return;
+  }
+  const vals=features.map(f=>m.val(f.properties.REGION)).filter(v=>!isNaN(v));
+  const ext={min:Math.min(...vals),max:Math.max(...vals)};
+  if(!selected) g.selectAll("path.region").style("fill",f=>metricColor(m,m.val(f.properties.REGION),ext));
+  renderLegend(m,ext);
+}
+function renderLegend(m,ext){
+  const grad=m.div?"linear-gradient(90deg,#c2503f,#f4f3ef,#1c6b63)":"linear-gradient(90deg,#e7f0ee,#164f49)";
+  document.getElementById("legend").innerHTML=
+    `<div class="lg-bar" style="background:${grad}"></div>`+
+    `<div class="lg-sc"><span>${m.fmt(ext.min)}</span>${m.div?"<span>0</span>":""}<span>${m.fmt(ext.max)}</span></div>`;
+}
+function buildMapTabs(){
+  const box=document.getElementById("mapmetrics"); box.innerHTML="";
+  MAPMETRICS.forEach(m=>{
+    const b=document.createElement("button");
+    b.className="mc-tab"+(m.key===curMapMetric?" on":"");
+    b.dataset.k=m.key; b.textContent=m.label;
+    b.onclick=()=>applyChoropleth(m.key);
+    box.appendChild(b);
+  });
+}
+function insightTags(name){
+  const t=[], e=ECON[name]||{}, gap=potentialGap(name), g=growthVal(name), pc=percapIndex(name);
+  if(gap>=3) t.push(["성장여력 높음","pos"]); else if(gap<=-4) t.push(["성숙·과점 시장","neu"]);
+  if(g<0) t.push(["역성장 주의","warn"]); else if(g>=8) t.push(["고성장 지역","pos"]);
+  if(e.cpi>=104 && e.income>=23000) t.push(["프리미엄 유망","pos"]);
+  if(e.cpi<=94) t.push(["가성비·볼륨 중심","neu"]);
+  if(pc<80) t.push(["침투 저조 → 확대 기회","pos"]); else if(pc>=140) t.push(["구매력 집중","neu"]);
+  if(!t.length) t.push(["안정·평균 수준","neu"]);
+  return t.slice(0,4);
+}
+function renderTags(name){
+  const box=document.getElementById("d-tags"); box.innerHTML="";
+  insightTags(name).forEach(([txt,cls])=>{
+    const s=document.createElement("span"); s.className="tag "+cls; s.textContent=txt; box.appendChild(s);
+  });
+}
+function renderDerived(name){
+  const box=document.getElementById("d-derived"); box.innerHTML="";
+  const items=[
+    {label:"1인당 셀아웃 (지수·전국=100)", get:percapIndex, fmt:v=>Math.round(v)},
+    {label:"성장 여력 (인구점유−기여도)", get:potentialGap, fmt:v=>(v>0?"+":"")+v.toFixed(1)+"p"},
+    {label:"실질 수요 (물가 보정 지수)",   get:realDemand,  fmt:v=>v.toFixed(1)}
+  ];
+  items.forEach(it=>{
+    const all=features.map(f=>it.get(f.properties.REGION));
+    const max=Math.max(...all), lo=Math.min(0,...all), span=(max-lo)||1;
+    const val=it.get(name);
+    const pct=Math.max(3,Math.min(100,(val-lo)/span*100));
+    const avg=all.reduce((a,b)=>a+b,0)/all.length, avgPct=(avg-lo)/span*100;
+    const sorted=[...all].sort((a,b)=>b-a), rank=sorted.findIndex(v=>v<=val)+1;
+    const el=document.createElement("div"); el.className="metric";
+    el.innerHTML=`<div class="mrow"><span class="mlabel">${it.label}</span><span class="mval">${it.fmt(val)}</span></div>`+
+      `<div class="mbar"><div class="mtick" style="left:${avgPct}%"></div><div class="mfill"></div></div>`+
+      `<div class="mrank">전국 17개 중 ${rank}위</div>`;
+    box.appendChild(el);
+    requestAnimationFrame(()=>{ el.querySelector(".mfill").style.width=pct+"%"; });
+  });
+}
+
+// ── Province → dealer sell-out data (시연: Rizal 실제 데이터) ──────────────
+const PROV_BY_REGION={
+  "CALABARZON (Region IV-A)":[
+    {ko:"카비테",en:"Cavite",cities:["다스마리냐스","바쿠르","이무스","제네럴트리아스"]},
+    {ko:"라구나",en:"Laguna",cities:["칼람바","산타로사","비냔","산페드로"]},
+    {ko:"바탕가스",en:"Batangas",cities:["바탕가스시티","리파","타나우안"]},
+    {ko:"리잘",en:"Rizal",cities:["안티폴로","카인타","타이타이","앙고노"]},
+    {ko:"케손",en:"Quezon",cities:["루세나","타야바스","사리아야"]}
+  ],
+};
+const CATS=[
+  {key:"ttl",label:"전체"},{key:"ltv",label:"TV·영상"},{key:"ref",label:"냉장고"},
+  {key:"wm",label:"세탁기"},{key:"rac",label:"에어컨"},{key:"audio",label:"오디오"},{key:"mwo",label:"전자레인지"}
+];
+const PROV={
+  "Rizal":{
+    region:"CALABARZON (Region IV-A)", ko:"리잘 (Rizal)",
+    inc:"₱42,171", pop:"20%", br:"13%", sell:"11%",
+    cats:{
+      ttl:{gma:"11%", label:"전체 카테고리", shares:{ABENSON:45,SM:35,ANSON:10,WESTERN:4,ROBINSON:3,"K-SERVICO":1,IMPERIAL:1}, insight:"ABENSON(45%)이 매장 수(10개) 기반으로 최대 점유. SM(35%)은 4개 매장으로 매장당 효율이 높음."},
+      ltv:{gma:"10%", label:"TV·영상(LTV)", shares:{ABENSON:46,SM:37,ROBINSON:4,ANSON:7,WESTERN:3,"K-SERVICO":1,IMPERIAL:1}, insight:"SM OLED는 ABENSON·ANSON 대비 셀아웃이 높아 개선 여지가 큼(OLED65C4PSA·OLED55C4PSA). 타 딜러와 격차 축소를 위한 SM 가격 인하 검토."},
+      ref:{gma:"11%", label:"냉장고(REF)", shares:{SM:44,ABENSON:40,ANSON:8,ROBINSON:3,WESTERN:2,"K-SERVICO":2,IMPERIAL:2}, insight:"SM(44%)이 최고 점유이나 Bottom Freezer 셀아웃(28%)은 개선 필요. ABENSON Multi-door는 18% → San Mateo·Angono 진열 강화, 프리미엄 라인업·POP 보강."},
+      wm:{gma:"12%", label:"세탁기(WM)", shares:{ABENSON:41,SM:38,ANSON:10,WESTERN:5,ROBINSON:3,"K-SERVICO":2,IMPERIAL:1}, insight:"SM은 Front Load(WD·Washer) 점유가 낮음 → 8kg FL 카테고리 강화 시 성장 여지."},
+      rac:{gma:"10%", label:"에어컨(RAC)", shares:{ABENSON:51,SM:22,ANSON:16,WESTERN:7,ROBINSON:3}, insight:"매장 수가 많은 ABENSON이 최고 점유. 매장당 평균 셀아웃은 SM(281대)이 ABENSON(267대)과 대등."},
+      audio:{gma:"15%", label:"오디오(Audio)", shares:{ABENSON:54,SM:28,ROBINSON:8,ANSON:7,WESTERN:1}, insight:"SM 오디오 점유(28%)는 전체 점유(35%)보다 낮음(매장 4개로 적음) → Portable Speaker 성장 여지(XG2TQBK·BOUNCE·GRAB 등 NPI)."},
+      mwo:{gma:"11%", label:"전자레인지(MWO)", shares:{SM:48,ABENSON:31,ANSON:14,ROBINSON:5,WESTERN:2}, insight:"ABENSON은 2024년 3월 말 입고로 점유 영향 → 전용 30L Non-inverter 모델로 전 매장(10개) 진열 확대 시 성장 가능."}
+    }
+  }
+};
+let W=0,H=0,path,g,gLabels,features,selected=null;
+
+d3.json("data/ph-regions.geojson").then(geo=>{
+  document.getElementById("loading").remove();
+  features = geo.features;
+  const stage=document.querySelector(".stage");
+  W=stage.clientWidth; H=stage.clientHeight;
+  svg.attr("viewBox",`0 0 ${W} ${H}`);
+
+  const proj=d3.geoMercator().fitExtent([[40,90],[W-40,H-40]],geo);
+  path=d3.geoPath(proj);
+  g=svg.append("g").attr("class","zoomlayer");
+  gLabels=svg.append("g");
+
+  g.selectAll("path.region")
+    .data(features).join("path")
+    .attr("class","region")
+    .attr("d",path)
+    .attr("data-name",d=>d.properties.REGION)
+    .on("mouseenter",(e,d)=>{ if(!selected) showLabel(d,false); })
+    .on("mouseleave",(e,d)=>{ if(!selected) hideLabels(); })
+    .on("click",(e,d)=>selectRegion(d));
+
+  buildList();
+  buildMapTabs();
+  applyChoropleth(curMapMetric);
+  loadEconomic();
+  window.addEventListener("resize",()=>{ /* keep simple: reload layout */ });
+});
+
+function centroidXY(d){ return path.centroid(d); }
+
+function showLabel(d,isSel){
+  hideLabels();
+  const [cx,cy]=centroidXY(d);
+  gLabels.append("text")
+    .attr("class","label show"+(isSel?" sel":""))
+    .attr("x",cx).attr("y",cy)
+    .text(DATA[d.properties.REGION]?.ko || d.properties.REGION);
+}
+function hideLabels(){ gLabels.selectAll("*").remove(); }
+
+let curT={tx:0,ty:0,scale:1};
+function selectRegion(d){
+  selected=d;
+  const name=d.properties.REGION;
+  g.selectAll("path.region")
+    .classed("selected",x=>x===d)
+    .classed("dimmed",x=>x!==d);
+
+  // zoom to bounds via CSS transform on the layer
+  const [[x0,y0],[x1,y1]]=path.bounds(d);
+  const dx=x1-x0,dy=y1-y0,cx=(x0+x1)/2,cy=(y0+y1)/2;
+  const scale=Math.max(1.4,Math.min(9,0.78/Math.max(dx/W,dy/H)));
+  const tx=W/2-scale*cx, ty=H/2-scale*cy;
+  curT={tx,ty,scale};
+  const node=g.node();
+  node.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
+
+  // selected label positioned in screen space after the zoom settles
+  hideLabels();
+  setTimeout(()=>{
+    if(selected!==d) return;
+    const [pcx,pcy]=path.centroid(d);
+    gLabels.append("text")
+      .attr("class","label show sel")
+      .attr("x",pcx*scale+tx).attr("y",pcy*scale+ty)
+      .style("font-size","14px")
+      .text(DATA[name]?.ko||name);
+  },560);
+
+  showDetail(name);
+  level="region";
+  renderHeadline(name);
+  const bk=document.getElementById("back");
+  bk.classList.add("show"); bk.querySelector("span").textContent="전체 지도";
+  markList(name);
+}
+
+function resetView(){
+  selected=null; level="map";
+  g.selectAll("path.region").classed("selected",false).classed("dimmed",false);
+  curT={tx:0,ty:0,scale:1};
+  g.node().style.transform="translate(0px,0px) scale(1)";
+  hideLabels();
+  applyChoropleth(curMapMetric);
+  renderHeadline(null);
+  document.getElementById("dealer").classList.remove("show");
+  document.getElementById("detail").classList.remove("show");
+  document.getElementById("back").classList.remove("show");
+  markList(null);
+}
+document.getElementById("back").onclick=()=>{
+  if(level==="prov"){ closeProvince(); } else { resetView(); }
+};
+function closeProvince(){
+  document.getElementById("dealer").classList.remove("show");
+  level="region";
+  document.getElementById("back").querySelector("span").textContent="전체 지도";
+}
+
+// ── side panel list ──
+function buildList(){
+  const list=d3.select("#list");
+  const order=features.slice().sort((a,b)=>{
+    const ca=DATA[a.properties.REGION]?.code||"", cb=DATA[b.properties.REGION]?.code||"";
+    return ca.localeCompare(cb);
+  });
+  order.forEach(d=>{
+    const info=DATA[d.properties.REGION]||{};
+    const btn=list.append("button").attr("class","list-item").attr("data-name",d.properties.REGION);
+    btn.html(`<span class="code">${info.code||"—"}</span>
+      <span class="nm">${info.ko||d.properties.REGION}<small>${d.properties.REGION}</small></span>`);
+    btn.on("click",()=>selectRegion(d));
+    btn.on("mouseenter",()=>{ if(!selected){ showLabel(d,false);
+        g.selectAll("path.region").style("filter",x=>x===d?"brightness(1.1)":null).style("stroke-width",x=>x===d?2.4:null);}});
+    btn.on("mouseleave",()=>{ if(!selected){ hideLabels(); g.selectAll("path.region").style("filter",null).style("stroke-width",null);}});
+  });
+}
+function markList(name){
+  d3.selectAll(".list-item").classed("active",function(){return this.getAttribute("data-name")===name;});
+}
+
+function showDetail(name){
+  const info=DATA[name]||{};
+  document.getElementById("d-code").textContent=info.code||"—";
+  document.getElementById("d-name").textContent=info.ko||name;
+  document.getElementById("d-en").textContent=name;
+  document.getElementById("d-intro").textContent=info.intro||"—";
+  const geo=document.getElementById("d-geo");
+  geo.innerHTML=[["인구",info.pop],["면적",info.area],["주도·중심도시",info.cap],["인구밀도",info.den]]
+    .map(([k,v])=>`<div class="gi"><span class="gk">${k}</span><span class="gv">${v||"—"}</span></div>`).join("");
+  const ind=document.getElementById("d-ind"); ind.innerHTML="";
+  (info.ind||[]).forEach(t=>{const c=document.createElement("span");c.className="chip";c.textContent=t;ind.appendChild(c);});
+  renderProvinces(name);
+  renderKPI(name);
+  renderSummary(name);
+  renderMetrics(name);
+  renderTags(name);
+  renderDerived(name);
+  document.getElementById("detail").classList.add("show");
+  document.getElementById("detail").querySelector(".detail-scroll").scrollTop=0;
+}
+
+function renderKPI(name){
+  const h=headlineFor(name);
+  document.getElementById("k-sell").textContent=h.sell;
+  const y=document.getElementById("k-yoy");
+  y.className="kc-v "+(h.yoyUp?"up":"down");
+  y.textContent=(h.yoyUp?"▲ ":"▼ ")+h.yoy.replace(/[+-]/,"");
+  document.getElementById("k-share").textContent=h.thirdV;
+  const pc=Math.round(percapIndex(name));
+  document.getElementById("k-pc").textContent=pc;
+}
+function renderSummary(name){
+  const all=Object.keys(DATA).map(n=>contribution(n)).sort((a,b)=>b-a);
+  const rank=all.indexOf(contribution(name))+1;
+  const g=growthVal(name), pcr=Math.round(percapIndex(name));
+  const gTxt = g<0 ? `역성장 <b>${g.toFixed(1)}%</b>` : g>=8 ? `고성장 <b>+${g.toFixed(1)}%</b>` : `성장률 <b>+${g.toFixed(1)}%</b>`;
+  const pcTxt = pcr>=140 ? "구매력 집중 시장" : pcr<80 ? "침투 여력 큰 시장" : "평균 구매력";
+  document.getElementById("d-summary").innerHTML=
+    `전국 매출 기여도 <b>${rank}위</b> (${contribution(name)}%) · ${gTxt} · ${pcTxt}`;
+}
+
+function renderProvinces(regionName){
+  const sec=document.getElementById("d-prov-sec");
+  const box=document.getElementById("d-prov"); box.innerHTML="";
+  const lb=sec.querySelector(".lb");
+  const list=PROV_BY_REGION[regionName];
+  if(!list){
+    lb.textContent="주요 도시";
+    const wrap=document.createElement("div"); wrap.className="chips";
+    (DATA[regionName]?.cities||[]).forEach(t=>{const c=document.createElement("span");c.className="chip";c.textContent=t;wrap.appendChild(c);});
+    box.appendChild(wrap);
+    const n=document.createElement("div");
+    n.style.cssText="font-size:11.5px;color:var(--muted);line-height:1.6;margin-top:11px";
+    n.textContent="주·딜러 단위 데이터를 추가하면 도시별·딜러별 분석이 여기에 표시됩니다.";
+    box.appendChild(n); return;
+  }
+  lb.textContent="주(Province) · 주요 도시 · 딜러";
+  list.forEach(p=>{
+    const has=!!PROV[p.en];
+    const blk=document.createElement("div"); blk.className="provblk"+(has?" has":"");
+    const head=document.createElement("div"); head.className="provhead";
+    head.innerHTML=`<span class="pv-name">${p.ko}<small>${p.en}</small></span>`+
+      (has?'<span class="pv-cta">딜러 분석 →</span>':'<span class="pv-soon">준비중</span>');
+    if(has) head.onclick=()=>openProvince(p.en);
+    blk.appendChild(head);
+    if(p.cities&&p.cities.length){
+      const cw=document.createElement("div"); cw.className="pv-cities";
+      p.cities.forEach(ct=>{const s=document.createElement("span");s.className="pv-city";s.textContent=ct;cw.appendChild(s);});
+      blk.appendChild(cw);
+    }
+    box.appendChild(blk);
+  });
+}
+
+let curCat="ttl";
+function openProvince(enName){
+  const p=PROV[enName]; if(!p) return;
+  level="prov";
+  document.getElementById("dl-up").textContent=p.region;
+  document.getElementById("dl-name").textContent=p.ko;
+  document.getElementById("dl-inc").textContent=p.inc;
+  document.getElementById("dl-pop").textContent=p.pop;
+  document.getElementById("dl-br").textContent=p.br;
+  document.getElementById("dl-sell").textContent=p.sell;
+  const tabs=document.getElementById("dl-tabs"); tabs.innerHTML="";
+  curCat="ttl";
+  CATS.forEach(cat=>{
+    if(!p.cats[cat.key]) return;
+    const b=document.createElement("button");
+    b.className="cattab"+(cat.key===curCat?" on":"");
+    b.textContent=cat.label;
+    b.onclick=()=>{ curCat=cat.key;
+      tabs.querySelectorAll(".cattab").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on"); renderCat(p,cat.key); };
+    tabs.appendChild(b);
+  });
+  renderCat(p,curCat);
+  const bk=document.getElementById("back");
+  bk.classList.add("show"); bk.querySelector("span").textContent=(DATA[p.region]?.ko||"지역")+" 개요";
+  const dv=document.getElementById("dealer");
+  dv.classList.add("show");
+  dv.querySelector(".dealer-scroll").scrollTop=0;
+}
+
+function renderCat(p,key){
+  const c=p.cats[key]; const body=document.getElementById("dl-body"); body.innerHTML="";
+  const gl=document.createElement("div"); gl.className="gma-line";
+  gl.innerHTML=`${c.label} · GMA 대비 이 주(州)의 비중 <b>${c.gma}</b>`;
+  body.appendChild(gl);
+  const entries=Object.entries(c.shares).sort((a,b)=>b[1]-a[1]);
+  const hhi=Math.round(entries.reduce((s,[,p])=>s+p*p,0));
+  const top1=entries[0][1];
+  const lvl=hhi>=3500?["높음 · 특정 딜러 의존 리스크","warn"]:hhi>=2500?["보통","neu"]:["분산 · 건전","pos"];
+  const cc=document.createElement("div");
+  cc.style.cssText="margin:-6px 0 16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap";
+  cc.innerHTML=`<span style="font-size:11.5px;color:var(--muted);font-weight:600">거래선 집중도 · Top1 ${top1}% · HHI ${hhi}</span>`+
+    `<span class="tag ${lvl[1]}" style="padding:4px 10px;font-size:11px">${lvl[0]}</span>`;
+  body.appendChild(cc);
+  const max=entries[0][1];
+  entries.forEach(([dealer,pct],i)=>{
+    const el=document.createElement("div"); el.className="dbar"+(i===0?" top":"");
+    el.innerHTML=`<div class="drow"><span class="dname">${dealer}</span><span class="dpct">${pct}%</span></div>`+
+      `<div class="dtrack"><div class="dfill"></div></div>`;
+    body.appendChild(el);
+    requestAnimationFrame(()=>{ el.querySelector(".dfill").style.width=(pct/max*100)+"%"; });
+  });
+  if(c.insight){
+    const ins=document.createElement("div"); ins.className="insight";
+    ins.innerHTML=`<div class="it">▶ 인사이트 · 전략</div><p>${c.insight}</p>`;
+    body.appendChild(ins);
+  }
+}
+
+function renderMetrics(name){
+  const e=ECON[name]||{};
+  const box=document.getElementById("d-metrics"); box.innerHTML="";
+  METRICS.forEach(m=>{
+    const val=e[m.key]; if(val==null) return;
+    const st=ECON_STAT[m.key];
+    const pct=Math.max(3,Math.min(100,val/st.max*100));
+    const avgPct=st.avg/st.max*100;
+    const rank=st.sorted.indexOf(val)+1;
+    const parts=m.fmt(val).split("|");
+    const el=document.createElement("div"); el.className="metric";
+    el.innerHTML=`<div class="mrow"><span class="mlabel">${m.label}</span>`+
+      `<span class="mval">${parts[0]}${parts[1]?`<small>${parts[1]}</small>`:""}</span></div>`+
+      `<div class="mbar"><div class="mtick" style="left:${avgPct}%"></div>`+
+      `<div class="mfill"></div></div>`+
+      `<div class="mrank">전국 ${st.sorted.length}개 중 ${rank}위</div>`;
+    box.appendChild(el);
+    requestAnimationFrame(()=>{ el.querySelector(".mfill").style.width=pct+"%"; });
+  });
+}
+</script>
+</body>
+</html>

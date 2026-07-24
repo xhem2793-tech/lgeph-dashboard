@@ -1,0 +1,24 @@
+{
+  "_comment": "경제 데이터 레이어 (최신). Supabase 테이블을 이 파일 형식으로 export 하거나, HTML의 SUPABASE 설정을 채워 직접 연동하세요. region 키는 지도의 REGION 명과 정확히 일치해야 합니다. pop=인구, wage=최저임금 일급(₱), income=월평균 가구소득(₱), grdp=경제기여도(%), mid=중산층 비중(%), cpi=물가지수(전국=100).",
+  "source": "economic.json (최신)",
+  "updated": "2026-07",
+  "regions": {
+    "Metropolitan Manila": { "pop": "1,348만", "wage": 645, "income": 32000, "grdp": 31, "mid": 48, "cpi": 118 },
+    "CALABARZON (Region IV-A)": { "pop": "1,641만", "wage": 520, "income": 27000, "grdp": 15, "mid": 40, "cpi": 106 },
+    "Central Luzon (Region III)": { "pop": "1,221만", "wage": 500, "income": 25000, "grdp": 11, "mid": 38, "cpi": 102 },
+    "Central Visayas (Region VII)": { "pop": "803만", "wage": 468, "income": 20000, "grdp": 6.5, "mid": 33, "cpi": 99 },
+    "Davao Region (Region XI)": { "pop": "532만", "wage": 476, "income": 20000, "grdp": 4, "mid": 34, "cpi": 97 },
+    "Bicol Region (Region V)": { "pop": "614만", "wage": 395, "income": 17000, "grdp": 2, "mid": 26, "cpi": 94 },
+    "Cagayan Valley (Region II)": { "pop": "371만", "wage": 460, "income": 19000, "grdp": 1.8, "mid": 32, "cpi": 95 },
+    "Caraga (Region XIII)": { "pop": "296만", "wage": 400, "income": 16500, "grdp": 1.3, "mid": 25, "cpi": 93 },
+    "Cordillera Administrative Region (CAR)": { "pop": "179만", "wage": 470, "income": 24000, "grdp": 1.8, "mid": 40, "cpi": 104 },
+    "Ilocos Region (Region I)": { "pop": "521만", "wage": 435, "income": 21000, "grdp": 3, "mid": 34, "cpi": 97 },
+    "Eastern Visayas (Region VIII)": { "pop": "453만", "wage": 405, "income": 16000, "grdp": 2, "mid": 24, "cpi": 93 },
+    "Western Visayas (Region VI)": { "pop": "788만", "wage": 480, "income": 19000, "grdp": 4, "mid": 30, "cpi": 96 },
+    "Northern Mindanao (Region X)": { "pop": "518만", "wage": 461, "income": 18500, "grdp": 4.5, "mid": 30, "cpi": 95 },
+    "SOCCSKSARGEN (Region XII)": { "pop": "482만", "wage": 368, "income": 16500, "grdp": 2.5, "mid": 26, "cpi": 92 },
+    "Zamboanga Peninsula (Region IX)": { "pop": "387만", "wage": 381, "income": 16000, "grdp": 2, "mid": 24, "cpi": 93 },
+    "MIMAROPA (Region IV-B)": { "pop": "302만", "wage": 355, "income": 17500, "grdp": 1.5, "mid": 27, "cpi": 96 },
+    "Autonomous Region of Muslim Mindanao (ARMM)": { "pop": "485만", "wage": 341, "income": 12000, "grdp": 1.2, "mid": 15, "cpi": 91 }
+  }
+}
