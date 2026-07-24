@@ -61,13 +61,13 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
       const ex = X(li), ey = Y(s.data[li])
       const py = Math.max(T + 7, Math.min(B - 7, ey)) // 상하 클램프
       const tw = s.endLabel.length * 6.2 + 12
-      const g = el("g", { opacity: 0 }); g.style.transition = "opacity .5s ease"; g.style.transitionDelay = "1.5s"
+      const g = el("g", {}); g.style.opacity = "0"; g.style.transition = "opacity .5s ease"; g.style.transitionDelay = "1.4s" // 인라인 style로 페이드(폴리라인과 동일 패턴)
       g.appendChild(el("circle", { cx: ex, cy: ey, r: 2.4, fill: s.color, stroke: "#fff", "stroke-width": 1.2 }))
       if (Math.abs(py - ey) > 1) g.appendChild(el("line", { x1: ex, y1: ey, x2: ex + 5, y2: py, stroke: s.color, "stroke-width": 1, opacity: 0.5 }))
       g.appendChild(el("rect", { x: ex + 5, y: py - 7, width: tw, height: 14, rx: 4, fill: "#fff", stroke: s.color, "stroke-width": 1.1 }))
       const t = el("text", { x: ex + 5 + tw / 2, y: py + 2.9, "text-anchor": "middle", "font-size": 8.4, "font-weight": 800, fill: s.color }); t.textContent = s.endLabel
       g.appendChild(t); svg.appendChild(g)
-      void (g as unknown as SVGGraphicsElement).getBoundingClientRect(); g.setAttribute("opacity", "1")
+      void (g as unknown as SVGGraphicsElement).getBoundingClientRect(); g.style.opacity = "1"
     })
     // 호버 활성점: 시리즈당 1개, 평소 opacity 0
     const adots: SVGElement[] = series.map((s) => {
