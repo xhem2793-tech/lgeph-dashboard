@@ -276,14 +276,14 @@ export function RatesView() {
           tone="amber" src={src("BSP 은행간 콜금리 · 일별")} />
       )}
       {cab.series.length > 0 && (
-        <ChartCard seg="B2B" title="경상수지 (% GDP)" unit="% GDP · 연간" labels={cab.labels} series={cab.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="B2B" title="경상수지 (% GDP)" unit="% GDP · 연간" kind="bar" labels={cab.labels} series={cab.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="경상수지(%GDP)" b />}
           meaning={<>대외 경상수지 균형 — <b className="text-gray-700 dark:text-gray-200">페소 환율·수입원가의 구조적 압력</b></>}
           ai={<>경상수지 적자 확대는 <b className="font-semibold text-amber-600 dark:text-amber-400">페소 약세·수입 가전 원가 상승 압력</b> → 조달 헤지·판가 방어 점검, 흑자 전환 시 원가 여유</>}
           tone="amber" src={src("BSP·World Bank 경상수지(%GDP) · 연간")} />
       )}
       {fdi.series.length > 0 && (
-        <ChartCard seg="B2B" title="외국인직접투자 순유입 (FDI)" unit="십억$ · 연간" labels={fdi.labels} series={fdi.series} decimals={1} seriesUnit="십억$"
+        <ChartCard seg="B2B" title="외국인직접투자 순유입 (FDI)" unit="십억$ · 연간" kind="bar" labels={fdi.labels} series={fdi.series} decimals={1} seriesUnit="십억$"
           legend={<Lg c={C.emer} t="FDI 순유입" b />}
           meaning={<>FDI 순유입 규모 — <b className="text-gray-700 dark:text-gray-200">투자심리·중장기 소득·고용 기반</b></>}
           ai={<>FDI 확대는 고용·소득·소비 기반 강화 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">중장기 가전 수요 저변 확장</b>, 급감 시 투자·내수 둔화 경계</>}
@@ -324,7 +324,7 @@ export function GrowthView() {
         { key: "capacity_utilization", label: "가동률", fmt: (v) => v + "%", tone: "amber" },
       ]}>
       {gdp.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title="GDP 성장률" unit="전년비 %" labels={gdp.labels} series={gdp.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title="GDP 성장률" unit="전년비 %" kind="bar" labels={gdp.labels} series={gdp.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="GDP 성장률" b />}
           meaning={<>실질 GDP 성장률 — <b className="text-gray-700 dark:text-gray-200">가전 시장 전체 파이의 크기</b> (연간 장기 + 최근 분기)</>}
           ai={<>성장 둔화기엔 재량소비 위축 → <b className="font-semibold text-amber-600 dark:text-amber-400">보급형 방어</b>, 확장기엔 프리미엄·신규수요 가속</>}
@@ -387,7 +387,7 @@ export function GrowthView() {
           tone="emerald" src={src("PSA 국민계정 부문별 GVA · 연간")} />
       )}
       {rsale.series.length > 0 && (
-        <ChartCard seg="CE" title="소매판매 증가율" unit="전년비 % · 연간" labels={rsale.labels} series={rsale.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title="소매판매 증가율" unit="전년비 % · 연간" kind="bar" labels={rsale.labels} series={rsale.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="소매판매 증가율" b />}
           meaning={<>소매판매 성장률 — <b className="text-gray-700 dark:text-gray-200">가전 포함 소비재 실판매 대리지표</b></>}
           ai={<>소매판매 반등은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 실수요 회복 신호</b> → 프로모·진열 확대 적기, 둔화 시 보급형 방어</>}
