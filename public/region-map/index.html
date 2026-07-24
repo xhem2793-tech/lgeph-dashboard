@@ -110,7 +110,9 @@
   .mc-head .mc-dd{color:var(--muted);margin-left:1px;transition:transform .35s cubic-bezier(.16,1,.3,1)}
   .mapctrl:hover:not(.picked) .mc-head .mc-dd{transform:rotate(180deg)}
   .mc-body{max-height:0;opacity:0;overflow:hidden;padding:0 8px;transition:max-height .45s cubic-bezier(.16,1,.3,1),opacity .35s ease,padding .3s ease}
-  .mapctrl:hover:not(.picked) .mc-body{max-height:400px;opacity:1;padding-bottom:8px}
+  .mapctrl:hover:not(.picked) .mc-body{max-height:52vh;opacity:1;padding-bottom:8px;overflow-y:auto}
+  .mc-body::-webkit-scrollbar{width:6px}
+  .mc-body::-webkit-scrollbar-thumb{background:#dcdad3;border-radius:6px}
   .mc-tabs{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
   .mc-tab{padding:7px 11px;border:1.2px solid var(--hair);background:var(--panel);border-radius:8px;font-size:11.5px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .15s;text-align:left;width:112px}
   .mc-tab:hover{border-color:var(--accent);color:var(--accent)}
