@@ -180,18 +180,19 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
 export type Tone = "rose" | "amber" | "emerald"
 
 // 차트 카드(환율과 동일): 차트 → 의미 → AI 분석 → 고정 출처
-export function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, meaning, ai, src, idx = 0, kind = "line" }: {
+export function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, meaning, ai, src, idx = 0, kind = "line", seg }: {
   title: string; unit?: string; legend: React.ReactNode; series: SLine[]; labels: string[]; decimals?: number; seriesUnit?: string
-  meaning: React.ReactNode; ai: React.ReactNode; tone?: Tone; src: React.ReactNode; idx?: number; kind?: "line" | "bar"
+  meaning: React.ReactNode; ai: React.ReactNode; tone?: Tone; src: React.ReactNode; idx?: number; kind?: "line" | "bar"; seg?: "CE" | "B2B" | "CE·B2B"
 }) {
   return (
     <div
       className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md"
       style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: Math.min(idx, 6) * 0.06 + "s" }}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5">
         <h3 className="text-[14px] font-bold tracking-tight text-gray-900">{title}</h3>
-        {unit && <span className="text-[10.5px] font-medium text-gray-400">{unit}</span>}
+        {seg && <span className={"shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold " + (seg === "B2B" ? "bg-amber-50 text-amber-700" : seg === "CE" ? "bg-indigo-50 text-indigo-700" : "bg-violet-50 text-violet-700")}>{seg}</span>}
+        {unit && <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400">{unit}</span>}
       </div>
       <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">{legend}</div>
       {kind === "bar"

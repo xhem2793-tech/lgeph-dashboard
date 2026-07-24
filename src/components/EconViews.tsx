@@ -177,28 +177,28 @@ export function ApplianceView() {
         { key: "meralco_residential_rate", label: "전기료", fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
       ]}>
       {ppi.series.length > 0 && (
-        <ChartCard title="가전 생산자물가 PPI" unit="지수" labels={ppi.labels} series={ppi.series}
+        <ChartCard seg="CE·B2B" title="가전 생산자물가 PPI" unit="지수" labels={ppi.labels} series={ppi.series}
           legend={<><Lg c={C.ind} t="가전 PPI" b /><Lg c={C.rose} t="전기기기" /><Lg c={C.blue} t="전자" /></>}
           meaning={<>생산단계 출고가격 — <b className="text-gray-700">소비자가·조달원가의 수개월 선행</b></>}
           ai={<>가전 PPI 상승은 수개월 뒤 출고가·원가로 전이 → <b className="font-semibold text-rose-600">선제 판가·조달 대응</b>, 부품 헤지·현지조달 비중 점검</>}
           tone="rose" src={src("PSA 생산자물가지수(PPI) · 월별")} />
       )}
       {imp.series.length > 0 && (
-        <ChartCard title="가전 수입액" unit="연간 · 무역통계" kind="bar" labels={imp.labels} series={imp.series}
+        <ChartCard seg="CE·B2B" title="가전 수입액" unit="연간 · 무역통계" kind="bar" labels={imp.labels} series={imp.series}
           legend={<Lg c={C.ind} t="가전 완제품 수입" b />}
           meaning={<>완제품·부품 수입 규모 — <b className="text-gray-700">시장 공급량·경쟁 강도 선행</b></>}
           ai={<>수입 급증은 중국계 물량 유입 신호 → <b className="font-semibold text-amber-600">채널 재고·가격 경쟁 압박</b>, 프로모 타이밍·SKU 방어 필요</>}
           tone="amber" src={src("PSA 수출입통계 · 월별")} />
       )}
       {inf.series.length > 0 && (
-        <ChartCard title="가전 소비자물가 상승률" unit="전년비 %" labels={inf.labels} series={inf.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title="가전 소비자물가 상승률" unit="전년비 %" labels={inf.labels} series={inf.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="가전 물가" b /><Lg c={C.rose} t="에어컨" /><Lg c={C.brown} t="전체 CPI" /></>}
           meaning={<>가전 소매물가 상승률 vs 전체 물가 — <b className="text-gray-700">가전의 실질 가격 매력</b></>}
           ai={<>가전 물가가 전체 CPI보다 낮으면 <b className="font-semibold text-emerald-600">실질 저렴 → 구매 매력↑</b>, 높으면 구매 저항 → 보급형·프로모 강화</>}
           tone="rose" src={src("PSA CPI(가전·에어컨) · 전년비")} />
       )}
       {elec.series.length > 0 && (
-        <ChartCard title="가정용 전기요금 (Meralco)" unit="₱/kWh" labels={elec.labels} series={elec.series} decimals={2}
+        <ChartCard seg="CE·B2B" title="가정용 전기요금 (Meralco)" unit="₱/kWh" labels={elec.labels} series={elec.series} decimals={2}
           legend={<Lg c={C.ind} t="가정용 전기료" b />}
           meaning={<>전기요금 = 가전 <b className="text-gray-700">사용비용·에너지효율 소구력</b> 결정</>}
           ai={<>전기료 상승기엔 <b className="font-semibold text-emerald-600">인버터·고효율 프리미엄 소구</b>가 유리 → 에너지 절감액을 판매 메시지로 전환</>}
@@ -232,28 +232,28 @@ export function RatesView() {
         { key: "bank_loan_growth_yoy", label: "은행 총대출", fmt: (v) => v + "%", tone: "emerald" },
       ]}>
       {pol.series.length > 0 && (
-        <ChartCard title="BSP 정책금리 corridor" unit="%" labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title="BSP 정책금리 corridor" unit="%" labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
           legend={<><Lg c={C.ind} t="정책금리 RRP" b /><Lg c={C.rose} t="상한 OLF" /><Lg c={C.blue} t="하한 ODF" /></>}
           meaning={<>기준금리·상하한(corridor) — <b className="text-gray-700">할부·소비자 금융비용의 기준</b></>}
           ai={<>금리 인하기엔 <b className="font-semibold text-emerald-600">할부·카드 이자 부담↓ = 가전 구매력↑</b> → 무이자 할부·금융 프로모로 수요 견인 유리</>}
           tone="amber" src={src("BSP 정책금리·ODF·OLF · 일별")} />
       )}
       {loan.series.length > 0 && (
-        <ChartCard title="가계·카드 신용 성장" unit="전년비 %" labels={loan.labels} series={loan.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title="가계·카드 신용 성장" unit="전년비 %" labels={loan.labels} series={loan.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="소비자대출" b /><Lg c={C.rose} t="신용카드" /><Lg c={C.blue} t="은행 총대출" /></>}
           meaning={<>가계·카드 대출 증가율 — <b className="text-gray-700">가전 할부 구매의 직접 재원</b></>}
           ai={<>카드·소비자대출 확대는 <b className="font-semibold text-emerald-600">내구재 할부 수요 선행</b> → 신용 확장기에 프리미엄·대형 라인업 푸시</>}
           tone="emerald" src={src("BSP 대출통계(소비자·카드·은행) · 전년비")} />
       )}
       {m3.series.length > 0 && (
-        <ChartCard title="통화량 M3 증가율" unit="전년비 %" labels={m3.labels} series={m3.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title="통화량 M3 증가율" unit="전년비 %" labels={m3.labels} series={m3.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="M3 통화량" b /><Lg c={C.teal} t="광의통화" /></>}
           meaning={<>시중 유동성 증가율 — <b className="text-gray-700">소비여력·신용 확대 여지</b></>}
           ai={<>M3 확대는 유동성·소비여력 개선 신호 → <b className="font-semibold text-emerald-600">수요 회복 국면</b> 판단의 거시 배경</>}
           tone="emerald" src={src("BSP 통화총량(M3) · 월별")} />
       )}
       {call.series.length > 0 && (
-        <ChartCard title="은행간 콜금리" unit="%" labels={call.labels} series={call.series} decimals={2} seriesUnit="%"
+        <ChartCard seg="B2B" title="은행간 콜금리" unit="%" labels={call.labels} series={call.series} decimals={2} seriesUnit="%"
           legend={<Lg c={C.ind} t="콜금리" b />}
           meaning={<>단기 시장금리 — <b className="text-gray-700">정책금리 전이·자금시장 긴장도</b></>}
           ai={<>콜금리 급등은 자금경색 신호 → 유통·딜러 <b className="font-semibold text-amber-600">운전자금 부담·재고 조정</b> 가능성 관찰</>}
@@ -286,28 +286,28 @@ export function GrowthView() {
         { key: "capacity_utilization", label: "가동률", fmt: (v) => v + "%", tone: "amber" },
       ]}>
       {gdp.series.length > 0 && (
-        <ChartCard title="GDP·소비·투자 성장률" unit="전년비 %" labels={gdp.labels} series={gdp.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title="GDP·소비·투자 성장률" unit="전년비 %" labels={gdp.labels} series={gdp.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="GDP 성장률" b /><Lg c={C.emer} t="민간소비" /><Lg c={C.blue} t="총투자" /></>}
           meaning={<>경제·소비·투자 성장률 — <b className="text-gray-700">가전 시장 전체 파이의 크기</b></>}
           ai={<>민간소비 성장은 가전 수요와 직결 → <b className="font-semibold text-emerald-600">소비 확장기에 시장 성장 가속</b>, 둔화 시 보급형 방어</>}
           tone="emerald" src={src("PSA 국민계정(GDP·GDE) · 분기")} />
       )}
       {cons.series.length > 0 && (
-        <ChartCard title="건설·주거 건축허가" unit="증가율·규모" labels={cons.labels} series={cons.series} decimals={1}
+        <ChartCard seg="B2B" title="건설·주거 건축허가" unit="증가율·규모" labels={cons.labels} series={cons.series} decimals={1}
           legend={<><Lg c={C.ind} t="건설 부가가치" b /><Lg c={C.violet} t="주거 건축허가" /></>}
           meaning={<>신축·주거 착공 — <b className="text-gray-700">빌트인·냉난방·신규 가전 수요의 6~12개월 선행</b></>}
           ai={<>주거 건축허가 증가는 <b className="font-semibold text-emerald-600">신규 가전·에어컨 수요 선행</b> → 착공 밀집 지역에 채널·재고 선제 배치</>}
           tone="emerald" src={src("PSA 건설통계·건축허가 · 분기/월")} />
       )}
       {ind.series.length > 0 && (
-        <ChartCard title="산업·제조·가동률" unit="전년비 % / %" labels={ind.labels} series={ind.series} decimals={1}
+        <ChartCard seg="B2B" title="산업·제조·가동률" unit="전년비 % / %" labels={ind.labels} series={ind.series} decimals={1}
           legend={<><Lg c={C.ind} t="산업" b /><Lg c={C.rose} t="제조업" /><Lg c={C.amber} t="가동률" /></>}
           meaning={<>산업 생산·가동률 — <b className="text-gray-700">현지 조달·공급망·경기 국면</b></>}
           ai={<>가동률·제조업 둔화는 경기 하강 신호 → <b className="font-semibold text-amber-600">수요 위축 대비</b>, 재고·판가 보수적 운영</>}
           tone="amber" src={src("PSA 산업생산·가동률 · 분기/월")} />
       )}
       {ret.series.length > 0 && (
-        <ChartCard title="도소매 유통 성장" unit="전년비 %" labels={ret.labels} series={ret.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title="도소매 유통 성장" unit="전년비 %" labels={ret.labels} series={ret.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="도소매 거래" b /><Lg c={C.teal} t="소매 부가가치" /></>}
           meaning={<>도소매업 성장률 — <b className="text-gray-700">유통 채널 활력·소비 실현</b></>}
           ai={<>도소매 성장 가속은 채널 판매 여건 개선 → <b className="font-semibold text-emerald-600">유통 프로모·진열 확대 적기</b></>}
@@ -340,28 +340,28 @@ export function LaborView() {
         { key: "labor_force_participation_rate", label: "경제활동참가", fmt: (v) => v + "%", tone: "emerald" },
       ]}>
       {un.series.length > 0 && (
-        <ChartCard title="실업·불완전고용률" unit="%" labels={un.labels} series={un.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title="실업·불완전고용률" unit="%" labels={un.labels} series={un.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="실업률" b /><Lg c={C.rose} t="불완전고용" /></>}
           meaning={<>고용 여건 — <b className="text-gray-700">가처분소득·내구재 구매 여력</b></>}
           ai={<>실업·불완전고용 하락은 소득 안정 신호 → <b className="font-semibold text-emerald-600">가전 수요 우호</b>, 상승 시 필수·보급형 우선</>}
           tone="rose" src={src("PSA 노동력조사(LFS) · 월/분기")} />
       )}
       {remL.series.length > 0 && (
-        <ChartCard title="OFW 현금송금액" unit="송금 규모" labels={remL.labels} series={remL.series}
+        <ChartCard seg="CE" title="OFW 현금송금액" unit="송금 규모" labels={remL.labels} series={remL.series}
           legend={<Lg c={C.emer} t="OFW 현금송금" b />}
           meaning={<>해외근로자 송금 — <b className="text-gray-700">필리핀 가전·프리미엄 구매의 핵심 재원</b></>}
           ai={<>송금 유입은 가전 특히 <b className="font-semibold text-emerald-600">프리미엄·대형 수요를 견인</b> → 송금 성수기(4Q·연말)에 프리미엄 캠페인 집중</>}
           tone="emerald" src={src("BSP OFW 현금송금 · 월별")} />
       )}
       {rem.series.length > 0 && (
-        <ChartCard title="OFW 송금 증가율" unit="전년비 %" labels={rem.labels} series={rem.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title="OFW 송금 증가율" unit="전년비 %" labels={rem.labels} series={rem.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="송금 증가율" b />}
           meaning={<>송금 증가율 — <b className="text-gray-700">구매력 모멘텀</b></>}
           ai={<>송금 증가율 가속은 <b className="font-semibold text-emerald-600">가처분소득 모멘텀</b> → 페소 약세와 겹치면 페소환산 송금 구매력 추가 상승</>}
           tone="emerald" src={src("BSP OFW 현금송금 · 전년비")} />
       )}
       {lf.series.length > 0 && (
-        <ChartCard title="경제활동참가율" unit="%" labels={lf.labels} series={lf.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title="경제활동참가율" unit="%" labels={lf.labels} series={lf.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="경제활동참가율" b />}
           meaning={<>노동시장 참여율 — <b className="text-gray-700">소득 창출 인구 저변</b></>}
           ai={<>참가율 상승은 소득 기반 확대 → <b className="font-semibold text-emerald-600">중장기 수요 저변 확대</b> 신호</>}
@@ -392,21 +392,21 @@ export function SentimentView() {
         { key: "durables_buying_intention", label: "내구재 구매의향", fmt: (v) => String(v), tone: "emerald" },
       ]}>
       {dur.series.length > 0 && (
-        <ChartCard title="내구재 구매의향" unit="지수" labels={dur.labels} series={dur.series} decimals={1}
+        <ChartCard seg="CE" title="내구재 구매의향" unit="지수" labels={dur.labels} series={dur.series} decimals={1}
           legend={<Lg c={C.ind} t="내구재 구매의향" b />}
           meaning={<>가전 등 내구재 구매 의향 — <b className="text-gray-700">실판매의 3~6개월 직접 선행</b></>}
           ai={<>구매의향 반등은 <b className="font-semibold text-emerald-600">수개월 뒤 가전 실판매 회복</b>을 예고 → 반등 초입에 신제품·프리미엄 출시 타이밍</>}
           tone="emerald" src={src("BSP 소비자기대조사 내구재 구매의향 · 분기")} />
       )}
       {cci.series.length > 0 && (
-        <ChartCard title="소비자심리 CCI" unit="지수" labels={cci.labels} series={cci.series} decimals={1}
+        <ChartCard seg="CE" title="소비자심리 CCI" unit="지수" labels={cci.labels} series={cci.series} decimals={1}
           legend={<><Lg c={C.ind} t="현재 CCI" b /><Lg c={C.emer} t="향후 12개월" /></>}
           meaning={<>소비자 신뢰지수 — <b className="text-gray-700">가계 지출 심리·수요 선행</b></>}
           ai={<>CCI 개선은 재량 지출 확대 신호 → <b className="font-semibold text-emerald-600">프리미엄 전환 수요</b>, 악화 시 가성비·필수형 우선</>}
           tone="emerald" src={src("BSP 소비자기대조사(CES) · 분기")} />
       )}
       {bci.series.length > 0 && (
-        <ChartCard title="기업심리 BCI" unit="지수" labels={bci.labels} series={bci.series} decimals={1}
+        <ChartCard seg="B2B" title="기업심리 BCI" unit="지수" labels={bci.labels} series={bci.series} decimals={1}
           legend={<><Lg c={C.ind} t="현재 BCI" b /><Lg c={C.blue} t="향후 12개월" /></>}
           meaning={<>기업 신뢰지수 — <b className="text-gray-700">B2B·유통 투자·재고 심리</b></>}
           ai={<>BCI 개선은 유통·B2B 발주 확대 여건 → <b className="font-semibold text-emerald-600">채널 재고·프로젝트 수주</b> 우호</>}

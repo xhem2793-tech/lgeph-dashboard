@@ -1,6 +1,6 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, useState } from "react"
 
 /** 지역시장 지도 — 원본 디자인 핸드오프(필리핀 17개 지역 인터랙티브 대시보드)를 그대로 임베드.
  *  · 원본 = public/region-map/index.html (마크업·CSS·JS·d3 단일 파일, 딜러 드릴다운·choropleth·KPI 스트립 전 구성 보존).
@@ -9,6 +9,9 @@ import React from "react"
  *  · 우리 디자인(DESIGN.md)은 바깥 페이지 셸(헤더 바·카드·모션)에만 적용 — 지도 내부 구성은 원본 별개 유지. */
 
 export default function RegionMapView() {
+  // 동적 캐시버스터 — 매 로드 고유 URL로 iframe이 항상 최신 맵을 받도록(정적 ?v 캐시 문제 근본 해결)
+  const [cb, setCb] = useState("")
+  useEffect(() => { setCb("?t=" + Date.now()) }, [])
   return (
     <div className="flex flex-col gap-3">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
@@ -25,13 +28,17 @@ export default function RegionMapView() {
           <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-[9.5px] font-bold text-gray-500">예시 데이터 · 실측 연결 전</span>
         </header>
 
-        {/* 원본 지도 임베드(별개 구성 그대로) — 세로 크게(하단 클립 방지) · 캐시버스터로 항상 최신 로드 */}
-        <iframe
-          src="/region-map/index.html?v=20260724e"
-          title="필리핀 지역시장 인터랙티브 지도"
-          className="block w-full border-0"
-          style={{ height: "96vh", minHeight: 940 }}
-        />
+        {/* 원본 지도 임베드 — 동적 캐시버스터로 항상 최신 로드(마운트 후 렌더) */}
+        {cb ? (
+          <iframe
+            src={"/region-map/index.html" + cb}
+            title="필리핀 지역시장 인터랙티브 지도"
+            className="block w-full border-0"
+            style={{ height: "96vh", minHeight: 940 }}
+          />
+        ) : (
+          <div className="w-full animate-pulse bg-gray-50" style={{ height: "96vh", minHeight: 940 }} />
+        )}
       </section>
 
       <p className="text-[11px] leading-relaxed text-gray-400">
