@@ -13,10 +13,11 @@ const num = (s: string | number | undefined) => {
 }
 const shortGeo = (g: string | number) => String(g).replace(/\(.*/, "").replace("Region ", "").trim().slice(0, 14)
 
-type Cat = "price" | "pop"
+type Cat = "price" | "pop" | "income"
 const CATS: { k: Cat; label: string; sub: string }[] = [
   { k: "price", label: "지역 물가", sub: "지역×품목 CPI·물가 분포" },
   { k: "pop", label: "인구·가구", sub: "지역별 인구·가구수 (2020 센서스)" },
+  { k: "income", label: "소득·빈곤", sub: "지역별 빈곤율 (2023 FIES)" },
 ]
 
 export default function RegionPriceExtras() {
@@ -26,7 +27,7 @@ export default function RegionPriceExtras() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
     pricesDomain().then(setData).catch(() => setData({ idx: {}, forecast: [], policyRate: null, region: [] }))
-    regionMetric(["population_region", "households_region"]).then(setPop).catch(() => setPop({}))
+    regionMetric(["population_region", "households_region", "poverty_rate_region"]).then(setPop).catch(() => setPop({}))
   }, [])
   useEffect(() => {
     const id = requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)))
@@ -48,6 +49,12 @@ export default function RegionPriceExtras() {
   const popMax = popRows.length ? popRows[0].pop : 1
   const popTotal = popRows.reduce((a, b) => a + b.pop, 0)
   const hhTotal = popRows.reduce((a, b) => a + b.hh, 0)
+
+  // 소득·빈곤 랭킹(빈곤율 낮은 순 = 소득 상위)
+  const povData = pop.poverty_rate_region ?? {}
+  const povRows = useMemo(() => Object.entries(povData).map(([geo, v]) => ({ geo, pov: v })).sort((a, b) => a.pov - b.pov), [pop]) // eslint-disable-line react-hooks/exhaustive-deps
+  const povMax = povRows.length ? Math.max(...povRows.map((r) => r.pov)) : 1
+  const povNat = povRows.length ? povRows.reduce((a, b) => a + b.pov, 0) / povRows.length : 0
 
   if (!data) return null
 
@@ -132,6 +139,32 @@ export default function RegionPriceExtras() {
             ))}
           </div>
           <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">자료 PSA 2020 인구주택총조사(CPH) · 지역별 총인구·가구수 · <b className="text-gray-500 dark:text-gray-400">인구 밀집 지역 = 가전 수요 최대 시장</b></p>
+        </section>
+      )}
+
+      {cat === "income" && povRows.length > 0 && (
+        <section className="min-w-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+          <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+            <span className="h-[18px] w-1 rounded bg-indigo-500" />
+            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 소득·빈곤</h2>
+            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">2023 빈곤율(%) · 낮을수록 소득 상위</span>
+            <span className="ml-auto text-[11px] font-semibold text-gray-500 dark:text-gray-400">전국 평균 {povNat.toFixed(1)}%</span>
+          </div>
+          <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+            {povRows.map((r, i) => {
+              const t = Math.max(0, Math.min(1, r.pov / povMax))
+              return (
+                <div key={r.geo} className="flex items-center gap-2" style={{ opacity: mounted ? 1 : 0, transform: mounted ? "none" : "translateX(-6px)", transition: "all .4s ease " + (i * 0.02) + "s" }}>
+                  <span className="w-24 shrink-0 truncate text-[11px] text-gray-600 dark:text-gray-300">{shortGeo(r.geo)}</span>
+                  <div className="relative h-4 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
+                    <div className="absolute inset-y-0 left-0 rounded" style={{ width: mounted ? (r.pov / povMax * 100) + "%" : "0%", background: "rgba(225,29,72," + (0.35 + t * 0.5).toFixed(2) + ")", transition: "width .7s cubic-bezier(.16,1,.3,1) " + (i * 0.02) + "s" }} />
+                  </div>
+                  <span className="w-10 shrink-0 text-right text-[11px] font-semibold tabular-nums text-gray-800 dark:text-gray-100">{r.pov.toFixed(1)}%</span>
+                </div>
+              )
+            })}
+          </div>
+          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">자료 PSA FIES 빈곤통계(2023) · 지역별 빈곤율 · <b className="text-gray-500 dark:text-gray-400">저빈곤(고소득) 지역 = 프리미엄 가전 우선 시장</b></p>
         </section>
       )}
     </div>

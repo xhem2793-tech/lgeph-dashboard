@@ -239,14 +239,13 @@ export function RatesView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(RATES_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
-  const pol = build(d, n, [{ key: "policy_rate_monthly", name: "정책금리 RRP", color: C.ind, w: 2 }]) // 월별 30개월 인하사이클
+  const pol = build(d, n, [{ key: "policy_rate_monthly", name: "정책금리 RRP", color: C.ind, w: 2 }, { key: "interbank_call_rate", name: "시장금리(콜)", color: C.rose }]) // 정책금리+시장금리 월별
   const loan = build(d, n, [{ key: "consumer_loan_growth_yoy", name: "소비자대출", color: C.ind, w: 2 }, { key: "bank_loan_growth_yoy", name: "은행 총대출", color: C.blue }])
   const m3 = build(d, n, [{ key: "m3_growth_yoy", name: "광의통화(M3)", color: C.ind, w: 2 }]) // IMF IFS 월별 YoY
   const credit = build(d, n, [{ key: "domestic_credit_pct_gdp", name: "민간신용(%GDP)", color: C.ind, w: 2 }])
-  const call = build(d, n, [{ key: "interbank_call_rate", name: "콜금리", color: C.ind, w: 2 }])
   const cab = build(d, n, [{ key: "current_account_pct_gdp", name: "경상수지(%GDP)", color: C.ind, w: 2 }]) // 대외균형, 연간
   const fdi = build(d, n, [{ key: "fdi_net_inflow_usd", name: "FDI 순유입", color: C.emer, w: 2, tf: (v) => v / 1e9 }]) // USD→십억$, 연간
-  const empty = !pol.series.length && !loan.series.length && !m3.series.length && !credit.series.length && !call.series.length && !cab.series.length && !fdi.series.length
+  const empty = !pol.series.length && !loan.series.length && !m3.series.length && !credit.series.length && !cab.series.length && !fdi.series.length
   return (
     <Shell title="통화·금리·신용" sub="기준금리·통화량 M3·가계신용 — 할부·카드 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ summary: (kv) => <>정책금리 {B(f1(kv.BSP_policy_rate) + "%")}·M3 {B(f1(kv.m3_growth_yoy) + "%")}, 소비자대출 {B(f1(kv.consumer_loan_growth_yoy) + "%")}·카드 {B(f1(kv.credit_card_loan_growth_yoy) + "%")}·총대출 {B(f1(kv.bank_loan_growth_yoy) + "%")} — {(kv.BSP_policy_rate ?? 9) < 6 ? "금리 인하·신용 확장이 할부 수요 뒷받침" : "고금리로 할부 부담 지속"}</>, headline: <><b className="font-semibold text-gray-900 dark:text-gray-50">통화·신용 = 가전 구매력 엔진</b></>, lg: <>금리 인하·카드/소비자대출 확장기엔 <b className="font-semibold">무이자 할부·프리미엄 푸시</b>가 유효 · 콜금리 급등 시 유통 운전자금 부담 관찰</> }}
@@ -260,11 +259,11 @@ export function RatesView() {
       sections={[
         { key: "rate_credit", label: "금리·신용", node: <>
       {pol.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title="BSP 정책금리 (RRP)" unit="% · 월별" labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
-          legend={<Lg c={C.ind} t="정책금리 RRP" b />}
-          meaning={<>기준금리 추이 — <b className="text-gray-700 dark:text-gray-200">할부·소비자 금융비용의 기준</b> (인하 사이클 진행)</>}
-          ai={<>금리 인하기엔 <b className="font-semibold text-emerald-600 dark:text-emerald-400">할부·카드 이자 부담↓ = 가전 구매력↑</b> → 무이자 할부·금융 프로모로 수요 견인 유리</>}
-          tone="amber" src={src("BSP 정책금리(RRP) · 월별")} />
+        <ChartCard seg="CE·B2B" title="정책금리·시장금리" unit="% · 월별" labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="정책금리 RRP" b /><Lg c={C.rose} t="시장금리(콜)" /></>}
+          meaning={<>정책금리 vs 시장금리 — <b className="text-gray-700 dark:text-gray-200">할부·소비자 금융비용의 기준·자금시장 긴장도</b></>}
+          ai={<>금리 인하기엔 <b className="font-semibold text-emerald-600 dark:text-emerald-400">할부·카드 이자 부담↓ = 가전 구매력↑</b> · 시장금리 급등 시 유통 운전자금 부담 관찰</>}
+          tone="amber" src={src("BSP 정책금리(RRP) · IMF IFS 시장금리 · 월별")} />
       )}
       {loan.series.length > 0 && (
         <ChartCard seg="CE" title="가계·기업 대출 증가율" unit="전년비 % · 월별" labels={loan.labels} series={loan.series} decimals={1} seriesUnit="%"
@@ -288,13 +287,6 @@ export function RatesView() {
           meaning={<>시중 유동성(M3) 증가율 — <b className="text-gray-700 dark:text-gray-200">소비여력·신용 확대 여지</b></>}
           ai={<>M3 확대는 유동성·소비여력 개선 신호 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">수요 회복 국면</b> 판단의 거시 배경</>}
           tone="emerald" src={src("IMF IFS 광의통화(M3) · 월별 YoY")} />
-      )}
-      {call.series.length > 0 && (
-        <ChartCard seg="B2B" title="은행간 콜금리" unit="%" labels={call.labels} series={call.series} decimals={2} seriesUnit="%"
-          legend={<Lg c={C.ind} t="콜금리" b />}
-          meaning={<>단기 시장금리 — <b className="text-gray-700 dark:text-gray-200">정책금리 전이·자금시장 긴장도</b></>}
-          ai={<>콜금리 급등은 자금경색 신호 → 유통·딜러 <b className="font-semibold text-amber-600 dark:text-amber-400">운전자금 부담·재고 조정</b> 가능성 관찰</>}
-          tone="amber" src={src("IMF IFS 은행간/단기 금리 · 월별")} />
       )}
       {cab.series.length > 0 && (
         <ChartCard seg="B2B" title="경상수지 (% GDP)" unit="% GDP · 연간" kind="bar" labels={cab.labels} series={cab.series} decimals={1} seriesUnit="%"
