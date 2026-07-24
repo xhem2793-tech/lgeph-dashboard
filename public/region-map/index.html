@@ -851,6 +851,7 @@ function hideLabels(){ gLabels.selectAll("*").remove(); }
 
 let curT={tx:0,ty:0,scale:1};
 function selectRegion(d){
+  hideTip(); // 상세 진입 시 호버 말풍선 숨김
   selected=d;
   const name=d.properties.REGION;
   g.selectAll("path.region")
