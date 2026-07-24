@@ -872,6 +872,16 @@ export async function macroMonthly(inds: string[], n = 18) {
   return out
 }
 
+// 지역별 지표(geo_level='region') 최신값 — { [indicator]: { [geo]: value } }
+export async function regionMetric(indicators: string[]) {
+  const list = indicators.map((s) => encodeURIComponent(s)).join(",")
+  const path = "macro_indicators?geo_level=eq.region&indicator=in.(" + list + ")&order=period_date.asc&select=indicator,geo,value,period_date"
+  const rows = (await sb(path)) as { indicator: string; geo: string; value: number; period_date: string }[]
+  const out: Record<string, Record<string, number>> = {}
+  for (const r of rows) { (out[r.indicator] = out[r.indicator] || {})[r.geo] = Number(r.value) } // period_date asc → 최신이 마지막(덮어씀)
+  return out
+}
+
 // 동남아 국가 비교(geo_level='country_sea') — 특정 지표를 6개국 시계열로. { [geo]: {dates, values} }
 export async function seaCompare(indicator: string) {
   const path =
