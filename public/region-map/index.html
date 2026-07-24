@@ -128,6 +128,14 @@
   .monthbar .mb-btn:hover{opacity:.65}
   .monthbar .mb-slider{width:150px;accent-color:var(--accent);cursor:pointer}
   .monthbar .mb-lbl{font-size:12.5px;font-weight:800;color:var(--ink);min-width:40px;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  /* 지역 hover 말풍선(값 + 근거) */
+  .rtip{position:absolute;pointer-events:none;z-index:20;min-width:150px;max-width:210px;background:rgba(255,255,255,.98);backdrop-filter:blur(7px);border:1px solid var(--hair);border-radius:10px;padding:9px 11px;box-shadow:0 6px 22px rgba(0,0,0,.13);opacity:0;transition:opacity .16s ease}
+  .rtip .rt-name{font-size:12.5px;font-weight:800;color:var(--ink);letter-spacing:-.01em}
+  .rtip .rt-metric{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-top:5px}
+  .rtip .rt-metric span{font-size:10.5px;color:var(--muted);font-weight:600}
+  .rtip .rt-metric b{font-size:15px;font-weight:800;color:var(--accent);white-space:nowrap}
+  .rtip .rt-note{font-size:10px;color:var(--muted);margin-top:5px;line-height:1.5}
+  .rtip .rt-note b{color:var(--ink);font-weight:800}
 
   /* management insight tags */
   .tags{display:flex;flex-wrap:wrap;gap:8px}
@@ -300,12 +308,9 @@
       <span>전체 지도</span>
     </button>
     <svg class="map" id="map"></svg>
-    <div class="kpiover" id="kpiover">
-      <span id="hl-tag" style="display:none"></span><span id="hl-name" style="display:none"></span><span id="hl-per" style="display:none"></span>
-      <div class="ko"><div class="kk">총 셀아웃</div><div class="kv" id="hl-sell">—</div></div>
-      <div class="ko"><div class="kk">전년 대비</div><div class="kv up" id="hl-yoy">—</div></div>
-      <div class="ko"><div class="kk" id="hl-thirdk">총 매장</div><div class="kv" id="hl-third">—</div></div>
-    </div>
+    <div class="rtip" id="rtip"></div>
+    <!-- KPI 오버레이 제거: 셀아웃 KPI는 상세 패널에서 확인 -->
+    <span id="hl-tag" style="display:none"></span><span id="hl-name" style="display:none"></span><span id="hl-per" style="display:none"></span><span id="hl-sell" style="display:none"></span><span id="hl-yoy" style="display:none"></span><span id="hl-thirdk" style="display:none"></span><span id="hl-third" style="display:none"></span>
     <div class="mapbottom" id="mapbottom">
       <div class="maplegend" id="legend"></div>
       <div class="monthbar" id="monthbar" style="display:none">
@@ -521,10 +526,18 @@ const fmtMonth=(iso)=> iso? (iso.slice(2,4)+"년 "+Number(iso.slice(5,7))+"월")
 async function loadRegionalCpi(){
   try{
     const inds=Object.values(INF_METRICS).join(",");
-    const r=await fetch(`${SB_CPI.url}/rest/v1/macro_indicators?geo_level=eq.region&indicator=in.(${inds})&select=geo,indicator,period_date,value&order=period_date.asc&limit=6000`,
-      {headers:{apikey:SB_CPI.key,Authorization:"Bearer "+SB_CPI.key}});
-    if(!r.ok) return;
-    const rows=await r.json();
+    // Supabase는 응답을 1000행으로 캡 → 페이지네이션으로 전체(18개월×19지역×6지표) 확보
+    let rows=[], off=0;
+    while(true){
+      const rr=await fetch(`${SB_CPI.url}/rest/v1/macro_indicators?geo_level=eq.region&indicator=in.(${inds})&select=geo,indicator,period_date,value&order=period_date.asc&offset=${off}&limit=1000`,
+        {headers:{apikey:SB_CPI.key,Authorization:"Bearer "+SB_CPI.key}});
+      if(!rr.ok) break;
+      const chunk=await rr.json();
+      rows=rows.concat(chunk);
+      if(chunk.length<1000) break;
+      off+=1000;
+    }
+    if(!rows.length) return;
     MONTHS=[...new Set(rows.map(x=>x.period_date))].sort(); curMonthIdx=MONTHS.length-1;
     const ind2key={}; for(const k in INF_METRICS) ind2key[INF_METRICS[k]]=k;
     rows.forEach(row=>{
@@ -663,6 +676,34 @@ function buildMonthBar(){
   document.getElementById("m-prev").onclick=()=>{ if(curMonthIdx>0){ sl.value=--curMonthIdx; upd(); } };
   document.getElementById("m-next").onclick=()=>{ if(curMonthIdx<MONTHS.length-1){ sl.value=++curMonthIdx; upd(); } };
 }
+function showTip(e,d){
+  const tip=document.getElementById("rtip"); if(!tip) return;
+  const name=d.properties.REGION, ko=(KO[name]||name);
+  const m=MAPMETRICS.find(x=>x.key===curMapMetric);
+  let html=`<div class="rt-name">${ko}</div>`;
+  if(m && !m.none){
+    const v=m.val(name);
+    if(!isNaN(v)){
+      const all=features.map(f=>m.val(f.properties.REGION)).filter(x=>!isNaN(x));
+      const avg=all.reduce((a,b)=>a+b,0)/all.length;
+      const sorted=[...all].sort((a,b)=>b-a); const rank=sorted.indexOf(v)+1;
+      const cmp=v>avg+0.05?"전국 평균 상회":v<avg-0.05?"전국 평균 하회":"전국 평균 수준";
+      const per=(m.monthly&&MONTHS.length)?" · "+fmtMonth(MONTHS[curMonthIdx]):"";
+      html+=`<div class="rt-metric"><span>${m.label}${per}</span><b>${m.fmt(v)}</b></div>`;
+      html+=`<div class="rt-note">전국 ${sorted.length}개 중 <b>${rank}위</b> · 평균 ${m.fmt(+avg.toFixed(1))} → ${cmp}</div>`;
+    } else {
+      html+=`<div class="rt-note">해당 월 데이터 없음</div>`;
+    }
+  } else {
+    html+=`<div class="rt-note">클릭 시 지역 상세</div>`;
+  }
+  tip.innerHTML=html;
+  const st=document.querySelector(".stage").getBoundingClientRect();
+  let x=e.clientX-st.left+14, y=e.clientY-st.top+14;
+  if(x+180>st.width) x=e.clientX-st.left-190;
+  tip.style.left=x+"px"; tip.style.top=y+"px"; tip.style.opacity="1";
+}
+function hideTip(){ const t=document.getElementById("rtip"); if(t) t.style.opacity="0"; }
 function insightTags(name){
   const t=[], e=ECON[name]||{}, gap=potentialGap(name), g=growthVal(name), pc=percapIndex(name);
   if(gap>=3) t.push(["성장여력 높음","pos"]); else if(gap<=-4) t.push(["성숙·과점 시장","neu"]);
@@ -743,8 +784,9 @@ d3.json("data/ph-regions.geojson").then(geo=>{
     .data(features).join("path")
     .attr("class","region")
     .attr("data-name",d=>d.properties.REGION)
-    .on("mouseenter",(e,d)=>{ if(!selected) showLabel(d,false); })
-    .on("mouseleave",(e,d)=>{ if(!selected) hideLabels(); })
+    .on("mouseenter",(e,d)=>{ if(!selected){ showLabel(d,false); showTip(e,d); } })
+    .on("mousemove",(e,d)=>{ if(!selected) showTip(e,d); })
+    .on("mouseleave",(e,d)=>{ if(!selected){ hideLabels(); hideTip(); } })
     .on("click",(e,d)=>selectRegion(d));
 
   // 스테이지를 꽉 채우되(원래 크기), 크기 변할 때마다 재핏 → 로드 타이밍 드리프트 없음
