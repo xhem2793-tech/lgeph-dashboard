@@ -110,18 +110,21 @@
   .mc-body{max-height:0;opacity:0;overflow:hidden;padding:0 8px;transition:max-height .45s cubic-bezier(.16,1,.3,1),opacity .35s ease,padding .3s ease}
   .mapctrl:hover:not(.picked) .mc-body{max-height:400px;opacity:1;padding-bottom:8px}
   .mc-tabs{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
-  .mc-tab{padding:7px 11px;border:1.2px solid var(--hair);background:var(--panel);border-radius:8px;font-size:11.5px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .15s;text-align:left;width:158px}
+  .mc-tab{padding:7px 11px;border:1.2px solid var(--hair);background:var(--panel);border-radius:8px;font-size:11.5px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .15s;text-align:left;width:112px}
   .mc-tab:hover{border-color:var(--accent);color:var(--accent)}
   .mc-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
-  .legend .lg-bar{height:10px;border-radius:5px;margin-bottom:5px}
-  .legend .lg-sc{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:600}
+  .maplegend{position:absolute;bottom:22px;left:30px;z-index:6;width:158px;background:rgba(255,255,255,.97);backdrop-filter:blur(7px);border:1px solid var(--hair);border-radius:10px;padding:9px 12px;box-shadow:0 4px 16px rgba(0,0,0,.07);animation:ovin .5s cubic-bezier(.16,1,.3,1)}
+  .maplegend:empty{display:none}
+  .maplegend .lg-t{font-size:10px;font-weight:800;color:var(--ink);margin-bottom:6px;letter-spacing:.01em}
+  .maplegend .lg-bar{height:9px;border-radius:5px;margin-bottom:5px}
+  .maplegend .lg-sc{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-weight:700}
   .mc-hint{margin-top:11px;font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
   .mc-hint .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
   /* 월 선택 슬라이더(지역 인플레이션 전용) */
   .monthbar{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.97);backdrop-filter:blur(7px);border:1px solid var(--hair);border-radius:999px;padding:7px 15px;box-shadow:0 6px 22px rgba(0,0,0,.09)}
   .monthbar .mb-btn{border:none;background:none;font-size:18px;color:var(--accent);cursor:pointer;font-weight:800;line-height:1;padding:0 2px;font-family:inherit}
   .monthbar .mb-btn:hover{opacity:.65}
-  .monthbar .mb-slider{width:190px;accent-color:var(--accent);cursor:pointer}
+  .monthbar .mb-slider{width:150px;accent-color:var(--accent);cursor:pointer}
   .monthbar .mb-lbl{font-size:12.5px;font-weight:800;color:var(--ink);min-width:40px;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em}
 
   /* management insight tags */
@@ -301,6 +304,7 @@
       <div class="ko"><div class="kk">전년 대비</div><div class="kv up" id="hl-yoy">—</div></div>
       <div class="ko"><div class="kk" id="hl-thirdk">총 매장</div><div class="kv" id="hl-third">—</div></div>
     </div>
+    <div class="maplegend" id="legend"></div>
     <div class="monthbar" id="monthbar" style="display:none">
       <button class="mb-btn" id="m-prev" type="button" aria-label="이전 달">‹</button>
       <input type="range" class="mb-slider" id="m-slider" min="0" max="0" value="0">
@@ -314,8 +318,6 @@
       </div>
       <div class="mc-body">
       <div class="mc-tabs" id="mapmetrics"></div>
-      <div class="legend" id="legend"></div>
-      <div class="mc-hint"><span class="dot"></span> 색이 진할수록 값이 큼 · 지역 클릭 시 확대</div>
       </div>
     </div>
     <div class="loading" id="loading">지도 불러오는 중…</div>
@@ -511,7 +513,7 @@ const SB_CPI={ url:"https://ozvbyigntwhwzzagwojr.supabase.co", key:"eyJhbGciOiJI
 const INF_METRICS={ appl_cpi:"INF_household_appliances", aircon_cpi:"INF_aircon", food_cpi:"INF_food", elec_cpi:"INF_electricity", rice_cpi:"INF_rice", transport_cpi:"INF_transport" };
 let MONTHS=[], curMonthIdx=0; const ECON_M={};
 const mVal=(name,key)=>{ const a=ECON_M[name]&&ECON_M[name][key]; return (a&&a[curMonthIdx]!=null)?a[curMonthIdx]:NaN; };
-const fmtMonth=(iso)=> iso? (iso.slice(2,4)+"."+Number(iso.slice(5,7))) : "";
+const fmtMonth=(iso)=> iso? (iso.slice(2,4)+"년 "+Number(iso.slice(5,7))+"월") : "";
 async function loadRegionalCpi(){
   try{
     const inds=Object.values(INF_METRICS).join(",");
@@ -632,6 +634,7 @@ function applyChoropleth(key){
 function renderLegend(m,ext){
   const grad=m.div?"linear-gradient(90deg,#e11d48,#f4f3ef,#4f46e5)":"linear-gradient(90deg,#eef2ff,#4338ca)";
   document.getElementById("legend").innerHTML=
+    `<div class="lg-t">${m.label}</div>`+
     `<div class="lg-bar" style="background:${grad}"></div>`+
     `<div class="lg-sc"><span>${m.fmt(ext.min)}</span>${m.div?"<span>0</span>":""}<span>${m.fmt(ext.max)}</span></div>`;
 }
