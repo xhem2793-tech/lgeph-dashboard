@@ -266,7 +266,7 @@ export function RatesView() {
 // ══════════════════════════════════════════════════════════════════════
 // 국민계정·성장 — GDP·소비·투자·건설·산업·유통
 // ══════════════════════════════════════════════════════════════════════
-const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "industry_gva_yoy", "manufacturing_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "services_gva_yoy"]
+const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "services_gva_yoy"]
 export function GrowthView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(GROWTH_KEYS)
@@ -275,7 +275,9 @@ export function GrowthView() {
   const cons = build(d, n, [{ key: "construction_gva_growth", name: "건설 부가가치", color: C.ind, w: 2 }, { key: "permits_residential_value", name: "주거 건축허가", color: C.violet }])
   const ind = build(d, n, [{ key: "industry_gva_yoy", name: "산업", color: C.ind, w: 2 }, { key: "manufacturing_va_growth", name: "제조업", color: C.rose }, { key: "capacity_utilization", name: "가동률", color: C.amber }])
   const ret = build(d, n, [{ key: "wholesale_retail_trade_yoy", name: "도소매 거래", color: C.ind, w: 2 }, { key: "retail_gva_growth", name: "소매 부가가치", color: C.teal }])
-  const empty = !gdp.series.length && !cons.series.length && !ind.series.length && !ret.series.length
+  const permit = build(d, n, [{ key: "permits_nonresidential_floorarea", name: "비주거 착공면적", color: C.ind, w: 2, tf: (v) => v / 1e6 }])
+  const va = build(d, n, [{ key: "manufacturing_va_growth", name: "제조업", color: C.ind, w: 2 }, { key: "industry_va_growth", name: "산업", color: C.rose }, { key: "services_va_growth", name: "서비스", color: C.emer }])
+  const empty = !gdp.series.length && !cons.series.length && !ind.series.length && !ret.series.length && !permit.series.length && !va.series.length
   return (
     <Shell title="국민계정·성장" sub="GDP·소비·투자·건설허가·산업·유통 — 가전 수요 파이" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ headline: <><b className="font-semibold text-gray-900">국민계정으로 본 가전 수요 파이</b> — 소비·투자·건설허가가 시장 크기를 결정</>, lg: <>민간소비·주거 착공 회복은 <b className="font-semibold">가전 신규수요 선행</b> → 성장 밀집 지역 채널·재고 선점, 둔화 시 보급형 방어</> }}
@@ -312,6 +314,20 @@ export function GrowthView() {
           meaning={<>도소매업 성장률 — <b className="text-gray-700">유통 채널 활력·소비 실현</b></>}
           ai={<>도소매 성장 가속은 채널 판매 여건 개선 → <b className="font-semibold text-emerald-600">유통 프로모·진열 확대 적기</b></>}
           tone="emerald" src={src("PSA 국민계정 도소매업 · 분기")} />
+      )}
+      {permit.series.length > 0 && (
+        <ChartCard seg="B2B" title="비주거 건축허가(상업·산업)" unit="백만 ㎡ · 분기" kind="bar" labels={permit.labels} series={permit.series} decimals={2}
+          legend={<Lg c={C.ind} t="비주거 착공면적" b />}
+          meaning={<>상업·산업 신축 착공면적 — <b className="text-gray-700">B2B 냉난방·빌트인 수요의 선행</b></>}
+          ai={<>비주거 착공 확대는 <b className="font-semibold text-emerald-600">상업용 HVAC·빌트인 프로젝트 수요 선행</b> → B2B 파이프라인·입찰 선제 대응</>}
+          tone="emerald" src={src("PSA 건축허가(비주거) · 분기")} />
+      )}
+      {va.series.length > 0 && (
+        <ChartCard seg="B2B" title="부문별 부가가치 성장" unit="전년비 %" labels={va.labels} series={va.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="제조업" b /><Lg c={C.rose} t="산업" /><Lg c={C.emer} t="서비스" /></>}
+          meaning={<>제조·산업·서비스 부문 성장 — <b className="text-gray-700">B2B 수요처 업황·설비투자 여력</b></>}
+          ai={<>제조·서비스 업황 개선은 <b className="font-semibold text-emerald-600">기업 설비·시설 투자 여력</b> → B2B 상업용·산업용 수요 우호</>}
+          tone="emerald" src={src("PSA 국민계정 부문별 GVA · 연간")} />
       )}
     </Shell>
   )
