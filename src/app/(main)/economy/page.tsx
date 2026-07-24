@@ -53,7 +53,7 @@ export default function Page() {
   }
 
   return (
-    <main className="px-4 pb-10 pt-4 sm:px-6">
+    <main className="mx-auto max-w-[1536px] px-4 pb-10 pt-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}"}</style>
       <div className="grid items-start gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
         <aside className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[88px]">
