@@ -24,7 +24,7 @@ const strengthOf = (a: number[]) => a.map((v) => +((v / a[0]) * 100).toFixed(1))
 const idx100 = (a: number[]) => a.map((v) => +((v / a[0]) * 100).toFixed(1))
 
 // ── 인터랙티브 라인차트 (ProChart 어법 · N시리즈 단일축, 모든 구간 호버 대응) ──
-type SLine = { name: string; color: string; data: number[]; w?: number }
+type SLine = { name: string; color: string; data: number[]; w?: number; endLabel?: string }
 function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[]; labels: string[]; decimals?: number; unit?: string }) {
   const svgRef = React.useRef<SVGSVGElement | null>(null)
   const tipRef = React.useRef<HTMLDivElement | null>(null)
@@ -35,7 +35,8 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
     tip.innerHTML = ""
     const NS = "http://www.w3.org/2000/svg"
     const n = labels.length
-    const L = 36, R = 292, T = 8, B = 80 // 핵심요약 ProChart와 동일 프레임
+    const hasEnd = series.some((s) => s.endLabel) // 끝점 라벨 카드 있으면 우측 여백 확보
+    const L = 36, R = hasEnd ? 250 : 292, T = 8, B = 80 // 핵심요약 ProChart와 동일 프레임
     const el = (t: string, a: Record<string, string | number>) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, String(a[k])); return e }
     const all = series.flatMap((s) => s.data).filter((v) => Number.isFinite(v))
     let lo = Math.min(...all), hi = Math.max(...all)
@@ -51,7 +52,7 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
       const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
     }
     const everyN = n <= 8 ? 1 : n <= 16 ? 2 : Math.ceil(n / 7)
-    labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": "middle", "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) })
+    labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const an = i === n - 1 ? "end" : i === 0 ? "start" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) }) // 양끝 라벨 짤림 방지
     const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: "#c3c8d0", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 }); svg.appendChild(cross)
     // 라인만 상시 표시(선굵기 = 핵심요약 현재선 2 / 보조선 1.6). 점은 호버 시에만.
     // 선 그리기 애니메이션도 핵심요약과 동일(1500ms · cubic-bezier(.22,1,.36,1) · delay .18s)
@@ -65,6 +66,20 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
       pl.style.transition = "stroke-dashoffset 1500ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = "0.18s"
       pl.style.strokeDashoffset = "0"
     })
+    // 끝점 라벨 카드 — 필리핀 위치를 우측 끝 소형 핀 카드로(굵기 강조 대체)
+    series.forEach((s) => {
+      if (!s.endLabel) return
+      let li = -1; for (let i = s.data.length - 1; i >= 0; i--) { if (Number.isFinite(s.data[i])) { li = i; break } }
+      if (li < 0) return
+      const ex = X(li), ey = Y(s.data[li]), py = Math.max(T + 7, Math.min(B - 7, ey)), tw = s.endLabel.length * 6.2 + 12
+      const g = el("g", {}); g.style.opacity = "0"; g.style.transition = "opacity .5s ease"; g.style.transitionDelay = "1.4s"
+      g.appendChild(el("circle", { cx: ex, cy: ey, r: 2.4, fill: s.color, stroke: "#fff", "stroke-width": 1.2 }))
+      if (Math.abs(py - ey) > 1) g.appendChild(el("line", { x1: ex, y1: ey, x2: ex + 5, y2: py, stroke: s.color, "stroke-width": 1, opacity: 0.5 }))
+      g.appendChild(el("rect", { x: ex + 5, y: py - 7, width: tw, height: 14, rx: 4, fill: "#fff", stroke: s.color, "stroke-width": 1.1 }))
+      const t = el("text", { x: ex + 5 + tw / 2, y: py + 2.9, "text-anchor": "middle", "font-size": 8.4, "font-weight": 800, fill: s.color }); t.textContent = s.endLabel
+      g.appendChild(t); svg.appendChild(g)
+      void (g as unknown as SVGGraphicsElement).getBoundingClientRect(); g.style.opacity = "1"
+    })
     // 호버 활성점: 시리즈당 1개, 평소 opacity 0 (핵심요약 호버와 동일한 어법)
     const adots: SVGElement[] = series.map((s) => {
       const c = el("circle", { r: 4.2, fill: s.color, stroke: "#fff", "stroke-width": 1.6, opacity: 0 }); svg.appendChild(c); return c
@@ -72,7 +87,7 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
     const head = document.createElement("div"); head.className = "mb-1 text-[11px] font-medium text-gray-400"; tip.appendChild(head)
     const valNodes: HTMLElement[] = []
     series.forEach((s) => {
-      const row = document.createElement("div"); row.className = "flex items-center gap-2 text-[11px] leading-4"
+      const row = document.createElement("div"); row.className = "flex items-center gap-2 whitespace-nowrap text-[11px] leading-4"
       const dot = document.createElement("span"); dot.className = "inline-block h-2 w-2 shrink-0 rounded-full"; dot.style.background = s.color
       const nm = document.createElement("span"); nm.className = "text-gray-500"; nm.textContent = s.name
       const v = document.createElement("b"); v.className = "ml-auto tabular-nums font-semibold text-gray-800"
@@ -110,7 +125,7 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
   return (
     <div className="relative mt-1" style={{ touchAction: "none" }}>
       <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
-      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 min-w-[128px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
+      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 w-max whitespace-nowrap rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>
   )
 }
@@ -134,9 +149,9 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
       </div>
       <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">{legend}</div>
       <FxChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />
-      <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
+      <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
       <div className="mt-2 border-l-2 border-indigo-300 pl-2.5">
-        <p className="text-[11px] leading-relaxed text-gray-600">{ai}</p>
+        <p className="line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-600">{ai}</p>
       </div>
       <p className="mt-auto border-t border-gray-100 pt-2 text-[10px] leading-relaxed text-gray-400">{src}</p>
     </div>
@@ -160,7 +175,7 @@ export default function FxView() {
     { name: "싱가포르", color: "#a855f7", w: 1.6, data: strengthOf(lastN(DATA.region.sg, n)) },
   ]
   const fxusd = [{ name: "₱/USD", color: "#6366f1", w: 2, data: lastN(DATA.fxusd, n) }]
-  const won = [{ name: "₩/₱", color: "#0f766e", w: 3, data: lastN(DATA.extra.wonperpeso, n) }]
+  const won = [{ name: "₩/₱", color: "#0f766e", w: 2, data: lastN(DATA.extra.wonperpeso, n) }]
   const asia = [
     { name: "위안 CNY", color: "#dc2626", w: 2, data: idx100(lastN(DATA.asia.cny, n)) },
     { name: "루피 INR", color: "#7c3aed", data: idx100(lastN(DATA.asia.inr, n)) },

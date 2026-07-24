@@ -219,17 +219,17 @@ export function ApplianceView() {
 // ══════════════════════════════════════════════════════════════════════
 // 통화·금리·신용 — 정책금리·M3·가계신용
 // ══════════════════════════════════════════════════════════════════════
-const RATES_KEYS = ["BSP_policy_rate", "BSP_odf_rate", "BSP_olf_rate", "interbank_call_rate", "m3_growth_yoy", "broad_money_growth", "domestic_credit_pct_gdp", "bank_loan_growth_yoy", "consumer_loan_growth_yoy", "credit_card_loan_growth_yoy"]
+const RATES_KEYS = ["policy_rate_monthly", "BSP_policy_rate", "interbank_call_rate", "m3_growth_yoy", "broad_money_growth", "domestic_credit_pct_gdp", "bank_loan_growth_yoy", "consumer_loan_growth_yoy", "credit_card_loan_growth_yoy"]
 export function RatesView() {
-  const [win, setWin] = useState("2Y")
+  const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(RATES_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
-  const pol = build(d, n, [{ key: "BSP_policy_rate", name: "정책금리 RRP", color: C.ind, w: 2 }, { key: "BSP_olf_rate", name: "상한 OLF", color: C.rose }, { key: "BSP_odf_rate", name: "하한 ODF", color: C.blue }])
-  // 월별 신용·M3는 최신 1포인트뿐(2026 월별 검증 백필 불가) → KPI 타일로. 차트는 검증된 WB 연간 장기 시계열로
+  const pol = build(d, n, [{ key: "policy_rate_monthly", name: "정책금리 RRP", color: C.ind, w: 2 }]) // 월별 30개월 인하사이클
+  const loan = build(d, n, [{ key: "consumer_loan_growth_yoy", name: "소비자대출", color: C.ind, w: 2 }, { key: "bank_loan_growth_yoy", name: "은행 총대출", color: C.blue }])
   const m3 = build(d, n, [{ key: "broad_money_growth", name: "광의통화(M3)", color: C.ind, w: 2 }])
   const credit = build(d, n, [{ key: "domestic_credit_pct_gdp", name: "민간신용(%GDP)", color: C.ind, w: 2 }])
   const call = build(d, n, [{ key: "interbank_call_rate", name: "콜금리", color: C.ind, w: 2 }])
-  const empty = !pol.series.length && !m3.series.length && !credit.series.length && !call.series.length
+  const empty = !pol.series.length && !loan.series.length && !m3.series.length && !credit.series.length && !call.series.length
   return (
     <Shell title="통화·금리·신용" sub="기준금리·통화량 M3·가계신용 — 할부·카드 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ headline: <><b className="font-semibold text-gray-900">통화·신용 = 가전 구매력 엔진</b> — 정책금리·M3·가계신용이 할부/카드 수요를 좌우</>, lg: <>금리 인하·카드/소비자대출 확장기엔 <b className="font-semibold">무이자 할부·프리미엄 푸시</b>가 유효 · 콜금리 급등 시 유통 운전자금 부담 관찰</> }}
@@ -241,11 +241,18 @@ export function RatesView() {
         { key: "bank_loan_growth_yoy", label: "은행 총대출", fmt: (v) => v + "%", tone: "emerald" },
       ]}>
       {pol.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title="BSP 정책금리 corridor" unit="%" labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
-          legend={<><Lg c={C.ind} t="정책금리 RRP" b /><Lg c={C.rose} t="상한 OLF" /><Lg c={C.blue} t="하한 ODF" /></>}
-          meaning={<>기준금리·상하한(corridor) — <b className="text-gray-700">할부·소비자 금융비용의 기준</b></>}
+        <ChartCard seg="CE·B2B" title="BSP 정책금리 (RRP)" unit="% · 월별" labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
+          legend={<Lg c={C.ind} t="정책금리 RRP" b />}
+          meaning={<>기준금리 추이 — <b className="text-gray-700">할부·소비자 금융비용의 기준</b> (인하 사이클 진행)</>}
           ai={<>금리 인하기엔 <b className="font-semibold text-emerald-600">할부·카드 이자 부담↓ = 가전 구매력↑</b> → 무이자 할부·금융 프로모로 수요 견인 유리</>}
-          tone="amber" src={src("BSP 정책금리·ODF·OLF · 일별")} />
+          tone="amber" src={src("BSP 정책금리(RRP) · 월별")} />
+      )}
+      {loan.series.length > 0 && (
+        <ChartCard seg="CE" title="가계·기업 대출 증가율" unit="전년비 % · 월별" labels={loan.labels} series={loan.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="소비자대출" b /><Lg c={C.blue} t="은행 총대출" /></>}
+          meaning={<>소비자·총대출 증가율 — <b className="text-gray-700">가전 할부 구매의 직접 재원</b></>}
+          ai={<>소비자대출 확대는 <b className="font-semibold text-emerald-600">내구재 할부 수요 선행</b> → 신용 확장기에 프리미엄·대형 라인업 푸시</>}
+          tone="emerald" src={src("BSP 대출통계(소비자·총대출) · 월별")} />
       )}
       {credit.series.length > 0 && (
         <ChartCard seg="CE" title="민간신용 침투 (% GDP)" unit="% GDP · 연간" labels={credit.labels} series={credit.series} decimals={1} seriesUnit="%"
@@ -281,7 +288,8 @@ export function GrowthView() {
   const { d, loaded } = useMacro(GROWTH_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
   // 같은 단위(전년비 %)끼리만 겹침 — 스케일 다른 지표(가동률 레벨·건축허가 금액)는 별도 카드로 분리
-  const gdp = build(d, n, [{ key: "gdp_growth_yoy", name: "GDP 성장률", color: C.ind, w: 2 }, { key: "household_consumption_yoy", name: "민간소비", color: C.emer }, { key: "gross_capital_formation_yoy", name: "총투자", color: C.blue }])
+  const gdp = build(d, n, [{ key: "gdp_growth_yoy", name: "GDP 성장률", color: C.ind, w: 2 }]) // GDP 단독(COVID 저점 등 스케일 독립)
+  const demand = build(d, n, [{ key: "household_consumption_yoy", name: "민간소비", color: C.ind, w: 2 }, { key: "gross_capital_formation_yoy", name: "총투자", color: C.blue }])
   const cons = build(d, n, [{ key: "construction_gva_growth", name: "건설 부가가치", color: C.ind, w: 2 }, { key: "construction_gfcf_growth", name: "건설 투자", color: C.violet }])
   const ind = build(d, n, [{ key: "industry_gva_yoy", name: "산업", color: C.ind, w: 2 }, { key: "manufacturing_va_growth", name: "제조업", color: C.rose }])
   const cap = build(d, n, [{ key: "capacity_utilization", name: "평균 가동률", color: C.amber, w: 2 }]) // 레벨(%) — 성장률과 축 분리
@@ -289,7 +297,7 @@ export function GrowthView() {
   const permit = build(d, n, [{ key: "permits_nonresidential_floorarea", name: "비주거 착공면적", color: C.ind, w: 2, tf: (v) => v / 1e6 }])
   const permitV = build(d, n, [{ key: "permits_residential_value", name: "주거 건축허가액", color: C.violet, w: 2, tf: (v) => v / 1e6 }]) // 천PHP→십억₱
   const va = build(d, n, [{ key: "manufacturing_va_growth", name: "제조업", color: C.ind, w: 2 }, { key: "industry_va_growth", name: "산업", color: C.rose }, { key: "services_va_growth", name: "서비스", color: C.emer }])
-  const empty = !gdp.series.length && !cons.series.length && !ind.series.length && !cap.series.length && !ret.series.length && !permit.series.length && !permitV.series.length && !va.series.length
+  const empty = !gdp.series.length && !demand.series.length && !cons.series.length && !ind.series.length && !cap.series.length && !ret.series.length && !permit.series.length && !permitV.series.length && !va.series.length
   return (
     <Shell title="국민계정·성장" sub="GDP·소비·투자·건설허가·산업·유통 — 가전 수요 파이" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ headline: <><b className="font-semibold text-gray-900">국민계정으로 본 가전 수요 파이</b> — 소비·투자·건설허가가 시장 크기를 결정</>, lg: <>민간소비·주거 착공 회복은 <b className="font-semibold">가전 신규수요 선행</b> → 성장 밀집 지역 채널·재고 선점, 둔화 시 보급형 방어</> }}
@@ -300,11 +308,18 @@ export function GrowthView() {
         { key: "capacity_utilization", label: "가동률", fmt: (v) => v + "%", tone: "amber" },
       ]}>
       {gdp.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title="GDP·소비·투자 성장률" unit="전년비 %" labels={gdp.labels} series={gdp.series} decimals={1} seriesUnit="%"
-          legend={<><Lg c={C.ind} t="GDP 성장률" b /><Lg c={C.emer} t="민간소비" /><Lg c={C.blue} t="총투자" /></>}
-          meaning={<>경제·소비·투자 성장률 — <b className="text-gray-700">가전 시장 전체 파이의 크기</b></>}
+        <ChartCard seg="CE·B2B" title="GDP 성장률" unit="전년비 %" labels={gdp.labels} series={gdp.series} decimals={1} seriesUnit="%"
+          legend={<Lg c={C.ind} t="GDP 성장률" b />}
+          meaning={<>실질 GDP 성장률 — <b className="text-gray-700">가전 시장 전체 파이의 크기</b> (연간 장기 + 최근 분기)</>}
+          ai={<>성장 둔화기엔 재량소비 위축 → <b className="font-semibold text-amber-600">보급형 방어</b>, 확장기엔 프리미엄·신규수요 가속</>}
+          tone="emerald" src={src("PSA 국민계정 GDP · 분기/연")} />
+      )}
+      {demand.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="민간소비·총투자 성장률" unit="전년비 %" labels={demand.labels} series={demand.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="민간소비" b /><Lg c={C.blue} t="총투자" /></>}
+          meaning={<>내수 소비·투자 성장 — <b className="text-gray-700">가전 수요와 직결되는 지출 축</b></>}
           ai={<>민간소비 성장은 가전 수요와 직결 → <b className="font-semibold text-emerald-600">소비 확장기에 시장 성장 가속</b>, 둔화 시 보급형 방어</>}
-          tone="emerald" src={src("PSA 국민계정(GDP·GDE) · 분기")} />
+          tone="emerald" src={src("PSA 국민계정 GDE(소비·투자) · 분기/연")} />
       )}
       {cons.series.length > 0 && (
         <ChartCard seg="B2B" title="건설 부가가치·투자 성장" unit="전년비 %" labels={cons.labels} series={cons.series} decimals={1} seriesUnit="%"
@@ -469,6 +484,78 @@ export function SentimentView() {
           meaning={<>기업 신뢰지수 — <b className="text-gray-700">B2B·유통 투자·재고 심리</b></>}
           ai={<>BCI 개선은 유통·B2B 발주 확대 여건 → <b className="font-semibold text-emerald-600">채널 재고·프로젝트 수주</b> 우호</>}
           tone="emerald" src={src("BSP 기업기대조사(BES) · 분기")} />
+      )}
+    </Shell>
+  )
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// 물가 — 생활물가·에너지·주거/내구재 CPI 상승률 (환율과 동일 레이아웃)
+// ══════════════════════════════════════════════════════════════════════
+const PRICES_KEYS = ["INF_all_items", "INF_food", "INF_rice", "INF_electricity", "INF_lpg", "INF_transport", "INF_housing_utilities", "INF_household_appliances", "INF_aircon", "INF_restaurants", "meralco_residential_rate", "oil_diesel", "oil_gasoline", "oil_kerosene"]
+export function PricesView() {
+  const [win, setWin] = useState("전체")
+  const { d, loaded } = useMacro(PRICES_KEYS)
+  const n = WIN.find((w) => w.k === win)!.n
+  const core = build(d, n, [{ key: "INF_all_items", name: "전체", color: C.ind, w: 2 }, { key: "INF_food", name: "식품", color: C.rose }, { key: "INF_rice", name: "쌀", color: C.amber }])
+  const energy = build(d, n, [{ key: "INF_electricity", name: "전기", color: C.ind, w: 2 }, { key: "INF_lpg", name: "LPG", color: C.rose }, { key: "INF_transport", name: "운송", color: C.blue }])
+  const home = build(d, n, [{ key: "INF_housing_utilities", name: "주거·공공요금", color: C.ind, w: 2 }, { key: "INF_household_appliances", name: "가전", color: C.emer }, { key: "INF_aircon", name: "에어컨", color: C.rose }])
+  const dine = build(d, n, [{ key: "INF_restaurants", name: "외식·숙박", color: C.ind, w: 2 }, { key: "INF_all_items", name: "전체 물가", color: C.brown }])
+  const elec = build(d, n, [{ key: "meralco_residential_rate", name: "가정용 전기료", color: C.ind, w: 2 }])
+  const oil = build(d, n, [{ key: "oil_diesel", name: "경유", color: C.ind, w: 2 }, { key: "oil_gasoline", name: "휘발유", color: C.rose }, { key: "oil_kerosene", name: "등유", color: C.amber }])
+  const empty = !core.series.length && !energy.series.length && !home.series.length && !dine.series.length && !elec.series.length && !oil.series.length
+  return (
+    <Shell title="물가" sub="생활물가·에너지·주거/내구재 CPI 상승률 — 실질 구매력·원가" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
+      banner={{ headline: <><b className="font-semibold text-gray-900">물가 = 가전 구매력의 실질 기준</b> — 식품·전기·주거 물가가 재량지출 여력을 좌우</>, lg: <>식품·전기 물가 급등기엔 가처분소득이 필수재로 쏠려 <b className="font-semibold">가전 구매 이연 → 보급형·프로모 방어</b> · 물가 둔화 국면엔 프리미엄 전환 수요 회복</> }}
+      kpiDefs={[
+        { key: "INF_all_items", label: "전체 물가", fmt: (v) => v + "%", tone: "rose" },
+        { key: "INF_food", label: "식품", fmt: (v) => v + "%", tone: "rose" },
+        { key: "INF_rice", label: "쌀", fmt: (v) => v + "%", tone: "rose" },
+        { key: "INF_electricity", label: "전기", fmt: (v) => v + "%", tone: "rose" },
+        { key: "oil_diesel", label: "경유", fmt: (v) => "₱" + v.toFixed(1), tone: "amber" },
+        { key: "meralco_residential_rate", label: "전기료", fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
+      ]}>
+      {core.series.length > 0 && (
+        <ChartCard seg="CE" title="생활물가 (전체·식품·쌀)" unit="전년비 %" labels={core.labels} series={core.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="전체" b /><Lg c={C.rose} t="식품" /><Lg c={C.amber} t="쌀" /></>}
+          meaning={<>핵심 생활물가 상승률 — <b className="text-gray-700">가처분소득·재량지출 여력의 직접 결정</b></>}
+          ai={<>식품·쌀 물가 급등은 필수재 지출 쏠림 → <b className="font-semibold text-amber-600">가전 구매 이연 리스크</b>, 둔화 시 재량소비 회복 → 프리미엄 기회</>}
+          tone="rose" src={src("PSA CPI 상승률(전체·식품·쌀) · 월별")} />
+      )}
+      {energy.series.length > 0 && (
+        <ChartCard seg="CE" title="에너지·이동 물가 (전기·LPG·운송)" unit="전년비 %" labels={energy.labels} series={energy.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="전기" b /><Lg c={C.rose} t="LPG" /><Lg c={C.blue} t="운송" /></>}
+          meaning={<>에너지·이동 비용 상승률 — <b className="text-gray-700">가전 사용비용·고효율 소구력</b></>}
+          ai={<>전기·LPG 물가 상승기엔 <b className="font-semibold text-emerald-600">인버터·고효율 프리미엄 소구</b> 유리 → 에너지 절감액을 판매 메시지로</>}
+          tone="rose" src={src("PSA CPI 상승률(전기·LPG·운송) · 월별")} />
+      )}
+      {home.series.length > 0 && (
+        <ChartCard seg="CE" title="주거·내구재 물가 (주거·가전·에어컨)" unit="전년비 %" labels={home.labels} series={home.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="주거·공공요금" b /><Lg c={C.emer} t="가전" /><Lg c={C.rose} t="에어컨" /></>}
+          meaning={<>주거·가전 물가 상승률 — <b className="text-gray-700">가전의 상대적 가격 매력</b></>}
+          ai={<>가전 물가가 전체·주거보다 낮으면 <b className="font-semibold text-emerald-600">실질 저렴 → 구매 매력↑</b>, 높으면 보급형·프로모 강화</>}
+          tone="rose" src={src("PSA CPI 상승률(주거·가전·에어컨) · 월별")} />
+      )}
+      {dine.series.length > 0 && (
+        <ChartCard seg="CE" title="외식·숙박 vs 전체 물가" unit="전년비 %" labels={dine.labels} series={dine.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="외식·숙박" b /><Lg c={C.brown} t="전체 물가" /></>}
+          meaning={<>서비스 물가 대표(외식) — <b className="text-gray-700">서비스發 물가 압력·근원물가 방향</b></>}
+          ai={<>외식 물가가 전체보다 높으면 <b className="font-semibold text-amber-600">서비스發 끈적한 물가</b> → 금리 인하 지연·구매력 회복 지체 신호</>}
+          tone="rose" src={src("PSA CPI 상승률(외식·숙박) · 월별")} />
+      )}
+      {elec.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="가정용 전기요금 (Meralco)" unit="₱/kWh · 월별" labels={elec.labels} series={elec.series} decimals={2} seriesUnit="₱"
+          legend={<Lg c={C.ind} t="가정용 전기료" b />}
+          meaning={<>실제 전기요금 수준 — <b className="text-gray-700">가전 사용비용의 절대 기준</b></>}
+          ai={<>전기료 상승 추세엔 <b className="font-semibold text-emerald-600">고효율·인버터 프리미엄 소구</b>가 유효 → TCO(총소유비용) 절감 메시지 강화</>}
+          tone="amber" src={src("Meralco 가정용 요금 · 월별")} />
+      )}
+      {oil.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="유가 (경유·휘발유·등유)" unit="₱/L · 월별" labels={oil.labels} series={oil.series} decimals={1} seriesUnit="₱"
+          legend={<><Lg c={C.ind} t="경유" b /><Lg c={C.rose} t="휘발유" /><Lg c={C.amber} t="등유" /></>}
+          meaning={<>국내 종류별 소매 유가 — <b className="text-gray-700">운송·물류원가·전기료·전체 물가의 상류 동인</b></>}
+          ai={<>유가 상승은 운송·물류·전기료로 전이돼 <b className="font-semibold text-amber-600">가전 물류원가·소비자 물가 동반 압박</b> → 조달·판가 선제 점검, 하락기엔 원가 여유·프로모 여력</>}
+          tone="amber" src={src("DOE 주간 유가(oil_prices) · 월평균")} />
       )}
     </Shell>
   )

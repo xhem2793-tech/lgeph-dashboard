@@ -82,7 +82,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     const head = document.createElement("div"); head.className = "mb-1 text-[11px] font-medium text-gray-400"; tip.appendChild(head)
     const valNodes: HTMLElement[] = []
     series.forEach((s) => {
-      const row = document.createElement("div"); row.className = "flex items-center gap-2 text-[11px] leading-4"
+      const row = document.createElement("div"); row.className = "flex items-center gap-2 whitespace-nowrap text-[11px] leading-4"
       const dot = document.createElement("span"); dot.className = "inline-block h-2 w-2 shrink-0 rounded-full"; dot.style.background = s.color
       const nm = document.createElement("span"); nm.className = "text-gray-500"; nm.textContent = s.name
       const v = document.createElement("b"); v.className = "ml-auto tabular-nums font-semibold text-gray-800"
@@ -122,7 +122,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
   return (
     <div className="relative mt-1" style={{ touchAction: "none" }}>
       <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
-      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 min-w-[128px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
+      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 w-max whitespace-nowrap rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>
   )
 }
@@ -223,9 +223,9 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
       {kind === "bar"
         ? <BarChart data={series[0]?.data ?? []} labels={labels} color={series[0]?.color} decimals={decimals} unit={seriesUnit} />
         : <LineChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />}
-      <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
+      <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
       <div className="mt-2 border-l-2 border-indigo-300 pl-2.5">
-        <p className="text-[11px] leading-relaxed text-gray-600">{ai}</p>
+        <p className="line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-600">{ai}</p>
       </div>
       <p className="mt-auto border-t border-gray-100 pt-2 text-[10px] leading-relaxed text-gray-400">{src}</p>
     </div>
