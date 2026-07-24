@@ -69,26 +69,24 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     if (prim) { const defs = el("defs", {}); defs.innerHTML = '<linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="' + prim.color + '" stop-opacity="0.16"/><stop offset="100%" stop-color="' + prim.color + '" stop-opacity="0"/></linearGradient>'; svg.appendChild(defs) }
     series.forEach((s) => {
       const w = s.w ?? 1.6, isPrim = s === prim
-      // 결측(NaN)에서 선을 끊어 유한 구간별 폴리라인으로 분할 — 축이 다른 시리즈도 정확히 표현
-      const segs: number[][][] = []; let cur: number[][] = []
-      s.data.forEach((v, i) => { if (Number.isFinite(v)) cur.push([X(i), Y(v)]); else { if (cur.length) segs.push(cur); cur = [] } })
-      if (cur.length) segs.push(cur)
-      segs.forEach((pts) => {
-        if (pts.length === 1) { svg.appendChild(el("circle", { cx: pts[0][0].toFixed(1), cy: pts[0][1].toFixed(1), r: Math.max(1.8, w), fill: s.color })); return }
-        if (isPrim) { // 주 시리즈 아래 그라디언트 면적(라인이 심심해 보이지 않게, 모든 구간)
-          const ar = el("polygon", { points: pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ") + " " + pts[pts.length - 1][0].toFixed(1) + "," + B + " " + pts[0][0].toFixed(1) + "," + B, fill: "url(#" + gid + ")", stroke: "none" })
-          ar.style.opacity = "0"; svg.appendChild(ar); void (ar as unknown as SVGGraphicsElement).getBoundingClientRect(); ar.style.transition = "opacity .8s ease .55s"; ar.style.opacity = "1"
-        }
-        const pl = el("polyline", { points: pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "), fill: "none", stroke: s.color, "stroke-width": w, "stroke-linejoin": "round", "stroke-linecap": "round" }); svg.appendChild(pl)
-        const len = (pl as unknown as SVGPolylineElement).getTotalLength()
-        pl.style.strokeDasharray = String(len); pl.style.strokeDashoffset = String(len)
-        void (pl as unknown as SVGGraphicsElement).getBoundingClientRect() // 강제 reflow로 시작 상태 확정(async 로드 시 첫 페인트 누락 방지)
-        pl.style.transition = "stroke-dashoffset 1500ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = "0.18s"
-        pl.style.strokeDashoffset = "0"
-        if (showDots) pts.forEach((p) => { // 희소 구간 정적 마커 — 라인색 테두리·카드색 채움(할로), 라인 그린 뒤 페이드인
-          const c = el("circle", { cx: p[0].toFixed(1), cy: p[1].toFixed(1), r: w >= 2 ? 2.5 : 2.1, fill: CO.halo, stroke: s.color, "stroke-width": 1.3 }); c.style.opacity = "0"; svg.appendChild(c)
-          void (c as unknown as SVGGraphicsElement).getBoundingClientRect(); c.style.transition = "opacity .5s ease 1.5s"; c.style.opacity = "1"
-        })
+      // 결측(NaN)은 건너뛰고 실제 값이 있는 점만 연결(connect-nulls) — 연간+분기/월별 혼합 시리즈도 끊기지 않고 하나의 선으로
+      const pts: number[][] = []
+      s.data.forEach((v, i) => { if (Number.isFinite(v)) pts.push([X(i), Y(v)]) })
+      if (!pts.length) return
+      if (pts.length === 1) { svg.appendChild(el("circle", { cx: pts[0][0].toFixed(1), cy: pts[0][1].toFixed(1), r: Math.max(1.8, w), fill: s.color })); return }
+      if (isPrim) { // 주 시리즈 아래 그라디언트 면적(라인이 심심해 보이지 않게)
+        const ar = el("polygon", { points: pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ") + " " + pts[pts.length - 1][0].toFixed(1) + "," + B + " " + pts[0][0].toFixed(1) + "," + B, fill: "url(#" + gid + ")", stroke: "none" })
+        ar.style.opacity = "0"; svg.appendChild(ar); void (ar as unknown as SVGGraphicsElement).getBoundingClientRect(); ar.style.transition = "opacity .8s ease .55s"; ar.style.opacity = "1"
+      }
+      const pl = el("polyline", { points: pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "), fill: "none", stroke: s.color, "stroke-width": w, "stroke-linejoin": "round", "stroke-linecap": "round" }); svg.appendChild(pl)
+      const len = (pl as unknown as SVGPolylineElement).getTotalLength()
+      pl.style.strokeDasharray = String(len); pl.style.strokeDashoffset = String(len)
+      void (pl as unknown as SVGGraphicsElement).getBoundingClientRect() // 강제 reflow로 시작 상태 확정(async 로드 시 첫 페인트 누락 방지)
+      pl.style.transition = "stroke-dashoffset 1500ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = "0.18s"
+      pl.style.strokeDashoffset = "0"
+      if (showDots) pts.forEach((p) => { // 희소 구간 정적 마커 — 라인색 테두리·카드색 채움(할로), 라인 그린 뒤 페이드인
+        const c = el("circle", { cx: p[0].toFixed(1), cy: p[1].toFixed(1), r: w >= 2 ? 2.5 : 2.1, fill: CO.halo, stroke: s.color, "stroke-width": 1.3 }); c.style.opacity = "0"; svg.appendChild(c)
+        void (c as unknown as SVGGraphicsElement).getBoundingClientRect(); c.style.transition = "opacity .5s ease 1.5s"; c.style.opacity = "1"
       })
     })
     // 끝점 라벨 카드 — 특정 시리즈(예: 필리핀)의 우측 끝 위치를 소형 핀 카드로 표기(굵은선 강조 대체)
