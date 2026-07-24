@@ -193,21 +193,22 @@
   .srcnote .sb-in{background:#ececff;color:#4b45a8}
   .srcnote .sb-ec{background:var(--accent-soft);color:var(--accent)}
 
-  .sec{margin-top:26px}
+  .sec{margin-top:18px}
   .sec .lb{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:11px;display:flex;align-items:center;justify-content:space-between}
   .sec .lb .avgkey{display:inline-flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.04em;font-weight:600;text-transform:none;color:var(--muted)}
   .sec .lb .avgkey i{display:inline-block;width:2px;height:11px;background:var(--ink);opacity:.5}
   .sec p{font-size:14px;line-height:1.7;color:#333}
   /* economic indicator bars */
   .metrics{display:flex;flex-direction:column;gap:15px}
-  .metric .mrow{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:7px;gap:10px}
-  .metric .mlabel{font-size:12.5px;font-weight:600;color:#3a3a3a}
-  .metric .mval{font-size:15px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
-  .metric .mval small{font-size:11px;font-weight:600;color:var(--muted);margin-left:2px}
-  .mbar{position:relative;height:8px;background:var(--accent-soft);border-radius:999px}
+  .metric{margin-bottom:12px}
+  .metric .mrow{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:5px;gap:10px}
+  .metric .mlabel{font-size:12px;font-weight:600;color:#3a3a3a}
+  .metric .mval{font-size:14px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
+  .metric .mval small{font-size:10.5px;font-weight:600;color:var(--muted);margin-left:2px}
+  .metric .mval .mrk{font-size:10px;font-weight:700;color:var(--muted);margin-left:7px}
+  .mbar{position:relative;height:6px;background:var(--accent-soft);border-radius:999px}
   .mfill{height:100%;background:var(--accent);border-radius:999px;width:0;transition:width .7s cubic-bezier(.5,0,.15,1)}
-  .mtick{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);opacity:.5;border-radius:2px}
-  .mrank{font-size:10.5px;font-weight:700;color:var(--accent);margin-top:6px}
+  .mtick{position:absolute;top:-2px;bottom:-2px;width:2px;background:var(--ink);opacity:.45;border-radius:2px}
   .chips{display:flex;flex-wrap:wrap;gap:8px}
   .chip{padding:7px 13px;background:var(--accent-soft);border:1px solid var(--accent-tint);border-radius:999px;font-size:12.5px;font-weight:600;color:var(--accent)}
   .pchip{cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:background .14s,color .14s}
@@ -325,8 +326,7 @@
         <div class="sec">
           <div class="lb">시장·경제 지표 <span class="avgkey"><i></i> 전국 평균</span></div>
           <div class="srcnote"><span class="sb sb-in">셀아웃·성장 = 2024 내부</span><span class="sb sb-ec" id="econ-src">경제 데이터: 폴백(내장 근사치)</span></div>
-          <div class="metrics" id="d-derived"></div>
-          <div class="metrics" id="d-metrics" style="margin-top:15px"></div>
+          <div class="metrics" id="d-metrics"></div>
         </div>
         <div class="sec">
           <div class="lb">지역 개요</div>
@@ -813,7 +813,6 @@ function showDetail(name){
   renderSummary(name);
   renderMetrics(name);
   renderTags(name);
-  renderDerived(name);
   document.getElementById("detail").classList.add("show");
   document.getElementById("detail").querySelector(".detail-scroll").scrollTop=0;
 }
@@ -942,10 +941,9 @@ function renderMetrics(name){
     const parts=m.fmt(val).split("|");
     const el=document.createElement("div"); el.className="metric";
     el.innerHTML=`<div class="mrow"><span class="mlabel">${m.label}</span>`+
-      `<span class="mval">${parts[0]}${parts[1]?`<small>${parts[1]}</small>`:""}</span></div>`+
+      `<span class="mval">${parts[0]}${parts[1]?`<small>${parts[1]}</small>`:""}<small class="mrk">${rank}위</small></span></div>`+
       `<div class="mbar"><div class="mtick" style="left:${avgPct}%"></div>`+
-      `<div class="mfill"></div></div>`+
-      `<div class="mrank">전국 ${st.sorted.length}개 중 ${rank}위</div>`;
+      `<div class="mfill"></div></div>`;
     box.appendChild(el);
     requestAnimationFrame(()=>{ el.querySelector(".mfill").style.width=pct+"%"; });
   });
