@@ -121,14 +121,17 @@ function AgendaCard() {
 }
 
 // ── 공용 셸 — 환율 페이지와 동일 레이아웃(배너 + 좌 차트 | 우 위젯 286px) ──
-function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, children }: { title: string; sub: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; banner?: BannerDef; kpiDefs?: KpiDef[]; d: Mon; children: React.ReactNode }) {
+type Section = { key: string; label: string; node: React.ReactNode }
+function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, children, sections }: { title: string; sub: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; banner?: BannerDef; kpiDefs?: KpiDef[]; d: Mon; children?: React.ReactNode; sections?: Section[] }) {
+  const [activeSub, setActiveSub] = useState(sections?.[0]?.key ?? "")
+  const curSub = sections?.find((s) => s.key === activeSub) ?? sections?.[0]
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
       {banner && <Banner {...banner} d={d} kpiDefs={loaded ? kpiDefs : undefined} />}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
         <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
-          <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+          <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h2>
             <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{sub}</span>
@@ -136,6 +139,16 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
               <Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k }))} />
             </span>
           </header>
+          {loaded && !empty && sections && sections.length > 1 && (
+            <nav className="mb-3.5 flex flex-wrap gap-1.5">
+              {sections.map((s) => (
+                <button key={s.key} type="button" onClick={() => setActiveSub(s.key)}
+                  className={"rounded-lg px-3 py-1.5 text-[12.5px] font-semibold transition-all duration-200 " + (activeSub === s.key ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300")}>
+                  {s.label}
+                </button>
+              ))}
+            </nav>
+          )}
           {!loaded ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {[0, 1, 2, 3].map((i) => <div key={i} className="h-72 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}
@@ -146,7 +159,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
               <div className="text-[12px] text-gray-400 dark:text-gray-500">해당 지표가 아직 Supabase에 없음 · 수집 후 자동 표시</div>
             </div>
           ) : (
-            <div className="grid items-stretch gap-4 sm:grid-cols-2">{children}</div>
+            <div key={activeSub} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s ease both" }}>{sections ? curSub?.node : children}</div>
           )}
         </section>
         <aside className="flex flex-col gap-4">
@@ -322,7 +335,9 @@ export function GrowthView() {
         { key: "household_consumption_yoy", label: "민간소비", fmt: (v) => v + "%", tone: "emerald" },
         { key: "gross_capital_formation_yoy", label: "총투자", fmt: (v) => v + "%", tone: "emerald" },
         { key: "capacity_utilization", label: "가동률", fmt: (v) => v + "%", tone: "amber" },
-      ]}>
+      ]}
+      sections={[
+        { key: "demand", label: "수요·성장", node: <>
       {gdp.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="GDP 성장률" unit="전년비 %" kind="bar" labels={gdp.labels} series={gdp.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="GDP 성장률" b />}
@@ -337,20 +352,15 @@ export function GrowthView() {
           ai={<>민간소비 성장은 가전 수요와 직결 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">소비 확장기에 시장 성장 가속</b>, 둔화 시 보급형 방어</>}
           tone="emerald" src={src("PSA 국민계정 GDE(소비·투자) · 분기/연")} />
       )}
-      {cons.series.length > 0 && (
-        <ChartCard seg="B2B" title="건설 부가가치·투자 성장" unit="전년비 %" labels={cons.labels} series={cons.series} decimals={1} seriesUnit="%"
-          legend={<><Lg c={C.ind} t="건설 부가가치" b /><Lg c={C.violet} t="건설 투자" /></>}
-          meaning={<>건설 부문 성장 — <b className="text-gray-700 dark:text-gray-200">빌트인·냉난방·신규 가전 수요의 6~12개월 선행</b></>}
-          ai={<>건설 성장 가속은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">신규 가전·에어컨 수요 선행</b> → 착공 밀집 지역에 채널·재고 선제 배치</>}
-          tone="emerald" src={src("PSA 국민계정 건설 GVA·GFCF · 분기")} />
+      {pcap.series.length > 0 && (
+        <ChartCard seg="CE" title="1인당 GDP" unit="US$ · 연간" labels={pcap.labels} series={pcap.series} decimals={0} seriesUnit="$"
+          legend={<Lg c={C.ind} t="1인당 GDP" b />}
+          meaning={<>1인당 명목 GDP — <b className="text-gray-700 dark:text-gray-200">가전 구매력·프리미엄 전환의 구조적 기반</b></>}
+          ai={<>1인당 GDP는 10년간 2,163$→4,171$로 상승 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">중산층 확대·프리미엄 가전 침투 여력↑</b> → 상위 라인업·신가전 카테고리 확장 기회</>}
+          tone="emerald" src={src("World Bank 1인당 GDP(명목) · 연간")} />
       )}
-      {permitV.series.length > 0 && (
-        <ChartCard seg="B2B" title="주거 건축허가액" unit="십억₱ · 분기" kind="bar" labels={permitV.labels} series={permitV.series} decimals={1} seriesUnit="십억₱"
-          legend={<Lg c={C.violet} t="주거 건축허가액" b />}
-          meaning={<>주거 신축 허가 금액 — <b className="text-gray-700 dark:text-gray-200">주택·가전 신규수요의 선행 규모</b></>}
-          ai={<>허가액 확대는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">신규 주택 유입 = 가전 초도수요</b> → 착공 밀집 지역 채널 선점</>}
-          tone="emerald" src={src("PSA 건축허가(주거) · 분기")} />
-      )}
+        </> },
+        { key: "industry", label: "산업·생산", node: <>
       {ind.series.length > 0 && (
         <ChartCard seg="B2B" title="산업·제조 성장률" unit="전년비 %" labels={ind.labels} series={ind.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="산업" b /><Lg c={C.rose} t="제조업" /></>}
@@ -365,12 +375,28 @@ export function GrowthView() {
           ai={<>가동률 하락은 수요 둔화·유휴 신호 → <b className="font-semibold text-amber-600 dark:text-amber-400">보수적 재고·판가</b>, 상승 지속 시 공급 병목 대비</>}
           tone="amber" src={src("PSA 산업생산조사 가동률 · 월")} />
       )}
-      {ret.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title="도소매 유통 성장" unit="전년비 %" labels={ret.labels} series={ret.series} decimals={1} seriesUnit="%"
-          legend={<><Lg c={C.ind} t="도소매 거래" b /><Lg c={C.teal} t="소매 부가가치" /></>}
-          meaning={<>도소매업 성장률 — <b className="text-gray-700 dark:text-gray-200">유통 채널 활력·소비 실현</b></>}
-          ai={<>도소매 성장 가속은 채널 판매 여건 개선 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">유통 프로모·진열 확대 적기</b></>}
-          tone="emerald" src={src("PSA 국민계정 도소매업 · 분기")} />
+      {va.series.length > 0 && (
+        <ChartCard seg="B2B" title="부문별 부가가치 성장" unit="전년비 %" labels={va.labels} series={va.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="제조업" b /><Lg c={C.rose} t="산업" /><Lg c={C.emer} t="서비스" /></>}
+          meaning={<>제조·산업·서비스 부문 성장 — <b className="text-gray-700 dark:text-gray-200">B2B 수요처 업황·설비투자 여력</b></>}
+          ai={<>제조·서비스 업황 개선은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">기업 설비·시설 투자 여력</b> → B2B 상업용·산업용 수요 우호</>}
+          tone="emerald" src={src("PSA 국민계정 부문별 GVA · 연간")} />
+      )}
+        </> },
+        { key: "construction", label: "건설·투자", node: <>
+      {cons.series.length > 0 && (
+        <ChartCard seg="B2B" title="건설 부가가치·투자 성장" unit="전년비 %" labels={cons.labels} series={cons.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="건설 부가가치" b /><Lg c={C.violet} t="건설 투자" /></>}
+          meaning={<>건설 부문 성장 — <b className="text-gray-700 dark:text-gray-200">빌트인·냉난방·신규 가전 수요의 6~12개월 선행</b></>}
+          ai={<>건설 성장 가속은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">신규 가전·에어컨 수요 선행</b> → 착공 밀집 지역에 채널·재고 선제 배치</>}
+          tone="emerald" src={src("PSA 국민계정 건설 GVA·GFCF · 분기")} />
+      )}
+      {permitV.series.length > 0 && (
+        <ChartCard seg="B2B" title="주거 건축허가액" unit="십억₱ · 분기" kind="bar" labels={permitV.labels} series={permitV.series} decimals={1} seriesUnit="십억₱"
+          legend={<Lg c={C.violet} t="주거 건축허가액" b />}
+          meaning={<>주거 신축 허가 금액 — <b className="text-gray-700 dark:text-gray-200">주택·가전 신규수요의 선행 규모</b></>}
+          ai={<>허가액 확대는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">신규 주택 유입 = 가전 초도수요</b> → 착공 밀집 지역 채널 선점</>}
+          tone="emerald" src={src("PSA 건축허가(주거) · 분기")} />
       )}
       {permit.series.length > 0 && (
         <ChartCard seg="B2B" title="비주거 건축허가(상업·산업)" unit="백만 ㎡ · 분기" kind="bar" labels={permit.labels} series={permit.series} decimals={2}
@@ -379,12 +405,14 @@ export function GrowthView() {
           ai={<>비주거 착공 확대는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">상업용 HVAC·빌트인 프로젝트 수요 선행</b> → B2B 파이프라인·입찰 선제 대응</>}
           tone="emerald" src={src("PSA 건축허가(비주거) · 분기")} />
       )}
-      {va.series.length > 0 && (
-        <ChartCard seg="B2B" title="부문별 부가가치 성장" unit="전년비 %" labels={va.labels} series={va.series} decimals={1} seriesUnit="%"
-          legend={<><Lg c={C.ind} t="제조업" b /><Lg c={C.rose} t="산업" /><Lg c={C.emer} t="서비스" /></>}
-          meaning={<>제조·산업·서비스 부문 성장 — <b className="text-gray-700 dark:text-gray-200">B2B 수요처 업황·설비투자 여력</b></>}
-          ai={<>제조·서비스 업황 개선은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">기업 설비·시설 투자 여력</b> → B2B 상업용·산업용 수요 우호</>}
-          tone="emerald" src={src("PSA 국민계정 부문별 GVA · 연간")} />
+        </> },
+        { key: "trade", label: "유통", node: <>
+      {ret.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="도소매 유통 성장" unit="전년비 %" labels={ret.labels} series={ret.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="도소매 거래" b /><Lg c={C.teal} t="소매 부가가치" /></>}
+          meaning={<>도소매업 성장률 — <b className="text-gray-700 dark:text-gray-200">유통 채널 활력·소비 실현</b></>}
+          ai={<>도소매 성장 가속은 채널 판매 여건 개선 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">유통 프로모·진열 확대 적기</b></>}
+          tone="emerald" src={src("PSA 국민계정 도소매업 · 분기")} />
       )}
       {rsale.series.length > 0 && (
         <ChartCard seg="CE" title="소매판매 증가율" unit="전년비 % · 연간" kind="bar" labels={rsale.labels} series={rsale.series} decimals={1} seriesUnit="%"
@@ -393,14 +421,8 @@ export function GrowthView() {
           ai={<>소매판매 반등은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 실수요 회복 신호</b> → 프로모·진열 확대 적기, 둔화 시 보급형 방어</>}
           tone="emerald" src={src("PSA 소매판매 · 연간")} />
       )}
-      {pcap.series.length > 0 && (
-        <ChartCard seg="CE" title="1인당 GDP" unit="US$ · 연간" labels={pcap.labels} series={pcap.series} decimals={0} seriesUnit="$"
-          legend={<Lg c={C.ind} t="1인당 GDP" b />}
-          meaning={<>1인당 명목 GDP — <b className="text-gray-700 dark:text-gray-200">가전 구매력·프리미엄 전환의 구조적 기반</b></>}
-          ai={<>1인당 GDP는 10년간 2,163$→4,171$로 상승 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">중산층 확대·프리미엄 가전 침투 여력↑</b> → 상위 라인업·신가전 카테고리 확장 기회</>}
-          tone="emerald" src={src("World Bank 1인당 GDP(명목) · 연간")} />
-      )}
-    </Shell>
+        </> },
+      ]} />
   )
 }
 
