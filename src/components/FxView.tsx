@@ -61,8 +61,9 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
       const pl = el("polyline", { points: pts.map((p) => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "), fill: "none", stroke: s.color, "stroke-width": w, "stroke-linejoin": "round", "stroke-linecap": "round" }); svg.appendChild(pl)
       const len = (pl as unknown as SVGPolylineElement).getTotalLength()
       pl.style.strokeDasharray = String(len); pl.style.strokeDashoffset = String(len)
+      void (pl as unknown as SVGGraphicsElement).getBoundingClientRect()
       pl.style.transition = "stroke-dashoffset 1500ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = "0.18s"
-      requestAnimationFrame(() => requestAnimationFrame(() => { pl.style.strokeDashoffset = "0" }))
+      pl.style.strokeDashoffset = "0"
     })
     // 호버 활성점: 시리즈당 1개, 평소 opacity 0 (핵심요약 호버와 동일한 어법)
     const adots: SVGElement[] = series.map((s) => {
@@ -127,7 +128,7 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
   meaning: React.ReactNode; ai: React.ReactNode; tone: Tone; src: React.ReactNode
 }) {
   return (
-    <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm">
+    <div className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-2">
         <h3 className="text-[14px] font-bold tracking-tight text-gray-900">{title}</h3>
         {unit && <span className="text-[10.5px] font-medium text-gray-400">{unit}</span>}

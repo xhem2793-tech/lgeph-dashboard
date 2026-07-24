@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import DailyIndicators from "@/components/DailyIndicators"
 import FxView from "@/components/FxView"
 import RegionMapView from "@/components/RegionMapView"
+import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView } from "@/components/EconViews"
 import { ProChart, CountUp } from "@/components/ProChartCore"
 import { homeBand, pricesDomain, macroMonthly } from "@/lib/supabase"
 import type { PricesDomain } from "@/lib/supabase"
@@ -263,6 +264,11 @@ export default function Page() {
     if (active === "regions") return <RegionMapView />
     if (active === "core") return <DailyIndicators />
     if (active === "fx") return <FxView />
+    if (active === "growth") return <GrowthView />
+    if (active === "labor") return <LaborView />
+    if (active === "sentiment") return <SentimentView />
+    if (active === "rates") return <RatesView />
+    if (active === "appliance") return <ApplianceView />
     if (active === "prices") {
       if (!prices || band === null) return <div className="h-80 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />
       return <PricesView data={prices} inf={inf} byKey={byKey} />
