@@ -14,9 +14,9 @@
     --line:#141414;
     --muted:#7b7a74;
     --hair:#e6e4dd;
-    --accent:#1c6b63;
-    --accent-tint:#d9ebe8;
-    --accent-soft:#eef6f4;
+    --accent:#6366f1;
+    --accent-tint:#e0e7ff;
+    --accent-soft:#eef2ff;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{height:100%}
@@ -28,22 +28,22 @@
     display:flex;flex-direction:column;
   }
   a{color:var(--accent)}
-  a:hover{color:#134b45}
+  a:hover{color:#4338ca}
 
   /* KPI headline strip */
-  .kpibar{display:flex;align-items:center;gap:26px;padding:15px 30px;background:#141414;color:#fff;flex:none;z-index:10}
+  .kpibar{display:flex;align-items:center;gap:26px;padding:15px 30px;background:#fff;color:var(--ink);border-bottom:1px solid var(--hair);flex:none;z-index:10}
   .kpibar .ctx{display:flex;flex-direction:column;min-width:0}
   .kpibar .ctx-row{display:flex;align-items:center;gap:9px}
   .kpibar .ctx-tag{font-size:10px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:5px;background:var(--accent);color:#fff;white-space:nowrap;flex:none}
   .kpibar .ctx-name{font-size:19px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
-  .kpibar .ctx-per{font-size:11px;color:rgba(255,255,255,.5);margin-top:4px;font-style:italic}
+  .kpibar .ctx-per{font-size:11px;color:var(--muted);margin-top:4px;font-style:italic}
   .kpicards{display:flex;margin-left:auto}
-  .kpicard{padding:2px 26px;border-left:1px solid rgba(255,255,255,.14);text-align:right}
+  .kpicard{padding:2px 26px;border-left:1px solid var(--hair);text-align:right}
   .kpicard:first-child{border-left:none}
-  .kpicard .kk{font-size:11px;color:rgba(255,255,255,.5);font-weight:600;letter-spacing:.01em}
+  .kpicard .kk{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.01em}
   .kpicard .kv{font-size:23px;font-weight:800;margin-top:4px;letter-spacing:-.02em;white-space:nowrap}
-  .kpicard .kv.up{color:#63d3ab}
-  .kpicard .kv.down{color:#f0857a}
+  .kpicard .kv.up{color:#059669}
+  .kpicard .kv.down{color:#e11d48}
 
   .app{display:grid;grid-template-columns:1fr 400px;flex:1;min-height:0}
 
@@ -179,7 +179,7 @@
   .kc-k{font-size:11px;color:var(--muted);font-weight:600}
   .kc-k small{font-weight:500;opacity:.8}
   .kc-v{font-size:22px;font-weight:800;margin-top:5px;letter-spacing:-.02em}
-  .kc-v.up{color:var(--accent)} .kc-v.down{color:#c2503f}
+  .kc-v.up{color:var(--accent)} .kc-v.down{color:#e11d48}
 
   /* compact geography line */
   .geo{display:grid;grid-template-columns:1fr 1fr;gap:9px 18px;margin-top:15px;padding-top:15px;border-top:1px solid var(--hair)}
@@ -233,14 +233,14 @@
   /* dealer dashboard view */
   .dealer{opacity:0;transform:translateX(14px);transition:opacity .35s,transform .35s;pointer-events:none;position:absolute;inset:0;background:var(--panel);display:flex;flex-direction:column}
   .dealer.show{opacity:1;transform:none;pointer-events:auto}
-  .dealer-head{padding:24px 32px 20px;border-bottom:1px solid var(--hair);background:#141414;color:#fff}
-  .dealer-head .up{font-size:11px;letter-spacing:.06em;color:rgba(255,255,255,.6);font-weight:600}
+  .dealer-head{padding:24px 32px 20px;border-bottom:1px solid var(--hair);background:#fff;color:var(--ink)}
+  .dealer-head .up{font-size:11px;letter-spacing:.06em;color:var(--muted);font-weight:600}
   .dealer-head h2{font-size:24px;font-weight:800;margin-top:8px;letter-spacing:-.01em}
-  .dealer-head .period{font-size:11.5px;color:rgba(255,255,255,.55);margin-top:6px;font-style:italic}
-  .sumstrip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,.15);margin-top:16px;border-radius:9px;overflow:hidden}
-  .sumstrip .s{background:#141414;padding:10px 8px;text-align:center}
-  .sumstrip .s .sk{font-size:9.5px;color:rgba(255,255,255,.55);font-weight:600;letter-spacing:.02em}
-  .sumstrip .s .sv{font-size:16px;font-weight:800;margin-top:3px}
+  .dealer-head .period{font-size:11.5px;color:var(--muted);margin-top:6px;font-style:italic}
+  .sumstrip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--hair);margin-top:16px;border-radius:9px;overflow:hidden;border:1px solid var(--hair)}
+  .sumstrip .s{background:var(--accent-soft);padding:10px 8px;text-align:center}
+  .sumstrip .s .sk{font-size:9.5px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+  .sumstrip .s .sv{font-size:16px;font-weight:800;margin-top:3px;color:var(--ink)}
   .dealer-scroll{flex:1;overflow-y:auto;padding:18px 0 40px}
   .cattabs{display:flex;gap:7px;overflow-x:auto;padding:4px 32px 16px;position:sticky;top:0;background:var(--panel);z-index:2}
   .cattabs::-webkit-scrollbar{height:0}
@@ -257,7 +257,7 @@
   .dtrack{height:9px;background:var(--accent-soft);border-radius:999px;overflow:hidden}
   .dfill{height:100%;border-radius:999px;width:0;transition:width .6s cubic-bezier(.5,0,.15,1)}
   .dbar.top .dfill{background:var(--accent)}
-  .dbar .dfill{background:#b9cfcb}
+  .dbar .dfill{background:#c7d2fe}
   .dbar.top .dname{color:var(--accent)}
   .insight{margin-top:20px;background:var(--accent-soft);border:1px solid var(--accent-tint);border-left:3px solid var(--accent);border-radius:10px;padding:15px 16px}
   .insight .it{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:800;margin-bottom:7px;display:flex;align-items:center;gap:6px}
@@ -532,11 +532,11 @@ let curMapMetric="none";
 function metricColor(m,v,ext){
   if(m.div){
     const maxAbs=Math.max(Math.abs(ext.min),Math.abs(ext.max))||1, t=v/maxAbs;
-    return t>=0 ? d3.interpolateRgb("#f4f3ef","#1c6b63")(0.12+0.88*Math.min(1,t))
-                : d3.interpolateRgb("#f4f3ef","#c2503f")(0.12+0.88*Math.min(1,-t));
+    return t>=0 ? d3.interpolateRgb("#f4f3ef","#6366f1")(0.12+0.88*Math.min(1,t))
+                : d3.interpolateRgb("#f4f3ef","#e11d48")(0.12+0.88*Math.min(1,-t));
   }
   const t=(v-ext.min)/((ext.max-ext.min)||1);
-  return d3.interpolateRgb("#e7f0ee","#164f49")(0.08+0.92*t);
+  return d3.interpolateRgb("#eef2ff","#4338ca")(0.08+0.92*t);
 }
 function applyChoropleth(key){
   curMapMetric=key;
@@ -553,7 +553,7 @@ function applyChoropleth(key){
   renderLegend(m,ext);
 }
 function renderLegend(m,ext){
-  const grad=m.div?"linear-gradient(90deg,#c2503f,#f4f3ef,#1c6b63)":"linear-gradient(90deg,#e7f0ee,#164f49)";
+  const grad=m.div?"linear-gradient(90deg,#e11d48,#f4f3ef,#6366f1)":"linear-gradient(90deg,#eef2ff,#4338ca)";
   document.getElementById("legend").innerHTML=
     `<div class="lg-bar" style="background:${grad}"></div>`+
     `<div class="lg-sc"><span>${m.fmt(ext.min)}</span>${m.div?"<span>0</span>":""}<span>${m.fmt(ext.max)}</span></div>`;

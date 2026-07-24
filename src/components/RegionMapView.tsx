@@ -25,13 +25,13 @@ export default function RegionMapView() {
           <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-[9.5px] font-bold text-gray-500">예시 데이터 · 실측 연결 전</span>
         </header>
 
-        {/* 원본 지도 임베드(별개 구성 그대로) */}
+        {/* 원본 지도 임베드(별개 구성 그대로) — 세로 크게(하단 클립 방지) */}
         <iframe
           src="/region-map/index.html"
           title="필리핀 지역시장 인터랙티브 지도"
           loading="lazy"
           className="block w-full border-0"
-          style={{ height: "80vh", minHeight: 640 }}
+          style={{ height: "92vh", minHeight: 860 }}
         />
       </section>
 
