@@ -14,6 +14,10 @@ const WIN = [{ k: "1Y", n: 12 }, { k: "2Y", n: 24 }, { k: "전체", n: 60 }]
 
 // 시리즈 팔레트(환율과 동일 계열)
 const C = { ind: "#6366f1", rose: "#dc2626", blue: "#0284c7", emer: "#059669", amber: "#d99400", violet: "#7c3aed", teal: "#0f766e", brown: "#a1795b" }
+// 배너 한 줄 요약용 숫자 포맷
+const f1 = (v?: number) => (v == null ? "–" : v.toFixed(1))
+const f0 = (v?: number) => (v == null ? "–" : v.toFixed(0))
+const B = (s: React.ReactNode) => <b className="font-semibold text-gray-900">{s}</b> // 값 강조
 
 type Spec = { key: string; name: string; color: string; w?: number; tf?: (v: number) => number }
 /** 여러 지표를 한 카드에 정렬해 SLine[] + labels 생성. 시계열(2점 이상)만 라인으로. */
@@ -47,32 +51,26 @@ function useMacro(keys: string[]) {
   return { d, loaded }
 }
 
-// ── 접이식 배너(환율 페이지와 동일) ───────────────────────────────────────
-type BannerDef = { headline: React.ReactNode; lg?: React.ReactNode }
-function Banner({ headline, lg, d, kpiDefs }: BannerDef & { d: Mon; kpiDefs?: KpiDef[] }) {
+// ── 접이식 배너 — 현재 지표값을 녹인 한 줄 요약(펼치면 LG 관점) ────────────
+type Kv = Record<string, number>
+type BannerDef = { headline: React.ReactNode; lg?: React.ReactNode; summary?: (kv: Kv, asOf: string) => React.ReactNode }
+function Banner({ headline, lg, summary, d, kpiDefs }: BannerDef & { d: Mon; kpiDefs?: KpiDef[] }) {
   const [open, setOpen] = useState(false)
   const items = (kpiDefs ?? []).map((k) => ({ ...k, cur: latestOf(d, k.key) })).filter((k) => k.cur)
-  const tc = (t?: string) => (t === "rose" ? "text-rose-600" : t === "emerald" ? "text-emerald-600" : t === "amber" ? "text-amber-600" : "text-gray-900")
+  const kv: Kv = {}; let asOf = ""
+  items.forEach((k) => { kv[k.key] = k.cur!.v; if (!asOf || k.cur!.date > asOf) asOf = k.cur!.date })
+  const now = new Date(); const nowLbl = String(now.getFullYear()).slice(2) + "." + (now.getMonth() + 1) // 현재 월 기준(지표가 과거여도)
+  const line = summary && items.length ? summary(kv, asOf) : headline
   return (
     <div className="overflow-hidden rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
       <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg>
         </div>
-        <div className="min-w-0 flex-1 text-[13px] text-gray-700">{headline}</div>
+        <div className="min-w-0 flex-1 text-[13px] leading-snug text-gray-700">{line}</div>
+        <span className="shrink-0 text-[10px] text-gray-400">{nowLbl} 기준</span>
         {lg && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}
       </div>
-      {items.length > 0 && (
-        <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 border-t border-indigo-100/70 bg-white/50 px-4 py-2.5">
-          {items.map((k) => (
-            <div key={k.key} className="flex items-baseline gap-1.5">
-              <span className="text-[10.5px] font-medium text-gray-500">{k.label}</span>
-              <span className={"text-[15px] font-bold tabular-nums " + tc(k.tone)}>{k.fmt(k.cur!.v)}</span>
-            </div>
-          ))}
-          <span className="ml-auto text-[10px] text-gray-400">{moLabel(items[0].cur!.date)} 기준</span>
-        </div>
-      )}
       {lg && (
         <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
           <div className="overflow-hidden">
@@ -177,7 +175,7 @@ export function ApplianceView() {
   const empty = !ppi.series.length && !imp.series.length && !inf.series.length && !elec.series.length
   return (
     <Shell title="가전 선행지표" sub="생산자물가·수입액·가전물가·전기료 — 원가·공급 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
-      banner={{ headline: <><b className="font-semibold text-gray-900">가전 원가·공급 선행지표</b> — PPI·수입·전기료로 원가/경쟁 압박을 조기 포착</>, lg: <>PPI·수입 급등은 원가·중국계 물량 신호 → <b className="font-semibold">조달 헤지·프로모 타이밍</b> 선제 대응 · 전기료↑엔 고효율 프리미엄 소구</> }}
+      banner={{ summary: (kv) => <>가전 물가 {B(f1(kv.INF_household_appliances) + "%")}·에어컨 {B(f1(kv.INF_aircon) + "%")}·가전 PPI {B(f1(kv.PPI_domestic_appliances) + "%")}, 전기료 {B("₱" + f1(kv.meralco_residential_rate))} — {(kv.PPI_domestic_appliances ?? 0) > 2 ? "원가·소매가 상방 압박" : "원가·가전물가 안정 국면"}</>, headline: <><b className="font-semibold text-gray-900">가전 원가·공급 선행지표</b></>, lg: <>PPI·수입 급등은 원가·중국계 물량 신호 → <b className="font-semibold">조달 헤지·프로모 타이밍</b> 선제 대응 · 전기료↑엔 고효율 프리미엄 소구</> }}
       kpiDefs={[
         { key: "INF_household_appliances", label: "가전 물가 YoY", fmt: (v) => v + "%", tone: "rose" },
         { key: "INF_aircon", label: "에어컨 물가 YoY", fmt: (v) => v + "%", tone: "rose" },
@@ -232,7 +230,7 @@ export function RatesView() {
   const empty = !pol.series.length && !loan.series.length && !m3.series.length && !credit.series.length && !call.series.length
   return (
     <Shell title="통화·금리·신용" sub="기준금리·통화량 M3·가계신용 — 할부·카드 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
-      banner={{ headline: <><b className="font-semibold text-gray-900">통화·신용 = 가전 구매력 엔진</b> — 정책금리·M3·가계신용이 할부/카드 수요를 좌우</>, lg: <>금리 인하·카드/소비자대출 확장기엔 <b className="font-semibold">무이자 할부·프리미엄 푸시</b>가 유효 · 콜금리 급등 시 유통 운전자금 부담 관찰</> }}
+      banner={{ summary: (kv) => <>정책금리 {B(f1(kv.BSP_policy_rate) + "%")}·M3 {B(f1(kv.m3_growth_yoy) + "%")}, 소비자대출 {B(f1(kv.consumer_loan_growth_yoy) + "%")}·카드 {B(f1(kv.credit_card_loan_growth_yoy) + "%")}·총대출 {B(f1(kv.bank_loan_growth_yoy) + "%")} — {(kv.BSP_policy_rate ?? 9) < 6 ? "금리 인하·신용 확장이 할부 수요 뒷받침" : "고금리로 할부 부담 지속"}</>, headline: <><b className="font-semibold text-gray-900">통화·신용 = 가전 구매력 엔진</b></>, lg: <>금리 인하·카드/소비자대출 확장기엔 <b className="font-semibold">무이자 할부·프리미엄 푸시</b>가 유효 · 콜금리 급등 시 유통 운전자금 부담 관찰</> }}
       kpiDefs={[
         { key: "BSP_policy_rate", label: "정책금리 RRP", fmt: (v) => v + "%", tone: "amber" },
         { key: "m3_growth_yoy", label: "통화량 M3", fmt: (v) => v + "%", tone: "emerald" },
@@ -301,7 +299,7 @@ export function GrowthView() {
   const empty = !gdp.series.length && !demand.series.length && !cons.series.length && !ind.series.length && !cap.series.length && !ret.series.length && !permit.series.length && !permitV.series.length && !va.series.length && !rsale.series.length
   return (
     <Shell title="국민계정·성장" sub="GDP·소비·투자·건설허가·산업·유통 — 가전 수요 파이" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
-      banner={{ headline: <><b className="font-semibold text-gray-900">국민계정으로 본 가전 수요 파이</b> — 소비·투자·건설허가가 시장 크기를 결정</>, lg: <>민간소비·주거 착공 회복은 <b className="font-semibold">가전 신규수요 선행</b> → 성장 밀집 지역 채널·재고 선점, 둔화 시 보급형 방어</> }}
+      banner={{ summary: (kv) => <>GDP {B(f1(kv.gdp_growth_yoy) + "%")}·민간소비 {B(f1(kv.household_consumption_yoy) + "%")}·투자 {B(f1(kv.gross_capital_formation_yoy) + "%")}, 가동률 {B(f1(kv.capacity_utilization) + "%")} — {(kv.gdp_growth_yoy ?? 0) < 4 ? "성장 둔화로 가전 수요 파이 축소 국면" : "성장 견조, 수요 파이 확대 국면"}</>, headline: <><b className="font-semibold text-gray-900">국민계정으로 본 가전 수요 파이</b></>, lg: <>민간소비·주거 착공 회복은 <b className="font-semibold">가전 신규수요 선행</b> → 성장 밀집 지역 채널·재고 선점, 둔화 시 보급형 방어</> }}
       kpiDefs={[
         { key: "gdp_growth_yoy", label: "GDP 성장률", fmt: (v) => v + "%", tone: "emerald" },
         { key: "household_consumption_yoy", label: "민간소비", fmt: (v) => v + "%", tone: "emerald" },
@@ -403,7 +401,7 @@ export function LaborView() {
   const empty = !un.series.length && !lf.series.length && !rem.series.length && !remL.series.length && !remY.series.length && !pop.series.length && !wage.series.length && !hh.series.length && !infra.series.length && !pov.series.length
   return (
     <Shell title="고용·임금·소득" sub="실업·경제활동참가·OFW 송금 — 가전 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
-      banner={{ headline: <><b className="font-semibold text-gray-900">고용·OFW 송금 = 가전 구매력의 원천</b> — 소득 안정과 송금이 수요를 견인</>, lg: <>실업 하락·송금 증가는 가처분소득↑ → <b className="font-semibold">송금 성수기(4Q·연말) 프리미엄 집중</b> · 페소 약세와 겹치면 환산 구매력 추가 상승</> }}
+      banner={{ summary: (kv) => <>실업률 {B(f1(kv.unemployment_rate) + "%")}·불완전고용 {B(f1(kv.underemployment_rate) + "%")}, OFW송금 {B(f1(kv.ofw_cash_remittance_growth_yoy) + "%")}·최저임금 {B("₱" + f0(kv.min_wage_php))}·빈곤율 {B(f1(kv.poverty_rate) + "%")} — {(kv.ofw_cash_remittance_growth_yoy ?? 0) > 0 ? "고용·송금이 구매력 뒷받침" : "구매력 모멘텀 둔화"}</>, headline: <><b className="font-semibold text-gray-900">고용·OFW 송금 = 가전 구매력의 원천</b></>, lg: <>실업 하락·송금 증가는 가처분소득↑ → <b className="font-semibold">송금 성수기(4Q·연말) 프리미엄 집중</b> · 페소 약세와 겹치면 환산 구매력 추가 상승</> }}
       kpiDefs={[
         { key: "unemployment_rate", label: "실업률", fmt: (v) => v + "%", tone: "rose" },
         { key: "underemployment_rate", label: "불완전고용", fmt: (v) => v + "%", tone: "rose" },
@@ -500,7 +498,7 @@ export function SentimentView() {
   const empty = !cci.series.length && !bci.series.length && !dur.series.length
   return (
     <Shell title="기업·소비 심리" sub="소비자심리 CCI·기업심리 BCI·내구재 구매의향 — 수요 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
-      banner={{ headline: <><b className="font-semibold text-gray-900">소비·기업 심리 = 수요의 3~6개월 선행</b> — 내구재 구매의향이 실판매를 예고</>, lg: <>내구재 구매의향·CCI 반등 초입에 <b className="font-semibold">신제품·프리미엄 출시 타이밍</b> · 악화 시 가성비·필수형 우선</> }}
+      banner={{ summary: (kv) => <>소비자심리 CCI {B(f1(kv.consumer_confidence_index))}·기업심리 BCI {B(f1(kv.business_confidence_index))}·내구재 구매의향 {B(f1(kv.durables_buying_intention))} — {(kv.consumer_confidence_index ?? 0) < 0 ? "심리 위축, 수요 회복 지연 국면" : "심리 개선, 수요 회복 초입"}</>, headline: <><b className="font-semibold text-gray-900">소비·기업 심리 = 수요의 3~6개월 선행</b></>, lg: <>내구재 구매의향·CCI 반등 초입에 <b className="font-semibold">신제품·프리미엄 출시 타이밍</b> · 악화 시 가성비·필수형 우선</> }}
       kpiDefs={[
         { key: "consumer_confidence_index", label: "소비자심리 CCI", fmt: (v) => String(v), tone: "emerald" },
         { key: "business_confidence_index", label: "기업심리 BCI", fmt: (v) => String(v), tone: "emerald" },
@@ -548,7 +546,7 @@ export function PricesView() {
   const empty = !core.series.length && !energy.series.length && !home.series.length && !dine.series.length && !elec.series.length && !oil.series.length
   return (
     <Shell title="물가" sub="생활물가·에너지·주거/내구재 CPI 상승률 — 실질 구매력·원가" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
-      banner={{ headline: <><b className="font-semibold text-gray-900">물가 = 가전 구매력의 실질 기준</b> — 식품·전기·주거 물가가 재량지출 여력을 좌우</>, lg: <>식품·전기 물가 급등기엔 가처분소득이 필수재로 쏠려 <b className="font-semibold">가전 구매 이연 → 보급형·프로모 방어</b> · 물가 둔화 국면엔 프리미엄 전환 수요 회복</> }}
+      banner={{ summary: (kv) => <>전체 물가 {B(f1(kv.INF_all_items) + "%")}·식품 {B(f1(kv.INF_food) + "%")}·쌀 {B(f1(kv.INF_rice) + "%")}·전기 {B(f1(kv.INF_electricity) + "%")}, 경유 {B("₱" + f1(kv.oil_diesel))} — {(kv.INF_all_items ?? 0) > 4 ? "물가 압박 지속, 재량지출 위축" : "물가 둔화, 구매력 회복 국면"}</>, headline: <><b className="font-semibold text-gray-900">물가 = 가전 구매력의 실질 기준</b></>, lg: <>식품·전기 물가 급등기엔 가처분소득이 필수재로 쏠려 <b className="font-semibold">가전 구매 이연 → 보급형·프로모 방어</b> · 물가 둔화 국면엔 프리미엄 전환 수요 회복</> }}
       kpiDefs={[
         { key: "INF_all_items", label: "전체 물가", fmt: (v) => v + "%", tone: "rose" },
         { key: "INF_food", label: "식품", fmt: (v) => v + "%", tone: "rose" },

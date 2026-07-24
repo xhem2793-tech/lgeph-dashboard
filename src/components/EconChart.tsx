@@ -23,8 +23,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     tip.innerHTML = ""
     const NS = "http://www.w3.org/2000/svg"
     const n = labels.length
-    const hasEnd = series.some((s) => s.endLabel) // 끝점 라벨 카드 있으면 우측 여백 확보
-    const L = 36, R = hasEnd ? 250 : 292, T = 8, B = 80
+    const L = 36, R = 292, T = 8, B = 80 // 끝점 라벨은 차트 밖으로 넘김(overflow visible)
     const el = (t: string, a: Record<string, string | number>) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, String(a[k])); return e }
     const all = series.flatMap((s) => s.data).filter((v) => Number.isFinite(v))
     if (!all.length) return
@@ -121,7 +120,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
   }, [series, labels, decimals, unit])
   return (
     <div className="relative mt-1" style={{ touchAction: "none" }}>
-      <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
+      <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair", overflow: "visible" }} />
       <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 w-max whitespace-nowrap rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>
   )
@@ -211,7 +210,7 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
 }) {
   return (
     <div
-      className="flex h-full flex-col rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md"
+      className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md"
       style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: Math.min(idx, 6) * 0.06 + "s" }}
     >
       <div className="flex items-center gap-1.5">
