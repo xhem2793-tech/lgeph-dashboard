@@ -68,13 +68,10 @@ export function TopNav() {
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
       <style>{"@keyframes axfade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}"}</style>
       <div className="mx-auto flex max-w-[1536px] items-center gap-5 px-4 py-2.5 sm:px-6" style={{ animation: "axfade .5s ease both" }}>
-        <Link href="/overview" className="flex shrink-0 flex-col leading-none">
-          <span className="text-[20px] font-extrabold tracking-tight">
+        <Link href="/overview" className="flex shrink-0 items-center leading-none">
+          <span className="text-[27px] font-extrabold tracking-tight">
             <span className="text-gray-900 dark:text-gray-50">axlgeph</span>
             <span className="text-indigo-600 dark:text-indigo-400">.report</span>
-          </span>
-          <span className="mt-0.5 text-[10px] font-semibold text-gray-400 dark:text-gray-500">
-            LG전자 필리핀법인 · 경영기획
           </span>
         </Link>
 

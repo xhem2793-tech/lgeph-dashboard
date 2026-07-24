@@ -414,6 +414,7 @@ export function LaborView() {
   const n = WIN.find((w) => w.k === win)!.n
   const un = build(d, n, [{ key: "unemployment_rate", name: "실업률", color: C.ind, w: 2 }, { key: "underemployment_rate", name: "불완전고용", color: C.rose }])
   const lf = build(d, n, [{ key: "labor_force_participation_rate", name: "경제활동참가율", color: C.ind, w: 2 }])
+  const emp = build(d, n, [{ key: "employed_persons", name: "취업자 수", color: C.emer, w: 2 }]) // 백만명, 월별 5년
   const rem = build(d, n, [{ key: "ofw_cash_remittance_growth_yoy", name: "송금 증가율", color: C.ind, w: 2 }])
   const remL = build(d, n, [{ key: "ofw_cash_remittance", name: "OFW 현금송금", color: C.emer, w: 2 }])
   const remY = build(d, n, [{ key: "remittances_usd", name: "연간 송금액", color: C.emer, w: 2, tf: (v) => v / 1e9 }]) // USD→십억$, 연간 장기(15년)
@@ -425,7 +426,7 @@ export function LaborView() {
   const urban = build(d, n, [{ key: "urban_population_pct", name: "도시화율", color: C.ind, w: 2 }]) // %, 연간
   const age = build(d, n, [{ key: "median_age", name: "중위연령", color: C.ind, w: 2 }]) // 세, 연간
   const fam = build(d, n, [{ key: "household_size", name: "평균 가구원수", color: C.ind, w: 2 }, { key: "fertility_rate", name: "합계출산율", color: C.rose }]) // 명, 연간
-  const empty = !un.series.length && !lf.series.length && !rem.series.length && !remL.series.length && !remY.series.length && !pop.series.length && !wage.series.length && !hh.series.length && !infra.series.length && !pov.series.length && !urban.series.length && !age.series.length && !fam.series.length
+  const empty = !un.series.length && !lf.series.length && !emp.series.length && !rem.series.length && !remL.series.length && !remY.series.length && !pop.series.length && !wage.series.length && !hh.series.length && !infra.series.length && !pov.series.length && !urban.series.length && !age.series.length && !fam.series.length
   return (
     <Shell title="고용·임금·소득" sub="실업·경제활동참가·OFW 송금 — 가전 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ summary: (kv) => <>실업률 {B(f1(kv.unemployment_rate) + "%")}·불완전고용 {B(f1(kv.underemployment_rate) + "%")}, OFW송금 {B(f1(kv.ofw_cash_remittance_growth_yoy) + "%")}·최저임금 {B("₱" + f0(kv.min_wage_php))}·빈곤율 {B(f1(kv.poverty_rate) + "%")} — {(kv.ofw_cash_remittance_growth_yoy ?? 0) > 0 ? "고용·송금이 구매력 뒷받침" : "구매력 모멘텀 둔화"}</>, headline: <><b className="font-semibold text-gray-900 dark:text-gray-50">고용·OFW 송금 = 가전 구매력의 원천</b></>, lg: <>실업 하락·송금 증가는 가처분소득↑ → <b className="font-semibold">송금 성수기(4Q·연말) 프리미엄 집중</b> · 페소 약세와 겹치면 환산 구매력 추가 상승</> }}
@@ -463,7 +464,14 @@ export function LaborView() {
           legend={<Lg c={C.ind} t="경제활동참가율" b />}
           meaning={<>노동시장 참여율 — <b className="text-gray-700 dark:text-gray-200">소득 창출 인구 저변</b></>}
           ai={<>참가율 상승은 소득 기반 확대 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">중장기 수요 저변 확대</b> 신호</>}
-          tone="emerald" src={src("PSA 노동력조사(LFS) · 월/분기")} />
+          tone="emerald" src={src("PSA 노동력조사(LFS) · 월별")} />
+      )}
+      {emp.series.length > 0 && (
+        <ChartCard seg="CE" title="취업자 수" unit="백만명 · 월별" labels={emp.labels} series={emp.series} decimals={1} seriesUnit="백만명"
+          legend={<Lg c={C.emer} t="취업자 수" b />}
+          meaning={<>총 취업자 수(월별) — <b className="text-gray-700 dark:text-gray-200">가전 구매 가능 소득인구의 절대 규모</b></>}
+          ai={<>취업자 증가는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가처분소득 창출 인구 확대 = 내구재 수요 저변 성장</b> → 고용 회복기 프리미엄·신규 라인업 확대 적기</>}
+          tone="emerald" src={src("PSA 노동력조사(LFS) 취업자 수 · 월별")} />
       )}
       {remY.series.length > 0 && (
         <ChartCard seg="CE" title="연간 해외송금액" unit="십억$ · 연간" labels={remY.labels} series={remY.series} decimals={1} seriesUnit="십억$"
