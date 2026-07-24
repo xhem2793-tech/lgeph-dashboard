@@ -12,9 +12,9 @@ import { useLang } from "@/lib/i18n"
 
 type NavItem = { id: string; ko: string; sub: string; count: string; group: string; accent?: boolean; star?: boolean; subs: string[] }
 const NAV: NavItem[] = [
-  { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도", count: "17", group: "전국", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운"] },
+  { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도 + 지역 물가", count: "17", group: "전국", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운", "지역 물가 히트맵"] },
   { id: "core", ko: "핵심 요약", sub: "일일 지표 + 대표 스코어카드 한 화면", count: "KPI 12", group: "핵심", subs: ["일일 지표 환율·유가·날씨", "대표 지표 스코어카드"] },
-  { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별·지역별 물가", count: "10+지역20", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "지역 물가 히트맵", "실질 지표"] },
+  { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별 물가", count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
   { id: "growth", ko: "국민계정·성장", sub: "GDP·투자·건설·산업생산·가동률", count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
   { id: "labor", ko: "고용·임금·소득", sub: "실업률·최저임금·OFW 송금", count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
   { id: "sentiment", ko: "기업·소비 심리", sub: "소비자심리 CCI·기업심리 BCI", count: "5", group: "실물경제", subs: ["소비자심리 CCI", "기업심리 BCI", "내구재 구매의향"] },

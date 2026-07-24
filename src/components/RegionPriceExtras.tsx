@@ -4,8 +4,8 @@ import React, { useEffect, useMemo, useState } from "react"
 import { pricesDomain } from "@/lib/supabase"
 import type { PricesDomain } from "@/lib/supabase"
 
-/** 지역 × 품목 물가 히트맵 + 지역 물가 분포 — 옛 물가 페이지에서 이관(임시).
- *  지역시장 지도 아래에 배치. 데이터 = pricesDomain().region(v_cost_of_living_regional). */
+/** 지역 × 품목 물가 히트맵 + 지역 물가 분포 — 지역시장 지도 아래에 배치.
+ *  데이터 = pricesDomain().region(v_cost_of_living_regional). */
 
 const num = (s: string | number | undefined) => {
   const v = parseFloat(String(s ?? "").replace(/[^0-9.\-]/g, ""))
@@ -42,7 +42,7 @@ export default function RegionPriceExtras() {
         <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
           <h2 className="text-[15px] font-bold tracking-tight text-gray-900">지역 × 품목 물가</h2>
-          <span className="text-[11px] font-semibold text-gray-400">전년비 % · 물가 높은 순 · 임시(지역 물가 상세)</span>
+          <span className="text-[11px] font-semibold text-gray-400">전년비 % · 물가 높은 순 · 지역 물가 상세</span>
         </div>
         <div className="mt-3 overflow-x-auto">
           <div className="grid min-w-[440px] gap-1" style={{ gridTemplateColumns: "auto repeat(6,1fr)" }}>

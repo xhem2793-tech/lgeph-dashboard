@@ -537,13 +537,15 @@ export function PricesView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(PRICES_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
-  const core = build(d, n, [{ key: "INF_all_items", name: "전체", color: C.ind, w: 2 }, { key: "INF_food", name: "식품", color: C.rose }, { key: "INF_rice", name: "쌀", color: C.amber }])
+  const allI = build(d, n, [{ key: "INF_all_items", name: "전체", color: C.ind, w: 2 }])
+  const food = build(d, n, [{ key: "INF_food", name: "식품", color: C.rose, w: 2 }])
+  const rice = build(d, n, [{ key: "INF_rice", name: "쌀", color: C.amber, w: 2 }])
   const energy = build(d, n, [{ key: "INF_electricity", name: "전기", color: C.ind, w: 2 }, { key: "INF_lpg", name: "LPG", color: C.rose }, { key: "INF_transport", name: "운송", color: C.blue }])
   const home = build(d, n, [{ key: "INF_housing_utilities", name: "주거·공공요금", color: C.ind, w: 2 }, { key: "INF_household_appliances", name: "가전", color: C.emer }, { key: "INF_aircon", name: "에어컨", color: C.rose }])
   const dine = build(d, n, [{ key: "INF_restaurants", name: "외식·숙박", color: C.ind, w: 2 }, { key: "INF_all_items", name: "전체 물가", color: C.brown }])
   const elec = build(d, n, [{ key: "meralco_residential_rate", name: "가정용 전기료", color: C.ind, w: 2 }])
   const oil = build(d, n, [{ key: "oil_diesel", name: "경유", color: C.ind, w: 2 }, { key: "oil_gasoline", name: "휘발유", color: C.rose }, { key: "oil_kerosene", name: "등유", color: C.amber }])
-  const empty = !core.series.length && !energy.series.length && !home.series.length && !dine.series.length && !elec.series.length && !oil.series.length
+  const empty = !allI.series.length && !food.series.length && !rice.series.length && !energy.series.length && !home.series.length && !dine.series.length && !elec.series.length && !oil.series.length
   return (
     <Shell title="물가" sub="생활물가·에너지·주거/내구재 CPI 상승률 — 실질 구매력·원가" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ summary: (kv) => <>전체 물가 {B(f1(kv.INF_all_items) + "%")}·식품 {B(f1(kv.INF_food) + "%")}·쌀 {B(f1(kv.INF_rice) + "%")}·전기 {B(f1(kv.INF_electricity) + "%")}, 경유 {B("₱" + f1(kv.oil_diesel))} — {(kv.INF_all_items ?? 0) > 4 ? "물가 압박 지속, 재량지출 위축" : "물가 둔화, 구매력 회복 국면"}</>, headline: <><b className="font-semibold text-gray-900">물가 = 가전 구매력의 실질 기준</b></>, lg: <>식품·전기 물가 급등기엔 가처분소득이 필수재로 쏠려 <b className="font-semibold">가전 구매 이연 → 보급형·프로모 방어</b> · 물가 둔화 국면엔 프리미엄 전환 수요 회복</> }}
@@ -555,12 +557,26 @@ export function PricesView() {
         { key: "oil_diesel", label: "경유", fmt: (v) => "₱" + v.toFixed(1), tone: "amber" },
         { key: "meralco_residential_rate", label: "전기료", fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
       ]}>
-      {core.series.length > 0 && (
-        <ChartCard seg="CE" title="생활물가 (전체·식품·쌀)" unit="전년비 %" labels={core.labels} series={core.series} decimals={1} seriesUnit="%"
-          legend={<><Lg c={C.ind} t="전체" b /><Lg c={C.rose} t="식품" /><Lg c={C.amber} t="쌀" /></>}
-          meaning={<>핵심 생활물가 상승률 — <b className="text-gray-700">가처분소득·재량지출 여력의 직접 결정</b></>}
-          ai={<>식품·쌀 물가 급등은 필수재 지출 쏠림 → <b className="font-semibold text-amber-600">가전 구매 이연 리스크</b>, 둔화 시 재량소비 회복 → 프리미엄 기회</>}
-          tone="rose" src={src("PSA CPI 상승률(전체·식품·쌀) · 월별")} />
+      {allI.series.length > 0 && (
+        <ChartCard seg="CE" title="전체 물가 (헤드라인 CPI)" unit="전년비 %" labels={allI.labels} series={allI.series} decimals={1} seriesUnit="%"
+          legend={<Lg c={C.ind} t="전체" b />}
+          meaning={<>헤드라인 물가 상승률 — <b className="text-gray-700">가처분소득·재량지출 여력의 직접 결정</b></>}
+          ai={<>전체 물가 4% 상회 시 필수재 쏠림 → <b className="font-semibold text-amber-600">가전 구매 이연</b>, 둔화 국면엔 재량소비·프리미엄 전환 회복</>}
+          tone="rose" src={src("PSA CPI 상승률(전체) · 월별")} />
+      )}
+      {food.series.length > 0 && (
+        <ChartCard seg="CE" title="식품 물가" unit="전년비 %" labels={food.labels} series={food.series} decimals={1} seriesUnit="%"
+          legend={<Lg c={C.rose} t="식품" b />}
+          meaning={<>식품 물가 상승률 — <b className="text-gray-700">가계 필수지출의 최대 항목</b></>}
+          ai={<>식품 물가 급등은 저·중소득 가처분소득을 직접 잠식 → <b className="font-semibold text-amber-600">보급형 가전 구매력 위축</b>, 둔화 시 회복 선행</>}
+          tone="rose" src={src("PSA CPI 상승률(식품) · 월별")} />
+      )}
+      {rice.series.length > 0 && (
+        <ChartCard seg="CE" title="쌀 물가" unit="전년비 %" labels={rice.labels} series={rice.series} decimals={1} seriesUnit="%"
+          legend={<Lg c={C.amber} t="쌀" b />}
+          meaning={<>주식(쌀) 물가 상승률 — <b className="text-gray-700">체감물가·정책 민감도 최고 품목</b></>}
+          ai={<>쌀값 급등은 체감물가·정책개입(수입관세·상한제)을 촉발 → <b className="font-semibold text-amber-600">소비심리 위축 신호</b>, 안정 시 재량소비 여력 반등</>}
+          tone="amber" src={src("PSA CPI 상승률(쌀) · 월별")} />
       )}
       {energy.series.length > 0 && (
         <ChartCard seg="CE" title="에너지·이동 물가 (전기·LPG·운송)" unit="전년비 %" labels={energy.labels} series={energy.series} decimals={1} seriesUnit="%"
