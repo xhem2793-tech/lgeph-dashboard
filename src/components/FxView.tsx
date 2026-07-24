@@ -20,7 +20,7 @@ const DATA = {"labels": ["21.7", "21.8", "21.9", "21.10", "21.11", "21.12", "22.
 
 const WINDOWS = [{ k: "1Y", n: 12 }, { k: "3Y", n: 36 }, { k: "5Y", n: 60 }]
 const lastN = <T,>(a: T[], n: number) => a.slice(Math.max(0, a.length - n))
-const strengthOf = (a: number[]) => a.map((v) => +((a[0] / v) * 100).toFixed(1)) // 대미달러, 시작=100 (아래=약세)
+const strengthOf = (a: number[]) => a.map((v) => +((v / a[0]) * 100).toFixed(1)) // 대미달러, 시작=100 (위=약세·절하)
 const idx100 = (a: number[]) => a.map((v) => +((v / a[0]) * 100).toFixed(1))
 
 // ── 인터랙티브 라인차트 (ProChart 어법 · N시리즈 단일축, 모든 구간 호버 대응) ──
@@ -158,12 +158,12 @@ export default function FxView() {
   const n = WINDOWS.find((w) => w.k === win)!.n
   const labels = lastN(DATA.labels, n)
   const region = [
-    { name: "필리핀", color: "#6366f1", w: 2, data: strengthOf(lastN(DATA.region.ph, n)) },
-    { name: "인니", color: "#dc2626", data: strengthOf(lastN(DATA.region.id, n)) },
-    { name: "말련", color: "#0284c7", data: strengthOf(lastN(DATA.region.my, n)) },
-    { name: "태국", color: "#0f766e", data: strengthOf(lastN(DATA.region.th, n)) },
-    { name: "베트남", color: "#d99400", data: strengthOf(lastN(DATA.region.vn, n)) },
-    { name: "싱가포르", color: "#7c3aed", data: strengthOf(lastN(DATA.region.sg, n)) },
+    { name: "필리핀", color: "#4338ca", w: 3, data: strengthOf(lastN(DATA.region.ph, n)) }, // 강조: 진한 indigo + 굵게
+    { name: "인니", color: "#ef4444", w: 1.6, data: strengthOf(lastN(DATA.region.id, n)) },
+    { name: "말련", color: "#0ea5e9", w: 1.6, data: strengthOf(lastN(DATA.region.my, n)) },
+    { name: "태국", color: "#10b981", w: 1.6, data: strengthOf(lastN(DATA.region.th, n)) },
+    { name: "베트남", color: "#f59e0b", w: 1.6, data: strengthOf(lastN(DATA.region.vn, n)) },
+    { name: "싱가포르", color: "#a855f7", w: 1.6, data: strengthOf(lastN(DATA.region.sg, n)) },
   ]
   const fxusd = [{ name: "₱/USD", color: "#6366f1", w: 2, data: lastN(DATA.fxusd, n) }]
   const won = [{ name: "₩/₱", color: "#0f766e", w: 3, data: lastN(DATA.extra.wonperpeso, n) }]
@@ -249,8 +249,8 @@ export default function FxView() {
             </span>
           </header>
           <div className="grid items-stretch gap-4 sm:grid-cols-2">
-            <ChartCard title="동남아 6개국 통화 강도" unit="대미달러 · 창 시작=100" labels={labels} series={region} tone="rose"
-              legend={<><Lg c="#6366f1" t="필리핀" b /><Lg c="#dc2626" t="인니" /><Lg c="#0284c7" t="말련" /><Lg c="#0f766e" t="태국" /><Lg c="#d99400" t="베트남" /><Lg c="#7c3aed" t="싱가포르" /></>}
+            <ChartCard title="동남아 6개국 통화 약세도" unit="대미달러 · 창 시작=100 · 위=절하" labels={labels} series={region} tone="rose"
+              legend={<><Lg c="#4338ca" t="필리핀" b /><Lg c="#ef4444" t="인니" /><Lg c="#0ea5e9" t="말련" /><Lg c="#10b981" t="태국" /><Lg c="#f59e0b" t="베트남" /><Lg c="#a855f7" t="싱가포르" /></>}
               meaning={<>각국 통화의 대미달러 가치를 창 시작=100으로 지수화 — <b className="text-gray-700">아래로 갈수록 약세</b>.</>}
               ai={<>페소는 5년간 대미달러 약 18% 절하로 <b className="font-semibold text-rose-600">역내 최대 낙폭</b>. 페소로 결제하지 않는 한 경쟁국 대비 원가 방어력이 약함 → 헤지·현지조달 확대 검토.</>}
               src={<><b className="font-semibold text-gray-500">자료</b> Alpha Vantage 월별 양자환율</>} />
