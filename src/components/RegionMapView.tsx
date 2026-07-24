@@ -31,7 +31,7 @@ export default function RegionMapView() {
           title="필리핀 지역시장 인터랙티브 지도"
           loading="lazy"
           className="block w-full border-0"
-          style={{ height: "92vh", minHeight: 860 }}
+          style={{ height: "96vh", minHeight: 940 }}
         />
       </section>
 

@@ -14,7 +14,7 @@
     --line:#141414;
     --muted:#7b7a74;
     --hair:#e6e4dd;
-    --accent:#6366f1;
+    --accent:#4f46e5;
     --accent-tint:#e0e7ff;
     --accent-soft:#eef2ff;
   }
@@ -30,20 +30,20 @@
   a{color:var(--accent)}
   a:hover{color:#4338ca}
 
-  /* KPI headline strip */
-  .kpibar{display:flex;align-items:center;gap:26px;padding:15px 30px;background:#fff;color:var(--ink);border-bottom:1px solid var(--hair);flex:none;z-index:10}
-  .kpibar .ctx{display:flex;flex-direction:column;min-width:0}
-  .kpibar .ctx-row{display:flex;align-items:center;gap:9px}
-  .kpibar .ctx-tag{font-size:10px;font-weight:800;letter-spacing:.1em;padding:3px 8px;border-radius:5px;background:var(--accent);color:#fff;white-space:nowrap;flex:none}
-  .kpibar .ctx-name{font-size:19px;font-weight:800;letter-spacing:-.01em;white-space:nowrap}
-  .kpibar .ctx-per{font-size:11px;color:var(--muted);margin-top:4px;font-style:italic}
-  .kpicards{display:flex;margin-left:auto}
-  .kpicard{padding:2px 26px;border-left:1px solid var(--hair);text-align:right}
-  .kpicard:first-child{border-left:none}
-  .kpicard .kk{font-size:11px;color:var(--muted);font-weight:600;letter-spacing:.01em}
-  .kpicard .kv{font-size:23px;font-weight:800;margin-top:4px;letter-spacing:-.02em;white-space:nowrap}
-  .kpicard .kv.up{color:#059669}
-  .kpicard .kv.down{color:#e11d48}
+  /* KPI 오버레이(지도 안, 우하단) + 진입 애니메이션 */
+  @keyframes ovin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  @keyframes rin{from{opacity:0}to{opacity:1}}
+  .kpiover{position:absolute;bottom:22px;right:22px;z-index:6;display:flex;background:#fff;border:1px solid var(--hair);border-radius:12px;box-shadow:0 4px 18px rgba(0,0,0,.08);padding:9px 6px;animation:ovin .6s cubic-bezier(.16,1,.3,1) both;animation-delay:.3s}
+  .kpiover .ko{padding:1px 15px;border-left:1px solid var(--hair);text-align:right}
+  .kpiover .ko:first-of-type{border-left:none}
+  .kpiover .kk{font-size:9px;color:var(--muted);font-weight:600;letter-spacing:.01em}
+  .kpiover .kv{font-size:16.5px;font-weight:800;margin-top:2px;letter-spacing:-.02em;white-space:nowrap;color:var(--ink)}
+  .kpiover .kv.up{color:#059669}
+  .kpiover .kv.down{color:#e11d48}
+  .zoomlayer{animation:rin .8s ease .12s both}
+  .brand{animation:ovin .6s cubic-bezier(.16,1,.3,1) both;animation-delay:.12s}
+  .mapctrl{animation:ovin .6s cubic-bezier(.16,1,.3,1) both;animation-delay:.42s}
+  .panel{animation:ovin .55s cubic-bezier(.16,1,.3,1) both;animation-delay:.2s}
 
   .app{display:grid;grid-template-columns:1fr 400px;flex:1;min-height:0}
 
@@ -125,7 +125,7 @@
     background:var(--panel);border-left:1.5px solid var(--line);
     display:flex;flex-direction:column;height:100vh;overflow:hidden;position:relative;
   }
-  .panel-head{padding:30px 32px 22px;border-bottom:1px solid var(--hair)}
+  .panel-head{padding:22px 28px 18px;border-bottom:1px solid var(--hair)}
   .panel-head .ey{font-size:11px;letter-spacing:.28em;color:var(--muted);font-weight:600;text-transform:uppercase}
   .panel-head .ttl{font-size:20px;font-weight:800;margin-top:9px;letter-spacing:-.01em}
 
@@ -269,17 +269,7 @@
 </style>
 </head>
 <body>
-<div class="kpibar">
-  <div class="ctx">
-    <div class="ctx-row"><span class="ctx-tag" id="hl-tag">전국</span><span class="ctx-name" id="hl-name">필리핀 전국</span></div>
-    <div class="ctx-per" id="hl-per">Jan–Dec 2024 · Sell-out</div>
-  </div>
-  <div class="kpicards">
-    <div class="kpicard"><div class="kk">총 셀아웃</div><div class="kv" id="hl-sell">—</div></div>
-    <div class="kpicard"><div class="kk">전년 대비 성장률</div><div class="kv up" id="hl-yoy">—</div></div>
-    <div class="kpicard"><div class="kk" id="hl-thirdk">총 매장 수</div><div class="kv" id="hl-third">—</div></div>
-  </div>
-</div>
+<!-- 상단 KPI 스트립 제거: 지도 내 우하단 오버레이(.kpiover)로 이동 -->
 <div class="app">
   <div class="stage">
     <div class="brand">
@@ -292,6 +282,12 @@
       <span>전체 지도</span>
     </button>
     <svg class="map" id="map"></svg>
+    <div class="kpiover" id="kpiover">
+      <span id="hl-tag" style="display:none"></span><span id="hl-name" style="display:none"></span><span id="hl-per" style="display:none"></span>
+      <div class="ko"><div class="kk">총 셀아웃</div><div class="kv" id="hl-sell">—</div></div>
+      <div class="ko"><div class="kk">전년 대비</div><div class="kv up" id="hl-yoy">—</div></div>
+      <div class="ko"><div class="kk" id="hl-thirdk">총 매장</div><div class="kv" id="hl-third">—</div></div>
+    </div>
     <div class="mapctrl">
       <div class="mc-t">지역별 현황 · 색상 지표</div>
       <div class="mc-tabs" id="mapmetrics"></div>
@@ -532,7 +528,7 @@ let curMapMetric="none";
 function metricColor(m,v,ext){
   if(m.div){
     const maxAbs=Math.max(Math.abs(ext.min),Math.abs(ext.max))||1, t=v/maxAbs;
-    return t>=0 ? d3.interpolateRgb("#f4f3ef","#6366f1")(0.12+0.88*Math.min(1,t))
+    return t>=0 ? d3.interpolateRgb("#f4f3ef","#4f46e5")(0.12+0.88*Math.min(1,t))
                 : d3.interpolateRgb("#f4f3ef","#e11d48")(0.12+0.88*Math.min(1,-t));
   }
   const t=(v-ext.min)/((ext.max-ext.min)||1);
@@ -553,7 +549,7 @@ function applyChoropleth(key){
   renderLegend(m,ext);
 }
 function renderLegend(m,ext){
-  const grad=m.div?"linear-gradient(90deg,#e11d48,#f4f3ef,#6366f1)":"linear-gradient(90deg,#eef2ff,#4338ca)";
+  const grad=m.div?"linear-gradient(90deg,#e11d48,#f4f3ef,#4f46e5)":"linear-gradient(90deg,#eef2ff,#4338ca)";
   document.getElementById("legend").innerHTML=
     `<div class="lg-bar" style="background:${grad}"></div>`+
     `<div class="lg-sc"><span>${m.fmt(ext.min)}</span>${m.div?"<span>0</span>":""}<span>${m.fmt(ext.max)}</span></div>`;
@@ -645,7 +641,7 @@ d3.json("data/ph-regions.geojson").then(geo=>{
   W=stage.clientWidth; H=stage.clientHeight;
   svg.attr("viewBox",`0 0 ${W} ${H}`);
 
-  const proj=d3.geoMercator().fitExtent([[40,90],[W-40,H-40]],geo);
+  const proj=d3.geoMercator().fitExtent([[30,52],[W-30,H-44]],geo);
   path=d3.geoPath(proj);
   g=svg.append("g").attr("class","zoomlayer");
   gLabels=svg.append("g");
