@@ -114,7 +114,7 @@
 
   /* management insight tags */
   .tags{display:flex;flex-wrap:wrap;gap:8px}
-  .tag{display:inline-flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:700;border:1px solid}
+  .tag{display:inline-flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;font-size:10.5px;font-weight:700;border:1px solid}
   .tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.8}
   .tag.pos{background:var(--accent-soft);border-color:var(--accent-tint);color:var(--accent)}
   .tag.warn{background:#fbeeeb;border-color:#f2d3cc;color:#b8503f}
@@ -155,11 +155,11 @@
   /* detail view */
   .detail{padding:0;opacity:0;transform:translateX(14px);transition:opacity .35s,transform .35s;pointer-events:none;position:absolute;inset:0;top:0;background:var(--panel);display:flex;flex-direction:column}
   .detail.show{opacity:1;transform:none;pointer-events:auto}
-  .detail-head{padding:28px 32px 22px;border-bottom:1px solid var(--hair);background:var(--accent);color:#fff}
-  .detail-head .code2{display:inline-block;padding:4px 11px;border:1.3px solid rgba(255,255,255,.6);border-radius:6px;font-size:11px;font-weight:800;letter-spacing:.08em}
-  .detail-head h2{font-size:25px;font-weight:800;margin-top:14px;letter-spacing:-.01em;line-height:1.1}
-  .detail-head .en{font-size:12.5px;color:rgba(255,255,255,.75);margin-top:6px}
-  .detail-scroll{flex:1;overflow-y:auto;padding:26px 32px 40px}
+  .detail-head{padding:15px 22px 13px;border-bottom:1px solid var(--hair);background:var(--accent);color:#fff}
+  .detail-head .code2{display:inline-block;padding:2px 8px;border:1.3px solid rgba(255,255,255,.55);border-radius:6px;font-size:10px;font-weight:800;letter-spacing:.08em}
+  .detail-head h2{font-size:19px;font-weight:800;margin-top:8px;letter-spacing:-.01em;line-height:1.1}
+  .detail-head .en{font-size:11px;color:rgba(255,255,255,.75);margin-top:4px}
+  .detail-scroll{flex:1;overflow-y:auto;padding:16px 22px 26px}
 
   .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:12px;overflow:hidden}
   .stat{background:var(--panel);padding:16px 17px}
@@ -168,17 +168,17 @@
   .stat .v small{font-size:12px;font-weight:600;color:var(--muted);margin-left:3px}
 
   /* executive summary */
-  .summary{background:var(--accent-soft);border:1px solid var(--accent-tint);border-radius:12px;padding:16px 17px}
-  .sum-line{font-size:13.5px;line-height:1.55;font-weight:600;color:#22322f;margin-bottom:12px}
+  .summary{border-left:2px solid var(--accent);padding:1px 0 1px 12px}
+  .sum-line{font-size:12px;line-height:1.45;font-weight:600;color:var(--ink);margin-bottom:8px}
   .sum-line b{color:var(--accent);font-weight:800}
   .summary .tags{gap:7px}
 
   /* key business KPIs */
-  .kpigrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:12px;overflow:hidden;margin-top:16px}
-  .kc{background:var(--panel);padding:15px 16px}
-  .kc-k{font-size:11px;color:var(--muted);font-weight:600}
+  .kpigrid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--hair);border:1px solid var(--hair);border-radius:12px;overflow:hidden;margin-top:12px}
+  .kc{background:var(--panel);padding:9px 12px}
+  .kc-k{font-size:10px;color:var(--muted);font-weight:600}
   .kc-k small{font-weight:500;opacity:.8}
-  .kc-v{font-size:22px;font-weight:800;margin-top:5px;letter-spacing:-.02em}
+  .kc-v{font-size:17px;font-weight:800;margin-top:3px;letter-spacing:-.02em}
   .kc-v.up{color:var(--accent)} .kc-v.down{color:#e11d48}
 
   /* compact geography line */
@@ -572,7 +572,7 @@ function insightTags(name){
   if(e.cpi<=94) t.push(["가성비·볼륨 중심","neu"]);
   if(pc<80) t.push(["침투 저조 → 확대 기회","pos"]); else if(pc>=140) t.push(["구매력 집중","neu"]);
   if(!t.length) t.push(["안정·평균 수준","neu"]);
-  return t.slice(0,4);
+  return t.slice(0,2);
 }
 function renderTags(name){
   const box=document.getElementById("d-tags"); box.innerHTML="";
