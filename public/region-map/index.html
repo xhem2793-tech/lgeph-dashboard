@@ -129,7 +129,7 @@
   .monthbar .mb-btn{border:none;background:none;font-size:18px;color:var(--accent);cursor:pointer;font-weight:800;line-height:1;padding:0 2px;font-family:inherit}
   .monthbar .mb-btn:hover{opacity:.65}
   .monthbar .mb-slider{flex:1;min-width:60px;accent-color:var(--accent);cursor:pointer}
-  .monthbar .mb-lbl{font-size:12.5px;font-weight:800;color:var(--ink);min-width:40px;text-align:center;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .monthbar .mb-lbl{font-size:11px;font-weight:800;color:var(--ink);min-width:46px;text-align:left;white-space:nowrap;letter-spacing:.01em}
   /* 지역 hover 말풍선(값 + 근거) */
   .rtip{position:absolute;pointer-events:none;z-index:20;min-width:150px;max-width:210px;background:rgba(255,255,255,.98);backdrop-filter:blur(7px);border:1px solid var(--hair);border-radius:10px;padding:9px 11px;box-shadow:0 6px 22px rgba(0,0,0,.13);opacity:0;transition:opacity .16s ease}
   .rtip .rt-name{font-size:11.5px;font-weight:800;color:var(--muted);letter-spacing:.01em}
@@ -329,9 +329,9 @@
       <div class="mapbottom" id="mapbottom">
         <div class="maplegend" id="legend"></div>
         <div class="monthbar" id="monthbar" style="display:none">
+          <span class="mb-lbl" id="m-label">—</span>
           <button class="mb-btn" id="m-prev" type="button" aria-label="이전 달">‹</button>
           <input type="range" class="mb-slider" id="m-slider" min="0" max="0" value="0">
-          <span class="mb-lbl" id="m-label">—</span>
           <button class="mb-btn" id="m-next" type="button" aria-label="다음 달">›</button>
         </div>
       </div>
