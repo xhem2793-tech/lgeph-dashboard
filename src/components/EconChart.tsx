@@ -10,7 +10,7 @@ import React from "react"
 const GRID = "#eceef1"
 export const IND = "#6366f1" // 주 시리즈(핵심요약 동일)
 
-export type SLine = { name: string; color: string; data: number[]; w?: number }
+export type SLine = { name: string; color: string; data: number[]; w?: number; endLabel?: string }
 
 // ── 인터랙티브 라인차트 (N시리즈 단일축, 평소 선만·호버 시 점) ──
 export function LineChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[]; labels: string[]; decimals?: number; unit?: string }) {
@@ -23,7 +23,8 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     tip.innerHTML = ""
     const NS = "http://www.w3.org/2000/svg"
     const n = labels.length
-    const L = 36, R = 292, T = 8, B = 80
+    const hasEnd = series.some((s) => s.endLabel) // 끝점 라벨 카드 있으면 우측 여백 확보
+    const L = 36, R = hasEnd ? 250 : 292, T = 8, B = 80
     const el = (t: string, a: Record<string, string | number>) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, String(a[k])); return e }
     const all = series.flatMap((s) => s.data).filter((v) => Number.isFinite(v))
     if (!all.length) return
@@ -51,6 +52,22 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
       void (pl as unknown as SVGGraphicsElement).getBoundingClientRect() // 강제 reflow로 시작 상태 확정(async 로드 시 첫 페인트 누락 방지)
       pl.style.transition = "stroke-dashoffset 1500ms cubic-bezier(.22,1,.36,1)"; pl.style.transitionDelay = "0.18s"
       pl.style.strokeDashoffset = "0"
+    })
+    // 끝점 라벨 카드 — 특정 시리즈(예: 필리핀)의 우측 끝 위치를 소형 핀 카드로 표기(굵은선 강조 대체)
+    series.forEach((s) => {
+      if (!s.endLabel) return
+      let li = -1; for (let i = s.data.length - 1; i >= 0; i--) { if (Number.isFinite(s.data[i])) { li = i; break } }
+      if (li < 0) return
+      const ex = X(li), ey = Y(s.data[li])
+      const py = Math.max(T + 7, Math.min(B - 7, ey)) // 상하 클램프
+      const tw = s.endLabel.length * 6.2 + 12
+      const g = el("g", { opacity: 0 }); g.style.transition = "opacity .5s ease"; g.style.transitionDelay = "1.5s"
+      g.appendChild(el("circle", { cx: ex, cy: ey, r: 2.4, fill: s.color, stroke: "#fff", "stroke-width": 1.2 }))
+      if (Math.abs(py - ey) > 1) g.appendChild(el("line", { x1: ex, y1: ey, x2: ex + 5, y2: py, stroke: s.color, "stroke-width": 1, opacity: 0.5 }))
+      g.appendChild(el("rect", { x: ex + 5, y: py - 7, width: tw, height: 14, rx: 4, fill: "#fff", stroke: s.color, "stroke-width": 1.1 }))
+      const t = el("text", { x: ex + 5 + tw / 2, y: py + 2.9, "text-anchor": "middle", "font-size": 8.4, "font-weight": 800, fill: s.color }); t.textContent = s.endLabel
+      g.appendChild(t); svg.appendChild(g)
+      void (g as unknown as SVGGraphicsElement).getBoundingClientRect(); g.setAttribute("opacity", "1")
     })
     // 호버 활성점: 시리즈당 1개, 평소 opacity 0
     const adots: SVGElement[] = series.map((s) => {

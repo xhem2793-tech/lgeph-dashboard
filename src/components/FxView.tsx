@@ -152,7 +152,7 @@ export default function FxView() {
   const n = WINDOWS.find((w) => w.k === win)!.n
   const labels = lastN(DATA.labels, n)
   const region = [
-    { name: "필리핀", color: "#4338ca", w: 3, data: strengthOf(lastN(DATA.region.ph, n)) }, // 강조: 진한 indigo + 굵게
+    { name: "필리핀", color: "#4338ca", w: 1.6, data: strengthOf(lastN(DATA.region.ph, n)), endLabel: "필리핀" }, // 굵기 강조 대신 우측 끝 라벨 카드로 위치 표기
     { name: "인니", color: "#ef4444", w: 1.6, data: strengthOf(lastN(DATA.region.id, n)) },
     { name: "말련", color: "#0ea5e9", w: 1.6, data: strengthOf(lastN(DATA.region.my, n)) },
     { name: "태국", color: "#10b981", w: 1.6, data: strengthOf(lastN(DATA.region.th, n)) },
