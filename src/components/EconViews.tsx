@@ -466,7 +466,7 @@ export function GrowthView() {
 // ══════════════════════════════════════════════════════════════════════
 // 고용·임금·소득 — 실업·참가·OFW 송금·인구
 // ══════════════════════════════════════════════════════════════════════
-const LABOR_KEYS = ["unemployment_rate", "underemployment_rate", "labor_force_participation_rate", "employed_persons", "ofw_cash_remittance", "ofw_cash_remittance_growth_yoy", "ofw_personal_remittance", "remittances_usd", "population", "urban_population_pct", "min_wage_php", "households_mn", "household_size", "internet_penetration", "electrification_rate", "poverty_rate", "fertility_rate", "median_age"]
+const LABOR_KEYS = ["unemployment_rate", "underemployment_rate", "labor_force_participation_rate", "employed_persons", "ofw_cash_remittance", "ofw_cash_remittance_growth_yoy", "ofw_personal_remittance", "remittances_usd", "population", "urban_population_pct", "min_wage_php", "households_mn", "household_size", "internet_penetration", "electrification_rate", "poverty_rate", "fertility_rate", "median_age", "mobile_per100", "broadband_per100", "account_ownership", "gini_index", "hh_consumption_pc", "gni_per_capita", "life_expectancy", "secondary_enroll"]
 export function LaborView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(LABOR_KEYS)
@@ -485,7 +485,12 @@ export function LaborView() {
   const urban = build(d, n, [{ key: "urban_population_pct", name: "도시화율", color: C.ind, w: 2 }]) // %, 연간
   const age = build(d, n, [{ key: "median_age", name: "중위연령", color: C.ind, w: 2 }]) // 세, 연간
   const fam = build(d, n, [{ key: "household_size", name: "평균 가구원수", color: C.ind, w: 2 }, { key: "fertility_rate", name: "합계출산율", color: C.rose }]) // 명, 연간
-  const empty = !un.series.length && !lf.series.length && !emp.series.length && !rem.series.length && !remL.series.length && !remY.series.length && !pop.series.length && !wage.series.length && !hh.series.length && !infra.series.length && !pov.series.length && !urban.series.length && !age.series.length && !fam.series.length
+  const ict = build(d, n, [{ key: "mobile_per100", name: "이동전화", color: C.ind, w: 2 }, { key: "broadband_per100", name: "초고속인터넷", color: C.emer }, { key: "internet_penetration", name: "인터넷 사용", color: C.blue }]) // 100명당·%
+  const fin = build(d, n, [{ key: "account_ownership", name: "금융계좌 보유율", color: C.ind, w: 2 }]) // %, Findex
+  const cons = build(d, n, [{ key: "hh_consumption_pc", name: "1인당 가계소비", color: C.ind, w: 2 }]) // 불변$
+  const gni = build(d, n, [{ key: "gni_per_capita", name: "1인당 GNI", color: C.ind, w: 2 }]) // 명목$
+  const gini = build(d, n, [{ key: "gini_index", name: "지니계수", color: C.rose, w: 2 }]) // 불평등
+  const empty = !un.series.length && !lf.series.length && !emp.series.length && !rem.series.length && !remL.series.length && !remY.series.length && !pop.series.length && !wage.series.length && !hh.series.length && !infra.series.length && !pov.series.length && !urban.series.length && !age.series.length && !fam.series.length && !ict.series.length && !fin.series.length && !cons.series.length && !gni.series.length && !gini.series.length
   return (
     <Shell title="고용·임금·소득" sub="실업·경제활동참가·OFW 송금 — 가전 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ summary: (kv) => <>실업률 {B(f1(kv.unemployment_rate) + "%")}·불완전고용 {B(f1(kv.underemployment_rate) + "%")}, OFW송금 {B(f1(kv.ofw_cash_remittance_growth_yoy) + "%")}·최저임금 {B("₱" + f0(kv.min_wage_php))}·빈곤율 {B(f1(kv.poverty_rate) + "%")} — {(kv.ofw_cash_remittance_growth_yoy ?? 0) > 0 ? "고용·송금이 구매력 뒷받침" : "구매력 모멘텀 둔화"}</>, headline: <><b className="font-semibold text-gray-900 dark:text-gray-50">고용·OFW 송금 = 가전 구매력의 원천</b></>, lg: <>실업 하락·송금 증가는 가처분소득↑ → <b className="font-semibold">송금 성수기(4Q·연말) 프리미엄 집중</b> · 페소 약세와 겹치면 환산 구매력 추가 상승</> }}
@@ -600,6 +605,43 @@ export function LaborView() {
           meaning={<>가구 규모·출산율 하락 — <b className="text-gray-700 dark:text-gray-200">가구 수 증가·소형 가전 수요 구조 전환</b></>}
           ai={<>가구원수·출산율 하락은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가구 분화 = 가구 수↑ = 소형·1인용 가전 대수 확대</b> → 소형·프리미엄 소가전 라인업 강화</>}
           tone="emerald" src={src("PSA·World Bank 가구·출산율 · 연간")} />
+      )}
+        </> },
+        { key: "adopt", label: "소비·기술·금융", node: <>
+      {ict.series.length > 0 && (
+        <ChartCard seg="CE" title="ICT 보급 (모바일·인터넷)" unit="100명당 · % · 연간" labels={ict.labels} series={ict.series} decimals={0} seriesUnit=""
+          legend={<><Lg c={C.ind} t="이동전화/100명" b /><Lg c={C.emer} t="초고속인터넷/100명" /><Lg c={C.blue} t="인터넷 사용%" /></>}
+          meaning={<>통신·인터넷 보급 — <b className="text-gray-700 dark:text-gray-200">스마트가전·IoT 연계 수요의 인프라 전제</b></>}
+          ai={<>모바일·초고속인터넷 보급 확대는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">스마트가전·앱연동 프리미엄 침투 여지</b> → 커넥티드 라인업·구독형 서비스 기회</>}
+          tone="emerald" src={src("World Bank WDI ICT · 연간")} />
+      )}
+      {fin.series.length > 0 && (
+        <ChartCard seg="CE" title="금융계좌 보유율 (금융포용)" unit="% · 연간" labels={fin.labels} series={fin.series} decimals={0} seriesUnit="%"
+          legend={<Lg c={C.ind} t="금융계좌 보유율" b />}
+          meaning={<>15세+ 금융계좌 보유율 — <b className="text-gray-700 dark:text-gray-200">할부·카드·디지털결제 기반 확대</b></>}
+          ai={<>금융포용 확대는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">무이자 할부·BNPL·카드 결제 저변 성장</b> → 핀테크 제휴 할부 프로모로 신규 구매층 확보</>}
+          tone="emerald" src={src("World Bank Findex 금융계좌 · 연간")} />
+      )}
+      {cons.series.length > 0 && (
+        <ChartCard seg="CE" title="1인당 가계소비" unit="불변 US$ · 연간" labels={cons.labels} series={cons.series} decimals={0} seriesUnit="$"
+          legend={<Lg c={C.ind} t="1인당 가계소비" b />}
+          meaning={<>실질 1인당 소비지출 — <b className="text-gray-700 dark:text-gray-200">가전 포함 재량소비의 구조적 성장</b></>}
+          ai={<>1인당 소비 우상향은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">재량·프리미엄 지출 여력 구조적 확대</b> → 상위 라인업·신가전 카테고리 침투 기회</>}
+          tone="emerald" src={src("World Bank 1인당 가계소비(불변) · 연간")} />
+      )}
+      {gni.series.length > 0 && (
+        <ChartCard seg="CE" title="1인당 GNI (국민총소득)" unit="US$ · 연간" labels={gni.labels} series={gni.series} decimals={0} seriesUnit="$"
+          legend={<Lg c={C.ind} t="1인당 GNI" b />}
+          meaning={<>1인당 국민총소득 — <b className="text-gray-700 dark:text-gray-200">해외소득(OFW) 포함 실질 소득수준</b></>}
+          ai={<>GNI는 GDP+해외소득(OFW) → <b className="font-semibold text-emerald-600 dark:text-emerald-400">송금 반영 실제 구매력 지표</b>, 중진국 상단 진입 시 프리미엄 전환 가속</>}
+          tone="emerald" src={src("World Bank 1인당 GNI · 연간")} />
+      )}
+      {gini.series.length > 0 && (
+        <ChartCard seg="CE" title="소득불평등 (지니계수)" unit="index · 연간" labels={gini.labels} series={gini.series} decimals={1} seriesUnit=""
+          legend={<Lg c={C.rose} t="지니계수" b />}
+          meaning={<>소득분배 불평등도 — <b className="text-gray-700 dark:text-gray-200">양극화 = 프리미엄·보급형 이원 시장 구조</b></>}
+          ai={<>높은 지니(양극화)는 <b className="font-semibold text-amber-600 dark:text-amber-400">프리미엄(상위층)·초저가(하위층) 양극 전략</b> 필요 → 중간 공백 유의, 하락 시 중산층 볼륨존 확대</>}
+          tone="amber" src={src("World Bank 지니계수 · 연간")} />
       )}
         </> },
       ]} />
