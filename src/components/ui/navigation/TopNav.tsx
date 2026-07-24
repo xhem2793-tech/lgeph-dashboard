@@ -69,7 +69,7 @@ export function TopNav() {
       <style>{"@keyframes axfade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}"}</style>
       <div className="mx-auto flex max-w-[1536px] items-center gap-5 px-4 py-2.5 sm:px-6" style={{ animation: "axfade .5s ease both" }}>
         <Link href="/overview" className="flex shrink-0 items-center leading-none">
-          <span className="text-[27px] font-extrabold tracking-tight">
+          <span className="text-[22px] font-extrabold tracking-tight leading-none">
             <span className="text-gray-900 dark:text-gray-50">axlgeph</span>
             <span className="text-indigo-600 dark:text-indigo-400">.report</span>
           </span>
