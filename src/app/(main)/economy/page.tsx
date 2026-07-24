@@ -13,17 +13,18 @@ import { useLang } from "@/lib/i18n"
 type Card = Awaited<ReturnType<typeof homeBand>>[number]
 type Mon = Record<string, { dates: string[]; values: number[] }>
 
-const NAV: { id: string; ko: string; sub: string; count: string; accent?: boolean; star?: boolean; subs: string[] }[] = [
-  { id: "core", ko: "핵심 요약", sub: "일일 지표 + 대표 스코어카드 한 화면", count: "KPI 12", subs: ["일일 지표 환율·유가·날씨", "대표 지표 스코어카드"] },
-  { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별·지역별 물가", count: "10+지역20", subs: ["소비자물가 CPI", "품목별 물가", "지역 물가 히트맵", "실질 지표"] },
-  { id: "fx", ko: "환율", sub: "대달러·실효환율·역내 통화·수입원가", count: "FX", subs: ["동남아 6개국 통화", "페소/달러·NEER", "실효환율 REER", "수입 원가 영향"] },
-  { id: "growth", ko: "국민계정·성장", sub: "GDP·투자·건설·산업생산·가동률", count: "14", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
-  { id: "rates", ko: "통화·금리", sub: "기준금리·통화량 M3·가계신용", count: "9", subs: ["기준금리 BSP", "통화량 M3", "가계·카드 대출"] },
-  { id: "labor", ko: "고용·임금·소득", sub: "실업률·최저임금·OFW 송금", count: "11", subs: ["실업률", "최저임금", "OFW 송금"] },
-  { id: "sentiment", ko: "기업·소비 심리", sub: "소비자심리 CCI·기업심리 BCI", count: "5", subs: ["소비자심리 CCI", "기업심리 BCI", "내구재 구매의향"] },
-  { id: "appliance", ko: "가전 선행지표", sub: "가전 물가·PPI·수입액·실질가격 갭", count: "8", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
-  { id: "market", ko: "가전시장·제품별", sub: "에어컨·냉장고·TV·세탁기 LG점유·ASP·할인갭", count: "1,900+", accent: true, subs: ["LG 점유·ASP", "제품별 할인갭"] },
-  { id: "radar", ko: "사업 레이더", sub: "원가압박·OFW구매력·실질물가·TCO", count: "파생", star: true, subs: ["원가압박 지수", "실질 구매력·TCO"] },
+type NavItem = { id: string; ko: string; sub: string; count: string; group: string; accent?: boolean; star?: boolean; subs: string[] }
+const NAV: NavItem[] = [
+  { id: "core", ko: "핵심 요약", sub: "일일 지표 + 대표 스코어카드 한 화면", count: "KPI 12", group: "핵심", subs: ["일일 지표 환율·유가·날씨", "대표 지표 스코어카드"] },
+  { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별·지역별 물가", count: "10+지역20", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "지역 물가 히트맵", "실질 지표"] },
+  { id: "growth", ko: "국민계정·성장", sub: "GDP·투자·건설·산업생산·가동률", count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
+  { id: "labor", ko: "고용·임금·소득", sub: "실업률·최저임금·OFW 송금", count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
+  { id: "sentiment", ko: "기업·소비 심리", sub: "소비자심리 CCI·기업심리 BCI", count: "5", group: "실물경제", subs: ["소비자심리 CCI", "기업심리 BCI", "내구재 구매의향"] },
+  { id: "fx", ko: "환율·원가", sub: "대달러·실효환율·역내 통화·수입원가", count: "FX", group: "외환·금융", subs: ["동남아 6개국 통화", "₱/USD 기본 환율", "실효환율 NEER·REER", "수입 원가 영향"] },
+  { id: "rates", ko: "통화·금리·신용", sub: "기준금리·통화량 M3·가계신용", count: "9", group: "외환·금융", subs: ["기준금리 BSP", "통화량 M3", "가계·카드 대출"] },
+  { id: "appliance", ko: "가전 선행지표", sub: "가전 물가·PPI·수입액·실질가격 갭", count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
+  { id: "market", ko: "가전시장·제품별", sub: "에어컨·냉장고·TV·세탁기 LG점유·ASP·할인갭", count: "1,900+", group: "가전 인텔리전스", accent: true, subs: ["LG 점유·ASP", "제품별 할인갭"] },
+  { id: "radar", ko: "사업 레이더", sub: "원가압박·OFW구매력·실질물가·TCO", count: "파생", group: "가전 인텔리전스", star: true, subs: ["원가압박 지수", "실질 구매력·TCO"] },
 ]
 
 const num = (s: string | undefined) => {
@@ -276,6 +277,9 @@ export default function Page() {
             <nav className="flex flex-col gap-0.5">
               {NAV.map((n, i) => (
                 <div key={n.id}>
+                  {n.group !== NAV[i - 1]?.group && (
+                    <p className={"px-1.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 " + (i === 0 ? "mb-1" : "mb-1 mt-2.5")}>{n.group}</p>
+                  )}
                   <button
                     onClick={() => setActive(n.id)}
                     style={{ animation: "fadeUp .4s ease both", animationDelay: (i * 40) + "ms" }}
