@@ -10,7 +10,7 @@ import { ChartCard, Lg, SLine, moLabel } from "@/components/EconChart"
  *  각 카드는 지표 1~3계열을 한 축에 겹쳐 그림. 창(1Y/2Y/전체) 토글 공용. */
 
 type Mon = Record<string, { dates: string[]; values: number[] }>
-const WIN = [{ k: "1Y", n: 12 }, { k: "2Y", n: 24 }, { k: "5Y", n: 60 }, { k: "전체", n: 132 }]
+const WIN = [{ k: "1Y", n: 1 }, { k: "2Y", n: 2 }, { k: "5Y", n: 5 }, { k: "전체", n: 99 }] // n=표시 기간(년)
 
 // 시리즈 팔레트(환율과 동일 계열)
 const C = { ind: "#6366f1", rose: "#dc2626", blue: "#0284c7", emer: "#059669", amber: "#d99400", violet: "#7c3aed", teal: "#0f766e", brown: "#a1795b" }
@@ -20,16 +20,20 @@ const f0 = (v?: number) => (v == null ? "–" : v.toFixed(0))
 const B = (s: React.ReactNode) => <b className="font-semibold text-gray-900 dark:text-gray-50">{s}</b> // 값 강조
 
 type Spec = { key: string; name: string; color: string; w?: number; tf?: (v: number) => number }
-/** 여러 지표를 한 카드에 정렬해 SLine[] + labels 생성. 시계열(2점 이상)만 라인으로. */
-function build(d: Mon, n: number, specs: Spec[]): { series: SLine[]; labels: string[] } {
+/** 여러 지표를 한 카드에 정렬해 SLine[] + labels 생성. 시계열(2점 이상)만 라인으로.
+ *  windowYears = 표시 기간(년). 포인트 수가 아니라 **실제 시간** 기준으로 잘라 분기·연간·월별이 섞여도 토글이 일관됨. */
+function build(d: Mon, windowYears: number, specs: Spec[]): { series: SLine[]; labels: string[] } {
   const present = specs.filter((s) => d[s.key] && d[s.key].values.length >= 2) // 1점짜리는 라인 불가 → 제외(KPI 타일로 대체)
   if (!present.length) return { series: [], labels: [] }
   // 날짜 합집합을 공용 축으로 — 시리즈마다 축이 달라도(연간+분기 혼합 등) 라벨과 값이 어긋나지 않게 정렬. 결측은 NaN(선 끊김)
   const dateSet = new Set<string>()
   present.forEach((s) => d[s.key].dates.forEach((dt) => dateSet.add(dt)))
   const allDates = Array.from(dateSet).sort()
-  const L = Math.min(n, allDates.length)
-  const axis = allDates.slice(-L)
+  // 최신 날짜 기준 windowYears 만큼만(오른쪽=실제 최신, 억지로 미래월 고정 안 함). 너무 적으면 최소 2점 보장
+  const latest = allDates[allDates.length - 1]
+  const cutoff = (Number(latest.slice(0, 4)) - windowYears) + latest.slice(4) // "YYYY-MM-DD" 문자열 비교
+  let axis = allDates.filter((dt) => dt >= cutoff)
+  if (axis.length < 2) axis = allDates.slice(-Math.min(2, allDates.length))
   const series = present.map((s) => {
     const m = new Map(d[s.key].dates.map((dt, i) => [dt, d[s.key].values[i]]))
     return { name: s.name, color: s.color, w: s.w, data: axis.map((dt) => { const v = m.get(dt); return v == null ? NaN : (s.tf ? s.tf(v) : v) }) }
