@@ -462,6 +462,45 @@ function refreshEconViews(){
   if(selected) showDetail(selected.properties.REGION);
 }
 
+// ── 지역별 가전·에어컨 물가 실측(Supabase v_cost_of_living_regional) ──
+// PSA 지역 CPI의 geo 명칭 → 지도 GeoJSON REGION 명칭 매핑
+const REG_CPI_MAP={
+  "National Capital Region (NCR)":"Metropolitan Manila",
+  "Region IV-A (CALABARZON)":"CALABARZON (Region IV-A)",
+  "Region III (Central Luzon)":"Central Luzon (Region III)",
+  "Region VII (Central Visayas)":"Central Visayas (Region VII)",
+  "Region XI (Davao Region)":"Davao Region (Region XI)",
+  "Region V (Bicol Region)":"Bicol Region (Region V)",
+  "Region II (Cagayan Valley)":"Cagayan Valley (Region II)",
+  "Region XIII (Caraga)":"Caraga (Region XIII)",
+  "Cordillera Administrative Region (CAR)":"Cordillera Administrative Region (CAR)",
+  "Region I (Ilocos Region)":"Ilocos Region (Region I)",
+  "Region VIII (Eastern Visayas)":"Eastern Visayas (Region VIII)",
+  "Region VI (Western Visayas)":"Western Visayas (Region VI)",
+  "Region X (Northern Mindanao)":"Northern Mindanao (Region X)",
+  "Region XII (SOCCSKSARGEN)":"SOCCSKSARGEN (Region XII)",
+  "Region IX (Zamboanga Peninsula)":"Zamboanga Peninsula (Region IX)",
+  "MIMAROPA Region":"MIMAROPA (Region IV-B)",
+  "Bangsamoro Autonomous Region in Muslim Mindanao (BARMM)":"Autonomous Region of Muslim Mindanao (ARMM)"
+};
+const SB_CPI={ url:"https://ozvbyigntwhwzzagwojr.supabase.co", key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96dmJ5aWdudHdod3p6YWd3b2pyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4ODkxNDEsImV4cCI6MjA5ODQ2NTE0MX0.LrkBzEK9QzX1PCNm9KzTUZE29VcHuJOqikFOnbEpv6U" };
+async function loadRegionalCpi(){
+  try{
+    const r=await fetch(`${SB_CPI.url}/rest/v1/v_cost_of_living_regional?select=geo,period_date,inf_appliances,inf_aircon&order=period_date.desc`,
+      {headers:{apikey:SB_CPI.key,Authorization:"Bearer "+SB_CPI.key}});
+    if(!r.ok) return;
+    const rows=await r.json(); const seen=new Set();
+    rows.forEach(row=>{
+      const reg=REG_CPI_MAP[row.geo]; if(!reg||seen.has(reg)) return; seen.add(reg);
+      ECON[reg]=ECON[reg]||{};
+      if(row.inf_appliances!=null) ECON[reg].appl_cpi=row.inf_appliances;
+      if(row.inf_aircon!=null) ECON[reg].aircon_cpi=row.inf_aircon;
+    });
+    if(curMapMetric && curMapMetric!=="none") applyChoropleth(curMapMetric);
+    if(selected) showDetail(selected.properties.REGION);
+  }catch(e){ console.warn("지역 물가 로드 건너뜀:",e); }
+}
+
 const svg = d3.select("#map");
 let level="map";
 
@@ -522,7 +561,9 @@ const MAPMETRICS=[
   {key:"growth",   label:"성장률",       div:true, val:growthVal,    fmt:v=>(v>0?"+":"")+v.toFixed(1)+"%"},
   {key:"contrib",  label:"전국 기여도",  val:contribution, fmt:v=>v+"%"},
   {key:"percap",   label:"1인당 셀아웃", val:percapIndex,  fmt:v=>Math.round(v)},
-  {key:"potential",label:"성장 여력",    val:potentialGap, fmt:v=>(v>0?"+":"")+v.toFixed(1)+"p"}
+  {key:"potential",label:"성장 여력",    val:potentialGap, fmt:v=>(v>0?"+":"")+v.toFixed(1)+"p"},
+  {key:"appl_cpi", label:"가전 물가",    div:true, val:name=>ECON[name]&&ECON[name].appl_cpi!=null?ECON[name].appl_cpi:NaN,   fmt:v=>(v>0?"+":"")+v+"%"},
+  {key:"aircon_cpi",label:"에어컨 물가", div:true, val:name=>ECON[name]&&ECON[name].aircon_cpi!=null?ECON[name].aircon_cpi:NaN, fmt:v=>(v>0?"+":"")+v+"%"}
 ];
 let curMapMetric="none";
 function metricColor(m,v,ext){
@@ -659,6 +700,7 @@ d3.json("data/ph-regions.geojson").then(geo=>{
   buildMapTabs();
   applyChoropleth(curMapMetric);
   loadEconomic();
+  loadRegionalCpi();
   window.addEventListener("resize",()=>{ /* keep simple: reload layout */ });
 });
 
