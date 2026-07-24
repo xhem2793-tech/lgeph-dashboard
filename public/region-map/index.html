@@ -101,8 +101,15 @@
   .hint .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block}
 
   /* choropleth control card */
-  .mapctrl{position:absolute;bottom:24px;left:30px;z-index:5;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:14px 16px 13px;box-shadow:0 4px 18px rgba(0,0,0,.08);width:288px}
-  .mapctrl .mc-t{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:10px}
+  .mapctrl{position:absolute;bottom:24px;left:30px;z-index:5;background:var(--panel);border:1.5px solid var(--line);border-radius:12px;padding:0;box-shadow:0 4px 18px rgba(0,0,0,.08);width:auto;overflow:hidden}
+  .mapctrl.open{width:288px}
+  .mc-head{display:flex;align-items:center;gap:8px;width:100%;padding:9px 14px;background:none;border:none;cursor:pointer;font-family:inherit;color:inherit}
+  .mc-head .mc-lbl{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:800;white-space:nowrap}
+  .mc-head .mc-cur{font-size:12px;font-weight:800;color:var(--accent);white-space:nowrap}
+  .mc-head .mc-chev{margin-left:auto;color:var(--muted);transition:transform .25s}
+  .mapctrl.open .mc-head .mc-chev{transform:rotate(180deg)}
+  .mc-body{display:none;padding:2px 14px 13px}
+  .mapctrl.open .mc-body{display:block}
   .mc-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
   .mc-tab{padding:6px 10px;border:1.2px solid var(--hair);background:var(--panel);border-radius:7px;font-size:11.5px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .14s}
   .mc-tab:hover{border-color:var(--accent);color:var(--accent)}
@@ -289,11 +296,17 @@
       <div class="ko"><div class="kk">전년 대비</div><div class="kv up" id="hl-yoy">—</div></div>
       <div class="ko"><div class="kk" id="hl-thirdk">총 매장</div><div class="kv" id="hl-third">—</div></div>
     </div>
-    <div class="mapctrl">
-      <div class="mc-t">지역별 현황 · 색상 지표</div>
+    <div class="mapctrl" id="mapctrl">
+      <button class="mc-head" id="mc-head" type="button">
+        <span class="mc-lbl">색상 지표</span>
+        <span class="mc-cur" id="mc-cur">기본</span>
+        <svg class="mc-chev" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="mc-body">
       <div class="mc-tabs" id="mapmetrics"></div>
       <div class="legend" id="legend"></div>
       <div class="mc-hint"><span class="dot"></span> 색이 진할수록 값이 큼 · 지역 클릭 시 확대</div>
+      </div>
     </div>
     <div class="loading" id="loading">지도 불러오는 중…</div>
   </div>
@@ -578,6 +591,7 @@ function metricColor(m,v,ext){
 function applyChoropleth(key){
   curMapMetric=key;
   const m=MAPMETRICS.find(x=>x.key===key);
+  const cur=document.getElementById("mc-cur"); if(cur&&m) cur.textContent=m.label.replace("(화이트)","");
   document.querySelectorAll("#mapmetrics .mc-tab").forEach(b=>b.classList.toggle("on",b.dataset.k===key));
   if(m.none){
     if(!selected) g.selectAll("path.region").style("fill",null);
@@ -596,6 +610,8 @@ function renderLegend(m,ext){
     `<div class="lg-sc"><span>${m.fmt(ext.min)}</span>${m.div?"<span>0</span>":""}<span>${m.fmt(ext.max)}</span></div>`;
 }
 function buildMapTabs(){
+  const head=document.getElementById("mc-head");
+  if(head&&!head._bound){ head._bound=true; head.onclick=()=>document.getElementById("mapctrl").classList.toggle("open"); }
   const box=document.getElementById("mapmetrics"); box.innerHTML="";
   MAPMETRICS.forEach(m=>{
     const b=document.createElement("button");
