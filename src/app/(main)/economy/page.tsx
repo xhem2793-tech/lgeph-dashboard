@@ -27,9 +27,9 @@ const NAV: NavItem[] = [
 
 function Soon({ label }: { label: string }) {
   return (
-    <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 bg-gray-50/60 text-center">
-      <div className="text-[14px] font-bold text-gray-500">{label}</div>
-      <div className="text-[12px] text-gray-400">물가·생활비 템플릿을 이 도메인에도 적용 예정</div>
+    <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-center">
+      <div className="text-[14px] font-bold text-gray-500 dark:text-gray-400">{label}</div>
+      <div className="text-[12px] text-gray-400 dark:text-gray-500">물가·생활비 템플릿을 이 도메인에도 적용 예정</div>
     </div>
   )
 }
@@ -56,29 +56,29 @@ export default function Page() {
     <main className="px-4 pb-10 pt-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
       <div className="grid items-start gap-4 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm lg:sticky lg:top-[88px]">
+        <aside className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[88px]">
           <div className="px-2.5 py-3">
-            <p className="mb-2 px-1.5 text-[14px] font-bold tracking-tight text-gray-900">{en ? "View" : "보기"}</p>
+            <p className="mb-2 px-1.5 text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{en ? "View" : "보기"}</p>
             <nav className="flex flex-col gap-0.5">
               {NAV.map((n, i) => (
                 <div key={n.id}>
                   {n.group !== NAV[i - 1]?.group && (
-                    <p className={"px-1.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 " + (i === 0 ? "mb-1" : "mb-1 mt-2.5")}>{n.group}</p>
+                    <p className={"px-1.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 " + (i === 0 ? "mb-1" : "mb-1 mt-2.5")}>{n.group}</p>
                   )}
                   <button
                     onClick={() => setActive(n.id)}
                     style={{ animation: "fadeUp .4s ease both", animationDelay: (i * 40) + "ms" }}
                     className={
                       "group flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
-                      (active === n.id ? "bg-indigo-50 ring-1 ring-indigo-100" : "hover:bg-indigo-50/40")
+                      (active === n.id ? "bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/25" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
                     }
                   >
-                    <span className={"flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700" : "font-semibold text-gray-800 group-hover:text-indigo-600")}>
-                      {n.star && <span className="text-amber-500">★ </span>}
-                      {n.accent && <span className="text-violet-500">◆ </span>}
+                    <span className={"flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700 dark:text-indigo-300" : "font-semibold text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
+                      {n.star && <span className="text-amber-500 dark:text-amber-400">★ </span>}
+                      {n.accent && <span className="text-violet-500 dark:text-violet-400">◆ </span>}
                       {n.ko}
                     </span>
-                    <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums " + (active === n.id ? "bg-indigo-100 text-indigo-600" : "bg-gray-100 text-gray-400")}>{n.count}</span>
+                    <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums " + (active === n.id ? "bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500")}>{n.count}</span>
                   </button>
                 </div>
               ))}

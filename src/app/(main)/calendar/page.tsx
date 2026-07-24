@@ -10,14 +10,14 @@ import { Segmented } from "@/components/Segmented"
  */
 
 const CAT: Record<string, { bg: string; fg: string; dot: string; band: string }> = {
-  경제: { bg: "bg-emerald-50", fg: "text-emerald-800", dot: "bg-emerald-500", band: "bg-emerald-100 text-emerald-900" },
-  금융: { bg: "bg-blue-50", fg: "text-blue-800", dot: "bg-blue-500", band: "bg-blue-100 text-blue-900" },
+  경제: { bg: "bg-emerald-50 dark:bg-emerald-500/10", fg: "text-emerald-800", dot: "bg-emerald-500", band: "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-900" },
+  금융: { bg: "bg-blue-50 dark:bg-blue-500/10", fg: "text-blue-800", dot: "bg-blue-500", band: "bg-blue-100 dark:bg-blue-500/15 text-blue-900" },
   정치: { bg: "bg-purple-50", fg: "text-purple-800", dot: "bg-purple-500", band: "bg-purple-100 text-purple-900" },
-  규제: { bg: "bg-red-50", fg: "text-red-800", dot: "bg-red-500", band: "bg-red-100 text-red-900" },
-  에너지: { bg: "bg-amber-50", fg: "text-amber-800", dot: "bg-amber-500", band: "bg-amber-100 text-amber-900" },
-  유통: { bg: "bg-violet-50", fg: "text-violet-800", dot: "bg-violet-500", band: "bg-violet-100 text-violet-900" },
+  규제: { bg: "bg-red-50 dark:bg-red-500/10", fg: "text-red-800", dot: "bg-red-500", band: "bg-red-100 dark:bg-red-500/15 text-red-900" },
+  에너지: { bg: "bg-amber-50 dark:bg-amber-500/10", fg: "text-amber-800", dot: "bg-amber-500", band: "bg-amber-100 dark:bg-amber-500/15 text-amber-900" },
+  유통: { bg: "bg-violet-50 dark:bg-violet-500/10", fg: "text-violet-800", dot: "bg-violet-500", band: "bg-violet-100 text-violet-900" },
   공휴일: { bg: "bg-teal-50", fg: "text-teal-800", dot: "bg-teal-500", band: "bg-teal-100 text-teal-900" },
-  기타: { bg: "bg-gray-100", fg: "text-gray-700", dot: "bg-gray-400", band: "bg-gray-100 text-gray-800" },
+  기타: { bg: "bg-gray-100 dark:bg-gray-800", fg: "text-gray-700 dark:text-gray-200", dot: "bg-gray-400", band: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100" },
 }
 const tone = (c: string) => CAT[c] ?? CAT["기타"]
   const catLabel = (c: string) => (c === "규제" ? "정책" : c)
@@ -212,34 +212,34 @@ export default function Calendar() {
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
           <div className="flex min-w-0 flex-col gap-4">
         <div
-          className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+          className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm"
           style={{ animation: "fadeUp .5s ease both" }}
         >
-          <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
+          <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   onClick={() => setMonth((m) => Math.max(0, m - 1))}
-                  className="rounded-md border border-gray-200 px-2 py-0.5 text-[13px] font-semibold text-gray-500 transition-all duration-300 hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 active:scale-95"
+                  className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-0.5 text-[13px] font-semibold text-gray-500 dark:text-gray-400 transition-all duration-300 hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95"
                 >
                   ‹
                 </button>
                 <button
                   type="button"
                   onClick={() => setMonth((m) => Math.min(span === "한달" ? 2 : 4, m + 1))}
-                  className="rounded-md border border-gray-200 px-2 py-0.5 text-[13px] font-semibold text-gray-500 transition-all duration-300 hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 active:scale-95"
+                  className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-0.5 text-[13px] font-semibold text-gray-500 dark:text-gray-400 transition-all duration-300 hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95"
                 >
                   ›
                 </button>
               </div>
-              <h2 className="text-[17px] font-bold tracking-tight text-gray-900">{label}</h2>
-              <span className="text-[12px] font-medium text-gray-500">{inMonth.length}건 · Critical {crit}건</span>
+              <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{label}</h2>
+              <span className="text-[12px] font-medium text-gray-500 dark:text-gray-400">{inMonth.length}건 · Critical {crit}건</span>
               {month !== 0 && (
                 <button
                   type="button"
                   onClick={() => setMonth(0)}
-                  className="rounded-full bg-indigo-50 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700 transition-all duration-300 hover:-translate-y-px active:scale-95"
+                  className="rounded-full bg-indigo-50 dark:bg-indigo-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-700 dark:text-indigo-300 transition-all duration-300 hover:-translate-y-px active:scale-95"
                 >
                   {span === "2주" ? "이번 주" : "이번 달"}
                 </button>
@@ -253,7 +253,7 @@ export default function Calendar() {
             />
           </header>
 
-          <div className="mt-3 grid grid-cols-7 gap-1.5 text-[11.5px] font-semibold text-gray-400">
+          <div className="mt-3 grid grid-cols-7 gap-1.5 text-[11.5px] font-semibold text-gray-400 dark:text-gray-500">
             {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
               <div key={d} className="px-1">{d}</div>
             ))}
@@ -276,8 +276,8 @@ export default function Calendar() {
                   onClick={() => on && evs.length > 0 && setDayList({ date: key, events: evs })}
                   className={
                     (span === "2주" ? "min-h-[150px] " : "h-[118px] ") + "overflow-hidden rounded-lg border p-2 transition-all duration-300 " +
-                    (on ? "cursor-pointer bg-white hover:-translate-y-px hover:border-indigo-200 hover:shadow-sm " : "border-transparent bg-transparent ") +
-                    (isToday ? "border-indigo-400 bg-indigo-50/40 " : holiday && on ? "border-teal-200 bg-teal-50/40 " : on ? "border-gray-200 " : "")
+                    (on ? "cursor-pointer bg-white dark:bg-gray-900 hover:-translate-y-px hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-sm " : "border-transparent bg-transparent ") +
+                    (isToday ? "border-indigo-400 dark:border-indigo-500/50 bg-indigo-50/40 dark:bg-indigo-500/10 " : holiday && on ? "border-teal-200 bg-teal-50/40 " : on ? "border-gray-200 dark:border-gray-800 " : "")
                   }
                 >
                   {on && (
@@ -285,7 +285,7 @@ export default function Calendar() {
                       <div
                         className={
                           "mb-1.5 text-[13px] font-semibold " +
-                          (isToday ? "text-indigo-600" : holiday ? "text-teal-600" : d.getDay() === 0 ? "text-rose-500" : "text-gray-700")
+                          (isToday ? "text-indigo-600 dark:text-indigo-400" : holiday ? "text-teal-600" : d.getDay() === 0 ? "text-rose-500" : "text-gray-700 dark:text-gray-200")
                         }
                       >
                         {d.getDate()}
@@ -298,7 +298,7 @@ export default function Calendar() {
                             type="button"
                             onClick={(ev) => { ev.stopPropagation(); openEvent(e) }}
                             className={
-                              "mb-0.5 flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11.5px] font-medium leading-tight text-gray-700 transition-all duration-300 hover:bg-gray-100 active:scale-[.97] "
+                              "mb-0.5 flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11.5px] font-medium leading-tight text-gray-700 dark:text-gray-200 transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-[.97] "
                             }
                             title={e.event}
                           >
@@ -307,7 +307,7 @@ export default function Calendar() {
                         )
                       })}
                       {evs.length > (span === "2주" ? 6 : 3) && (
-                        <span className="block px-1 text-[10.5px] font-medium text-gray-400">+{evs.length - (span === "2주" ? 6 : 3)}건</span>
+                        <span className="block px-1 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">+{evs.length - (span === "2주" ? 6 : 3)}건</span>
                     )}
                     </>
                   )}
@@ -316,7 +316,7 @@ export default function Calendar() {
             })}
           </div>
 
-          <div className="mt-3 flex flex-wrap gap-3 text-[11.5px] font-medium text-gray-500">
+          <div className="mt-3 flex flex-wrap gap-3 text-[11.5px] font-medium text-gray-500 dark:text-gray-400">
             {LEGEND.map((c) => (
               <span key={c} className="flex items-center gap-1">
                 <span className={"h-1.5 w-1.5 rounded-full " + tone(c).dot} />
@@ -327,12 +327,12 @@ export default function Calendar() {
         </div>
 
       <div
-        className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+        className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm"
         style={{ animation: "fadeUp .5s ease both", animationDelay: "140ms" }}
       >
-        <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
+        <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <div className="flex items-center gap-3">
-            <h2 className="text-[17px] font-bold tracking-tight text-gray-900">이벤트 목록</h2>
+            <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">이벤트 목록</h2>
             <Segmented size="sm"
               options={[
                 { k: "past", label: "지남 " + counts.past },
@@ -350,7 +350,7 @@ export default function Calendar() {
                 }
                 style={{ marginTop: "-5px" }}
               >
-                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600">
+                <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
                 </span>
                 <input
@@ -359,25 +359,25 @@ export default function Calendar() {
                   onFocus={() => setFocused(true)}
                   onBlur={() => setFocused(false)}
                   placeholder="이벤트 · 출처 검색"
-                  className="w-full rounded-full border border-gray-200 bg-gray-50 py-1 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]"
+                  className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]"
                 />
                 {query && (
                   <button
                     type="button"
                     onClick={() => setQuery("")}
                     aria-label="검색어 지우기"
-                    className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90"
+                    className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
                   </button>
                 )}
               </div>
-          <span className="flex items-center gap-1.5 text-[11px] text-gray-400">최근 갱신 {stamp ? fmtStamp(stamp) : "—"}<span className="rounded bg-emerald-50 px-1 py-px text-[9px] font-bold text-emerald-600">C</span></span>
+          <span className="flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500">최근 갱신 {stamp ? fmtStamp(stamp) : "—"}<span className="rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[9px] font-bold text-emerald-600 dark:text-emerald-400">C</span></span>
         </header>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
           <Segmented size="sm" value={axis} onChange={(k) => { setAxis(k as "topic" | "dept"); setCat("전체") }} options={[{ k: "topic", label: "주제별" }, { k: "dept", label: "부서별" }]} />
-          <span className="mx-1 h-5 w-px self-center bg-gray-200" />
+          <span className="mx-1 h-5 w-px self-center bg-gray-200 dark:bg-gray-700" />
           {cats.map((c) => (
             <button
               key={c}
@@ -385,7 +385,7 @@ export default function Calendar() {
               onClick={() => setCat(c)}
               className={
                 "rounded-md px-2.5 py-1 text-[12px] font-semibold transition-all duration-300 hover:-translate-y-px active:scale-[.98] " +
-                (cat === c ? "bg-indigo-600 text-white" : "border border-gray-200 text-gray-600 hover:border-indigo-300 hover:text-indigo-600")
+                (cat === c ? "bg-indigo-600 text-white" : "border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")
               }
             >
               {c}
@@ -394,14 +394,14 @@ export default function Calendar() {
         </div>
 
         {rows === null ? (
-          <div className="flex min-h-[240px] items-center justify-center text-[13px] text-gray-400">불러오는 중</div>
+          <div className="flex min-h-[240px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
         ) : list.length === 0 ? (
-          <div className="flex min-h-[200px] items-center justify-center text-[13px] text-gray-400">해당 구간 이벤트 없음</div>
+          <div className="flex min-h-[200px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">해당 구간 이벤트 없음</div>
         ) : (
           <div key={bucket + cat + axis + query} className="mt-2 overflow-x-auto" style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
             <table className="w-full min-w-[760px] text-[13px]">
               <thead>
-                <tr className="border-b border-gray-100 text-[11px] font-semibold text-gray-500">
+                <tr className="border-b border-gray-100 dark:border-gray-800 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
                   <th className="w-[70px] px-2 py-2 text-left">날짜</th>
                   <th className="w-[62px] px-2 py-2 text-left">분류</th>
                   <th className="w-[76px] px-2 py-2 text-left">성격</th>
@@ -422,7 +422,7 @@ export default function Calendar() {
                     <React.Fragment key={e.date + e.event}>
                       {showHead && (
                         <tr>
-                          <td colSpan={8} className="border-t border-gray-100 bg-gray-50/60 px-2 pb-1.5 pt-2.5 text-[11px] font-bold text-gray-500 first:border-t-0">
+                          <td colSpan={8} className="border-t border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 px-2 pb-1.5 pt-2.5 text-[11px] font-bold text-gray-500 dark:text-gray-400 first:border-t-0">
                             {groupOf(e)}
                           </td>
                         </tr>
@@ -431,20 +431,20 @@ export default function Calendar() {
                         onClick={() => openEvent(e)}
                         style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.03 + "s" }}
                         className={
-                          "cursor-pointer border-b border-gray-50 transition-colors duration-300 hover:bg-indigo-50/50 " +
+                          "cursor-pointer border-b border-gray-50 dark:border-gray-800 transition-colors duration-300 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 " +
                           (bucket === "past" ? "opacity-70 hover:opacity-100" : "")
                         }
                       >
-                        <td className="h-[44px] px-2 align-middle font-medium tabular-nums text-gray-600">{e.date.slice(5).replace("-", "/")}</td>
+                        <td className="h-[44px] px-2 align-middle font-medium tabular-nums text-gray-600 dark:text-gray-300">{e.date.slice(5).replace("-", "/")}</td>
                         <td className="h-[44px] px-2 align-middle">
-                          <span className="flex items-center gap-1.5"><span className={"h-1.5 w-1.5 shrink-0 rounded-full " + t.dot} /><span className="text-[11.5px] text-gray-600">{catLabel(e.category)}</span></span>
+                          <span className="flex items-center gap-1.5"><span className={"h-1.5 w-1.5 shrink-0 rounded-full " + t.dot} /><span className="text-[11.5px] text-gray-600 dark:text-gray-300">{catLabel(e.category)}</span></span>
                         </td>
-                        <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-500">{KIND[e.kind] ?? "—"}</td>
-                        <td className="max-w-0 truncate h-[44px] px-2 align-middle font-medium text-gray-900">{e.event}</td>
-                        <td className="h-[44px] px-2 align-middle text-right text-[11px] text-amber-500">{"★".repeat(e.importance)}</td>
-                        <td className="h-[44px] px-2 align-middle text-right tabular-nums text-gray-400">{e.forecast ?? "—"}</td>
-                        <td className={"h-[44px] px-2 align-middle text-right font-bold tabular-nums " + (up ? "text-rose-600" : down ? "text-emerald-600" : "text-gray-900")}>{fmtVal(e.actual, e.unit)}</td>
-                        <td className="h-[44px] px-2 align-middle text-right tabular-nums text-gray-500">{fmtVal(e.previous, e.unit)}</td>
+                        <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-500 dark:text-gray-400">{KIND[e.kind] ?? "—"}</td>
+                        <td className="max-w-0 truncate h-[44px] px-2 align-middle font-medium text-gray-900 dark:text-gray-50">{e.event}</td>
+                        <td className="h-[44px] px-2 align-middle text-right text-[11px] text-amber-500 dark:text-amber-400">{"★".repeat(e.importance)}</td>
+                        <td className="h-[44px] px-2 align-middle text-right tabular-nums text-gray-400 dark:text-gray-500">{e.forecast ?? "—"}</td>
+                        <td className={"h-[44px] px-2 align-middle text-right font-bold tabular-nums " + (up ? "text-rose-600 dark:text-rose-400" : down ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-gray-50")}>{fmtVal(e.actual, e.unit)}</td>
+                        <td className="h-[44px] px-2 align-middle text-right tabular-nums text-gray-500 dark:text-gray-400">{fmtVal(e.previous, e.unit)}</td>
                       </tr>
                     </React.Fragment>
                   )
@@ -454,7 +454,7 @@ export default function Calendar() {
           </div>
         )}
 
-        <p className="mt-3 text-[11px] leading-relaxed text-gray-400">
+        <p className="mt-3 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
           실제·이전은 자체 수집 지표에서 자동 연결 — CPI·실업률·송금·GDP·기준금리·전기요금·최저임금·PPI
           <br />
           예측은 공식 기관 전망이 확보된 건만 표기 — 미확보 시 &quot;—&quot; 유지(추정치 생성 금지)
@@ -462,15 +462,15 @@ export default function Calendar() {
       </div>
           </div>
         <div className="flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both", animationDelay: "80ms" }}>
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
-              <h2 className="text-[15px] font-bold tracking-tight text-gray-900">{label} 구성</h2>
-              <span className="text-[11px] text-gray-400">최종 갱신 {stamp ? fmtStamp(stamp) : "—"}</span>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
+            <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
+              <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{label} 구성</h2>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500">최종 갱신 {stamp ? fmtStamp(stamp) : "—"}</span>
             </header>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               {[
-                { k: "release", n: mix.release, c: "text-emerald-700 bg-emerald-50" },
-                { k: "policy", n: mix.policy, c: "text-gray-700 bg-gray-50" },
+                { k: "release", n: mix.release, c: "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-500/10" },
+                { k: "policy", n: mix.policy, c: "text-gray-700 dark:text-gray-200 bg-gray-50 dark:bg-gray-900" },
                 { k: "holiday", n: mix.holiday, c: "text-teal-700 bg-teal-50" },
               ].map((x) => (
                 <div key={x.k} className={"rounded-lg py-3 " + x.c}>
@@ -479,29 +479,29 @@ export default function Calendar() {
                 </div>
               ))}
             </div>
-            <p className="mt-3 text-[11px] leading-relaxed text-gray-400">
+            <p className="mt-3 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
               뉴스성 이벤트는 제외 — 지표 발표 · 정책·규제 시행 · 필리핀 공휴일만 캘린더에 표시
             </p>
-              <div className="mt-4 border-t border-gray-100 pt-3">
+              <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3">
                 <div className="mb-1 flex items-baseline justify-between">
-                  <h3 className="text-[12px] font-bold text-gray-700">예정 일정</h3>
-                  <span className="text-[11px] text-gray-400">2주간</span>
+                  <h3 className="text-[12px] font-bold text-gray-700 dark:text-gray-200">예정 일정</h3>
+                  <span className="text-[11px] text-gray-400 dark:text-gray-500">2주간</span>
                 </div>
                 <div className="flex flex-col">
                   {agenda.map((x, i) => {
                     const dd = dday(x.date, today)
                     return (
-                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.04 + "s" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
+                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.04 + "s" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
                         <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
                         <span className="min-w-0 flex-1">
-                          <span className="block truncate text-[12.5px] font-semibold text-gray-900">{x.label}</span>
-                          <span className="block text-[10.5px] text-gray-500">{x.note}</span>
+                          <span className="block truncate text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
+                          <span className="block text-[10.5px] text-gray-500 dark:text-gray-400">{x.note}</span>
                         </span>
-                        <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500">{dd === 0 ? "오늘" : "D-" + dd}</span>
+                        <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500 dark:text-gray-400">{dd === 0 ? "오늘" : "D-" + dd}</span>
                       </div>
                     )
                   })}
-                  {agenda.length === 0 && <p className="px-1.5 py-3 text-[11px] text-gray-400">2주간 예정된 일정 없음</p>}
+                  {agenda.length === 0 && <p className="px-1.5 py-3 text-[11px] text-gray-400 dark:text-gray-500">2주간 예정된 일정 없음</p>}
                 </div>
               </div>
           </div>
@@ -518,7 +518,7 @@ export default function Calendar() {
         >
           {modal ? (
             <div
-              className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+              className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl"
               style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
               onClick={(ev) => ev.stopPropagation()}
             >
@@ -527,51 +527,51 @@ export default function Calendar() {
                 type="button"
                 onClick={closeModal}
                 aria-label="닫기"
-                className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-1.5 text-gray-500 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 active:scale-95"
+                className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M6 6l12 12M18 6L6 18" />
                 </svg>
               </button>
 
-              <div className="flex w-full shrink-0 items-center gap-2 border-b border-gray-100 px-7 pb-3 pt-6 text-[12px] font-semibold">
-                <span className="text-gray-800">{catLabel(modal.category)}</span>
-                <span className="text-gray-300">·</span>
-                <span className="text-gray-500">{KIND[modal.kind] || ""}</span>
+              <div className="flex w-full shrink-0 items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-7 pb-3 pt-6 text-[12px] font-semibold">
+                <span className="text-gray-800 dark:text-gray-100">{catLabel(modal.category)}</span>
+                <span className="text-gray-300 dark:text-gray-600">·</span>
+                <span className="text-gray-500 dark:text-gray-400">{KIND[modal.kind] || ""}</span>
                 {modal.importance >= 2 && (
-                  <span className="text-[12px] text-amber-500">{"★".repeat(modal.importance)}</span>
+                  <span className="text-[12px] text-amber-500 dark:text-amber-400">{"★".repeat(modal.importance)}</span>
                 )}
               </div>
 
               <div className="overflow-y-auto px-7 pb-7 pt-5">
-                <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-gray-500">
-                  {modal.sourceLabel && <span className="font-semibold text-gray-600">{modal.sourceLabel}</span>}
-                  {modal.sourceLabel && <span className="text-gray-300">·</span>}
+                <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-gray-500 dark:text-gray-400">
+                  {modal.sourceLabel && <span className="font-semibold text-gray-600 dark:text-gray-300">{modal.sourceLabel}</span>}
+                  {modal.sourceLabel && <span className="text-gray-300 dark:text-gray-600">·</span>}
                   <span className="tabular-nums">{modal.date}</span>
                 </div>
 
-                <h3 className="mt-2 text-[20px] font-semibold leading-snug tracking-tight text-gray-900">{modal.event}</h3>
+                <h3 className="mt-2 text-[20px] font-semibold leading-snug tracking-tight text-gray-900 dark:text-gray-50">{modal.event}</h3>
 
                 {modal.indicatorKey && (
-                  <div className="mt-4 inline-flex flex-wrap gap-4 rounded-lg bg-gray-50 px-3.5 py-2 text-[12px] tabular-nums">
-                    <span className="text-gray-400">예측 <span className="font-semibold text-gray-600">{modal.forecast || "—"}</span></span>
-                    <span className="text-indigo-500">실제 <span className="font-semibold">{fmtVal(modal.actual, modal.unit)}</span></span>
-                    <span className="text-gray-400">이전 <span className="font-semibold text-gray-500">{fmtVal(modal.previous, modal.unit)}</span></span>
+                  <div className="mt-4 inline-flex flex-wrap gap-4 rounded-lg bg-gray-50 dark:bg-gray-900 px-3.5 py-2 text-[12px] tabular-nums">
+                    <span className="text-gray-400 dark:text-gray-500">예측 <span className="font-semibold text-gray-600 dark:text-gray-300">{modal.forecast || "—"}</span></span>
+                    <span className="text-indigo-500 dark:text-indigo-400">실제 <span className="font-semibold">{fmtVal(modal.actual, modal.unit)}</span></span>
+                    <span className="text-gray-400 dark:text-gray-500">이전 <span className="font-semibold text-gray-500 dark:text-gray-400">{fmtVal(modal.previous, modal.unit)}</span></span>
                   </div>
                 )}
 
                 {modal.implication && (
-                  <div className="mt-4 border-l-2 border-indigo-300 pl-3">
-                    <p className="text-[10.5px] font-semibold tracking-wide text-indigo-600">시사점</p>
-                    <p className="mt-1 text-[14px] leading-[1.7] text-gray-800">{modal.implication}</p>
+                  <div className="mt-4 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-3">
+                    <p className="text-[10.5px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-400">시사점</p>
+                    <p className="mt-1 text-[14px] leading-[1.7] text-gray-800 dark:text-gray-100">{modal.implication}</p>
                   </div>
                 )}
                 
                 {modal.summary && (
                   <div className="mt-4 space-y-2">
-                    <p className="text-[10.5px] font-semibold tracking-wide text-gray-400">본문 요약</p>
+                    <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
                     {para(modal.summary).map((p, k) => (
-                      <p key={k} className="text-[13px] leading-[1.7] text-gray-600">{p}</p>
+                      <p key={k} className="text-[13px] leading-[1.7] text-gray-600 dark:text-gray-300">{p}</p>
                     ))}
                   </div>
                 )}
@@ -579,8 +579,8 @@ export default function Calendar() {
 
                 {modal.actions && (
                   <div className="mt-4">
-                    <p className="text-[10.5px] font-semibold tracking-wide text-gray-400">대응 · Owner</p>
-                    <p className="mt-1 whitespace-pre-line text-[13px] leading-[1.7] text-gray-600">{modal.actions}</p>
+                    <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">대응 · Owner</p>
+                    <p className="mt-1 whitespace-pre-line text-[13px] leading-[1.7] text-gray-600 dark:text-gray-300">{modal.actions}</p>
                   </div>
                 )}
 
@@ -598,13 +598,13 @@ export default function Calendar() {
             </div>
           ) : dayList ? (
             <div
-              className="relative flex max-h-[84vh] w-full max-w-[540px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+              className="relative flex max-h-[84vh] w-full max-w-[540px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl"
               style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
               onClick={(ev) => ev.stopPropagation()}
             >
-              <div className="flex items-baseline justify-between border-b border-gray-100 px-6 pb-3 pt-5">
-                <h3 className="text-[16px] font-bold text-gray-900">{dayList.date.slice(5).replace("-", "/")} 일정</h3>
-                <span className="text-[11px] text-gray-400">{dayList.events.length}건</span>
+              <div className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 px-6 pb-3 pt-5">
+                <h3 className="text-[16px] font-bold text-gray-900 dark:text-gray-50">{dayList.date.slice(5).replace("-", "/")} 일정</h3>
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">{dayList.events.length}건</span>
               </div>
               <div className="flex flex-col divide-y divide-gray-50 overflow-y-auto px-4 py-2">
                 {dayList.events.map((e) => {
@@ -614,12 +614,12 @@ export default function Calendar() {
                       key={e.event}
                       type="button"
                       onClick={() => openEvent(e)}
-                      className="flex items-start gap-2.5 rounded-lg px-2 py-2.5 text-left transition-colors duration-200 hover:bg-gray-50 active:scale-[.99]"
+                      className="flex items-start gap-2.5 rounded-lg px-2 py-2.5 text-left transition-colors duration-200 hover:bg-gray-50 dark:hover:bg-gray-900 active:scale-[.99]"
                     >
                       <span className={"mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full " + t.dot} />
                       <span className="min-w-0 flex-1">
-                        <span className="block line-clamp-1 text-[13px] font-semibold leading-snug text-gray-900">{e.importance >= 3 ? "★ " : ""}{e.event}</span>
-                        <span className="mt-0.5 block text-[11px] text-gray-500">{KIND[e.kind] ?? "—"}{e.sourceLabel ? " · " + e.sourceLabel : ""}</span>
+                        <span className="block line-clamp-1 text-[13px] font-semibold leading-snug text-gray-900 dark:text-gray-50">{e.importance >= 3 ? "★ " : ""}{e.event}</span>
+                        <span className="mt-0.5 block text-[11px] text-gray-500 dark:text-gray-400">{KIND[e.kind] ?? "—"}{e.sourceLabel ? " · " + e.sourceLabel : ""}</span>
                       </span>
                     </button>
                   )
@@ -628,7 +628,7 @@ export default function Calendar() {
               <button
                 type="button"
                 onClick={closeModal}
-                className="m-4 rounded-lg border border-gray-200 py-2 text-[12.5px] font-medium text-gray-600 transition-all duration-300 hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 active:scale-[.99]"
+                className="m-4 rounded-lg border border-gray-200 dark:border-gray-800 py-2 text-[12.5px] font-medium text-gray-600 dark:text-gray-300 transition-all duration-300 hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-[.99]"
               >
                 닫기
               </button>

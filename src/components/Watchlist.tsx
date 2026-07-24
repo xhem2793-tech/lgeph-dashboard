@@ -33,19 +33,19 @@ export default function Watchlist() {
   return (
     <section className="animate-[fadeUp_.5s_ease]">
       <header className="mb-1.5 flex items-baseline justify-between">
-        <h2 className="text-[14px] font-bold tracking-tight text-gray-900">우리 위치</h2>
-        <span className="text-[10px] text-gray-300">{fmtDate(asOf)} · 주간 성격</span>
+        <h2 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">우리 위치</h2>
+        <span className="text-[10px] text-gray-300 dark:text-gray-600">{fmtDate(asOf)} · 주간 성격</span>
       </header>
 
-      <div className="rounded-lg border border-gray-200 bg-white p-2">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2">
         {err ? (
-          <p className="py-4 text-center text-[10px] text-gray-400">불러오지 못함</p>
+          <p className="py-4 text-center text-[10px] text-gray-400 dark:text-gray-500">불러오지 못함</p>
         ) : rows && rows.length === 0 ? (
-          <p className="py-4 text-center text-[10px] text-gray-400">열위 셀 없음</p>
+          <p className="py-4 text-center text-[10px] text-gray-400 dark:text-gray-500">열위 셀 없음</p>
         ) : (
           (rows ?? Array.from({ length: 3 })).map((r, i) =>
             !r ? (
-              <div key={i} className="h-[42px] border-b border-gray-50" />
+              <div key={i} className="h-[42px] border-b border-gray-50 dark:border-gray-800" />
             ) : (
               <div
                 key={i}
@@ -59,7 +59,7 @@ export default function Watchlist() {
                       : "border-l-gray-200")
                 }
               >
-                <p className="flex items-baseline justify-between text-[11px] font-bold text-gray-900">
+                <p className="flex items-baseline justify-between text-[11px] font-bold text-gray-900 dark:text-gray-50">
                   <span>
                     {r.retailer} · {r.category}
                   </span>
@@ -67,10 +67,10 @@ export default function Watchlist() {
                     className={
                       "text-[11px] " +
                       (r.verdict === "risk"
-                        ? "text-rose-600"
+                        ? "text-rose-600 dark:text-rose-400"
                         : r.verdict === "chance"
-                          ? "text-emerald-600"
-                          : "text-gray-500")
+                          ? "text-emerald-600 dark:text-emerald-400"
+                          : "text-gray-500 dark:text-gray-400")
                     }
                   >
                     {r.oosGap != null && Math.abs(r.oosGap) >= 3
@@ -78,7 +78,7 @@ export default function Watchlist() {
                       : pp(r.discGap)}
                   </span>
                 </p>
-                <p className="mt-0.5 text-[10px] leading-snug text-gray-500">
+                <p className="mt-0.5 text-[10px] leading-snug text-gray-500 dark:text-gray-400">
                   {r.oosGap != null && r.oosGap >= 3
                     ? `품절 LG ${r.lgOos?.toFixed(0)}% vs 시장 ${r.mktOos?.toFixed(0)}% — 우리가 비움`
                     : r.oosGap != null && r.oosGap <= -8
@@ -87,7 +87,7 @@ export default function Watchlist() {
                         ? `할인 LG ${r.lgDisc?.toFixed(0)}% vs 중국계 ${r.cnDisc?.toFixed(0)}%`
                         : `선반 ${r.shelf.toFixed(1)}% — 취급 확대 여지`}
                 </p>
-                <p className="mt-0.5 text-[10px] text-gray-300">
+                <p className="mt-0.5 text-[10px] text-gray-300 dark:text-gray-600">
                   표본 LG {r.lgN} / 전체 {r.totalN} SKU
                 </p>
               </div>
@@ -96,8 +96,8 @@ export default function Watchlist() {
         )}
       </div>
 
-      <p className="mt-1.5 text-[10px] leading-relaxed text-gray-400">
-        선반 점유는 <b className="font-semibold text-gray-500">SKU 개수 기준</b> — 매출 점유율 아님
+      <p className="mt-1.5 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">
+        선반 점유는 <b className="font-semibold text-gray-500 dark:text-gray-400">SKU 개수 기준</b> — 매출 점유율 아님
         <br />
         웹 리스팅 기준(실매장 진열 아님) · 판매량 데이터 없음
       </p>

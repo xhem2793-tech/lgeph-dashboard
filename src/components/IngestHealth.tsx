@@ -14,10 +14,10 @@ import { ingestHealth } from "@/lib/supabase"
 type Row = Awaited<ReturnType<typeof ingestHealth>>[number]
 
 const TONE: Record<Row["status"], string> = {
-  ok: "text-emerald-600",
-  warn: "text-amber-600",
-  stale: "text-rose-600",
-  dead: "text-rose-600",
+  ok: "text-emerald-600 dark:text-emerald-400",
+  warn: "text-amber-600 dark:text-amber-400",
+  stale: "text-rose-600 dark:text-rose-400",
+  dead: "text-rose-600 dark:text-rose-400",
 }
 const LABEL: Record<Row["status"], string> = {
   ok: "정상",
@@ -38,16 +38,16 @@ export default function IngestHealth() {
   const bad = (rows ?? []).filter((r) => r.status !== "ok").length
 
   return (
-    <section className="h-full rounded-lg border border-gray-200 bg-white p-3">
+    <section className="h-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3">
       <header className="mb-2 flex items-baseline justify-between">
-        <h3 className="text-[12px] font-bold tracking-tight text-gray-900">데이터 신뢰</h3>
-        <span className="text-[10px] text-gray-300">
+        <h3 className="text-[12px] font-bold tracking-tight text-gray-900 dark:text-gray-50">데이터 신뢰</h3>
+        <span className="text-[10px] text-gray-300 dark:text-gray-600">
           {rows ? (bad ? `${bad}건 주의` : "전부 정상") : "수집 상태"}
         </span>
       </header>
 
       {err ? (
-        <p className="py-4 text-center text-[10px] text-gray-400">불러오지 못함</p>
+        <p className="py-4 text-center text-[10px] text-gray-400 dark:text-gray-500">불러오지 못함</p>
       ) : (
         <table className="w-full border-collapse text-[10px]">
           <tbody>
@@ -57,11 +57,11 @@ export default function IngestHealth() {
                   <td className="h-[22px]" />
                 </tr>
               ) : (
-                <tr key={r.src} className="border-b border-gray-50 last:border-0">
-                  <td className="py-[5px] text-gray-600">
+                <tr key={r.src} className="border-b border-gray-50 dark:border-gray-800 last:border-0">
+                  <td className="py-[5px] text-gray-600 dark:text-gray-300">
                     {r.src}
                     {r.vol ? (
-                      <span className="ml-1 text-gray-300">{r.vol.toLocaleString()}건</span>
+                      <span className="ml-1 text-gray-300 dark:text-gray-600">{r.vol.toLocaleString()}건</span>
                     ) : null}
                   </td>
                   <td className={"py-[5px] text-right font-semibold " + TONE[r.status]}>
@@ -77,10 +77,10 @@ export default function IngestHealth() {
         </table>
       )}
 
-      <p className="mt-2 border-t border-gray-100 pt-1.5 text-[10px] leading-relaxed text-gray-400">
+      <p className="mt-2 border-t border-gray-100 dark:border-gray-800 pt-1.5 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">
         정상 발표 지연을 반영 — BSP 송금은 원래 2~3개월 늦음
         <br />
-        <b className="font-semibold text-gray-500">약점을 우리가 먼저 공개한다</b>
+        <b className="font-semibold text-gray-500 dark:text-gray-400">약점을 우리가 먼저 공개한다</b>
       </p>
     </section>
   )

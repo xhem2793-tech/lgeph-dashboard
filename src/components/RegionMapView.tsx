@@ -17,15 +17,15 @@ export default function RegionMapView() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
 
       <section
-        className="min-w-0 overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md"
+        className="min-w-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm transition-shadow duration-300 hover:shadow-md"
         style={{ animation: "fadeUp .5s ease both" }}
       >
         {/* 우리 디자인 셸 헤더(주요뉴스·환율과 동일 어법) */}
-        <header className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 px-4 py-2.5">
+        <header className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900">지역시장 지도</h2>
-          <span className="text-[11px] font-semibold text-gray-400">필리핀 17개 행정지역 · 셀아웃·경제 choropleth · 클릭 드릴다운</span>
-          <span className="ml-auto rounded-full bg-gray-100 px-2 py-0.5 text-[9.5px] font-bold text-gray-500">예시 데이터 · 실측 연결 전</span>
+          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역시장 지도</h2>
+          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">필리핀 17개 행정지역 · 셀아웃·경제 choropleth · 클릭 드릴다운</span>
+          <span className="ml-auto rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[9.5px] font-bold text-gray-500 dark:text-gray-400">예시 데이터 · 실측 연결 전</span>
         </header>
 
         {/* 원본 지도 임베드 — 동적 캐시버스터로 항상 최신 로드(마운트 후 렌더) */}
@@ -37,14 +37,14 @@ export default function RegionMapView() {
             style={{ height: "96vh", minHeight: 940 }}
           />
         ) : (
-          <div className="w-full animate-pulse bg-gray-50" style={{ height: "96vh", minHeight: 940 }} />
+          <div className="w-full animate-pulse bg-gray-50 dark:bg-gray-900" style={{ height: "96vh", minHeight: 940 }} />
         )}
       </section>
 
-      <p className="text-[11px] leading-relaxed text-gray-400">
+      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
         원본 디자인 핸드오프 임베드(별개 구성 보존) · 데이터 교체 위치 =
-        <code className="mx-1 rounded bg-gray-100 px-1 py-0.5 text-[10px] text-gray-500">public/region-map/data/</code>
-        · Supabase 직접연동은 원본 HTML 상단 <code className="rounded bg-gray-100 px-1 py-0.5 text-[10px] text-gray-500">SUPABASE</code> 설정
+        <code className="mx-1 rounded bg-gray-100 dark:bg-gray-800 px-1 py-0.5 text-[10px] text-gray-500 dark:text-gray-400">public/region-map/data/</code>
+        · Supabase 직접연동은 원본 HTML 상단 <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-0.5 text-[10px] text-gray-500 dark:text-gray-400">SUPABASE</code> 설정
       </p>
     </div>
   )

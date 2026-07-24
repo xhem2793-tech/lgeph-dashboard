@@ -38,7 +38,7 @@ const scale = (key: string, v: number) => (key === "remit" ? v / 1e9 : v)
 function DeltaCell({ d, dir, unit, muted }: { d: number | null; dir: string | null; unit: string | null; muted?: boolean }) {
   if (d == null)
     return (
-      <span className="num w-[60px] shrink-0 text-right text-[9px] text-gray-300">
+      <span className="num w-[60px] shrink-0 text-right text-[9px] text-gray-300 dark:text-gray-600">
         —
       </span>
     )
@@ -49,7 +49,7 @@ function DeltaCell({ d, dir, unit, muted }: { d: number | null; dir: string | nu
     <span
       className={
         "num inline-flex font-semibold w-[60px] shrink-0 items-center justify-end gap-0.5 rounded px-1 py-0.5 text-[9px] leading-4 " +
-        (muted || flat ? "bg-gray-100 text-gray-500" : bad ? "bg-red-100 text-red-700" : "bg-emerald-100 text-emerald-700")
+        (muted || flat ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" : bad ? "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400" : "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300")
       }
     >
       <span>{flat ? "·" : up ? "↑" : "↓"}</span>
@@ -134,16 +134,16 @@ export default function EconRail() {
   }, [])
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow duration-300 hover:shadow-md">
-      <header className="flex items-baseline justify-between border-b border-gray-100 px-3.5 py-2.5">
+    <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm transition-shadow duration-300 hover:shadow-md">
+      <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 px-3.5 py-2.5">
         <a href="/economy" className="group flex items-baseline gap-1">
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("rail_title")}</h2>
-          <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("rail_title")}</h2>
+          <span className="text-gray-400 dark:text-gray-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">›</span>
         </a>
         {/* 지금 보고 있는 변동률 기준 — 4초마다 교대 */}
         <span
           key={mode}
-          className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-medium text-indigo-600"
+          className="rounded-full bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 text-[10px] font-medium text-indigo-600 dark:text-indigo-400"
           style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}
         >
           {mode === "yoy" ? (lang === "en" ? "YoY" : "전년비") : lang === "en" ? "MoM" : "전월비"}
@@ -152,19 +152,19 @@ export default function EconRail() {
 
 
       {err ? (
-        <p className="px-3 py-6 text-center text-[12px] text-gray-400">{t("rail_fail")}</p>
+        <p className="px-3 py-6 text-center text-[12px] text-gray-400 dark:text-gray-500">{t("rail_fail")}</p>
       ) : (
         GROUPS.map((g) => {
           const list = (rows ?? []).filter((c) => c.freq === g)
           if (rows && list.length === 0) return null
           return (
             <div key={g}>
-              <p className="border-b border-gray-100 bg-gray-50/70 px-2.5 py-0.5 text-[10px] font-normal text-gray-400">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</p>
+              <p className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/70 px-2.5 py-0.5 text-[10px] font-normal text-gray-400 dark:text-gray-500">{g === "월별" ? t("rail_monthly") : t("rail_quarterly")}</p>
               {(rows ? list : (Array.from({ length: 4 }) as (Card | undefined)[])).map((c, i) =>
                 !c ? (
-                  <div key={i} className="h-[36px] border-b border-gray-50" />
+                  <div key={i} className="h-[36px] border-b border-gray-50 dark:border-gray-800" />
                 ) : (
-                  <div key={c.key} className="mx-2.5 border-b border-dashed border-gray-300 last:border-b-0">
+                  <div key={c.key} className="mx-2.5 border-b border-dashed border-gray-300 dark:border-gray-700 last:border-b-0">
                     <button
                       type="button"
                       onClick={() => {
@@ -173,12 +173,12 @@ export default function EconRail() {
                   }}
                       className={
                         "group flex min-h-[26px] w-full items-center gap-1.5 transition-colors duration-300 px-0 py-0.5 text-left transition-all duration-300 ease-out " +
-                        (open === c.key ? "bg-indigo-50/60" : "hover:-translate-y-0.5 hover:bg-gray-50")
+                        (open === c.key ? "bg-indigo-50/60 dark:bg-indigo-500/10" : "hover:-translate-y-0.5 hover:bg-gray-50 dark:hover:bg-gray-900")
                       }
                     >
                       <p
                         className={
-                          "w-[104px] shrink-0 text-[13px] font-medium leading-snug text-gray-800 transition-colors duration-300 group-hover:text-indigo-600 " +
+                          "w-[104px] shrink-0 text-[13px] font-medium leading-snug text-gray-800 dark:text-gray-100 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 " +
                           (lang === "en" ? "truncate text-[12px]" : "truncate text-[13px]")
                         }
                       >
@@ -187,7 +187,7 @@ export default function EconRail() {
 
                       <Preview pts={(series[c.key]?.points ?? []).map((v) => scale(c.key, v))} />
 
-                      <p className="num min-w-0 flex-1 whitespace-nowrap pr-2 text-right text-[12px] font-semibold text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">
+                      <p className="num min-w-0 flex-1 whitespace-nowrap pr-2 text-right text-[12px] font-semibold text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                         <CountUp value={Number(c.value)} prefix={c.prefix ?? ""} suffix={c.suffix ?? ""} decimals={c.key === "remit" ? 2 : 1} />
                       </p>
 
@@ -232,8 +232,8 @@ function Detail({ c, s }: { c: Card; s: Series }) {
     <div className="pb-2.5 pt-2.5" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="rounded-xl bg-[#f9fafb] p-3">
         <div className="flex items-center justify-between gap-2">
-          <span className={(lang === "en" ? "text-[12px]" : "text-[13px]") + " font-medium text-gray-800"}>{pick(c.label, c.labelEn)}</span>
-          <div className="flex shrink-0 items-center gap-2.5 text-[10px] text-gray-400">
+          <span className={(lang === "en" ? "text-[12px]" : "text-[13px]") + " font-medium text-gray-800 dark:text-gray-100"}>{pick(c.label, c.labelEn)}</span>
+          <div className="flex shrink-0 items-center gap-2.5 text-[10px] text-gray-400 dark:text-gray-500">
             {hasPrev ? (
               <span className="flex items-center gap-1">
                 <span className="inline-block h-2 w-2 rounded-sm" style={{ background: "#b4b2a9" }} />
@@ -248,23 +248,23 @@ function Detail({ c, s }: { c: Card; s: Series }) {
         </div>
 
         <p className="mt-0.5 flex items-baseline gap-1.5">
-          <span className="num text-[20px] font-semibold text-gray-900">
+          <span className="num text-[20px] font-semibold text-gray-900 dark:text-gray-50">
             <CountUp value={Number(c.value)} prefix={c.prefix} suffix={c.suffix} decimals={dec} />
           </span>
-          <span className="text-[10px] text-gray-400/90">{c.asOf?.slice(0, 7).replace("-", ".")} 기준</span>
+          <span className="text-[10px] text-gray-400/90 dark:text-gray-500/90">{c.asOf?.slice(0, 7).replace("-", ".")} 기준</span>
         </p>
 
         {/* 변동률 라벨은 상세에서 본다 — 목록 배지에는 숫자만 */}
         <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[10px] tabular-nums">
           {c.deltaMom != null ? (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-600">
+            <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-gray-600 dark:text-gray-300">
               {lang === "en" ? (c.freq === "분기" ? "QoQ" : "MoM") : c.freq === "분기" ? "전분기" : "전월"}{" "}
               {c.deltaMom > 0 ? "↑" : c.deltaMom < 0 ? "↓" : "·"} {Math.abs(c.deltaMom).toFixed(1)}
               {c.deltaUnit}
             </span>
           ) : null}
           {c.deltaYoy != null ? (
-            <span className="rounded bg-gray-100 px-1.5 py-0.5 text-gray-600">
+            <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-gray-600 dark:text-gray-300">
               {lang === "en" ? "YoY" : "전년"} {c.deltaYoy > 0 ? "↑" : c.deltaYoy < 0 ? "↓" : "·"}{" "}
               {Math.abs(c.deltaYoy).toFixed(1)}
               {c.deltaUnit}
@@ -282,8 +282,8 @@ function Detail({ c, s }: { c: Card; s: Series }) {
           decimals={dec}
         />
 
-        <div className="mt-2 border-t border-gray-200 pt-2">
-          <span className="text-[10px] text-gray-400">출처 {c.freq === "분기" ? "BSP·PSA 분기" : "PSA·BSP 월별"} · {c.deltaLabel}</span>
+        <div className="mt-2 border-t border-gray-200 dark:border-gray-800 pt-2">
+          <span className="text-[10px] text-gray-400 dark:text-gray-500">출처 {c.freq === "분기" ? "BSP·PSA 분기" : "PSA·BSP 월별"} · {c.deltaLabel}</span>
         </div>
       </div>
     </div>

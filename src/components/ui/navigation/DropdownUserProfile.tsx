@@ -96,21 +96,21 @@ export function DropdownUserProfile({
             <DropdownMenuItem>
               Changelog
               <RiArrowRightUpLine
-                className="mb-1 ml-1 size-2.5 shrink-0 text-gray-500"
+                className="mb-1 ml-1 size-2.5 shrink-0 text-gray-500 dark:text-gray-400"
                 aria-hidden="true"
               />
             </DropdownMenuItem>
             <DropdownMenuItem>
               Documentation
               <RiArrowRightUpLine
-                className="mb-1 ml-1 size-2.5 shrink-0 text-gray-500"
+                className="mb-1 ml-1 size-2.5 shrink-0 text-gray-500 dark:text-gray-400"
                 aria-hidden="true"
               />
             </DropdownMenuItem>
             <DropdownMenuItem>
               Join Slack community
               <RiArrowRightUpLine
-                className="mb-1 ml-1 size-2.5 shrink-0 text-gray-500"
+                className="mb-1 ml-1 size-2.5 shrink-0 text-gray-500 dark:text-gray-400"
                 aria-hidden="true"
               />
             </DropdownMenuItem>

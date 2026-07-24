@@ -104,17 +104,17 @@ export function ProChart(p: Series) {
     const dCur = drawSeries(p.cur, IND, 2, true)
 
     const ttm = document.createElement("div")
-    ttm.className = "mb-1 text-[11px] text-gray-400"
+    ttm.className = "mb-1 text-[11px] text-gray-400 dark:text-gray-500"
     tip.appendChild(ttm)
     let bPrev: HTMLElement | null = null
     if (hasPrev) {
       const rp = document.createElement("div")
       rp.className = "flex items-center justify-between gap-3 text-xs"
       const sp = document.createElement("span")
-      sp.className = "text-gray-500"
+      sp.className = "text-gray-500 dark:text-gray-400"
       sp.textContent = p.prevName ?? "전년"
       bPrev = document.createElement("b")
-      bPrev.className = "tabular-nums font-medium text-gray-500"
+      bPrev.className = "tabular-nums font-medium text-gray-500 dark:text-gray-400"
       rp.appendChild(sp)
       rp.appendChild(bPrev)
       tip.appendChild(rp)
@@ -122,10 +122,10 @@ export function ProChart(p: Series) {
     const rc = document.createElement("div")
     rc.className = "mt-0.5 flex items-center justify-between gap-3 text-xs"
     const sc = document.createElement("span")
-    sc.className = "text-gray-500"
+    sc.className = "text-gray-500 dark:text-gray-400"
     sc.textContent = p.curName ?? "값"
     const bCur = document.createElement("b")
-    bCur.className = "tabular-nums font-medium text-indigo-600"
+    bCur.className = "tabular-nums font-medium text-indigo-600 dark:text-indigo-400"
     rc.appendChild(sc)
     rc.appendChild(bCur)
     tip.appendChild(rc)
@@ -217,7 +217,7 @@ export function ProChart(p: Series) {
       <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
       <div
         ref={tipRef}
-        className="pointer-events-none absolute left-0 top-0 z-10 min-w-[96px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity"
+        className="pointer-events-none absolute left-0 top-0 z-10 min-w-[96px] rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 shadow-lg transition-opacity"
         style={{ opacity: 0 }}
       />
     </div>

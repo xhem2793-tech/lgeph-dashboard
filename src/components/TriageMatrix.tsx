@@ -14,10 +14,10 @@ type Row = Awaited<ReturnType<typeof categoryKpi>>[number]
 type Tone = "bad" | "warn" | "ok" | "neu"
 
 const TONE: Record<Tone, string> = {
-  bad: "bg-rose-50 text-rose-700",
-  warn: "bg-amber-50 text-amber-700",
-  ok: "bg-emerald-50 text-emerald-700",
-  neu: "bg-gray-50 text-gray-600",
+  bad: "bg-rose-50 dark:bg-rose-500/10 text-rose-700 dark:text-rose-300",
+  warn: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  ok: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  neu: "bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-300",
 }
 
 const fmtDate = (s?: string | null) =>
@@ -61,7 +61,7 @@ export default function TriageMatrix() {
 
   if (err)
     return (
-      <p className="text-[12px] text-gray-400">
+      <p className="text-[12px] text-gray-400 dark:text-gray-500">
         상황판 데이터를 불러오지 못함 — 확인 필요
       </p>
     )
@@ -72,13 +72,13 @@ export default function TriageMatrix() {
     <section className="animate-[fadeUp_.5s_ease] rounded-xl bg-[#f9fafb] p-4 sm:p-5">
       <header className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2">
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900">상황판</h2>
-          <span className="text-[11px] text-gray-400">
+          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">상황판</h2>
+          <span className="text-[11px] text-gray-400 dark:text-gray-500">
             카테고리 × KPI — 어디가 문제인가
           </span>
         </div>
-        <span className="flex items-center gap-1.5 text-[11px] text-gray-400">
-          <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
+        <span className="flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500">
+          <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
             CONFIRMED
           </span>
           {fmtDate(asOf)} 기준 · 3개 유통
@@ -88,29 +88,29 @@ export default function TriageMatrix() {
       <div className="overflow-x-auto">
         <table className="w-full min-w-[640px] border-collapse text-[12px]">
           <thead>
-            <tr className="text-[10px] font-medium text-gray-400">
+            <tr className="text-[10px] font-medium text-gray-400 dark:text-gray-500">
               <th className="w-[74px] pb-2 text-left">카테고리</th>
               <th className="pb-2 text-center">
                 선반 점유
-                <span className="block text-[9px] font-normal text-gray-300">
+                <span className="block text-[9px] font-normal text-gray-300 dark:text-gray-600">
                   LG SKU / 전체
                 </span>
               </th>
               <th className="pb-2 text-center">
                 품절 격차
-                <span className="block text-[9px] font-normal text-gray-300">
+                <span className="block text-[9px] font-normal text-gray-300 dark:text-gray-600">
                   LG vs 시장 (믹스보정)
                 </span>
               </th>
               <th className="pb-2 text-center">
                 가격 경쟁력
-                <span className="block text-[9px] font-normal text-gray-300">
+                <span className="block text-[9px] font-normal text-gray-300 dark:text-gray-600">
                   LG 할인 vs 중국계
                 </span>
               </th>
               <th className="pb-2 text-center">
                 프리미엄
-                <span className="block text-[9px] font-normal text-gray-300">
+                <span className="block text-[9px] font-normal text-gray-300 dark:text-gray-600">
                   LG ASP vs 시장
                 </span>
               </th>
@@ -120,13 +120,13 @@ export default function TriageMatrix() {
             {(rows ?? Array.from({ length: 4 })).map((r, i) => {
               if (!r)
                 return (
-                  <tr key={i} className="border-t border-gray-100">
+                  <tr key={i} className="border-t border-gray-100 dark:border-gray-800">
                     <td colSpan={5} className="h-[54px]" />
                   </tr>
                 )
               return (
-                <tr key={r.category} className="border-t border-gray-100">
-                  <td className="py-1 pl-0.5 text-[12.5px] font-bold text-gray-900">
+                <tr key={r.category} className="border-t border-gray-100 dark:border-gray-800">
+                  <td className="py-1 pl-0.5 text-[12.5px] font-bold text-gray-900 dark:text-gray-50">
                     {r.category}
                   </td>
 
@@ -155,15 +155,15 @@ export default function TriageMatrix() {
         </table>
       </div>
 
-      <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-gray-400">
-        <Legend c="bg-rose-100" t="즉시 대응" />
-        <Legend c="bg-amber-100" t="주시" />
-        <Legend c="bg-emerald-100" t="양호·기회" />
-        <Legend c="bg-gray-200" t="참고" />
+      <div className="mt-3 flex flex-wrap gap-3 text-[10px] text-gray-400 dark:text-gray-500">
+        <Legend c="bg-rose-100 dark:bg-rose-500/15" t="즉시 대응" />
+        <Legend c="bg-amber-100 dark:bg-amber-500/15" t="주시" />
+        <Legend c="bg-emerald-100 dark:bg-emerald-500/15" t="양호·기회" />
+        <Legend c="bg-gray-200 dark:bg-gray-700" t="참고" />
       </div>
 
-      <p className="mt-3 border-t border-gray-200 pt-2.5 text-[10.5px] leading-relaxed text-gray-400">
-        품절 격차는 <b className="font-semibold text-gray-500">LG의 유통 분포로 보정</b>한 값 —
+      <p className="mt-3 border-t border-gray-200 dark:border-gray-800 pt-2.5 text-[10.5px] leading-relaxed text-gray-400 dark:text-gray-500">
+        품절 격차는 <b className="font-semibold text-gray-500 dark:text-gray-400">LG의 유통 분포로 보정</b>한 값 —
         합산 평균 비교는 매장 믹스에 왜곡됨
         <br />
         품절은 잘 팔려서일 수도, 공급이 끊겨서일 수도 있음 — 단정 금지. 판매량(sell-out) 데이터 없음

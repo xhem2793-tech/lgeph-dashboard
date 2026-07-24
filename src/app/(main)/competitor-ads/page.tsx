@@ -12,9 +12,9 @@ import { Segmented } from "@/components/Segmented"
 
 type St = { key: string; label: string; text: string; dot: string; band: string }
 const STATUS: St[] = [
-  { key: "진행중", label: "진행중", text: "text-emerald-700", dot: "bg-emerald-500", band: "bg-emerald-50" },
-  { key: "새로시작", label: "새로시작", text: "text-indigo-700", dot: "bg-indigo-500", band: "bg-indigo-50" },
-  { key: "종료예정", label: "종료예정", text: "text-amber-700", dot: "bg-amber-500", band: "bg-amber-50" },
+  { key: "진행중", label: "진행중", text: "text-emerald-700 dark:text-emerald-300", dot: "bg-emerald-500", band: "bg-emerald-50 dark:bg-emerald-500/10" },
+  { key: "새로시작", label: "새로시작", text: "text-indigo-700 dark:text-indigo-300", dot: "bg-indigo-500", band: "bg-indigo-50 dark:bg-indigo-500/10" },
+  { key: "종료예정", label: "종료예정", text: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500", band: "bg-amber-50 dark:bg-amber-500/10" },
 ]
 const stOf = (s: string) => STATUS.find((x) => x.key === s)
 const BRANDS = ["Samsung", "TCL", "Hisense", "Midea", "Sharp", "Panasonic"]
@@ -34,18 +34,18 @@ function Facet({ title, options, selected, onToggle }: { title: string; options:
   if (options.length === 0) return null
   return (
     <div className="py-2">
-      <div className="mb-1 px-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400">{title}</div>
+      <div className="mb-1 px-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{title}</div>
       <div className="flex flex-col">
         {options.map((o, i) => {
           const ck = selected.includes(o.value)
           return (
-            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[6px] text-left text-[13px] font-medium transition-colors hover:bg-indigo-50/50">
-              <span className={"flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors " + (ck ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 group-hover:border-gray-400")}>
+            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[6px] text-left text-[13px] font-medium transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
+              <span className={"flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors " + (ck ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 dark:border-gray-700 group-hover:border-gray-400")}>
                 {ck && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><path d="M5 13l4 4L19 7" /></svg>}
               </span>
               {o.dot && <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + o.dot} />}
-              <span className={"flex-1 truncate " + (ck ? "font-semibold text-indigo-700" : "text-gray-700")}>{o.label}</span>
-              <span className="text-[10px] tabular-nums text-gray-400">{o.count}</span>
+              <span className={"flex-1 truncate " + (ck ? "font-semibold text-indigo-700 dark:text-indigo-300" : "text-gray-700 dark:text-gray-200")}>{o.label}</span>
+              <span className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{o.count}</span>
             </button>
           )
         })}
@@ -59,17 +59,17 @@ function Thumb({ a }: { a: CompAd }) {
   const st = stOf(a.status)
   const showImg = !!a.image_url && !err
   return (
-    <div className="relative aspect-[16/9] w-full overflow-hidden bg-indigo-50">
+    <div className="relative aspect-[16/9] w-full overflow-hidden bg-indigo-50 dark:bg-indigo-500/10">
       {showImg
         ? <img src={a.image_url || ""} alt="" onError={() => setErr(true)} className="h-full w-full object-cover" />
         : <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 bg-gradient-to-br from-indigo-500 to-violet-600"><span className="text-[20px] font-bold tracking-tight text-white">{a.brand}</span><span className="text-[9px] font-medium text-white/70">광고 이미지 없음</span></div>}
       {st && st.key !== "진행중" && (
-        <span className={"absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/85 px-2 py-0.5 text-[9px] font-bold " + st.text}>
+        <span className={"absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/85 dark:bg-gray-900/85 px-2 py-0.5 text-[9px] font-bold " + st.text}>
           <span className={"h-1.5 w-1.5 rounded-full " + st.dot} />
           {a.days_to_end != null && a.days_to_end >= 0 ? "D-" + a.days_to_end : st.label}
         </span>
       )}
-      <span className="absolute bottom-0 left-0 bg-white/60 px-1.5 py-0.5 text-[8px] font-medium text-gray-600">{prodLabel(a.category || "기타")}</span>
+      <span className="absolute bottom-0 left-0 bg-white/60 dark:bg-gray-900/60 px-1.5 py-0.5 text-[8px] font-medium text-gray-600 dark:text-gray-300">{prodLabel(a.category || "기타")}</span>
     </div>
   )
 }
@@ -87,24 +87,24 @@ function Card({ a, onOpen }: { a: CompAd; onOpen: () => void }) {
   const openSrc = (e: React.MouseEvent) => { e.stopPropagation(); if (a.ad_url) window.open(a.ad_url, "_blank", "noopener") }
   const brief = briefBody(a.body)
   return (
-    <button onClick={onOpen} className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-gray-200 bg-white text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 hover:shadow-md active:scale-[.99]">
+    <button onClick={onOpen} className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99]">
       <Thumb a={a} />
       <div className="flex flex-1 flex-col p-2.5">
         <div className="flex items-center gap-1.5">
-          <span className="text-[12px] font-bold tracking-tight text-gray-900">{a.brand}</span>
-          <span className="rounded border border-gray-200 px-1.5 py-0.5 text-[9.5px] font-medium text-gray-500">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+          <span className="text-[12px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{a.brand}</span>
+          <span className="rounded border border-gray-200 dark:border-gray-800 px-1.5 py-0.5 text-[9.5px] font-medium text-gray-500 dark:text-gray-400">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
         </div>
-        <p className="mt-1.5 line-clamp-2 text-[12px] font-medium leading-snug text-gray-800">{clean(a.headline)}</p>
-        {a.offer && <span className="mt-1.5 max-w-full self-start truncate rounded-md bg-emerald-50 px-1.5 py-0.5 text-[10.5px] font-semibold text-emerald-700">{offerShort(a.offer)}</span>}
-        {brief && <p className="mt-2 line-clamp-2 text-[10.5px] leading-relaxed text-gray-500">{brief}</p>}
-        <div className="mt-auto flex items-center gap-1.5 border-t border-gray-100 pt-2 text-[10px] text-gray-400">
+        <p className="mt-1.5 line-clamp-2 text-[12px] font-medium leading-snug text-gray-800 dark:text-gray-100">{clean(a.headline)}</p>
+        {a.offer && <span className="mt-1.5 max-w-full self-start truncate rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 text-[10.5px] font-semibold text-emerald-700 dark:text-emerald-300">{offerShort(a.offer)}</span>}
+        {brief && <p className="mt-2 line-clamp-2 text-[10.5px] leading-relaxed text-gray-500 dark:text-gray-400">{brief}</p>}
+        <div className="mt-auto flex items-center gap-1.5 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">
           {a.venue ? (
             <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z" /><circle cx="12" cy="11" r="2" /></svg><span className="truncate">{a.venue}</span></>
           ) : (
             <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="shrink-0"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg><span>{period(a)}</span></>
           )}
           {a.ad_url ? (
-            <span onClick={openSrc} className="ml-auto inline-flex items-center gap-0.5 text-indigo-500 hover:text-indigo-700">원문<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M7 7h10v10" /></svg></span>
+            <span onClick={openSrc} className="ml-auto inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">원문<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M7 7h10v10" /></svg></span>
           ) : conf ? <span className="ml-auto">{conf}</span> : null}
         </div>
       </div>
@@ -131,24 +131,24 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-gray-900/40 p-4 backdrop-blur-sm sm:p-8" style={{ animation: (closing ? "backOut" : "backIn") + " .22s ease both" }} onClick={close}>
-      <div className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white shadow-2xl" style={{ animation: (closing ? "modalOut" : "modalIn") + " .34s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
-        <div className={"flex items-center justify-between gap-3 px-5 py-3.5 " + (st ? st.band : "bg-gray-50")}>
+      <div className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl" style={{ animation: (closing ? "modalOut" : "modalIn") + " .34s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
+        <div className={"flex items-center justify-between gap-3 px-5 py-3.5 " + (st ? st.band : "bg-gray-50 dark:bg-gray-900")}>
           <div className="flex items-center gap-2">
-            <span className="text-[15px] font-bold tracking-tight text-gray-900">{a.brand}</span>
-            <span className="rounded border border-gray-300/60 px-1.5 py-0.5 text-[10px] font-medium text-gray-500">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
-            {st && <span className={"inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 text-[11px] font-bold " + st.text}><span className={"h-1.5 w-1.5 rounded-full " + st.dot} />{st.label}{a.days_to_end != null && a.days_to_end >= 0 ? " D-" + a.days_to_end : ""}</span>}
+            <span className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{a.brand}</span>
+            <span className="rounded border border-gray-300/60 dark:border-gray-700/60 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-400">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+            {st && <span className={"inline-flex items-center gap-1.5 rounded-full bg-white/70 dark:bg-gray-900/70 px-2.5 py-1 text-[11px] font-bold " + st.text}><span className={"h-1.5 w-1.5 rounded-full " + st.dot} />{st.label}{a.days_to_end != null && a.days_to_end >= 0 ? " D-" + a.days_to_end : ""}</span>}
           </div>
-          <button onClick={close} aria-label="닫기" className="shrink-0 rounded-full p-1 text-gray-400 transition-colors hover:bg-white/60 hover:text-gray-700">
+          <button onClick={close} aria-label="닫기" className="shrink-0 rounded-full p-1 text-gray-400 dark:text-gray-500 transition-colors hover:bg-white/60 dark:hover:bg-gray-900/60 hover:text-gray-700 dark:hover:text-gray-200">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
         <div className="px-5 py-4">
-          <p className="text-[14px] font-bold leading-snug text-gray-900">{clean(a.headline)}</p>
-          {a.offer && <span className="mt-2.5 inline-block rounded-md bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-700">{clean(a.offer)}</span>}
-          <p className="mt-3 border-t border-gray-100 pt-3 text-[11.5px] leading-relaxed text-gray-500">{meta.join(" · ")}</p>
-          {bodyMain && <div className="mt-3 rounded-xl bg-gray-50 p-3.5 text-[12.5px] leading-relaxed text-gray-700">{bodyMain}</div>}
-          {bodyImpl && <div className="mt-2.5 rounded-xl bg-indigo-50/70 p-3.5 text-[12.5px] leading-relaxed text-indigo-800"><span className="font-bold">실무</span> {bodyImpl}</div>}
-          <p className="mt-3 text-[10.5px] text-gray-400">Meta 광고 라이브러리(자체 수집) · {a.confidence || "—"}</p>
+          <p className="text-[14px] font-bold leading-snug text-gray-900 dark:text-gray-50">{clean(a.headline)}</p>
+          {a.offer && <span className="mt-2.5 inline-block rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[12px] font-semibold text-emerald-700 dark:text-emerald-300">{clean(a.offer)}</span>}
+          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-3 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400">{meta.join(" · ")}</p>
+          {bodyMain && <div className="mt-3 rounded-xl bg-gray-50 dark:bg-gray-900 p-3.5 text-[12.5px] leading-relaxed text-gray-700 dark:text-gray-200">{bodyMain}</div>}
+          {bodyImpl && <div className="mt-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-500/10 p-3.5 text-[12.5px] leading-relaxed text-indigo-800"><span className="font-bold">실무</span> {bodyImpl}</div>}
+          <p className="mt-3 text-[10.5px] text-gray-400 dark:text-gray-500">Meta 광고 라이브러리(자체 수집) · {a.confidence || "—"}</p>
         </div>
       </div>
     </div>
@@ -217,30 +217,30 @@ export default function Page() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
       <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit rounded-xl border border-gray-200 bg-white px-2 py-2 shadow-sm lg:sticky lg:top-[80px]">
-          <div className="mb-1.5 flex items-center justify-between border-b border-gray-100 px-1.5 pb-2.5">
-            <span className="text-[14px] font-bold tracking-tight text-gray-900">필터</span>
-            {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 hover:text-indigo-600">초기화</button>}
+        <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2 py-2 shadow-sm lg:sticky lg:top-[80px]">
+          <div className="mb-1.5 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-1.5 pb-2.5">
+            <span className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">필터</span>
+            {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">초기화</button>}
           </div>
           <Facet title="브랜드" options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} />
-          <div className="mx-1.5 h-px bg-gray-100" />
+          <div className="mx-1.5 h-px bg-gray-100 dark:bg-gray-800" />
           <Facet title="제품" options={prodOpts} selected={fProd} onToggle={(v) => toggle(fProd, setFProd, v)} />
-          <div className="mx-1.5 h-px bg-gray-100" />
+          <div className="mx-1.5 h-px bg-gray-100 dark:bg-gray-800" />
           <Facet title="카테고리" options={typeOpts} selected={fType} onToggle={(v) => toggle(fType, setFType, v)} />
-          <div className="mx-1.5 h-px bg-gray-100" />
+          <div className="mx-1.5 h-px bg-gray-100 dark:bg-gray-800" />
           <Facet title="상태" options={statOpts} selected={fStat} onToggle={(v) => toggle(fStat, setFStat, v)} />
         </aside>
 
         <div className="min-w-0" style={{animation:"fadeUp .5s ease both"}}>
-          <div onClick={() => setSitOpen((v) => !v)} className="group mb-4 cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white shadow-sm transition-shadow hover:shadow-md"><div className="flex items-center gap-3 px-4 py-3"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 12l5-3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /></svg></div>{monthSel ? (<span className="shrink-0 rounded-full bg-white/70 px-2 py-0.5 text-[9.5px] font-semibold text-indigo-600 ring-1 ring-indigo-100">{ymLabel(monthSel)}</span>) : null}<div className="min-w-0 flex-1 truncate text-[13px] text-gray-700"><b className="font-semibold text-gray-900">성수기 TV·에어컨 경쟁 집중</b> — Samsung 가격딜·TCL 신모델 무이자·Hisense 월드컵 브랜딩</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 transition-transform duration-300" style={{ transform: sitOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg></div><div style={{ display: "grid", gridTemplateRows: sitOpen ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}><div className="overflow-hidden"><div className="border-t border-indigo-100/70 px-4 pb-3.5 pt-3"><p className="text-[13px] leading-relaxed text-gray-700">성수기 진입과 함께 경쟁사 광고가 <b className="text-gray-900">TV·에어컨</b>에 집중되는 흐름. <b className="text-gray-900">Samsung</b>은 비전 AI TV를 대형 할인+사운드바로 <b className="text-gray-900">가격 공세</b>, <b className="text-gray-900">TCL</b>은 인버터 에어컨 신모델을 무이자 할부로 밀며 <b className="text-gray-900">신제품+금융</b> 카드, <b className="text-gray-900">Hisense</b>는 월드컵 스폰서십으로 <b className="text-gray-900">브랜딩</b> 상향 시도.</p><p className="mt-2 flex items-start gap-1.5 text-[12.5px] leading-relaxed text-indigo-700"><span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 대응</span><span>TV 성수기 프로모 강도·번들 점검, 에어컨 할부조건 경쟁력 확인, 중가 브랜드 상향 시도 주시.</span></p></div></div></div></div>
+          <div onClick={() => setSitOpen((v) => !v)} className="group mb-4 cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm transition-shadow hover:shadow-md"><div className="flex items-center gap-3 px-4 py-3"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 12l5-3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /></svg></div>{monthSel ? (<span className="shrink-0 rounded-full bg-white/70 dark:bg-gray-900/70 px-2 py-0.5 text-[9.5px] font-semibold text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-100 dark:ring-indigo-500/25">{ymLabel(monthSel)}</span>) : null}<div className="min-w-0 flex-1 truncate text-[13px] text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">성수기 TV·에어컨 경쟁 집중</b> — Samsung 가격딜·TCL 신모델 무이자·Hisense 월드컵 브랜딩</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 dark:text-indigo-300 transition-transform duration-300" style={{ transform: sitOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg></div><div style={{ display: "grid", gridTemplateRows: sitOpen ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}><div className="overflow-hidden"><div className="border-t border-indigo-100/70 dark:border-indigo-500/25 px-4 pb-3.5 pt-3"><p className="text-[13px] leading-relaxed text-gray-700 dark:text-gray-200">성수기 진입과 함께 경쟁사 광고가 <b className="text-gray-900 dark:text-gray-50">TV·에어컨</b>에 집중되는 흐름. <b className="text-gray-900 dark:text-gray-50">Samsung</b>은 비전 AI TV를 대형 할인+사운드바로 <b className="text-gray-900 dark:text-gray-50">가격 공세</b>, <b className="text-gray-900 dark:text-gray-50">TCL</b>은 인버터 에어컨 신모델을 무이자 할부로 밀며 <b className="text-gray-900 dark:text-gray-50">신제품+금융</b> 카드, <b className="text-gray-900 dark:text-gray-50">Hisense</b>는 월드컵 스폰서십으로 <b className="text-gray-900 dark:text-gray-50">브랜딩</b> 상향 시도.</p><p className="mt-2 flex items-start gap-1.5 text-[12.5px] leading-relaxed text-indigo-700 dark:text-indigo-300"><span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 대응</span><span>TV 성수기 프로모 강도·번들 점검, 에어컨 할부조건 경쟁력 확인, 중가 브랜드 상향 시도 주시.</span></p></div></div></div></div>
 
-        <div className="relative mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 pb-2.5"><div className="flex shrink-0 items-center gap-3"><Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: "최신순" }, { k: "ending", label: "종료임박순" }]} size="sm" /><div className="inline-flex items-center gap-1 rounded-full bg-gray-100 p-0.5"><button onClick={() => setMonthIdx(-1)} className={"h-7 rounded-full px-3 text-[12px] font-semibold transition-colors " + (monthSel === null ? "bg-white text-indigo-700 shadow-sm" : "text-gray-500 hover:text-gray-700")}>전체</button><button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label="이전 달" disabled={months.length === 0 || monthIdx >= months.length - 1} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-white disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg></button><span className={"min-w-[92px] px-1 text-center text-[12px] font-semibold " + (monthSel ? "text-gray-700" : "text-gray-400")}>{monthSel ? ymLabel(monthSel) : "전체 기간"}</span><button onClick={() => setMonthIdx((i) => (i <= 0 ? 0 : i - 1))} aria-label="다음 달" disabled={monthIdx <= 0} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-white disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg></button></div></div><div className="flex shrink-0 items-center gap-3"><div className={"group relative hidden lg:block transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[416px]" : "w-[320px]")}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg><input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="브랜드 · 제목 · 프로모 · 장소 검색" className="w-full rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />{q ? (<button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>) : null}</div><span className="text-[11px] text-gray-400"><b className="font-semibold text-gray-700">{shown.length}건</b>{_maxDate ? " · 최종 " + _fresh : ""}</span></div></div>
+        <div className="relative mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5"><div className="flex shrink-0 items-center gap-3"><Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: "최신순" }, { k: "ending", label: "종료임박순" }]} size="sm" /><div className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 p-0.5"><button onClick={() => setMonthIdx(-1)} className={"h-7 rounded-full px-3 text-[12px] font-semibold transition-colors " + (monthSel === null ? "bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")}>전체</button><button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label="이전 달" disabled={months.length === 0 || monthIdx >= months.length - 1} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg></button><span className={"min-w-[92px] px-1 text-center text-[12px] font-semibold " + (monthSel ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500")}>{monthSel ? ymLabel(monthSel) : "전체 기간"}</span><button onClick={() => setMonthIdx((i) => (i <= 0 ? 0 : i - 1))} aria-label="다음 달" disabled={monthIdx <= 0} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg></button></div></div><div className="flex shrink-0 items-center gap-3"><div className={"group relative hidden lg:block transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[416px]" : "w-[320px]")}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg><input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="브랜드 · 제목 · 프로모 · 장소 검색" className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />{q ? (<button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>) : null}</div><span className="text-[11px] text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-700 dark:text-gray-200">{shown.length}건</b>{_maxDate ? " · 최종 " + _fresh : ""}</span></div></div>
 
           <div key={(ads === null ? "L" : "R") + fBrand.join() + fType.join() + fProd.join() + fStat.join() + String(monthSel) + sort + q} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
           {ads === null ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 bg-gray-50" />)}</div>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}</div>
           ) : shown.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-200 py-16 text-center text-[12px] text-gray-400">{qq ? "검색 결과 없음" : "해당 조건의 광고 없음"}</div>
+            <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12px] text-gray-400 dark:text-gray-500">{qq ? "검색 결과 없음" : "해당 조건의 광고 없음"}</div>
           ) : (
             <>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -250,12 +250,12 @@ export default function Page() {
                 </div>
               ))}
             </div>
-            {totalPages > 1 ? (<div className="mt-4 flex items-center justify-center gap-1 border-t border-gray-100 pt-3"><button type="button" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)} className="rounded-md border border-gray-200 px-2 py-1 text-[11px] text-gray-600 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">이전</button>{Array.from({ length: totalPages }, (_, k) => k + 1).map((p) => (<button key={p} type="button" onClick={() => setPage(p)} className={"min-w-[26px] rounded-md px-1.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " + (p === curPage ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 hover:-translate-y-0.5 hover:bg-indigo-50 hover:text-indigo-600")}>{p}</button>))}<button type="button" disabled={curPage >= totalPages} onClick={() => setPage(curPage + 1)} className="rounded-md border border-gray-200 px-2 py-1 text-[11px] text-gray-600 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">다음</button></div>) : null}
+            {totalPages > 1 ? (<div className="mt-4 flex items-center justify-center gap-1 border-t border-gray-100 dark:border-gray-800 pt-3"><button type="button" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)} className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">이전</button>{Array.from({ length: totalPages }, (_, k) => k + 1).map((p) => (<button key={p} type="button" onClick={() => setPage(p)} className={"min-w-[26px] rounded-md px-1.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " + (p === curPage ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 dark:text-gray-300 hover:-translate-y-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400")}>{p}</button>))}<button type="button" disabled={curPage >= totalPages} onClick={() => setPage(curPage + 1)} className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">다음</button></div>) : null}
             </>
           )}
           </div>
 
-          <p className="mt-5 text-[10.5px] leading-relaxed text-gray-400">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 썸네일 없으면 브랜드 이니셜 · 제목 한글 번역 · 클릭 시 상세</p>
+          <p className="mt-5 text-[10.5px] leading-relaxed text-gray-400 dark:text-gray-500">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 썸네일 없으면 브랜드 이니셜 · 제목 한글 번역 · 클릭 시 상세</p>
         </div>
       </div>
 

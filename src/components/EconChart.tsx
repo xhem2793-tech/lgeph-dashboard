@@ -10,15 +10,36 @@ import React from "react"
 const GRID = "#eceef1"
 export const IND = "#6366f1" // 주 시리즈(핵심요약 동일)
 
+// .dark 클래스를 감시해 SVG 내부 하드코딩 색(그리드·흰 핀·크로스헤어)을 테마 반응형으로 — 토글 시 재그리기
+function useIsDark() {
+  const [dark, setDark] = React.useState(false)
+  React.useEffect(() => {
+    const root = document.documentElement
+    const upd = () => setDark(root.classList.contains("dark"))
+    upd()
+    const mo = new MutationObserver(upd)
+    mo.observe(root, { attributes: true, attributeFilter: ["class"] })
+    return () => mo.disconnect()
+  }, [])
+  return dark
+}
+const chartColors = (dark: boolean) => ({
+  grid: dark ? "#232a33" : GRID,       // 그리드선
+  halo: dark ? "#0b0f16" : "#fff",     // 점·핀 배경(카드색 컷아웃)
+  cross: dark ? "#4b5563" : "#c3c8d0", // 크로스헤어
+})
+
 export type SLine = { name: string; color: string; data: number[]; w?: number; endLabel?: string }
 
 // ── 인터랙티브 라인차트 (N시리즈 단일축, 평소 선만·호버 시 점) ──
 export function LineChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[]; labels: string[]; decimals?: number; unit?: string }) {
   const svgRef = React.useRef<SVGSVGElement | null>(null)
   const tipRef = React.useRef<HTMLDivElement | null>(null)
+  const dark = useIsDark()
   React.useEffect(() => {
     const svg = svgRef.current, tip = tipRef.current
     if (!svg || !tip) return
+    const CO = chartColors(dark)
     while (svg.firstChild) svg.removeChild(svg.firstChild)
     tip.innerHTML = ""
     const NS = "http://www.w3.org/2000/svg"
@@ -35,12 +56,12 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     const dec2 = hi - lo < 20 ? 1 : 0
     for (let k = 0; k <= 5; k++) {
       const v = lo + ((hi - lo) * k) / 5, y = Y(v)
-      svg.appendChild(el("line", { x1: L, y1: y, x2: R, y2: y, stroke: GRID, "stroke-width": 1 }))
+      svg.appendChild(el("line", { x1: L, y1: y, x2: R, y2: y, stroke: CO.grid, "stroke-width": 1 }))
       const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
     }
     const everyN = n <= 8 ? 1 : n <= 16 ? 2 : Math.ceil(n / 7)
     labels.forEach((lb, i) => { if ((n - 1 - i) % everyN !== 0) return; const an = i === n - 1 ? "end" : i === 0 ? "start" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) }) // 양끝 라벨은 end/start 정렬로 뷰박스 밖 짤림 방지
-    const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: "#c3c8d0", "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 }); svg.appendChild(cross)
+    const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: CO.cross, "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 }); svg.appendChild(cross)
     // 라인만 상시 표시. 선 그리기 애니메이션은 핵심요약과 동일.
     series.forEach((s) => {
       const w = s.w ?? 1.6
@@ -67,24 +88,24 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
       const py = Math.max(T + 7, Math.min(B - 7, ey)) // 상하 클램프
       const tw = s.endLabel.length * 6.2 + 12
       const g = el("g", {}); g.style.opacity = "0"; g.style.transition = "opacity .5s ease"; g.style.transitionDelay = "1.4s" // 인라인 style로 페이드(폴리라인과 동일 패턴)
-      g.appendChild(el("circle", { cx: ex, cy: ey, r: 2.4, fill: s.color, stroke: "#fff", "stroke-width": 1.2 }))
+      g.appendChild(el("circle", { cx: ex, cy: ey, r: 2.4, fill: s.color, stroke: CO.halo, "stroke-width": 1.2 }))
       if (Math.abs(py - ey) > 1) g.appendChild(el("line", { x1: ex, y1: ey, x2: ex + 5, y2: py, stroke: s.color, "stroke-width": 1, opacity: 0.5 }))
-      g.appendChild(el("rect", { x: ex + 5, y: py - 7, width: tw, height: 14, rx: 4, fill: "#fff", stroke: s.color, "stroke-width": 1.1 }))
+      g.appendChild(el("rect", { x: ex + 5, y: py - 7, width: tw, height: 14, rx: 4, fill: CO.halo, stroke: s.color, "stroke-width": 1.1 }))
       const t = el("text", { x: ex + 5 + tw / 2, y: py + 2.9, "text-anchor": "middle", "font-size": 8.4, "font-weight": 800, fill: s.color }); t.textContent = s.endLabel
       g.appendChild(t); svg.appendChild(g)
       void (g as unknown as SVGGraphicsElement).getBoundingClientRect(); g.style.opacity = "1"
     })
     // 호버 활성점: 시리즈당 1개, 평소 opacity 0
     const adots: SVGElement[] = series.map((s) => {
-      const c = el("circle", { r: 4.2, fill: s.color, stroke: "#fff", "stroke-width": 1.6, opacity: 0 }); svg.appendChild(c); return c
+      const c = el("circle", { r: 4.2, fill: s.color, stroke: CO.halo, "stroke-width": 1.6, opacity: 0 }); svg.appendChild(c); return c
     })
-    const head = document.createElement("div"); head.className = "mb-1 text-[11px] font-medium text-gray-400"; tip.appendChild(head)
+    const head = document.createElement("div"); head.className = "mb-1 text-[11px] font-medium text-gray-400 dark:text-gray-500"; tip.appendChild(head)
     const valNodes: HTMLElement[] = []
     series.forEach((s) => {
       const row = document.createElement("div"); row.className = "flex items-center gap-2 whitespace-nowrap text-[11px] leading-4"
       const dot = document.createElement("span"); dot.className = "inline-block h-2 w-2 shrink-0 rounded-full"; dot.style.background = s.color
-      const nm = document.createElement("span"); nm.className = "text-gray-500"; nm.textContent = s.name
-      const v = document.createElement("b"); v.className = "ml-auto tabular-nums font-semibold text-gray-800"
+      const nm = document.createElement("span"); nm.className = "text-gray-500 dark:text-gray-400"; nm.textContent = s.name
+      const v = document.createElement("b"); v.className = "ml-auto tabular-nums font-semibold text-gray-800 dark:text-gray-100"
       row.appendChild(dot); row.appendChild(nm); row.appendChild(v); tip.appendChild(row); valNodes.push(v)
     })
     let active = -1, curX = X(0), tgtX = X(0), cOp = 0, tOp = 0, curTop = T, tgtTop = T, rectW = 300, rectH = 120, raf = 0
@@ -117,11 +138,11 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     const leave = () => { tOp = 0; tip.style.opacity = "0"; active = -1 }
     svg.addEventListener("pointermove", move); svg.addEventListener("pointerdown", move); svg.addEventListener("pointerleave", leave)
     return () => { cancelAnimationFrame(raf); svg.removeEventListener("pointermove", move); svg.removeEventListener("pointerdown", move); svg.removeEventListener("pointerleave", leave) }
-  }, [series, labels, decimals, unit])
+  }, [series, labels, decimals, unit, dark])
   return (
     <div className="relative mt-1" style={{ touchAction: "none" }}>
       <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair", overflow: "visible" }} />
-      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 w-max whitespace-nowrap rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
+      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 w-max whitespace-nowrap rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>
   )
 }
@@ -135,9 +156,11 @@ export function Lg({ c, t, b }: { c: string; t: string; b?: boolean }) {
 export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }: { data: number[]; labels: string[]; color?: string; decimals?: number; unit?: string }) {
   const svgRef = React.useRef<SVGSVGElement | null>(null)
   const tipRef = React.useRef<HTMLDivElement | null>(null)
+  const dark = useIsDark()
   React.useEffect(() => {
     const svg = svgRef.current, tip = tipRef.current
     if (!svg || !tip) return
+    const CO = chartColors(dark)
     while (svg.firstChild) svg.removeChild(svg.firstChild)
     tip.innerHTML = ""
     const NS = "http://www.w3.org/2000/svg"
@@ -156,7 +179,7 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
     const dec2 = hi - lo < 20 ? 1 : 0
     for (let k = 0; k <= 5; k++) {
       const v = lo + ((hi - lo) * k) / 5, y = Y(v)
-      svg.appendChild(el("line", { x1: L, y1: y, x2: R, y2: y, stroke: GRID, "stroke-width": 1 }))
+      svg.appendChild(el("line", { x1: L, y1: y, x2: R, y2: y, stroke: CO.grid, "stroke-width": 1 }))
       const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
     }
     svg.appendChild(el("line", { x1: L, y1: y0, x2: R, y2: y0, stroke: "#9ca3af", "stroke-width": 1 })) // 0 기준선
@@ -173,7 +196,7 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
       r.setAttribute("y", top.toFixed(1)); r.setAttribute("height", h.toFixed(1))
       return { r, c }
     })
-    const head = document.createElement("div"); head.className = "mb-0.5 text-[11px] font-medium text-gray-400"; tip.appendChild(head)
+    const head = document.createElement("div"); head.className = "mb-0.5 text-[11px] font-medium text-gray-400 dark:text-gray-500"; tip.appendChild(head)
     const valRow = document.createElement("div"); valRow.className = "text-[13px] font-bold tabular-nums"; tip.appendChild(valRow)
     let rectW = 300, rectH = 120, active = -1
     const move = (e: PointerEvent) => {
@@ -191,11 +214,11 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
     const leave = () => { active = -1; bars.forEach((b) => b.r.setAttribute("opacity", "0.9")); tip.style.opacity = "0" }
     svg.addEventListener("pointermove", move); svg.addEventListener("pointerdown", move); svg.addEventListener("pointerleave", leave)
     return () => { svg.removeEventListener("pointermove", move); svg.removeEventListener("pointerdown", move); svg.removeEventListener("pointerleave", leave) }
-  }, [data, labels, color, decimals, unit])
+  }, [data, labels, color, decimals, unit, dark])
   return (
     <div className="relative mt-1" style={{ touchAction: "none" }}>
       <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
-      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 min-w-[80px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-center shadow-lg transition-opacity" style={{ opacity: 0 }} />
+      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 min-w-[80px] rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-center shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>
   )
 }
@@ -210,23 +233,23 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
 }) {
   return (
     <div
-      className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md"
+      className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md"
       style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: Math.min(idx, 6) * 0.06 + "s" }}
     >
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[14px] font-bold tracking-tight text-gray-900">{title}</h3>
-        {seg && <span className={"shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold " + (seg === "B2B" ? "bg-amber-50 text-amber-700" : seg === "CE" ? "bg-indigo-50 text-indigo-700" : "bg-violet-50 text-violet-700")}>{seg}</span>}
-        {unit && <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400">{unit}</span>}
+        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
+        {seg && <span className={"shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold " + (seg === "B2B" ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" : seg === "CE" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-violet-50 dark:bg-violet-500/10 text-violet-700")}>{seg}</span>}
+        {unit && <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
       </div>
       <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">{legend}</div>
       {kind === "bar"
         ? <BarChart data={series[0]?.data ?? []} labels={labels} color={series[0]?.color} decimals={decimals} unit={seriesUnit} />
         : <LineChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />}
-      <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
-      <div className="mt-2 border-l-2 border-indigo-300 pl-2.5">
-        <p className="line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-600">{ai}</p>
+      <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
+      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
+        <p className="line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
       </div>
-      <p className="mt-auto border-t border-gray-100 pt-2 text-[10px] leading-relaxed text-gray-400">{src}</p>
+      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{src}</p>
     </div>
   )
 }

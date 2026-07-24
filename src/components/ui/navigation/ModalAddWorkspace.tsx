@@ -136,7 +136,7 @@ export function ModalAddWorkspace({
                       <SelectItem value="us-west-01">us-west-01</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
                     For best performance, choose a region closest to your
                     application.
                   </p>
@@ -164,7 +164,7 @@ export function ModalAddWorkspace({
                           ) : (
                             <span>{database.label}</span>
                           )}
-                          <p className="mt-1 text-xs text-gray-500">
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             1/8 vCPU, 1 GB RAM
                           </p>
                         </div>

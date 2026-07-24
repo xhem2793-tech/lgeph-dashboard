@@ -83,13 +83,13 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
     const adots: SVGElement[] = series.map((s) => {
       const c = el("circle", { r: 4.2, fill: s.color, stroke: "#fff", "stroke-width": 1.6, opacity: 0 }); svg.appendChild(c); return c
     })
-    const head = document.createElement("div"); head.className = "mb-1 text-[11px] font-medium text-gray-400"; tip.appendChild(head)
+    const head = document.createElement("div"); head.className = "mb-1 text-[11px] font-medium text-gray-400 dark:text-gray-500"; tip.appendChild(head)
     const valNodes: HTMLElement[] = []
     series.forEach((s) => {
       const row = document.createElement("div"); row.className = "flex items-center gap-2 whitespace-nowrap text-[11px] leading-4"
       const dot = document.createElement("span"); dot.className = "inline-block h-2 w-2 shrink-0 rounded-full"; dot.style.background = s.color
-      const nm = document.createElement("span"); nm.className = "text-gray-500"; nm.textContent = s.name
-      const v = document.createElement("b"); v.className = "ml-auto tabular-nums font-semibold text-gray-800"
+      const nm = document.createElement("span"); nm.className = "text-gray-500 dark:text-gray-400"; nm.textContent = s.name
+      const v = document.createElement("b"); v.className = "ml-auto tabular-nums font-semibold text-gray-800 dark:text-gray-100"
       row.appendChild(dot); row.appendChild(nm); row.appendChild(v); tip.appendChild(row); valNodes.push(v)
     })
     let active = -1, curX = X(0), tgtX = X(0), cOp = 0, tOp = 0, curTop = T, tgtTop = T, rectW = 300, rectH = 120, raf = 0
@@ -124,7 +124,7 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
   return (
     <div className="relative mt-1" style={{ touchAction: "none" }}>
       <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair", overflow: "visible" }} />
-      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 w-max whitespace-nowrap rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
+      <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 w-max whitespace-nowrap rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>
   )
 }
@@ -141,18 +141,18 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
   meaning: React.ReactNode; ai: React.ReactNode; tone: Tone; src: React.ReactNode
 }) {
   return (
-    <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-2">
-        <h3 className="text-[14px] font-bold tracking-tight text-gray-900">{title}</h3>
-        {unit && <span className="text-[10.5px] font-medium text-gray-400">{unit}</span>}
+        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
+        {unit && <span className="text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
       </div>
       <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">{legend}</div>
       <FxChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />
-      <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-500"><b className="font-semibold text-gray-700">의미</b> {meaning}</p>
-      <div className="mt-2 border-l-2 border-indigo-300 pl-2.5">
-        <p className="line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-600">{ai}</p>
+      <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
+      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
+        <p className="line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
       </div>
-      <p className="mt-auto border-t border-gray-100 pt-2 text-[10px] leading-relaxed text-gray-400">{src}</p>
+      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{src}</p>
     </div>
   )
 }
@@ -200,7 +200,7 @@ export default function FxView() {
     { n: "페소 NEER", v: neerNow, d: nf(neerNow - neer12, 1), tone: "rose", dec: 1 },
     { n: "페소 REER", v: reerNow, d: nf(reerNow - reer12, 1), tone: "amber", dec: 1 },
   ]
-  const toneTxt: Record<string, string> = { rose: "text-rose-600", emerald: "text-emerald-600", amber: "text-amber-600", gray: "text-gray-500" }
+  const toneTxt: Record<string, string> = { rose: "text-rose-600 dark:text-rose-400", emerald: "text-emerald-600 dark:text-emerald-400", amber: "text-amber-600 dark:text-amber-400", gray: "text-gray-500 dark:text-gray-400" }
   const AGENDA: { label: string; note: string; date: string; dot: string }[] = [
     { label: "BSP 통화정책회의", note: "금리 → 페소 방향 좌우", date: "2026-08-14", dot: "bg-rose-500" },
     { label: "미국 CPI 발표", note: "달러·페소 변동성", date: "2026-08-12", dot: "bg-amber-500" },
@@ -219,23 +219,23 @@ export default function FxView() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
 
       {/* 배너 — 주요뉴스·경쟁사와 동일 */}
-      <div onClick={() => setOpen((v) => !v)} className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white shadow-sm transition-shadow hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}>
+      <div onClick={() => setOpen((v) => !v)} className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm transition-shadow hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex items-center gap-3 px-4 py-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 12l5-3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /></svg>
           </div>
-          <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700">
-            <b className="font-semibold text-gray-900">페소 약세 심화</b> — ₱/USD 61.3(5년 전 50.0), 동남아 6개국 중 최대 낙폭 · NEER 88.7로 하락하나 REER 98.1은 유지(물가가 명목약세 상쇄)
+          <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700 dark:text-gray-200">
+            <b className="font-semibold text-gray-900 dark:text-gray-50">페소 약세 심화</b> — ₱/USD 61.3(5년 전 50.0), 동남아 6개국 중 최대 낙폭 · NEER 88.7로 하락하나 REER 98.1은 유지(물가가 명목약세 상쇄)
           </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 dark:text-indigo-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
         </div>
         <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
           <div className="overflow-hidden">
-            <div className="border-t border-indigo-100/70 px-4 pb-3.5 pt-3">
-              <p className="text-[13px] leading-relaxed text-gray-700">
-                페소는 대달러 <b className="text-gray-900">₱/USD 61.3</b>으로 5년 전(50.0) 대비 크게 약세이고, 동남아 6개국을 대미달러로 지수화하면 <b className="text-gray-900">페소 낙폭이 가장 큽니다</b>. BIS 명목실효환율(NEER)도 96.8→88.7로 하락. 다만 실질실효환율(REER)은 <b className="text-gray-900">98.1로 거의 유지</b> — 필리핀 물가가 교역상대국보다 빨리 올라 명목 약세를 상쇄했기 때문입니다.
+            <div className="border-t border-indigo-100/70 dark:border-indigo-500/25 px-4 pb-3.5 pt-3">
+              <p className="text-[13px] leading-relaxed text-gray-700 dark:text-gray-200">
+                페소는 대달러 <b className="text-gray-900 dark:text-gray-50">₱/USD 61.3</b>으로 5년 전(50.0) 대비 크게 약세이고, 동남아 6개국을 대미달러로 지수화하면 <b className="text-gray-900 dark:text-gray-50">페소 낙폭이 가장 큽니다</b>. BIS 명목실효환율(NEER)도 96.8→88.7로 하락. 다만 실질실효환율(REER)은 <b className="text-gray-900 dark:text-gray-50">98.1로 거의 유지</b> — 필리핀 물가가 교역상대국보다 빨리 올라 명목 약세를 상쇄했기 때문입니다.
               </p>
-              <p className="mt-2 flex items-start gap-1.5 text-[12.5px] leading-relaxed text-indigo-700">
+              <p className="mt-2 flex items-start gap-1.5 text-[12.5px] leading-relaxed text-indigo-700 dark:text-indigo-300">
                 <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 관점</span>
                 <span><b className="font-semibold">NEER↓ = 원가 압박</b>(조달통화 대비 페소 약세로 수입 가전 COGS 상방), <b className="font-semibold">REER 유지 = 실질 구매력 정체</b>(대형·프리미엄 수요 부담). 위안 강세(대페소 +17%)로 중국 조달 방어가 1순위.</span>
               </p>
@@ -246,95 +246,95 @@ export default function FxView() {
 
       {/* 본문: 좌 차트 + 우 상시 위젯(286px) */}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-        <section className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
-          <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 pb-2.5">
+        <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+          <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[16px] font-bold tracking-tight text-gray-900">환율</h2>
-            <span className="text-[11px] font-semibold text-gray-400">필리핀 페소 · 대달러·역내·조달통화·실효환율</span>
+            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율</h2>
+            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">필리핀 페소 · 대달러·역내·조달통화·실효환율</span>
             <span className="ml-auto flex items-center gap-2">
-              <span className="hidden text-[10.5px] text-gray-400 sm:inline">{labels[0]} → {labels[labels.length - 1]}</span>
+              <span className="hidden text-[10.5px] text-gray-400 dark:text-gray-500 sm:inline">{labels[0]} → {labels[labels.length - 1]}</span>
               <Segmented size="sm" value={win} onChange={setWin} options={WINDOWS.map((w) => ({ k: w.k, label: w.k }))} />
             </span>
           </header>
           <div className="grid items-stretch gap-4 sm:grid-cols-2">
             <ChartCard title="동남아 6개국 통화 약세도" unit="대미달러 · 창 시작=100 · 위=절하" labels={labels} series={region} tone="rose"
               legend={<><Lg c="#4338ca" t="필리핀" b /><Lg c="#ef4444" t="인니" /><Lg c="#0ea5e9" t="말련" /><Lg c="#10b981" t="태국" /><Lg c="#f59e0b" t="베트남" /><Lg c="#a855f7" t="싱가포르" /></>}
-              meaning={<>각국 통화의 대미달러 가치를 창 시작=100으로 지수화 — <b className="text-gray-700">아래로 갈수록 약세</b>.</>}
-              ai={<>페소는 5년간 대미달러 약 18% 절하로 <b className="font-semibold text-rose-600">역내 최대 낙폭</b>. 페소로 결제하지 않는 한 경쟁국 대비 원가 방어력이 약함 → 헤지·현지조달 확대 검토.</>}
-              src={<><b className="font-semibold text-gray-500">자료</b> Alpha Vantage 월별 양자환율</>} />
+              meaning={<>각국 통화의 대미달러 가치를 창 시작=100으로 지수화 — <b className="text-gray-700 dark:text-gray-200">아래로 갈수록 약세</b>.</>}
+              ai={<>페소는 5년간 대미달러 약 18% 절하로 <b className="font-semibold text-rose-600 dark:text-rose-400">역내 최대 낙폭</b>. 페소로 결제하지 않는 한 경쟁국 대비 원가 방어력이 약함 → 헤지·현지조달 확대 검토.</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 양자환율</>} />
             <ChartCard title="₱/USD 기본 환율" unit="달러당 페소" labels={labels} series={fxusd} seriesUnit="" decimals={2} tone="rose"
               legend={<Lg c="#6366f1" t="₱/USD 월 종가" b />}
-              meaning={<>조달·결제의 기준 환율. <b className="text-gray-700">오를수록 페소 약세</b>.</>}
-              ai={<>₱/USD가 <b className="font-semibold text-rose-600">60선을 넘어 사상 최저권</b>. 달러결제 부품·완제품 원가가 구조적 상방 → 판가 전가 여력·달러 헤지 비율 점검.</>}
-              src={<><b className="font-semibold text-gray-500">자료</b> Alpha Vantage 월별 (USD/PHP) · 일별 BSP fx_daily</>} />
+              meaning={<>조달·결제의 기준 환율. <b className="text-gray-700 dark:text-gray-200">오를수록 페소 약세</b>.</>}
+              ai={<>₱/USD가 <b className="font-semibold text-rose-600 dark:text-rose-400">60선을 넘어 사상 최저권</b>. 달러결제 부품·완제품 원가가 구조적 상방 → 판가 전가 여력·달러 헤지 비율 점검.</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 (USD/PHP) · 일별 BSP fx_daily</>} />
             <ChartCard title="원/페소 (한국 조달)" unit="페소당 원" labels={labels} series={won} seriesUnit="" decimals={2} tone="emerald"
               legend={<Lg c="#0f766e" t="₩/₱ 월 종가" b />}
-              meaning={<>페소로 살 수 있는 원. <b className="text-gray-700">오를수록 페소가 원에 강세</b>(한국 조달 유리).</>}
-              ai={<>원/페소 25선으로 <b className="font-semibold text-emerald-600">페소가 원에 상대적 강세</b> → 한국 조달분(비중 大) 원가는 상대적 완충. 원 약세 지속 시 한국 소싱 확대가 유리.</>}
-              src={<><b className="font-semibold text-gray-500">자료</b> Alpha Vantage 월별 (USD/KRW ÷ USD/PHP)</>} />
+              meaning={<>페소로 살 수 있는 원. <b className="text-gray-700 dark:text-gray-200">오를수록 페소가 원에 강세</b>(한국 조달 유리).</>}
+              ai={<>원/페소 25선으로 <b className="font-semibold text-emerald-600 dark:text-emerald-400">페소가 원에 상대적 강세</b> → 한국 조달분(비중 大) 원가는 상대적 완충. 원 약세 지속 시 한국 소싱 확대가 유리.</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 (USD/KRW ÷ USD/PHP)</>} />
             <ChartCard title="위안·루피의 대페소 가치" unit="창 시작=100" labels={labels} series={asia} tone="rose"
               legend={<><Lg c="#dc2626" t="위안 CNY/₱" /><Lg c="#7c3aed" t="루피 INR/₱" /></>}
-              meaning={<>가전 조달통화(중국·인도)의 대페소 가치 — <b className="text-gray-700">오를수록 조달비 상승</b>.</>}
-              ai={<>위안이 대페소 <b className="font-semibold text-rose-600">+17% 강세</b> — 중국 조달 비중이 큰 만큼 원가 압박의 핵심. 대체 소싱(인도·인니)·결제통화 조정이 방어 1순위.</>}
-              src={<><b className="font-semibold text-gray-500">자료</b> Alpha Vantage 월별 · 대페소 환산, 창 시작=100</>} />
+              meaning={<>가전 조달통화(중국·인도)의 대페소 가치 — <b className="text-gray-700 dark:text-gray-200">오를수록 조달비 상승</b>.</>}
+              ai={<>위안이 대페소 <b className="font-semibold text-rose-600 dark:text-rose-400">+17% 강세</b> — 중국 조달 비중이 큰 만큼 원가 압박의 핵심. 대체 소싱(인도·인니)·결제통화 조정이 방어 1순위.</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 · 대페소 환산, 창 시작=100</>} />
             <ChartCard title="엔·유로의 대페소 가치" unit="창 시작=100" labels={labels} series={jpyeur} tone="amber"
               legend={<><Lg c="#0284c7" t="엔 JPY/₱" /><Lg c="#b45309" t="유로 EUR/₱" /></>}
-              meaning={<>일본·유럽 조달통화의 대페소 가치 — <b className="text-gray-700">오를수록 조달비 상승</b>.</>}
-              ai={<>엔은 대페소 <b className="font-semibold text-emerald-600">약세</b>로 일본 조달·부품 원가 우호적, 유로는 <b className="font-semibold text-amber-600">+18% 강세</b>로 유럽 조달 부담. 통화 국면에 맞춰 소싱 믹스 조정.</>}
-              src={<><b className="font-semibold text-gray-500">자료</b> Alpha Vantage 월별 · 대페소 환산, 창 시작=100</>} />
+              meaning={<>일본·유럽 조달통화의 대페소 가치 — <b className="text-gray-700 dark:text-gray-200">오를수록 조달비 상승</b>.</>}
+              ai={<>엔은 대페소 <b className="font-semibold text-emerald-600 dark:text-emerald-400">약세</b>로 일본 조달·부품 원가 우호적, 유로는 <b className="font-semibold text-amber-600 dark:text-amber-400">+18% 강세</b>로 유럽 조달 부담. 통화 국면에 맞춰 소싱 믹스 조정.</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 · 대페소 환산, 창 시작=100</>} />
             <ChartCard title="페소 실효환율 NEER·REER" unit="BIS · 2020=100" labels={labels} series={eer} tone="amber"
               legend={<><Lg c="#6366f1" t="NEER 명목" b /><Lg c="#a1795b" t="REER 실질" /></>}
-              meaning={<><b className="text-gray-700">NEER</b>=교역가중 명목가치(원가 종합압력), <b className="text-gray-700">REER</b>=물가반영 실질가치(구매력·수요).</>}
-              ai={<>명목(NEER) 96.8→88.7 약세지만 실질(REER)은 98선 유지 — <b className="font-semibold text-amber-600">물가가 명목 약세를 상쇄</b>. 원가는 오르는데 실질 구매력은 정체 → 저가·필수형 우선, 프리미엄은 심리 반등 후.</>}
-              src={<><b className="font-semibold text-gray-500">자료</b> BIS 실효환율 공식통계 (Broad, 64개국)</>} />
+              meaning={<><b className="text-gray-700 dark:text-gray-200">NEER</b>=교역가중 명목가치(원가 종합압력), <b className="text-gray-700 dark:text-gray-200">REER</b>=물가반영 실질가치(구매력·수요).</>}
+              ai={<>명목(NEER) 96.8→88.7 약세지만 실질(REER)은 98선 유지 — <b className="font-semibold text-amber-600 dark:text-amber-400">물가가 명목 약세를 상쇄</b>. 원가는 오르는데 실질 구매력은 정체 → 저가·필수형 우선, 프리미엄은 심리 반등 후.</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> BIS 실효환율 공식통계 (Broad, 64개국)</>} />
           </div>
         </section>
 
         {/* 우 — 상시 위젯(286px, 캘린더 위젯 어법) */}
         <aside className="flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both", animationDelay: "80ms" }}>
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
-              <h2 className="text-[15px] font-bold tracking-tight text-gray-900">환율 핵심 KPI</h2>
-              <span className="text-[11px] text-gray-400">{s?.asOf ? s.asOf.slice(0, 10).replace(/-/g, ".") : "26.06"} 기준</span>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
+            <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
+              <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율 핵심 KPI</h2>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500">{s?.asOf ? s.asOf.slice(0, 10).replace(/-/g, ".") : "26.06"} 기준</span>
             </header>
             <div className="mt-3 grid grid-cols-2 gap-2">
               {KPI.map((k) => (
-                <div key={k.n} className="rounded-lg bg-gray-50 px-3 py-2.5">
-                  <p className="text-[11px] font-medium text-gray-500">{k.n}</p>
-                  <p className="mt-0.5 text-[19px] font-bold leading-none tabular-nums text-gray-900"><CountUp value={k.v} decimals={k.dec} /></p>
+                <div key={k.n} className="rounded-lg bg-gray-50 dark:bg-gray-900 px-3 py-2.5">
+                  <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{k.n}</p>
+                  <p className="mt-0.5 text-[19px] font-bold leading-none tabular-nums text-gray-900 dark:text-gray-50"><CountUp value={k.v} decimals={k.dec} /></p>
                   <span className={"mt-1 inline-flex items-center gap-0.5 text-[11px] font-bold tabular-nums " + toneTxt[k.tone]}>{k.d.replace(/^[+-]/, "")}<span className="text-[10px]">{k.d.startsWith("-") ? "↓" : "↑"}</span></span>
                 </div>
               ))}
             </div>
-            <p className="mt-2.5 text-[10.5px] leading-relaxed text-gray-400">₱/USD·₩/₱ 실측(fx_daily) · NEER·REER 실측(BIS, 전년비 Δ)</p>
+            <p className="mt-2.5 text-[10.5px] leading-relaxed text-gray-400 dark:text-gray-500">₱/USD·₩/₱ 실측(fx_daily) · NEER·REER 실측(BIS, 전년비 Δ)</p>
           </div>
 
-          <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
-            <header className="flex items-baseline justify-between border-b border-gray-100 pb-2.5">
-              <h2 className="text-[15px] font-bold tracking-tight text-gray-900">연결 일정</h2>
-              <span className="text-[11px] text-gray-400">환율 영향</span>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
+            <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
+              <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">연결 일정</h2>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500">환율 영향</span>
             </header>
             <div className="mt-2 flex flex-col">
               {AGENDA.map((x, i) => {
                 const dd = dday(x.date)
                 return (
-                  <div key={x.label} style={{ animation: "fadeUp .5s ease both", animationDelay: 60 + i * 40 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40">
+                  <div key={x.label} style={{ animation: "fadeUp .5s ease both", animationDelay: 60 + i * 40 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
                     <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[12.5px] font-semibold text-gray-900">{x.label}</span>
-                      <span className="block text-[10.5px] text-gray-500">{x.note}</span>
+                      <span className="block truncate text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
+                      <span className="block text-[10.5px] text-gray-500 dark:text-gray-400">{x.note}</span>
                     </span>
-                    <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500">{dd === 0 ? "오늘" : dd > 0 ? "D-" + dd : "D+" + -dd}</span>
+                    <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500 dark:text-gray-400">{dd === 0 ? "오늘" : dd > 0 ? "D-" + dd : "D+" + -dd}</span>
                   </div>
                 )
               })}
             </div>
-            <div className="mt-2 border-t border-gray-100 pt-2.5">
-              <p className="mb-1 text-[11px] font-bold text-gray-500">연결 뉴스</p>
+            <div className="mt-2 border-t border-gray-100 dark:border-gray-800 pt-2.5">
+              <p className="mb-1 text-[11px] font-bold text-gray-500 dark:text-gray-400">연결 뉴스</p>
               {NEWS.map((nw) => (
-                <a key={nw.t} href="/news" className="flex items-start gap-2 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-indigo-50/40">
-                  <span className="mt-0.5 shrink-0 rounded bg-indigo-50 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700">{nw.tag}</span>
-                  <span><span className="block text-[12px] font-semibold leading-snug text-gray-700">{nw.t}</span><span className="mt-0.5 block text-[10px] text-gray-400">{nw.m}</span></span>
+                <a key={nw.t} href="/news" className="flex items-start gap-2 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                  <span className="mt-0.5 shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{nw.tag}</span>
+                  <span><span className="block text-[12px] font-semibold leading-snug text-gray-700 dark:text-gray-200">{nw.t}</span><span className="mt-0.5 block text-[10px] text-gray-400 dark:text-gray-500">{nw.m}</span></span>
                 </a>
               ))}
             </div>

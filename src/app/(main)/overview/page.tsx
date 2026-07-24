@@ -99,19 +99,19 @@ export default function Overview() {
                 <CompetitorMovers />
               </div>
               {/* 주요 뉴스 — 금주 주요 이슈·가격 동향과 같은 카드 어법으로 묶음 */}
-              <section className="mt-6 rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
+              <section className="mt-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
               <div className="mb-2 flex items-baseline justify-between gap-2 px-0.5">
                 <a href="/news" className="group flex items-baseline gap-1">
-                  <h2 className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("news_title")}</h2>
-                  <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+                  <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("news_title")}</h2>
+                  <span className="text-gray-400 dark:text-gray-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">›</span>
                 </a>
                 {nMain[0]?.date ? (
-                  <span className="flex items-center gap-1.5 text-[10px] text-gray-400">
+                  <span className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
                     {t("news_updated")} {newsStamp ? fmtStamp(newsStamp, lang === "en") : String(nMain[0].date).slice(5).replace("-", "/")}
-                    <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span>
+                    <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span>
                     {/* 없는 기사를 지어내지 않는다 — 신규가 없으면 없다고 쓴다 */}
                     {String(nMain[0].date) !== new Date().toISOString().slice(0, 10) ? (
-                      <span className="rounded border border-amber-200 bg-amber-50 px-1 py-px text-[10px] font-semibold text-amber-700">
+                      <span className="rounded border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-1 py-px text-[10px] font-semibold text-amber-700 dark:text-amber-300">
                         {t("news_none_today")}
                       </span>
                     ) : null}
@@ -124,39 +124,39 @@ export default function Overview() {
                   {/* 좌측 — 헤드라인 아래 CE·B2B·분석 3열 */}
                   <div>
                     {nMain[0] ? (
-                      <button type="button" onClick={() => setModal({ ...nMain[0], category: "경제·정치·사회" })} className="group mb-4 flex flex-col gap-3 border-b border-gray-100 pb-4 text-left sm:flex-row sm:gap-4">
+                      <button type="button" onClick={() => setModal({ ...nMain[0], category: "경제·정치·사회" })} className="group mb-4 flex flex-col gap-3 border-b border-gray-100 dark:border-gray-800 pb-4 text-left sm:flex-row sm:gap-4">
                         {nMain[0].image ? (
-                          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 sm:aspect-auto sm:h-[168px] sm:w-[344px] sm:shrink-0">
+                          <div className="aspect-[16/9] w-full overflow-hidden rounded-xl bg-gray-100 dark:bg-gray-800 sm:aspect-auto sm:h-[168px] sm:w-[344px] sm:shrink-0">
                             <img src={nMain[0].image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                           </div>
                         ) : null}
                         <div className="min-w-0">
                           <p
                           className={
-                            "line-clamp-3 font-bold leading-tight text-gray-900 group-hover:text-indigo-600 " +
+                            "line-clamp-3 font-bold leading-tight text-gray-900 dark:text-gray-50 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 " +
                             (lang === "en" ? "text-[22px]" : "text-[25px]")
                           }
                         >
                           {pick(nMain[0].title, (nMain[0] as any).titleEn)}
                         </p>
-                          {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500">{pick(nMain[0].summary, (nMain[0] as any).summaryEn)}</p> : null}
-                          <p className="mt-2 text-[12px] text-gray-400">{nMain[0].source} · {nMain[0].date}</p>
+                          {nMain[0].summary ? <p className="mt-1.5 line-clamp-2 text-[14px] leading-relaxed text-gray-500 dark:text-gray-400">{pick(nMain[0].summary, (nMain[0] as any).summaryEn)}</p> : null}
+                          <p className="mt-2 text-[12px] text-gray-400 dark:text-gray-500">{nMain[0].source} · {nMain[0].date}</p>
                         </div>
                       </button>
                     ) : null}
 
-                    <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:-mx-3 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200">
+                    <div className="grid grid-cols-1 gap-y-6 sm:grid-cols-2 lg:-mx-3 lg:grid-cols-3 lg:gap-y-0 lg:divide-x lg:divide-gray-200 dark:lg:divide-gray-800">
                       {[
                         { title: t("ce_title"), sub: "", rows: nCE, skip: 0, cat: "CE" },
                         { title: t("b2b_title"), sub: "", rows: nB2B, skip: 0, cat: "B2B" },
                       ].map((col) => (
                         <div key={col.title} className="lg:min-h-[480px] lg:px-3">
                           <a href={"/news?cat=" + encodeURIComponent(col.cat)} className="group mb-2 flex items-baseline gap-1">
-                            <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{col.title}</span>
-                            <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
-                            <span className="ml-1 text-[10px] text-gray-400">{col.sub}</span>
+                            <span className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{col.title}</span>
+                            <span className="text-gray-400 dark:text-gray-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">›</span>
+                            <span className="ml-1 text-[10px] text-gray-400 dark:text-gray-500">{col.sub}</span>
                           </a>
-                          <div className="flex flex-col divide-y divide-gray-100">
+                          <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
                             {(() => {
                               // 각 열의 상단은 반드시 사진 — 리드에 이미지가 없으면
                               // 이미지 있는 최신 기사를 끌어올린다(야후식). 순서만 바꿀 뿐 기사를 지어내지 않음
@@ -165,14 +165,14 @@ export default function Overview() {
                               if (li > 0) rows.unshift(rows.splice(li, 1)[0])
                               return rows
                             })().map((n, i) => (
-                              <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className={"group -mx-2 flex w-full flex-col overflow-hidden rounded-lg px-2 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 " + (i === 0 ? "h-[240px]" : "h-[86px]")}>
+                              <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className={"group -mx-2 flex w-full flex-col overflow-hidden rounded-lg px-2 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 " + (i === 0 ? "h-[240px]" : "h-[86px]")}>
                                 {i === 0 && n.image ? (
-                                  <div className="mb-2 h-[150px] w-full overflow-hidden rounded-lg bg-gray-100">
+                                  <div className="mb-2 h-[150px] w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
                                     <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
                                   </div>
                                 ) : null}
-                                <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{pick(n.title, (n as any).titleEn)}</p>
-                                <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-4 text-gray-400"><span className="min-w-0 truncate">{n.source}</span><span className="shrink-0">·</span><span className="shrink-0">{n.date}</span></p>
+                                <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{pick(n.title, (n as any).titleEn)}</p>
+                                <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-4 text-gray-400 dark:text-gray-500"><span className="min-w-0 truncate">{n.source}</span><span className="shrink-0">·</span><span className="shrink-0">{n.date}</span></p>
                               </button>
                             ))}
                           </div>
@@ -186,16 +186,16 @@ export default function Overview() {
                   </div>
 
                   {/* 우측 — 시장 동향. 야후의 Popular처럼 헤드라인 높이에서 시작해 아래까지 한 컬럼 */}
-                  <div className="lg:border-l lg:border-gray-200 lg:pl-5">
+                  <div className="lg:border-l lg:border-gray-200 dark:lg:border-gray-800 lg:pl-5">
                     <a href="/news?cat=시장" className="group mb-2 flex items-baseline gap-1">
-                      <span className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("market_title")}</span>
-                      <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+                      <span className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("market_title")}</span>
+                      <span className="text-gray-400 dark:text-gray-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">›</span>
                     </a>
-                    <div className="flex flex-col divide-y divide-gray-100">
+                    <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
                       {nMain.slice(1, 9).map((n, i) => (
-                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group -mx-2 rounded-lg px-2 py-3.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40">
-                          <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 group-hover:text-indigo-600">{pick(n.title, (n as any).titleEn)}</p>
-                          <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-4 text-gray-400"><span className="min-w-0 truncate">{n.source}</span><span className="shrink-0">·</span><span className="shrink-0">{n.date}</span></p>
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group -mx-2 rounded-lg px-2 py-3.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                          <p className="line-clamp-2 text-[14px] font-semibold leading-snug text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{pick(n.title, (n as any).titleEn)}</p>
+                          <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-4 text-gray-400 dark:text-gray-500"><span className="min-w-0 truncate">{n.source}</span><span className="shrink-0">·</span><span className="shrink-0">{n.date}</span></p>
                         </button>
                       ))}
                     </div>
@@ -205,7 +205,7 @@ export default function Overview() {
               </section>
 
               {/* ③ 일간 지표(환율·유가·날씨) — 뉴스와 같은 카드 어법 */}
-              <section className="mt-6 rounded-xl border border-gray-200 bg-white p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
+              <section className="mt-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
                 <DailyIndicators />
               </section>
             </div>
@@ -214,11 +214,11 @@ export default function Overview() {
               <div className="mb-5">
                 <EconRail />
               </div>
-              <div className="rounded-xl border border-gray-200 bg-white p-3 shadow-sm transition-shadow duration-300 hover:shadow-md">
+              <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 shadow-sm transition-shadow duration-300 hover:shadow-md">
               <div className="flex items-center justify-between gap-2">
                 <a href="/calendar" className="group flex items-baseline gap-1">
-                  <p className="text-[16px] font-bold tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-600">{t("cal_title")}</p>
-                  <span className="text-gray-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600">›</span>
+                  <p className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("cal_title")}</p>
+                  <span className="text-gray-400 dark:text-gray-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">›</span>
                 </a>
                 {/* 예정 ↔ 결과 — 같은 달을 두 방향으로 본다(앞으로 볼 것 / 이미 나온 것) */}
                 <div className="flex shrink-0 gap-1">
@@ -227,7 +227,7 @@ export default function Overview() {
                       key={k}
                       type="button"
                       onClick={() => setCalTab(k)}
-                      className={"rounded px-1.5 py-0.5 text-[10px] font-medium transition-all duration-200 active:scale-95 " + (calTab === k ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-500 hover:-translate-y-0.5 hover:bg-gray-200 hover:text-indigo-600")}
+                      className={"rounded px-1.5 py-0.5 text-[10px] font-medium transition-all duration-200 active:scale-95 " + (calTab === k ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}
                     >
                       {lb}
                     </button>
@@ -236,7 +236,7 @@ export default function Overview() {
               </div>
               <div key={`${calTick}-${calTab}`} className="mt-2 flex flex-col gap-1.5">
                 {calList.length === 0 ? (
-                  <p className="py-6 text-center text-[12px] text-gray-400">{calTab === "past" ? t("cal_none_past") : t("cal_none_up")}</p>
+                  <p className="py-6 text-center text-[12px] text-gray-400 dark:text-gray-500">{calTab === "past" ? t("cal_none_past") : t("cal_none_up")}</p>
                 ) : null}
                 {calList.map((e, i) => {
                   const ev = pick(e.event, (e as any).eventEn)
@@ -246,16 +246,16 @@ export default function Overview() {
                   const kws = [abbr ? abbr[1].trim() : null, e.category].filter(Boolean).slice(0, 2)
                   return (
                     <React.Fragment key={i}>
-                      <button type="button" onClick={() => setModal({ title: ev.split("\u2014")[0].trim(), summary: ev.split("\u2014").slice(1).join("\u2014").trim() || null, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance, isCal: true })} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 " + (e.past ? "opacity-90" : "")}>
-                        <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 text-gray-500" : "bg-emerald-50 text-emerald-600")}>
+                      <button type="button" onClick={() => setModal({ title: ev.split("\u2014")[0].trim(), summary: ev.split("\u2014").slice(1).join("\u2014").trim() || null, category: e.category, date: e.date, source: (e.past ? "결과" : "예정") + " · " + e.importance, isCal: true })} style={{ animation: "calIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: i * 0.1 + "s", willChange: "transform, opacity" }} className={"group flex w-full min-w-0 gap-2.5 rounded-lg px-1 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-gray-50 dark:hover:bg-gray-900 " + (e.past ? "opacity-90" : "")}>
+                        <div className={"flex w-9 shrink-0 flex-col items-center justify-center rounded-md py-1 " + (e.past ? "bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400" : "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400")}>
                           <span className="text-[10px] font-bold uppercase leading-none">{["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"][Number(e.date.slice(5, 7)) - 1]}</span>
                           <span className="num text-sm font-semibold leading-tight">{Number(e.date.slice(8, 10))}</span>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <p className={"truncate break-normal text-[12px] font-normal leading-snug transition-colors duration-300 group-hover:text-indigo-600 " + (e.past ? "text-gray-600" : "text-gray-800")}>{calTitle}</p>
+                          <p className={"truncate break-normal text-[12px] font-normal leading-snug transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 " + (e.past ? "text-gray-600 dark:text-gray-300" : "text-gray-800 dark:text-gray-100")}>{calTitle}</p>
                           <div className="mt-1 flex flex-wrap items-center gap-1">
                             {kws.map((k, ki) => (
-                              <span key={ki} className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 transition-colors duration-300 group-hover:bg-indigo-50 group-hover:text-indigo-600">{k}</span>
+                              <span key={ki} className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-400 transition-colors duration-300 group-hover:bg-indigo-50 dark:group-hover:bg-indigo-500/10 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{k}</span>
                             ))}
                           </div>
                         </div>
@@ -278,7 +278,7 @@ export default function Overview() {
         >
           {/* 뉴스 페이지(/news)와 동일한 팝업 — 결론(SO WHAT) 먼저, 본문은 문단으로 */}
           <div
-            className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl"
+            className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl"
             style={{ animation: modalClosing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -286,13 +286,13 @@ export default function Overview() {
               type="button"
               onClick={closeModal}
               aria-label="닫기"
-              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-1.5 text-gray-500 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 active:scale-95"
+              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
 
             {modal.image ? (
-              <div className="h-[200px] w-full shrink-0 overflow-hidden bg-gray-100">
+              <div className="h-[200px] w-full shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-800">
                 <img
                   src={modal.image}
                   alt=""
@@ -306,37 +306,37 @@ export default function Overview() {
             ) : null}
 
             <div className="overflow-y-auto px-7 pb-7 pt-5">
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500">
-                {modal.category ? <span className="font-semibold text-indigo-600">{modal.category}</span> : null}
+              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+                {modal.category ? <span className="font-semibold text-indigo-600 dark:text-indigo-400">{modal.category}</span> : null}
                 {modal.source ? (
                   <>
-                    <span className="text-gray-300">·</span>
+                    <span className="text-gray-300 dark:text-gray-600">·</span>
                     <span>{modal.source}</span>
                   </>
                 ) : null}
                 {modal.date ? (
                   <>
-                    <span className="text-gray-300">·</span>
+                    <span className="text-gray-300 dark:text-gray-600">·</span>
                     <span className="num">{modal.date}</span>
                   </>
                 ) : null}
               </div>
 
-              <h3 className="mt-2 text-[24px] font-bold leading-[1.35] tracking-tight text-gray-900">{modal.title}</h3>
+              <h3 className="mt-2 text-[24px] font-bold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{modal.title}</h3>
 
               {modal.ai ? (
-                <div className="mt-4 rounded-xl border-l-[3px] border-indigo-500 bg-indigo-50/60 px-4 py-3">
-                  <p className="text-[10px] font-bold tracking-widest text-indigo-600">SO WHAT</p>
-                  <p className="mt-1 text-[15px] leading-[1.75] text-gray-800">{modal.ai}</p>
+                <div className="mt-4 rounded-xl border-l-[3px] border-indigo-500 bg-indigo-50/60 dark:bg-indigo-500/10 px-4 py-3">
+                  <p className="text-[10px] font-bold tracking-widest text-indigo-600 dark:text-indigo-400">SO WHAT</p>
+                  <p className="mt-1 text-[15px] leading-[1.75] text-gray-800 dark:text-gray-100">{modal.ai}</p>
                 </div>
               ) : null}
 
               {modal.summary ? (
                 <div className="mt-5">
-                  {modal.isCal ? null : <p className="text-[10px] font-bold tracking-widest text-gray-400">본문 요약</p>}
+                  {modal.isCal ? null : <p className="text-[10px] font-bold tracking-widest text-gray-400 dark:text-gray-500">본문 요약</p>}
                   <div className="mt-2 space-y-3">
                     {para(modal.summary as string).map((p: string, i: number) => (
-                      <p key={i} className="text-[15px] leading-[1.8] text-gray-700">{p}</p>
+                      <p key={i} className="text-[15px] leading-[1.8] text-gray-700 dark:text-gray-200">{p}</p>
                     ))}
                   </div>
                 </div>

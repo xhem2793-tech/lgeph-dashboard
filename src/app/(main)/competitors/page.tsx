@@ -98,9 +98,9 @@ const BANDS: { t: string; lo: number; hi: number }[] = [
 ]
 
 const BADGE: Record<Status, { t: string; c: string }> = {
-  live: { t: "LIVE", c: "border-emerald-200 bg-emerald-50 text-emerald-700" },
-  next: { t: "SOON", c: "border-indigo-200 bg-indigo-50 text-indigo-600" },
-  plan: { t: "PLAN", c: "border-gray-200 bg-gray-50 text-gray-500" },
+  live: { t: "LIVE", c: "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
+  next: { t: "SOON", c: "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" },
+  plan: { t: "PLAN", c: "border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-gray-500 dark:text-gray-400" },
 }
 
 const peso = (n: number | null) => (n == null ? "—" : "₱" + Math.round(n).toLocaleString("en-US"))
@@ -131,7 +131,7 @@ function exportCsv(rows: PriceRow[], name: string) {
 /** 3일 미니 라인 — 숫자 3개를 눈으로 비교하는 대신 모양으로 읽는다 */
 function Spark({ p2, p1, p0 }: { p2: number | null; p1: number | null; p0: number | null }) {
   const v = [p2, p1, p0]
-  if (v.some((x) => x == null)) return <span className="text-gray-300">—</span>
+  if (v.some((x) => x == null)) return <span className="text-gray-300 dark:text-gray-600">—</span>
   const arr = v as number[]
   const mn = Math.min(...arr)
   const mx = Math.max(...arr)
@@ -152,8 +152,8 @@ function Spark({ p2, p1, p0 }: { p2: number | null; p1: number | null; p0: numbe
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border-t border-gray-100 px-3 py-3 first:border-t-0">
-      <p className="mb-2 text-[14px] font-bold tracking-tight text-gray-900">{title}</p>
+    <div className="border-t border-gray-100 dark:border-gray-800 px-3 py-3 first:border-t-0">
+      <p className="mb-2 text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</p>
       {children}
     </div>
   )
@@ -165,14 +165,14 @@ function FacetMenu({ label, value, active, children }: { label: string; value: s
       <summary
         className={
           "flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] transition-colors [&::-webkit-details-marker]:hidden " +
-          (active ? "border-indigo-200 bg-indigo-50" : "border-gray-200 bg-white hover:border-indigo-300")
+          (active ? "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-indigo-300 dark:hover:border-indigo-500/40")
         }
       >
-        <span className={"font-semibold " + (active ? "text-indigo-400" : "text-gray-400")}>{label}</span>
-        <span className={"font-semibold " + (active ? "text-indigo-700" : "text-gray-800")}>{value}</span>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" className="text-gray-300 transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
+        <span className={"font-semibold " + (active ? "text-indigo-400 dark:text-indigo-300" : "text-gray-400 dark:text-gray-500")}>{label}</span>
+        <span className={"font-semibold " + (active ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{value}</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" className="text-gray-300 dark:text-gray-600 transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
       </summary>
-      <div className="absolute left-0 top-[calc(100%+6px)] z-30 max-h-[280px] w-[190px] overflow-auto rounded-[10px] border border-gray-200 bg-white p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.10)]">
+      <div className="absolute left-0 top-[calc(100%+6px)] z-30 max-h-[280px] w-[190px] overflow-auto rounded-[10px] border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.10)]">
         {children}
       </div>
     </details>
@@ -186,18 +186,18 @@ function Opt({ on, count, multi, onClick, children }: { on: boolean; count?: num
       onClick={onClick}
       className={
         "flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-[12.5px] transition-colors " +
-        (on && !multi ? "bg-indigo-50 font-semibold text-indigo-700" : "text-gray-600 hover:bg-gray-50")
+        (on && !multi ? "bg-indigo-50 dark:bg-indigo-500/10 font-semibold text-indigo-700 dark:text-indigo-300" : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900")
       }
     >
       <span className="flex items-center gap-2">
         {multi ? (
-          <span className={"flex h-[15px] w-[15px] items-center justify-center rounded border " + (on ? "border-indigo-600 bg-indigo-600" : "border-gray-300")}>
+          <span className={"flex h-[15px] w-[15px] items-center justify-center rounded border " + (on ? "border-indigo-600 bg-indigo-600" : "border-gray-300 dark:border-gray-700")}>
             {on ? <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12l5 5 9-11" /></svg> : null}
           </span>
         ) : null}
         {children}
       </span>
-      {count != null ? <span className="num text-[10px] text-gray-400">{count}</span> : null}
+      {count != null ? <span className="num text-[10px] text-gray-400 dark:text-gray-500">{count}</span> : null}
     </button>
   )
 }
@@ -222,21 +222,21 @@ const COLS: { k: string; t: string; num?: boolean }[] = [
  *     따라서 판단은 '전주 대비 변화'와 '평균 할인율'로만 한다. */
 function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camps: PromoCampaign[] }) {
   if (rows === null) {
-    return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400">불러오는 중</div>
+    return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
   }
   if (rows.length === 0) {
-    return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400">데이터 없음</div>
+    return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">데이터 없음</div>
   }
   const wow = (n: number) => (n > 0 ? "+" + n : String(n))
   const tone = (n: number) =>
-    n > 0 ? "text-rose-600" : n < 0 ? "text-emerald-600" : "text-gray-400"
+    n > 0 ? "text-rose-600 dark:text-rose-400" : n < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-gray-400 dark:text-gray-500"
 
   return (
     <div className="mt-3 flex flex-col gap-4">
-      <div className="overflow-x-auto rounded-lg border border-gray-100">
+      <div className="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-800">
         <table className="w-full min-w-[720px] text-[12.5px]">
           <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/70 text-[11px] font-semibold text-gray-500">
+            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/70 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
               <th className="px-3 py-2 text-left">브랜드</th>
               <th className="px-3 py-2 text-left">유통</th>
               <th className="px-3 py-2 text-right">프로모 모델</th>
@@ -249,21 +249,21 @@ function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camps: Prom
             {rows.map((r, i) => (
               <tr
                 key={r.brand + r.retailer}
-                className="border-b border-gray-50 transition-colors hover:bg-indigo-50/40"
+                className="border-b border-gray-50 dark:border-gray-800 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10"
                 style={{ animation: "rowIn .3s cubic-bezier(.16,1,.3,1) both", animationDelay: i * 22 + "ms" }}
               >
-                <td className={"px-3 py-2 font-semibold " + (r.brand === "LG" ? "text-indigo-700" : "text-gray-800")}>
+                <td className={"px-3 py-2 font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>
                   {r.brand}
                 </td>
-                <td className="px-3 py-2 text-gray-500">{r.retailer}</td>
-                <td className="px-3 py-2 text-right tabular-nums text-gray-900">
+                <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{r.retailer}</td>
+                <td className="px-3 py-2 text-right tabular-nums text-gray-900 dark:text-gray-50">
                   {r.promoModels}
-                  <span className="text-[10px] text-gray-400"> / {r.listedModels}</span>
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500"> / {r.listedModels}</span>
                 </td>
                 <td className={"px-3 py-2 text-right tabular-nums font-semibold " + tone(r.promoModelsWow)}>
                   {wow(r.promoModelsWow)}
                 </td>
-                <td className="px-3 py-2 text-right tabular-nums text-gray-900">
+                <td className="px-3 py-2 text-right tabular-nums text-gray-900 dark:text-gray-50">
                   {r.avgDiscount === null ? "—" : r.avgDiscount.toFixed(1) + "%"}
                 </td>
                 <td className={"px-3 py-2 text-right tabular-nums font-semibold " + tone(r.avgDiscountWowPp ?? 0)}>
@@ -277,7 +277,7 @@ function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camps: Prom
 
       {camps.length > 0 && (
         <div>
-          <p className="mb-1.5 text-[12px] font-semibold text-gray-700">유통 캠페인 (진행 중)</p>
+          <p className="mb-1.5 text-[12px] font-semibold text-gray-700 dark:text-gray-200">유통 캠페인 (진행 중)</p>
           <div className="grid gap-2 sm:grid-cols-2">
             {camps.map((c) => (
               <a
@@ -285,16 +285,16 @@ function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camps: Prom
                 href={c.url ?? "#"}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-lg border border-gray-200 bg-white p-3 transition-all duration-200 hover:-translate-y-px hover:border-indigo-300 hover:shadow-sm"
+                className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 transition-all duration-200 hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm"
               >
-                <p className="text-[11px] font-semibold text-gray-500">{c.retailer}</p>
-                <p className="text-[13px] font-semibold text-gray-900">{c.title}</p>
-                <p className="mt-1 text-[11.5px] text-gray-600">
+                <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{c.retailer}</p>
+                <p className="text-[13px] font-semibold text-gray-900 dark:text-gray-50">{c.title}</p>
+                <p className="mt-1 text-[11.5px] text-gray-600 dark:text-gray-300">
                   {c.liveDiscounted !== null && <span>할인 {c.liveDiscounted}종 · 평균 {c.avgDiscount}% · 최대 {c.maxDiscount}%</span>}
                   {c.onSaleCount !== null && <span>세일 중 {c.onSaleCount.toLocaleString()}종</span>}
                 </p>
                 {c.brands.length > 0 && (
-                  <p className="mt-1 truncate text-[11px] text-gray-400">{c.brands.join(" · ")}</p>
+                  <p className="mt-1 truncate text-[11px] text-gray-400 dark:text-gray-500">{c.brands.join(" · ")}</p>
                 )}
               </a>
             ))}
@@ -302,7 +302,7 @@ function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camps: Prom
         </div>
       )}
 
-      <p className="text-[11px] leading-relaxed text-gray-400">
+      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
         프로모 모델 = 할인가 또는 프로모 문구가 걸린 리스팅 · 전주 대비는 7일 전 대비 변화
         <br />
         Anson&apos;s는 정가 필드가 세일가로 표기돼 비중이 항상 100% — 판단은 전주 대비 변화와 평균 할인율 기준
@@ -387,12 +387,12 @@ export default function Competitors() {
       <style>{"@keyframes viewIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
 
       <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside style={{ animation: "viewIn .45s ease both" }} className="h-fit rounded-xl border border-gray-200 bg-white shadow-sm">
+        <aside style={{ animation: "viewIn .45s ease both" }} className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
           <Section title="보기">
             <div className="flex flex-col gap-0.5">
               {GROUPS.map((g) => (
                 <div key={g.group} className="mt-1.5 first:mt-0">
-                  <div className="px-1.5 pb-0.5 pt-1 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400">{g.group}</div>
+                  <div className="px-1.5 pb-0.5 pt-1 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{g.group}</div>
                   {g.items.map((it) => (
                     <button
                       key={it.key}
@@ -400,11 +400,11 @@ export default function Competitors() {
                       onClick={() => setView(it.key)}
                       className={
                         "group flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 hover:-translate-y-px active:scale-[.99] " +
-                        (view === it.key ? "bg-indigo-50" : "hover:bg-indigo-50/40")
+                        (view === it.key ? "bg-indigo-50 dark:bg-indigo-500/10" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
                       }
                     >
                       <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (it.status === "live" ? "bg-emerald-500" : "bg-gray-300")} />
-                      <span className={"flex-1 truncate text-[13px] transition-colors duration-200 " + (view === it.key ? "font-semibold text-indigo-700" : "font-medium text-gray-600")}>{it.label}</span>
+                      <span className={"flex-1 truncate text-[13px] transition-colors duration-200 " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-600 dark:text-gray-300")}>{it.label}</span>
                     </button>
                   ))}
                 </div>
@@ -412,7 +412,7 @@ export default function Competitors() {
             </div>
           </Section>
 
-          <div className="border-t border-gray-100 px-3 py-2.5">
+          <div className="border-t border-gray-100 dark:border-gray-800 px-3 py-2.5">
             <button
               type="button"
               onClick={() => {
@@ -424,7 +424,7 @@ export default function Competitors() {
                 setOnlyMoved(false)
                 setQ("")
               }}
-              className="w-full rounded-md border border-gray-200 py-1.5 text-[12px] text-gray-600 transition-all duration-200 hover:border-gray-300 hover:text-indigo-600 active:scale-[.98]"
+              className="w-full rounded-md border border-gray-200 dark:border-gray-800 py-1.5 text-[12px] text-gray-600 dark:text-gray-300 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-[.98]"
             >
               필터 초기화
             </button>
@@ -441,33 +441,33 @@ export default function Competitors() {
           const lgDisc = avg(R.filter((r) => r.brand === "LG"), (r) => r.discountPct)
           const cxDisc = avg(R.filter((r) => r.brand !== "LG"), (r) => r.discountPct)
           return (
-            <div onClick={() => setPriceOpen((v) => !v)} className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white shadow-sm transition-shadow hover:shadow-md">
+            <div onClick={() => setPriceOpen((v) => !v)} className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm transition-shadow hover:shadow-md">
               <div className="flex items-center gap-3 px-4 py-3">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
                 </div>
-                <span className="shrink-0 text-[12px] font-bold text-gray-900">가격 읽기</span>
+                <span className="shrink-0 text-[12px] font-bold text-gray-900 dark:text-gray-50">가격 읽기</span>
                 {!priceOpen && (
-                  <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700">
+                  <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700 dark:text-gray-200">
                     {nMoved === 0 ? (
-                      <><b className="font-semibold text-gray-900">시장 가격 보합</b> — 관측 {total}개 중 오늘 변동 없음 · LG 할인 {pct(lgDisc)} vs 경쟁 {pct(cxDisc)}</>
+                      <><b className="font-semibold text-gray-900 dark:text-gray-50">시장 가격 보합</b> — 관측 {total}개 중 오늘 변동 없음 · LG 할인 {pct(lgDisc)} vs 경쟁 {pct(cxDisc)}</>
                     ) : (
-                      <><b className="font-semibold text-gray-900">오늘 변동 {nMoved}건</b> (인하 {cu}·인상 {hi}) — 관측 {total}개 · LG 할인 {pct(lgDisc)} vs 경쟁 {pct(cxDisc)}</>
+                      <><b className="font-semibold text-gray-900 dark:text-gray-50">오늘 변동 {nMoved}건</b> (인하 {cu}·인상 {hi}) — 관측 {total}개 · LG 할인 {pct(lgDisc)} vs 경쟁 {pct(cxDisc)}</>
                     )}
                   </div>
                 )}
-                <span className="ml-auto shrink-0 text-[11px] font-medium text-indigo-600">더보기 <span className={"inline-block transition-transform " + (priceOpen ? "rotate-180" : "")}>▾</span></span>
+                <span className="ml-auto shrink-0 text-[11px] font-medium text-indigo-600 dark:text-indigo-400">더보기 <span className={"inline-block transition-transform " + (priceOpen ? "rotate-180" : "")}>▾</span></span>
               </div>
               <div className="grid transition-[grid-template-rows] duration-300 ease-out" style={{ gridTemplateRows: priceOpen ? "1fr" : "0fr" }}>
                 <div className="overflow-hidden">
-                  <div className="border-t border-indigo-100/70 px-4 pb-3.5 pt-3">
-                    <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-gray-500">
-                      <span>관측 <b className="text-gray-800">{total}</b></span>
-                      <span>오늘 변동 <b className="text-gray-800">{nMoved}건</b> (인하 {cu}·인상 {hi})</span>
-                      <span>LG 할인 <b className="text-gray-800">{pct(lgDisc)}</b> vs 경쟁 {pct(cxDisc)}</span>
+                  <div className="border-t border-indigo-100/70 dark:border-indigo-500/25 px-4 pb-3.5 pt-3">
+                    <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11.5px] text-gray-500 dark:text-gray-400">
+                      <span>관측 <b className="text-gray-800 dark:text-gray-100">{total}</b></span>
+                      <span>오늘 변동 <b className="text-gray-800 dark:text-gray-100">{nMoved}건</b> (인하 {cu}·인상 {hi})</span>
+                      <span>LG 할인 <b className="text-gray-800 dark:text-gray-100">{pct(lgDisc)}</b> vs 경쟁 {pct(cxDisc)}</span>
                     </div>
-                    <p className="text-[12.5px] leading-relaxed text-gray-700">관측 <b className="text-gray-900">{total}개 리스팅</b> 기준, 오늘 가격 변동은 <b className="text-gray-900">{nMoved}건</b>(인하 {cu}·인상 {hi}). LG 자사 리스팅 평균 할인율은 <b className="text-gray-900">{pct(lgDisc)}</b>로 경쟁({pct(cxDisc)})과 비교됩니다.</p>
-                    <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-relaxed text-indigo-700"><span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 시사점</span><span>변동 건수·폭과 경쟁사 SRP 복귀 시점을 주시. 대량 인하 신호 유무로 성수기 프로모 개시 타이밍을 판단.</span></p>
+                    <p className="text-[12.5px] leading-relaxed text-gray-700 dark:text-gray-200">관측 <b className="text-gray-900 dark:text-gray-50">{total}개 리스팅</b> 기준, 오늘 가격 변동은 <b className="text-gray-900 dark:text-gray-50">{nMoved}건</b>(인하 {cu}·인상 {hi}). LG 자사 리스팅 평균 할인율은 <b className="text-gray-900 dark:text-gray-50">{pct(lgDisc)}</b>로 경쟁({pct(cxDisc)})과 비교됩니다.</p>
+                    <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-relaxed text-indigo-700 dark:text-indigo-300"><span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 시사점</span><span>변동 건수·폭과 경쟁사 SRP 복귀 시점을 주시. 대량 인하 신호 유무로 성수기 프로모 개시 타이밍을 판단.</span></p>
                   </div>
                 </div>
               </div>
@@ -476,19 +476,19 @@ export default function Competitors() {
         })() : null}
         <section
           key={view}
-          className="min-w-0 rounded-xl border border-gray-200 bg-white p-4 shadow-sm"
+          className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm"
           style={{ animation: "viewIn .32s cubic-bezier(.22,1,.36,1) both" }}
         >
-          {view !== "movers" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 pb-2">
-            <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900">
+          {view !== "movers" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+            <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">
               {active?.label}
               <span className={"rounded border px-1 py-px text-[9px] font-semibold " + BADGE[active?.status ?? "plan"].c}>
                 {BADGE[active?.status ?? "plan"].t}
               </span>
             </h2>
-            <span className="flex items-center gap-1.5 text-[11px] text-gray-500">
+            <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
               최종 갱신 {stamp ? fmtStamp(stamp) : md(asOf)}
-              <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">
+              <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
                 CONFIRMED
               </span>
             </span>
@@ -498,8 +498,8 @@ export default function Competitors() {
             <PromoView rows={promo} camps={camps} />
           ) : active?.status !== "live" ? (
             <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
-              <p className="text-[13px] font-medium text-gray-600">{active?.desc}</p>
-              <p className="text-[12px] text-gray-400">데이터 연결 예정 — 뷰 확정 후 구현</p>
+              <p className="text-[13px] font-medium text-gray-600 dark:text-gray-300">{active?.desc}</p>
+              <p className="text-[12px] text-gray-400 dark:text-gray-500">데이터 연결 예정 — 뷰 확정 후 구현</p>
             </div>
           ) : (
             <>
@@ -537,35 +537,35 @@ export default function Competitors() {
                     <Opt key={s} multi on={shops.includes(s)} count={rows ? rows.filter((r) => r.retailer === s).length : null} onClick={() => toggle(shops, s, setShops)}>{s === "SM Appliance" ? "SM" : s}</Opt>
                   ))}
                 </FacetMenu>
-                <button type="button" onClick={() => setOnlyMoved(!onlyMoved)} className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium transition-colors " + (onlyMoved ? "border-indigo-200 bg-indigo-50 text-indigo-700" : "border-transparent bg-gray-100 text-gray-500 hover:bg-gray-200")}>
-                  <span className={"flex h-4 w-7 items-center rounded-full px-0.5 transition-colors " + (onlyMoved ? "bg-indigo-600" : "bg-gray-300")}><span className={"h-3 w-3 rounded-full bg-white transition-transform " + (onlyMoved ? "translate-x-3" : "")} /></span>
+                <button type="button" onClick={() => setOnlyMoved(!onlyMoved)} className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium transition-colors " + (onlyMoved ? "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "border-transparent bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700")}>
+                  <span className={"flex h-4 w-7 items-center rounded-full px-0.5 transition-colors " + (onlyMoved ? "bg-indigo-600" : "bg-gray-300")}><span className={"h-3 w-3 rounded-full bg-white dark:bg-gray-900 transition-transform " + (onlyMoved ? "translate-x-3" : "")} /></span>
                   변동분만
                 </button>
                 <div className="ml-auto flex items-center gap-2.5">
                   <div className="relative">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" /></svg>
-                    <input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델코드·모델명 검색" className={"rounded-full border border-gray-200 bg-gray-50 py-1.5 pl-9 pr-3 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 hover:border-gray-300 hover:bg-white focus:border-indigo-400 focus:bg-white " + (focused || q ? "w-[360px]" : "w-[260px]")} />
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" /></svg>
+                    <input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델코드·모델명 검색" className={"rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-3 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 " + (focused || q ? "w-[360px]" : "w-[260px]")} />
                   </div>
-                  <span className="whitespace-nowrap text-[11px] text-gray-400"><b className="text-gray-700">{data.length}</b>행{stamp ? " · 최종 " + fmtStamp(stamp) : ""} <span className="rounded border border-emerald-200 bg-emerald-50 px-1 py-px text-[10px] font-semibold text-emerald-700">CONFIRMED</span></span>
-                  <button type="button" onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")} className="rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 transition hover:border-emerald-300 hover:text-emerald-700">엑셀</button>
+                  <span className="whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500"><b className="text-gray-700 dark:text-gray-200">{data.length}</b>행{stamp ? " · 최종 " + fmtStamp(stamp) : ""} <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
+                  <button type="button" onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-300">엑셀</button>
                 </div>
               </div>
 
-              <div className="mt-2 max-h-[600px] overflow-auto rounded-lg border border-gray-200">
+              <div className="mt-2 max-h-[600px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
                 <table className="w-full border-collapse text-[11px]">
-                  <thead className="sticky top-0 z-10 bg-gray-50">
+                  <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
                     <tr>
                       {COLS.map((c) => (
                         <th
                           key={c.k as string}
                           onClick={() => setSort((s) => ({ k: c.k as string, asc: s.k === c.k ? !s.asc : true }))}
                           className={
-                            "cursor-pointer select-none whitespace-nowrap border-b border-gray-200 px-2 py-1.5 font-semibold text-gray-600 transition-colors duration-200 hover:text-indigo-600 " +
+                            "cursor-pointer select-none whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-1.5 font-semibold text-gray-600 dark:text-gray-300 transition-colors duration-200 hover:text-indigo-600 dark:hover:text-indigo-400 " +
                             (c.num ? "text-right" : "text-left")
                           }
                         >
                           {c.t === "D-2" ? "D-2 " + md(rows?.[0]?.d2 ?? null) : c.t === "D-1" ? "D-1 " + md(rows?.[0]?.d1 ?? null) : c.t === "당일" ? "당일 " + md(asOf) : c.t}
-                          {sort.k === c.k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null}
+                          {sort.k === c.k ? <span className="ml-0.5 text-indigo-500 dark:text-indigo-400">{sort.asc ? "▲" : "▼"}</span> : null}
                         </th>
                       ))}
                     </tr>
@@ -573,13 +573,13 @@ export default function Competitors() {
                   <tbody key={cat + brands.join() + shops.join() + band + seg + sort.k + String(sort.asc) + q + String(onlyMoved)}>
                     {rows === null ? (
                       <tr>
-                        <td colSpan={COLS.length} className="px-2 py-10 text-center text-[12px] text-gray-400">
+                        <td colSpan={COLS.length} className="px-2 py-10 text-center text-[12px] text-gray-400 dark:text-gray-500">
                           불러오는 중…
                         </td>
                       </tr>
                     ) : data.length === 0 ? (
                       <tr>
-                        <td colSpan={COLS.length} className="px-2 py-10 text-center text-[12px] text-gray-400">
+                        <td colSpan={COLS.length} className="px-2 py-10 text-center text-[12px] text-gray-400 dark:text-gray-500">
                           조건에 맞는 행 없음
                         </td>
                       </tr>
@@ -587,21 +587,21 @@ export default function Competitors() {
                       data.slice(0, 100).map((r, i) => {
                         const up = (r.deltaPhp ?? 0) > 0
                         const dn = (r.deltaPhp ?? 0) < 0
-                        const dcol = dn ? "text-emerald-700" : up ? "text-red-700" : "text-gray-400"
+                        const dcol = dn ? "text-emerald-700 dark:text-emerald-300" : up ? "text-red-700 dark:text-red-400" : "text-gray-400 dark:text-gray-500"
                         return (
                           <tr
                             key={i}
                             style={{ animation: "rowIn .28s ease both", animationDelay: Math.min(i, 24) * 0.02 + "s" }}
-                            className="border-b border-gray-100 transition-all duration-200 hover:-translate-y-px hover:bg-indigo-50/60 hover:text-indigo-700 hover:shadow-[0_1px_0_0_rgba(99,102,241,.25)]"
+                            className="border-b border-gray-100 dark:border-gray-800 transition-all duration-200 hover:-translate-y-px hover:bg-indigo-50/60 dark:hover:bg-indigo-500/10 hover:text-indigo-700 dark:hover:text-indigo-300 hover:shadow-[0_1px_0_0_rgba(99,102,241,.25)]"
                           >
-                            <td className="px-2 py-1 font-medium text-gray-800">{r.brand}</td>
-                            <td className="px-2 py-1 text-gray-600">{r.category}</td>
-                            <td className="whitespace-nowrap px-2 py-1 font-medium text-gray-800" title={r.model}>
+                            <td className="px-2 py-1 font-medium text-gray-800 dark:text-gray-100">{r.brand}</td>
+                            <td className="px-2 py-1 text-gray-600 dark:text-gray-300">{r.category}</td>
+                            <td className="whitespace-nowrap px-2 py-1 font-medium text-gray-800 dark:text-gray-100" title={r.model}>
                               {r.code}
                             </td>
-                            <td className="whitespace-nowrap px-2 py-1 text-gray-500">{r.retailer}</td>
-                            <td className="num px-2 py-1 text-right text-gray-500">{peso(r.p1)}</td>
-                            <td className="num px-2 py-1 text-right font-semibold text-gray-900">{peso(r.p0)}</td>
+                            <td className="whitespace-nowrap px-2 py-1 text-gray-500 dark:text-gray-400">{r.retailer}</td>
+                            <td className="num px-2 py-1 text-right text-gray-500 dark:text-gray-400">{peso(r.p1)}</td>
+                            <td className="num px-2 py-1 text-right font-semibold text-gray-900 dark:text-gray-50">{peso(r.p0)}</td>
                             <td className={"num px-2 py-1 text-right " + dcol}>
                               {r.deltaPhp == null || r.deltaPhp === 0 ? "—" : (dn ? "−" : "+") + peso(Math.abs(r.deltaPhp)).slice(1)}
                             </td>
@@ -609,8 +609,8 @@ export default function Competitors() {
                               {r.deltaPct == null || r.deltaPct === 0 ? "—" : pct(r.deltaPct)}
                             </td>
                             <td className="px-2 py-1"><Spark p2={r.p2} p1={r.p1} p0={r.p0} /></td>
-                            <td className="num px-2 py-1 text-right text-gray-400">{peso(r.srp)}</td>
-                            <td className="num px-2 py-1 text-right text-gray-600">
+                            <td className="num px-2 py-1 text-right text-gray-400 dark:text-gray-500">{peso(r.srp)}</td>
+                            <td className="num px-2 py-1 text-right text-gray-600 dark:text-gray-300">
                               {r.discountPct == null ? "—" : r.discountPct.toFixed(0) + "%"}
                             </td>
                           </tr>
@@ -620,7 +620,7 @@ export default function Competitors() {
                   </tbody>
                 </table>
               </div>
-              <p className="mt-1 text-[10px] text-gray-400">
+              <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
                 표는 상위 100행만 표시(정렬 기준) · 엑셀(CSV)에는 필터된 전체 {data.length}행 전부 · 모델코드에 마우스를 올리면 원문 모델명
               </p>
             </>

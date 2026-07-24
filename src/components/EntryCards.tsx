@@ -61,33 +61,33 @@ export default function EntryCards() {
   return (
     <section className="animate-[fadeUp_.5s_ease]">
       <header className="mb-2 flex items-baseline gap-2">
-        <h2 className="text-[16px] font-bold tracking-tight text-gray-900">더 파고들기</h2>
-        <span className="text-[10px] text-gray-400">주제별 상세</span>
+        <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">더 파고들기</h2>
+        <span className="text-[10px] text-gray-400 dark:text-gray-500">주제별 상세</span>
       </header>
 
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {(cards ?? Array.from({ length: 4 })).map((c, i) =>
           !c ? (
-            <div key={i} className="h-[76px] rounded-lg border border-gray-100 bg-[#f9fafb]" />
+            <div key={i} className="h-[76px] rounded-lg border border-gray-100 dark:border-gray-800 bg-[#f9fafb]" />
           ) : (
             <a
               key={c.title}
               href={c.href}
-              className="group rounded-lg border border-gray-200 bg-white px-3 py-2.5 transition-colors duration-200 hover:border-indigo-300"
+              className="group rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2.5 transition-colors duration-200 hover:border-indigo-300 dark:hover:border-indigo-500/40"
               style={{ animation: "fadeUp .5s ease both", animationDelay: `${i * 0.05}s` }}
             >
-              <p className="flex items-baseline justify-between text-[11px] font-bold text-gray-900">
+              <p className="flex items-baseline justify-between text-[11px] font-bold text-gray-900 dark:text-gray-50">
                 {c.title}
-                <span className="text-gray-300 transition-colors duration-200 group-hover:text-indigo-600">
+                <span className="text-gray-300 dark:text-gray-600 transition-colors duration-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
                   ›
                 </span>
               </p>
-              <p className="mt-1 text-[16px] font-bold leading-none tracking-tight text-gray-900">
+              <p className="mt-1 text-[16px] font-bold leading-none tracking-tight text-gray-900 dark:text-gray-50">
                 {c.value}
               </p>
-              <p className="mt-1 text-[10px] leading-tight text-gray-400">{c.sub}</p>
+              <p className="mt-1 text-[10px] leading-tight text-gray-400 dark:text-gray-500">{c.sub}</p>
               {c.hint ? (
-                <p className="mt-0.5 text-[10px] leading-tight text-gray-300">{c.hint}</p>
+                <p className="mt-0.5 text-[10px] leading-tight text-gray-300 dark:text-gray-600">{c.hint}</p>
               ) : null}
             </a>
           ),

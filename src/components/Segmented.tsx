@@ -26,7 +26,7 @@ export function Segmented({
   }, [idx, options])
   const pad = size === "sm" ? "px-2.5 py-1 text-[11px]" : "px-3.5 py-1 text-[11.5px]"
   return (
-    <div className="relative flex shrink-0 rounded-full border border-gray-200 bg-gray-50 p-0.5">
+    <div className="relative flex shrink-0 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-0.5">
       <span
         className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 shadow-sm transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]"
         style={style}
@@ -43,7 +43,7 @@ export function Segmented({
             "relative z-10 rounded-full font-medium transition-colors duration-300 active:scale-95 " +
             pad +
             " " +
-            (value === o.k ? "text-white" : "text-gray-600 hover:text-indigo-600")
+            (value === o.k ? "text-white" : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400")
           }
         >
           {o.label}
