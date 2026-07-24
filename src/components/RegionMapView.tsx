@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
+import { useTheme } from "next-themes"
 
 /** 지역시장 지도 — 원본 디자인 핸드오프(필리핀 17개 지역 인터랙티브 대시보드)를 그대로 임베드.
  *  · 원본 = public/region-map/index.html (마크업·CSS·JS·d3 단일 파일, 딜러 드릴다운·choropleth·KPI 스트립 전 구성 보존).
@@ -11,7 +12,16 @@ import React, { useEffect, useState } from "react"
 export default function RegionMapView() {
   // 동적 캐시버스터 — 매 로드 고유 URL로 iframe이 항상 최신 맵을 받도록(정적 ?v 캐시 문제 근본 해결)
   const [cb, setCb] = useState("")
-  useEffect(() => { setCb("?t=" + Date.now()) }, [])
+  const [mounted, setMounted] = useState(false)
+  const frameRef = useRef<HTMLIFrameElement | null>(null)
+  const { theme, resolvedTheme } = useTheme()
+  const dark = ((theme === "system" ? resolvedTheme : theme) === "dark")
+  useEffect(() => { setCb("?t=" + Date.now()); setMounted(true) }, [])
+  // 테마 토글 시 iframe에 postMessage — 리로드 없이 CSS 변수만 전환(드릴다운 상태 보존)
+  useEffect(() => {
+    if (!mounted) return
+    frameRef.current?.contentWindow?.postMessage({ type: "ax-theme", theme: dark ? "dark" : "light" }, "*")
+  }, [dark, mounted])
   return (
     <div className="flex flex-col gap-3">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
@@ -31,10 +41,12 @@ export default function RegionMapView() {
         {/* 원본 지도 임베드 — 동적 캐시버스터로 항상 최신 로드(마운트 후 렌더) */}
         {cb ? (
           <iframe
-            src={"/region-map/index.html" + cb}
+            ref={frameRef}
+            src={"/region-map/index.html" + cb + "&theme=" + (dark ? "dark" : "light")}
             title="필리핀 지역시장 인터랙티브 지도"
             className="block w-full border-0"
             style={{ height: "96vh", minHeight: 940 }}
+            onLoad={() => frameRef.current?.contentWindow?.postMessage({ type: "ax-theme", theme: dark ? "dark" : "light" }, "*")}
           />
         ) : (
           <div className="w-full animate-pulse bg-gray-50 dark:bg-gray-900" style={{ height: "96vh", minHeight: 940 }} />
