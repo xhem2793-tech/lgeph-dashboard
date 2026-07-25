@@ -147,10 +147,10 @@
   .mapctrl:hover:not(.picked) .mc-body{max-height:52vh;opacity:1;padding-bottom:8px;overflow-y:auto}
   .mc-body::-webkit-scrollbar{width:6px}
   .mc-body::-webkit-scrollbar-thumb{background:#dcdad3;border-radius:6px}
-  .mc-tabs{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
-  .mc-grp{font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:8px 4px 2px;margin-top:2px}
+  .mc-tabs{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px;width:186px}
+  .mc-grp{width:100%;font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:7px 4px 1px}
   html.dark .mc-grp{color:#8b93a3}
-  .mc-tab{padding:7px 11px;border:1.2px solid var(--hair);background:var(--panel);border-radius:8px;font-size:11.5px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .15s;text-align:left;width:112px}
+  .mc-tab{padding:6px 9px;border:1.2px solid var(--hair);background:var(--panel);border-radius:8px;font-size:11px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .15s;text-align:center;flex:1 1 40%;min-width:78px}
   .mc-tab:hover{border-color:var(--accent);color:var(--accent)}
   .mc-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
   /* 하단 컨트롤 묶음: 범례 + 월 슬라이더를 한 줄로(겹침·산만 방지) */
@@ -732,7 +732,7 @@ function buildMapTabs(){
   const box=document.getElementById("mapmetrics"); box.innerHTML="";
   const mkBtn=(m)=>{ const b=document.createElement("button"); b.className="mc-tab"+(m.key===curMapMetric?" on":""); b.dataset.k=m.key; b.textContent=m.label.replace(/\s*\(.*\)/,""); b.onclick=()=>{ applyChoropleth(m.key); document.getElementById("mapctrl").classList.add("picked"); }; return b; };
   // 전체(none) 최상단
-  const none=MAPMETRICS.find(m=>m.none); if(none) box.appendChild(mkBtn(none));
+  const none=MAPMETRICS.find(m=>m.none); if(none){ const nb=mkBtn(none); nb.style.flex="1 1 100%"; box.appendChild(nb); }
   MAP_GROUPS.forEach(g=>{
     const items=g.keys.map(k=>MAPMETRICS.find(m=>m.key===k)).filter(Boolean);
     if(!items.length) return;

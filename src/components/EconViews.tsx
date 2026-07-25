@@ -181,6 +181,35 @@ const src = (s: string) => (<><b className="font-semibold text-gray-500 dark:tex
 // 가전 선행지표 — PPI·수입·가전물가·전기료
 // ══════════════════════════════════════════════════════════════════════
 const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile"]
+// 단면(cross-sectional) 바 카드 — 보유율·연령구조 등 시점 스냅샷용 공용
+function CrossBarCard({ d, items, title, seg, unit, meaning, ai, source, sort = true }: { d: Mon; items: { key: string; name: string }[]; title: string; seg: string; unit: string; meaning: React.ReactNode; ai: React.ReactNode; source: string; sort?: boolean }) {
+  let rows = items.map((it) => ({ ...it, v: latestOf(d, it.key)?.v ?? 0 })).filter((r) => r.v > 0)
+  if (sort) rows = rows.sort((a, b) => b.v - a.v)
+  if (!rows.length) return null
+  return (
+    <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+      <div className="flex items-center gap-1.5">
+        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
+        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>
+        <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>
+      </div>
+      <div className="mt-3 flex flex-1 flex-col justify-center gap-2.5">
+        {rows.map((r, i) => (
+          <div key={r.key} className="flex items-center gap-2">
+            <span className="w-20 shrink-0 text-[11px] text-gray-600 dark:text-gray-300">{r.name}</span>
+            <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
+              <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.16,1,.3,1) " + (i * 0.06) + "s" }} />
+            </div>
+            <span className="w-11 shrink-0 text-right text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{r.v.toFixed(0)}%</span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2.5 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
+      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">AI</b> {ai}</p></div>
+      <div className="mt-auto pt-2.5 text-[10px] text-gray-400 dark:text-gray-500">{src(source)}</div>
+    </div>
+  )
+}
 // 가전 보유율(침투율) — PSA 2020 센서스 단면. 낮을수록 성장여력↑
 const OWN_ITEMS: { key: string; name: string }[] = [
   { key: "appl_own_cool", name: "냉방·선풍기" }, { key: "appl_own_tv", name: "TV" },
@@ -507,7 +536,7 @@ export function GrowthView() {
 // ══════════════════════════════════════════════════════════════════════
 // 고용·임금·소득 — 실업·참가·OFW 송금·인구
 // ══════════════════════════════════════════════════════════════════════
-const LABOR_KEYS = ["unemployment_rate", "underemployment_rate", "labor_force_participation_rate", "employed_persons", "ofw_cash_remittance", "ofw_cash_remittance_growth_yoy", "ofw_personal_remittance", "remittances_usd", "population", "urban_population_pct", "min_wage_php", "households_mn", "household_size", "internet_penetration", "electrification_rate", "poverty_rate", "fertility_rate", "median_age", "mobile_per100", "broadband_per100", "account_ownership", "gini_index", "hh_consumption_pc", "gni_per_capita", "life_expectancy", "secondary_enroll"]
+const LABOR_KEYS = ["unemployment_rate", "underemployment_rate", "labor_force_participation_rate", "employed_persons", "ofw_cash_remittance", "ofw_cash_remittance_growth_yoy", "ofw_personal_remittance", "remittances_usd", "population", "urban_population_pct", "min_wage_php", "households_mn", "household_size", "internet_penetration", "electrification_rate", "poverty_rate", "fertility_rate", "median_age", "mobile_per100", "broadband_per100", "account_ownership", "gini_index", "hh_consumption_pc", "gni_per_capita", "life_expectancy", "secondary_enroll", "pop_share_child", "pop_share_youth", "pop_share_working", "pop_share_old"]
 export function LaborView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(LABOR_KEYS)
@@ -647,6 +676,11 @@ export function LaborView() {
           ai={<>가구원수·출산율 하락은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가구 분화 = 가구 수↑ = 소형·1인용 가전 대수 확대</b> → 소형·프리미엄 소가전 라인업 강화</>}
           tone="emerald" src={src("PSA·World Bank 가구·출산율 · 연간")} />
       )}
+      <CrossBarCard d={d} seg="CE" unit="인구 % · 2020" title="인구 연령구조" sort={false}
+        items={[{ key: "pop_share_child", name: "유소년 0-14" }, { key: "pop_share_youth", name: "청년 20-39" }, { key: "pop_share_working", name: "생산가능 15-64" }, { key: "pop_share_old", name: "고령 65+" }]}
+        meaning={<>연령 구조 — <b className="text-gray-700 dark:text-gray-200">청년·유소년 비중 = 신규 가구형성·초도수요 런웨이</b></>}
+        ai={<>청년(20-39) <b className="font-semibold text-emerald-600 dark:text-emerald-400">32% = 신혼·1인가구 초도 가전수요 대량</b>, 고령 4.5%로 아직 젊어 장기 볼륨 성장 · 유소년 31%는 향후 10년 수요 파이프라인</>}
+        source="PSA 2020 인구주택총조사 · 연령별" />
         </> },
         { key: "adopt", label: "소비·기술·금융", node: <>
       {ict.series.length > 0 && (
