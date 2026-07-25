@@ -488,16 +488,18 @@ const ECON = {
   "Autonomous Region of Muslim Mindanao (ARMM)":{wage:341,income:12000,grdp:1.2,mid:15,cpi:91},
 };
 const METRICS=[
-  {key:"wage",  label:"최저임금 (일급)",     fmt:v=>"₱"+v.toLocaleString()},
-  {key:"income",label:"월평균 가구소득",     fmt:v=>"₱"+v.toLocaleString()+"|/월"},
-  {key:"grdp",  label:"경제 기여도 (GRDP)",  fmt:v=>v+"%"},
-  {key:"mid",   label:"중산층 비중",         fmt:v=>v+"%"},
-  {key:"cpi",   label:"물가 수준 (전국=100)",fmt:v=>String(v)},
+  {key:"pop_n",   label:"인구 (백만명)",       fmt:v=>(+v).toFixed(1)+"|백만", real:true},
+  {key:"poverty", label:"빈곤율 (%)",          fmt:v=>(+v).toFixed(1)+"%", real:true},
+  {key:"appl_cpi",label:"가전 물가 (전년비%)", fmt:v=>(+v).toFixed(1)+"%", real:true},
+  {key:"food_cpi",label:"식품 물가 (전년비%)", fmt:v=>(+v).toFixed(1)+"%", real:true},
+  {key:"income",  label:"월평균 가구소득",      fmt:v=>"₱"+(+v).toLocaleString()+"|/월"},
+  {key:"mid",     label:"중산층 비중",          fmt:v=>v+"%"},
 ];
 const ECON_STAT={};
 function computeEconStats(){
   METRICS.forEach(m=>{
-    const vals=Object.values(ECON).map(e=>e[m.key]).filter(v=>v!=null);
+    const vals=Object.values(ECON).map(e=>e[m.key]).filter(v=>v!=null&&!isNaN(v));
+    if(!vals.length){ ECON_STAT[m.key]={max:1,avg:0,sorted:[]}; return; }
     const max=Math.max(...vals), avg=vals.reduce((a,b)=>a+b,0)/vals.length;
     const sorted=[...vals].sort((a,b)=>b-a);
     ECON_STAT[m.key]={max,avg,sorted};
@@ -591,10 +593,26 @@ async function loadRegionalCpi(){
       (ECON_M[reg][key]=ECON_M[reg][key]||new Array(MONTHS.length).fill(null))[mi]=Number(row.value);
     });
     Object.keys(ECON_M).forEach(reg=>{ ECON[reg]=ECON[reg]||{}; for(const k in INF_METRICS){ const v=mVal(reg,k); if(!isNaN(v)) ECON[reg][k]=v; } });
+    if(typeof computeEconStats==="function") computeEconStats();
     buildMonthBar();
     if(curMapMetric && curMapMetric!=="none") applyChoropleth(curMapMetric);
     if(selected) showDetail(selected.properties.REGION);
   }catch(e){ console.warn("지역 물가 로드 건너뜀:",e); }
+}
+// 지역 인구(2020 센서스)·빈곤율(FIES 2023) — macro_indicators geo_level=region 실측을 choropleth로
+async function loadRegionalCensus(){
+  try{
+    const rr=await fetch(`${SB_CPI.url}/rest/v1/macro_indicators?geo_level=eq.region&indicator=in.(population_region,poverty_rate_region)&select=geo,indicator,period_date,value&order=period_date.asc`,
+      {headers:{apikey:SB_CPI.key,Authorization:"Bearer "+SB_CPI.key}});
+    if(!rr.ok) return;
+    const rows=await rr.json();
+    rows.forEach(row=>{ const reg=REG_CPI_MAP[row.geo]; if(!reg) return; ECON[reg]=ECON[reg]||{};
+      if(row.indicator==="population_region") ECON[reg].pop_n=Number(row.value)/1e6;
+      else if(row.indicator==="poverty_rate_region") ECON[reg].poverty=Number(row.value); }); // period asc → 최신(빈곤 2023) 우선
+    if(typeof computeEconStats==="function") computeEconStats();
+    if(curMapMetric && curMapMetric!=="none") applyChoropleth(curMapMetric);
+    if(selected) showDetail(selected.properties.REGION);
+  }catch(e){ console.warn("지역 인구/빈곤 로드 건너뜀:",e); }
 }
 
 const svg = d3.select("#map");
@@ -658,6 +676,8 @@ const MAPMETRICS=[
   {key:"contrib",  label:"전국 기여도",  val:contribution, fmt:v=>v+"%"},
   {key:"percap",   label:"1인당 셀아웃", val:percapIndex,  fmt:v=>Math.round(v)},
   {key:"potential",label:"성장 여력",    val:potentialGap, fmt:v=>(v>0?"+":"")+v.toFixed(1)+"p"},
+  {key:"pop_n",    label:"인구 (백만명)", val:name=>{const v=ECON[name]&&ECON[name].pop_n;return v!=null?v:NaN;}, fmt:v=>v.toFixed(1)+"백만"},
+  {key:"poverty",  label:"빈곤율 (%)",   val:name=>{const v=ECON[name]&&ECON[name].poverty;return v!=null?v:NaN;}, fmt:v=>v.toFixed(1)+"%"},
   {key:"appl_cpi",  label:"가전 물가",  monthly:true, div:true, val:name=>mVal(name,"appl_cpi"),  fmt:v=>(v>0?"+":"")+v+"%"},
   {key:"aircon_cpi",label:"에어컨 물가",monthly:true, div:true, val:name=>mVal(name,"aircon_cpi"),fmt:v=>(v>0?"+":"")+v+"%"},
   {key:"food_cpi",  label:"식품 물가",  monthly:true, div:true, val:name=>mVal(name,"food_cpi"),  fmt:v=>(v>0?"+":"")+v+"%"},
@@ -872,6 +892,7 @@ d3.json("data/ph-regions.geojson").then(geo=>{
   applyChoropleth(curMapMetric);
   loadEconomic();
   loadRegionalCpi();
+  loadRegionalCensus();
 });
 
 function centroidXY(d){ return path.centroid(d); }
