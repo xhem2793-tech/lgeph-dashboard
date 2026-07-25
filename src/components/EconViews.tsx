@@ -180,7 +180,33 @@ const src = (s: string) => (<><b className="font-semibold text-gray-500 dark:tex
 // ══════════════════════════════════════════════════════════════════════
 // 가전 선행지표 — PPI·수입·가전물가·전기료
 // ══════════════════════════════════════════════════════════════════════
-const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile", "cdd_monthly", "temp_monthly"]
+const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile", "cdd_monthly", "temp_monthly", "energy_households", "appliance_market_usd", "appliance_market_cagr"]
+// 가전 시장 규모(민간자료) 정보 카드
+function MarketCard({ d }: { d: Mon }) {
+  const size = latestOf(d, "appliance_market_usd")?.v, cagr = latestOf(d, "appliance_market_cagr")?.v
+  if (size == null) return null
+  return (
+    <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+      <div className="flex items-center gap-1.5">
+        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">필리핀 가전시장 규모</h3>
+        <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300">민간자료</span>
+      </div>
+      <div className="mt-3 flex flex-1 flex-col justify-center gap-3">
+        <div className="flex items-end gap-3">
+          <div><p className="text-[11px] text-gray-400 dark:text-gray-500">시장규모(2024)</p><p className="text-[26px] font-extrabold tabular-nums text-gray-900 dark:text-gray-50">${size.toFixed(2)}<span className="text-[13px] font-semibold text-gray-400">B</span></p></div>
+          {cagr != null && <div className="pb-1"><p className="text-[11px] text-gray-400 dark:text-gray-500">성장률(CAGR 25-30)</p><p className="text-[20px] font-bold tabular-nums text-emerald-600 dark:text-emerald-400">+{cagr}%</p></div>}
+        </div>
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-[11px] text-gray-600 dark:text-gray-300">
+          <span>주요 3사 <b className="text-gray-800 dark:text-gray-100">Panasonic·Samsung·LG</b></span>
+          <span>전자매장 채널 <b className="text-gray-800 dark:text-gray-100">47.3%</b></span>
+          <span>LG ThinQ = 프리미엄 <b className="text-indigo-600 dark:text-indigo-400">50%</b></span>
+        </div>
+      </div>
+      <p className="mt-2.5 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 연 <b className="text-emerald-600 dark:text-emerald-400">7%대 성장·58억불 시장</b>, 매장 중심 구매·LG 프리미엄 강세 = 오프라인 체험+ThinQ 스마트가전 이원 공략</p>
+      <div className="mt-auto pt-2.5 text-[10px] text-gray-400 dark:text-gray-500">{src("Grand View Research · 필리핀 가전시장 · 민간자료")}</div>
+    </div>
+  )
+}
 // 단면(cross-sectional) 바 카드 — 보유율·연령구조 등 시점 스냅샷용 공용
 function CrossBarCard({ d, items, title, seg, unit, meaning, ai, source, sort = true }: { d: Mon; items: { key: string; name: string }[]; title: string; seg: string; unit: string; meaning: React.ReactNode; ai: React.ReactNode; source: string; sort?: boolean }) {
   let rows = items.map((it) => ({ ...it, v: latestOf(d, it.key)?.v ?? 0 })).filter((r) => r.v > 0)
@@ -251,6 +277,7 @@ export function ApplianceView() {
   const inf = build(d, n, [{ key: "INF_household_appliances", name: "가전 물가", color: C.ind, w: 2 }, { key: "INF_aircon", name: "에어컨", color: C.rose }, { key: "INF_all_items", name: "전체 CPI", color: C.brown }])
   const elec = build(d, n, [{ key: "meralco_residential_rate", name: "가정용 전기료", color: C.ind, w: 2 }])
   const cdd = build(d, n, [{ key: "cdd_monthly", name: "냉방도일 CDD", color: C.rose, w: 2 }]) // 에어컨 수요 선행
+  const energy = build(d, n, [{ key: "energy_households", name: "가정용 에너지소비", color: C.ind, w: 2 }]) // ktoe, 연간
   const empty = !ppi.series.length && !imp.series.length && !inf.series.length && !elec.series.length && !cdd.series.length
   return (
     <Shell title="가전 선행지표" sub="생산자물가·수입액·가전물가·전기료 — 원가·공급 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
@@ -261,6 +288,7 @@ export function ApplianceView() {
         { key: "PPI_domestic_appliances", label: "가전 PPI YoY", fmt: (v) => v + "%", tone: "rose" },
         { key: "meralco_residential_rate", label: "전기료", fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
       ]}>
+      <MarketCard d={d} />
       <OwnershipCard d={d} />
       {ppi.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="가전 생산자물가 PPI" unit="전년비 %" labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
@@ -296,6 +324,13 @@ export function ApplianceView() {
           meaning={<>냉방도일 = Σ(일평균기온−24℃) — <b className="text-gray-700 dark:text-gray-200">에어컨·냉장고 사용강도·판매 성수기 직접 선행</b></>}
           ai={<>CDD 급등기(3~5월 혹서)는 <b className="font-semibold text-amber-600 dark:text-amber-400">에어컨·선풍기 판매 성수기</b> → 사전 재고·프로모 집중, 냉방 프리미엄(인버터) 소구 최적 · <b className="text-gray-500 dark:text-gray-400">Open-Meteo 기온</b></>}
           tone="amber" src={src("Open-Meteo 메트로마닐라 기온 · 냉방도일 월집계")} />
+      )}
+      {energy.series.length > 0 && (
+        <ChartCard seg="CE" title="가정용 에너지소비" unit="ktoe · 연간" labels={energy.labels} series={energy.series} decimals={0} seriesUnit="ktoe"
+          legend={<Lg c={C.ind} t="가정용 에너지소비" b />}
+          meaning={<>가구부문 최종에너지소비 — <b className="text-gray-700 dark:text-gray-200">가전 사용량·전력화 심화의 구조적 지표</b></>}
+          ai={<>가정용 에너지소비 증가는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 보유·사용 심화 = 시장 성숙</b> → 고효율·인버터 소구 여지 확대, 전력화 진전 지역 우선</>}
+          tone="emerald" src={src("PSA 에너지통계 부문별 최종소비 · 연간")} />
       )}
     </Shell>
   )
