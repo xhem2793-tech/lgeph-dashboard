@@ -831,15 +831,16 @@ export function LaborView() {
 // ══════════════════════════════════════════════════════════════════════
 // 기업·소비 심리 — CCI·BCI·내구재 구매의향
 // ══════════════════════════════════════════════════════════════════════
-const SENTIMENT_KEYS = ["consumer_confidence_index", "consumer_confidence_next12m", "business_confidence_index", "business_confidence_next12m", "durables_buying_intention"]
+const SENTIMENT_KEYS = ["economic_sentiment_composite", "consumer_confidence_index", "consumer_confidence_next12m", "business_confidence_index", "business_confidence_next12m", "durables_buying_intention"]
 export function SentimentView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(SENTIMENT_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
+  const esi = build(d, n, [{ key: "economic_sentiment_composite", name: "경제심리지수", color: C.ind, w: 2 }])
   const cci = build(d, n, [{ key: "consumer_confidence_index", name: "현재 CCI", color: C.ind, w: 2 }, { key: "consumer_confidence_next12m", name: "향후 12개월", color: C.emer }])
   const bci = build(d, n, [{ key: "business_confidence_index", name: "현재 BCI", color: C.ind, w: 2 }, { key: "business_confidence_next12m", name: "향후 12개월", color: C.blue }])
   const dur = build(d, n, [{ key: "durables_buying_intention", name: "내구재 구매의향", color: C.ind, w: 2 }])
-  const empty = !cci.series.length && !bci.series.length && !dur.series.length
+  const empty = !cci.series.length && !bci.series.length && !dur.series.length && !esi.series.length
   return (
     <Shell title="기업·소비 심리" sub="소비자심리 CCI·기업심리 BCI·내구재 구매의향 — 수요 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ summary: (kv) => <>소비자심리 CCI {B(f1(kv.consumer_confidence_index))}·기업심리 BCI {B(f1(kv.business_confidence_index))}·내구재 구매의향 {B(f1(kv.durables_buying_intention))} — {(kv.consumer_confidence_index ?? 0) < 0 ? "심리 위축, 수요 회복 지연 국면" : "심리 개선, 수요 회복 초입"}</>, headline: <><b className="font-semibold text-gray-900 dark:text-gray-50">소비·기업 심리 = 수요의 3~6개월 선행</b></>, lg: <>내구재 구매의향·CCI 반등 초입에 <b className="font-semibold">신제품·프리미엄 출시 타이밍</b> · 악화 시 가성비·필수형 우선</> }}
@@ -848,6 +849,13 @@ export function SentimentView() {
         { key: "business_confidence_index", label: "기업심리 BCI", fmt: (v) => String(v), tone: "emerald" },
         { key: "durables_buying_intention", label: "내구재 구매의향", fmt: (v) => String(v), tone: "emerald" },
       ]}>
+      {esi.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="경제심리지수 (자체산출·실험적)" unit="지수 · 평균100 · 분기" labels={esi.labels} series={esi.series} decimals={1}
+          legend={<Lg c={C.ind} t="경제심리지수" b />}
+          meaning={<>소비자심리·전망·내구재의향·기업심리를 표준화 합성 — <b className="text-gray-700 dark:text-gray-200">경제 전반 심리의 단일 게이지</b> (100=장기평균)</>}
+          ai={<>100 상회는 낙관·수요 확장, 하회는 위축 국면 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">단일 지표로 국면 전환 조기 포착</b> · <b className="text-gray-500 dark:text-gray-400">BOK 경제심리지수(ESI) 방식 · 자체산출, 기업심리 이력 확보 시 정식화</b></>}
+          tone="emerald" src={src("자체산출: BSP CES/BES 표준화 합성(평균100·표준편차10) · 분기")} />
+      )}
       {dur.series.length > 0 && (
         <ChartCard seg="CE" title="내구재 구매의향" unit="지수" labels={dur.labels} series={dur.series} decimals={1}
           legend={<Lg c={C.ind} t="내구재 구매의향" b />}
