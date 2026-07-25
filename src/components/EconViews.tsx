@@ -130,6 +130,10 @@ type Section = { key: string; label: string; node: React.ReactNode }
 function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, children, sections }: { title: string; sub: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; banner?: BannerDef; kpiDefs?: KpiDef[]; d: Mon; children?: React.ReactNode; sections?: Section[] }) {
   const [activeSub, setActiveSub] = useState(sections?.[0]?.key ?? "")
   const curSub = sections?.find((s) => s.key === activeSub) ?? sections?.[0]
+  // 적응형 토글 — 뷰의 실제 데이터 기간(년)보다 긴 창은 숨김(5년치 데이터 없는데 5Y 토글 노출 방지)
+  let spanY = 0
+  for (const k in d) { const g = d[k]; if (g && g.dates.length >= 2) { const a = Number(g.dates[0].slice(0, 4)), b = Number(g.dates[g.dates.length - 1].slice(0, 4)); if (b - a > spanY) spanY = b - a } }
+  const winOpts = WIN.filter((w) => w.k === "전체" || w.n <= Math.max(1, spanY))
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
@@ -141,7 +145,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
             <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h2>
             <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{sub}</span>
             <span className="ml-auto">
-              <Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k }))} />
+              <Segmented size="sm" value={win} onChange={setWin} options={winOpts.map((w) => ({ k: w.k, label: w.k }))} />
             </span>
           </header>
           {loaded && !empty && sections && sections.length > 1 && (
