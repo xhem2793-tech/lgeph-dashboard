@@ -9,19 +9,22 @@ import type { Provenance } from "@/lib/supabase"
 // 출처 → 원본 URL 리졸버(가능하면 원본 페이지, 아니면 기관 포털)
 function sourceLink(source: string, ref: string | null): string | null {
   const s = source || "", r = ref || ""
-  if (/^https?:\/\//.test(r)) return r
+  // WB/IMF 코드 우선 — raw API URL·설명문 모두 사람용 지표 페이지로
   const wb = r.match(/[A-Z]{2}\.[A-Z]{2,4}\.[A-Z0-9._]+/) // WB WDI 코드
-  if (/World Bank/i.test(s) && wb) return "https://data.worldbank.org/indicator/" + wb[0]
+  if (/World Bank/i.test(s)) return wb ? "https://data.worldbank.org/indicator/" + wb[0] : "https://data.worldbank.org/country/philippines"
   const imf = r.match(/[MQA]\.PH\.[A-Z0-9_]+/)
   if (/IMF/i.test(s) && imf) return "https://db.nomics.world/IMF/IFS/" + imf[0]
+  if (/DOLE|RTWPB|NWPC/i.test(s)) return "https://nwpc.dole.gov.ph/" // 저장된 비공식 URL 무시, 공식 임금위원회
+  if (/^https?:\/\//.test(r)) return r // 저장된 원본 URL(미디어 등)
   if (/PSA OpenSTAT/i.test(s)) return "https://openstat.psa.gov.ph/"
   if (/PSA/i.test(s)) return "https://psa.gov.ph/statistics"
   if (/BSP/i.test(s)) return "https://www.bsp.gov.ph/SitePages/Statistics/Statistics.aspx"
-  if (/DOE/i.test(s)) return "https://doe.gov.ph/oil-monitor"
+  if (/DOE/i.test(s)) return "https://www.doe.gov.ph/"
   if (/Open-Meteo/i.test(s)) return "https://open-meteo.com/"
   if (/Meralco/i.test(s)) return "https://company.meralco.com.ph/"
   if (/Colliers/i.test(s)) return "https://www.colliers.com/en-ph/research"
   if (/ADB/i.test(s)) return "https://www.adb.org/countries/philippines/economy"
+  if (/IMF/i.test(s)) return "https://www.imf.org/en/Countries/PHL"
   return null
 }
 // 공식 / 민간 / 미디어 분류
