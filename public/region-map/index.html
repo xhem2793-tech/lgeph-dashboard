@@ -148,6 +148,8 @@
   .mc-body::-webkit-scrollbar{width:6px}
   .mc-body::-webkit-scrollbar-thumb{background:#dcdad3;border-radius:6px}
   .mc-tabs{display:flex;flex-direction:column;gap:4px;margin-bottom:8px}
+  .mc-grp{font-size:9.5px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:8px 4px 2px;margin-top:2px}
+  html.dark .mc-grp{color:#8b93a3}
   .mc-tab{padding:7px 11px;border:1.2px solid var(--hair);background:var(--panel);border-radius:8px;font-size:11.5px;font-weight:700;color:#555;cursor:pointer;font-family:inherit;transition:all .15s;text-align:left;width:112px}
   .mc-tab:hover{border-color:var(--accent);color:var(--accent)}
   .mc-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -721,14 +723,21 @@ function renderLegend(m,ext){
     `<span class="lg-bar" style="background:${grad}"></span>`+
     `<span class="lg-mx">${m.fmt(ext.max)}</span>`;
 }
+const MAP_GROUPS=[
+  {label:"가전시장", keys:["growth","contrib","percap","potential"]},
+  {label:"인구·소득", keys:["pop_n","income_real","poverty"]},
+  {label:"물가 (전년비)", keys:["appl_cpi","aircon_cpi","food_cpi","elec_cpi","rice_cpi","transport_cpi"]},
+];
 function buildMapTabs(){
   const box=document.getElementById("mapmetrics"); box.innerHTML="";
-  MAPMETRICS.forEach(m=>{
-    const b=document.createElement("button");
-    b.className="mc-tab"+(m.key===curMapMetric?" on":"");
-    b.dataset.k=m.key; b.textContent=m.label;
-    b.onclick=()=>{ applyChoropleth(m.key); document.getElementById("mapctrl").classList.add("picked"); }; // 선택하면 사라짐
-    box.appendChild(b);
+  const mkBtn=(m)=>{ const b=document.createElement("button"); b.className="mc-tab"+(m.key===curMapMetric?" on":""); b.dataset.k=m.key; b.textContent=m.label.replace(/\s*\(.*\)/,""); b.onclick=()=>{ applyChoropleth(m.key); document.getElementById("mapctrl").classList.add("picked"); }; return b; };
+  // 전체(none) 최상단
+  const none=MAPMETRICS.find(m=>m.none); if(none) box.appendChild(mkBtn(none));
+  MAP_GROUPS.forEach(g=>{
+    const items=g.keys.map(k=>MAPMETRICS.find(m=>m.key===k)).filter(Boolean);
+    if(!items.length) return;
+    const h=document.createElement("div"); h.className="mc-grp"; h.textContent=g.label; box.appendChild(h);
+    items.forEach(m=>box.appendChild(mkBtn(m)));
   });
   const mc=document.getElementById("mapctrl");
   if(mc && !mc._mcBound){ mc._mcBound=true; mc.addEventListener("mouseleave",()=>mc.classList.remove("picked")); }
