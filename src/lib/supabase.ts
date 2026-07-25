@@ -872,6 +872,13 @@ export async function macroMonthly(inds: string[], n = 18) {
   return out
 }
 
+// 데이터 출처·검증 — 전 지표의 출처/원본코드/기간/신뢰도 (v_data_provenance 뷰)
+export type Provenance = { indicator: string; label: string; source: string; source_ref: string | null; confidence: string | null; levels: string | null; mn: string; mx: string; n: number }
+export async function dataProvenance(): Promise<Provenance[]> {
+  const rows = (await sb("v_data_provenance?select=*&order=source.asc,indicator.asc&limit=1000")) as Provenance[]
+  return rows
+}
+
 // 지역별 지표(geo_level='region') 최신값 — { [indicator]: { [geo]: value } }
 export async function regionMetric(indicators: string[]) {
   const list = indicators.map((s) => encodeURIComponent(s)).join(",")
