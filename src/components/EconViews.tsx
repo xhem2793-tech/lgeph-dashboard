@@ -180,7 +180,39 @@ const src = (s: string) => (<><b className="font-semibold text-gray-500 dark:tex
 // ══════════════════════════════════════════════════════════════════════
 // 가전 선행지표 — PPI·수입·가전물가·전기료
 // ══════════════════════════════════════════════════════════════════════
-const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate"]
+const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile"]
+// 가전 보유율(침투율) — PSA 2020 센서스 단면. 낮을수록 성장여력↑
+const OWN_ITEMS: { key: string; name: string }[] = [
+  { key: "appl_own_cool", name: "냉방·선풍기" }, { key: "appl_own_tv", name: "TV" },
+  { key: "appl_own_ref", name: "냉장고" }, { key: "appl_own_wash", name: "세탁기" }, { key: "appl_own_mobile", name: "휴대폰" },
+]
+function OwnershipCard({ d }: { d: Mon }) {
+  const rows = OWN_ITEMS.map((it) => ({ ...it, v: latestOf(d, it.key)?.v ?? 0 })).filter((r) => r.v > 0).sort((a, b) => b.v - a.v)
+  if (!rows.length) return null
+  return (
+    <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+      <div className="flex items-center gap-1.5">
+        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전 보유율 (침투율)</h3>
+        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">CE</span>
+        <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">가구 % · 2020</span>
+      </div>
+      <div className="mt-3 flex flex-1 flex-col justify-center gap-2.5">
+        {rows.map((r, i) => (
+          <div key={r.key} className="flex items-center gap-2">
+            <span className="w-20 shrink-0 text-[11px] text-gray-600 dark:text-gray-300">{r.name}</span>
+            <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
+              <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.16,1,.3,1) " + (i * 0.06) + "s" }} />
+            </div>
+            <span className="w-11 shrink-0 text-right text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{r.v.toFixed(0)}%</span>
+          </div>
+        ))}
+      </div>
+      <p className="mt-2.5 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 가구 보유율 = 시장 침투율. <b className="font-semibold text-emerald-600 dark:text-emerald-400">냉장고 46%·세탁기 43% = 성장여력 최대</b> (미보유 과반)</p>
+      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">AI</b> 저침투(냉장고·세탁기)는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">초도수요 헤드룸 = 보급형 볼륨존</b>, 고침투(TV·냉방)는 교체·프리미엄 업그레이드 시장</p></div>
+      <div className="mt-auto pt-2.5 text-[10px] text-gray-400 dark:text-gray-500">{src("PSA 2020 인구주택총조사 · 가구편의")}</div>
+    </div>
+  )
+}
 export function ApplianceView() {
   const [win, setWin] = useState("2Y")
   const { d, loaded } = useMacro(APPLIANCE_KEYS)
@@ -199,6 +231,7 @@ export function ApplianceView() {
         { key: "PPI_domestic_appliances", label: "가전 PPI YoY", fmt: (v) => v + "%", tone: "rose" },
         { key: "meralco_residential_rate", label: "전기료", fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
       ]}>
+      <OwnershipCard d={d} />
       {ppi.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="가전 생산자물가 PPI" unit="전년비 %" labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="가전 PPI" b /><Lg c={C.rose} t="전기기기" /><Lg c={C.blue} t="전자" /></>}
