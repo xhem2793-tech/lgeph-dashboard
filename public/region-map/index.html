@@ -602,13 +602,14 @@ async function loadRegionalCpi(){
 // 지역 인구(2020 센서스)·빈곤율(FIES 2023) — macro_indicators geo_level=region 실측을 choropleth로
 async function loadRegionalCensus(){
   try{
-    const rr=await fetch(`${SB_CPI.url}/rest/v1/macro_indicators?geo_level=eq.region&indicator=in.(population_region,poverty_rate_region)&select=geo,indicator,period_date,value&order=period_date.asc`,
+    const rr=await fetch(`${SB_CPI.url}/rest/v1/macro_indicators?geo_level=eq.region&indicator=in.(population_region,poverty_rate_region,household_income_region)&select=geo,indicator,period_date,value&order=period_date.asc`,
       {headers:{apikey:SB_CPI.key,Authorization:"Bearer "+SB_CPI.key}});
     if(!rr.ok) return;
     const rows=await rr.json();
     rows.forEach(row=>{ const reg=REG_CPI_MAP[row.geo]; if(!reg) return; ECON[reg]=ECON[reg]||{};
       if(row.indicator==="population_region") ECON[reg].pop_n=Number(row.value)/1e6;
-      else if(row.indicator==="poverty_rate_region") ECON[reg].poverty=Number(row.value); }); // period asc → 최신(빈곤 2023) 우선
+      else if(row.indicator==="poverty_rate_region") ECON[reg].poverty=Number(row.value);
+      else if(row.indicator==="household_income_region") ECON[reg].income_real=Number(row.value); }); // period asc → 최신 우선
     if(typeof computeEconStats==="function") computeEconStats();
     if(curMapMetric && curMapMetric!=="none") applyChoropleth(curMapMetric);
     if(selected) showDetail(selected.properties.REGION);
@@ -677,6 +678,7 @@ const MAPMETRICS=[
   {key:"percap",   label:"1인당 셀아웃", val:percapIndex,  fmt:v=>Math.round(v)},
   {key:"potential",label:"성장 여력",    val:potentialGap, fmt:v=>(v>0?"+":"")+v.toFixed(1)+"p"},
   {key:"pop_n",    label:"인구 (백만명)", val:name=>{const v=ECON[name]&&ECON[name].pop_n;return v!=null?v:NaN;}, fmt:v=>v.toFixed(1)+"백만"},
+  {key:"income_real",label:"평균 가구소득", val:name=>{const v=ECON[name]&&ECON[name].income_real;return v!=null?v:NaN;}, fmt:v=>"₱"+Math.round(v/1000)+"천/년"},
   {key:"poverty",  label:"빈곤율 (%)",   val:name=>{const v=ECON[name]&&ECON[name].poverty;return v!=null?v:NaN;}, fmt:v=>v.toFixed(1)+"%"},
   {key:"appl_cpi",  label:"가전 물가",  monthly:true, div:true, val:name=>mVal(name,"appl_cpi"),  fmt:v=>(v>0?"+":"")+v+"%"},
   {key:"aircon_cpi",label:"에어컨 물가",monthly:true, div:true, val:name=>mVal(name,"aircon_cpi"),fmt:v=>(v>0?"+":"")+v+"%"},

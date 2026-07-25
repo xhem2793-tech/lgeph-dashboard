@@ -27,7 +27,7 @@ export default function RegionPriceExtras() {
   const [mounted, setMounted] = useState(false)
   useEffect(() => {
     pricesDomain().then(setData).catch(() => setData({ idx: {}, forecast: [], policyRate: null, region: [] }))
-    regionMetric(["population_region", "households_region", "poverty_rate_region"]).then(setPop).catch(() => setPop({}))
+    regionMetric(["population_region", "households_region", "poverty_rate_region", "household_income_region"]).then(setPop).catch(() => setPop({}))
   }, [])
   useEffect(() => {
     const id = requestAnimationFrame(() => requestAnimationFrame(() => setMounted(true)))
@@ -50,9 +50,10 @@ export default function RegionPriceExtras() {
   const popTotal = popRows.reduce((a, b) => a + b.pop, 0)
   const hhTotal = popRows.reduce((a, b) => a + b.hh, 0)
 
-  // 소득·빈곤 랭킹(빈곤율 낮은 순 = 소득 상위)
+  // 소득·빈곤 랭킹(빈곤율 낮은 순 = 소득 상위) + 평균 가구소득
   const povData = pop.poverty_rate_region ?? {}
-  const povRows = useMemo(() => Object.entries(povData).map(([geo, v]) => ({ geo, pov: v })).sort((a, b) => a.pov - b.pov), [pop]) // eslint-disable-line react-hooks/exhaustive-deps
+  const incData = pop.household_income_region ?? {}
+  const povRows = useMemo(() => Object.entries(povData).map(([geo, v]) => ({ geo, pov: v, inc: incData[geo] ?? 0 })).sort((a, b) => a.pov - b.pov), [pop]) // eslint-disable-line react-hooks/exhaustive-deps
   const povMax = povRows.length ? Math.max(...povRows.map((r) => r.pov)) : 1
   const povNat = povRows.length ? povRows.reduce((a, b) => a + b.pov, 0) / povRows.length : 0
 
@@ -159,6 +160,7 @@ export default function RegionPriceExtras() {
                   <div className="relative h-4 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
                     <div className="absolute inset-y-0 left-0 rounded" style={{ width: mounted ? (r.pov / povMax * 100) + "%" : "0%", background: "rgba(225,29,72," + (0.35 + t * 0.5).toFixed(2) + ")", transition: "width .7s cubic-bezier(.16,1,.3,1) " + (i * 0.02) + "s" }} />
                   </div>
+                  {r.inc > 0 && <span className="w-16 shrink-0 text-right text-[10px] tabular-nums text-gray-400 dark:text-gray-500">₱{Math.round(r.inc / 1000)}천</span>}
                   <span className="w-10 shrink-0 text-right text-[11px] font-semibold tabular-nums text-gray-800 dark:text-gray-100">{r.pov.toFixed(1)}%</span>
                 </div>
               )
