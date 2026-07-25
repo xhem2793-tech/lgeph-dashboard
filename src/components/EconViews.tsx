@@ -180,7 +180,7 @@ const src = (s: string) => (<><b className="font-semibold text-gray-500 dark:tex
 // ══════════════════════════════════════════════════════════════════════
 // 가전 선행지표 — PPI·수입·가전물가·전기료
 // ══════════════════════════════════════════════════════════════════════
-const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile"]
+const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile", "cdd_monthly", "temp_monthly"]
 // 단면(cross-sectional) 바 카드 — 보유율·연령구조 등 시점 스냅샷용 공용
 function CrossBarCard({ d, items, title, seg, unit, meaning, ai, source, sort = true }: { d: Mon; items: { key: string; name: string }[]; title: string; seg: string; unit: string; meaning: React.ReactNode; ai: React.ReactNode; source: string; sort?: boolean }) {
   let rows = items.map((it) => ({ ...it, v: latestOf(d, it.key)?.v ?? 0 })).filter((r) => r.v > 0)
@@ -250,7 +250,8 @@ export function ApplianceView() {
   const imp = build(d, n, [{ key: "imports_home_appliances", name: "가전", color: C.ind, w: 2, tf: (v) => v / 1e6 }, { key: "imports_consumer_electronics", name: "소비자전자", color: C.rose, tf: (v) => v / 1e6 }, { key: "imports_telecom", name: "통신기기", color: C.blue, tf: (v) => v / 1e6 }]) // USD→백만$ (연간 무역통계)
   const inf = build(d, n, [{ key: "INF_household_appliances", name: "가전 물가", color: C.ind, w: 2 }, { key: "INF_aircon", name: "에어컨", color: C.rose }, { key: "INF_all_items", name: "전체 CPI", color: C.brown }])
   const elec = build(d, n, [{ key: "meralco_residential_rate", name: "가정용 전기료", color: C.ind, w: 2 }])
-  const empty = !ppi.series.length && !imp.series.length && !inf.series.length && !elec.series.length
+  const cdd = build(d, n, [{ key: "cdd_monthly", name: "냉방도일 CDD", color: C.rose, w: 2 }]) // 에어컨 수요 선행
+  const empty = !ppi.series.length && !imp.series.length && !inf.series.length && !elec.series.length && !cdd.series.length
   return (
     <Shell title="가전 선행지표" sub="생산자물가·수입액·가전물가·전기료 — 원가·공급 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ summary: (kv) => <>가전 물가 {B(f1(kv.INF_household_appliances) + "%")}·에어컨 {B(f1(kv.INF_aircon) + "%")}·가전 PPI {B(f1(kv.PPI_domestic_appliances) + "%")}, 전기료 {B("₱" + f1(kv.meralco_residential_rate))} — {(kv.PPI_domestic_appliances ?? 0) > 2 ? "원가·소매가 상방 압박" : "원가·가전물가 안정 국면"}</>, headline: <><b className="font-semibold text-gray-900 dark:text-gray-50">가전 원가·공급 선행지표</b></>, lg: <>PPI·수입 급등은 원가·중국계 물량 신호 → <b className="font-semibold">조달 헤지·프로모 타이밍</b> 선제 대응 · 전기료↑엔 고효율 프리미엄 소구</> }}
@@ -288,6 +289,13 @@ export function ApplianceView() {
           meaning={<>전기요금 = 가전 <b className="text-gray-700 dark:text-gray-200">사용비용·에너지효율 소구력</b> 결정</>}
           ai={<>전기료 상승기엔 <b className="font-semibold text-emerald-600 dark:text-emerald-400">인버터·고효율 프리미엄 소구</b>가 유리 → 에너지 절감액을 판매 메시지로 전환</>}
           tone="amber" src={src("Meralco 가정용 요금 · 월별")} />
+      )}
+      {cdd.series.length > 0 && (
+        <ChartCard seg="CE" title="냉방도일 (에어컨 수요 선행)" unit="CDD · 월별 · 기준24℃" labels={cdd.labels} series={cdd.series} decimals={0} seriesUnit="CDD"
+          legend={<Lg c={C.rose} t="냉방도일 CDD" b />}
+          meaning={<>냉방도일 = Σ(일평균기온−24℃) — <b className="text-gray-700 dark:text-gray-200">에어컨·냉장고 사용강도·판매 성수기 직접 선행</b></>}
+          ai={<>CDD 급등기(3~5월 혹서)는 <b className="font-semibold text-amber-600 dark:text-amber-400">에어컨·선풍기 판매 성수기</b> → 사전 재고·프로모 집중, 냉방 프리미엄(인버터) 소구 최적 · <b className="text-gray-500 dark:text-gray-400">Open-Meteo 기온</b></>}
+          tone="amber" src={src("Open-Meteo 메트로마닐라 기온 · 냉방도일 월집계")} />
       )}
     </Shell>
   )
