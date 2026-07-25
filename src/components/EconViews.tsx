@@ -379,7 +379,7 @@ export function RatesView() {
         <ChartCard seg="B2B" title="대외거래 (수출·수입·무역수지)" unit="% GDP · 연간" labels={trade.labels} series={trade.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.emer} t="수출" b /><Lg c={C.rose} t="수입" /><Lg c={C.ind} t="무역수지" /></>}
           meaning={<>수출·수입·무역수지 — <b className="text-gray-700 dark:text-gray-200">페소 환율·수입 가전 원가의 구조적 압력</b></>}
-          ai={<>수입>수출(무역적자 지속)은 <b className="font-semibold text-amber-600 dark:text-amber-400">페소 약세·수입가전 원가 상승 압력</b> → 현지조달·판가 헤지, 수출 회복 시 원가 완화</>}
+          ai={<>수입 초과(무역적자 지속)은 <b className="font-semibold text-amber-600 dark:text-amber-400">페소 약세·수입가전 원가 상승 압력</b> → 현지조달·판가 헤지, 수출 회복 시 원가 완화</>}
           tone="amber" src={src("World Bank 수출입·무역수지(%GDP) · 연간")} />
       )}
       {reserves.series.length > 0 && (
