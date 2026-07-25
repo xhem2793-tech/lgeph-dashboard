@@ -275,7 +275,7 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
         <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {seg && <span className={"shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold " + (seg === "B2B" ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" : seg === "CE" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-violet-50 dark:bg-violet-500/10 text-violet-700")}>{seg}</span>}
         {unit && <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
-        <span className={"flex shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover/card:opacity-100 " + (unit ? "ml-1.5" : "ml-auto")}>
+        <span className={"flex shrink-0 items-center gap-0.5 " + (unit ? "ml-1.5" : "ml-auto")}>
           <button type="button" onClick={dlImg} title="이미지(SVG) 다운로드" className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
           </button>
