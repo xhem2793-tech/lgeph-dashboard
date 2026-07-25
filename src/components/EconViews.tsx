@@ -180,7 +180,7 @@ const src = (s: string) => (<><b className="font-semibold text-gray-500 dark:tex
 // ══════════════════════════════════════════════════════════════════════
 // 가전 선행지표 — PPI·수입·가전물가·전기료
 // ══════════════════════════════════════════════════════════════════════
-const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile", "cdd_monthly", "temp_monthly", "energy_households", "appliance_market_usd", "appliance_market_cagr"]
+const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile", "cdd_monthly", "temp_monthly", "energy_households", "appliance_market_usd", "appliance_market_cagr", "ecommerce_market_usd", "ecommerce_weekly_pct"]
 // 가전 시장 규모(민간자료) 정보 카드
 function MarketCard({ d }: { d: Mon }) {
   const size = latestOf(d, "appliance_market_usd")?.v, cagr = latestOf(d, "appliance_market_cagr")?.v
@@ -200,6 +200,7 @@ function MarketCard({ d }: { d: Mon }) {
           <span>주요 3사 <b className="text-gray-800 dark:text-gray-100">Panasonic·Samsung·LG</b></span>
           <span>전자매장 채널 <b className="text-gray-800 dark:text-gray-100">47.3%</b></span>
           <span>LG ThinQ = 프리미엄 <b className="text-indigo-600 dark:text-indigo-400">50%</b></span>
+          {latestOf(d, "ecommerce_weekly_pct")?.v != null && <span>온라인 주간구매 <b className="text-gray-800 dark:text-gray-100">{latestOf(d, "ecommerce_weekly_pct")!.v}%</b> · 이커머스 <b className="text-gray-800 dark:text-gray-100">${latestOf(d, "ecommerce_market_usd")?.v}B</b></span>}
         </div>
       </div>
       <p className="mt-2.5 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 연 <b className="text-emerald-600 dark:text-emerald-400">7%대 성장·58억불 시장</b>, 매장 중심 구매·LG 프리미엄 강세 = 오프라인 체험+ThinQ 스마트가전 이원 공략</p>
