@@ -23,6 +23,7 @@ function sourceLink(source: string, ref: string | null): string | null {
   if (/Open-Meteo/i.test(s)) return "https://open-meteo.com/"
   if (/Meralco/i.test(s)) return "https://company.meralco.com.ph/"
   if (/Colliers/i.test(s)) return "https://www.colliers.com/en-ph/research"
+  if (/BIS/i.test(s)) return "https://data.bis.org/topics/RPP"
   if (/ADB/i.test(s)) return "https://www.adb.org/countries/philippines/economy"
   if (/IMF/i.test(s)) return "https://www.imf.org/en/Countries/PHL"
   return null
@@ -32,7 +33,7 @@ function tier(source: string): { label: string; cls: string } {
   const s = source || ""
   if (/Colliers|Open-Meteo|GfK|Euromonitor|Statista/i.test(s)) return { label: "민간자료", cls: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" }
   if (/Reuters|Bloomberg|BusinessWorld|Inquirer|bworldonline/i.test(s)) return { label: "미디어(공식인용)", cls: "bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300" }
-  if (/PSA|World Bank|BSP|IMF|DOE|ADB|DOLE|DBCC|BAP|Meralco/i.test(s)) return { label: "공식기관", cls: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" }
+  if (/PSA|World Bank|BSP|IMF|DOE|ADB|DOLE|DBCC|BAP|Meralco|BIS/i.test(s)) return { label: "공식기관", cls: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" }
   return { label: "ETL(공식가공)", cls: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300" }
 }
 const ym = (d: string) => (d ? d.slice(2, 4) + "." + Number(d.slice(5, 7)) : "")

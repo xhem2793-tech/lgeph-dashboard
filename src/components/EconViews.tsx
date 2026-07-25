@@ -302,7 +302,7 @@ export function ApplianceView() {
   const [win, setWin] = useState("2Y")
   const { d, loaded } = useMacro(APPLIANCE_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
-  const ppi = build(d, n, [{ key: "PPI_domestic_appliances", name: "가전 PPI", color: C.ind, w: 2 }, { key: "PPI_electrical", name: "전기기기", color: C.rose }, { key: "PPI_electronics", name: "전자", color: C.blue }])
+  const ppi = build(d, n, [{ key: "PPI_domestic_appliances", name: "가전 PPI", color: C.ind, w: 2 }, { key: "PPI_electrical", name: "전기기기", color: C.rose }, { key: "PPI_electronics", name: "전자", color: C.blue }, { key: "PPI_manufacturing", name: "제조업 전체", color: C.brown }])
   const imp = build(d, n, [{ key: "imports_home_appliances", name: "가전", color: C.ind, w: 2, tf: (v) => v / 1e6 }, { key: "imports_consumer_electronics", name: "소비자전자", color: C.rose, tf: (v) => v / 1e6 }, { key: "imports_telecom", name: "통신기기", color: C.blue, tf: (v) => v / 1e6 }]) // USD→백만$ (연간 무역통계)
   const inf = build(d, n, [{ key: "INF_household_appliances", name: "가전 물가", color: C.ind, w: 2 }, { key: "INF_aircon", name: "에어컨", color: C.rose }, { key: "INF_all_items", name: "전체 CPI", color: C.brown }])
   const elec = build(d, n, [{ key: "meralco_residential_rate", name: "가정용 전기료", color: C.ind, w: 2 }])
@@ -322,9 +322,9 @@ export function ApplianceView() {
       <OwnershipCard d={d} />
       {ppi.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="가전 생산자물가 PPI" unit="전년비 %" labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
-          legend={<><Lg c={C.ind} t="가전 PPI" b /><Lg c={C.rose} t="전기기기" /><Lg c={C.blue} t="전자" /></>}
-          meaning={<>생산단계 출고가격 상승률 — <b className="text-gray-700 dark:text-gray-200">소비자가·조달원가의 수개월 선행</b></>}
-          ai={<>가전 PPI 상승은 수개월 뒤 출고가·원가로 전이 → <b className="font-semibold text-rose-600 dark:text-rose-400">선제 판가·조달 대응</b>, 부품 헤지·현지조달 비중 점검</>}
+          legend={<><Lg c={C.ind} t="가전 PPI" b /><Lg c={C.rose} t="전기기기" /><Lg c={C.blue} t="전자" /><Lg c={C.brown} t="제조업 전체" /></>}
+          meaning={<>생산단계 출고가격 상승률 — <b className="text-gray-700 dark:text-gray-200">소비자가·조달원가의 수개월 선행</b> · 가전 PPI vs 제조업 전체로 카테고리 특이 압력 판별</>}
+          ai={<>가전 PPI가 제조업 전체보다 높으면 <b className="font-semibold text-rose-600 dark:text-rose-400">가전 특이 원가압력</b> → 선제 판가·조달 대응·부품 헤지, 동행이면 경제 전반 원가 국면</>}
           tone="rose" src={src("PSA 생산자물가지수(PPI) · 월별")} />
       )}
       {imp.series.length > 0 && (
@@ -469,7 +469,7 @@ export function RatesView() {
 // ══════════════════════════════════════════════════════════════════════
 // 국민계정·성장 — GDP·소비·투자·건설·산업·유통
 // ══════════════════════════════════════════════════════════════════════
-const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "services_gva_yoy", "retail_sales_growth", "gdp_per_capita_usd", "office_vacancy_ncr"]
+const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "wholesale_gva_growth", "services_gva_yoy", "retail_sales_growth", "gdp_per_capita_usd", "office_vacancy_ncr", "residential_property_price_yoy", "residential_property_price_real_yoy"]
 // 동남아 6개국 비교 — 필리핀 강조(굵은선+끝점 핀), 나머지 색 구분
 const SEA_SPECS: Spec[] = [
   { key: "Philippines", name: "필리핀", color: C.ind, w: 2.4, endLabel: "필리핀" },
@@ -493,14 +493,15 @@ export function GrowthView() {
   const cons = build(d, n, [{ key: "construction_gva_growth", name: "건설 부가가치", color: C.ind, w: 2 }, { key: "construction_gfcf_growth", name: "건설 투자", color: C.violet }])
   const ind = build(d, n, [{ key: "industry_gva_yoy", name: "산업", color: C.ind, w: 2 }, { key: "manufacturing_va_growth", name: "제조업", color: C.rose }])
   const cap = build(d, n, [{ key: "capacity_utilization", name: "평균 가동률", color: C.amber, w: 2 }]) // 레벨(%) — 성장률과 축 분리
-  const ret = build(d, n, [{ key: "wholesale_retail_trade_yoy", name: "도소매 거래", color: C.ind, w: 2 }, { key: "retail_gva_growth", name: "소매 부가가치", color: C.teal }])
+  const ret = build(d, n, [{ key: "wholesale_retail_trade_yoy", name: "도소매 거래", color: C.ind, w: 2 }, { key: "retail_gva_growth", name: "소매 부가가치", color: C.teal }, { key: "wholesale_gva_growth", name: "도매 부가가치", color: C.amber }])
   const permit = build(d, n, [{ key: "permits_nonresidential_floorarea", name: "비주거 착공면적", color: C.ind, w: 2, tf: (v) => v / 1e6 }])
   const permitV = build(d, n, [{ key: "permits_residential_value", name: "주거 건축허가액", color: C.violet, w: 2, tf: (v) => v / 1e6 }]) // 천PHP→십억₱
   const va = build(d, n, [{ key: "manufacturing_va_growth", name: "제조업", color: C.ind, w: 2 }, { key: "industry_va_growth", name: "산업", color: C.rose }, { key: "services_va_growth", name: "서비스", color: C.emer }])
   const rsale = build(d, n, [{ key: "retail_sales_growth", name: "소매판매 증가율", color: C.ind, w: 2 }]) // 연간 6년(COVID 저점)
   const pcap = build(d, n, [{ key: "gdp_per_capita_usd", name: "1인당 GDP", color: C.ind, w: 2 }]) // USD, 연간 — 구매력·시장규모
   const office = build(d, n, [{ key: "office_vacancy_ncr", name: "오피스 공실률", color: C.rose, w: 2 }]) // 민간자료(Colliers)
-  const empty = !gdp.series.length && !demand.series.length && !cons.series.length && !ind.series.length && !cap.series.length && !ret.series.length && !permit.series.length && !permitV.series.length && !va.series.length && !rsale.series.length && !pcap.series.length && !office.series.length
+  const rrepi = build(d, n, [{ key: "residential_property_price_yoy", name: "명목", color: C.ind, w: 2 }, { key: "residential_property_price_real_yoy", name: "실질", color: C.teal }]) // 주거용 부동산가격 상승률, 분기(BIS)
+  const empty = !gdp.series.length && !demand.series.length && !cons.series.length && !ind.series.length && !cap.series.length && !ret.series.length && !permit.series.length && !permitV.series.length && !va.series.length && !rsale.series.length && !pcap.series.length && !office.series.length && !rrepi.series.length
   return (
     <Shell title="국민계정·성장" sub="GDP·소비·투자·건설허가·산업·유통 — 가전 수요 파이" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ summary: (kv) => <>GDP {B(f1(kv.gdp_growth_yoy) + "%")}·민간소비 {B(f1(kv.household_consumption_yoy) + "%")}·투자 {B(f1(kv.gross_capital_formation_yoy) + "%")}, 가동률 {B(f1(kv.capacity_utilization) + "%")} — {(kv.gdp_growth_yoy ?? 0) < 4 ? "성장 둔화로 가전 수요 파이 축소 국면" : "성장 견조, 수요 파이 확대 국면"}</>, headline: <><b className="font-semibold text-gray-900 dark:text-gray-50">국민계정으로 본 가전 수요 파이</b></>, lg: <>민간소비·주거 착공 회복은 <b className="font-semibold">가전 신규수요 선행</b> → 성장 밀집 지역 채널·재고 선점, 둔화 시 보급형 방어</> }}
@@ -586,11 +587,18 @@ export function GrowthView() {
           ai={<>공실률 하락은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">오피스 임대·신규 입주 회복 = 상업용 냉난방·가전 수요</b>, 상승 시 B2B 프로젝트 지연 경계 · <b className="text-gray-500 dark:text-gray-400">민간자료(Colliers)</b></>}
           tone="amber" src={src("Colliers PH Office · 분기 · 민간자료")} />
       )}
+      {rrepi.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="주거용 부동산가격 상승률" unit="전년비 % · 분기" labels={rrepi.labels} series={rrepi.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="명목" b /><Lg c={C.teal} t="실질(물가조정)" /></>}
+          meaning={<>주택가격 상승률(명목·실질) — <b className="text-gray-700 dark:text-gray-200">주거 자산효과·신규주택 = 프리미엄 가전 교체·초도수요 동인</b></>}
+          ai={<>주택가격 상승은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">자산효과·신규 입주 = 프리미엄·빌트인 가전 수요</b>, 실질 하락(명목이 물가 하회) 시 소비여력 위축 경계 · <b className="text-gray-500 dark:text-gray-400">BIS(BSP RREPI 원천)</b></>}
+          tone="emerald" src={src("BIS 주거용 부동산가격지수(BSP RREPI 원천) · 분기")} />
+      )}
         </> },
         { key: "trade", label: "유통", node: <>
       {ret.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="도소매 유통 성장" unit="전년비 %" labels={ret.labels} series={ret.series} decimals={1} seriesUnit="%"
-          legend={<><Lg c={C.ind} t="도소매 거래" b /><Lg c={C.teal} t="소매 부가가치" /></>}
+          legend={<><Lg c={C.ind} t="도소매 거래" b /><Lg c={C.teal} t="소매 부가가치" /><Lg c={C.amber} t="도매 부가가치" /></>}
           meaning={<>도소매업 성장률 — <b className="text-gray-700 dark:text-gray-200">유통 채널 활력·소비 실현</b></>}
           ai={<>도소매 성장 가속은 채널 판매 여건 개선 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">유통 프로모·진열 확대 적기</b></>}
           tone="emerald" src={src("PSA 국민계정 도소매업 · 분기")} />
