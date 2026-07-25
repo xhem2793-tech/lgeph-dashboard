@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { macroMonthly, calendarUpcoming, seaCompare } from "@/lib/supabase"
+import { macroMonthly, calendarUpcoming, seaCompare, marketEstimates } from "@/lib/supabase"
+import type { MktEst } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 import { ChartCard, Lg, SLine, moLabel } from "@/components/EconChart"
 
@@ -181,30 +182,58 @@ const src = (s: string) => (<><b className="font-semibold text-gray-500 dark:tex
 // 가전 선행지표 — PPI·수입·가전물가·전기료
 // ══════════════════════════════════════════════════════════════════════
 const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile", "cdd_monthly", "temp_monthly", "energy_households", "appliance_market_usd", "appliance_market_cagr", "ecommerce_market_usd", "ecommerce_weekly_pct"]
-// 가전 시장 규모(민간자료) 정보 카드
-function MarketCard({ d }: { d: Mon }) {
-  const size = latestOf(d, "appliance_market_usd")?.v, cagr = latestOf(d, "appliance_market_cagr")?.v
-  if (size == null) return null
+// 가전 시장규모·이커머스 — 다중기관 추정 범위 + 근거(백데이터). 단일 숫자 아닌 삼각검증.
+function MarketCard() {
+  const [appl, setAppl] = useState<MktEst[]>([])
+  const [ec, setEc] = useState<MktEst[]>([])
+  const [open, setOpen] = useState(false)
+  useEffect(() => { marketEstimates("appliance_market").then(setAppl).catch(() => {}); marketEstimates("ecommerce").then(setEc).catch(() => {}) }, [])
+  if (!appl.length && !ec.length) return null
+  const rng = (a: MktEst[]) => { const v = a.map((x) => x.value).sort((x, y) => x - y); return v.length ? { lo: v[0], hi: v[v.length - 1], med: v[Math.floor(v.length / 2)], n: v.length } : null }
+  const ra = rng(appl.filter((x) => x.scope !== "주방가전만")), re = rng(ec)
   return (
-    <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="relative z-0 col-span-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">필리핀 가전시장 규모</h3>
-        <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300">민간자료</span>
+        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전시장·이커머스 규모 (다중기관 추정)</h3>
+        <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300">추정·민간자료</span>
+        <button type="button" onClick={() => setOpen((v) => !v)} className="ml-auto text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">{open ? "근거 접기" : `근거 ${appl.length + ec.length}건 ▾`}</button>
       </div>
-      <div className="mt-3 flex flex-1 flex-col justify-center gap-3">
-        <div className="flex items-end gap-3">
-          <div><p className="text-[11px] text-gray-400 dark:text-gray-500">시장규모(2024)</p><p className="text-[26px] font-extrabold tabular-nums text-gray-900 dark:text-gray-50">${size.toFixed(2)}<span className="text-[13px] font-semibold text-gray-400">B</span></p></div>
-          {cagr != null && <div className="pb-1"><p className="text-[11px] text-gray-400 dark:text-gray-500">성장률(CAGR 25-30)</p><p className="text-[20px] font-bold tabular-nums text-emerald-600 dark:text-emerald-400">+{cagr}%</p></div>}
-        </div>
-        <div className="flex flex-wrap gap-x-5 gap-y-1 text-[11px] text-gray-600 dark:text-gray-300">
-          <span>주요 3사 <b className="text-gray-800 dark:text-gray-100">Panasonic·Samsung·LG</b></span>
-          <span>전자매장 채널 <b className="text-gray-800 dark:text-gray-100">47.3%</b></span>
-          <span>LG ThinQ = 프리미엄 <b className="text-indigo-600 dark:text-indigo-400">50%</b></span>
-          {latestOf(d, "ecommerce_weekly_pct")?.v != null && <span>온라인 주간구매 <b className="text-gray-800 dark:text-gray-100">{latestOf(d, "ecommerce_weekly_pct")!.v}%</b> · 이커머스 <b className="text-gray-800 dark:text-gray-100">${latestOf(d, "ecommerce_market_usd")?.v}B</b></span>}
-        </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {ra && (
+          <div className="rounded-lg border border-gray-100 dark:border-gray-800 p-3">
+            <p className="text-[11px] text-gray-400 dark:text-gray-500">가전시장 규모(추정 범위, {ra.n}개 기관)</p>
+            <p className="text-[22px] font-extrabold tabular-nums text-gray-900 dark:text-gray-50">${ra.lo.toFixed(1)}~{ra.hi.toFixed(1)}<span className="text-[12px] font-semibold text-gray-400">B</span> <span className="text-[12px] font-medium text-gray-400">중앙값 ${ra.med.toFixed(1)}B</span></p>
+            <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">주요 3사 Panasonic·Samsung·LG · 전자매장 47% · <b className="text-indigo-600 dark:text-indigo-400">LG ThinQ 프리미엄 50%</b></p>
+          </div>
+        )}
+        {re && (
+          <div className="rounded-lg border border-gray-100 dark:border-gray-800 p-3">
+            <p className="text-[11px] text-gray-400 dark:text-gray-500">이커머스 규모(추정 범위, {re.n}개 기관)</p>
+            <p className="text-[22px] font-extrabold tabular-nums text-gray-900 dark:text-gray-50">${re.lo.toFixed(1)}~{re.hi.toFixed(1)}<span className="text-[12px] font-semibold text-gray-400">B</span> <span className="text-[12px] font-medium text-gray-400">중앙값 ${re.med.toFixed(1)}B</span></p>
+            <p className="mt-1 text-[11px] text-gray-500 dark:text-gray-400">주간 온라인구매 57% · Shopee·Lazada 양강 · 가전 온라인 침투 확대</p>
+          </div>
+        )}
       </div>
-      <p className="mt-2.5 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 연 <b className="text-emerald-600 dark:text-emerald-400">7%대 성장·58억불 시장</b>, 매장 중심 구매·LG 프리미엄 강세 = 오프라인 체험+ThinQ 스마트가전 이원 공략</p>
-      <div className="mt-auto pt-2.5 text-[10px] text-gray-400 dark:text-gray-500">{src("Grand View Research · 필리핀 가전시장 · 민간자료")}</div>
+      {open && (
+        <div className="mt-3 overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-800">
+          <table className="w-full min-w-[520px] text-[11px]">
+            <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[10px] uppercase text-gray-400 dark:text-gray-500"><th className="px-3 py-1.5">지표</th><th className="px-2 py-1.5">기관</th><th className="px-2 py-1.5 text-right">추정값</th><th className="px-2 py-1.5">범위/비고</th><th className="px-2 py-1.5 text-right">원본</th></tr></thead>
+            <tbody>
+              {[...appl, ...ec].map((e, i) => (
+                <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50">
+                  <td className="px-3 py-1.5 text-gray-600 dark:text-gray-300">{e.metric === "ecommerce" ? "이커머스" : "가전시장"}</td>
+                  <td className="px-2 py-1.5 font-medium text-gray-800 dark:text-gray-100">{e.source}</td>
+                  <td className="px-2 py-1.5 text-right tabular-nums text-gray-800 dark:text-gray-100">${e.value}B{e.cagr ? ` · CAGR ${e.cagr}%` : ""}</td>
+                  <td className="px-2 py-1.5 text-gray-400 dark:text-gray-500">{e.note || e.scope || "—"}</td>
+                  <td className="px-2 py-1.5 text-right">{e.url ? <a href={e.url} target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">↗</a> : "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 민간 리서치는 기관별 편차가 커 <b className="text-amber-600 dark:text-amber-400">단일 숫자보다 범위·중앙값</b>으로 판단 — 방향성(연 7%대 성장·프리미엄/온라인 확대)은 일치. 정밀 규모는 내부 셀아웃·GfK 실측 연동 시 확정.</p>
+      <div className="mt-2 pt-1 text-[10px] text-gray-400 dark:text-gray-500">{src("Grand View Research·Statista·IMARC·Mordor·GII 등 다중기관 · 민간자료(추정)")}</div>
     </div>
   )
 }
@@ -289,7 +318,7 @@ export function ApplianceView() {
         { key: "PPI_domestic_appliances", label: "가전 PPI YoY", fmt: (v) => v + "%", tone: "rose" },
         { key: "meralco_residential_rate", label: "전기료", fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
       ]}>
-      <MarketCard d={d} />
+      <MarketCard />
       <OwnershipCard d={d} />
       {ppi.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="가전 생산자물가 PPI" unit="전년비 %" labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"

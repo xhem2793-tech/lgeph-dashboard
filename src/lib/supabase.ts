@@ -872,6 +872,13 @@ export async function macroMonthly(inds: string[], n = 18) {
   return out
 }
 
+// 시장규모 다중기관 추정 백데이터 (market_estimates) — 범위·근거 제시용
+export type MktEst = { metric: string; source: string; value: number; unit: string; year: number; cagr: number | null; scope: string | null; url: string | null; note: string | null }
+export async function marketEstimates(metric: string): Promise<MktEst[]> {
+  const rows = (await sb("market_estimates?metric=eq." + encodeURIComponent(metric) + "&select=*&order=value.desc")) as MktEst[]
+  return rows
+}
+
 // 데이터 출처·검증 — 전 지표의 출처/원본코드/기간/신뢰도 (v_data_provenance 뷰)
 export type Provenance = { indicator: string; label: string; source: string; source_ref: string | null; confidence: string | null; levels: string | null; mn: string; mx: string; n: number }
 export async function dataProvenance(): Promise<Provenance[]> {
