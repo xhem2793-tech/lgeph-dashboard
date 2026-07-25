@@ -315,7 +315,10 @@ export function RatesView() {
   const credit = build(d, n, [{ key: "domestic_credit_pct_gdp", name: "민간신용(%GDP)", color: C.ind, w: 2 }])
   const cab = build(d, n, [{ key: "current_account_pct_gdp", name: "경상수지(%GDP)", color: C.ind, w: 2 }]) // 대외균형, 연간
   const fdi = build(d, n, [{ key: "fdi_net_inflow_usd", name: "FDI 순유입", color: C.emer, w: 2, tf: (v) => v / 1e9 }]) // USD→십억$, 연간
-  const empty = !pol.series.length && !loan.series.length && !m3.series.length && !credit.series.length && !cab.series.length && !fdi.series.length
+  const trade = build(d, n, [{ key: "exports_gdp", name: "수출", color: C.emer, w: 2 }, { key: "imports_gdp", name: "수입", color: C.rose }, { key: "trade_balance_gdp", name: "무역수지", color: C.ind, w: 2 }]) // %GDP
+  const reserves = build(d, n, [{ key: "reserves_usd", name: "외환보유액", color: C.ind, w: 2, tf: (v) => v / 1e9 }]) // USD→십억$
+  const govt = build(d, n, [{ key: "govt_exp_gdp", name: "정부지출", color: C.ind, w: 2 }, { key: "services_pct_gdp", name: "서비스업 비중", color: C.emer }]) // %GDP
+  const empty = !pol.series.length && !loan.series.length && !m3.series.length && !credit.series.length && !cab.series.length && !fdi.series.length && !trade.series.length && !reserves.series.length && !govt.series.length
   return (
     <Shell title="통화·금리·신용" sub="기준금리·통화량 M3·가계신용 — 할부·카드 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d}
       banner={{ summary: (kv) => <>정책금리 {B(f1(kv.BSP_policy_rate) + "%")}·M3 {B(f1(kv.m3_growth_yoy) + "%")}, 소비자대출 {B(f1(kv.consumer_loan_growth_yoy) + "%")}·카드 {B(f1(kv.credit_card_loan_growth_yoy) + "%")}·총대출 {B(f1(kv.bank_loan_growth_yoy) + "%")} — {(kv.BSP_policy_rate ?? 9) < 6 ? "금리 인하·신용 확장이 할부 수요 뒷받침" : "고금리로 할부 부담 지속"}</>, headline: <><b className="font-semibold text-gray-900 dark:text-gray-50">통화·신용 = 가전 구매력 엔진</b></>, lg: <>금리 인하·카드/소비자대출 확장기엔 <b className="font-semibold">무이자 할부·프리미엄 푸시</b>가 유효 · 콜금리 급등 시 유통 운전자금 부담 관찰</> }}
@@ -371,6 +374,27 @@ export function RatesView() {
           meaning={<>FDI 순유입 규모 — <b className="text-gray-700 dark:text-gray-200">투자심리·중장기 소득·고용 기반</b></>}
           ai={<>FDI 확대는 고용·소득·소비 기반 강화 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">중장기 가전 수요 저변 확장</b>, 급감 시 투자·내수 둔화 경계</>}
           tone="emerald" src={src("BSP·World Bank FDI 순유입 · 연간")} />
+      )}
+      {trade.series.length > 0 && (
+        <ChartCard seg="B2B" title="대외거래 (수출·수입·무역수지)" unit="% GDP · 연간" labels={trade.labels} series={trade.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.emer} t="수출" b /><Lg c={C.rose} t="수입" /><Lg c={C.ind} t="무역수지" /></>}
+          meaning={<>수출·수입·무역수지 — <b className="text-gray-700 dark:text-gray-200">페소 환율·수입 가전 원가의 구조적 압력</b></>}
+          ai={<>수입>수출(무역적자 지속)은 <b className="font-semibold text-amber-600 dark:text-amber-400">페소 약세·수입가전 원가 상승 압력</b> → 현지조달·판가 헤지, 수출 회복 시 원가 완화</>}
+          tone="amber" src={src("World Bank 수출입·무역수지(%GDP) · 연간")} />
+      )}
+      {reserves.series.length > 0 && (
+        <ChartCard seg="B2B" title="외환보유액" unit="십억$ · 연간" labels={reserves.labels} series={reserves.series} decimals={0} seriesUnit="십억$"
+          legend={<Lg c={C.ind} t="외환보유액" b />}
+          meaning={<>외환보유고 — <b className="text-gray-700 dark:text-gray-200">페소 방어력·수입결제 안정성</b></>}
+          ai={<>외환보유 충분은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">페소 안정·수입가전 원가 예측성</b> → 조달·판가 안정, 급감 시 환리스크·수입비용 변동성 경계</>}
+          tone="emerald" src={src("World Bank·BSP 외환보유액 · 연간")} />
+      )}
+      {govt.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="정부지출·서비스업 비중" unit="% GDP · 연간" labels={govt.labels} series={govt.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="정부지출" b /><Lg c={C.emer} t="서비스업 비중" /></>}
+          meaning={<>정부지출·서비스업 GDP비중 — <b className="text-gray-700 dark:text-gray-200">인프라·서비스 경제화 = 도시가구·B2B 수요 기반</b></>}
+          ai={<>서비스업 비중 확대·정부 인프라 지출은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">도시화·사무실·상업용 가전 수요 저변</b> → B2B·프리미엄 도시시장 성장</>}
+          tone="emerald" src={src("World Bank 정부지출·서비스업 비중(%GDP) · 연간")} />
       )}
         </> },
       ]} />
