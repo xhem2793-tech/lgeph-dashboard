@@ -618,6 +618,7 @@ async function loadRegionalCensus(){
       else if(row.indicator==="appl_own_tv_region") ECON[reg].own_tv=Number(row.value);
       else if(row.indicator==="electrification_region") ECON[reg].electrif=Number(row.value); }); // period asc → 최신 우선(2025)
     if(typeof computeEconStats==="function") computeEconStats();
+    if(typeof recomputeOpp==="function") recomputeOpp();
     if(curMapMetric && curMapMetric!=="none") applyChoropleth(curMapMetric);
     if(selected) showDetail(selected.properties.REGION);
   }catch(e){ console.warn("지역 인구/빈곤 로드 건너뜀:",e); }
@@ -677,9 +678,15 @@ function percapAvg(){ const r=Object.keys(DATA).map(n=>popMillions(n)?contributi
 function percapIndex(name){ const a=percapAvg(); return (a&&popMillions(name))? contribution(name)/popMillions(name)/a*100 : 0; }
 function realDemand(name){ return contribution(name)/((ECON[name]?.cpi||100)/100); }
 function growthVal(name){ return parseFloat(YOY[name]); }
+// ── 종합 기회점수 = 인구규모 × 구매력(1인당GRDP) × 냉장고 미보급여력 ──
+let OPP_MAX=1;
+function rawOpp(name){ const e=ECON[name]; if(!e||e.pop_n==null||e.grdp_pc==null||e.own_ref==null) return NaN; return e.pop_n*(e.grdp_pc/1000)*((100-e.own_ref)/100); }
+function oppScore(name){ const r=rawOpp(name); return isNaN(r)?NaN:r/OPP_MAX*100; }
+function recomputeOpp(){ const v=Object.keys(DATA).map(rawOpp).filter(x=>!isNaN(x)); if(v.length) OPP_MAX=Math.max(...v)||1; }
 
 const MAPMETRICS=[
   {key:"none",     label:"전체", none:true},
+  {key:"opp",      label:"종합 기회점수", val:oppScore, fmt:v=>Math.round(v)},
   {key:"growth",   label:"성장률",       div:true, val:growthVal,    fmt:v=>(v>0?"+":"")+v.toFixed(1)+"%"},
   {key:"contrib",  label:"전국 기여도",  val:contribution, fmt:v=>v+"%"},
   {key:"percap",   label:"1인당 셀아웃", val:percapIndex,  fmt:v=>Math.round(v)},
@@ -735,6 +742,7 @@ function renderLegend(m,ext){
     `<span class="lg-mx">${m.fmt(ext.max)}</span>`;
 }
 const MAP_GROUPS=[
+  {label:"★ 종합 기회점수", keys:["opp"]},
   {label:"경제규모 (GRDP·2025)", keys:["grdp_pc","grdp_size"]},
   {label:"가전보급·기회 (DHS 2022)", keys:["own_ref","own_tv","electrif","ref_gap"]},
   {label:"인구·소득", keys:["pop_n","income_real","poverty"]},
