@@ -39,7 +39,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
   React.useEffect(() => {
     const svg = svgRef.current, tip = tipRef.current
     if (!svg || !tip) return
-    const CO = chartColors(dark)
+    const CO = chartColors(dark); const axisCol = dark ? "#9ca3af" : "#6b7280"
     while (svg.firstChild) svg.removeChild(svg.firstChild)
     tip.innerHTML = ""
     const NS = "http://www.w3.org/2000/svg"
@@ -60,7 +60,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     for (let k = 0; k <= 5; k++) {
       const v = lo + ((hi - lo) * k) / 5, y = Y(v)
       svg.appendChild(el("line", { x1: L, y1: y, x2: R, y2: y, stroke: CO.grid, "stroke-width": 1 }))
-      const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
+      const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 10, fill: axisCol }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
     }
     // 가로축 라벨: 연도 경계 기준(시간 균등). 오른쪽 최신점을 억지로 고정하지 않음. 연도가 적으면 균등 분산.
     const yearFirst: number[] = []; let ly = ""
@@ -69,7 +69,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     if (yearFirst.length >= 3) { const step = Math.max(1, Math.ceil(yearFirst.length / 8)); showIdx = yearFirst.filter((_, k) => k % step === 0) }
     else { const k = Math.min(5, n); showIdx = Array.from({ length: k }, (_, j) => Math.round((j * (n - 1)) / (k - 1 || 1))) }
     const showSet = new Set(showIdx)
-    labels.forEach((lb, i) => { if (!showSet.has(i)) return; const an = i <= 1 ? "start" : i >= n - 2 ? "end" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) })
+    labels.forEach((lb, i) => { if (!showSet.has(i)) return; const an = i <= 1 ? "start" : i >= n - 2 ? "end" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 10, fill: axisCol }); tx.textContent = lb; svg.appendChild(tx) })
     const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: CO.cross, "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 }); svg.appendChild(cross)
     // 라인 + 주 시리즈 그라디언트 면적 + 적응형 점(희소 구간만) — 1Y는 풍부, 3~5Y는 깔끔
     const gid = "ecg" + Math.random().toString(36).slice(2, 8)
@@ -179,7 +179,7 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
   React.useEffect(() => {
     const svg = svgRef.current, tip = tipRef.current
     if (!svg || !tip) return
-    const CO = chartColors(dark)
+    const CO = chartColors(dark); const axisCol = dark ? "#9ca3af" : "#6b7280"
     while (svg.firstChild) svg.removeChild(svg.firstChild)
     tip.innerHTML = ""
     const NS = "http://www.w3.org/2000/svg"
@@ -199,13 +199,13 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
     for (let k = 0; k <= 5; k++) {
       const v = lo + ((hi - lo) * k) / 5, y = Y(v)
       svg.appendChild(el("line", { x1: L, y1: y, x2: R, y2: y, stroke: CO.grid, "stroke-width": 1 }))
-      const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 9, fill: "#9ca3af" }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
+      const tl = el("text", { x: L - 6, y: y + 3, "text-anchor": "end", "font-size": 10, fill: axisCol }); tl.textContent = v.toFixed(dec2); svg.appendChild(tl)
     }
     svg.appendChild(el("line", { x1: L, y1: y0, x2: R, y2: y0, stroke: "#9ca3af", "stroke-width": 1 })) // 0 기준선
     // 막대는 index 균등 배치 → 라벨도 index 균등 분산(연간+분기 혼합 시 몰림 방지)
     const kL = Math.min(6, n)
     const showSet = new Set(Array.from({ length: kL }, (_, j) => Math.round((j * (n - 1)) / (kL - 1 || 1))))
-    labels.forEach((lb, i) => { if (!showSet.has(i)) return; const an = i <= 1 ? "start" : i >= n - 2 ? "end" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 9, fill: "#9ca3af" }); tx.textContent = lb; svg.appendChild(tx) })
+    labels.forEach((lb, i) => { if (!showSet.has(i)) return; const an = i <= 1 ? "start" : i >= n - 2 ? "end" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 10, fill: axisCol }); tx.textContent = lb; svg.appendChild(tx) })
     const bars = data.map((v, i) => {
       const x = X(i) - bw / 2
       const top = Math.min(Y(v), y0), h = Math.abs(Y(v) - y0)

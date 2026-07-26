@@ -67,7 +67,7 @@ function Banner({ headline, lg, summary, d, kpiDefs }: BannerDef & { d: Mon; kpi
   const now = new Date(); const nowLbl = String(now.getFullYear()).slice(2) + "." + (now.getMonth() + 1) // 현재 월 기준(지표가 과거여도)
   const line = summary && items.length ? summary(kv, asOf) : headline
   return (
-    <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+    <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
       <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg>
@@ -101,7 +101,7 @@ function AgendaCard() {
   const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
   const dday = (iso: string) => Math.round((new Date(iso + "T00:00:00").getTime() - today0) / 86400000)
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both", animationDelay: "80ms" }}>
+    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: "80ms" }}>
       <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
         <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">경제 일정</h2>
         <span className="text-[11px] text-gray-400 dark:text-gray-500">지표 발표</span>
@@ -110,7 +110,7 @@ function AgendaCard() {
         {ev.map((x, i) => {
           const dd = dday(x.date)
           return (
-            <div key={i} style={{ animation: "fadeUp .5s ease both", animationDelay: 60 + i * 40 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+            <div key={i} style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: 60 + i * 40 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
               <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{x.event}</span>
@@ -139,7 +139,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
       {banner && <Banner {...banner} d={d} kpiDefs={loaded ? kpiDefs : undefined} />}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-        <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+        <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h2>
@@ -168,7 +168,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
               <div className="text-[12px] text-gray-400 dark:text-gray-500">해당 지표가 아직 Supabase에 없음 · 수집 후 자동 표시</div>
             </div>
           ) : (
-            <div key={activeSub} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s ease both" }}>{sections ? curSub?.node : children}</div>
+            <div key={activeSub} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s cubic-bezier(.16,1,.3,1) both" }}>{sections ? curSub?.node : children}</div>
           )}
         </section>
         <aside className="flex flex-col gap-4">

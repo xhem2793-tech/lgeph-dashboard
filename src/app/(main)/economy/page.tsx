@@ -67,7 +67,7 @@ export default function Page() {
                   )}
                   <button
                     onClick={() => setActive(n.id)}
-                    style={{ animation: "fadeUp .4s ease both", animationDelay: (i * 40) + "ms" }}
+                    style={{ animation: "fadeUp .4s cubic-bezier(.16,1,.3,1) both", animationDelay: (i * 40) + "ms" }}
                     className={
                       "group flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
                       (active === n.id ? "bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/25" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
@@ -87,7 +87,7 @@ export default function Page() {
           </div>
         </aside>
         <div className="min-w-0">
-          <div key={active} style={{ animation: "fadeOnly .35s ease both" }}>{view()}</div>
+          <div key={active} style={{ animation: "fadeOnly .35s cubic-bezier(.16,1,.3,1) both" }}>{view()}</div>
         </div>
       </div>
     </main>
