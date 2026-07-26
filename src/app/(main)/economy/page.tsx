@@ -13,7 +13,7 @@ import { useLang } from "@/lib/i18n"
 type NavItem = { id: string; ko: string; sub: string; count: string; group: string; accent?: boolean; star?: boolean; subs: string[] }
 const NAV: NavItem[] = [
   { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도 + 지역 물가", count: "17", group: "전국", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운", "지역 물가 히트맵"] },
-  { id: "core", ko: "핵심 요약", sub: "일일 지표 + 대표 스코어카드 한 화면", count: "KPI 12", group: "핵심", subs: ["일일 지표 환율·유가·날씨", "대표 지표 스코어카드"] },
+  { id: "core", ko: "핵심 요약", sub: "일일 지표 + 대표 스코어카드 한 화면", count: "12", group: "핵심", subs: ["일일 지표 환율·유가·날씨", "대표 지표 스코어카드"] },
   { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별 물가", count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
   { id: "growth", ko: "국민계정·성장", sub: "GDP·투자·건설·산업생산·가동률", count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
   { id: "labor", ko: "고용·임금·소득", sub: "실업률·최저임금·OFW 송금", count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
@@ -73,12 +73,13 @@ export default function Page() {
                       (active === n.id ? "bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/25" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
                     }
                   >
-                    <span className={"flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700 dark:text-indigo-300" : "font-semibold text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
-                      {n.star && <span className="text-amber-500 dark:text-amber-400">★ </span>}
-                      {n.accent && <span className="text-violet-500 dark:text-violet-400">◆ </span>}
+                    <span className={"flex items-center gap-1.5 flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700 dark:text-indigo-300" : "font-semibold text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
+                      {(n.star || n.accent) && <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (n.star ? "bg-amber-400" : "bg-violet-400")} aria-hidden />}
                       {n.ko}
                     </span>
-                    <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-semibold tabular-nums " + (active === n.id ? "bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500")}>{n.count}</span>
+                    {/^[\d,]+\+?$/.test(n.count)
+                      ? <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9.5px] font-semibold tabular-nums " + (active === n.id ? "bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500")}>{n.count}</span>
+                      : <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 ring-1 ring-inset ring-gray-200 dark:ring-gray-700">{n.count}</span>}
                   </button>
                 </div>
               ))}
