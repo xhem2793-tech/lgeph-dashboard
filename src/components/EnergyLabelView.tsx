@@ -118,35 +118,85 @@ function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { la
   )
 }
 
-// 산점도 — 효율(X, 높을수록 우측=좋음) vs 월전력(Y, 낮을수록 상단=좋음). LG 강조
-function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: number; isLG: boolean }[]; metric: string }) {
+// 산점도 — 효율(X, 높을수록 우측=좋음) vs 월전력(Y, 낮을수록 상단=좋음). LG 강조, 사분면 가이드·격자
+function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: number; isLG: boolean; n?: number }[]; metric: string }) {
   const [h, setH] = useState<number | null>(null)
-  if (pts.length < 2) return <div className="flex h-full min-h-[160px] w-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
-  const W = 300, H = 160, L = 30, R = 10, T = 12, B = 24
+  if (pts.length < 2) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  const W = 340, H = 250, L = 40, R = 14, T = 16, B = 30
   const exs = pts.map((p) => p.eff), kys = pts.map((p) => p.kwh)
-  const ex0 = Math.min(...exs), ex1 = Math.max(...exs), ky0 = Math.min(...kys), ky1 = Math.max(...kys)
+  const pad = (lo: number, hi: number) => { const d = (hi - lo) * 0.12 || 1; return [lo - d, hi + d] as const }
+  const [ex0, ex1] = pad(Math.min(...exs), Math.max(...exs)), [ky0, ky1] = pad(Math.min(...kys), Math.max(...kys))
   const X = (v: number) => L + (W - L - R) * ((v - ex0) / ((ex1 - ex0) || 1))
-  const Y = (v: number) => T + (H - T - B) * ((v - ky0) / ((ky1 - ky0) || 1)) // 높은 kWh=아래
+  const Y = (v: number) => T + (H - T - B) * ((v - ky0) / ((ky1 - ky0) || 1))
+  const emx = (ex0 + ex1) / 2, kmy = (ky0 + ky1) / 2
   return (
     <div className="w-full">
       <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
-        <line x1={L} y1={T} x2={L} y2={H - B} stroke="#e5e7eb" strokeWidth="0.8" className="dark:stroke-gray-800" />
-        <line x1={L} y1={H - B} x2={W - R} y2={H - B} stroke="#e5e7eb" strokeWidth="0.8" className="dark:stroke-gray-800" />
-        <text x={W - R} y={H - B + 9} textAnchor="end" fontSize="7" fill="#94a3b8">효율 {metric}→ 좋음</text>
-        <text x={L - 3} y={T + 2} textAnchor="end" fontSize="7" fill="#94a3b8">저전력</text>
+        {/* 사분면 가이드 — 우상단(고효율·저전력)=우수 */}
+        <rect x={X(emx)} y={T} width={W - R - X(emx)} height={Y(kmy) - T} fill="#0d9488" opacity="0.05" />
+        {[0.25, 0.5, 0.75].map((f) => <line key={"h" + f} x1={L} y1={T + (H - T - B) * f} x2={W - R} y2={T + (H - T - B) * f} stroke="#e5e7eb" strokeWidth="0.6" strokeDasharray="2 3" className="dark:stroke-gray-800" />)}
+        {[0.25, 0.5, 0.75].map((f) => <line key={"v" + f} x1={L + (W - L - R) * f} y1={T} x2={L + (W - L - R) * f} y2={H - B} stroke="#e5e7eb" strokeWidth="0.6" strokeDasharray="2 3" className="dark:stroke-gray-800" />)}
+        <line x1={L} y1={T} x2={L} y2={H - B} stroke="#cbd5e1" strokeWidth="1" className="dark:stroke-gray-700" />
+        <line x1={L} y1={H - B} x2={W - R} y2={H - B} stroke="#cbd5e1" strokeWidth="1" className="dark:stroke-gray-700" />
+        {/* 축 눈금 */}
+        <text x={L - 4} y={T + 4} textAnchor="end" fontSize="8" fill="#94a3b8">{Math.round(ky0)}</text>
+        <text x={L - 4} y={H - B} textAnchor="end" fontSize="8" fill="#94a3b8">{Math.round(ky1)}</text>
+        <text x={L} y={H - B + 11} textAnchor="middle" fontSize="8" fill="#94a3b8">{ex0.toFixed(1)}</text>
+        <text x={W - R} y={H - B + 11} textAnchor="end" fontSize="8" fill="#94a3b8">{ex1.toFixed(1)}</text>
+        <text x={(L + W - R) / 2} y={H - 3} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b">효율({metric}) → 높을수록 우수</text>
+        <text x={11} y={(T + H - B) / 2} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b" transform={`rotate(-90 11 ${(T + H - B) / 2})`}>월전력 ↓ 낮을수록 우수</text>
+        <text x={W - R - 2} y={T + 9} textAnchor="end" fontSize="7.5" fontWeight="700" className="fill-teal-600/70 dark:fill-teal-400/60">우수 구간</text>
         {pts.map((p, i) => (
-          <g key={p.name} onMouseEnter={() => setH(i)} style={{ cursor: "default" }}>
-            <title>{p.name} · {metric} {p.eff.toFixed(2)} · {Math.round(p.kwh)}kWh/월</title>
-            <circle cx={X(p.eff)} cy={Y(p.kwh)} r={p.isLG ? 5 : 3.4} fill={p.isLG ? TEAL : "#cbd5e1"} stroke={p.isLG ? "#fff" : "none"} strokeWidth={p.isLG ? 1.2 : 0} className={p.isLG ? "" : "dark:fill-gray-600"} opacity={h == null || h === i || p.isLG ? 1 : 0.5} style={{ animation: "fadeIn .5s ease both", animationDelay: i * 0.02 + "s" }} />
-            {(p.isLG || h === i) && <text x={X(p.eff)} y={Y(p.kwh) - 7} textAnchor="middle" fontSize="8" fontWeight="700" className={p.isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-300"}>{p.name}</text>}
+          <g key={p.name} onMouseEnter={() => setH(i)} style={{ cursor: "default" }} opacity={h == null || h === i || p.isLG ? 1 : 0.45}>
+            <title>{p.name} · {metric} {p.eff.toFixed(2)} · {Math.round(p.kwh)}kWh/월{p.n ? ` · ${p.n}모델` : ""}</title>
+            <circle cx={X(p.eff)} cy={Y(p.kwh)} r={p.isLG ? 7 : 5} fill={p.isLG ? TEAL : "#94a3b8"} stroke={p.isLG ? "#fff" : "#fff"} strokeWidth={p.isLG ? 1.6 : 0.8} className={p.isLG ? "" : "dark:fill-gray-500"} style={{ animation: "fadeIn .5s ease both", animationDelay: i * 0.03 + "s", transition: "opacity .15s" }} />
+            {(p.isLG || h === i) && <text x={X(p.eff)} y={Y(p.kwh) - 10} textAnchor="middle" fontSize="9.5" fontWeight="800" className={p.isLG ? "fill-teal-700 dark:fill-teal-300" : "fill-gray-600 dark:fill-gray-200"}>{p.name}</text>}
           </g>
         ))}
       </svg>
-      <div className="mt-1 text-[9.5px] text-gray-400">우측·상단일수록 고효율·저전력(우수) · <span className="text-teal-600 dark:text-teal-400 font-semibold">●LG</span></div>
+      <div className="mt-1 text-[10px] text-gray-400"><span className="font-semibold text-teal-600 dark:text-teal-400">● LG</span> · 우측·상단(음영)일수록 고효율·저전력</div>
     </div>
   )
 }
 const avgOf = (a: number[]) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null
+
+// LG 커버리지 매트릭스 — 설치형(행) × 용량(열). 셀=LG 모델수, 색농도=LG 평균효율. LG 라인업 전모를 한 화면에.
+type Cell = { lgN: number; lgEff: number | null; mktN: number; mktEff: number | null }
+function Heatmap({ rowLabels, colLabels, cells, metric, effLo, effHi }: { rowLabels: string[]; colLabels: string[]; cells: Record<string, Cell>; metric: string; effLo: number; effHi: number }) {
+  const [hov, setHov] = useState<string | null>(null)
+  if (!rowLabels.length) return <div className="flex h-40 w-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  const tone = (eff: number | null) => { if (eff == null) return 0; const t = (eff - effLo) / ((effHi - effLo) || 1); return Math.max(0.12, Math.min(1, t)) }
+  return (
+    <div className="w-full overflow-x-auto">
+      <div className="min-w-[420px]" style={{ display: "grid", gridTemplateColumns: `76px repeat(${colLabels.length}, minmax(0,1fr))`, gap: "3px" }}>
+        <div />
+        {colLabels.map((c) => <div key={c} className="pb-0.5 text-center text-[9.5px] font-semibold text-gray-500 dark:text-gray-400">{c.replace(/급|\(.*\)/g, "")}</div>)}
+        {rowLabels.map((r, ri) => (
+          <React.Fragment key={r}>
+            <div className="flex items-center justify-end pr-1.5 text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">{r}</div>
+            {colLabels.map((c, ci) => {
+              const k = r + "|" + c, cell = cells[k], id = ri + "-" + ci
+              const has = cell && cell.lgN > 0, op = has ? tone(cell.lgEff) : 0
+              return (
+                <div key={c} onMouseEnter={() => setHov(id)} onMouseLeave={() => setHov(null)} title={cell ? `${r} · ${c}\nLG ${cell.lgN}개 (${cell.lgEff != null ? metric + " " + cell.lgEff.toFixed(2) : "—"})\n시장 ${cell.mktN}개 (${cell.mktEff != null ? cell.mktEff.toFixed(2) : "—"})` : `${r} · ${c} · LG 0개`}
+                  className="relative flex aspect-[1.6/1] min-h-[34px] items-center justify-center rounded-md text-[13px] font-bold transition-all"
+                  style={{ background: has ? `rgba(13,148,136,${op})` : "var(--hm-empty)", color: has && op > 0.55 ? "#fff" : has ? "#0f766e" : "#cbd5e1", outline: hov === id ? "2px solid #0d9488" : "none", animation: "fadeIn .45s ease both", animationDelay: (ri * colLabels.length + ci) * 0.02 + "s" }}>
+                  {has ? cell.lgN : "·"}
+                  {has && cell.mktN > 0 && <span className="absolute bottom-0.5 right-1 text-[7.5px] font-medium opacity-60">/{cell.mktN}</span>}
+                </div>
+              )
+            })}
+          </React.Fragment>
+        ))}
+      </div>
+      <style>{":root{--hm-empty:#f1f5f9}.dark{--hm-empty:#1e293b}"}</style>
+      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9.5px] text-gray-400">
+        <span className="font-semibold text-gray-500 dark:text-gray-400">숫자=LG 모델수 · /뒤=시장 총모델</span>
+        <span className="inline-flex items-center gap-1">색농도 {metric} 낮음<span className="h-2.5 w-16 rounded" style={{ background: "linear-gradient(90deg,rgba(13,148,136,.12),rgba(13,148,136,1))" }} />높음</span>
+      </div>
+    </div>
+  )
+}
 
 export default function EnergyLabelView() {
   const [rows, setRows] = useState<EnergyRow[]>([])
@@ -192,6 +242,30 @@ export default function EnergyLabelView() {
     const rs = catRows.filter((r) => byType(r) && inSeg(r, s))
     return { label: s.k, lg: avgOf(rs.filter((r) => /^lg$/i.test(r.brand)).map((r) => r.eff!)), mkt: avgOf(rs.map((r) => r.eff!)) ?? 0 }
   }).filter((g) => g.mkt > 0), [catRows, segs, typ])
+
+  // LG 커버리지 매트릭스 — 설치형×용량 전 조합의 LG/시장 모델수·효율 (카테고리 전체, 필터 무관)
+  const coverage = useMemo(() => {
+    const cells: Record<string, Cell> = {}; const effs: number[] = []
+    const rowLabels = hasType ? types : ["전체"]
+    for (const rl of rowLabels) for (const s of segs) {
+      const rs = catRows.filter((r) => (hasType ? typeOf(cat, r.stype) === rl : true) && inSeg(r, s))
+      if (!rs.length) continue
+      const lg = rs.filter((r) => /^lg$/i.test(r.brand)); const lgEff = avgOf(lg.map((r) => r.eff!))
+      if (lgEff != null) effs.push(lgEff)
+      cells[rl + "|" + s.k] = { lgN: lg.length, lgEff, mktN: rs.length, mktEff: avgOf(rs.map((r) => r.eff!)) }
+    }
+    const lgTotal = catRows.filter((r) => /^lg$/i.test(r.brand)).length
+    return { cells, rowLabels, colLabels: segs.map((s) => s.k), effLo: effs.length ? Math.min(...effs) : 0, effHi: effs.length ? Math.max(...effs) : 1, lgTotal }
+  }, [catRows, types, segs, hasType, cat])
+
+  // 냉매 믹스 — LG vs 시장 R32/R410A 등 (환경규제·GWP 관점)
+  const refrigMix = useMemo(() => {
+    const norm = (s: string) => { const t = (s || "").toUpperCase().replace(/[\s-]/g, ""); if (!t) return null; if (t.includes("R32")) return "R32"; if (t.includes("R410")) return "R410A"; if (t.includes("R290")) return "R290"; if (t.includes("R600")) return "R600a"; if (t.includes("R134")) return "R134a"; return t.slice(0, 6) }
+    const tally = (rs: EnergyRow[]) => { const m: Record<string, number> = {}; let tot = 0; for (const r of rs) { const g = norm(r.refrigerant); if (!g) continue; m[g] = (m[g] || 0) + 1; tot++ } return { m, tot } }
+    const lg = tally(segRows.filter((r) => /^lg$/i.test(r.brand))); const mkt = tally(segRows)
+    const keys = Array.from(new Set([...Object.keys(lg.m), ...Object.keys(mkt.m)])).sort((a, b) => (mkt.m[b] || 0) - (mkt.m[a] || 0))
+    return { keys, lg, mkt }
+  }, [segRows])
   // 냉매(에어컨) — extra는 energyLabels에서 stype만 파싱했으므로 rows의 원본 대신 model/eff 기반 분리 불가 → segment refrigerant via rows extra not available; use kwh TCO instead
 
   // TCO — 선택 세그먼트 LG vs 리더 vs 평균 월 전기요금(₱)
@@ -274,7 +348,17 @@ export default function EnergyLabelView() {
             <div className="grid gap-4 sm:grid-cols-2">{[0, 1, 2, 3].map((i) => <div key={i} className="h-56 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}</div>
           ) : (
             <>
-            <div className="grid items-stretch gap-4 sm:grid-cols-2">
+            {/* LG 커버리지 매트릭스 — 카테고리 전체(필터 무관). LG 라인업 전모를 한 화면에. */}
+            <div key={"cov-" + cat} className="mb-4 flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+              <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
+                <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">LG {cur.label} 라인업 커버리지</h3>
+                <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:text-teal-300">전체 {coverage.lgTotal}개 모델</span>
+                <span className="ml-auto text-[10.5px] text-gray-400 dark:text-gray-500">설치형 × 용량 · 색=효율</span>
+              </div>
+              <Heatmap rowLabels={coverage.rowLabels} colLabels={coverage.colLabels} cells={coverage.cells} metric={cur.metric} effLo={coverage.effLo} effHi={coverage.effHi} />
+              <p className="mt-2.5 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">LG는 <b>{coverage.lgTotal}개</b> 모델을 {coverage.rowLabels.length}개 설치형·{coverage.colLabels.length}개 용량대에 걸쳐 등록. <b>빈 셀=미출시 공백</b>(진입 기회), 색이 옅은 셀=효율 열세(개선 타깃).</p>
+            </div>
+            <div key={`seg-${typ}-${segIdx}`} className="grid items-stretch gap-4 sm:grid-cols-2">
               <Sub idx={0} title="브랜드 효율 랭킹" seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} note={lgR ? <>같은 스펙 내 평균 {cur.metric}. LG {lgRk}위·리더 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? "낮아 최고효율 격차가 곧 개발 타깃" : "높아 프리미엄 소구 가능"}. 막대 hover 시 모델수.</> : <><b>LG는 이 세그먼트에 등록 모델 없음</b>(현지 미출시) — 시장 브랜드만 비교. 진입 검토 시 벤치마크로 활용.</>}><HBar items={rank} hiName="LG" /></Sub>
               <Sub idx={1} title="효율 ↔ 월전력 관계" seg={seg?.k} note={<>가로=효율({cur.metric}), 세로=월 소비전력. <b>우측·상단</b>이 고효율·저전력(우수). LG 점 위치로 <b>효율 대비 실제 전력소비</b> 경쟁력 확인.</>}><Scatter pts={scatterData} metric={cur.metric} /></Sub>
               <Sub idx={2} title="용량대별 LG vs 시장" note={<>용량 세그먼트별 평균 {cur.metric}. {weak ? <>LG는 <b className="text-rose-600 dark:text-rose-400">{weak.label}</b>에서 시장 대비 열세 — 차기 라인업의 효율 스펙 상향 1순위.</> : "세그먼트별 LG 포지션."}</>}><GroupBars groups={bySegChart} /></Sub>
@@ -304,6 +388,20 @@ export default function EnergyLabelView() {
                   </div>
                 )}</div>
               </Sub>
+              {cat === "acu" && refrigMix.mkt.tot > 0 && (() => {
+                const RC: Record<string, string> = { R32: "#10b981", R290: "#0d9488", R600a: "#22c55e", R410A: "#dc2626", R134a: "#f59e0b" }
+                const lgR32 = refrigMix.lg.tot ? (refrigMix.lg.m.R32 || 0) / refrigMix.lg.tot * 100 : null
+                const Bar = ({ t, m }: { t: number; m: Record<string, number> }) => <span className="flex h-4 flex-1 overflow-hidden rounded">{refrigMix.keys.map((k, i) => { const w = t ? (m[k] || 0) / t * 100 : 0; if (!w) return null; return <span key={k} title={`${k} ${w.toFixed(0)}%`} style={{ width: w + "%", background: RC[k] || "#94a3b8", animation: "growX .5s ease both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: "left" }} /> })}</span>
+                return (
+                  <Sub idx={5} title="냉매 믹스 (환경·GWP)" seg={seg?.k} note={<>저GWP 냉매(R32·R290) 비중 = 환경규제 대응력. LG R32 {lgR32 != null ? <b>{lgR32.toFixed(0)}%</b> : "—"} — <b>친환경 냉매 소구</b>는 유럽·규제강화 시장의 프리미엄 근거.</>}>
+                    <div className="flex w-full flex-col gap-2.5">
+                      <div className="flex items-center gap-2"><span className="w-12 shrink-0 text-right text-[11px] font-bold text-teal-600 dark:text-teal-400">LG</span>{refrigMix.lg.tot ? <Bar t={refrigMix.lg.tot} m={refrigMix.lg.m} /> : <span className="flex-1 text-[10px] text-gray-400">데이터 없음</span>}</div>
+                      <div className="flex items-center gap-2"><span className="w-12 shrink-0 text-right text-[11px] text-gray-500 dark:text-gray-400">시장</span><Bar t={refrigMix.mkt.tot} m={refrigMix.mkt.m} /></div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[9.5px] text-gray-400">{refrigMix.keys.slice(0, 5).map((k) => <span key={k} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: RC[k] || "#94a3b8" }} />{k}</span>)}<span className="text-gray-400">· 녹색=저GWP</span></div>
+                    </div>
+                  </Sub>
+                )
+              })()}
             </div>
             <button type="button" onClick={() => setSimOpen(true)} className="mt-4 flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".3s" }}>
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>

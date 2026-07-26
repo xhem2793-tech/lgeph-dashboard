@@ -51,7 +51,7 @@ export async function oilDaily(n = 30) {
   return rows.reverse().map((r) => ({ date: r.date as string, diesel: num(r.diesel), ron95: num(r.ron95) }))
 }
 
-export type EnergyRow = { category: string; brand: string; model: string; eff: number | null; metric: string; star: number | null; kwh: number | null; spec: number | null; stype: string }
+export type EnergyRow = { category: string; brand: string; model: string; eff: number | null; metric: string; star: number | null; kwh: number | null; spec: number | null; stype: string; refrigerant: string; gwp: number | null }
 export async function energyLabels(): Promise<EnergyRow[]> {
   // PostgREST 행 상한(1000) 대응 — offset 페이지네이션으로 전량 수집
   const all: any[] = []
@@ -65,7 +65,8 @@ export async function energyLabels(): Promise<EnergyRow[]> {
     // 스펙(세그먼트 기준): 에어컨=냉방kW, 냉장고=용량L, TV=화면inch
     const spec = num(ex.cooling_kw) ?? num(ex.volume_l) ?? num(ex.screen_in)
     const stype = (ex.installation || ex.ref_type || ex.tv_type || "") as string
-    return { category: r.category, brand: r.brand, model: r.model_code || r.product_name || "", eff: num(r.efficiency_val), metric: r.efficiency_metric, star: num(r.star_rating), kwh: num(r.monthly_kwh), spec, stype }
+    const refrigerant = (ex.refrigerant || "") as string
+    return { category: r.category, brand: r.brand, model: r.model_code || r.product_name || "", eff: num(r.efficiency_val), metric: r.efficiency_metric, star: num(r.star_rating), kwh: num(r.monthly_kwh), spec, stype, refrigerant, gwp: num(ex.gwp) }
   })
 }
 

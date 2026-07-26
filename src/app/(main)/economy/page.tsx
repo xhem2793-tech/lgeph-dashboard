@@ -77,8 +77,7 @@ export default function Page() {
                       (active === n.id ? "bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/25" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
                     }
                   >
-                    <span className={"flex items-center gap-1.5 flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700 dark:text-indigo-300" : "font-semibold text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
-                      {(n.star || n.accent) && <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (n.star ? "bg-amber-400" : "bg-violet-400")} aria-hidden />}
+                    <span className={"flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700 dark:text-indigo-300" : "font-semibold text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
                       {n.ko}
                     </span>
                     <span className="num shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{n.count}</span>
