@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import DailyIndicators from "@/components/DailyIndicators"
-import KeyScorecards from "@/components/KeyScorecards"
+import DailyTrends from "@/components/DailyTrends"
 import FxView from "@/components/FxView"
 import RegionMapView from "@/components/RegionMapView"
 import RegionPriceExtras from "@/components/RegionPriceExtras"
+import EnergyLabelView from "@/components/EnergyLabelView"
+import OnlineMarketView from "@/components/OnlineMarketView"
 import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView, PricesView } from "@/components/EconViews"
 import { useLang } from "@/lib/i18n"
 
@@ -14,7 +15,7 @@ import { useLang } from "@/lib/i18n"
 type NavItem = { id: string; ko: string; sub: string; count: string; group: string; accent?: boolean; star?: boolean; subs: string[] }
 const NAV: NavItem[] = [
   { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도 + 지역 물가", count: "17", group: "전국", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운", "지역 물가 히트맵"] },
-  { id: "core", ko: "핵심 요약", sub: "일일 지표 + 대표 스코어카드 한 화면", count: "12", group: "핵심", subs: ["일일 지표 환율·유가·날씨", "대표 지표 스코어카드"] },
+  { id: "core", ko: "일일동향", sub: "환율·유가 최근 30일 추이", count: "일간", group: "핵심", subs: ["환율 30일", "유가 30일"] },
   { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별 물가", count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
   { id: "growth", ko: "국민계정·성장", sub: "GDP·투자·건설·산업생산·가동률", count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
   { id: "labor", ko: "고용·임금·소득", sub: "실업률·최저임금·OFW 송금", count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
@@ -22,7 +23,8 @@ const NAV: NavItem[] = [
   { id: "fx", ko: "환율·원가", sub: "대달러·실효환율·역내 통화·수입원가", count: "FX", group: "외환·금융", subs: ["동남아 6개국 통화", "₱/USD 기본 환율", "실효환율 NEER·REER", "수입 원가 영향"] },
   { id: "rates", ko: "통화·금리·신용", sub: "기준금리·통화량 M3·가계신용", count: "9", group: "외환·금융", subs: ["기준금리 BSP", "통화량 M3", "가계·카드 대출"] },
   { id: "appliance", ko: "가전 선행지표", sub: "가전 물가·PPI·수입액·실질가격 갭", count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
-  // 미구축 플레이스홀더(가전시장·제품별=경쟁사가격과 중복, 사업 레이더=파생지표 미구축) — 데이터 준비 시 재노출
+  { id: "energy", ko: "에너지 라벨", sub: "에어컨·냉장고·TV 브랜드별 에너지효율·별점(DOE)", count: "4K+", group: "가전 인텔리전스", star: true, subs: ["브랜드별 효율", "5성 비중", "카테고리별"] },
+  { id: "online", ko: "온라인 시장", sub: "이커머스 규모·디지털/통신 침투", count: "민간", group: "가전 인텔리전스", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
 ]
 
 function Soon({ label }: { label: string }) {
@@ -41,8 +43,10 @@ export default function Page() {
 
   function view() {
     if (active === "regions") return <div className="flex flex-col gap-3"><RegionMapView /><RegionPriceExtras /></div>
-    if (active === "core") return <div className="flex flex-col gap-1"><DailyIndicators /><KeyScorecards /></div>
+    if (active === "core") return <DailyTrends />
     if (active === "fx") return <FxView />
+    if (active === "energy") return <EnergyLabelView />
+    if (active === "online") return <OnlineMarketView />
     if (active === "prices") return <PricesView />
     if (active === "growth") return <GrowthView />
     if (active === "labor") return <LaborView />

@@ -41,6 +41,22 @@ export async function oilSeries(weeks = 8): Promise<number[]> {
   return rows.reverse().map((r) => num(r.diesel)!)
 }
 
+export async function macroDual(indicator: string) {
+  const rows = await sb(`macro_indicators?geo=in.(PHILIPPINES,PH)&indicator=eq.${indicator}&select=value,period_date&order=period_date`)
+  return rows.map((r) => ({ value: num(r.value)!, date: r.period_date as string }))
+}
+
+export async function oilDaily(n = 30) {
+  const rows = await sb(`oil_prices?select=date,diesel,ron95&order=date.desc&limit=${n}`)
+  return rows.reverse().map((r) => ({ date: r.date as string, diesel: num(r.diesel), ron95: num(r.ron95) }))
+}
+
+export type EnergyRow = { category: string; brand: string; eff: number | null; metric: string; star: number | null; kwh: number | null }
+export async function energyLabels(): Promise<EnergyRow[]> {
+  const rows = await sb(`energy_labels?select=category,brand,efficiency_val,efficiency_metric,star_rating,monthly_kwh&limit=5000`)
+  return rows.map((r) => ({ category: r.category, brand: r.brand, eff: num(r.efficiency_val), metric: r.efficiency_metric, star: num(r.star_rating), kwh: num(r.monthly_kwh) }))
+}
+
 export async function latestOne(table: string, col: string) {
   const rows = await sb(`${table}?select=${col},date&order=date.desc&limit=1`)
   return rows[0] ? num(rows[0][col]) : null
