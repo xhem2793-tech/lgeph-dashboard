@@ -101,8 +101,8 @@ export default function GdpComposition() {
       ) : (
         <>
           <div className="mt-1.5 text-[10.5px] text-gray-400 dark:text-gray-500">{latestYr}년 세부 산업 비중 · 색=상위산업</div>
-          {!loaded ? <div className="mt-2 h-[150px] animate-pulse rounded bg-gray-50 dark:bg-gray-800/40" /> : (() => {
-            const cx = 74, cy = 74, R = 58, ri = 34
+          {!loaded ? <div className="mt-2 h-[190px] animate-pulse rounded bg-gray-50 dark:bg-gray-800/40" /> : (() => {
+            const cx = 90, cy = 90, R = 82, ri = 48
             const arc = (a0: number, a1: number) => {
               const p = (a: number, r: number) => [cx + r * Math.cos(a), cy + r * Math.sin(a)]
               const [x0, y0] = p(a0, R), [x1, y1] = p(a1, R), [xi1, yi1] = p(a1, ri), [xi0, yi0] = p(a0, ri)
@@ -111,15 +111,15 @@ export default function GdpComposition() {
             }
             const foc = hsub != null ? subPie[hsub] : null
             return (
-              <div className="mt-2 flex items-center justify-center gap-4">
-                <svg viewBox="0 0 150 150" width="128" style={{ display: "block", flexShrink: 0 }} onMouseLeave={() => setHsub(null)}>
+              <div className="mt-2 flex flex-col items-center">
+                <svg viewBox="0 0 180 180" width="172" style={{ display: "block" }} onMouseLeave={() => setHsub(null)}>
                   {subPie.map((s, i) => (
-                    <path key={s.name} d={arc(s.a0, s.a1)} fill={s.col} opacity={hsub == null || hsub === i ? 1 : 0.35} onMouseEnter={() => setHsub(i)} style={{ transition: "opacity .18s", cursor: "default", animation: "fadeIn .5s ease both", animationDelay: i * 0.02 + "s" }} />
+                    <path key={s.name} d={arc(s.a0, s.a1)} fill={s.col} stroke={dark ? "#0b0f16" : "#fff"} strokeWidth="1" opacity={hsub == null || hsub === i ? 1 : 0.3} onMouseEnter={() => setHsub(i)} style={{ transition: "opacity .18s", cursor: "default", animation: "fadeIn .5s ease both", animationDelay: i * 0.02 + "s" }} />
                   ))}
-                  <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fontWeight="800" className="fill-gray-900 dark:fill-gray-50">{foc ? foc.pct.toFixed(1) + "%" : latestYr}</text>
-                  <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7.5" className="fill-gray-400">{foc ? foc.name.slice(0, 7) : "세부 비중"}</text>
+                  <text x={cx} y={cy - 4} textAnchor="middle" fontSize="18" fontWeight="800" className="fill-gray-900 dark:fill-gray-50">{foc ? foc.pct.toFixed(1) + "%" : latestYr}</text>
+                  <text x={cx} y={cy + 11} textAnchor="middle" fontSize="9" className="fill-gray-400">{foc ? foc.name : "세부 비중"}</text>
                 </svg>
-                <div className="grid flex-1 grid-cols-2 gap-x-2 gap-y-0.5 self-center text-[9px]">
+                <div className="mt-2 grid w-full grid-cols-2 gap-x-3 gap-y-0.5 text-[9.5px] sm:grid-cols-3">
                   {subPie.slice(0, 12).map((s, i) => (
                     <span key={s.name} className="flex items-center gap-1 truncate" onMouseEnter={() => setHsub(i)} onMouseLeave={() => setHsub(null)}>
                       <span className="h-1.5 w-1.5 shrink-0 rounded-sm" style={{ background: s.col }} /><span className="truncate text-gray-600 dark:text-gray-300" title={s.name}>{s.name}</span><span className="ml-auto shrink-0 font-semibold tabular-nums text-gray-500 dark:text-gray-400">{s.pct.toFixed(1)}</span>
