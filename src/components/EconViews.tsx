@@ -543,7 +543,7 @@ export function GrowthView() {
       )}
         </> },
         { key: "industry", label: "산업·생산", node: <>
-      <div className="sm:col-span-2"><GdpComposition /></div>
+      <GdpComposition />
       {ind.series.length > 0 && (
         <ChartCard seg="B2B" title="산업·제조 성장률" unit="전년비 %" labels={ind.labels} series={ind.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="산업" b /><Lg c={C.rose} t="제조업" /></>}
