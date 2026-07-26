@@ -703,7 +703,7 @@ const MAPMETRICS=[
   {key:"contrib",  label:"전국 기여도",  val:contribution, fmt:v=>v+"%", src:"내부(예시)", yr:"—"},
   {key:"percap",   label:"1인당 셀아웃", val:percapIndex,  fmt:v=>Math.round(v), src:"내부(예시)", yr:"—"},
   {key:"potential",label:"성장 여력",    val:potentialGap, fmt:v=>(v>0?"+":"")+v.toFixed(1)+"p", src:"내부(예시)", yr:"—"},
-  {key:"pop_n",    label:"인구",         val:name=>{const v=ECON[name]&&ECON[name].pop_n;return v!=null?v:NaN;}, fmt:v=>v.toFixed(1)+"백만명", src:"PSA 인구총조사", yr:"2020"},
+  {key:"pop_n",    label:"인구",         val:name=>{const v=ECON[name]&&ECON[name].pop_n;return v!=null?v:NaN;}, fmt:v=>Math.round(v*100).toLocaleString()+"만명", src:"PSA 인구총조사", yr:"2020"},
   {key:"income_real",label:"평균 가구소득(연)", val:name=>{const v=ECON[name]&&ECON[name].income_real;return v!=null?v:NaN;}, fmt:v=>"연 "+pesoKo(v)+" ("+usdOf(v)+")", src:"PSA 가계소득지출조사(FIES)", yr:"2023"},
   {key:"poverty",  label:"빈곤율",       val:name=>{const v=ECON[name]&&ECON[name].poverty;return v!=null?v:NaN;}, fmt:v=>v.toFixed(1)+"%", src:"PSA 빈곤통계", yr:"2023"},
   {key:"grdp_pc",  label:"1인당 GRDP",   val:name=>{const v=ECON[name]&&ECON[name].grdp_pc;return v!=null?v:NaN;}, fmt:v=>pesoKo(v)+" ("+usdOf(v)+")", src:"PSA 지역계정(불변2018)", yr:"2025"},
@@ -801,7 +801,9 @@ function showTip(e,d){
       html+=`<div class="rt-big">${m.fmt(v)}</div>`;
       html+=`<div class="rt-sub">${m.label}${per?" · "+per:""}</div>`;
       const gap=v-avg;
-      html+=`<div class="rt-note">전국 ${sorted.length}개 중 <b>${rank}위</b> · 평균 ${m.fmt(+avg.toFixed(1))} 대비 <b>${(gap>0?"+":"")+gap.toFixed(1)}%p ${hi?"높음":lo?"낮음":"비슷"}</b> <span class="rt-tag ok">확인</span></div>`;
+      const fv=m.fmt(v), pctType=/%/.test(fv)&&!/페소|명|조|\$|점/.test(fv);
+      const gapTxt = pctType ? (gap>=0?"+":"")+gap.toFixed(1)+"%p" : (v>=avg?"+":"-")+Math.abs((v/avg-1)*100).toFixed(0)+"%";
+      html+=`<div class="rt-note">전국 ${sorted.length}개 중 <b>${rank}위</b> · 평균 ${m.fmt(avg)} 대비 <b>${gapTxt} ${hi?"높음":lo?"낮음":"비슷"}</b> <span class="rt-tag ok">확인</span></div>`;
       if(isInf){
         // 이 지역의 top 물가 드라이버(품목) 식별 → 드라이버별 구체 LGE 함의
         const cats={food_cpi:"식품",elec_cpi:"전기",transport_cpi:"운송",rice_cpi:"쌀",aircon_cpi:"에어컨",appl_cpi:"가전"};
