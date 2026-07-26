@@ -66,6 +66,7 @@ export default function Page() {
                     <p className={"px-1.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 " + (i === 0 ? "mb-1" : "mb-1 mt-2.5")}>{n.group}</p>
                   )}
                   <button
+                    onPointerDown={() => setActive(n.id)}
                     onClick={() => setActive(n.id)}
                     style={{ animation: "fadeUp .4s cubic-bezier(.16,1,.3,1) both", animationDelay: (i * 40) + "ms" }}
                     className={
