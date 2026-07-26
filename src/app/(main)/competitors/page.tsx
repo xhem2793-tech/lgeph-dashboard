@@ -369,6 +369,10 @@ export default function Competitors() {
     })
   }, [rows, cat, seg, band, brands, shops, onlyMoved, q, sort])
 
+  // 일별 움직임 데이터가 아직 없으면(스냅샷) 전일변동·3일추이 컬럼을 숨김 — 빈 '—' 컬럼이 버그처럼 보이지 않게
+  const hasTrend = React.useMemo(() => (rows ?? []).some((r) => r.deltaPhp != null && r.deltaPhp !== 0), [rows])
+  const activeCols = React.useMemo(() => COLS.filter((c) => hasTrend || !["deltaPhp", "deltaPct", "spark"].includes(c.k)), [hasTrend])
+
   const avg = (a: PriceRow[], f: (r: PriceRow) => number | null) => {
     const v = a.map(f).filter((x): x is number => x != null)
     return v.length ? v.reduce((s, x) => s + x, 0) / v.length : null
@@ -555,7 +559,7 @@ export default function Competitors() {
                 <table className="w-full border-collapse text-[11px]">
                   <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
                     <tr>
-                      {COLS.map((c) => (
+                      {activeCols.map((c) => (
                         <th
                           key={c.k as string}
                           onClick={() => setSort((s) => ({ k: c.k as string, asc: s.k === c.k ? !s.asc : true }))}
@@ -573,13 +577,13 @@ export default function Competitors() {
                   <tbody key={cat + brands.join() + shops.join() + band + seg + sort.k + String(sort.asc) + q + String(onlyMoved)}>
                     {rows === null ? (
                       <tr>
-                        <td colSpan={COLS.length} className="px-2 py-10 text-center text-[12px] text-gray-400 dark:text-gray-500">
+                        <td colSpan={activeCols.length} className="px-2 py-10 text-center text-[12px] text-gray-400 dark:text-gray-500">
                           불러오는 중…
                         </td>
                       </tr>
                     ) : data.length === 0 ? (
                       <tr>
-                        <td colSpan={COLS.length} className="px-2 py-10 text-center text-[12px] text-gray-400 dark:text-gray-500">
+                        <td colSpan={activeCols.length} className="px-2 py-10 text-center text-[12px] text-gray-400 dark:text-gray-500">
                           조건에 맞는 행 없음
                         </td>
                       </tr>
@@ -602,13 +606,17 @@ export default function Competitors() {
                             <td className="whitespace-nowrap px-2 py-1 text-gray-500 dark:text-gray-400">{r.retailer}</td>
                             <td className="num px-2 py-1 text-right text-gray-500 dark:text-gray-400">{peso(r.p1)}</td>
                             <td className="num px-2 py-1 text-right font-semibold text-gray-900 dark:text-gray-50">{peso(r.p0)}</td>
-                            <td className={"num px-2 py-1 text-right " + dcol}>
-                              {r.deltaPhp == null || r.deltaPhp === 0 ? "—" : (dn ? "−" : "+") + peso(Math.abs(r.deltaPhp)).slice(1)}
-                            </td>
-                            <td className={"num px-2 py-1 text-right font-semibold " + dcol}>
-                              {r.deltaPct == null || r.deltaPct === 0 ? "—" : pct(r.deltaPct)}
-                            </td>
-                            <td className="px-2 py-1"><Spark p2={r.p2} p1={r.p1} p0={r.p0} /></td>
+                            {hasTrend && (
+                              <>
+                                <td className={"num px-2 py-1 text-right " + dcol}>
+                                  {r.deltaPhp == null || r.deltaPhp === 0 ? "—" : (dn ? "−" : "+") + peso(Math.abs(r.deltaPhp)).slice(1)}
+                                </td>
+                                <td className={"num px-2 py-1 text-right font-semibold " + dcol}>
+                                  {r.deltaPct == null || r.deltaPct === 0 ? "—" : pct(r.deltaPct)}
+                                </td>
+                                <td className="px-2 py-1"><Spark p2={r.p2} p1={r.p1} p0={r.p0} /></td>
+                              </>
+                            )}
                             <td className="num px-2 py-1 text-right text-gray-400 dark:text-gray-500">{peso(r.srp)}</td>
                             <td className="num px-2 py-1 text-right text-gray-600 dark:text-gray-300">
                               {r.discountPct == null ? "—" : r.discountPct.toFixed(0) + "%"}

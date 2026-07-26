@@ -820,24 +820,17 @@ export default function Page() {
                         "group flex items-start cursor-pointer gap-3 rounded-lg px-2 py-4 border-t border-gray-100 dark:border-gray-800 transition-all duration-300 ease-out hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 active:scale-[.997] "
                       }
                     >
-                      <div
-                        className={
-                          "shrink-0 overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800 " +
-                          "hidden h-[60px] w-[80px] sm:block"
-                        }
-                      >
-                        {d.image ? (
+                      <div className="relative shrink-0 overflow-hidden rounded-lg hidden h-[60px] w-[80px] sm:block">
+                        {/* 카테고리 아트를 항상 뒤에 — 이미지 없음/로드 실패 시에도 빈 회색 박스가 아니라 브랜디드 폴백이 보임 */}
+                        <DocArt d={d} chip={c} big={false} />
+                        {d.image && (
                           <img
                             src={d.image}
                             alt=""
                             loading="lazy"
-                            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                            onError={(ev) => {
-                              ev.currentTarget.style.display = "none"
-                            }}
+                            className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                            onError={(ev) => { ev.currentTarget.style.display = "none" }}
                           />
-                        ) : (
-                          <DocArt d={d} chip={c} big={false} />
                         )}
                       </div>
 
@@ -1005,18 +998,15 @@ export default function Page() {
               </svg>
             </button>
 
-            <div className="h-[200px] w-full shrink-0 overflow-hidden bg-gray-100 dark:bg-gray-800">
-              {modal.image ? (
+            <div className="relative h-[200px] w-full shrink-0 overflow-hidden">
+              <DocArt d={modal} chip={lead(modal, chips)} big />
+              {modal.image && (
                 <img
                   src={modal.image}
                   alt=""
-                  className="h-full w-full object-cover"
-                  onError={(ev) => {
-                    ev.currentTarget.style.display = "none"
-                  }}
+                  className="absolute inset-0 h-full w-full object-cover"
+                  onError={(ev) => { ev.currentTarget.style.display = "none" }}
                 />
-              ) : (
-                <DocArt d={modal} chip={lead(modal, chips)} big />
               )}
             </div>
 
