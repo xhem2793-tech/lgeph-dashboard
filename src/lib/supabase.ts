@@ -51,16 +51,22 @@ export async function oilDaily(n = 30) {
   return rows.reverse().map((r) => ({ date: r.date as string, diesel: num(r.diesel), ron95: num(r.ron95) }))
 }
 
-export type EnergyRow = { category: string; brand: string; model: string; eff: number | null; metric: string; star: number | null; kwh: number | null }
+export type EnergyRow = { category: string; brand: string; model: string; eff: number | null; metric: string; star: number | null; kwh: number | null; spec: number | null; stype: string }
 export async function energyLabels(): Promise<EnergyRow[]> {
   // PostgREST 행 상한(1000) 대응 — offset 페이지네이션으로 전량 수집
   const all: any[] = []
   for (let off = 0; off < 8000; off += 1000) {
-    const rows = await sb(`energy_labels?select=category,brand,model_code,product_name,efficiency_val,efficiency_metric,star_rating,monthly_kwh&order=id&limit=1000&offset=${off}`)
+    const rows = await sb(`energy_labels?select=category,brand,model_code,product_name,efficiency_val,efficiency_metric,star_rating,monthly_kwh,extra&order=id&limit=1000&offset=${off}`)
     all.push(...rows)
     if (rows.length < 1000) break
   }
-  return all.map((r) => ({ category: r.category, brand: r.brand, model: r.model_code || r.product_name || "", eff: num(r.efficiency_val), metric: r.efficiency_metric, star: num(r.star_rating), kwh: num(r.monthly_kwh) }))
+  return all.map((r) => {
+    const ex = (r.extra && typeof r.extra === "object") ? r.extra : {}
+    // 스펙(세그먼트 기준): 에어컨=냉방kW, 냉장고=용량L, TV=화면inch
+    const spec = num(ex.cooling_kw) ?? num(ex.volume_l) ?? num(ex.screen_in)
+    const stype = (ex.installation || ex.ref_type || ex.tv_type || "") as string
+    return { category: r.category, brand: r.brand, model: r.model_code || r.product_name || "", eff: num(r.efficiency_val), metric: r.efficiency_metric, star: num(r.star_rating), kwh: num(r.monthly_kwh), spec, stype }
+  })
 }
 
 export async function annualGroup(groupLabel: string) {
