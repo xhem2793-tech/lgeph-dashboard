@@ -23,40 +23,20 @@ export default function RegionMapView() {
     frameRef.current?.contentWindow?.postMessage({ type: "ax-theme", theme: dark ? "dark" : "light" }, "*")
   }, [dark, mounted])
   return (
-    <div className="flex flex-col gap-3">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
-
-      <section
-        className="min-w-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm transition-shadow duration-300 hover:shadow-md"
-      >
-        {/* 우리 디자인 셸 헤더(주요뉴스·환율과 동일 어법) */}
-        <header className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
-          <span className="h-[18px] w-1 rounded bg-indigo-500" />
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역시장 지도</h2>
-          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">필리핀 17개 행정지역 · 셀아웃·경제 choropleth · 클릭 드릴다운</span>
-          <span className="ml-auto rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-[9.5px] font-bold text-gray-500 dark:text-gray-400">예시 데이터 · 실측 연결 전</span>
-        </header>
-
-        {/* 원본 지도 임베드 — 동적 캐시버스터로 항상 최신 로드(마운트 후 렌더) */}
-        {cb ? (
-          <iframe
-            ref={frameRef}
-            src={"/region-map/index.html" + cb + "&theme=" + (dark ? "dark" : "light")}
-            title="필리핀 지역시장 인터랙티브 지도"
-            className="block w-full border-0"
-            style={{ height: "96vh", minHeight: 940 }}
-            onLoad={() => frameRef.current?.contentWindow?.postMessage({ type: "ax-theme", theme: dark ? "dark" : "light" }, "*")}
-          />
-        ) : (
-          <div className="w-full animate-pulse bg-gray-50 dark:bg-gray-900" style={{ height: "96vh", minHeight: 940 }} />
-        )}
-      </section>
-
-      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
-        원본 디자인 핸드오프 임베드(별개 구성 보존) · 데이터 교체 위치 =
-        <code className="mx-1 rounded bg-gray-100 dark:bg-gray-800 px-1 py-0.5 text-[10px] text-gray-500 dark:text-gray-400">public/region-map/data/</code>
-        · Supabase 직접연동은 원본 HTML 상단 <code className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-0.5 text-[10px] text-gray-500 dark:text-gray-400">SUPABASE</code> 설정
-      </p>
+    // 풀블리드 — 카드 박스·이중 헤더·개발자 푸터 제거. 지도가 페이지 표면과 하나로 읽히게.
+    <div className="min-w-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "fadeUp .4s cubic-bezier(.16,1,.3,1) both" }}>
+      {cb ? (
+        <iframe
+          ref={frameRef}
+          src={"/region-map/index.html" + cb + "&theme=" + (dark ? "dark" : "light")}
+          title="필리핀 지역시장 인터랙티브 지도"
+          className="block w-full border-0"
+          style={{ height: "calc(100vh - 108px)", minHeight: 900 }}
+          onLoad={() => frameRef.current?.contentWindow?.postMessage({ type: "ax-theme", theme: dark ? "dark" : "light" }, "*")}
+        />
+      ) : (
+        <div className="w-full animate-pulse bg-gray-50 dark:bg-gray-900" style={{ height: "calc(100vh - 108px)", minHeight: 900 }} />
+      )}
     </div>
   )
 }
