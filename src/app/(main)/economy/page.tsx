@@ -15,16 +15,16 @@ import { useLang } from "@/lib/i18n"
 type NavItem = { id: string; ko: string; sub: string; count: string; group: string; accent?: boolean; star?: boolean; subs: string[] }
 const NAV: NavItem[] = [
   { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도 + 지역 물가", count: "17", group: "전국", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운", "지역 물가 히트맵"] },
-  { id: "core", ko: "일일동향", sub: "환율·유가 최근 30일 추이", count: "일간", group: "핵심", subs: ["환율 30일", "유가 30일"] },
+  { id: "core", ko: "일일동향", sub: "환율·유가 최근 30일 추이", count: "2", group: "핵심", subs: ["환율 30일", "유가 30일"] },
   { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별 물가", count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
   { id: "growth", ko: "국민계정·성장", sub: "GDP·투자·건설·산업생산·가동률", count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
   { id: "labor", ko: "고용·임금·소득", sub: "실업률·최저임금·OFW 송금", count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
   { id: "sentiment", ko: "기업·소비 심리", sub: "소비자심리 CCI·기업심리 BCI", count: "5", group: "실물경제", subs: ["소비자심리 CCI", "기업심리 BCI", "내구재 구매의향"] },
-  { id: "fx", ko: "환율·원가", sub: "대달러·실효환율·역내 통화·수입원가", count: "FX", group: "외환·금융", subs: ["동남아 6개국 통화", "₱/USD 기본 환율", "실효환율 NEER·REER", "수입 원가 영향"] },
+  { id: "fx", ko: "환율·원가", sub: "대달러·실효환율·역내 통화·수입원가", count: "7", group: "외환·금융", subs: ["동남아 6개국 통화", "₱/USD 기본 환율", "실효환율 NEER·REER", "수입 원가 영향"] },
   { id: "rates", ko: "통화·금리·신용", sub: "기준금리·통화량 M3·가계신용", count: "9", group: "외환·금융", subs: ["기준금리 BSP", "통화량 M3", "가계·카드 대출"] },
   { id: "appliance", ko: "가전 선행지표", sub: "가전 물가·PPI·수입액·실질가격 갭", count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
-  { id: "energy", ko: "에너지 라벨", sub: "에어컨·냉장고·TV 브랜드별 에너지효율·별점(DOE)", count: "4K+", group: "가전 인텔리전스", star: true, subs: ["브랜드별 효율", "5성 비중", "카테고리별"] },
-  { id: "online", ko: "온라인 시장", sub: "이커머스 규모·디지털/통신 침투", count: "민간", group: "가전 인텔리전스", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
+  { id: "energy", ko: "에너지 라벨", sub: "에어컨·냉장고·TV 브랜드별 에너지효율·별점(DOE)", count: "4", group: "가전 인텔리전스", star: true, subs: ["브랜드별 효율", "5성 비중", "카테고리별"] },
+  { id: "online", ko: "온라인 시장", sub: "이커머스 규모·디지털/통신 침투", count: "3", group: "가전 인텔리전스", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
 ]
 
 function Soon({ label }: { label: string }) {
@@ -81,9 +81,7 @@ export default function Page() {
                       {(n.star || n.accent) && <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (n.star ? "bg-amber-400" : "bg-violet-400")} aria-hidden />}
                       {n.ko}
                     </span>
-                    {/^[\d,]+\+?$/.test(n.count)
-                      ? <span className={"shrink-0 rounded-full px-1.5 py-0.5 text-[9.5px] font-semibold tabular-nums " + (active === n.id ? "bg-indigo-100 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400" : "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500")}>{n.count}</span>
-                      : <span className="shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 ring-1 ring-inset ring-gray-200 dark:ring-gray-700">{n.count}</span>}
+                    <span className="num shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{n.count}</span>
                   </button>
                 </div>
               ))}

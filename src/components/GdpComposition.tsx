@@ -111,8 +111,8 @@ export default function GdpComposition() {
             }
             const foc = hsub != null ? subPie[hsub] : null
             return (
-              <div className="mt-2 flex items-center gap-3">
-                <svg viewBox="0 0 150 150" width="132" style={{ display: "block", flexShrink: 0 }} onMouseLeave={() => setHsub(null)}>
+              <div className="mt-2 flex items-center justify-center gap-4">
+                <svg viewBox="0 0 150 150" width="128" style={{ display: "block", flexShrink: 0 }} onMouseLeave={() => setHsub(null)}>
                   {subPie.map((s, i) => (
                     <path key={s.name} d={arc(s.a0, s.a1)} fill={s.col} opacity={hsub == null || hsub === i ? 1 : 0.35} onMouseEnter={() => setHsub(i)} style={{ transition: "opacity .18s", cursor: "default", animation: "fadeIn .5s ease both", animationDelay: i * 0.02 + "s" }} />
                   ))}
