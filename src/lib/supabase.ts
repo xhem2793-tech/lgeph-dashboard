@@ -15,8 +15,9 @@ const num = (v: any) => (v == null ? null : Number(v))
 
 export async function latestMacro(indicators: string[]) {
   const list = indicators.join(",")
+  // national 데이터는 geo='PHILIPPINES' 또는 'PH' 양쪽에 존재 → 둘 다 조회 후 최신 날짜 우선
   const rows = await sb(
-    `macro_indicators?geo=eq.PHILIPPINES&indicator=in.(${list})&select=indicator,value,period_date&order=period_date.desc`,
+    `macro_indicators?geo=in.(PHILIPPINES,PH)&indicator=in.(${list})&select=indicator,value,period_date&order=period_date.desc`,
   )
   const map: Record<string, { value: number; date: string }> = {}
   for (const r of rows) if (!map[r.indicator]) map[r.indicator] = { value: num(r.value)!, date: r.period_date }

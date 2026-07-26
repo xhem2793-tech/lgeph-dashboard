@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import DailyIndicators from "@/components/DailyIndicators"
+import KeyScorecards from "@/components/KeyScorecards"
 import FxView from "@/components/FxView"
 import RegionMapView from "@/components/RegionMapView"
 import RegionPriceExtras from "@/components/RegionPriceExtras"
@@ -21,8 +22,7 @@ const NAV: NavItem[] = [
   { id: "fx", ko: "환율·원가", sub: "대달러·실효환율·역내 통화·수입원가", count: "FX", group: "외환·금융", subs: ["동남아 6개국 통화", "₱/USD 기본 환율", "실효환율 NEER·REER", "수입 원가 영향"] },
   { id: "rates", ko: "통화·금리·신용", sub: "기준금리·통화량 M3·가계신용", count: "9", group: "외환·금융", subs: ["기준금리 BSP", "통화량 M3", "가계·카드 대출"] },
   { id: "appliance", ko: "가전 선행지표", sub: "가전 물가·PPI·수입액·실질가격 갭", count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
-  { id: "market", ko: "가전시장·제품별", sub: "에어컨·냉장고·TV·세탁기 LG점유·ASP·할인갭", count: "1,900+", group: "가전 인텔리전스", accent: true, subs: ["LG 점유·ASP", "제품별 할인갭"] },
-  { id: "radar", ko: "사업 레이더", sub: "원가압박·OFW구매력·실질물가·TCO", count: "파생", group: "가전 인텔리전스", star: true, subs: ["원가압박 지수", "실질 구매력·TCO"] },
+  // 미구축 플레이스홀더(가전시장·제품별=경쟁사가격과 중복, 사업 레이더=파생지표 미구축) — 데이터 준비 시 재노출
 ]
 
 function Soon({ label }: { label: string }) {
@@ -41,7 +41,7 @@ export default function Page() {
 
   function view() {
     if (active === "regions") return <div className="flex flex-col gap-3"><RegionMapView /><RegionPriceExtras /></div>
-    if (active === "core") return <DailyIndicators />
+    if (active === "core") return <div className="flex flex-col gap-1"><DailyIndicators /><KeyScorecards /></div>
     if (active === "fx") return <FxView />
     if (active === "prices") return <PricesView />
     if (active === "growth") return <GrowthView />
