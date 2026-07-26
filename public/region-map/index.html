@@ -205,6 +205,28 @@
   .panel-head .ey{font-size:11px;letter-spacing:.28em;color:var(--muted);font-weight:600;text-transform:uppercase}
   .panel-head .ttl{font-size:20px;font-weight:800;margin-top:9px;letter-spacing:-.01em}
 
+  /* 2단 지표 내비 */
+  .metric-nav{padding:14px 20px 12px;border-bottom:1px solid var(--hair)}
+  .cat-tabs{display:flex;flex-wrap:wrap;gap:6px}
+  .cat-tab{font-family:inherit;font-size:12px;font-weight:700;padding:6px 11px;border-radius:999px;border:1.3px solid var(--line);background:none;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+  .cat-tab:hover{border-color:var(--accent);color:var(--accent)}
+  .cat-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
+  .metric-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+  .chip{font-family:inherit;font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:8px;border:1px solid var(--line);background:var(--accent-soft);color:var(--ink);cursor:pointer;transition:all .15s}
+  .chip:hover{border-color:var(--accent)}
+  .chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700}
+  .metric-src{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;font-size:11px;color:var(--muted);text-decoration:none;padding:7px 10px;border-radius:8px;background:var(--accent-soft)}
+  .metric-src .ms-t b{color:var(--ink);font-weight:800;background:rgba(99,102,241,.14);padding:0 5px;border-radius:4px}
+  .metric-src .ms-x{font-weight:800;color:var(--accent);white-space:nowrap}
+  .metric-src .ms-x.ms-none{color:var(--muted)}
+  .metric-src[href]:hover .ms-x{text-decoration:underline}
+  .rank-head{padding:11px 32px 3px;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.01em}
+  .list-item .rk{flex:none;width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:50%;font-size:12px;font-weight:800;background:var(--accent-soft);color:var(--muted)}
+  .list-item .rk.top{background:var(--accent);color:#fff}
+  .list-item .rv{margin-left:auto;flex:none;font-size:13px;font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;text-align:right}
+  .list-item.active .rv{color:#fff}
+  .list-item.active .rk{background:#fff;color:var(--accent)}
+
   .panel-body{flex:1;overflow-y:auto;overflow-x:hidden}
   .panel-body::-webkit-scrollbar{width:8px}
   .panel-body::-webkit-scrollbar-thumb{background:#dcdad3;border-radius:8px}
@@ -363,15 +385,6 @@
     <!-- KPI 오버레이 제거: 셀아웃 KPI는 상세 패널에서 확인 -->
     <span id="hl-tag" style="display:none"></span><span id="hl-name" style="display:none"></span><span id="hl-per" style="display:none"></span><span id="hl-sell" style="display:none"></span><span id="hl-yoy" style="display:none"></span><span id="hl-thirdk" style="display:none"></span><span id="hl-third" style="display:none"></span>
     <div class="mapcontrols">
-      <div class="mapctrl" id="mapctrl">
-        <div class="mc-head" id="mc-head">
-          <span class="mc-cur" id="mc-cur">전체</span>
-          <svg class="mc-dd" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
-        </div>
-        <div class="mc-body">
-          <div class="mc-tabs" id="mapmetrics"></div>
-        </div>
-      </div>
       <div class="mapbottom" id="mapbottom">
         <div class="maplegend" id="legend"></div>
         <div class="monthbar" id="monthbar" style="display:none">
@@ -387,10 +400,16 @@
 
   <aside class="panel">
     <div class="panel-head">
-      <div class="ey">Regions</div>
-      <div class="ttl">지역 목록</div>
+      <div class="ey">Indicators</div>
+      <div class="ttl">지표 · 지역 랭킹</div>
+    </div>
+    <div class="metric-nav">
+      <div class="cat-tabs" id="cat-tabs"></div>
+      <div class="metric-chips" id="metric-chips"></div>
+      <a class="metric-src" id="metric-src" target="_blank" rel="noopener" style="display:none"></a>
     </div>
     <div class="panel-body">
+      <div class="rank-head" id="rank-head" style="display:none"></div>
       <div class="list" id="list"></div>
     </div>
     <div class="detail" id="detail">
@@ -719,6 +738,20 @@ const MAPMETRICS=[
   {key:"rice_cpi",  label:"쌀 물가",    monthly:true, div:true, val:name=>mVal(name,"rice_cpi"),  fmt:v=>(v>0?"+":"")+v+"%", src:"PSA 소비자물가(CPI)", yr:"월별"},
   {key:"transport_cpi",label:"운송 물가",monthly:true,div:true, val:name=>mVal(name,"transport_cpi"),fmt:v=>(v>0?"+":"")+v+"%", src:"PSA 소비자물가(CPI)", yr:"월별"}
 ];
+// 지표별 원본 딥링크(재현·검증용)
+const OSTAT="https://openstat.psa.gov.ph/PXWeb/pxweb/en/DB/DB__";
+const METRIC_URL={
+  grdp_pc:OSTAT+"2B__GP__RG__PCI/0772B5BPCP1.px", grdp_size:OSTAT+"2B__GP__RG__GRD/0012B5BPGD1.px",
+  pop_n:OSTAT+"1A__PO/0011A6DPHH0.px", income_real:OSTAT+"1E__IE/0021E3AIPI0.px",
+  poverty:OSTAT+"3D/0013C3DP010.px",
+  own_ref:"https://www.statcompiler.com/en/", own_tv:"https://www.statcompiler.com/en/",
+  electrif:"https://www.statcompiler.com/en/", ref_gap:"https://www.statcompiler.com/en/",
+  appl_cpi:"https://psa.gov.ph/statistics/consumer-price-index", aircon_cpi:"https://psa.gov.ph/statistics/consumer-price-index",
+  food_cpi:"https://psa.gov.ph/statistics/consumer-price-index", elec_cpi:"https://psa.gov.ph/statistics/consumer-price-index",
+  rice_cpi:"https://psa.gov.ph/statistics/consumer-price-index", transport_cpi:"https://psa.gov.ph/statistics/consumer-price-index",
+  opp:"" // 자체 합성(구성지표는 각 항목 링크 참조)
+};
+function metricUrl(k){ return METRIC_URL[k]||""; }
 let curMapMetric="none";
 function metricColor(m,v,ext){
   if(m.div){
@@ -732,18 +765,29 @@ function metricColor(m,v,ext){
 function applyChoropleth(key){
   curMapMetric=key;
   const m=MAPMETRICS.find(x=>x.key===key);
-  const cur=document.getElementById("mc-cur"); if(cur&&m) cur.textContent=m.label;
   const mb=document.getElementById("monthbar"); if(mb) mb.style.display=(m&&m.monthly&&MONTHS.length>1)?"flex":"none"; // 월 선택은 인플레이션 지표에만
-  document.querySelectorAll("#mapmetrics .mc-tab").forEach(b=>b.classList.toggle("on",b.dataset.k===key));
-  if(m.none){
+  document.querySelectorAll("#metric-chips .chip").forEach(b=>b.classList.toggle("on",b.dataset.k===key));
+  // 출처 딥링크
+  const srcEl=document.getElementById("metric-src");
+  if(srcEl){
+    if(m && !m.none && (m.src||metricUrl(key))){
+      const u=metricUrl(key);
+      srcEl.style.display="flex";
+      srcEl.innerHTML=`<span class="ms-t">출처 · ${m.src||""}${m.yr?` <b>${m.yr}</b>`:""}</span>`+(u?`<span class="ms-x">원본 ↗</span>`:`<span class="ms-x ms-none">합성</span>`);
+      if(u){ srcEl.href=u; } else { srcEl.removeAttribute("href"); }
+    } else srcEl.style.display="none";
+  }
+  if(!m || m.none){
     if(!selected) g.selectAll("path.region").style("fill",null);
     document.getElementById("legend").innerHTML="";
+    renderRanking(null);
     return;
   }
   const vals=features.map(f=>m.val(f.properties.REGION)).filter(v=>!isNaN(v));
   const ext={min:Math.min(...vals),max:Math.max(...vals)};
   if(!selected) g.selectAll("path.region").style("fill",f=>{ const v=m.val(f.properties.REGION); return isNaN(v)?"#eceae4":metricColor(m,v,ext); }); // 데이터 없는 지역=중립 회색(검정 방지)
   renderLegend(m,ext);
+  renderRanking(key);
 }
 function renderLegend(m,ext){
   const grad=m.div?"linear-gradient(90deg,#e11d48,#f4f3ef,#4f46e5)":"linear-gradient(90deg,#eef2ff,#4338ca)";
@@ -761,19 +805,22 @@ const MAP_GROUPS=[
   {label:"가전시장 (내부·예시)", keys:["growth","contrib","percap","potential"]},
   {label:"물가 (전년비)", keys:["appl_cpi","aircon_cpi","food_cpi","elec_cpi","rice_cpi","transport_cpi"]},
 ];
-function buildMapTabs(){
-  const box=document.getElementById("mapmetrics"); box.innerHTML="";
-  const mkBtn=(m)=>{ const b=document.createElement("button"); b.className="mc-tab"+(m.key===curMapMetric?" on":""); b.dataset.k=m.key; b.textContent=m.label.replace(/\s*\(.*\)/,""); b.onclick=()=>{ applyChoropleth(m.key); document.getElementById("mapctrl").classList.add("picked"); }; return b; };
-  // 전체(none) 최상단
-  const none=MAPMETRICS.find(m=>m.none); if(none){ const nb=mkBtn(none); nb.style.flex="1 1 100%"; box.appendChild(nb); }
-  MAP_GROUPS.forEach(g=>{
-    const items=g.keys.map(k=>MAPMETRICS.find(m=>m.key===k)).filter(Boolean);
-    if(!items.length) return;
-    const h=document.createElement("div"); h.className="mc-grp"; h.textContent=g.label; box.appendChild(h);
-    items.forEach(m=>box.appendChild(mkBtn(m)));
-  });
-  const mc=document.getElementById("mapctrl");
-  if(mc && !mc._mcBound){ mc._mcBound=true; mc.addEventListener("mouseleave",()=>mc.classList.remove("picked")); }
+const NAVCATS=[{label:"전체",none:true}].concat(MAP_GROUPS);
+const catShort=g=>g.label.replace(/\s*\(.*\)/,"");
+function buildCategoryNav(){
+  const tabs=document.getElementById("cat-tabs"); if(!tabs) return; tabs.innerHTML="";
+  NAVCATS.forEach((g,i)=>{ const b=document.createElement("button"); b.className="cat-tab"; b.dataset.i=i; b.textContent=catShort(g); b.onclick=()=>selectCat(i); tabs.appendChild(b); });
+  selectCat(0); // 기본: 전체
+}
+function selectCat(i){
+  const g=NAVCATS[i];
+  document.querySelectorAll("#cat-tabs .cat-tab").forEach(b=>b.classList.toggle("on",+b.dataset.i===i));
+  const chips=document.getElementById("metric-chips"); chips.innerHTML="";
+  if(g.none){ chips.style.display="none"; applyChoropleth("none"); return; }
+  chips.style.display="flex";
+  const items=g.keys.map(k=>MAPMETRICS.find(m=>m.key===k)).filter(Boolean);
+  items.forEach(m=>{ const c=document.createElement("button"); c.className="chip"; c.dataset.k=m.key; c.textContent=catShort(m); c.onclick=()=>applyChoropleth(m.key); chips.appendChild(c); });
+  if(items[0]) applyChoropleth(items[0].key); // 카테고리 첫 지표 자동
 }
 function buildMonthBar(){
   const sl=document.getElementById("m-slider"), lbl=document.getElementById("m-label");
@@ -936,8 +983,8 @@ d3.json("data/ph-regions.geojson").then(geo=>{
   try{ new ResizeObserver(()=>{ if(!selected) fitMap(); }).observe(document.querySelector(".stage")); }
   catch(e){ window.addEventListener("resize",()=>{ if(!selected) fitMap(); }); }
 
+  buildCategoryNav();
   buildList();
-  buildMapTabs();
   applyChoropleth(curMapMetric);
   loadEconomic();
   loadRegionalCpi();
@@ -1017,22 +1064,32 @@ function closeProvince(){
 }
 
 // ── side panel list ──
-function buildList(){
-  const list=d3.select("#list");
-  const order=features.slice().sort((a,b)=>{
-    const ca=DATA[a.properties.REGION]?.code||"", cb=DATA[b.properties.REGION]?.code||"";
-    return ca.localeCompare(cb);
-  });
-  order.forEach(d=>{
-    const info=DATA[d.properties.REGION]||{};
-    const btn=list.append("button").attr("class","list-item").attr("data-name",d.properties.REGION);
-    btn.html(`<span class="code">${info.code||"—"}</span>
-      <span class="nm">${info.ko||d.properties.REGION}<small>${d.properties.REGION}</small></span>`);
+function buildList(){ renderRanking(curMapMetric&&curMapMetric!=="none"?curMapMetric:null); }
+function renderRanking(key){
+  const list=d3.select("#list"); list.selectAll("*").remove();
+  const head=document.getElementById("rank-head");
+  const m=key?MAPMETRICS.find(x=>x.key===key):null;
+  let order=features.slice();
+  if(m && !m.none){
+    order.sort((a,b)=>{ const va=m.val(a.properties.REGION), vb=m.val(b.properties.REGION); return (isNaN(vb)?-Infinity:vb)-(isNaN(va)?-Infinity:va); });
+    if(head){ head.style.display="block"; head.textContent=catShort(m)+" · 높은 순"; }
+  } else {
+    order.sort((a,b)=>(DATA[a.properties.REGION]?.code||"").localeCompare(DATA[b.properties.REGION]?.code||""));
+    if(head) head.style.display="none";
+  }
+  order.forEach((d,i)=>{
+    const name=d.properties.REGION, info=DATA[name]||{};
+    const v=(m&&!m.none)?m.val(name):NaN;
+    const btn=list.append("button").attr("class","list-item").attr("data-name",name);
+    const lead=(m&&!m.none)?`<span class="rk${i<3?" top":""}">${isNaN(v)?"–":(i+1)}</span>`:`<span class="code">${info.code||"—"}</span>`;
+    const valTxt=(m&&!m.none&&!isNaN(v))?`<span class="rv">${m.fmt(v)}</span>`:"";
+    btn.html(`${lead}<span class="nm">${info.ko||name}<small>${name}</small></span>${valTxt}`);
     btn.on("click",()=>selectRegion(d));
     btn.on("mouseenter",()=>{ if(!selected){ showLabel(d,false);
         g.selectAll("path.region").style("filter",x=>x===d?"brightness(1.1)":null).style("stroke-width",x=>x===d?2.4:null);}});
     btn.on("mouseleave",()=>{ if(!selected){ hideLabels(); g.selectAll("path.region").style("filter",null).style("stroke-width",null);}});
   });
+  if(selected) markList(selected.properties.REGION);
 }
 function markList(name){
   d3.selectAll(".list-item").classed("active",function(){return this.getAttribute("data-name")===name;});
