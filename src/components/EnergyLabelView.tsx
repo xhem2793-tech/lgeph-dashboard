@@ -118,6 +118,34 @@ function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { la
   )
 }
 
+// 산점도 — 효율(X, 높을수록 우측=좋음) vs 월전력(Y, 낮을수록 상단=좋음). LG 강조
+function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: number; isLG: boolean }[]; metric: string }) {
+  const [h, setH] = useState<number | null>(null)
+  if (pts.length < 2) return <div className="flex h-full min-h-[160px] w-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  const W = 300, H = 160, L = 30, R = 10, T = 12, B = 24
+  const exs = pts.map((p) => p.eff), kys = pts.map((p) => p.kwh)
+  const ex0 = Math.min(...exs), ex1 = Math.max(...exs), ky0 = Math.min(...kys), ky1 = Math.max(...kys)
+  const X = (v: number) => L + (W - L - R) * ((v - ex0) / ((ex1 - ex0) || 1))
+  const Y = (v: number) => T + (H - T - B) * ((v - ky0) / ((ky1 - ky0) || 1)) // 높은 kWh=아래
+  return (
+    <div className="w-full">
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
+        <line x1={L} y1={T} x2={L} y2={H - B} stroke="#e5e7eb" strokeWidth="0.8" className="dark:stroke-gray-800" />
+        <line x1={L} y1={H - B} x2={W - R} y2={H - B} stroke="#e5e7eb" strokeWidth="0.8" className="dark:stroke-gray-800" />
+        <text x={W - R} y={H - B + 9} textAnchor="end" fontSize="7" fill="#94a3b8">효율 {metric}→ 좋음</text>
+        <text x={L - 3} y={T + 2} textAnchor="end" fontSize="7" fill="#94a3b8">저전력</text>
+        {pts.map((p, i) => (
+          <g key={p.name} onMouseEnter={() => setH(i)} style={{ cursor: "default" }}>
+            <title>{p.name} · {metric} {p.eff.toFixed(2)} · {Math.round(p.kwh)}kWh/월</title>
+            <circle cx={X(p.eff)} cy={Y(p.kwh)} r={p.isLG ? 5 : 3.4} fill={p.isLG ? TEAL : "#cbd5e1"} stroke={p.isLG ? "#fff" : "none"} strokeWidth={p.isLG ? 1.2 : 0} className={p.isLG ? "" : "dark:fill-gray-600"} opacity={h == null || h === i || p.isLG ? 1 : 0.5} style={{ animation: "fadeIn .5s ease both", animationDelay: i * 0.02 + "s" }} />
+            {(p.isLG || h === i) && <text x={X(p.eff)} y={Y(p.kwh) - 7} textAnchor="middle" fontSize="8" fontWeight="700" className={p.isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-300"}>{p.name}</text>}
+          </g>
+        ))}
+      </svg>
+      <div className="mt-1 text-[9.5px] text-gray-400">우측·상단일수록 고효율·저전력(우수) · <span className="text-teal-600 dark:text-teal-400 font-semibold">●LG</span></div>
+    </div>
+  )
+}
 const avgOf = (a: number[]) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null
 
 export default function EnergyLabelView() {
@@ -155,10 +183,11 @@ export default function EnergyLabelView() {
   const lgR = rank.find((r) => /^lg$/i.test(r.name)); const lgRk = lgR ? rank.indexOf(lgR) + 1 : 0
   const gap = lgR && rank[0] ? ((rank[0].v - lgR.v) / lgR.v) * 100 : null
 
-  const byTypeChart = useMemo(() => !hasType ? [] : types.map((tp) => {
-    const rs = catRows.filter((r) => typeOf(cat, r.stype) === tp)
-    return { label: tp, lg: avgOf(rs.filter((r) => /^lg$/i.test(r.brand)).map((r) => r.eff!)), mkt: avgOf(rs.map((r) => r.eff!)) ?? 0 }
-  }).filter((g) => g.mkt > 0), [catRows, types, hasType, cat])
+  const scatterData = useMemo(() => {
+    const by: Record<string, { effs: number[]; kwhs: number[] }> = {}
+    for (const r of segRows) { const o = (by[r.brand] = by[r.brand] || { effs: [], kwhs: [] }); if (r.eff != null) o.effs.push(r.eff); if (r.kwh != null && r.kwh > 0) o.kwhs.push(r.kwh) }
+    return Object.entries(by).map(([name, o]) => ({ name, eff: avgOf(o.effs)!, kwh: avgOf(o.kwhs)!, isLG: /^lg$/i.test(name), n: o.effs.length })).filter((x) => x.eff != null && x.kwh != null && x.n >= 2)
+  }, [segRows])
   const bySegChart = useMemo(() => segs.map((s) => {
     const rs = catRows.filter((r) => byType(r) && inSeg(r, s))
     return { label: s.k, lg: avgOf(rs.filter((r) => /^lg$/i.test(r.brand)).map((r) => r.eff!)), mkt: avgOf(rs.map((r) => r.eff!)) ?? 0 }
@@ -246,8 +275,8 @@ export default function EnergyLabelView() {
           ) : (
             <>
             <div className="grid items-stretch gap-4 sm:grid-cols-2">
-              <Sub idx={0} title="브랜드 효율 랭킹" seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} note={lgR ? <>같은 스펙 내 평균 {cur.metric}. LG {lgRk}위·리더 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? "낮아 최고효율 격차가 곧 개발 타깃" : "높아 프리미엄 소구 가능"}. 막대 hover 시 모델수.</> : "이 세그먼트 LG 모델 없음"}><HBar items={rank} hiName="LG" /></Sub>
-              {hasType && <Sub idx={1} title="설치형별 LG vs 시장" note={<>폼팩터별 평균 {cur.metric}. LG가 <b>{byTypeChart.filter((g) => g.lg != null).sort((a, b) => (b.lg! - b.mkt) - (a.lg! - a.mkt))[0]?.label || "—"}</b>에서 상대 강세 → 해당 폼팩터에 프리미엄·마케팅 집중, 약세 폼팩터는 효율 스펙 보강.</>}><GroupBars groups={byTypeChart} /></Sub>}
+              <Sub idx={0} title="브랜드 효율 랭킹" seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} note={lgR ? <>같은 스펙 내 평균 {cur.metric}. LG {lgRk}위·리더 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? "낮아 최고효율 격차가 곧 개발 타깃" : "높아 프리미엄 소구 가능"}. 막대 hover 시 모델수.</> : <><b>LG는 이 세그먼트에 등록 모델 없음</b>(현지 미출시) — 시장 브랜드만 비교. 진입 검토 시 벤치마크로 활용.</>}><HBar items={rank} hiName="LG" /></Sub>
+              <Sub idx={1} title="효율 ↔ 월전력 관계" seg={seg?.k} note={<>가로=효율({cur.metric}), 세로=월 소비전력. <b>우측·상단</b>이 고효율·저전력(우수). LG 점 위치로 <b>효율 대비 실제 전력소비</b> 경쟁력 확인.</>}><Scatter pts={scatterData} metric={cur.metric} /></Sub>
               <Sub idx={2} title="용량대별 LG vs 시장" note={<>용량 세그먼트별 평균 {cur.metric}. {weak ? <>LG는 <b className="text-rose-600 dark:text-rose-400">{weak.label}</b>에서 시장 대비 열세 — 차기 라인업의 효율 스펙 상향 1순위.</> : "세그먼트별 LG 포지션."}</>}><GroupBars groups={bySegChart} /></Sub>
               <Sub idx={3} title="월 전기요금 (TCO)" seg={seg?.k} note={<>평균 월 소비전력×가정용 전기료(Meralco ₱{rate.toFixed(1)}/kWh{rateAsOf?" · "+rateAsOf:""}) 추정. 효율이 높을수록 전기요금↓ — <b>에너지 절감액을 판매 메시지로 전환</b>(고효율 프리미엄 정당화).</>}>
                 <div className="w-full">{tco.length === 0 ? <div className="flex h-28 items-center justify-center text-[12px] text-gray-400">데이터 부족</div> : (() => {
