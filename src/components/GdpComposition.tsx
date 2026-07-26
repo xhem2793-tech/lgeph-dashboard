@@ -17,22 +17,35 @@ const SUB: Record<string, string[]> = {
   "농·임·어업": ["작물", "축산·가금", "수산·양식", "임업·지원"],
 }
 const parentOf = (ind: string) => Object.keys(SUB).find((p) => SUB[p].includes(ind)) || ""
-const colOf = (ind: string) => MAJ.find((m) => m.key === parentOf(ind))?.color || "#94a3b8"
 
 export default function GdpComposition() {
   const [rows, setRows] = useState<{ indicator: string; year: number; value: number }[]>([])
   const [loaded, setLoaded] = useState(false)
   const [mode, setMode] = useState<"maj" | "sub">("maj")
   const [hi, setHi] = useState<number | null>(null)
+  const [hsub, setHsub] = useState<number | null>(null)
   const dark = useIsDark()
   useEffect(() => { annualGroup("3대 산업 GDP 비중").then((r) => { setRows(r); setLoaded(true) }).catch(() => setLoaded(true)) }, [])
 
   const years = useMemo(() => Array.from(new Set(rows.filter((r) => MAJ.some((m) => m.key === r.indicator)).map((r) => r.year))).sort(), [rows])
   const byYear = useMemo(() => { const m: Record<number, Record<string, number>> = {}; for (const r of rows) if (MAJ.some((x) => x.key === r.indicator)) (m[r.year] = m[r.year] || {})[r.indicator] = r.value; return m }, [rows])
   const latestYr = years[years.length - 1]
-  const subLatest = useMemo(() => {
+  const SHADES: Record<string, string[]> = {
+    "서비스업": ["#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe"],
+    "산업": ["#d97706", "#f59e0b", "#fbbf24", "#fcd34d"],
+    "농·임·어업": ["#059669", "#10b981", "#34d399", "#6ee7b7"],
+  }
+  const subPie = useMemo(() => {
     const all = Object.keys(SUB).flatMap((p) => SUB[p])
-    return rows.filter((r) => r.year === latestYr && all.includes(r.indicator)).map((r) => ({ name: r.indicator, value: r.value, col: colOf(r.indicator) })).sort((a, b) => b.value - a.value)
+    const list = rows.filter((r) => r.year === latestYr && all.includes(r.indicator)).map((r) => ({ name: r.indicator, value: r.value })).sort((a, b) => b.value - a.value)
+    const tot = list.reduce((s, x) => s + x.value, 0) || 1
+    const ipar: Record<string, number> = {}; let ang = -Math.PI / 2
+    return list.map((s) => {
+      const p = parentOf(s.name); const ii = (ipar[p] = (ipar[p] ?? -1) + 1)
+      const col = (SHADES[p] || ["#94a3b8"])[ii % (SHADES[p]?.length || 1)]
+      const frac = s.value / tot, a0 = ang, a1 = ang + frac * 2 * Math.PI; ang = a1
+      return { ...s, col, a0, a1, pct: frac * 100, parent: p }
+    })
   }, [rows, latestYr])
 
   const gray = "#94a3b8"
@@ -45,7 +58,7 @@ export default function GdpComposition() {
 
   return (
     <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
-      <style>{"@keyframes growBar{from{transform:scaleY(0);opacity:.3}to{transform:scaleY(1);opacity:1}}@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}"}</style>
+      <style>{"@keyframes growBar{from{transform:scaleY(0);opacity:.3}to{transform:scaleY(1);opacity:1}}@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}"}</style>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">GDP 산업구조</h3>
         <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">CE·B2B</span>
@@ -87,24 +100,35 @@ export default function GdpComposition() {
         </>
       ) : (
         <>
-          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px]">
-            {MAJ.map((m) => <span key={m.key} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: m.color }} /><span className="text-gray-600 dark:text-gray-300">{m.key}</span></span>)}
-            <span className="text-gray-400 dark:text-gray-500">· {latestYr}년 세부 비중</span>
-          </div>
-          {!loaded ? <div className="mt-2 h-[220px] animate-pulse rounded bg-gray-50 dark:bg-gray-800/40" /> : (
-            <div className="mt-2 flex flex-col gap-1.5">
-              {subLatest.map((s, i) => {
-                const pct = s.value * 100, max = (subLatest[0]?.value || 1) * 100
-                return (
-                  <div key={s.name} className="flex items-center gap-2">
-                    <span className="w-[92px] shrink-0 truncate text-right text-[10.5px] text-gray-600 dark:text-gray-300" title={s.name}>{s.name}</span>
-                    <span className="h-3.5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800"><span className="block h-full rounded" style={{ width: (pct / max * 100) + "%", background: s.col, animation: "growX .5s cubic-bezier(.16,1,.3,1) both", animationDelay: (i * 0.03) + "s", transformOrigin: "left" }} /></span>
-                    <span className="w-9 shrink-0 text-right text-[10.5px] font-semibold tabular-nums text-gray-700 dark:text-gray-200">{pct.toFixed(1)}%</span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+          <div className="mt-1.5 text-[10.5px] text-gray-400 dark:text-gray-500">{latestYr}년 세부 산업 비중 · 색=상위산업</div>
+          {!loaded ? <div className="mt-2 h-[150px] animate-pulse rounded bg-gray-50 dark:bg-gray-800/40" /> : (() => {
+            const cx = 74, cy = 74, R = 58, ri = 34
+            const arc = (a0: number, a1: number) => {
+              const p = (a: number, r: number) => [cx + r * Math.cos(a), cy + r * Math.sin(a)]
+              const [x0, y0] = p(a0, R), [x1, y1] = p(a1, R), [xi1, yi1] = p(a1, ri), [xi0, yi0] = p(a0, ri)
+              const lg = a1 - a0 > Math.PI ? 1 : 0
+              return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${R} ${R} 0 ${lg} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} L${xi1.toFixed(1)} ${yi1.toFixed(1)} A${ri} ${ri} 0 ${lg} 0 ${xi0.toFixed(1)} ${yi0.toFixed(1)} Z`
+            }
+            const foc = hsub != null ? subPie[hsub] : null
+            return (
+              <div className="mt-2 flex items-center gap-3">
+                <svg viewBox="0 0 150 150" width="132" style={{ display: "block", flexShrink: 0 }} onMouseLeave={() => setHsub(null)}>
+                  {subPie.map((s, i) => (
+                    <path key={s.name} d={arc(s.a0, s.a1)} fill={s.col} opacity={hsub == null || hsub === i ? 1 : 0.35} onMouseEnter={() => setHsub(i)} style={{ transition: "opacity .18s", cursor: "default", animation: "fadeIn .5s ease both", animationDelay: i * 0.02 + "s" }} />
+                  ))}
+                  <text x={cx} y={cy - 3} textAnchor="middle" fontSize="12" fontWeight="800" className="fill-gray-900 dark:fill-gray-50">{foc ? foc.pct.toFixed(1) + "%" : latestYr}</text>
+                  <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7.5" className="fill-gray-400">{foc ? foc.name.slice(0, 7) : "세부 비중"}</text>
+                </svg>
+                <div className="grid flex-1 grid-cols-2 gap-x-2 gap-y-0.5 self-center text-[9px]">
+                  {subPie.slice(0, 12).map((s, i) => (
+                    <span key={s.name} className="flex items-center gap-1 truncate" onMouseEnter={() => setHsub(i)} onMouseLeave={() => setHsub(null)}>
+                      <span className="h-1.5 w-1.5 shrink-0 rounded-sm" style={{ background: s.col }} /><span className="truncate text-gray-600 dark:text-gray-300" title={s.name}>{s.name}</span><span className="ml-auto shrink-0 font-semibold tabular-nums text-gray-500 dark:text-gray-400">{s.pct.toFixed(1)}</span>
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
           <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 제조업·무역·금융·BPO가 GDP 핵심 — 도시 사무직·상업 인프라 = B2B·프리미엄 가전 수요축</p>
         </>
       )}
