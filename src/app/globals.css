@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── 전역 본문 폰트 — Pretendard(한글) + Inter(라틴) 통일. 지도와 동일 톤 ── */
+body {
+  font-family: "Pretendard Variable", Pretendard, var(--font-inter), Inter, system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+}
+
 /* ── EN 모드 타이포 (2026-07-13) ─────────────────────────────
    Yahoo Finance는 "GT America"(상용) + Tabular 숫자를 쓴다.
    같은 톤의 오픈폰트 Public Sans로 대체하고, 숫자만 tabular로 고정한다.
