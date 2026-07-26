@@ -129,6 +129,7 @@ export default function EnergyLabelView() {
   const [rate, setRate] = useState(14.83) // Meralco 가정용 ₱/kWh(실측 로드 전 기본값)
   const [rateAsOf, setRateAsOf] = useState("")
   const [open, setOpen] = useState(false)
+  const [simOpen, setSimOpen] = useState(false)
   useEffect(() => {
     energyLabels().then((r) => { setRows(r); setLoaded(true) }).catch(() => setLoaded(true))
     latestMacro(["meralco_residential_rate"]).then((m) => { const r = m.meralco_residential_rate; if (r) { setRate(r.value); setRateAsOf(r.date.slice(2, 4) + "." + Number(r.date.slice(5, 7))) } }).catch(() => {})
@@ -194,7 +195,7 @@ export default function EnergyLabelView() {
 
   return (
     <div className="flex flex-col gap-4">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes growBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes growBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}"}</style>
 
       <div className="overflow-hidden rounded-xl border border-teal-100 dark:border-teal-500/25 bg-gradient-to-r from-teal-50 dark:from-teal-500/10 via-teal-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
         <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
@@ -275,20 +276,30 @@ export default function EnergyLabelView() {
                 )}</div>
               </Sub>
             </div>
-            <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".3s" }}>
-              <div className="mb-3 flex items-center gap-1.5">
-                <span className="rounded bg-teal-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">시뮬레이터</span>
-                <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">전기요금 계산 · {cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}</h3>
-                <span className="text-[11px] text-gray-400 dark:text-gray-500">DOE 표준 월소비전력 × 사용강도 × 요금</span>
-              </div>
-              <EnergySim brands={simBrands} lgKwh={lgKwh} rate0={rate} />
-            </div>
+            <button type="button" onClick={() => setSimOpen(true)} className="mt-4 flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".3s" }}>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
+              <span className="flex-1"><span className="block text-[13.5px] font-bold text-gray-900 dark:text-gray-50">전기요금 계산기 열기</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">브랜드·사용강도·요금 조정 → 월/연 전기요금·LG 절감액</span></span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
+            </button>
             </>
           )}
         </section>
         <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">출처 필리핀 DOE 에너지효율 라벨 등록 데이터(공식) · 설치형·용량 세그먼트별 브랜드 평균 {cur.metric}(높을수록 고효율) · TCO=DOE 라벨 월소비전력×Meralco 가정용 요금(₱{rate.toFixed(1)}/kWh) 추정 · 전체 평균은 스펙 혼합 왜곡</p>
+
+      {simOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setSimOpen(false)}>
+          <div className="w-full max-w-[560px] overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xl" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-teal-50/60 dark:bg-teal-500/10 px-4 py-3">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
+              <div className="flex-1"><div className="text-[14px] font-bold text-gray-900 dark:text-gray-50">전기요금 계산기</div><div className="text-[11px] text-gray-500 dark:text-gray-400">{cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k} · DOE 표준 월소비전력 기반</div></div>
+              <button type="button" onClick={() => setSimOpen(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+            </div>
+            <div className="p-4"><EnergySim brands={simBrands} lgKwh={lgKwh} rate0={rate} /></div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
