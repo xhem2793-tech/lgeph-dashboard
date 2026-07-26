@@ -168,7 +168,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
               <div className="text-[12px] text-gray-400 dark:text-gray-500">해당 지표가 아직 Supabase에 없음 · 수집 후 자동 표시</div>
             </div>
           ) : (
-            <div key={activeSub} className={"grid items-stretch gap-4 sm:grid-cols-2 " + (sections ? "sm:[&>*:last-child:nth-child(odd)]:col-span-2" : "")} style={{ animation: "fadeUp .35s ease both" }}>{sections ? curSub?.node : children}</div>
+            <div key={activeSub} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s ease both" }}>{sections ? curSub?.node : children}</div>
           )}
         </section>
         <aside className="flex flex-col gap-4">
