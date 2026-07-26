@@ -94,7 +94,7 @@ function Banner({ headline, lg, summary, d, kpiDefs }: BannerDef & { d: Mon; kpi
 }
 
 // ── 우측 위젯: 경제 일정 (모든 카테고리 공통 위젯 하나) ────────────────────
-function AgendaCard() {
+export function AgendaCard() {
   const [ev, setEv] = useState<{ date: string; event: string; category: string }[]>([])
   useEffect(() => { calendarUpcoming(6).then((r) => setEv(r.map((x) => ({ date: x.date, event: x.event, category: x.category })))).catch(() => setEv([])) }, [])
   if (!ev.length) return null
