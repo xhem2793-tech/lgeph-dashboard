@@ -12,7 +12,7 @@ import GdpComposition from "@/components/GdpComposition"
  *  각 카드는 지표 1~3계열을 한 축에 겹쳐 그림. 창(1Y/2Y/전체) 토글 공용. */
 
 type Mon = Record<string, { dates: string[]; values: number[] }>
-const WIN = [{ k: "1Y", n: 1 }, { k: "2Y", n: 2 }, { k: "5Y", n: 5 }, { k: "전체", n: 99 }] // n=표시 기간(년)
+const WIN = [{ k: "1Y", n: 1 }, { k: "2Y", n: 2 }, { k: "5Y", n: 5 }, { k: "전체", n: 10 }] // n=표시 기간(년) · 전체=10년 기준
 
 // 시리즈 팔레트(환율과 동일 계열)
 const C = { ind: "#6366f1", rose: "#dc2626", blue: "#0284c7", emer: "#059669", amber: "#d99400", violet: "#7c3aed", teal: "#0f766e", brown: "#a1795b" }
@@ -134,9 +134,8 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
   const [activeSub, setActiveSub] = useState(sections?.[0]?.key ?? "")
   const curSub = sections?.find((s) => s.key === activeSub) ?? sections?.[0]
   // 적응형 토글 — 뷰의 실제 데이터 기간(년)보다 긴 창은 숨김(5년치 데이터 없는데 5Y 토글 노출 방지)
-  let spanY = 0
-  for (const k in d) { const g = d[k]; if (g && g.dates.length >= 2) { const a = Number(g.dates[0].slice(0, 4)), b = Number(g.dates[g.dates.length - 1].slice(0, 4)); if (b - a > spanY) spanY = b - a } }
-  const winOpts = WIN.filter((w) => w.k === "전체" || w.n <= Math.max(1, spanY))
+  // 기간 토글은 전 뷰 동일하게 1Y/2Y/5Y/전체(10Y) 고정 노출(데이터 부족해도 있는 만큼 표시)
+  const winOpts = WIN
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>

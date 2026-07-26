@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
-import { energyLabels, type EnergyRow } from "@/lib/supabase"
+import { energyLabels, latestMacro, type EnergyRow } from "@/lib/supabase"
 import { AgendaCard } from "@/components/EconViews"
 import { Segmented } from "@/components/Segmented"
 
@@ -24,7 +24,41 @@ function typeOf(cat: string, s: string): string {
   return "전체"
 }
 const TEAL = "#0d9488", GRAY = "#cbd5e1", AMBER = "#f59e0b"
-const KWH_RATE = 12.5 // Meralco 가정용 대략 ₱/kWh
+
+/** 전기요금 시뮬레이터 — 브랜드 선택 + 사용강도·요금 조정 → 월/연 요금·LG 대비 절감(DOE 표준 월소비전력 기반) */
+function EnergySim({ brands, lgKwh, rate0 }: { brands: { name: string; kwh: number }[]; lgKwh: number | null; rate0: number }) {
+  const [sel, setSel] = useState<string>("")
+  const [mult, setMult] = useState(1)
+  const [rate, setRate] = useState(rate0)
+  useEffect(() => { setRate(rate0) }, [rate0])
+  const pick = brands.find((b) => b.name === sel) || brands[0]
+  if (!pick) return <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">세그먼트 데이터 부족</div>
+  const kwh = pick.kwh * mult
+  const mo = Math.round(kwh * rate), yr = Math.round(kwh * rate * 12)
+  const lgMo = lgKwh != null ? Math.round(lgKwh * mult * rate) : null
+  const saveYr = lgMo != null ? (mo - lgMo) * 12 : null
+  return (
+    <div className="grid gap-4 sm:grid-cols-[minmax(0,320px)_minmax(0,1fr)]">
+      <div className="flex flex-col gap-3">
+        <label className="block"><span className="mb-1 block text-[11px] font-semibold text-gray-500 dark:text-gray-400">브랜드/모델(세그먼트 평균)</span>
+          <select value={pick.name} onChange={(e) => setSel(e.target.value)} className="w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2 text-[13px] font-semibold text-gray-800 dark:text-gray-100 outline-none focus:border-teal-400">
+            {brands.map((b) => <option key={b.name} value={b.name}>{b.name} · {Math.round(b.kwh)}kWh/월</option>)}
+          </select></label>
+        <label className="block"><span className="mb-1 flex justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400"><span>사용강도</span><span className="text-teal-600 dark:text-teal-400">{mult.toFixed(2)}× {mult < 1 ? "(가벼움)" : mult > 1 ? "(많음)" : "(표준)"}</span></span>
+          <input type="range" min="0.5" max="2" step="0.05" value={mult} onChange={(e) => setMult(+e.target.value)} className="w-full accent-teal-600" /></label>
+        <label className="block"><span className="mb-1 flex justify-between text-[11px] font-semibold text-gray-500 dark:text-gray-400"><span>전기요금 ₱/kWh</span></span>
+          <input type="number" step="0.1" value={rate} onChange={(e) => setRate(+e.target.value || 0)} className="w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2 text-[13px] font-semibold text-gray-800 dark:text-gray-100 outline-none focus:border-teal-400" /></label>
+      </div>
+      <div className="flex flex-col justify-center gap-2.5 rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 p-4">
+        <div className="flex items-baseline justify-between"><span className="text-[12px] text-gray-500 dark:text-gray-400">월 예상 소비전력</span><span className="text-[15px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{Math.round(kwh)} kWh</span></div>
+        <div className="flex items-baseline justify-between border-t border-gray-100 dark:border-gray-800 pt-2.5"><span className="text-[12px] text-gray-500 dark:text-gray-400">월 전기요금</span><span className="text-[24px] font-extrabold tabular-nums text-teal-700 dark:text-teal-300">₱{mo.toLocaleString()}</span></div>
+        <div className="flex items-baseline justify-between"><span className="text-[12px] text-gray-500 dark:text-gray-400">연 전기요금</span><span className="text-[15px] font-bold tabular-nums text-gray-800 dark:text-gray-100">₱{yr.toLocaleString()}</span></div>
+        {lgMo != null && !/^lg$/i.test(pick.name) && <div className="mt-1 rounded-lg bg-teal-50 dark:bg-teal-500/10 px-3 py-2 text-[12px] leading-relaxed text-teal-800 dark:text-teal-200">같은 사용조건에서 <b>LG</b>로 바꾸면 월 <b>₱{Math.abs(mo - lgMo).toLocaleString()}</b>, 연 <b>₱{Math.abs(saveYr!).toLocaleString()}</b> {saveYr! > 0 ? "절감" : "더 듦"} · 고효율 소구 포인트</div>}
+        {/^lg$/i.test(pick.name) && <div className="mt-1 text-[11px] text-gray-400">LG 모델 기준 · 다른 브랜드 선택 시 LG 절감액 비교</div>}
+      </div>
+    </div>
+  )
+}
 
 function Sub({ title, seg, note, idx = 0, children }: { title: string; seg?: string; note: React.ReactNode; idx?: number; children: React.ReactNode }) {
   return (
@@ -33,7 +67,7 @@ function Sub({ title, seg, note, idx = 0, children }: { title: string; seg?: str
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {seg && <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:text-teal-300">{seg}</span>}
       </div>
-      <div className="mt-2 flex flex-1 items-center">{children}</div>
+      <div className="mt-2 flex min-h-[188px] flex-1 items-center">{children}</div>
       <p className="mt-2 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{note}</p>
     </div>
   )
@@ -92,7 +126,12 @@ export default function EnergyLabelView() {
   const [cat, setCat] = useState("acu")
   const [typ, setTyp] = useState("전체")
   const [segIdx, setSegIdx] = useState(0)
-  useEffect(() => { energyLabels().then((r) => { setRows(r); setLoaded(true) }).catch(() => setLoaded(true)) }, [])
+  const [rate, setRate] = useState(14.83) // Meralco 가정용 ₱/kWh(실측 로드 전 기본값)
+  const [rateAsOf, setRateAsOf] = useState("")
+  useEffect(() => {
+    energyLabels().then((r) => { setRows(r); setLoaded(true) }).catch(() => setLoaded(true))
+    latestMacro(["meralco_residential_rate"]).then((m) => { const r = m.meralco_residential_rate; if (r) { setRate(r.value); setRateAsOf(r.date.slice(2, 4) + "." + Number(r.date.slice(5, 7))) } }).catch(() => {})
+  }, [])
 
   const cur = CATS.find((c) => c.key === cat)!
   const segs = SEG[cat] || []
@@ -136,8 +175,8 @@ export default function EnergyLabelView() {
       { label: leadName || "리더", kwh: avgOf(ldK) },
       { label: "시장평균", kwh: avgOf(kwhAll) },
     ].filter((x) => x.kwh != null)
-    return g.map((x) => ({ label: x.label, cost: Math.round((x.kwh as number) * KWH_RATE) }))
-  }, [segRows, rank])
+    return g.map((x) => ({ label: x.label, cost: Math.round((x.kwh as number) * rate) }))
+  }, [segRows, rank, rate])
 
   const grade = useMemo(() => {
     const by: Record<string, EnergyRow[]> = {}; for (const r of segRows) (by[r.brand] = by[r.brand] || []).push(r)
@@ -145,6 +184,8 @@ export default function EnergyLabelView() {
   }, [segRows])
 
   // LG 강·약 세그먼트(분석 요약)
+  const simBrands = useMemo(() => { const by: Record<string, number[]> = {}; for (const r of segRows) if (r.kwh != null && r.kwh > 0) (by[r.brand] = by[r.brand] || []).push(r.kwh); return Object.entries(by).map(([name, a]) => ({ name, kwh: avgOf(a)! })).filter((x) => x.kwh > 0).sort((a, b) => a.kwh - b.kwh) }, [segRows])
+  const lgKwh = simBrands.find((b) => /^lg$/i.test(b.name))?.kwh ?? null
   const lgSegPos = useMemo(() => bySegChart.map((g) => ({ label: g.label, diff: g.lg != null ? g.lg - g.mkt : null })).filter((x) => x.diff != null) as { label: string; diff: number }[], [bySegChart])
   const strong = [...lgSegPos].sort((a, b) => b.diff - a.diff)[0]
   const weak = [...lgSegPos].sort((a, b) => a.diff - b.diff)[0]
@@ -199,11 +240,12 @@ export default function EnergyLabelView() {
           {!loaded ? (
             <div className="grid gap-4 sm:grid-cols-2">{[0, 1, 2, 3].map((i) => <div key={i} className="h-56 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}</div>
           ) : (
+            <>
             <div className="grid items-stretch gap-4 sm:grid-cols-2">
               <Sub idx={0} title="브랜드 효율 랭킹" seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} note={lgR ? <>같은 스펙 내 평균 {cur.metric}. LG {lgRk}위·리더 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? "낮아 최고효율 격차가 곧 개발 타깃" : "높아 프리미엄 소구 가능"}. 막대 hover 시 모델수.</> : "이 세그먼트 LG 모델 없음"}><HBar items={rank} hiName="LG" /></Sub>
               {hasType && <Sub idx={1} title="설치형별 LG vs 시장" note={<>폼팩터별 평균 {cur.metric}. LG가 <b>{byTypeChart.filter((g) => g.lg != null).sort((a, b) => (b.lg! - b.mkt) - (a.lg! - a.mkt))[0]?.label || "—"}</b>에서 상대 강세 → 해당 폼팩터에 프리미엄·마케팅 집중, 약세 폼팩터는 효율 스펙 보강.</>}><GroupBars groups={byTypeChart} /></Sub>}
               <Sub idx={2} title="용량대별 LG vs 시장" note={<>용량 세그먼트별 평균 {cur.metric}. {weak ? <>LG는 <b className="text-rose-600 dark:text-rose-400">{weak.label}</b>에서 시장 대비 열세 — 차기 라인업의 효율 스펙 상향 1순위.</> : "세그먼트별 LG 포지션."}</>}><GroupBars groups={bySegChart} /></Sub>
-              <Sub idx={3} title="월 전기요금 (TCO)" seg={seg?.k} note={<>평균 월 소비전력×가정용 전기료(₱{KWH_RATE}/kWh) 추정. 효율이 높을수록 전기요금↓ — <b>에너지 절감액을 판매 메시지로 전환</b>(고효율 프리미엄 정당화).</>}>
+              <Sub idx={3} title="월 전기요금 (TCO)" seg={seg?.k} note={<>평균 월 소비전력×가정용 전기료(Meralco ₱{rate.toFixed(1)}/kWh{rateAsOf?" · "+rateAsOf:""}) 추정. 효율이 높을수록 전기요금↓ — <b>에너지 절감액을 판매 메시지로 전환</b>(고효율 프리미엄 정당화).</>}>
                 <div className="w-full">{tco.length === 0 ? <div className="flex h-28 items-center justify-center text-[12px] text-gray-400">데이터 부족</div> : (() => {
                   const mx = Math.max(...tco.map((t) => t.cost), 1)
                   return <div className="flex flex-col gap-2">{tco.map((t, i) => { const isLG = t.label === "LG"; return (
@@ -230,11 +272,20 @@ export default function EnergyLabelView() {
                 )}</div>
               </Sub>
             </div>
+            <div className="mt-4 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".3s" }}>
+              <div className="mb-3 flex items-center gap-1.5">
+                <span className="rounded bg-teal-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">시뮬레이터</span>
+                <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">전기요금 계산 · {cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}</h3>
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">DOE 표준 월소비전력 × 사용강도 × 요금</span>
+              </div>
+              <EnergySim brands={simBrands} lgKwh={lgKwh} rate0={rate} />
+            </div>
+            </>
           )}
         </section>
         <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
-      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">출처 필리핀 DOE 에너지효율 라벨 등록 데이터(공식) · 설치형·용량 세그먼트별 브랜드 평균 {cur.metric}(높을수록 고효율) · TCO=월 소비전력×전기료(₱{KWH_RATE}/kWh) 추정 · 전체 평균은 스펙 혼합 왜곡</p>
+      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">출처 필리핀 DOE 에너지효율 라벨 등록 데이터(공식) · 설치형·용량 세그먼트별 브랜드 평균 {cur.metric}(높을수록 고효율) · TCO=DOE 라벨 월소비전력×Meralco 가정용 요금(₱{rate.toFixed(1)}/kWh) 추정 · 전체 평균은 스펙 혼합 왜곡</p>
     </div>
   )
 }

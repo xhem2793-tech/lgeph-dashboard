@@ -16,7 +16,6 @@ const SUB: Record<string, string[]> = {
   "산업": ["제조업", "건설업", "광업·채석", "전기·가스·수도"],
   "농·임·어업": ["작물", "축산·가금", "수산·양식", "임업·지원"],
 }
-const parentOf = (ind: string) => Object.keys(SUB).find((p) => SUB[p].includes(ind)) || ""
 
 export default function GdpComposition() {
   const [rows, setRows] = useState<{ indicator: string; year: number; value: number }[]>([])
@@ -30,22 +29,14 @@ export default function GdpComposition() {
   const years = useMemo(() => Array.from(new Set(rows.filter((r) => MAJ.some((m) => m.key === r.indicator)).map((r) => r.year))).sort(), [rows])
   const byYear = useMemo(() => { const m: Record<number, Record<string, number>> = {}; for (const r of rows) if (MAJ.some((x) => x.key === r.indicator)) (m[r.year] = m[r.year] || {})[r.indicator] = r.value; return m }, [rows])
   const latestYr = years[years.length - 1]
-  const SHADES: Record<string, string[]> = {
-    "서비스업": ["#4f46e5", "#6366f1", "#818cf8", "#a5b4fc", "#c7d2fe"],
-    "산업": ["#d97706", "#f59e0b", "#fbbf24", "#fcd34d"],
-    "농·임·어업": ["#059669", "#10b981", "#34d399", "#6ee7b7"],
-  }
-  const subPie = useMemo(() => {
+  const SUBPAL = ["#4f46e5", "#f59e0b", "#10b981", "#0ea5e9", "#e11d48", "#8b5cf6"]
+  const subTS = useMemo(() => {
     const all = Object.keys(SUB).flatMap((p) => SUB[p])
-    const list = rows.filter((r) => r.year === latestYr && all.includes(r.indicator)).map((r) => ({ name: r.indicator, value: r.value })).sort((a, b) => b.value - a.value)
-    const tot = list.reduce((s, x) => s + x.value, 0) || 1
-    const ipar: Record<string, number> = {}; let ang = -Math.PI / 2
-    return list.map((s) => {
-      const p = parentOf(s.name); const ii = (ipar[p] = (ipar[p] ?? -1) + 1)
-      const col = (SHADES[p] || ["#94a3b8"])[ii % (SHADES[p]?.length || 1)]
-      const frac = s.value / tot, a0 = ang, a1 = ang + frac * 2 * Math.PI; ang = a1
-      return { ...s, col, a0, a1, pct: frac * 100, parent: p }
-    })
+    const latest: Record<string, number> = {}; for (const r of rows) if (r.year === latestYr && all.includes(r.indicator)) latest[r.indicator] = r.value
+    const top = Object.entries(latest).sort((a, b) => b[1] - a[1]).slice(0, 6).map(([n]) => n)
+    const yrs = Array.from(new Set(rows.filter((r) => all.includes(r.indicator)).map((r) => r.year))).sort()
+    const lines = top.map((name, i) => ({ name, color: SUBPAL[i % SUBPAL.length], pts: yrs.map((y) => { const rr = rows.find((r) => r.indicator === name && r.year === y); return rr ? rr.value * 100 : null }) }))
+    return { yrs, lines }
   }, [rows, latestYr])
 
   const gray = "#94a3b8"
@@ -97,39 +88,33 @@ export default function GdpComposition() {
             </div>
           )}
           <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 서비스업 비중 확대 = 서비스 중심 경제 · 도시 중산층 소비 저변</p>
+          <p className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> 서비스화·도시화 심화는 <b>사무공간·도시가구 냉난방·소형가전</b> 수요 저변 → 도시 프리미엄·B2B 채널 우선</p>
         </>
       ) : (
         <>
-          <div className="mt-1.5 text-[10.5px] text-gray-400 dark:text-gray-500">{latestYr}년 세부 산업 비중 · 색=상위산업</div>
-          {!loaded ? <div className="mt-2 h-[190px] animate-pulse rounded bg-gray-50 dark:bg-gray-800/40" /> : (() => {
-            const cx = 90, cy = 90, R = 82, ri = 48
-            const arc = (a0: number, a1: number) => {
-              const p = (a: number, r: number) => [cx + r * Math.cos(a), cy + r * Math.sin(a)]
-              const [x0, y0] = p(a0, R), [x1, y1] = p(a1, R), [xi1, yi1] = p(a1, ri), [xi0, yi0] = p(a0, ri)
-              const lg = a1 - a0 > Math.PI ? 1 : 0
-              return `M${x0.toFixed(1)} ${y0.toFixed(1)} A${R} ${R} 0 ${lg} 1 ${x1.toFixed(1)} ${y1.toFixed(1)} L${xi1.toFixed(1)} ${yi1.toFixed(1)} A${ri} ${ri} 0 ${lg} 0 ${xi0.toFixed(1)} ${yi0.toFixed(1)} Z`
-            }
-            const foc = hsub != null ? subPie[hsub] : null
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[9.5px]">
+            {subTS.lines.map((l, i) => <span key={l.name} className="inline-flex items-center gap-1" onMouseEnter={() => setHsub(i)} onMouseLeave={() => setHsub(null)}><span className="h-2 w-2 rounded-sm" style={{ background: l.color }} /><span className={"text-gray-600 dark:text-gray-300 " + (hsub === i ? "font-bold" : "")}>{l.name}</span></span>)}
+          </div>
+          {!loaded ? <div className="mt-2 h-[150px] animate-pulse rounded bg-gray-50 dark:bg-gray-800/40" /> : (() => {
+            const yrs = subTS.yrs, W = 300, H = 150, L = 22, R = 8, T = 8, B = 16
+            const allV = subTS.lines.flatMap((l) => l.pts.filter((v): v is number => v != null))
+            const mx = Math.max(...allV, 1), mn = Math.min(...allV, 0)
+            const X = (i: number) => L + (W - L - R) * (yrs.length <= 1 ? 0.5 : i / (yrs.length - 1))
+            const Y = (v: number) => T + (H - T - B) * (1 - (v - mn) / ((mx - mn) || 1))
             return (
-              <div className="mt-2 flex flex-col items-center">
-                <svg viewBox="0 0 180 180" width="172" style={{ display: "block" }} onMouseLeave={() => setHsub(null)}>
-                  {subPie.map((s, i) => (
-                    <path key={s.name} d={arc(s.a0, s.a1)} fill={s.col} stroke={dark ? "#0b0f16" : "#fff"} strokeWidth="1" opacity={hsub == null || hsub === i ? 1 : 0.3} onMouseEnter={() => setHsub(i)} style={{ transition: "opacity .18s", cursor: "default", animation: "fadeIn .5s ease both", animationDelay: i * 0.02 + "s" }} />
-                  ))}
-                  <text x={cx} y={cy - 4} textAnchor="middle" fontSize="18" fontWeight="800" className="fill-gray-900 dark:fill-gray-50">{foc ? foc.pct.toFixed(1) + "%" : latestYr}</text>
-                  <text x={cx} y={cy + 11} textAnchor="middle" fontSize="9" className="fill-gray-400">{foc ? foc.name : "세부 비중"}</text>
-                </svg>
-                <div className="mt-2 grid w-full grid-cols-2 gap-x-3 gap-y-0.5 text-[9.5px] sm:grid-cols-3">
-                  {subPie.slice(0, 12).map((s, i) => (
-                    <span key={s.name} className="flex items-center gap-1 truncate" onMouseEnter={() => setHsub(i)} onMouseLeave={() => setHsub(null)}>
-                      <span className="h-1.5 w-1.5 shrink-0 rounded-sm" style={{ background: s.col }} /><span className="truncate text-gray-600 dark:text-gray-300" title={s.name}>{s.name}</span><span className="ml-auto shrink-0 font-semibold tabular-nums text-gray-500 dark:text-gray-400">{s.pct.toFixed(1)}</span>
-                    </span>
-                  ))}
-                </div>
-              </div>
+              <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }} onMouseLeave={() => setHsub(null)}>
+                {[0, 0.5, 1].map((f) => { const y = T + (H - T - B) * f; return <line key={f} x1={L} y1={y} x2={W - R} y2={y} stroke={dark ? "#1f2937" : "#f1f3f6"} strokeWidth="1" /> })}
+                {yrs.map((yr, i) => (i % 2 === 0 || i === yrs.length - 1) ? <text key={yr} x={X(i)} y={H - 4} textAnchor="middle" fontSize="7.5" fill="#94a3b8">{String(yr).slice(2)}</text> : null)}
+                {subTS.lines.map((l, li) => {
+                  const d = l.pts.map((v, i) => v == null ? null : `${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).filter(Boolean).map((p, i) => (i ? "L" : "M") + p).join(" ")
+                  const dim = hsub != null && hsub !== li
+                  return <g key={l.name} opacity={dim ? 0.25 : 1} style={{ transition: "opacity .18s" }}><path d={d} fill="none" stroke={l.color} strokeWidth={hsub === li ? 2.6 : 1.8} strokeLinejoin="round" style={{ animation: "fadeIn .6s ease both", animationDelay: li * 0.05 + "s" }} />{l.pts.map((v, i) => v == null ? null : <circle key={i} cx={X(i)} cy={Y(v)} r={i === l.pts.length - 1 ? 2.4 : 1.3} fill={l.color} />)}</g>
+                })}
+              </svg>
             )
           })()}
-          <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 제조업·무역·금융·BPO가 GDP 핵심 — 도시 사무직·상업 인프라 = B2B·프리미엄 가전 수요축</p>
+          <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 세부산업 시계열 — 정보통신(BPO)·금융·부동산 상승세가 도시 사무·중산층 확장 신호</p>
+          <p className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> BPO·금융 성장 지역(메트로마닐라·세부)에 <b>사무용 냉방·프리미엄 가전</b> 집중, 제조업 회복 시 B2B 파이프 확대</p>
         </>
       )}
       <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">출처 PSA 국민계정 산업별 GDP 비중 · 연간</p>
