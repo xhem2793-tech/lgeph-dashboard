@@ -617,11 +617,9 @@ export default function Page() {
           className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[88px]"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}
         >
-          <div className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">
-            <p className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">
-              보기
-            </p>
-            
+          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 4h18M6 12h12M10 20h4" /></svg>
+            <p className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분류</p>
           </div>
 
           {mode === "topic" ? (
