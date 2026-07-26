@@ -348,7 +348,8 @@ export default function EnergyLabelView() {
             <div className="grid gap-4 sm:grid-cols-2">{[0, 1, 2, 3].map((i) => <div key={i} className="h-56 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}</div>
           ) : (
             <>
-            {/* LG 커버리지 매트릭스 — 카테고리 전체(필터 무관). LG 라인업 전모를 한 화면에. */}
+            {/* LG 커버리지 매트릭스 — 카테고리 전체(필터 무관). 잠시 숨김(false) — 복원 시 true로. */}
+            {false && (
             <div key={"cov-" + cat} className="mb-4 flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
               <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
                 <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">LG {cur.label} 라인업 커버리지</h3>
@@ -358,6 +359,7 @@ export default function EnergyLabelView() {
               <Heatmap rowLabels={coverage.rowLabels} colLabels={coverage.colLabels} cells={coverage.cells} metric={cur.metric} effLo={coverage.effLo} effHi={coverage.effHi} />
               <p className="mt-2.5 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">LG는 <b>{coverage.lgTotal}개</b> 모델을 {coverage.rowLabels.length}개 설치형·{coverage.colLabels.length}개 용량대에 걸쳐 등록. <b>빈 셀=미출시 공백</b>(진입 기회), 색이 옅은 셀=효율 열세(개선 타깃).</p>
             </div>
+            )}
             <div key={`seg-${typ}-${segIdx}`} className="grid items-stretch gap-4 sm:grid-cols-2">
               <Sub idx={0} title="브랜드 효율 랭킹" seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} note={lgR ? <>같은 스펙 내 평균 {cur.metric}. LG {lgRk}위·리더 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? "낮아 최고효율 격차가 곧 개발 타깃" : "높아 프리미엄 소구 가능"}. 막대 hover 시 모델수.</> : <><b>LG는 이 세그먼트에 등록 모델 없음</b>(현지 미출시) — 시장 브랜드만 비교. 진입 검토 시 벤치마크로 활용.</>}><HBar items={rank} hiName="LG" /></Sub>
               <Sub idx={1} title="효율 ↔ 월전력 관계" seg={seg?.k} note={<>가로=효율({cur.metric}), 세로=월 소비전력. <b>우측·상단</b>이 고효율·저전력(우수). LG 점 위치로 <b>효율 대비 실제 전력소비</b> 경쟁력 확인.</>}><Scatter pts={scatterData} metric={cur.metric} /></Sub>
