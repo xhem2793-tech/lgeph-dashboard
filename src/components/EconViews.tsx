@@ -5,6 +5,7 @@ import { macroMonthly, calendarUpcoming, seaCompare, marketEstimates } from "@/l
 import type { MktEst } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 import { ChartCard, Lg, SLine, moLabel } from "@/components/EconChart"
+import GdpComposition from "@/components/GdpComposition"
 
 /** 주요 지표 카테고리 뷰 — 전부 Supabase(macro_indicators, geo_level=national) 실측.
  *  환율(FxView)과 동일한 차트(평소 선만·호버 점·핵심요약 애니메이션) + 의미 + AI 분석(LGE-PH 관점) + 출처.
@@ -542,6 +543,7 @@ export function GrowthView() {
       )}
         </> },
         { key: "industry", label: "산업·생산", node: <>
+      <div className="sm:col-span-2"><GdpComposition /></div>
       {ind.series.length > 0 && (
         <ChartCard seg="B2B" title="산업·제조 성장률" unit="전년비 %" labels={ind.labels} series={ind.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="산업" b /><Lg c={C.rose} t="제조업" /></>}

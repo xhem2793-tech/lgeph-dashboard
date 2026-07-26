@@ -51,10 +51,21 @@ export async function oilDaily(n = 30) {
   return rows.reverse().map((r) => ({ date: r.date as string, diesel: num(r.diesel), ron95: num(r.ron95) }))
 }
 
-export type EnergyRow = { category: string; brand: string; eff: number | null; metric: string; star: number | null; kwh: number | null }
+export type EnergyRow = { category: string; brand: string; model: string; eff: number | null; metric: string; star: number | null; kwh: number | null }
 export async function energyLabels(): Promise<EnergyRow[]> {
-  const rows = await sb(`energy_labels?select=category,brand,efficiency_val,efficiency_metric,star_rating,monthly_kwh&limit=5000`)
-  return rows.map((r) => ({ category: r.category, brand: r.brand, eff: num(r.efficiency_val), metric: r.efficiency_metric, star: num(r.star_rating), kwh: num(r.monthly_kwh) }))
+  // PostgREST 행 상한(1000) 대응 — offset 페이지네이션으로 전량 수집
+  const all: any[] = []
+  for (let off = 0; off < 8000; off += 1000) {
+    const rows = await sb(`energy_labels?select=category,brand,model_code,product_name,efficiency_val,efficiency_metric,star_rating,monthly_kwh&order=id&limit=1000&offset=${off}`)
+    all.push(...rows)
+    if (rows.length < 1000) break
+  }
+  return all.map((r) => ({ category: r.category, brand: r.brand, model: r.model_code || r.product_name || "", eff: num(r.efficiency_val), metric: r.efficiency_metric, star: num(r.star_rating), kwh: num(r.monthly_kwh) }))
+}
+
+export async function annualGroup(groupLabel: string) {
+  const rows = await sb(`annual_indicators?group_label=eq.${encodeURIComponent(groupLabel)}&select=indicator,year,value&order=year`)
+  return rows.map((r) => ({ indicator: r.indicator as string, year: Number(r.year), value: num(r.value)! }))
 }
 
 export async function latestOne(table: string, col: string) {
