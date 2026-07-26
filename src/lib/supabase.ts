@@ -886,11 +886,17 @@ export async function calendarEvents(from: string, to: string) {
 
 export async function macroMonthly(inds: string[], n = 18) {
   const list = inds.map((s) => encodeURIComponent(s)).join(",")
-  const path =
-    "macro_indicators?geo_level=eq.national&indicator=in.(" +
-    list +
-    ")&order=period_date.asc&select=indicator,period_date,value"
-  const rows = (await sb(path)) as { indicator: string; period_date: string; value: number }[]
+  // PostgREST 행 상한(서버 하드캡 1000, limit로 상향 불가) 대응 — offset 페이지네이션으로 전량 수집.
+  // 미대응 시 asc 정렬에서 최신 데이터가 잘려 차트가 과거에서 끊김(백필로 행이 늘면 재현).
+  const rows: { indicator: string; period_date: string; value: number }[] = []
+  for (let off = 0; off < 40000; off += 1000) {
+    const page = (await sb(
+      "macro_indicators?geo_level=eq.national&indicator=in.(" + list +
+      ")&order=period_date.asc&select=indicator,period_date,value&limit=1000&offset=" + off,
+    )) as { indicator: string; period_date: string; value: number }[]
+    rows.push(...page)
+    if (page.length < 1000) break
+  }
   const out: Record<string, { dates: string[]; values: number[] }> = {}
   for (const r of rows) {
     const g = (out[r.indicator] = out[r.indicator] || { dates: [], values: [] })
