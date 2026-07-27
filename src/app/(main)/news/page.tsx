@@ -614,7 +614,7 @@ export default function Page() {
       <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
         {/* ── 좌 : 메뉴 ── */}
         <aside
-          className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[88px]"
+          className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[61px]"
           style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}
         >
           <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">

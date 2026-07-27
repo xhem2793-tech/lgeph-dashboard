@@ -284,6 +284,9 @@ export default function EnergyLabelView() {
   const [rateAsOf, setRateAsOf] = useState("")
   const [open, setOpen] = useState(false)
   const [simOpen, setSimOpen] = useState(false)
+  const [modelOpen, setModelOpen] = useState(false)
+  const [mSort, setMSort] = useState<"eff" | "kwh" | "star">("eff")
+  const [mLgOnly, setMLgOnly] = useState(false)
   useEffect(() => {
     energyLabels().then((r) => { setRows(r); setLoaded(true) }).catch(() => setLoaded(true))
     latestMacro(["meralco_residential_rate"]).then((m) => { const r = m.meralco_residential_rate; if (r) { setRate(r.value); setRateAsOf(r.date.slice(2, 4) + "." + Number(r.date.slice(5, 7))) } }).catch(() => {})
@@ -313,6 +316,14 @@ export default function EnergyLabelView() {
     return { rank: disp, lgR: lgIdx >= 0 ? all[lgIdx] : undefined, lgRk: lgIdx >= 0 ? lgIdx + 1 : 0, brandCount: all.length }
   }, [segRows])
   const gap = lgR && rank[0] ? ((rank[0].v - lgR.v) / lgR.v) * 100 : null
+
+  // 모델별 상세(제품코드) — 선택 세그먼트의 개별 모델. PD가 모델 단위로 스펙·효율·별점·전력·냉매 확인.
+  const modelRows = useMemo(() => {
+    let rs = segRows.slice()
+    if (mLgOnly) rs = rs.filter((r) => /^lg$/i.test(r.brand))
+    const key = (r: EnergyRow) => mSort === "kwh" ? (r.kwh ?? 1e9) : mSort === "star" ? -(r.star ?? -1) : -(r.eff ?? -1)
+    return rs.sort((a, b) => key(a) - key(b))
+  }, [segRows, mSort, mLgOnly])
 
   const scatterData = useMemo(() => {
     const by: Record<string, { effs: number[]; kwhs: number[] }> = {}
@@ -482,11 +493,18 @@ export default function EnergyLabelView() {
                 )
               })()}
             </div>
-            <button type="button" onClick={() => setSimOpen(true)} className="mt-4 flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".3s" }}>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <button type="button" onClick={() => setModelOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".28s" }}>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg></span>
+              <span className="flex-1"><span className="block text-[13.5px] font-bold text-gray-900 dark:text-gray-50">모델별 상세 (제품코드)</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">개별 모델 스펙·효율·별점·전력·냉매 · CSV</span></span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
+            </button>
+            <button type="button" onClick={() => setSimOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".3s" }}>
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
               <span className="flex-1"><span className="block text-[13.5px] font-bold text-gray-900 dark:text-gray-50">전기요금 계산기 열기</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">브랜드·사용강도·요금 조정 → 월/연 전기요금·LG 절감액</span></span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
             </button>
+            </div>
             </>
           )}
         </section>
@@ -503,6 +521,50 @@ export default function EnergyLabelView() {
               <button type="button" onClick={() => setSimOpen(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
             </div>
             <div className="p-4"><EnergySim brands={simBrands} lgKwh={lgKwh} rate0={rate} /></div>
+          </div>
+        </div>,
+        document.body
+      )}
+
+      {modelOpen && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 sm:p-8" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setModelOpen(false)}>
+          <div className="flex max-h-[92vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xl" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
+            <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+              <span className="h-[16px] w-1 rounded bg-teal-500" />
+              <h3 className="text-[15px] font-bold text-gray-900 dark:text-gray-50">모델별 상세 · {cur.label}</h3>
+              <span className="rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-bold text-teal-700 dark:text-teal-300">{typ !== "전체" ? typ + " " : ""}{seg?.k} · {modelRows.length}개</span>
+              <span className="ml-auto flex items-center gap-1.5">
+                <span className="hidden items-center gap-0.5 sm:flex">
+                  {([["eff", "효율순"], ["kwh", "저전력순"], ["star", "별점순"]] as const).map(([k, lbl]) => <button key={k} type="button" onClick={() => setMSort(k)} className={"rounded-md px-2 py-1 text-[11px] font-semibold transition-all " + (mSort === k ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50")}>{lbl}</button>)}
+                </span>
+                <button type="button" onClick={() => setMLgOnly((v) => !v)} className={"rounded-md px-2 py-1 text-[11px] font-bold transition-all " + (mLgOnly ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-teal-700 dark:text-teal-300 hover:bg-teal-50")}>LG만</button>
+                <IcoBtn onClick={() => dlCsvFrom({ head: ["브랜드", "모델(제품코드)", cur.specUnit, cur.metric, "별점", "월전력kWh", "냉매"], rows: modelRows.map((r) => [r.brand, r.model, r.spec ?? "—", r.eff ?? "—", r.star ?? "—", r.kwh ?? "—", r.refrigerant || "—"]) }, "에너지_모델별_" + cur.label)} title="CSV 다운로드" d={ICO.csv} />
+                <button type="button" onClick={() => setModelOpen(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+              </span>
+            </div>
+            <div className="overflow-auto">
+              {modelRows.length === 0 ? <div className="flex h-40 items-center justify-center text-[13px] text-gray-400">해당 세그먼트 모델 없음</div> : (
+                <table className="w-full border-collapse text-[12px]">
+                  <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900/95"><tr className="border-b border-gray-200 dark:border-gray-700 text-[11px] text-gray-500 dark:text-gray-400">
+                    <th className="px-3 py-2 text-left font-semibold">브랜드</th><th className="px-3 py-2 text-left font-semibold">모델 (제품코드)</th>
+                    <th className="px-3 py-2 text-right font-semibold">{cur.specUnit}</th><th className="px-3 py-2 text-right font-semibold">{cur.metric}</th>
+                    <th className="px-3 py-2 text-right font-semibold">별점</th><th className="px-3 py-2 text-right font-semibold">월 kWh</th><th className="px-3 py-2 text-left font-semibold">냉매</th>
+                  </tr></thead>
+                  <tbody>{modelRows.map((r, i) => { const isLG = /^lg$/i.test(r.brand); return (
+                    <tr key={i} className={"border-b border-gray-100 dark:border-gray-800/60 " + (isLG ? "bg-teal-50/60 dark:bg-teal-500/10" : "hover:bg-gray-50 dark:hover:bg-gray-800/40")}>
+                      <td className={"px-3 py-1.5 " + (isLG ? "font-bold text-teal-700 dark:text-teal-300" : "text-gray-700 dark:text-gray-200")}>{r.brand}</td>
+                      <td className="max-w-[280px] truncate px-3 py-1.5 text-gray-600 dark:text-gray-300" title={r.model}>{r.model}</td>
+                      <td className="px-3 py-1.5 text-right tabular-nums text-gray-700 dark:text-gray-200">{r.spec ?? "—"}</td>
+                      <td className={"px-3 py-1.5 text-right font-semibold tabular-nums " + (isLG ? "text-teal-700 dark:text-teal-300" : "text-gray-800 dark:text-gray-100")}>{r.eff != null ? r.eff.toFixed(2) : "—"}</td>
+                      <td className="px-3 py-1.5 text-right tabular-nums text-amber-600 dark:text-amber-400">{r.star != null ? "★".repeat(Math.min(5, r.star)) : "—"}</td>
+                      <td className="px-3 py-1.5 text-right tabular-nums text-gray-600 dark:text-gray-300">{r.kwh != null ? Math.round(r.kwh) : "—"}</td>
+                      <td className="px-3 py-1.5 text-gray-500 dark:text-gray-400">{r.refrigerant || "—"}</td>
+                    </tr>
+                  ) })}</tbody>
+                </table>
+              )}
+            </div>
+            <div className="shrink-0 border-t border-gray-100 dark:border-gray-800 px-4 py-2 text-[10.5px] text-gray-400 dark:text-gray-500">현재 세그먼트({cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k})의 개별 모델 · <b className="text-teal-600 dark:text-teal-400">LG 강조</b> · DOE 라벨 등록 데이터</div>
           </div>
         </div>,
         document.body
