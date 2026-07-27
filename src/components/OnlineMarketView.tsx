@@ -118,35 +118,35 @@ export default function OnlineMarketView() {
             {cDigital.has && (
               <ChartCard seg="CE" title="디지털 이용 확산" unit="% · 연간" labels={cDigital.labels} series={cDigital.series} decimals={0} seriesUnit="%"
                 legend={<><Lg c={C.ind} t="인터넷 이용률" /><Lg c={C.emer} t="금융계정 보유" /></>}
-                meaning={<>인터넷 이용·금융계정 보유 확대 — <b className="text-gray-700 dark:text-gray-200">온라인 가전 구매·전자결제 저변</b></>}
+                meaning={<>인터넷·금융계정 확대 — <b className="text-gray-700 dark:text-gray-200">온라인 구매·전자결제 저변</b></>}
                 ai={<>인터넷·계정 보유 상승은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">이커머스·할부·BNPL 채널 확장</b> → 온라인 전용 모델·번들·D2C 강화. <b>트렌드</b>: 계정보유가 2017→2021 급등(팬데믹 디지털금융·정부지원금 계좌지급)했고, 인터넷 2024년 소폭 하락은 <b className="font-semibold">WB·ITU 추정 개정</b>(방법론 조정)에 따른 것.</>}
                 src={src("World Bank·ITU 디지털지표 · 연간")} />
             )}
             {cPay.has && (
               <ChartCard seg="CE" title="온라인 결제수단 보급" unit="% 성인 · 연간" labels={cPay.labels} series={cPay.series} decimals={1} seriesUnit="%"
                 legend={<><Lg c={C.rose} t="신용카드 보유" /><Lg c={C.blue} t="직불카드 보유" /><Lg c={C.amber} t="신용카드 사용" /></>}
-                meaning={<>온라인 결제 기반 카드 보급(Findex) — <b className="text-gray-700 dark:text-gray-200">이커머스 결제·할부 구조</b></>}
+                meaning={<>카드 보급(Findex) — <b className="text-gray-700 dark:text-gray-200">이커머스 결제·할부 구조</b></>}
                 ai={<><b className="font-semibold text-rose-600 dark:text-rose-400">신용카드 3%대로 낮음</b> → 온라인 가전은 직불·현금·<b className="font-semibold text-emerald-600 dark:text-emerald-400">BNPL/핀테크 할부</b> 우선 설계가 전환에 유리. <b>트렌드</b>: 신용·직불카드 모두 2021년 급등(팬데믹 디지털·정부지원금 계좌지급) 후 2024년 반락 — 계좌보유(50%)는 유지된 채 카드만 감소 = <b className="font-semibold">e-wallet(GCash·Maya)으로 대체</b>.</>}
                 src={src("World Bank Global Findex 카드 보유·사용율 · 격년")} />
             )}
             {cInfra.has && (
               <ChartCard seg="CE" title="통신 인프라 침투" unit="100명당 · 연간" labels={cInfra.labels} series={cInfra.series} decimals={0} seriesUnit=""
                 legend={<><Lg c={C.blue} t="모바일 가입/100" /><Lg c={C.violet} t="브로드밴드/100" /></>}
-                meaning={<>모바일·브로드밴드 보급 — <b className="text-gray-700 dark:text-gray-200">모바일 커머스·스마트가전 연결성</b></>}
+                meaning={<>모바일·브로드밴드 보급 — <b className="text-gray-700 dark:text-gray-200">모바일커머스·스마트가전 연결</b></>}
                 ai={<>모바일 포화·브로드밴드 확대는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">앱 기반 구매·IoT 가전</b> 수요 기반 → 스마트홈 연계 마케팅. <b>트렌드</b>: 모바일 100%+ 포화·브로드밴드 완만 상승 — 필리핀은 <b className="font-semibold">고정망보다 모바일 의존</b>이 구조적.</>}
                 src={src("World Bank·ITU 통신지표 · 연간")} />
             )}
             {cDpay.has && (
               <ChartCard seg="CE" title="디지털 결제 비중" unit="% 소매결제 · 연간" labels={cDpay.labels} series={cDpay.series} decimals={0} seriesUnit="%"
                 legend={<Lg c={C.emer} t="e-wallet·계좌이체" />}
-                meaning={<>소매결제 중 디지털(계좌이체·e-wallet) 비중 — <b className="text-gray-700 dark:text-gray-200">GCash·Maya 등 e-wallet 확산의 직접 지표</b></>}
+                meaning={<>디지털 결제(e-wallet) 비중 — <b className="text-gray-700 dark:text-gray-200">GCash·Maya 확산 직접 지표</b></>}
                 ai={<><b className="font-semibold text-emerald-600 dark:text-emerald-400">2013년 1% → 2023년 52.8%</b>로 폭증, 카드(3%) 건너뛰고 <b className="font-semibold">e-wallet(GCash 9천만명·Maya)</b>이 주류 결제수단화. 온라인 가전은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">e-wallet·QR·BNPL 결제 연동</b>이 필수 · <b>트렌드</b>: 팬데믹(2020~21) 가속, BSP 50% 목표 조기 달성.</>}
                 src={src("BSP Report on the State of Digital Payments · 연간(건수 기준)")} />
             )}
             {cSecure.has && (
               <ChartCard seg="B2B" title="이커머스 인프라 (보안서버)" unit="백만명당 · 연간" labels={cSecure.labels} series={cSecure.series} decimals={0} seriesUnit=""
                 legend={<Lg c={C.violet} t="보안 인터넷서버/100만" />}
-                meaning={<>보안 인터넷서버 밀도 — <b className="text-gray-700 dark:text-gray-200">전자상거래·결제 신뢰 인프라 성숙도</b></>}
+                meaning={<>보안서버 밀도 — <b className="text-gray-700 dark:text-gray-200">전자상거래 신뢰 인프라 성숙도</b></>}
                 ai={<>보안 인프라 확충은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">온라인 결제 신뢰·플랫폼 성숙</b> → 공식몰·마켓플레이스 플래그십 확대 여건. <b>트렌드</b>: 2023년 급등·2024년 반락은 인증서버 집계 변동(연도별 편차 큼) — 절대수준보다 추세로 해석 권고.</>}
                 src={src("World Bank WDI 보안 인터넷서버 · 연간")} />
             )}

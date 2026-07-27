@@ -343,7 +343,7 @@ export function ApplianceView() {
       {show(["전 제품"]) && ppi.series.length > 0 && (
         <ChartCard seg="전 제품·CE·B2B" title="가전 생산자물가 PPI" unit="전년비 %" labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="가전 PPI" b /><Lg c={C.rose} t="전기기기" /><Lg c={C.blue} t="전자" /><Lg c={C.brown} t="제조업 전체" /></>}
-          meaning={<>생산단계 출고가격 상승률 — <b className="text-gray-700 dark:text-gray-200">소비자가·조달원가의 수개월 선행</b> · 가전 PPI vs 제조업 전체로 카테고리 특이 압력 판별</>}
+          meaning={<>생산단계 출고가격 상승률 — <b className="text-gray-700 dark:text-gray-200">소비자가·조달원가의 수개월 선행</b></>}
           ai={<>가전 PPI가 제조업 전체보다 높으면 <b className="font-semibold text-rose-600 dark:text-rose-400">가전 특이 원가압력</b> → 선제 판가·조달 대응·부품 헤지, 동행이면 경제 전반 원가 국면</>}
           tone="rose" src={src("PSA 생산자물가지수(PPI) · 월별")} />
       )}
@@ -385,7 +385,7 @@ export function ApplianceView() {
       {show(["전 제품"]) && elecpc.series.length > 0 && (
         <ChartCard seg="전 제품" title="1인당 전력소비" unit="kWh/인 · 연간" labels={elecpc.labels} series={elecpc.series} decimals={0} seriesUnit="kWh"
           legend={<Lg c={C.ind} t="1인당 전력소비" b />}
-          meaning={<>국민 1인당 연간 전력사용량 — <b className="text-gray-700 dark:text-gray-200">전력화·가전 보유 심화의 대표 프록시</b>(소득 성장과 동행)</>}
+          meaning={<>국민 1인당 연간 전력사용량 — <b className="text-gray-700 dark:text-gray-200">전력화·가전 보유 심화 프록시</b></>}
           ai={<>필리핀 1인당 전력소비는 <b className="font-semibold text-amber-600 dark:text-amber-400">900kWh대로 태국(약 3,000)·말련(약 5,000)의 1/3 이하</b> = <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 보급·대형화 성장여력이 큰 저변</b>. <b>트렌드</b>: 소득 증가와 함께 완만한 우상향 — 냉장고·에어컨 등 상시가동 가전 확산의 구조적 순풍, 다만 高전기료가 고효율 수요를 동시에 자극.</>}
           tone="emerald" src={src("World Bank WDI 1인당 전력소비(EG.USE.ELEC.KH.PC) · 연간")} />
       )}
@@ -492,7 +492,7 @@ export function RatesView() {
       {npl.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="은행 부실채권(NPL) 비율" unit="% · 연간" labels={npl.labels} series={npl.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.rose} t="NPL 비율(총대출 대비)" b />}
-          meaning={<>은행 총여신 중 부실채권 비중 — <b className="text-gray-700 dark:text-gray-200">가계·기업 상환능력·금융안정</b>의 핵심 지표(할부·소비자금융 건전성 선행)</>}
+          meaning={<>은행 총여신 중 부실채권 비중 — <b className="text-gray-700 dark:text-gray-200">가계·기업 상환능력·금융안정</b></>}
           ai={<>NPL이 <b className="font-semibold text-emerald-600 dark:text-emerald-400">3%대로 낮고 안정</b>이면 은행이 소비자·카드·할부 여신을 공격적으로 늘릴 여력 → <b className="font-semibold">무이자 할부·BNPL 확대에 우호적</b>. <b>트렌드</b>: 팬데믹기 2021년 4%대로 상승했다가 <b className="font-semibold">2025년 3.0%로 안정 복귀</b> — 신용 리스크 완화로 가전 할부 수요 뒷받침. 급등 반전 시 유통 여신·연체 선행 경보로 활용.</>}
           tone="emerald" src={src("World Bank WDI 은행 NPL 비율(FB.AST.NPER.ZS) · 연간")} />
       )}
@@ -536,7 +536,7 @@ export function RatesView() {
       {govt.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="정부지출·서비스업 비중" unit="% GDP · 연간" labels={govt.labels} series={govt.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="정부지출" b /><Lg c={C.emer} t="서비스업 비중" /></>}
-          meaning={<>정부지출·서비스업 GDP비중 — <b className="text-gray-700 dark:text-gray-200">인프라·서비스 경제화 = 도시가구·B2B 수요 기반</b></>}
+          meaning={<>정부지출·서비스업 GDP비중 — <b className="text-gray-700 dark:text-gray-200">도시가구·B2B 수요 기반</b></>}
           ai={<>서비스업 비중 확대·정부 인프라 지출은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">도시화·사무실·상업용 가전 수요 저변</b> → B2B·프리미엄 도시시장 성장</>}
           tone="emerald" src={src("World Bank 정부지출·서비스업 비중(%GDP) · 연간")} />
       )}
@@ -596,7 +596,7 @@ export function GrowthView() {
       {gdp.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="GDP 성장률" unit="전년비 %" kind="bar" labels={gdp.labels} series={gdp.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="GDP 성장률" b />}
-          meaning={<>실질 GDP 성장률 — <b className="text-gray-700 dark:text-gray-200">가전 시장 전체 파이의 크기</b> (연간 장기 + 최근 분기)</>}
+          meaning={<>실질 GDP 성장률 — <b className="text-gray-700 dark:text-gray-200">가전 시장 전체 파이의 크기</b></>}
           ai={<>성장 둔화기엔 재량소비 위축 → <b className="font-semibold text-amber-600 dark:text-amber-400">보급형 방어</b>, 확장기엔 프리미엄·신규수요 가속. <b>트렌드</b>: 2020년 코로나로 <b className="font-semibold text-rose-600 dark:text-rose-400">-9.5% 급락</b>(역대 최악) 후 2022~2023 7%대 반등, 2024~ 5~6%대 안정 성장.</>}
           tone="emerald" src={src("PSA 국민계정 GDP · 분기/연")} />
       )}
@@ -617,7 +617,7 @@ export function GrowthView() {
       {tour.series.length > 0 && (
         <ChartCard seg="CE" title="국제 관광객 입국자수" unit="백만명 · 연간" labels={tour.labels} series={tour.series} decimals={1} seriesUnit="M"
           legend={<Lg c={C.teal} t="국제 관광객(백만명)" b />}
-          meaning={<>연간 국제 방문객 수 — <b className="text-gray-700 dark:text-gray-200">서비스·소매·숙박 소비의 외생 수요</b>(관광지·리조트 가전 B2B 수요 포함)</>}
+          meaning={<>연간 국제 방문객 수 — <b className="text-gray-700 dark:text-gray-200">서비스·소매·숙박·리조트 B2B 수요</b></>}
           ai={<>관광 회복은 호텔·리조트·요식 <b className="font-semibold text-emerald-600 dark:text-emerald-400">B2B 가전(에어컨·냉장·주방)</b> 및 관광지 소매 수요를 자극. <b>트렌드</b>: 2019년 <b>8.3M</b> 정점 → 2020~21 코로나로 <b className="font-semibold text-rose-600 dark:text-rose-400">0.2M까지 붕괴</b> → 2023 5.5M·2025 6.4M로 회복 중이나 아직 팬데믹 이전 미달 · 회복 지속 시 B2B·지방 소매 순풍.</>}
           tone="emerald" src={src("World Bank(2005~2020)·필리핀 DOT(2021~2025) 국제 관광객 · 연간")} />
       )}
@@ -678,7 +678,7 @@ export function GrowthView() {
       {rrepi.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="주거용 부동산가격 상승률" unit="전년비 % · 분기" labels={rrepi.labels} series={rrepi.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="명목" b /><Lg c={C.teal} t="실질(물가조정)" /></>}
-          meaning={<>주택가격 상승률(명목·실질) — <b className="text-gray-700 dark:text-gray-200">주거 자산효과·신규주택 = 프리미엄 가전 교체·초도수요 동인</b></>}
+          meaning={<>주택가격 상승률(명목·실질) — <b className="text-gray-700 dark:text-gray-200">자산효과·프리미엄·초도수요 동인</b></>}
           ai={<>주택가격 상승은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">자산효과·신규 입주 = 프리미엄·빌트인 가전 수요</b>, 실질 하락(명목이 물가 하회) 시 소비여력 위축 경계 · <b className="text-gray-500 dark:text-gray-400">BIS(BSP RREPI 원천)</b>. <b>트렌드</b>: 2024년 명목 7~9%였으나 2025년 2%대로 급둔화, 실질은 마이너스 근접 — 주택경기 냉각 신호.</>}
           tone="emerald" src={src("BIS 주거용 부동산가격지수(BSP RREPI 원천) · 분기")} />
       )}
@@ -873,7 +873,7 @@ export function LaborView() {
       {fam.series.length > 0 && (
         <ChartCard seg="CE" title="가구원수·합계출산율" unit="명 · 연간" labels={fam.labels} series={fam.series} decimals={2} seriesUnit="명"
           legend={<><Lg c={C.ind} t="평균 가구원수" b /><Lg c={C.rose} t="합계출산율" /></>}
-          meaning={<>가구 규모·출산율 하락 — <b className="text-gray-700 dark:text-gray-200">가구 수 증가·소형 가전 수요 구조 전환</b></>}
+          meaning={<>가구 규모·출산율 하락 — <b className="text-gray-700 dark:text-gray-200">가구 수↑·소형가전 수요 전환</b></>}
           ai={<>가구원수·출산율 하락은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가구 분화 = 가구 수↑ = 소형·1인용 가전 대수 확대</b> → 소형·프리미엄 소가전 라인업 강화</>}
           tone="emerald" src={src("PSA·World Bank 가구·출산율 · 연간")} />
       )}
@@ -948,7 +948,7 @@ export function SentimentView() {
       {esi.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="경제심리지수 (자체산출·실험적)" unit="지수 · 평균100 · 분기" labels={esi.labels} series={esi.series} decimals={1}
           legend={<Lg c={C.ind} t="경제심리지수" b />}
-          meaning={<>소비자심리·전망·내구재의향·기업심리를 표준화 합성 — <b className="text-gray-700 dark:text-gray-200">경제 전반 심리의 단일 게이지</b> (100=장기평균)</>}
+          meaning={<>소비·기업심리 표준화 합성 — <b className="text-gray-700 dark:text-gray-200">경제 전반 심리 단일 게이지</b></>}
           ai={<>100 상회는 낙관·수요 확장, 하회는 위축 국면 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">단일 지표로 국면 전환 조기 포착</b> · <b className="text-gray-500 dark:text-gray-400">BOK 경제심리지수(ESI) 방식 · 자체산출, 기업심리 이력 확보 시 정식화</b></>}
           tone="emerald" src={src("자체산출: BSP CES/BES 표준화 합성(평균100·표준편차10) · 분기")} />
       )}
@@ -1064,14 +1064,14 @@ export function PricesView() {
       {oil.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="유가 (경유·휘발유·등유)" unit="₱/L · 월별" labels={oil.labels} series={oil.series} decimals={1} seriesUnit="₱"
           legend={<><Lg c={C.ind} t="경유" b /><Lg c={C.rose} t="휘발유" /><Lg c={C.amber} t="등유" /></>}
-          meaning={<>국내 종류별 소매 유가 — <b className="text-gray-700 dark:text-gray-200">운송·물류원가·전기료·전체 물가의 상류 동인</b></>}
+          meaning={<>국내 종류별 소매 유가 — <b className="text-gray-700 dark:text-gray-200">운송·물류·전기료·물가 상류 동인</b></>}
           ai={<>유가 상승은 운송·물류·전기료로 전이돼 <b className="font-semibold text-amber-600 dark:text-amber-400">가전 물류원가·소비자 물가 동반 압박</b> → 조달·판가 선제 점검, 하락기엔 원가 여유·프로모 여력</>}
           tone="amber" src={src("DOE 주간 유가(oil_prices) · 월평균")} />
       )}
       {gas.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="휘발유 등급별 (RON95·RON91)" unit="₱/L · 월별" labels={gas.labels} series={gas.series} decimals={1} seriesUnit="₱"
           legend={<><Lg c={C.ind} t="RON95" b /><Lg c={C.rose} t="RON91" /></>}
-          meaning={<>휘발유 등급별 소매가 — <b className="text-gray-700 dark:text-gray-200">이동·물류비의 세부 동인, 경유와 함께 원가 상류</b></>}
+          meaning={<>휘발유 등급별 소매가 — <b className="text-gray-700 dark:text-gray-200">이동·물류비 세부 동인</b></>}
           ai={<>휘발유가 상승은 방문설치·A/S 물류비와 소비자 이동비용을 함께 압박 → <b className="font-semibold text-amber-600 dark:text-amber-400">서비스 물류원가·체감 구매력 점검</b>, 하락기엔 프로모 여력</>}
           tone="amber" src={src("DOE 주간 유가(RON95·RON91) · 월평균")} />
       )}

@@ -283,7 +283,7 @@ export default function FxView() {
           <div className="grid items-stretch gap-4 sm:grid-cols-2">
             <ChartCard title="동남아 6개국 통화 약세도" unit="대미달러 · 창 시작=100 · 위=절하" labels={labels} series={region} tone="rose"
               legend={<><Lg c="#4338ca" t="필리핀" b /><Lg c="#ef4444" t="인니" /><Lg c="#0ea5e9" t="말련" /><Lg c="#10b981" t="태국" /><Lg c="#f59e0b" t="베트남" /><Lg c="#a855f7" t="싱가포르" /></>}
-              meaning={<>각국 통화의 대미달러 가치를 창 시작=100으로 지수화 — <b className="text-gray-700 dark:text-gray-200">아래로 갈수록 약세</b>.</>}
+              meaning={<>대미달러 가치 지수화(시작=100) — <b className="text-gray-700 dark:text-gray-200">아래로 갈수록 약세</b></>}
               ai={<>페소는 5년간 대미달러 약 18% 절하로 <b className="font-semibold text-rose-600 dark:text-rose-400">역내 최대 낙폭</b>. 페소로 결제하지 않는 한 경쟁국 대비 원가 방어력이 약함 → 헤지·현지조달 확대 검토.</>}
               src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 양자환율</>} />
             <ChartCard title="₱/USD 기본 환율" unit="달러당 페소" labels={labels} series={fxusd} seriesUnit="" decimals={2} tone="rose"
@@ -308,7 +308,7 @@ export default function FxView() {
               src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 · 대페소 환산, 창 시작=100</>} />
             <ChartCard title="페소 실효환율 NEER·REER" unit="BIS · 2020=100" labels={labels} series={eer} tone="amber"
               legend={<><Lg c="#6366f1" t="NEER 명목" b /><Lg c="#a1795b" t="REER 실질" /></>}
-              meaning={<><b className="text-gray-700 dark:text-gray-200">NEER</b>=교역가중 명목가치(원가 종합압력), <b className="text-gray-700 dark:text-gray-200">REER</b>=물가반영 실질가치(구매력·수요).</>}
+              meaning={<><b className="text-gray-700 dark:text-gray-200">NEER</b>=명목 교역가중, <b className="text-gray-700 dark:text-gray-200">REER</b>=물가반영 실질</>}
               ai={<>명목(NEER) 96.8→88.7 약세지만 실질(REER)은 98선 유지 — <b className="font-semibold text-amber-600 dark:text-amber-400">물가가 명목 약세를 상쇄</b>. 원가는 오르는데 실질 구매력은 정체 → 저가·필수형 우선, 프리미엄은 심리 반등 후.</>}
               src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> BIS 실효환율 공식통계 (Broad, 64개국)</>} />
           </div>
