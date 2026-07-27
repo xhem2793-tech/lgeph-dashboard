@@ -243,12 +243,16 @@ export default function EnergyLabelView() {
   const seg = segs[segIdx] || segs[0]
   const segRows = useMemo(() => catRows.filter((r) => byType(r) && seg && inSeg(r, seg)), [catRows, seg, typ])
 
-  const rank = useMemo(() => {
+  const { rank, lgR, lgRk, brandCount } = useMemo(() => {
     const by: Record<string, number[]> = {}; for (const r of segRows) (by[r.brand] = by[r.brand] || []).push(r.eff!)
-    // LG는 모델 1개만 있어도 항상 노출(용량대별 LG 포지션 확인용), 그 외 브랜드는 노이즈 방지 위해 2개 이상
-    return Object.entries(by).map(([name, a]) => ({ name, v: avgOf(a)!, n: a.length })).filter((x) => x.n >= 2 || /^lg$/i.test(x.name)).sort((a, b) => b.v - a.v).slice(0, 8)
+    // 모델 2개 이상 브랜드 + LG(1개만 있어도) 전체 랭킹
+    const all = Object.entries(by).map(([name, a]) => ({ name, v: avgOf(a)!, n: a.length })).filter((x) => x.n >= 2 || /^lg$/i.test(x.name)).sort((a, b) => b.v - a.v)
+    const lgIdx = all.findIndex((x) => /^lg$/i.test(x.name))
+    // 상위 8개 표시하되, LG가 8위 밖이면 8번째 자리에 강제로 끼워넣어 항상 노출(냉장고처럼 효율순위 낮아도 위치 확인)
+    let disp = all.slice(0, 8)
+    if (lgIdx >= 8) disp = [...all.slice(0, 7), all[lgIdx]]
+    return { rank: disp, lgR: lgIdx >= 0 ? all[lgIdx] : undefined, lgRk: lgIdx >= 0 ? lgIdx + 1 : 0, brandCount: all.length }
   }, [segRows])
-  const lgR = rank.find((r) => /^lg$/i.test(r.name)); const lgRk = lgR ? rank.indexOf(lgR) + 1 : 0
   const gap = lgR && rank[0] ? ((rank[0].v - lgR.v) / lgR.v) * 100 : null
 
   const scatterData = useMemo(() => {
@@ -321,7 +325,7 @@ export default function EnergyLabelView() {
       <div className="overflow-hidden rounded-xl border border-teal-100 dark:border-teal-500/25 bg-gradient-to-r from-teal-50 dark:from-teal-500/10 via-teal-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
         <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white shadow-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z" /></svg></div>
-          <div className="min-w-0 flex-1 text-[13px] leading-snug text-gray-700 dark:text-gray-200">{loaded && lgR && rank[0] ? <><b className="font-semibold text-gray-900 dark:text-gray-50">에너지 효율 · {cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}</b> — LG {lgRk}위/{rank.length}개사, 리더 {rank[0].name}({rank[0].v.toFixed(2)}) 대비 {gap != null ? gap.toFixed(0) : "—"}% 낮음 · 같은 스펙 비교</> : <><b className="font-semibold text-gray-900 dark:text-gray-50">에너지 효율</b> — DOE 라벨 세그먼트별 브랜드 {cur.metric} 분석</>}</div>
+          <div className="min-w-0 flex-1 text-[13px] leading-snug text-gray-700 dark:text-gray-200">{loaded && lgR && rank[0] ? <><b className="font-semibold text-gray-900 dark:text-gray-50">에너지 효율 · {cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}</b> — LG {lgRk}위/{brandCount}개사, 리더 {rank[0].name}({rank[0].v.toFixed(2)}) 대비 {gap != null ? gap.toFixed(0) : "—"}% 낮음 · 같은 스펙 비교</> : <><b className="font-semibold text-gray-900 dark:text-gray-50">에너지 효율</b> — DOE 라벨 세그먼트별 브랜드 {cur.metric} 분석</>}</div>
           {loaded && lgR && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500 dark:text-teal-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}
         </div>
         {loaded && lgR && (
@@ -329,7 +333,7 @@ export default function EnergyLabelView() {
             <div className="overflow-hidden"><div className="border-t border-teal-100/70 dark:border-teal-500/25 px-4 pb-3.5 pt-3">
               <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-teal-700 dark:text-teal-300">LG {cur.label} 효율 경쟁력 진단 — {typ !== "전체" ? typ + " · " : ""}{seg?.k}</div>
               <ul className="space-y-1 text-[12px] leading-relaxed text-gray-700 dark:text-gray-200">
-                <li>• <b>포지션</b>: 이 세그먼트 {rank.length}개사 중 <b className="text-teal-700 dark:text-teal-300">{lgRk}위</b>({cur.metric} {lgR.v.toFixed(2)}), 리더 {rank[0]?.name} 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? "낮음" : "높음"}.</li>
+                <li>• <b>포지션</b>: 이 세그먼트 {brandCount}개사 중 <b className="text-teal-700 dark:text-teal-300">{lgRk}위</b>({cur.metric} {lgR.v.toFixed(2)}), 리더 {rank[0]?.name} 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? "낮음" : "높음"}.</li>
                 {strong && weak && <li>• <b>용량대 강·약</b>: <b className="text-emerald-600 dark:text-emerald-400">{strong.label}</b> 시장평균 +{strong.diff.toFixed(2)} 강세, <b className="text-rose-600 dark:text-rose-400">{weak.label}</b> {weak.diff.toFixed(2)} 열세 → 차기 개발 우선순위.</li>}
                 {lgGrade && <li>• <b>등급 믹스</b>: LG 5성 {lgGrade.s5.toFixed(0)}%(4성 {lgGrade.s4.toFixed(0)}%) — {lgGrade.s5 >= 60 ? "프리미엄 효율 라인 견고" : "5성 확대 여지"}.</li>}
                 {tco.length >= 2 && tco[0].label === "LG" && <li>• <b>전력비용(TCO)</b>: LG 월 약 <b>₱{tco[0].cost.toLocaleString()}</b>, 리더 대비 {tco[1] ? (tco[0].cost - tco[1].cost > 0 ? `₱${(tco[0].cost - tco[1].cost).toLocaleString()} 높음(효율 개선 시 절감 소구)` : `₱${(tco[1].cost - tco[0].cost).toLocaleString()} 낮음(절감 마케팅 가능)`) : "—"}.</li>}

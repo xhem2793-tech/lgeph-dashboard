@@ -159,12 +159,13 @@
   .mc-tab:hover{border-color:var(--accent);color:var(--accent)}
   .mc-tab.on{background:var(--accent);border-color:var(--accent);color:#fff}
   /* 하단 컨트롤 묶음: 범례 + 월 슬라이더를 한 줄로(겹침·산만 방지) */
-  .mapbottom{display:flex;flex-direction:column;gap:8px}
-  .maplegend{display:flex;align-items:center;gap:8px;width:214px;height:38px;box-sizing:border-box;background:rgba(255,255,255,.97);backdrop-filter:blur(7px);border:1px solid var(--hair);border-radius:12px;padding:0 13px;box-shadow:0 4px 16px rgba(0,0,0,.07);animation:ovin .5s cubic-bezier(.16,1,.3,1)}
+  .mapbottom{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+  /* 내용맞춤 폭(상한) — 라벨+긴 값(경제규모 ₱조+달러)이 고정폭을 넘겨 카드 밖으로 나가던 문제 방지 */
+  .maplegend{display:flex;align-items:center;gap:8px;width:fit-content;max-width:min(84vw,420px);height:38px;box-sizing:border-box;background:rgba(255,255,255,.97);backdrop-filter:blur(7px);border:1px solid var(--hair);border-radius:12px;padding:0 13px;box-shadow:0 4px 16px rgba(0,0,0,.07);animation:ovin .5s cubic-bezier(.16,1,.3,1)}
   .maplegend:empty{display:none}
   .maplegend .lg-t{font-size:11px;font-weight:800;color:var(--ink);white-space:nowrap}
   .maplegend .lg-mn,.maplegend .lg-mx{font-size:9.5px;font-weight:700;color:var(--muted);white-space:nowrap;font-variant-numeric:tabular-nums}
-  .maplegend .lg-bar{flex:1;min-width:30px;height:8px;border-radius:4px}
+  .maplegend .lg-bar{width:54px;flex:none;height:8px;border-radius:4px}
   .mc-hint{margin-top:11px;font-size:10.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
   .mc-hint .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex:none}
   /* 월 선택 슬라이더(지역 인플레이션 전용) */

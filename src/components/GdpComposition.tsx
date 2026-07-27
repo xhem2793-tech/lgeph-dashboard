@@ -72,7 +72,7 @@ export default function GdpComposition() {
         </div>
       )}
       <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 서비스업 비중 확대 = 서비스 중심 경제 · 도시 중산층 소비 저변</p>
-      <p className="mt-2 line-clamp-2 min-h-[34px] border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">서비스화·도시화 심화는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">도시가구·사무공간 냉난방·소형가전 수요 저변</b> → 도시 프리미엄·B2B 채널 우선</p>
+      <p className="mt-2 line-clamp-2 min-h-[34px] border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">AI</b> 서비스화·도시화 심화는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">도시가구·사무공간 냉난방·소형가전 수요 저변</b> → 도시 프리미엄·B2B 채널 우선</p>
       <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> PSA 국민계정 산업별 GDP 비중 · 연간 · 3대 산업 합계 100%</p>
     </div>
   )

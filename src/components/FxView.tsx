@@ -164,7 +164,7 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
       <FxChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />
       <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
       <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
-        <p className="line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
+        <p className="line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">AI</b> {ai}</p>
       </div>
       <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{src}</p>
     </div>
