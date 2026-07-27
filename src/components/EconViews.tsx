@@ -2,7 +2,8 @@
 
 import React, { useEffect, useState } from "react"
 import { macroMonthly, upcomingAgenda, seaCompare, marketEstimates } from "@/lib/supabase"
-import type { AgendaItem } from "@/lib/supabase"
+import type { AgendaItem, CalEvent } from "@/lib/supabase"
+import EventModal from "@/components/EventModal"
 import type { MktEst } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 import { ChartCard, Lg, SLine, fmtLabels } from "@/components/EconChart"
@@ -98,6 +99,7 @@ function Banner({ headline, lg, summary, d, kpiDefs }: BannerDef & { d: Mon; kpi
 export function AgendaCard() {
   // 캘린더 페이지 우측 '예정 일정'과 동일 소스(upcomingAgenda) — 완전 동기화.
   const [ev, setEv] = useState<AgendaItem[]>([])
+  const [sel, setSel] = useState<CalEvent | null>(null) // 클릭 시 캘린더 페이지와 동일 상세 팝업
   useEffect(() => { upcomingAgenda().then(setEv).catch(() => setEv([])) }, [])
   if (!ev.length) return null
   const now = new Date()
@@ -113,7 +115,7 @@ export function AgendaCard() {
         {ev.map((x, i) => {
           const dd = dday(x.date)
           return (
-            <div key={x.label + x.date} style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: 40 + i * 24 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+            <div key={x.label + x.date} onClick={() => x.ev && setSel(x.ev)} style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: 40 + i * 24 + "ms" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
               <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
@@ -124,6 +126,7 @@ export function AgendaCard() {
           )
         })}
       </div>
+      {sel && <EventModal event={sel} onClose={() => setSel(null)} />}
     </div>
   )
 }
