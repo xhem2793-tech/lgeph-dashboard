@@ -62,16 +62,18 @@ function EnergySim({ brands, lgKwh, rate0 }: { brands: { name: string; kwh: numb
 }
 
 // 스크롤로 화면에 들어올 때 애니메이션 재생 — 마운트 시 한 번만 재생돼 놓치는 문제 해소.
-// 안전장치: IO 미지원 시 즉시 on, 1.5s 내 미발화 시 강제 on → 콘텐츠가 영구히 숨겨지지 않음.
+// 중요: 기존 1.5s 강제 on 안전장치는 '화면 밖' 하단 카드(전기요금 TCO·등급·냉매)의 진입 애니메이션을
+// 스크롤 전에 오프스크린으로 재생시켜 버려, 실제로 보일 땐 이미 끝나 있어 애니메이션이 '안 됨'처럼 보였음.
+// → 안전장치를 60초로 늦춰(스크롤로 진작 IO 발화) 정상 스크롤 리빌 보장 + IO 미지원 시에만 즉시 on.
 function useInView() {
   const ref = useRef<HTMLDivElement | null>(null)
   const [on, setOn] = useState(false)
   useEffect(() => {
     const el = ref.current
     if (!el || typeof IntersectionObserver === "undefined") { setOn(true); return }
-    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { setOn(true); io.disconnect() } }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" })
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { setOn(true); io.disconnect() } }, { threshold: 0.01, rootMargin: "0px 0px -30px 0px" })
     io.observe(el)
-    const t = window.setTimeout(() => setOn(true), 1500)
+    const t = window.setTimeout(() => setOn(true), 60000)
     return () => { io.disconnect(); clearTimeout(t) }
   }, [])
   return [ref, on] as const
@@ -236,6 +238,113 @@ function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: numbe
 }
 const avgOf = (a: number[]) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null
 
+// 히스토그램 — 세그먼트 내 전 모델의 효율 분포 + LG 포함분(teal)·중앙값. 시장 대비 LG가 분포 어디에 위치하는지.
+function EffHist({ vals, lgVals, metric }: { vals: number[]; lgVals: number[]; metric: string }) {
+  const [h, setH] = useState<number | null>(null)
+  if (vals.length < 4) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  const lo = Math.min(...vals), hi = Math.max(...vals)
+  const nb = Math.min(8, Math.max(5, Math.round(Math.sqrt(vals.length))))
+  const bw0 = (hi - lo) / nb || 1
+  const bins = Array.from({ length: nb }, (_, i) => ({ lo: lo + bw0 * i, hi: lo + bw0 * (i + 1), n: 0, lg: 0 }))
+  const put = (v: number, key: "n" | "lg") => { let k = Math.floor((v - lo) / bw0); if (k >= nb) k = nb - 1; if (k < 0) k = 0; bins[k][key]++ }
+  for (const v of vals) put(v, "n"); for (const v of lgVals) put(v, "lg")
+  const sorted = [...vals].sort((a, b) => a - b); const med = sorted[Math.floor(sorted.length / 2)]
+  const maxN = Math.max(...bins.map((b) => b.n), 1)
+  const W = 360, H = 178, L = 10, R = 10, T = 14, B = 30, bw = (W - L - R) / nb
+  const Y = (n: number) => T + (H - T - B) * (1 - n / maxN)
+  const X = (v: number) => L + (W - L - R) * ((v - lo) / ((hi - lo) || 1))
+  return (
+    <div className="flex h-full w-full flex-col">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
+        <line x1={L} y1={H - B} x2={W - R} y2={H - B} stroke="#cbd5e1" strokeWidth="1" className="dark:stroke-gray-700" />
+        {bins.map((b, i) => { const x = L + bw * i, dim = h != null && h !== i
+          return (
+            <g key={i} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.5 : 1, transition: "opacity .15s" }}>
+              <rect x={x} y={T} width={bw} height={H - T - B} fill="transparent" /><title>{b.lo.toFixed(2)}~{b.hi.toFixed(2)} · {b.n}모델{b.lg ? ` (LG ${b.lg})` : ""}</title>
+              <rect x={x + 1.5} y={Y(b.n)} width={Math.max(1, bw - 3)} height={H - B - Y(b.n)} rx="2" fill={GRAY} className="dark:opacity-40" style={{ animation: "growBar .55s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.08 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />
+              {b.lg > 0 && <rect x={x + 1.5} y={Y(b.lg)} width={Math.max(1, bw - 3)} height={H - B - Y(b.lg)} rx="2" fill={TEAL} style={{ animation: "growBar .55s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.14 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />}
+              {b.n > 0 && <text x={x + bw / 2} y={Y(b.n) - 3} textAnchor="middle" fontSize="8" className="fill-gray-500 dark:fill-gray-400">{b.n}</text>}
+            </g>
+          )
+        })}
+        <line x1={X(med)} y1={T} x2={X(med)} y2={H - B} stroke="#f59e0b" strokeWidth="1.2" strokeDasharray="3 2" />
+        <text x={X(med)} y={T + 7} textAnchor="middle" fontSize="7.5" fontWeight="700" fill="#d97706">중앙 {med.toFixed(1)}</text>
+        <text x={L} y={H - B + 11} fontSize="8" fill="#94a3b8">{lo.toFixed(1)}</text>
+        <text x={W - R} y={H - B + 11} textAnchor="end" fontSize="8" fill="#94a3b8">{hi.toFixed(1)}</text>
+        <text x={(L + W - R) / 2} y={H - 1} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b">효율({metric}) 구간 →</text>
+      </svg>
+      <div className="mt-1 flex shrink-0 items-center gap-3 text-[10px]"><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: TEAL }} />LG</span><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-gray-300 dark:bg-gray-600" />시장</span><span className="text-gray-400">구간별 모델수</span></div>
+    </div>
+  )
+}
+
+// 용량↔효율 지형 — 카테고리 전체 모델. x=용량(스펙), y=효율. LG(teal)·시장(gray). 용량대별 LG 포진·효율 추세를 한눈에.
+function CapScatter({ pts, metric, specUnit }: { pts: { spec: number; eff: number; isLG: boolean; name: string }[]; metric: string; specUnit: string }) {
+  const [h, setH] = useState<number | null>(null)
+  if (pts.length < 3) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  const W = 400, H = 200, L = 40, R = 12, T = 14, B = 32
+  const sxs = pts.map((p) => p.spec), eys = pts.map((p) => p.eff)
+  const pad = (lo: number, hi: number) => { const d = (hi - lo) * 0.08 || 1; return [lo - d, hi + d] as const }
+  const [sx0, sx1] = pad(Math.min(...sxs), Math.max(...sxs)), [ey0, ey1] = pad(Math.min(...eys), Math.max(...eys))
+  const X = (v: number) => L + (W - L - R) * ((v - sx0) / ((sx1 - sx0) || 1))
+  const Y = (v: number) => T + (H - T - B) * (1 - (v - ey0) / ((ey1 - ey0) || 1))
+  return (
+    <div className="flex h-full w-full flex-col">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
+        {[0.25, 0.5, 0.75].map((f) => <line key={"h" + f} x1={L} y1={T + (H - T - B) * f} x2={W - R} y2={T + (H - T - B) * f} stroke="#e5e7eb" strokeWidth="0.6" strokeDasharray="2 3" className="dark:stroke-gray-800" />)}
+        <line x1={L} y1={T} x2={L} y2={H - B} stroke="#cbd5e1" strokeWidth="1" className="dark:stroke-gray-700" />
+        <line x1={L} y1={H - B} x2={W - R} y2={H - B} stroke="#cbd5e1" strokeWidth="1" className="dark:stroke-gray-700" />
+        <text x={L - 4} y={T + 4} textAnchor="end" fontSize="8" fill="#94a3b8">{ey1.toFixed(1)}</text>
+        <text x={L - 4} y={H - B} textAnchor="end" fontSize="8" fill="#94a3b8">{ey0.toFixed(1)}</text>
+        <text x={11} y={(T + H - B) / 2} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b" transform={`rotate(-90 11 ${(T + H - B) / 2})`}>효율({metric}) ↑</text>
+        <text x={(L + W - R) / 2} y={H - 2} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b">{specUnit} →</text>
+        {pts.map((p, i) => (
+          <g key={i} onMouseEnter={() => setH(i)} style={{ cursor: "default" }} opacity={h == null || h === i || p.isLG ? 1 : 0.4}>
+            <title>{p.name} · {specUnit} {p.spec} · {metric} {p.eff.toFixed(2)}</title>
+            <circle cx={X(p.spec)} cy={Y(p.eff)} r={p.isLG ? 5.5 : 3.4} fill={p.isLG ? TEAL : "#94a3b8"} stroke="#fff" strokeWidth={p.isLG ? 1.3 : 0.6} className={p.isLG ? "" : "dark:fill-gray-500"} style={{ animation: "fadeIn .5s ease both", animationDelay: Math.min(i, 40) * 0.012 + "s", transition: "opacity .15s" }} />
+          </g>
+        ))}
+      </svg>
+      <div className="mt-1 shrink-0 text-[10px] text-gray-400"><span className="font-semibold text-teal-600 dark:text-teal-400">● LG</span> · 우상단일수록 대용량·고효율</div>
+    </div>
+  )
+}
+
+// 브랜드 포지셔닝 버블 — x=평균효율, y=5성 비중%, 크기=모델수(라인업 폭). 우상단·큰버블=고효율·프리미엄·풀라인업.
+function Bubble({ items, metric }: { items: { name: string; eff: number; s5: number; n: number; isLG: boolean }[]; metric: string }) {
+  const [h, setH] = useState<number | null>(null)
+  if (items.length < 2) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  const W = 400, H = 200, L = 40, R = 16, T = 16, B = 30
+  const exs = items.map((p) => p.eff)
+  const pad = (lo: number, hi: number) => { const d = (hi - lo) * 0.12 || 1; return [lo - d, hi + d] as const }
+  const [ex0, ex1] = pad(Math.min(...exs), Math.max(...exs))
+  const X = (v: number) => L + (W - L - R) * ((v - ex0) / ((ex1 - ex0) || 1))
+  const Y = (v: number) => T + (H - T - B) * (1 - v / 100)
+  const maxN = Math.max(...items.map((i) => i.n), 1)
+  const rad = (n: number) => 4 + 10 * Math.sqrt(n / maxN)
+  return (
+    <div className="flex h-full w-full flex-col">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
+        {[0, 25, 50, 75, 100].map((p) => <line key={p} x1={L} y1={Y(p)} x2={W - R} y2={Y(p)} stroke="#e5e7eb" strokeWidth="0.6" strokeDasharray="2 3" className="dark:stroke-gray-800" />)}
+        <line x1={L} y1={T} x2={L} y2={H - B} stroke="#cbd5e1" strokeWidth="1" className="dark:stroke-gray-700" />
+        <line x1={L} y1={H - B} x2={W - R} y2={H - B} stroke="#cbd5e1" strokeWidth="1" className="dark:stroke-gray-700" />
+        <text x={L - 4} y={Y(100) + 3} textAnchor="end" fontSize="8" fill="#94a3b8">100</text>
+        <text x={L - 4} y={Y(0)} textAnchor="end" fontSize="8" fill="#94a3b8">0</text>
+        <text x={11} y={(T + H - B) / 2} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b" transform={`rotate(-90 11 ${(T + H - B) / 2})`}>5성 비중(%) ↑</text>
+        <text x={(L + W - R) / 2} y={H - 2} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b">평균 효율({metric}) →</text>
+        {items.map((p, i) => (
+          <g key={p.name} onMouseEnter={() => setH(i)} style={{ cursor: "default" }} opacity={h == null || h === i || p.isLG ? 1 : 0.45}>
+            <title>{p.name} · {metric} {p.eff.toFixed(2)} · 5성 {p.s5.toFixed(0)}% · {p.n}모델</title>
+            <circle cx={X(p.eff)} cy={Y(p.s5)} r={rad(p.n)} fill={p.isLG ? TEAL : "#94a3b8"} fillOpacity={p.isLG ? 0.85 : 0.4} stroke={p.isLG ? "#0d9488" : "#94a3b8"} strokeWidth={p.isLG ? 1.6 : 0.8} style={{ animation: "fadeIn .5s ease both", animationDelay: i * 0.04 + "s", transition: "opacity .15s" }} />
+            {(p.isLG || h === i) && <text x={X(p.eff)} y={Y(p.s5) - rad(p.n) - 2} textAnchor="middle" fontSize="9" fontWeight="800" className={p.isLG ? "fill-teal-700 dark:fill-teal-300" : "fill-gray-600 dark:fill-gray-200"}>{p.name}</text>}
+          </g>
+        ))}
+      </svg>
+      <div className="mt-1 shrink-0 text-[10px] text-gray-400"><span className="font-semibold text-teal-600 dark:text-teal-400">● LG</span> · 버블 크기=모델수(라인업 폭) · 우상단=고효율·프리미엄</div>
+    </div>
+  )
+}
+
 // LG 커버리지 매트릭스 — 설치형(행) × 용량(열). 셀=LG 모델수, 색농도=LG 평균효율. LG 라인업 전모를 한 화면에.
 type Cell = { lgN: number; lgEff: number | null; mktN: number; mktEff: number | null }
 function Heatmap({ rowLabels, colLabels, cells, metric, effLo, effHi }: { rowLabels: string[]; colLabels: string[]; cells: Record<string, Cell>; metric: string; effLo: number; effHi: number }) {
@@ -379,6 +488,22 @@ export default function EnergyLabelView() {
   // LG 강·약 세그먼트(분석 요약)
   const simBrands = useMemo(() => { const by: Record<string, number[]> = {}; for (const r of segRows) if (r.kwh != null && r.kwh > 0) (by[r.brand] = by[r.brand] || []).push(r.kwh); return Object.entries(by).map(([name, a]) => ({ name, kwh: avgOf(a)! })).filter((x) => x.kwh > 0).sort((a, b) => a.kwh - b.kwh) }, [segRows])
   const lgKwh = simBrands.find((b) => /^lg$/i.test(b.name))?.kwh ?? null
+
+  // 신규: 효율 분포 히스토그램(세그먼트) · 용량↔효율 지형(카테고리 전체) · 브랜드 포지셔닝 버블
+  const histData = useMemo(() => ({
+    vals: segRows.map((r) => r.eff!).filter((v) => Number.isFinite(v)),
+    lgVals: segRows.filter((r) => /^lg$/i.test(r.brand)).map((r) => r.eff!).filter((v) => Number.isFinite(v)),
+  }), [segRows])
+  const capData = useMemo(() => catRows.filter((r) => byType(r) && r.spec != null && r.eff != null).map((r) => ({ spec: r.spec!, eff: r.eff!, isLG: /^lg$/i.test(r.brand), name: r.brand })), [catRows, typ]) // eslint-disable-line
+  const bubbleData = useMemo(() => {
+    const by: Record<string, EnergyRow[]> = {}; for (const r of segRows) (by[r.brand] = by[r.brand] || []).push(r)
+    return Object.entries(by).map(([name, a]) => {
+      const effs = a.map((r) => r.eff!).filter((v) => Number.isFinite(v))
+      const st = a.filter((r) => r.star != null)
+      const s5 = st.length ? st.filter((r) => (r.star ?? 0) >= 5).length / st.length * 100 : 0
+      return { name, eff: avgOf(effs)!, s5, n: a.length, isLG: /^lg$/i.test(name) }
+    }).filter((x) => (x.n >= 2 || x.isLG) && Number.isFinite(x.eff))
+  }, [segRows])
   const lgSegPos = useMemo(() => bySegChart.map((g) => ({ label: g.label, diff: g.lg != null ? g.lg - g.mkt : null })).filter((x) => x.diff != null) as { label: string; diff: number }[], [bySegChart])
   const strong = [...lgSegPos].sort((a, b) => b.diff - a.diff)[0]
   const weak = [...lgSegPos].sort((a, b) => a.diff - b.diff)[0]
@@ -492,6 +617,9 @@ export default function EnergyLabelView() {
                   </Sub>
                 )
               })()}
+              <Sub idx={6} title="효율 분포 (히스토그램)" seg={seg?.k} note={<>이 세그먼트 전 모델의 {cur.metric} 분포. <b className="text-teal-600 dark:text-teal-400">teal=LG 포함분</b>, 주황 점선=시장 중앙값. LG가 <b>고효율 우측 구간</b>에 있는지로 포지션 확인.</>} csv={{ head: ["구간(하한)", "모델수"], rows: (() => { const v = histData.vals; if (v.length < 4) return []; const lo = Math.min(...v), hi = Math.max(...v), nb = Math.min(8, Math.max(5, Math.round(Math.sqrt(v.length)))), bw = (hi - lo) / nb || 1; const b = Array(nb).fill(0); for (const x of v) { let k = Math.floor((x - lo) / bw); if (k >= nb) k = nb - 1; if (k < 0) k = 0; b[k]++ } return b.map((n, i) => [(lo + bw * i).toFixed(2), n]) })() }}><EffHist vals={histData.vals} lgVals={histData.lgVals} metric={cur.metric} /></Sub>
+              <Sub idx={7} title="용량↔효율 지형" note={<>{cur.label} 전 용량대 개별 모델의 <b>용량 대비 효율</b> 지형. <b className="text-teal-600 dark:text-teal-400">teal=LG</b>. LG가 어느 용량 구간에 포진하고 효율이 시장 추세선 대비 어디인지 파악.</>} csv={{ head: ["브랜드", cur.specUnit, cur.metric], rows: capData.map((p) => [p.name, p.spec, p.eff.toFixed(2)]) }}><CapScatter pts={capData} metric={cur.metric} specUnit={cur.specUnit} /></Sub>
+              <Sub idx={8} title="브랜드 포지셔닝" seg={seg?.k} note={<>x=평균 {cur.metric}, y=5성 비중, <b>버블 크기=모델수</b>(라인업 폭). <b className="text-teal-600 dark:text-teal-400">우상단·큰 버블</b>=고효율·프리미엄·풀라인업. LG 위치로 3축 경쟁력 동시 진단.</>} csv={{ head: ["브랜드", cur.metric, "5성%", "모델수"], rows: bubbleData.map((p) => [p.name, p.eff.toFixed(2), p.s5.toFixed(0), p.n]) }}><Bubble items={bubbleData} metric={cur.metric} /></Sub>
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <button type="button" onClick={() => setModelOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".28s" }}>

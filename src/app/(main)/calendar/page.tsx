@@ -1,7 +1,7 @@
 "use client"
 
 import React from "react"
-import { calendarEvents, freshness, fmtStamp, type CalEvent } from "@/lib/supabase"
+import { calendarEvents, freshness, fmtStamp, upcomingAgenda, type CalEvent, type AgendaItem } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 
 /** 경제캘린더 — 좌 그리드(전체 이벤트) + 우 위젯(구성·수요 선행) + 하단 목록.
@@ -162,34 +162,9 @@ export default function Calendar() {
     for (const r of inMonth) if (m[r.kind] !== undefined) m[r.kind]++
     return m
   }, [inMonth])
-  const triggers = React.useMemo(() => {
-    const out: { label: string; date: string; note: string; dot: string }[] = []
-    const y = today.getFullYear(), mo = today.getMonth(), dd = today.getDate()
-    const end = new Date(y, mo + 1, 0).getDate()
-    const nextPay = dd < 15 ? new Date(y, mo, 15) : dd < end ? new Date(y, mo + 1, 0) : new Date(y, mo + 1, 15)
-    out.push({ label: "급여일", date: iso(nextPay), note: "오프라인 가전 구매 스파이크", dot: "bg-emerald-500" })
-    const sales = ["2026-08-08", "2026-09-09", "2026-10-10", "2026-11-11", "2026-12-12"]
-    const ns = sales.find((s) => s >= iso(today))
-    if (ns) out.push({ label: "이커머스 대형세일", date: ns, note: ns.slice(5).replace("-", ".") + " 메가세일", dot: "bg-violet-500" })
-    const elec = all
-      .filter((r) => r.category === "에너지" && (r.event.includes("전기요금") || r.event.includes("Meralco")) && r.date >= iso(today))
-      .sort((a, b) => a.date.localeCompare(b.date))[0]
-    if (elec) out.push({ label: "전기요금 변동", date: elec.date, note: "냉방가전 사용부담 좌우", dot: "bg-amber-500" })
-    return out
-  }, [all, today])
-  const agenda = React.useMemo(() => {
-    const t0 = iso(today)
-    const t14 = iso(addDays(today, 14))
-    const items: { date: string; label: string; note: string; dot: string; ev?: CalEvent }[] = []
-    for (const r of all) {
-      if (r.date >= t0 && r.date <= t14) items.push({ date: r.date, label: head(r.event), note: catLabel(r.category) + " · " + (KIND[r.kind] || ""), dot: tone(r.category).dot, ev: r })
-    }
-    for (const x of triggers) {
-      if (x.date >= t0 && x.date <= t14) items.push({ date: x.date, label: x.label, note: x.note, dot: x.dot })
-    }
-    items.sort((a, b) => a.date.localeCompare(b.date))
-    return items.slice(0, 10)
-  }, [all, triggers, today])
+  // 예정 일정 — 경제지표 페이지 위젯(AgendaCard)과 동일한 공유 소스로 완전 동기화.
+  const [agenda, setAgenda] = React.useState<AgendaItem[]>([])
+  React.useEffect(() => { upcomingAgenda().then(setAgenda).catch(() => setAgenda([])) }, [])
 
   const crit = inMonth.filter((r) => r.importance >= 3).length
   const label =

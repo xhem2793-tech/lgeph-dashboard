@@ -10,8 +10,9 @@ import { Segmented } from "@/components/Segmented"
  *  레이아웃: 접이식 배너 + 좌측 차트그리드(표준 카드) + 우측 아젠다(다른 뷰와 동일). */
 
 const C = { ind: "#4f46e5", emer: "#059669", blue: "#2563eb", violet: "#7c3aed", rose: "#e11d48", amber: "#d97706" }
+// 범례 마커 — 타 페이지(EconChart의 Lg)와 동일한 '선(-)' 스타일로 통일(기존 원형 'o'에서 변경)
 const Lg = ({ c, t }: { c: string; t: string }) => (
-  <span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full" style={{ background: c }} /><span className="text-gray-600 dark:text-gray-300">{t}</span></span>
+  <span className="inline-flex items-center gap-1.5"><span className="inline-block h-0 w-3" style={{ borderTop: "2.4px solid " + c }} /><span className="text-gray-600 dark:text-gray-300">{t}</span></span>
 )
 
 type Series = { value: number; date: string }[]
@@ -136,8 +137,8 @@ export default function OnlineMarketView() {
                 src={src("World Bank·ITU 통신지표 · 연간")} />
             )}
             {cDpay.has && (
-              <ChartCard seg="CE" title="디지털 결제 비중 (e-wallet)" unit="% 소매결제 건수 · 연간" labels={cDpay.labels} series={cDpay.series} decimals={0} seriesUnit="%"
-                legend={<Lg c={C.emer} t="디지털 결제 비중" />}
+              <ChartCard seg="CE" title="디지털 결제 비중" unit="% 소매결제 · 연간" labels={cDpay.labels} series={cDpay.series} decimals={0} seriesUnit="%"
+                legend={<Lg c={C.emer} t="e-wallet·계좌이체" />}
                 meaning={<>소매결제 중 디지털(계좌이체·e-wallet) 비중 — <b className="text-gray-700 dark:text-gray-200">GCash·Maya 등 e-wallet 확산의 직접 지표</b></>}
                 ai={<><b className="font-semibold text-emerald-600 dark:text-emerald-400">2013년 1% → 2023년 52.8%</b>로 폭증, 카드(3%) 건너뛰고 <b className="font-semibold">e-wallet(GCash 9천만명·Maya)</b>이 주류 결제수단화. 온라인 가전은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">e-wallet·QR·BNPL 결제 연동</b>이 필수 · <b>트렌드</b>: 팬데믹(2020~21) 가속, BSP 50% 목표 조기 달성.</>}
                 src={src("BSP Report on the State of Digital Payments · 연간(건수 기준)")} />

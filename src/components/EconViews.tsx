@@ -1,7 +1,8 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { macroMonthly, calendarUpcoming, seaCompare, marketEstimates } from "@/lib/supabase"
+import { macroMonthly, upcomingAgenda, seaCompare, marketEstimates } from "@/lib/supabase"
+import type { AgendaItem } from "@/lib/supabase"
 import type { MktEst } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 import { ChartCard, Lg, SLine, fmtLabels } from "@/components/EconChart"
@@ -95,8 +96,9 @@ function Banner({ headline, lg, summary, d, kpiDefs }: BannerDef & { d: Mon; kpi
 
 // ── 우측 위젯: 경제 일정 (모든 카테고리 공통 위젯 하나) ────────────────────
 export function AgendaCard() {
-  const [ev, setEv] = useState<{ date: string; event: string; category: string }[]>([])
-  useEffect(() => { calendarUpcoming(6).then((r) => setEv(r.map((x) => ({ date: x.date, event: x.event, category: x.category })))).catch(() => setEv([])) }, [])
+  // 캘린더 페이지 우측 '예정 일정'과 동일 소스(upcomingAgenda) — 완전 동기화.
+  const [ev, setEv] = useState<AgendaItem[]>([])
+  useEffect(() => { upcomingAgenda().then(setEv).catch(() => setEv([])) }, [])
   if (!ev.length) return null
   const now = new Date()
   const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
@@ -104,18 +106,18 @@ export function AgendaCard() {
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: "80ms" }}>
       <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
-        <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">경제 일정</h2>
-        <span className="text-[11px] text-gray-400 dark:text-gray-500">지표 발표</span>
+        <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">예정 일정</h2>
+        <span className="text-[11px] text-gray-400 dark:text-gray-500">2주간</span>
       </header>
       <div className="mt-2 flex flex-col">
         {ev.map((x, i) => {
           const dd = dday(x.date)
           return (
-            <div key={i} style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: 40 + i * 24 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
-              <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-500" />
+            <div key={x.label + x.date} style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: 40 + i * 24 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+              <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{x.event}</span>
-                <span className="block text-[10.5px] text-gray-500 dark:text-gray-400">{x.category}</span>
+                <span className="block truncate text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
+                <span className="block text-[10.5px] text-gray-500 dark:text-gray-400">{x.note}</span>
               </span>
               <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500 dark:text-gray-400">{dd === 0 ? "오늘" : dd > 0 ? "D-" + dd : "D+" + -dd}</span>
             </div>
@@ -383,7 +385,7 @@ export function ApplianceView() {
 // ══════════════════════════════════════════════════════════════════════
 // 통화·금리·신용 — 정책금리·M3·가계신용
 // ══════════════════════════════════════════════════════════════════════
-const RATES_KEYS = ["policy_rate_monthly", "BSP_policy_rate", "interbank_call_rate", "m3_growth_yoy", "broad_money_growth", "domestic_credit_pct_gdp", "bank_loan_growth_yoy", "consumer_loan_growth_yoy", "credit_card_loan_growth_yoy", "current_account_pct_gdp", "fdi_net_inflow_usd", "trade_balance_gdp", "exports_gdp", "imports_gdp", "govt_exp_gdp", "reserves_usd", "credit_card_ownership", "debit_card_ownership", "credit_card_used", "borrowed_any_pct", "saved_at_fi_pct", "account_ownership", "govt_debt_gdp", "tax_revenue_gdp", "gross_savings_gdp", "market_cap_gdp"]
+const RATES_KEYS = ["policy_rate_monthly", "BSP_policy_rate", "interbank_call_rate", "m3_growth_yoy", "broad_money_growth", "domestic_credit_pct_gdp", "bank_loan_growth_yoy", "consumer_loan_growth_yoy", "credit_card_loan_growth_yoy", "current_account_pct_gdp", "fdi_net_inflow_usd", "trade_balance_gdp", "exports_gdp", "imports_gdp", "govt_exp_gdp", "reserves_usd", "credit_card_ownership", "debit_card_ownership", "credit_card_used", "borrowed_any_pct", "saved_at_fi_pct", "account_ownership", "govt_debt_gdp", "tax_revenue_gdp", "gross_savings_gdp", "market_cap_gdp", "psei_index"]
 export function RatesView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(RATES_KEYS)
@@ -401,6 +403,7 @@ export function RatesView() {
   const finuse = build(d, n, [{ key: "borrowed_any_pct", name: "차입 경험", color: C.rose, w: 2 }, { key: "saved_at_fi_pct", name: "금융기관 저축", color: C.emer }]) // Findex 연간 %
   const fisc = build(d, n, [{ key: "govt_debt_gdp", name: "정부부채", color: C.rose, w: 2 }, { key: "gross_savings_gdp", name: "총저축률", color: C.emer }, { key: "tax_revenue_gdp", name: "조세수입", color: C.ind }]) // %GDP 연간
   const mktcap = build(d, n, [{ key: "market_cap_gdp", name: "주식 시가총액", color: C.ind, w: 2 }]) // %GDP 연간
+  const psei = build(d, n, [{ key: "psei_index", name: "PSEi 지수", color: C.ind, w: 2 }]) // 월말 종가, 지수
   const empty = !pol.series.length && !loan.series.length && !m3.series.length && !credit.series.length && !cab.series.length && !fdi.series.length && !trade.series.length && !reserves.series.length && !govt.series.length
   return (
     <Shell title="통화·금리·신용" sub="기준금리·통화량 M3·가계신용 — 할부·카드 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d} accent="blue"
@@ -466,6 +469,13 @@ export function RatesView() {
           meaning={<>상장주식 시총/GDP — <b className="text-gray-700 dark:text-gray-200">자본시장 깊이·자산효과</b></>}
           ai={<>시총/GDP는 <b className="font-semibold text-amber-600 dark:text-amber-400">2007 피크(~70%) 후 하락세(~48%)</b> = 자본시장 상대적 정체 → 소비는 자산효과보다 <b className="font-semibold text-emerald-600 dark:text-emerald-400">소득·송금 의존</b>이 구조적.</>}
           tone="amber" src={src("World Bank WDI 상장주식 시가총액(%GDP) · 연간")} />
+      )}
+      {psei.series.length > 0 && (
+        <ChartCard seg="B2B" title="PSEi 주가지수 (월말)" unit="지수 · 월별" labels={psei.labels} series={psei.series} decimals={0} seriesUnit=""
+          legend={<Lg c={C.ind} t="PSEi 종합지수" b />}
+          meaning={<>필리핀 증시 종합지수 — <b className="text-gray-700 dark:text-gray-200">투자심리·자산효과·경기 선행</b></>}
+          ai={<>PSEi는 <b className="font-semibold text-amber-600 dark:text-amber-400">2015년 7,700선 → 2026년 6,000대</b>로 장기 박스권·정체 = 자산효과 제한적. <b>트렌드</b>: 2020년 코로나 급락(4,000대) 후 회복했으나 고금리·외국인 이탈로 <b className="font-semibold text-rose-600 dark:text-rose-400">2026년 상반기 5,700대까지 재하락</b> 후 반등 — 증시보다 소득·송금이 소비 동력.</>}
+          tone="amber" src={src("PSE(필리핀증권거래소) 종합지수 · Yahoo Finance 월말 종가")} />
       )}
         </> },
         { key: "money_ext", label: "통화·대외", node: <>

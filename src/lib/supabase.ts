@@ -885,6 +885,43 @@ export async function calendarEvents(from: string, to: string) {
   })) as CalEvent[]
 }
 
+// ── 예정 일정(2주) — 캘린더 페이지 우측 위젯과 경제지표 페이지 위젯이 공유하는 단일 소스.
+//    로직: v_calendar_month(월초~+3개월) → kind!=other(공휴일 예외) 필터 → 오늘~+14일 창 +
+//    트리거(급여일·이커머스 대형세일·전기요금 변동) 병합 → 날짜순 → 상위 10.
+export type AgendaItem = { date: string; label: string; note: string; dot: string; category: string; ev?: CalEvent }
+const CAT_DOT: Record<string, string> = { 경제: "bg-emerald-500", 금융: "bg-blue-500", 정치: "bg-purple-500", 규제: "bg-red-500", 에너지: "bg-amber-500", 유통: "bg-violet-500", 공휴일: "bg-teal-500", 기타: "bg-gray-400" }
+const KIND_LABEL: Record<string, string> = { release: "지표 발표", policy: "정책·규제", holiday: "공휴일" }
+const agHead = (s: string) => s.split(/[—–]/)[0].replace(/\s*\(.*?\)\s*$/, "").trim()
+const agCat = (c: string) => (c === "규제" ? "정책" : c)
+
+export async function upcomingAgenda(): Promise<AgendaItem[]> {
+  const t = new Date()
+  const p = (n: number) => String(n).padStart(2, "0")
+  const isoD = (d: Date) => d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate())
+  const monthStart = new Date(t.getFullYear(), t.getMonth(), 1)
+  const end = new Date(t.getFullYear(), t.getMonth() + 3, 0)
+  const all = (await calendarEvents(isoD(monthStart), isoD(end))).filter((x) => x.kind !== "other" || x.category === "공휴일")
+  const t0 = isoD(t)
+  const t14 = isoD(new Date(t.getFullYear(), t.getMonth(), t.getDate() + 14))
+  const items: AgendaItem[] = []
+  for (const r of all) {
+    if (r.date >= t0 && r.date <= t14) items.push({ date: r.date, label: agHead(r.event), note: agCat(r.category) + " · " + (KIND_LABEL[r.kind] || ""), dot: CAT_DOT[r.category] ?? CAT_DOT["기타"], category: r.category, ev: r })
+  }
+  // 트리거(캘린더 페이지와 동일)
+  const y = t.getFullYear(), mo = t.getMonth(), dd = t.getDate()
+  const eom = new Date(y, mo + 1, 0).getDate()
+  const nextPay = dd < 15 ? new Date(y, mo, 15) : dd < eom ? new Date(y, mo + 1, 0) : new Date(y, mo + 1, 15)
+  const trg: AgendaItem[] = [{ date: isoD(nextPay), label: "급여일", note: "오프라인 가전 구매 스파이크", dot: "bg-emerald-500", category: "경제" }]
+  const sales = ["2026-08-08", "2026-09-09", "2026-10-10", "2026-11-11", "2026-12-12"]
+  const ns = sales.find((s) => s >= t0)
+  if (ns) trg.push({ date: ns, label: "이커머스 대형세일", note: ns.slice(5).replace("-", ".") + " 메가세일", dot: "bg-violet-500", category: "유통" })
+  const elec = all.filter((r) => r.category === "에너지" && (r.event.includes("전기요금") || r.event.includes("Meralco")) && r.date >= t0).sort((a, b) => a.date.localeCompare(b.date))[0]
+  if (elec) trg.push({ date: elec.date, label: "전기요금 변동", note: "냉방가전 사용부담 좌우", dot: "bg-amber-500", category: "에너지" })
+  for (const x of trg) if (x.date >= t0 && x.date <= t14) items.push(x)
+  items.sort((a, b) => a.date.localeCompare(b.date))
+  return items.slice(0, 10)
+}
+
 export async function macroMonthly(inds: string[], n = 18) {
   const list = inds.map((s) => encodeURIComponent(s)).join(",")
   // PostgREST 행 상한(서버 하드캡 1000, limit로 상향 불가) 대응 — offset 페이지네이션으로 전량 수집.
