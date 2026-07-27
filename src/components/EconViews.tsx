@@ -267,7 +267,7 @@ function CrossBarCard({ d, items, title, seg, unit, meaning, ai, source, sort = 
         ))}
       </div>
       <p className="mt-2.5 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
-      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">AI</b> {ai}</p></div>
+      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> {ai}</p></div>
       <div className="mt-auto pt-2.5 text-[10px] text-gray-400 dark:text-gray-500">{src(source)}</div>
     </div>
   )
@@ -299,7 +299,7 @@ function OwnershipCard({ d }: { d: Mon }) {
         ))}
       </div>
       <p className="mt-2.5 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 가구 보유율 = 시장 침투율. <b className="font-semibold text-emerald-600 dark:text-emerald-400">냉장고 46%·세탁기 43% = 성장여력 최대</b> (미보유 과반)</p>
-      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">AI</b> 저침투(냉장고·세탁기)는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">초도수요 헤드룸 = 보급형 볼륨존</b>, 고침투(TV·냉방)는 교체·프리미엄 업그레이드 시장</p></div>
+      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> 저침투(냉장고·세탁기)는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">초도수요 헤드룸 = 보급형 볼륨존</b>, 고침투(TV·냉방)는 교체·프리미엄 업그레이드 시장</p></div>
       <div className="mt-auto pt-2.5 text-[10px] text-gray-400 dark:text-gray-500">{src("PSA 2020 인구주택총조사 · 가구편의")}</div>
     </div>
   )

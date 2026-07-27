@@ -158,6 +158,7 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
   title: string; unit?: string; legend: React.ReactNode; series: SLine[]; labels: string[]; decimals?: number; seriesUnit?: string
   meaning: React.ReactNode; ai: React.ReactNode; tone: Tone; src: React.ReactNode
 }) {
+  const [aiOpen, setAiOpen] = React.useState(false)
   return (
     <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-2">
@@ -167,9 +168,18 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
       <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">{legend}</div>
       <FxChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />
       <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
-      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
-        <p className="line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">AI</b> {ai}</p>
-      </div>
+      {ai && (
+        <>
+          <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-700 dark:hover:text-indigo-300">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
+            LG 인사이트
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+          </button>
+          <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}>
+            <div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p></div></div>
+          </div>
+        </>
+      )}
       <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{src}</p>
     </div>
   )
