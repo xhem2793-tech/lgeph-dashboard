@@ -52,7 +52,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     if (lo === hi) { lo -= 1; hi += 1 }
     const pad = (hi - lo) * 0.1; lo -= pad; hi += pad
     // x축은 index가 아니라 **실제 시간** 비례 — 연간+분기/월별 혼합 시 라벨·점이 시간에 맞게 배치(한쪽 몰림 방지)
-    const tms = labels.map((lb) => { const p = String(lb).split("."); return Number(p[0]) * 12 + (Number(p[1]) || 1) })
+    const tms = labels.map((lb) => { const p = String(lb).split(" "); return Number(p[1]) * 12 + ((MON.indexOf(p[0]) + 1) || 1) })
     const t0 = tms[0], tspan = (tms[n - 1] - t0) || 1
     const X = (i: number) => (n <= 1 ? (L + R) / 2 : L + ((tms[i] - t0) / tspan) * (R - L))
     const Y = (v: number) => B - ((v - lo) / (hi - lo)) * (B - T)
@@ -64,7 +64,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     }
     // 가로축 라벨: 연도 경계 기준(시간 균등). 오른쪽 최신점을 억지로 고정하지 않음. 연도가 적으면 균등 분산.
     const yearFirst: number[] = []; let ly = ""
-    labels.forEach((lb, i) => { const y = String(lb || "").split(".")[0]; if (y && y !== ly) { yearFirst.push(i); ly = y } })
+    labels.forEach((lb, i) => { const y = String(lb || "").split(" ")[1]; if (y && y !== ly) { yearFirst.push(i); ly = y } })
     let showIdx: number[]
     if (yearFirst.length >= 3) { const step = Math.max(1, Math.ceil(yearFirst.length / 8)); showIdx = yearFirst.filter((_, k) => k % step === 0) }
     else { const k = Math.min(5, n); showIdx = Array.from({ length: k }, (_, j) => Math.round((j * (n - 1)) / (k - 1 || 1))) }
@@ -313,9 +313,11 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
 
 // ── 데이터 헬퍼 ─────────────────────────────────────────────────────────
 /** ISO date → "YY.M" 라벨 (분기·월 공용) */
+export const MON = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+// 축·툴팁 라벨: "25.1" 대신 "Jan 25"(가독성). LineChart의 tms/연도경계 파서도 이 포맷을 파싱.
 export function moLabel(iso: string): string {
-  const y = iso.slice(2, 4), m = Number(iso.slice(5, 7))
-  return y + "." + m
+  const yy = iso.slice(2, 4), m = Number(iso.slice(5, 7))
+  return (MON[m - 1] || "?") + " " + yy
 }
 /** 최근 n개만 */
 export const tail = <T,>(a: T[], n: number) => a.slice(Math.max(0, a.length - n))

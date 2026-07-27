@@ -60,7 +60,7 @@ export default function Page() {
     <main className="mx-auto max-w-[1536px] px-4 pb-10 pt-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}"}</style>
       <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[61px]" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.05s" }}>
+        <aside className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[61px]" style={{ animation: "fadeOnly .5s ease both", animationDelay: "0.05s" }}>
           <div className="px-2.5 py-3">
             <p className="mb-2 px-1.5 text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{en ? "View" : "보기"}</p>
             <nav className="flex flex-col gap-0.5">
@@ -87,7 +87,7 @@ export default function Page() {
             </nav>
           </div>
         </aside>
-        <div className="min-w-0" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.1s" }}>
+        <div className="min-w-0" style={{ animation: "fadeOnly .5s ease both", animationDelay: "0.1s" }}>
           {/* outer: 첫 진입 시 뉴스와 동일한 fadeUp(1회) · inner: 뷰 전환 시 스냅 전환 */}
           <div key={active} style={{ animation: "fadeOnly .28s cubic-bezier(.16,1,.3,1) both" }}>{view()}</div>
         </div>
