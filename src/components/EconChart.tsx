@@ -250,7 +250,7 @@ export type Tone = "rose" | "amber" | "emerald"
 // 차트 카드(환율과 동일): 차트 → 의미 → AI 분석 → 고정 출처
 export function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, meaning, ai, src, idx = 0, kind = "line", seg }: {
   title: string; unit?: string; legend: React.ReactNode; series: SLine[]; labels: string[]; decimals?: number; seriesUnit?: string
-  meaning: React.ReactNode; ai: React.ReactNode; tone?: Tone; src: React.ReactNode; idx?: number; kind?: "line" | "bar"; seg?: "CE" | "B2B" | "CE·B2B"
+  meaning: React.ReactNode; ai: React.ReactNode; tone?: Tone; src: React.ReactNode; idx?: number; kind?: "line" | "bar"; seg?: string
 }) {
   const cardRef = React.useRef<HTMLDivElement | null>(null)
   const [aiOpen, setAiOpen] = React.useState(false)

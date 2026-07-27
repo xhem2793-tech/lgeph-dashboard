@@ -304,10 +304,14 @@ function OwnershipCard({ d }: { d: Mon }) {
     </div>
   )
 }
+const PRODS = ["전체", "냉장고", "세탁·건조", "에어컨(RAC)", "TV·AV", "공조(B2B)", "모니터·사이니지"]
 export function ApplianceView() {
   const [win, setWin] = useState("2Y")
+  const [prod, setProd] = useState("전체")
   const { d, loaded } = useMacro(APPLIANCE_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
+  // 제품 필터 — '전 제품' 태그(원가·수입·전기 등 공통지표)는 항상 표시, 제품특정 지표는 해당 제품 선택 시만
+  const show = (tags: string[]) => prod === "전체" || tags.includes("전 제품") || tags.includes(prod)
   const ppi = build(d, n, [{ key: "PPI_domestic_appliances", name: "가전 PPI", color: C.ind, w: 2 }, { key: "PPI_electrical", name: "전기기기", color: C.rose }, { key: "PPI_electronics", name: "전자", color: C.blue }, { key: "PPI_manufacturing", name: "제조업 전체", color: C.brown }])
   const imp = build(d, n, [{ key: "imports_home_appliances", name: "가전", color: C.ind, w: 2, tf: (v) => v / 1e6 }, { key: "imports_consumer_electronics", name: "소비자전자", color: C.rose, tf: (v) => v / 1e6 }, { key: "imports_telecom", name: "통신기기", color: C.blue, tf: (v) => v / 1e6 }]) // USD→백만$ (연간 무역통계)
   const inf = build(d, n, [{ key: "INF_household_appliances", name: "가전 물가", color: C.ind, w: 2 }, { key: "INF_aircon", name: "에어컨", color: C.rose }, { key: "INF_all_items", name: "전체 CPI", color: C.brown }])
@@ -325,44 +329,48 @@ export function ApplianceView() {
         { key: "meralco_residential_rate", label: "전기료", fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
       ]}>
       {false && <MarketCard />}
-      <OwnershipCard d={d} />
-      {ppi.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title="가전 생산자물가 PPI" unit="전년비 %" labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
+      <div className="col-span-full -mt-1 flex flex-wrap items-center gap-1.5">
+        <span className="mr-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
+        {PRODS.map((p) => <button key={p} type="button" onClick={() => setProd(p)} className={"rounded-lg px-2.5 py-1 text-[12px] font-semibold transition-all " + (prod === p ? "bg-teal-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-teal-500/15")}>{p}</button>)}
+      </div>
+      {show(["전 제품"]) && <OwnershipCard d={d} />}
+      {show(["전 제품"]) && ppi.series.length > 0 && (
+        <ChartCard seg="전 제품·CE·B2B" title="가전 생산자물가 PPI" unit="전년비 %" labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="가전 PPI" b /><Lg c={C.rose} t="전기기기" /><Lg c={C.blue} t="전자" /><Lg c={C.brown} t="제조업 전체" /></>}
           meaning={<>생산단계 출고가격 상승률 — <b className="text-gray-700 dark:text-gray-200">소비자가·조달원가의 수개월 선행</b> · 가전 PPI vs 제조업 전체로 카테고리 특이 압력 판별</>}
           ai={<>가전 PPI가 제조업 전체보다 높으면 <b className="font-semibold text-rose-600 dark:text-rose-400">가전 특이 원가압력</b> → 선제 판가·조달 대응·부품 헤지, 동행이면 경제 전반 원가 국면</>}
           tone="rose" src={src("PSA 생산자물가지수(PPI) · 월별")} />
       )}
-      {imp.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title="가전·전자·통신 수입액" unit="백만$ · 연간" labels={imp.labels} series={imp.series} decimals={0} seriesUnit="백만$"
+      {show(["전 제품"]) && imp.series.length > 0 && (
+        <ChartCard seg="전 제품·CE·B2B" title="가전·전자·통신 수입액" unit="백만$ · 연간" labels={imp.labels} series={imp.series} decimals={0} seriesUnit="백만$"
           legend={<><Lg c={C.ind} t="가전" b /><Lg c={C.rose} t="소비자전자" /><Lg c={C.blue} t="통신기기" /></>}
           meaning={<>가전·인접 카테고리 완제품 수입 규모 — <b className="text-gray-700 dark:text-gray-200">시장 공급량·경쟁 강도 선행</b></>}
           ai={<>수입 급증은 중국계 물량 유입 신호 → <b className="font-semibold text-amber-600 dark:text-amber-400">채널 재고·가격 경쟁 압박</b> · 소비자전자·통신 동반 확대는 스마트홈 연계 수요 신호</>}
           tone="amber" src={src("PSA 수출입통계 · 연간")} />
       )}
-      {inf.series.length > 0 && (
-        <ChartCard seg="CE" title="가전 소비자물가 상승률" unit="전년비 %" labels={inf.labels} series={inf.series} decimals={1} seriesUnit="%"
+      {show(["전 제품", "에어컨(RAC)"]) && inf.series.length > 0 && (
+        <ChartCard seg="가전·에어컨" title="가전 소비자물가 상승률" unit="전년비 %" labels={inf.labels} series={inf.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="가전 물가" b /><Lg c={C.rose} t="에어컨" /><Lg c={C.brown} t="전체 CPI" /></>}
           meaning={<>가전 소매물가 상승률 vs 전체 물가 — <b className="text-gray-700 dark:text-gray-200">가전의 실질 가격 매력</b></>}
           ai={<>가전 물가가 전체 CPI보다 낮으면 <b className="font-semibold text-emerald-600 dark:text-emerald-400">실질 저렴 → 구매 매력↑</b>, 높으면 구매 저항 → 보급형·프로모 강화</>}
           tone="rose" src={src("PSA CPI(가전·에어컨) · 전년비")} />
       )}
-      {elec.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title="가정용 전기요금 (Meralco)" unit="₱/kWh" labels={elec.labels} series={elec.series} decimals={2}
+      {show(["전 제품", "에어컨(RAC)", "냉장고", "공조(B2B)"]) && elec.series.length > 0 && (
+        <ChartCard seg="에어컨·냉장고·공조" title="가정용 전기요금 (Meralco)" unit="₱/kWh" labels={elec.labels} series={elec.series} decimals={2}
           legend={<Lg c={C.ind} t="가정용 전기료" b />}
           meaning={<>전기요금 = 가전 <b className="text-gray-700 dark:text-gray-200">사용비용·에너지효율 소구력</b> 결정</>}
           ai={<>전기료 상승기엔 <b className="font-semibold text-emerald-600 dark:text-emerald-400">인버터·고효율 프리미엄 소구</b>가 유리 → 에너지 절감액을 판매 메시지로 전환</>}
           tone="amber" src={src("Meralco 가정용 요금 · 월별")} />
       )}
-      {cdd.series.length > 0 && (
-        <ChartCard seg="CE" title="냉방도일 (에어컨 수요 선행)" unit="CDD · 월별 · 기준24℃" labels={cdd.labels} series={cdd.series} decimals={0} seriesUnit="CDD"
+      {show(["에어컨(RAC)"]) && cdd.series.length > 0 && (
+        <ChartCard seg="에어컨" title="냉방도일 (에어컨 수요 선행)" unit="CDD · 월별 · 기준24℃" labels={cdd.labels} series={cdd.series} decimals={0} seriesUnit="CDD"
           legend={<Lg c={C.rose} t="냉방도일 CDD" b />}
           meaning={<>냉방도일 = Σ(일평균기온−24℃) — <b className="text-gray-700 dark:text-gray-200">에어컨·냉장고 사용강도·판매 성수기 직접 선행</b></>}
           ai={<>CDD 급등기(3~5월 혹서)는 <b className="font-semibold text-amber-600 dark:text-amber-400">에어컨·선풍기 판매 성수기</b> → 사전 재고·프로모 집중, 냉방 프리미엄(인버터) 소구 최적 · <b className="text-gray-500 dark:text-gray-400">Open-Meteo 기온</b></>}
           tone="amber" src={src("Open-Meteo 메트로마닐라 기온 · 냉방도일 월집계")} />
       )}
-      {energy.series.length > 0 && (
-        <ChartCard seg="CE" title="가정용 에너지소비" unit="ktoe · 연간" labels={energy.labels} series={energy.series} decimals={0} seriesUnit="ktoe"
+      {show(["전 제품"]) && energy.series.length > 0 && (
+        <ChartCard seg="전 제품" title="가정용 에너지소비" unit="ktoe · 연간" labels={energy.labels} series={energy.series} decimals={0} seriesUnit="ktoe"
           legend={<Lg c={C.ind} t="가정용 에너지소비" b />}
           meaning={<>가구부문 최종에너지소비 — <b className="text-gray-700 dark:text-gray-200">가전 사용량·전력화 심화의 구조적 지표</b></>}
           ai={<>가정용 에너지소비 증가는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 보유·사용 심화 = 시장 성숙</b> → 고효율·인버터 소구 여지 확대, 전력화 진전 지역 우선</>}
