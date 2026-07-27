@@ -835,24 +835,6 @@ export default function Page() {
                       </div>
 
                       <div className="flex min-w-0 flex-1 flex-col justify-center">
-                        {d.kind === "reg" ? (
-                          <span className="mb-1 flex flex-wrap items-center gap-1">
-                            <span className={"rounded px-1 py-px text-[9px] font-bold leading-4 " + (SEV[d.severity ?? ""] ?? SEV.Medium)}>
-                              {d.severity}
-                            </span>
-                            {d.dDay != null ? (
-                              <span
-                                className={
-                                  "num text-[10px] font-bold " + (d.dDay >= 0 && d.dDay <= 7 ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400")
-                                }
-                              >
-                                {d.dDay <= 0 ? "시행 중" : "시행 D-" + d.dDay}
-                              </span>
-                            ) : null}
-                            <span className="text-[10.5px] text-gray-500 dark:text-gray-400">{d.agency}</span>
-                          </span>
-                        ) : null}
-
                         <p
                           className={
                             "line-clamp-1 font-semibold leading-snug text-gray-800 dark:text-gray-100 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 " +
@@ -868,7 +850,13 @@ export default function Page() {
 
                         <p className="mt-1 line-clamp-1 text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{d.so ? <Hi text={d.so} q={q} /> : null}</p>
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                          <span className="text-[10.5px] font-medium text-gray-500 dark:text-gray-400">{d.topic}</span>
+                          {d.kind === "reg" && (
+                            <>
+                              <span className={"rounded px-1 py-px text-[9px] font-bold leading-4 " + (SEV[d.severity ?? ""] ?? SEV.Medium)}>{d.severity}</span>
+                              {d.dDay != null && <span className={"num text-[10px] font-bold " + (d.dDay >= 0 && d.dDay <= 7 ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400")}>{d.dDay <= 0 ? "시행 중" : "시행 D-" + d.dDay}</span>}
+                            </>
+                          )}
+                          <span className="text-[10.5px] font-medium text-gray-500 dark:text-gray-400">{d.kind === "reg" ? (d.agency || d.topic) : d.topic}</span>
                           <span className="text-[11.5px] text-gray-300 dark:text-gray-600">·</span>
                           <span className="text-[11.5px] text-gray-500 dark:text-gray-400">{d.source}</span>
                           {d.source === OURS || d.kind === "insight" ? <AiMark /> : null}
