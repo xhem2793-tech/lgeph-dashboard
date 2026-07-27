@@ -683,7 +683,7 @@ export function LaborView() {
   const lf = build(d, n, [{ key: "labor_force_participation_rate", name: "경제활동참가율", color: C.ind, w: 2 }])
   const emp = build(d, n, [{ key: "employed_persons", name: "취업자 수", color: C.emer, w: 2 }]) // 백만명, 월별 5년
   const rem = build(d, n, [{ key: "ofw_cash_remittance_growth_yoy", name: "송금 증가율", color: C.ind, w: 2 }])
-  const remL = build(d, n, [{ key: "ofw_cash_remittance", name: "OFW 현금송금", color: C.emer, w: 2 }])
+  const remL = build(d, n, [{ key: "ofw_personal_remittance", name: "개인송금(현금+현물)", color: C.ind, w: 2 }, { key: "ofw_cash_remittance", name: "현금송금", color: C.emer, w: 2 }])
   const remY = build(d, n, [{ key: "remittances_usd", name: "연간 송금액", color: C.emer, w: 2, tf: (v) => v / 1e9 }]) // USD→십억$, 연간 장기(15년)
   const pop = build(d, n, [{ key: "population", name: "인구", color: C.ind, w: 2, tf: (v) => v / 1e6 }]) // 명→백만명, 연간
   const wage = build(d, n, [{ key: "min_wage_php", name: "최저임금(일급)", color: C.ind, w: 2 }]) // PHP/일, 11년
@@ -720,11 +720,11 @@ export function LaborView() {
           tone="rose" src={src("PSA 노동력조사(LFS) · 월/분기")} />
       )}
       {remL.series.length > 0 && (
-        <ChartCard seg="CE" title="OFW 현금송금액" unit="송금 규모" labels={remL.labels} series={remL.series}
-          legend={<Lg c={C.emer} t="OFW 현금송금" b />}
+        <ChartCard seg="CE" title="OFW 송금액 (개인·현금)" unit="십억$ · 월별" labels={remL.labels} series={remL.series}
+          legend={<><Lg c={C.ind} t="개인송금(현금+현물)" b /><Lg c={C.emer} t="현금송금" b /></>}
           meaning={<>해외근로자 송금 — <b className="text-gray-700 dark:text-gray-200">필리핀 가전·프리미엄 구매의 핵심 재원</b></>}
           ai={<>송금 유입은 가전 특히 <b className="font-semibold text-emerald-600 dark:text-emerald-400">프리미엄·대형 수요를 견인</b> → 송금 성수기(4Q·연말)에 프리미엄 캠페인 집중</>}
-          tone="emerald" src={src("BSP OFW 현금송금 · 월별")} />
+          tone="emerald" src={src("BSP OFW 개인·현금송금 · 월별(2005~)")} />
       )}
       {rem.series.length > 0 && (
         <ChartCard seg="CE" title="OFW 송금 증가율" unit="전년비 %" labels={rem.labels} series={rem.series} decimals={1} seriesUnit="%"
