@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useRef, useState } from "react"
 import { energyLabels, latestMacro, type EnergyRow } from "@/lib/supabase"
 import { AgendaCard } from "@/components/EconViews"
 import { Segmented } from "@/components/Segmented"
@@ -60,14 +60,31 @@ function EnergySim({ brands, lgKwh, rate0 }: { brands: { name: string; kwh: numb
   )
 }
 
+// 스크롤로 화면에 들어올 때 애니메이션 재생 — 마운트 시 한 번만 재생돼 놓치는 문제 해소.
+// 안전장치: IO 미지원 시 즉시 on, 1.5s 내 미발화 시 강제 on → 콘텐츠가 영구히 숨겨지지 않음.
+function useInView() {
+  const ref = useRef<HTMLDivElement | null>(null)
+  const [on, setOn] = useState(false)
+  useEffect(() => {
+    const el = ref.current
+    if (!el || typeof IntersectionObserver === "undefined") { setOn(true); return }
+    const io = new IntersectionObserver((es) => { if (es.some((e) => e.isIntersecting)) { setOn(true); io.disconnect() } }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" })
+    io.observe(el)
+    const t = window.setTimeout(() => setOn(true), 1500)
+    return () => { io.disconnect(); clearTimeout(t) }
+  }, [])
+  return [ref, on] as const
+}
+
 function Sub({ title, seg, note, idx = 0, children }: { title: string; seg?: string; note: React.ReactNode; idx?: number; children: React.ReactNode }) {
+  const [ref, on] = useInView()
   return (
-    <div className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: Math.min(idx, 6) * 0.06 + "s" }}>
+    <div ref={ref} className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: on ? "fadeUp .5s cubic-bezier(.16,1,.3,1) both" : undefined, animationDelay: Math.min(idx, 6) * 0.06 + "s", opacity: on ? undefined : 0 }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {seg && <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:text-teal-300">{seg}</span>}
       </div>
-      <div className="mt-2 flex min-h-[188px] flex-1 items-center">{children}</div>
+      <div key={on ? "in" : "out"} className="mt-2 flex min-h-[188px] flex-1 items-center">{on ? children : null}</div>
       <p className="mt-2 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{note}</p>
     </div>
   )
