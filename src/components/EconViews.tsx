@@ -383,7 +383,7 @@ export function ApplianceView() {
 // ══════════════════════════════════════════════════════════════════════
 // 통화·금리·신용 — 정책금리·M3·가계신용
 // ══════════════════════════════════════════════════════════════════════
-const RATES_KEYS = ["policy_rate_monthly", "BSP_policy_rate", "interbank_call_rate", "m3_growth_yoy", "broad_money_growth", "domestic_credit_pct_gdp", "bank_loan_growth_yoy", "consumer_loan_growth_yoy", "credit_card_loan_growth_yoy", "current_account_pct_gdp", "fdi_net_inflow_usd", "trade_balance_gdp", "exports_gdp", "imports_gdp", "govt_exp_gdp", "reserves_usd", "credit_card_ownership", "debit_card_ownership", "credit_card_used", "borrowed_any_pct", "saved_at_fi_pct", "account_ownership"]
+const RATES_KEYS = ["policy_rate_monthly", "BSP_policy_rate", "interbank_call_rate", "m3_growth_yoy", "broad_money_growth", "domestic_credit_pct_gdp", "bank_loan_growth_yoy", "consumer_loan_growth_yoy", "credit_card_loan_growth_yoy", "current_account_pct_gdp", "fdi_net_inflow_usd", "trade_balance_gdp", "exports_gdp", "imports_gdp", "govt_exp_gdp", "reserves_usd", "credit_card_ownership", "debit_card_ownership", "credit_card_used", "borrowed_any_pct", "saved_at_fi_pct", "account_ownership", "govt_debt_gdp", "tax_revenue_gdp", "gross_savings_gdp", "market_cap_gdp"]
 export function RatesView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(RATES_KEYS)
@@ -399,6 +399,8 @@ export function RatesView() {
   const govt = build(d, n, [{ key: "govt_exp_gdp", name: "정부지출", color: C.ind, w: 2 }, { key: "services_pct_gdp", name: "서비스업 비중", color: C.emer }]) // %GDP
   const cards = build(d, n, [{ key: "credit_card_ownership", name: "신용카드 보유", color: C.ind, w: 2 }, { key: "debit_card_ownership", name: "직불카드 보유", color: C.blue }, { key: "account_ownership", name: "계좌 보유", color: C.emer }]) // Findex 연간 %
   const finuse = build(d, n, [{ key: "borrowed_any_pct", name: "차입 경험", color: C.rose, w: 2 }, { key: "saved_at_fi_pct", name: "금융기관 저축", color: C.emer }]) // Findex 연간 %
+  const fisc = build(d, n, [{ key: "govt_debt_gdp", name: "정부부채", color: C.rose, w: 2 }, { key: "gross_savings_gdp", name: "총저축률", color: C.emer }, { key: "tax_revenue_gdp", name: "조세수입", color: C.ind }]) // %GDP 연간
+  const mktcap = build(d, n, [{ key: "market_cap_gdp", name: "주식 시가총액", color: C.ind, w: 2 }]) // %GDP 연간
   const empty = !pol.series.length && !loan.series.length && !m3.series.length && !credit.series.length && !cab.series.length && !fdi.series.length && !trade.series.length && !reserves.series.length && !govt.series.length
   return (
     <Shell title="통화·금리·신용" sub="기준금리·통화량 M3·가계신용 — 할부·카드 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d} accent="blue"
@@ -448,6 +450,22 @@ export function RatesView() {
           meaning={<>성인 차입·저축 경험율(Findex) — <b className="text-gray-700 dark:text-gray-200">가전 구매 자금조달 성향</b></>}
           ai={<>차입율 <b className="font-semibold">72%</b>로 높지만 대부분 <b className="font-semibold text-amber-600 dark:text-amber-400">가족·비공식 채널</b>(카드 3%뿐) → 저축률 상승기·송금 유입기에 대형가전 수요, <b className="font-semibold text-emerald-600 dark:text-emerald-400">유연 할부·계약금 낮춘 상품</b>이 전환 견인. <b>트렌드</b>: 차입율은 2017·2021 하락 후 2024년 72%로 재상승(물가·생활비 압박), 금융기관 저축률은 12%(2017)→24%(2024) 꾸준히 개선.</>}
           tone="emerald" src={src("World Bank Global Findex 차입·저축율 · 격년(2011~2024)")} />
+      )}
+        </> },
+        { key: "fiscal_cap", label: "재정·자본시장", node: <>
+      {fisc.series.length > 0 && (
+        <ChartCard seg="B2B" title="정부재정 (부채·저축·조세)" unit="% GDP · 연간" labels={fisc.labels} series={fisc.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.rose} t="정부부채" b /><Lg c={C.emer} t="총저축률" /><Lg c={C.ind} t="조세수입" /></>}
+          meaning={<>재정 건전성·저축여력 — <b className="text-gray-700 dark:text-gray-200">거시 안정성·중장기 소비기반</b></>}
+          ai={<>총저축률 30%대는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">내구재 구매 잠재재원</b>. <b>트렌드</b>: 정부부채 2018년 40%까지 하락했다가 <b className="font-semibold text-rose-600 dark:text-rose-400">코로나로 61%(2022) 급등</b> 후 유지 — 조세수입 14%대로 낮아 재정여력 제약, 증세·인프라 지출이 B2B 수요 변수.</>}
+          tone="amber" src={src("World Bank WDI(저축·조세) · Bureau of Treasury(부채) · 연간")} />
+      )}
+      {mktcap.series.length > 0 && (
+        <ChartCard seg="B2B" title="주식 시가총액 (자본시장)" unit="% GDP · 연간" labels={mktcap.labels} series={mktcap.series} decimals={0} seriesUnit="%"
+          legend={<Lg c={C.ind} t="주식 시가총액(%GDP)" b />}
+          meaning={<>상장주식 시총/GDP — <b className="text-gray-700 dark:text-gray-200">자본시장 깊이·자산효과</b></>}
+          ai={<>시총/GDP는 <b className="font-semibold text-amber-600 dark:text-amber-400">2007 피크(~70%) 후 하락세(~48%)</b> = 자본시장 상대적 정체 → 소비는 자산효과보다 <b className="font-semibold text-emerald-600 dark:text-emerald-400">소득·송금 의존</b>이 구조적.</>}
+          tone="amber" src={src("World Bank WDI 상장주식 시가총액(%GDP) · 연간")} />
       )}
         </> },
         { key: "money_ext", label: "통화·대외", node: <>
@@ -674,7 +692,7 @@ export function GrowthView() {
 // ══════════════════════════════════════════════════════════════════════
 // 고용·임금·소득 — 실업·참가·OFW 송금·인구
 // ══════════════════════════════════════════════════════════════════════
-const LABOR_KEYS = ["unemployment_rate", "underemployment_rate", "labor_force_participation_rate", "employed_persons", "ofw_cash_remittance", "ofw_cash_remittance_growth_yoy", "ofw_personal_remittance", "remittances_usd", "population", "urban_population_pct", "min_wage_php", "households_mn", "household_size", "internet_penetration", "electrification_rate", "poverty_rate", "fertility_rate", "median_age", "mobile_per100", "broadband_per100", "account_ownership", "gini_index", "hh_consumption_pc", "gni_per_capita", "life_expectancy", "secondary_enroll", "pop_share_child", "pop_share_youth", "pop_share_working", "pop_share_old"]
+const LABOR_KEYS = ["unemployment_rate", "underemployment_rate", "labor_force_participation_rate", "employed_persons", "ofw_cash_remittance", "ofw_cash_remittance_growth_yoy", "ofw_personal_remittance", "remittances_usd", "population", "urban_population_pct", "min_wage_php", "households_mn", "household_size", "internet_penetration", "electrification_rate", "poverty_rate", "fertility_rate", "median_age", "mobile_per100", "broadband_per100", "account_ownership", "gini_index", "hh_consumption_pc", "gni_per_capita", "life_expectancy", "secondary_enroll", "pop_share_child", "pop_share_youth", "pop_share_working", "pop_share_old", "emp_industry_pct", "emp_services_pct", "emp_agri_pct"]
 export function LaborView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(LABOR_KEYS)
@@ -687,6 +705,7 @@ export function LaborView() {
   const remY = build(d, n, [{ key: "remittances_usd", name: "연간 송금액", color: C.emer, w: 2, tf: (v) => v / 1e9 }]) // USD→십억$, 연간 장기(15년)
   const pop = build(d, n, [{ key: "population", name: "인구", color: C.ind, w: 2, tf: (v) => v / 1e6 }]) // 명→백만명, 연간
   const wage = build(d, n, [{ key: "min_wage_php", name: "최저임금(일급)", color: C.ind, w: 2 }]) // PHP/일, 11년
+  const empShare = build(d, n, [{ key: "emp_services_pct", name: "서비스", color: C.ind, w: 2 }, { key: "emp_industry_pct", name: "산업", color: C.amber }, { key: "emp_agri_pct", name: "농업", color: C.emer }]) // 고용비중 %
   const hh = build(d, n, [{ key: "households_mn", name: "가구 수", color: C.ind, w: 2 }]) // 백만가구, 11년
   const infra = build(d, n, [{ key: "internet_penetration", name: "인터넷", color: C.ind, w: 2 }, { key: "electrification_rate", name: "전기", color: C.emer }]) // %, 보급률
   const pov = build(d, n, [{ key: "poverty_rate", name: "빈곤율", color: C.ind, w: 2 }]) // %, 소득계층
@@ -746,6 +765,13 @@ export function LaborView() {
           meaning={<>총 취업자 수(월별) — <b className="text-gray-700 dark:text-gray-200">가전 구매 가능 소득인구의 절대 규모</b></>}
           ai={<>취업자 증가는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가처분소득 창출 인구 확대 = 내구재 수요 저변 성장</b> → 고용 회복기 프리미엄·신규 라인업 확대 적기</>}
           tone="emerald" src={src("PSA 노동력조사(LFS) 취업자 수 · 월별")} />
+      )}
+      {empShare.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="산업별 고용비중" unit="% · 연간" labels={empShare.labels} series={empShare.series} decimals={0} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="서비스" b /><Lg c={C.amber} t="산업" /><Lg c={C.emer} t="농업" /></>}
+          meaning={<>고용의 산업 구조 — <b className="text-gray-700 dark:text-gray-200">경제 구조 전환·소득 성격</b></>}
+          ai={<><b className="font-semibold text-emerald-600 dark:text-emerald-400">서비스 60%·산업 20%·농업 20%</b> — 탈농업·서비스화 진행. <b>트렌드</b>: 농업 고용비중이 장기 하락(2005 35%→2024 20%대)하며 도시 서비스직 확대 = <b className="font-semibold">도시 중산층 가전수요 저변</b> 성장, 단 제조업 정체(20%)로 고소득 일자리는 제한.</>}
+          tone="emerald" src={src("World Bank·PSA 산업별 고용비중 · 연간")} />
       )}
       {remY.series.length > 0 && (
         <ChartCard seg="CE" title="연간 해외송금액" unit="십억$ · 연간" labels={remY.labels} series={remY.series} decimals={1} seriesUnit="십억$"
