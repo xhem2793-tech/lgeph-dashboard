@@ -23,7 +23,7 @@ function build(d: Record<string, Series>, specs: Spec[]) {
   return { labels: fmtLabels(dates), series, has: series.some((s) => s.data.some((v) => Number.isFinite(v))) }
 }
 
-const KEYS = ["internet_penetration", "account_ownership", "mobile_per100", "broadband_per100", "credit_card_ownership", "debit_card_ownership", "credit_card_used", "secure_internet_servers", "saved_at_fi_pct"]
+const KEYS = ["internet_penetration", "account_ownership", "mobile_per100", "broadband_per100", "credit_card_ownership", "debit_card_ownership", "credit_card_used", "secure_internet_servers", "saved_at_fi_pct", "digital_payment_share"]
 
 // 동남아 6개국 비교(WB WDI·Findex) — 환율 차트처럼 PH의 상대 위치. ph=강조.
 const SEA: Record<string, Record<string, Record<string, number>>> = {"internet":{"2012":{"id":14.5,"my":65.8,"ph":30.8,"sg":72,"th":26.5,"vn":36.8},"2013":{"id":14.9,"my":57.1,"ph":32.7,"sg":80.9,"th":28.9,"vn":38.5},"2014":{"id":17.1,"my":63.7,"ph":34.7,"sg":79.0,"th":34.9,"vn":41},"2015":{"id":22.1,"my":71.1,"ph":36.9,"sg":79.0,"th":39.3,"vn":45},"2016":{"id":25.4,"my":78.8,"ph":39.2,"sg":84.5,"th":47.5,"vn":53},"2017":{"id":32.3,"my":80.1,"ph":41.6,"sg":84.5,"th":52.9,"vn":58.1},"2018":{"id":39.9,"my":81.2,"ph":44.1,"sg":88.2,"th":56.8,"vn":69.8},"2019":{"id":47.7,"my":84.2,"ph":43.0,"sg":88.9,"th":66.7,"vn":68.7},"2020":{"id":53.7,"my":89.6,"ph":53.8,"sg":92.0,"th":77.8,"vn":70.3},"2021":{"id":62.1,"my":96.8,"ph":66.9,"sg":96.9,"th":85.3,"vn":74.2},"2022":{"id":66.5,"my":97.4,"ph":75.2,"sg":96.0,"th":88.0,"vn":78.6},"2023":{"id":69.2,"my":97.7,"ph":77.9,"sg":94.3,"th":89.5,"vn":78.1},"2024":{"id":72.8,"my":98.0,"ph":67.3,"sg":94.4,"th":90.9,"vn":84.2}},"broadband":{"2012":{"id":1.2,"my":9.8,"ph":2.1,"sg":27.1,"th":6.5,"vn":5.3},"2014":{"id":1.3,"my":10.0,"ph":2.8,"sg":27.0,"th":7.7,"vn":6.5},"2016":{"id":2.0,"my":8.6,"ph":2.8,"sg":28.5,"th":10.2,"vn":9.7},"2018":{"id":3.3,"my":8.2,"ph":3.5,"sg":26.5,"th":12.9,"vn":13.5},"2020":{"id":3.9,"my":9.9,"ph":7.1,"sg":26.9,"th":16.0,"vn":17.0},"2021":{"id":4.5,"my":10.9,"ph":8.5,"sg":27.5,"th":17.3,"vn":19.5},"2022":{"id":4.8,"my":12.2,"ph":7.6,"sg":27.6,"th":17.5,"vn":21.4},"2023":{"id":4.8,"my":13.0,"ph":6.5,"sg":27.4,"th":14.5,"vn":22.7},"2024":{"id":4.9,"my":13.5,"ph":7.1,"sg":27.8,"th":14.9,"vn":23.7}},"mobile":{"2012":{"id":111.6,"my":139.3,"ph":101.8,"sg":152.4,"th":122.4,"vn":147.1},"2014":{"id":125.8,"my":146.4,"ph":107.3,"sg":148.5,"th":138.3,"vn":148.5},"2016":{"id":145.7,"my":136.7,"ph":112.5,"sg":151.7,"th":168.9,"vn":128.3},"2018":{"id":118.3,"my":128.9,"ph":123.0,"sg":152.1,"th":175.3,"vn":146.1},"2020":{"id":129.4,"my":129.0,"ph":133.5,"sg":150.3,"th":162.3,"vn":141.7},"2021":{"id":132.2,"my":137.7,"ph":144.4,"sg":158.0,"th":168.5,"vn":136.8},"2022":{"id":122.9,"my":138.2,"ph":147.4,"sg":173.0,"th":176.2,"vn":137.9},"2023":{"id":125.2,"my":142.7,"ph":117.3,"sg":173.2,"th":168.6,"vn":131.0},"2024":{"id":122.5,"my":139.7,"ph":115.3,"sg":170.8,"th":160.6,"vn":127.6}},"account":{"2011":{"id":19.6,"my":66.2,"ph":26.6,"sg":98.2,"th":72.7,"vn":21.4},"2014":{"id":36.1,"my":80.7,"ph":31.3,"sg":96.4,"th":78.1,"vn":31.0},"2017":{"id":48.9,"my":85.3,"ph":34.5,"sg":97.9,"th":81.6,"vn":30.8},"2021":{"id":51.8,"my":88.4,"ph":51.4,"sg":97.5,"th":95.6},"2024":{"id":56.3,"my":88.7,"ph":50.2,"sg":98.0,"th":91.8,"vn":70.6}},"creditcard":{"2011":{"ph":3.2,"id":0.5,"th":4.5,"vn":1.2,"my":11.9,"sg":37.3},"2014":{"ph":3.2,"id":1.6,"th":5.7,"vn":1.9,"my":20.2,"sg":35.4},"2017":{"ph":1.9,"id":2.4,"th":9.8,"vn":4.1,"my":21.3,"sg":48.9},"2021":{"ph":8.1,"id":1.6,"th":22.6,"my":7.9,"sg":41.7},"2024":{"ph":3.0,"id":5.9,"th":8.0,"vn":5.8,"my":13.2}}}
@@ -68,11 +68,12 @@ export default function OnlineMarketView() {
   const infra = build(d, [{ key: "mobile_per100", name: "모바일 가입/100", color: C.blue }, { key: "broadband_per100", name: "브로드밴드/100", color: C.violet }])
   const pay = build(d, [{ key: "credit_card_ownership", name: "신용카드 보유", color: C.rose }, { key: "debit_card_ownership", name: "직불카드 보유", color: C.blue }, { key: "credit_card_used", name: "신용카드 사용", color: C.amber }])
   const secure = build(d, [{ key: "secure_internet_servers", name: "보안 인터넷서버", color: C.violet }])
+  const dpay = build(d, [{ key: "digital_payment_share", name: "디지털 결제 비중", color: C.emer }])
 
   const rInternet = seaRank(SEA.internet), rCard = seaRank(SEA.creditcard), rAccount = seaRank(SEA.account), rBb = seaRank(SEA.broadband)
   const seaLegend = <>{["ph", "sg", "th", "my", "vn", "id"].map((c) => <Lg key={c} c={SEA_COL[c]} t={SEA_NAME[c]} />)}</>
   // 기간 적용된 차트
-  const cDigital = winCut(digital), cPay = winCut(pay), cInfra = winCut(infra), cSecure = winCut(secure)
+  const cDigital = winCut(digital), cPay = winCut(pay), cInfra = winCut(infra), cSecure = winCut(secure), cDpay = winCut(dpay)
   const cSi = winCut(seaChart(SEA.internet)), cSa = winCut(seaChart(SEA.account)), cSc = winCut(seaChart(SEA.creditcard)), cSb = winCut(seaChart(SEA.broadband)), cSm = winCut(seaChart(SEA.mobile))
 
   const src = (t: string) => <><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> {t}</>
@@ -133,6 +134,13 @@ export default function OnlineMarketView() {
                 meaning={<>모바일·브로드밴드 보급 — <b className="text-gray-700 dark:text-gray-200">모바일 커머스·스마트가전 연결성</b></>}
                 ai={<>모바일 포화·브로드밴드 확대는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">앱 기반 구매·IoT 가전</b> 수요 기반 → 스마트홈 연계 마케팅. <b>트렌드</b>: 모바일 100%+ 포화·브로드밴드 완만 상승 — 필리핀은 <b className="font-semibold">고정망보다 모바일 의존</b>이 구조적.</>}
                 src={src("World Bank·ITU 통신지표 · 연간")} />
+            )}
+            {cDpay.has && (
+              <ChartCard seg="CE" title="디지털 결제 비중 (e-wallet)" unit="% 소매결제 건수 · 연간" labels={cDpay.labels} series={cDpay.series} decimals={0} seriesUnit="%"
+                legend={<Lg c={C.emer} t="디지털 결제 비중" />}
+                meaning={<>소매결제 중 디지털(계좌이체·e-wallet) 비중 — <b className="text-gray-700 dark:text-gray-200">GCash·Maya 등 e-wallet 확산의 직접 지표</b></>}
+                ai={<><b className="font-semibold text-emerald-600 dark:text-emerald-400">2013년 1% → 2023년 52.8%</b>로 폭증, 카드(3%) 건너뛰고 <b className="font-semibold">e-wallet(GCash 9천만명·Maya)</b>이 주류 결제수단화. 온라인 가전은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">e-wallet·QR·BNPL 결제 연동</b>이 필수 · <b>트렌드</b>: 팬데믹(2020~21) 가속, BSP 50% 목표 조기 달성.</>}
+                src={src("BSP Report on the State of Digital Payments · 연간(건수 기준)")} />
             )}
             {cSecure.has && (
               <ChartCard seg="B2B" title="이커머스 인프라 (보안서버)" unit="백만명당 · 연간" labels={cSecure.labels} series={cSecure.series} decimals={0} seriesUnit=""

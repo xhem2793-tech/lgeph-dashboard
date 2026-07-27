@@ -416,7 +416,7 @@ export function RatesView() {
         <ChartCard seg="CE·B2B" title="정책금리·시장금리" unit="% · 월별" labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
           legend={<><Lg c={C.ind} t="정책금리 RRP" b /><Lg c={C.rose} t="시장금리(콜)" /></>}
           meaning={<>정책금리 vs 시장금리 — <b className="text-gray-700 dark:text-gray-200">할부·소비자 금융비용의 기준·자금시장 긴장도</b></>}
-          ai={<>금리 인하기엔 <b className="font-semibold text-emerald-600 dark:text-emerald-400">할부·카드 이자 부담↓ = 가전 구매력↑</b> · 시장금리 급등 시 유통 운전자금 부담 관찰</>}
+          ai={<>금리 인하기엔 <b className="font-semibold text-emerald-600 dark:text-emerald-400">할부·카드 이자 부담↓ = 가전 구매력↑</b> · 시장금리 급등 시 유통 운전자금 부담 관찰. <b>트렌드</b>: BSP 정책금리 2022~23 급인상(2%→6.5%, 물가·페소 방어) 후 2024말~2025 인하 개시 = 할부 여건 개선 국면 진입.</>}
           tone="amber" src={src("BSP 정책금리(RRP) · IMF IFS 시장금리 · 월별")} />
       )}
       {loan.series.length > 0 && (
