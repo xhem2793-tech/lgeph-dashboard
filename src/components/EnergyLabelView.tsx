@@ -84,7 +84,7 @@ function Sub({ title, seg, note, idx = 0, children }: { title: string; seg?: str
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {seg && <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:text-teal-300">{seg}</span>}
       </div>
-      <div key={on ? "in" : "out"} className="mt-2 flex min-h-[188px] flex-1 items-center">{on ? children : null}</div>
+      <div key={on ? "in" : "out"} className="mt-2 flex h-[200px] items-center justify-center overflow-hidden">{on ? children : null}</div>
       <p className="mt-2 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{note}</p>
     </div>
   )
@@ -95,7 +95,7 @@ function HBar({ items, hiName }: { items: { name: string; v: number; n?: number 
   const max = Math.max(...items.map((i) => i.v), 1), rowH = 24, padL = 78, padR = 40, W = 360, H = items.length * rowH + 2
   const bx = (v: number) => padL + (W - padL - padR) * (v / max)
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
       {items.map((a, i) => { const isHi = hiName && a.name.toLowerCase() === hiName.toLowerCase(), y = i * rowH, col = isHi ? TEAL : i === 0 ? "#5eead4" : "#e2e8f0", dim = h != null && h !== i
         return (
           <g key={a.name} onMouseEnter={() => setH(i)} style={{ cursor: "default", opacity: dim ? 0.4 : 1, transition: "opacity .15s" }}>
@@ -116,8 +116,8 @@ function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { la
   const gw = (W - L - R) / groups.length, bw = Math.min(17, gw * 0.3)
   const Y = (v: number) => T + (H - T - B) * (1 - v / max)
   return (
-    <div className="w-full">
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
+    <div className="flex h-full w-full flex-col">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
         {groups.map((g, i) => { const cx = L + gw * (i + 0.5), dim = h != null && h !== i
           return (
             <g key={g.label} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.45 : 1, transition: "opacity .15s", cursor: "default" }}>
@@ -130,7 +130,7 @@ function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { la
           )
         })}
       </svg>
-      <div className="mt-1 flex items-center gap-3 text-[10px]"><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: TEAL }} />LG</span><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-gray-300 dark:bg-gray-600" />시장평균</span></div>
+      <div className="mt-1 flex shrink-0 items-center gap-3 text-[10px]"><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: TEAL }} />LG</span><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-gray-300 dark:bg-gray-600" />시장평균</span></div>
     </div>
   )
 }
@@ -147,8 +147,8 @@ function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: numbe
   const Y = (v: number) => T + (H - T - B) * ((v - ky0) / ((ky1 - ky0) || 1))
   const emx = (ex0 + ex1) / 2, kmy = (ky0 + ky1) / 2
   return (
-    <div className="w-full">
-      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
+    <div className="flex h-full w-full flex-col">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
         {/* 사분면 가이드 — 우상단(고효율·저전력)=우수 */}
         <rect x={X(emx)} y={T} width={W - R - X(emx)} height={Y(kmy) - T} fill="#0d9488" opacity="0.05" />
         {[0.25, 0.5, 0.75].map((f) => <line key={"h" + f} x1={L} y1={T + (H - T - B) * f} x2={W - R} y2={T + (H - T - B) * f} stroke="#e5e7eb" strokeWidth="0.6" strokeDasharray="2 3" className="dark:stroke-gray-800" />)}
@@ -171,7 +171,7 @@ function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: numbe
           </g>
         ))}
       </svg>
-      <div className="mt-1 text-[10px] text-gray-400"><span className="font-semibold text-teal-600 dark:text-teal-400">● LG</span> · 우측·상단(음영)일수록 고효율·저전력</div>
+      <div className="mt-1 shrink-0 text-[10px] text-gray-400"><span className="font-semibold text-teal-600 dark:text-teal-400">● LG</span> · 우측·상단(음영)일수록 고효율·저전력</div>
     </div>
   )
 }
@@ -245,7 +245,8 @@ export default function EnergyLabelView() {
 
   const rank = useMemo(() => {
     const by: Record<string, number[]> = {}; for (const r of segRows) (by[r.brand] = by[r.brand] || []).push(r.eff!)
-    return Object.entries(by).map(([name, a]) => ({ name, v: avgOf(a)!, n: a.length })).filter((x) => x.n >= 2).sort((a, b) => b.v - a.v).slice(0, 8)
+    // LG는 모델 1개만 있어도 항상 노출(용량대별 LG 포지션 확인용), 그 외 브랜드는 노이즈 방지 위해 2개 이상
+    return Object.entries(by).map(([name, a]) => ({ name, v: avgOf(a)!, n: a.length })).filter((x) => x.n >= 2 || /^lg$/i.test(x.name)).sort((a, b) => b.v - a.v).slice(0, 8)
   }, [segRows])
   const lgR = rank.find((r) => /^lg$/i.test(r.name)); const lgRk = lgR ? rank.indexOf(lgR) + 1 : 0
   const gap = lgR && rank[0] ? ((rank[0].v - lgR.v) / lgR.v) * 100 : null
