@@ -192,7 +192,7 @@ const src = (s: string) => (<><b className="font-semibold text-gray-500 dark:tex
 // ══════════════════════════════════════════════════════════════════════
 // 가전 선행지표 — PPI·수입·가전물가·전기료
 // ══════════════════════════════════════════════════════════════════════
-const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile", "cdd_monthly", "temp_monthly", "energy_households", "appliance_market_usd", "appliance_market_cagr", "ecommerce_market_usd", "ecommerce_weekly_pct"]
+const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile", "cdd_monthly", "temp_monthly", "energy_households", "appliance_market_usd", "appliance_market_cagr", "ecommerce_market_usd", "ecommerce_weekly_pct", "elec_consumption_pc", "elec_access_pct"]
 // 가전 시장규모·이커머스 — 다중기관 추정 범위 + 근거(백데이터). 단일 숫자 아닌 삼각검증.
 function MarketCard() {
   const [appl, setAppl] = useState<MktEst[]>([])
@@ -323,6 +323,7 @@ export function ApplianceView() {
   const elec = build(d, n, [{ key: "meralco_residential_rate", name: "가정용 전기료", color: C.ind, w: 2 }])
   const cdd = build(d, n, [{ key: "cdd_monthly", name: "냉방도일 CDD", color: C.rose, w: 2 }]) // 에어컨 수요 선행
   const energy = build(d, n, [{ key: "energy_households", name: "가정용 에너지소비", color: C.ind, w: 2 }]) // ktoe, 연간
+  const elecpc = build(d, n, [{ key: "elec_consumption_pc", name: "1인당 전력소비", color: C.ind, w: 2 }]) // kWh/인, 연간
   const empty = !ppi.series.length && !imp.series.length && !inf.series.length && !elec.series.length && !cdd.series.length
   return (
     <Shell title="가전 선행지표" sub="생산자물가·수입액·가전물가·전기료 — 원가·공급 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d} accent="teal"
@@ -381,6 +382,13 @@ export function ApplianceView() {
           ai={<>가정용 에너지소비 증가는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 보유·사용 심화 = 시장 성숙</b> → 고효율·인버터 소구 여지 확대, 전력화 진전 지역 우선</>}
           tone="emerald" src={src("PSA 에너지통계 부문별 최종소비 · 연간")} />
       )}
+      {show(["전 제품"]) && elecpc.series.length > 0 && (
+        <ChartCard seg="전 제품" title="1인당 전력소비" unit="kWh/인 · 연간" labels={elecpc.labels} series={elecpc.series} decimals={0} seriesUnit="kWh"
+          legend={<Lg c={C.ind} t="1인당 전력소비" b />}
+          meaning={<>국민 1인당 연간 전력사용량 — <b className="text-gray-700 dark:text-gray-200">전력화·가전 보유 심화의 대표 프록시</b>(소득 성장과 동행)</>}
+          ai={<>필리핀 1인당 전력소비는 <b className="font-semibold text-amber-600 dark:text-amber-400">900kWh대로 태국(약 3,000)·말련(약 5,000)의 1/3 이하</b> = <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 보급·대형화 성장여력이 큰 저변</b>. <b>트렌드</b>: 소득 증가와 함께 완만한 우상향 — 냉장고·에어컨 등 상시가동 가전 확산의 구조적 순풍, 다만 高전기료가 고효율 수요를 동시에 자극.</>}
+          tone="emerald" src={src("World Bank WDI 1인당 전력소비(EG.USE.ELEC.KH.PC) · 연간")} />
+      )}
     </Shell>
   )
 }
@@ -388,7 +396,7 @@ export function ApplianceView() {
 // ══════════════════════════════════════════════════════════════════════
 // 통화·금리·신용 — 정책금리·M3·가계신용
 // ══════════════════════════════════════════════════════════════════════
-const RATES_KEYS = ["policy_rate_monthly", "BSP_policy_rate", "interbank_call_rate", "m3_growth_yoy", "broad_money_growth", "domestic_credit_pct_gdp", "bank_loan_growth_yoy", "consumer_loan_growth_yoy", "credit_card_loan_growth_yoy", "current_account_pct_gdp", "fdi_net_inflow_usd", "trade_balance_gdp", "exports_gdp", "imports_gdp", "govt_exp_gdp", "reserves_usd", "credit_card_ownership", "debit_card_ownership", "credit_card_used", "borrowed_any_pct", "saved_at_fi_pct", "account_ownership", "govt_debt_gdp", "tax_revenue_gdp", "gross_savings_gdp", "market_cap_gdp", "psei_index"]
+const RATES_KEYS = ["policy_rate_monthly", "BSP_policy_rate", "interbank_call_rate", "m3_growth_yoy", "broad_money_growth", "domestic_credit_pct_gdp", "bank_loan_growth_yoy", "consumer_loan_growth_yoy", "credit_card_loan_growth_yoy", "current_account_pct_gdp", "fdi_net_inflow_usd", "trade_balance_gdp", "exports_gdp", "imports_gdp", "govt_exp_gdp", "reserves_usd", "credit_card_ownership", "debit_card_ownership", "credit_card_used", "borrowed_any_pct", "saved_at_fi_pct", "account_ownership", "govt_debt_gdp", "tax_revenue_gdp", "gross_savings_gdp", "market_cap_gdp", "psei_index", "npl_ratio"]
 export function RatesView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(RATES_KEYS)
@@ -407,6 +415,7 @@ export function RatesView() {
   const fisc = build(d, n, [{ key: "govt_debt_gdp", name: "정부부채", color: C.rose, w: 2 }, { key: "gross_savings_gdp", name: "총저축률", color: C.emer }, { key: "tax_revenue_gdp", name: "조세수입", color: C.ind }]) // %GDP 연간
   const mktcap = build(d, n, [{ key: "market_cap_gdp", name: "주식 시가총액", color: C.ind, w: 2 }]) // %GDP 연간
   const psei = build(d, n, [{ key: "psei_index", name: "PSEi 지수", color: C.ind, w: 2 }]) // 월말 종가, 지수
+  const npl = build(d, n, [{ key: "npl_ratio", name: "NPL 비율", color: C.rose, w: 2 }]) // 은행 부실채권비율 %, 연간
   const empty = !pol.series.length && !loan.series.length && !m3.series.length && !credit.series.length && !cab.series.length && !fdi.series.length && !trade.series.length && !reserves.series.length && !govt.series.length
   return (
     <Shell title="통화·금리·신용" sub="기준금리·통화량 M3·가계신용 — 할부·카드 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d} accent="blue"
@@ -480,6 +489,13 @@ export function RatesView() {
           ai={<>PSEi는 <b className="font-semibold text-amber-600 dark:text-amber-400">2015년 7,700선 → 2026년 6,000대</b>로 장기 박스권·정체 = 자산효과 제한적. <b>트렌드</b>: 2020년 코로나 급락(4,000대) 후 회복했으나 고금리·외국인 이탈로 <b className="font-semibold text-rose-600 dark:text-rose-400">2026년 상반기 5,700대까지 재하락</b> 후 반등 — 증시보다 소득·송금이 소비 동력.</>}
           tone="amber" src={src("PSE(필리핀증권거래소) 종합지수 · Yahoo Finance 월말 종가")} />
       )}
+      {npl.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="은행 부실채권(NPL) 비율" unit="% · 연간" labels={npl.labels} series={npl.series} decimals={1} seriesUnit="%"
+          legend={<Lg c={C.rose} t="NPL 비율(총대출 대비)" b />}
+          meaning={<>은행 총여신 중 부실채권 비중 — <b className="text-gray-700 dark:text-gray-200">가계·기업 상환능력·금융안정</b>의 핵심 지표(할부·소비자금융 건전성 선행)</>}
+          ai={<>NPL이 <b className="font-semibold text-emerald-600 dark:text-emerald-400">3%대로 낮고 안정</b>이면 은행이 소비자·카드·할부 여신을 공격적으로 늘릴 여력 → <b className="font-semibold">무이자 할부·BNPL 확대에 우호적</b>. <b>트렌드</b>: 팬데믹기 2021년 4%대로 상승했다가 <b className="font-semibold">2025년 3.0%로 안정 복귀</b> — 신용 리스크 완화로 가전 할부 수요 뒷받침. 급등 반전 시 유통 여신·연체 선행 경보로 활용.</>}
+          tone="emerald" src={src("World Bank WDI 은행 NPL 비율(FB.AST.NPER.ZS) · 연간")} />
+      )}
         </> },
         { key: "money_ext", label: "통화·대외", node: <>
       {m3.series.length > 0 && (
@@ -532,7 +548,7 @@ export function RatesView() {
 // ══════════════════════════════════════════════════════════════════════
 // 국민계정·성장 — GDP·소비·투자·건설·산업·유통
 // ══════════════════════════════════════════════════════════════════════
-const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "wholesale_gva_growth", "services_gva_yoy", "retail_sales_growth", "gdp_per_capita_usd", "office_vacancy_ncr", "residential_property_price_yoy", "residential_property_price_real_yoy"]
+const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "wholesale_gva_growth", "services_gva_yoy", "retail_sales_growth", "gdp_per_capita_usd", "office_vacancy_ncr", "residential_property_price_yoy", "residential_property_price_real_yoy", "tourism_arrivals"]
 // 동남아 6개국 비교 — 필리핀 강조(굵은선+끝점 핀), 나머지 색 구분
 const SEA_SPECS: Spec[] = [
   { key: "Philippines", name: "필리핀", color: C.ind, w: 2.4, endLabel: "필리핀" },
@@ -562,6 +578,7 @@ export function GrowthView() {
   const va = build(d, n, [{ key: "manufacturing_va_growth", name: "제조업", color: C.ind, w: 2 }, { key: "industry_va_growth", name: "산업", color: C.rose }, { key: "services_va_growth", name: "서비스", color: C.emer }])
   const rsale = build(d, n, [{ key: "retail_sales_growth", name: "소매판매 증가율", color: C.ind, w: 2 }]) // 연간 6년(COVID 저점)
   const pcap = build(d, n, [{ key: "gdp_per_capita_usd", name: "1인당 GDP", color: C.ind, w: 2 }]) // USD, 연간 — 구매력·시장규모
+  const tour = build(d, n, [{ key: "tourism_arrivals", name: "국제 관광객", color: C.teal, w: 2 }]) // 백만명, 연간 — 서비스·소비 동력
   const office = build(d, n, [{ key: "office_vacancy_ncr", name: "오피스 공실률", color: C.rose, w: 2 }]) // 민간자료(Colliers)
   const rrepi = build(d, n, [{ key: "residential_property_price_yoy", name: "명목", color: C.ind, w: 2 }, { key: "residential_property_price_real_yoy", name: "실질", color: C.teal }]) // 주거용 부동산가격 상승률, 분기(BIS)
   const empty = !gdp.series.length && !demand.series.length && !cons.series.length && !ind.series.length && !cap.series.length && !ret.series.length && !permit.series.length && !permitV.series.length && !va.series.length && !rsale.series.length && !pcap.series.length && !office.series.length && !rrepi.series.length
@@ -596,6 +613,13 @@ export function GrowthView() {
           meaning={<>1인당 명목 GDP — <b className="text-gray-700 dark:text-gray-200">가전 구매력·프리미엄 전환의 구조적 기반</b></>}
           ai={<>1인당 GDP는 10년간 2,163$→4,171$로 상승 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">중산층 확대·프리미엄 가전 침투 여력↑</b> → 상위 라인업·신가전 카테고리 확장 기회</>}
           tone="emerald" src={src("World Bank 1인당 GDP(명목) · 연간")} />
+      )}
+      {tour.series.length > 0 && (
+        <ChartCard seg="CE" title="국제 관광객 입국자수" unit="백만명 · 연간" labels={tour.labels} series={tour.series} decimals={1} seriesUnit="M"
+          legend={<Lg c={C.teal} t="국제 관광객(백만명)" b />}
+          meaning={<>연간 국제 방문객 수 — <b className="text-gray-700 dark:text-gray-200">서비스·소매·숙박 소비의 외생 수요</b>(관광지·리조트 가전 B2B 수요 포함)</>}
+          ai={<>관광 회복은 호텔·리조트·요식 <b className="font-semibold text-emerald-600 dark:text-emerald-400">B2B 가전(에어컨·냉장·주방)</b> 및 관광지 소매 수요를 자극. <b>트렌드</b>: 2019년 <b>8.3M</b> 정점 → 2020~21 코로나로 <b className="font-semibold text-rose-600 dark:text-rose-400">0.2M까지 붕괴</b> → 2023 5.5M·2025 6.4M로 회복 중이나 아직 팬데믹 이전 미달 · 회복 지속 시 B2B·지방 소매 순풍.</>}
+          tone="emerald" src={src("World Bank(2005~2020)·필리핀 DOT(2021~2025) 국제 관광객 · 연간")} />
       )}
         </> },
         { key: "industry", label: "산업·생산", node: <>

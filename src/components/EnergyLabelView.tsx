@@ -371,6 +371,84 @@ function Bubble({ items, metric }: { items: { name: string; eff: number; s5: num
   )
 }
 
+// 롤리팝 — 월 전기요금(낮을수록 유리). 막대 대신 선+원, LG teal 강조·값 라벨·hover. (스타일 변경 + 진입 애니메이션)
+function CostLollipop({ items }: { items: { label: string; cost: number; isLG: boolean }[] }) {
+  const [h, setH] = useState<number | null>(null)
+  if (!items.length) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  const max = Math.max(...items.map((i) => i.cost), 1)
+  const rowH = 26, padL = 62, padR = 56, W = 360, H = items.length * rowH + 8
+  const bx = (v: number) => padL + (W - padL - padR) * (v / max)
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
+      {items.map((a, i) => { const y = i * rowH + rowH / 2 + 3, isLG = a.isLG, col = isLG ? TEAL : "#94a3b8", dim = h != null && h !== i
+        return (
+          <g key={a.label} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.4 : 1, transition: "opacity .15s", cursor: "default" }}>
+            <rect x={0} y={i * rowH} width={W} height={rowH} fill="transparent" /><title>{a.label} · ₱{a.cost.toLocaleString()}/월</title>
+            <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#e5e7eb" strokeWidth="0.6" strokeDasharray="2 3" className="dark:stroke-gray-800" />
+            <text x={padL - 8} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight={isLG ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{a.label}</text>
+            <rect x={padL} y={y - (isLG ? 1.4 : 0.9)} width={Math.max(1, bx(a.cost) - padL)} height={isLG ? 2.8 : 1.8} rx={1.4} fill={col} className={isLG ? "" : "dark:opacity-60"} style={{ animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.06) + "s", transformOrigin: `${padL}px 0` }} />
+            <circle cx={bx(a.cost)} cy={y} r={isLG ? 5.5 : 4} fill={col} stroke="#fff" strokeWidth={isLG ? 1.5 : 0.8} className={isLG ? "" : "dark:fill-gray-500"} style={{ animation: "fadeIn .4s ease both", animationDelay: (0.36 + i * 0.06) + "s" }} />
+            <text x={bx(a.cost) + 9} y={y + 3.5} fontSize="10.5" fontWeight={isLG ? 800 : 600} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>₱{a.cost.toLocaleString()}</text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+// 100% 스택바(SVG) — 브랜드별 5·4·3성↓ 구성. 세그먼트별 growX 애니메이션·hover·값 라벨. (인라인 막대→SVG 스택바)
+function GradeStack({ rows }: { rows: { name: string; s5: number; s4: number; s3: number; n: number }[] }) {
+  const [h, setH] = useState<number | null>(null)
+  if (!rows.length) return <div className="flex h-full min-h-[160px] w-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  const rowH = 24, padL = 58, padR = 42, W = 360, H = rows.length * rowH + 4, barW = W - padL - padR
+  const seg = [{ k: "s5" as const, c: "#10b981" }, { k: "s4" as const, c: AMBER }, { k: "s3" as const, c: "#cbd5e1" }]
+  return (
+    <div className="flex h-full w-full flex-col">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
+        {rows.map((g, i) => { const y = i * rowH, isLG = /^lg$/i.test(g.name), dim = h != null && h !== i
+          let acc = 0
+          return (
+            <g key={g.name} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.45 : 1, transition: "opacity .15s", cursor: "default" }}>
+              <rect x={0} y={y} width={W} height={rowH} fill="transparent" /><title>{g.name} · 5성 {g.s5.toFixed(0)}% · 4성 {g.s4.toFixed(0)}% · 3성↓ {g.s3.toFixed(0)}% · {g.n}모델</title>
+              <text x={padL - 6} y={y + rowH / 2 + 3} textAnchor="end" fontSize="10.5" fontWeight={isLG ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{g.name}</text>
+              {seg.map((s, si) => { const w = barW * (g[s.k] || 0) / 100, x = padL + acc; acc += w; if (w <= 0) return null
+                return <rect key={s.k} x={x} y={y + 4} width={w} height={rowH - 9} fill={s.c} className={s.k === "s3" ? "dark:fill-gray-600" : ""} style={{ animation: "growX .5s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.05 + si * 0.06) + "s", transformOrigin: `${x}px 0` }} /> })}
+              <text x={padL + barW + 5} y={y + rowH / 2 + 3} fontSize="10" fontWeight={isLG ? 800 : 600} className="fill-emerald-600 dark:fill-emerald-400">{g.s5.toFixed(0)}%</text>
+            </g>
+          )
+        })}
+      </svg>
+      <div className="mt-1 flex shrink-0 items-center gap-3 text-[9.5px] text-gray-400"><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-emerald-500" />5성</span><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: AMBER }} />4성</span><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-gray-300 dark:bg-gray-600" />3성↓</span></div>
+    </div>
+  )
+}
+
+// 도넛 페어 — 냉매 믹스 LG vs 시장. 세그먼트 draw 애니메이션(stroke-dashoffset). (스택바→도넛으로 스타일 변경)
+function RefrigDonut({ keys, lg, mkt, colors }: { keys: string[]; lg: { m: Record<string, number>; tot: number }; mkt: { m: Record<string, number>; tot: number }; colors: Record<string, string> }) {
+  const R = 30, SW = 12, C = 2 * Math.PI * R, cx = 40, cy = 40
+  const one = (t: { m: Record<string, number>; tot: number }, tag: string) => {
+    let acc = 0
+    return (
+      <div className="flex flex-col items-center gap-1">
+        <svg viewBox="0 0 80 80" style={{ width: 82, height: 82 }}>
+          <circle cx={cx} cy={cy} r={R} fill="none" strokeWidth={SW} stroke="currentColor" className="text-gray-100 dark:text-gray-800" />
+          {t.tot > 0 && keys.map((k, i) => { const pct = (t.m[k] || 0) / t.tot; if (pct <= 0) return null; const len = C * pct, off = -C * acc; acc += pct
+            return <circle key={k} cx={cx} cy={cy} r={R} fill="none" strokeWidth={SW} stroke={colors[k] || "#94a3b8"} strokeDasharray={`${len} ${C - len}`} strokeDashoffset={off} transform={`rotate(-90 ${cx} ${cy})`} style={{ animation: "dashDraw .8s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.12 + i * 0.1) + "s" }} /> })}
+          <text x={cx} y={cy - 2} textAnchor="middle" fontSize="9" fontWeight="800" className={tag === "LG" ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{tag}</text>
+          <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7.5" className="fill-gray-400">{t.tot}모델</text>
+        </svg>
+      </div>
+    )
+  }
+  return (
+    <div className="flex h-full w-full flex-col justify-center">
+      <style>{"@keyframes dashDraw{from{stroke-dasharray:0 " + C.toFixed(1) + "}}"}</style>
+      <div className="flex items-center justify-center gap-6">{one(lg, "LG")}{one(mkt, "시장")}</div>
+      <div className="mt-2 flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-[9.5px] text-gray-400">{keys.slice(0, 5).map((k) => <span key={k} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: colors[k] || "#94a3b8" }} />{k}</span>)}<span className="text-gray-400">· 녹색계=저GWP</span></div>
+    </div>
+  )
+}
+
 // LG 커버리지 매트릭스 — 설치형(행) × 용량(열). 셀=LG 모델수, 색농도=LG 평균효율. LG 라인업 전모를 한 화면에.
 type Cell = { lgN: number; lgEff: number | null; mktN: number; mktEff: number | null }
 function Heatmap({ rowLabels, colLabels, cells, metric, effLo, effHi }: { rowLabels: string[]; colLabels: string[]; cells: Record<string, Cell>; metric: string; effLo: number; effHi: number }) {
@@ -604,42 +682,17 @@ export default function EnergyLabelView() {
               <Sub idx={1} title="효율 ↔ 월전력 관계" seg={seg?.k} meaning={<>가로=효율({cur.metric}), 세로=월 소비전력. <b className="text-gray-700 dark:text-gray-200">우측·상단</b>이 고효율·저전력(우수).</>} ai={<>같은 효율이라도 실제 월전력은 다를 수 있어 <b className="font-semibold">효율 스펙과 실사용 전력의 정합성</b>이 관건. LG 점이 우상단 음영(우수 구간)에 있으면 <b className="font-semibold text-emerald-600 dark:text-emerald-400">‘고효율=저전기료’ 메시지가 실측으로 뒷받침</b>되고, 아니면 라벨효율 대비 소비전력 개선이 과제.</>} csv={{ head: ["브랜드", cur.metric, "월전력(kWh)"], rows: scatterData.map((p) => [p.name, p.eff.toFixed(2), Math.round(p.kwh)]) }}><Scatter pts={scatterData} metric={cur.metric} /></Sub>
               <Sub idx={2} title="용량대별 LG vs 시장" meaning={<>용량 세그먼트별 <b className="text-gray-700 dark:text-gray-200">LG vs 시장평균</b> {cur.metric} 비교 — 용량대별 효율 포지션.</>} ai={weak && strong ? <>LG는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">{strong.label}</b>에서 시장 대비 +{strong.diff.toFixed(2)} 강세인 반면 <b className="font-semibold text-rose-600 dark:text-rose-400">{weak.label}</b>는 {weak.diff.toFixed(2)} 열세 → <b className="font-semibold">열세 용량대의 효율 스펙 상향이 차기 라인업 1순위</b>. 강세 용량대는 프리미엄 가격 방어에 활용.</> : <>용량대별 LG 포지션 — 시장평균 상회 구간은 프리미엄, 하회 구간은 개선 타깃.</>} csv={{ head: ["용량대", "LG " + cur.metric, "시장 " + cur.metric], rows: bySegChart.map((g) => [g.label, g.lg != null ? g.lg.toFixed(2) : "—", g.mkt.toFixed(2)]) }}><GroupBars groups={bySegChart} /></Sub>
               <Sub idx={3} title="월 전기요금 (TCO)" seg={seg?.k} meaning={<>평균 월 소비전력×가정용 전기료(Meralco ₱{rate.toFixed(1)}/kWh{rateAsOf?" · "+rateAsOf:""}) 추정 — <b className="text-gray-700 dark:text-gray-200">낮을수록 유리</b>.</>} ai={(() => { const lgT = tco.find((t) => t.isLG); const best = tco[0]; if (!lgT || !best) return <>효율이 높을수록 월 전기요금↓ — <b className="font-semibold text-emerald-600 dark:text-emerald-400">연간 절감액을 구매 설득 메시지로 전환</b>(고효율 프리미엄 정당화).</>; const diff = lgT.cost - best.cost; return <>LG 월 약 <b>₱{lgT.cost.toLocaleString()}</b>, 최저 {best.label}(₱{best.cost.toLocaleString()}) 대비 {diff > 0 ? <>₱{diff.toLocaleString()} 높아 <b className="font-semibold">효율 개선 시 절감 소구 여지</b></> : diff < 0 ? <>₱{(-diff).toLocaleString()} 낮아 <b className="font-semibold text-emerald-600 dark:text-emerald-400">연 ₱{((-diff) * 12).toLocaleString()} 절감 마케팅 가능</b></> : "동일"}. 필리핀 高전기료 구조상 TCO 절감은 강한 구매 동인.</> })()} csv={{ head: ["브랜드", "월 전기요금(₱)"], rows: tco.map((t) => [t.label, t.cost]) }}>
-                <div className="w-full">{tco.length === 0 ? <div className="flex h-28 items-center justify-center text-[12px] text-gray-400">데이터 부족</div> : (() => {
-                  const mx = Math.max(...tco.map((t) => t.cost), 1)
-                  return <div className="flex flex-col gap-2">{tco.map((t, i) => { const isLG = t.label === "LG"; return (
-                    <div key={t.label} className="flex items-center gap-2">
-                      <span className={"w-14 shrink-0 truncate text-right text-[11px] " + (isLG ? "font-bold text-teal-600 dark:text-teal-400" : "text-gray-500 dark:text-gray-400")}>{t.label}</span>
-                      <span className="h-4 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800"><span className="block h-full rounded" style={{ width: (t.cost / mx * 100) + "%", background: isLG ? TEAL : GRAY, animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.12 + i * 0.07) + "s", transformOrigin: "left center", willChange: "transform" }} /></span>
-                      <span className="w-14 shrink-0 text-right text-[11px] font-semibold tabular-nums text-gray-700 dark:text-gray-200">₱{t.cost.toLocaleString()}</span>
-                    </div>
-                  ) })}<span className="mt-0.5 text-[9.5px] text-gray-400">월 추정 · 낮을수록 유리</span></div>
-                })()}</div>
+                <CostLollipop items={tco} />
               </Sub>
               <Sub idx={4} title="브랜드 등급 분포(별점)" seg={seg?.k} meaning={<>브랜드별 라인업의 <b className="text-gray-700 dark:text-gray-200">5·4·3성↓ 구성</b> — 소형 니치는 5성 100%가 흔하므로 모델수와 함께 해석.</>} ai={lgGrade ? <>LG 5성 <b className="font-semibold text-emerald-600 dark:text-emerald-400">{lgGrade.s5.toFixed(0)}%</b>(4성 {lgGrade.s4.toFixed(0)}%) — {lgGrade.s5 >= 60 ? <b className="font-semibold">프리미엄 효율 라인이 견고</b> : <b className="font-semibold text-amber-600 dark:text-amber-400">5성 비중 확대 여지</b>}. DOE 별점은 소비자·유통 진열의 직접 소구 포인트라 5성 라인 폭이 매대 경쟁력으로 직결.</> : <>고별점 비중이 높은 브랜드일수록 프리미엄 진열·인증 마케팅에 유리 — LG 미등록 세그먼트는 진입 시 5성 라인 우선 확보가 관건.</>} csv={{ head: ["브랜드", "5성%", "4성%", "3성↓%", "모델수"], rows: grade.map((g) => [g.name, g.s5.toFixed(0), g.s4.toFixed(0), g.s3.toFixed(0), g.n]) }}>
-                <div className="w-full">{grade.length === 0 ? <div className="flex h-28 items-center justify-center text-[12px] text-gray-400">데이터 부족</div> : (
-                  <div className="flex flex-col gap-1.5">
-                    {grade.map((g, i) => { const isLG = /^lg$/i.test(g.name); return (
-                      <div key={g.name} className="flex items-center gap-2" title={`${g.name} · 5성 ${g.s5.toFixed(0)}% · 4성 ${g.s4.toFixed(0)}% · 3성↓ ${g.s3.toFixed(0)}% · ${g.n}모델`}>
-                        <span className={"w-[54px] shrink-0 truncate text-right text-[10.5px] " + (isLG ? "font-bold text-teal-600 dark:text-teal-400" : "text-gray-500 dark:text-gray-400")}>{g.name}</span>
-                        <span className="flex h-3 flex-1 overflow-hidden rounded"><span style={{ width: g.s5 + "%", background: "#10b981", animation: "growX .5s ease both", animationDelay: (0.1 + i * 0.04) + "s", transformOrigin: "left" }} /><span style={{ width: g.s4 + "%", background: AMBER }} /><span className="bg-gray-300 dark:bg-gray-600" style={{ width: g.s3 + "%" }} /></span>
-                        <span className="w-8 shrink-0 text-right text-[10px] font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{g.s5.toFixed(0)}%</span>
-                      </div>
-                    ) })}
-                    <div className="mt-0.5 flex items-center gap-3 text-[9.5px] text-gray-400"><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-emerald-500" />5성</span><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: AMBER }} />4성</span><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-gray-300 dark:bg-gray-600" />3성↓</span></div>
-                  </div>
-                )}</div>
+                <GradeStack rows={grade} />
               </Sub>
               {cat === "acu" && refrigMix.mkt.tot > 0 && (() => {
                 const RC: Record<string, string> = { R32: "#10b981", R290: "#0d9488", R600a: "#22c55e", R410A: "#dc2626", R134a: "#f59e0b" }
                 const lgR32 = refrigMix.lg.tot ? (refrigMix.lg.m.R32 || 0) / refrigMix.lg.tot * 100 : null
-                const Bar = ({ t, m }: { t: number; m: Record<string, number> }) => <span className="flex h-4 flex-1 overflow-hidden rounded">{refrigMix.keys.map((k, i) => { const w = t ? (m[k] || 0) / t * 100 : 0; if (!w) return null; return <span key={k} title={`${k} ${w.toFixed(0)}%`} style={{ width: w + "%", background: RC[k] || "#94a3b8", animation: "growX .5s ease both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: "left" }} /> })}</span>
                 return (
                   <Sub idx={5} title="냉매 믹스 (환경·GWP)" seg={seg?.k} meaning={<>LG vs 시장의 냉매 종류 구성 — <b className="text-gray-700 dark:text-gray-200">저GWP 냉매(R32·R290) 비중 = 환경규제 대응력</b>.</>} ai={<>LG R32 {lgR32 != null ? <b className="font-semibold text-emerald-600 dark:text-emerald-400">{lgR32.toFixed(0)}%</b> : "—"} — 고GWP R410A가 남아있으면 규제강화(키갈리 개정·수입쿼터) 시 리스크, 저GWP 전환율이 높을수록 <b className="font-semibold">친환경 프리미엄·조달 입찰 가점</b> 근거. R290(자연냉매)까지 갖추면 규제 선도 시장 대응력 강화.</>} csv={{ head: ["냉매", "LG %", "시장 %"], rows: refrigMix.keys.map((k) => [k, refrigMix.lg.tot ? ((refrigMix.lg.m[k] || 0) / refrigMix.lg.tot * 100).toFixed(0) : "—", refrigMix.mkt.tot ? ((refrigMix.mkt.m[k] || 0) / refrigMix.mkt.tot * 100).toFixed(0) : "—"]) }}>
-                    <div className="flex w-full flex-col gap-2.5">
-                      <div className="flex items-center gap-2"><span className="w-12 shrink-0 text-right text-[11px] font-bold text-teal-600 dark:text-teal-400">LG</span>{refrigMix.lg.tot ? <Bar t={refrigMix.lg.tot} m={refrigMix.lg.m} /> : <span className="flex-1 text-[10px] text-gray-400">데이터 없음</span>}</div>
-                      <div className="flex items-center gap-2"><span className="w-12 shrink-0 text-right text-[11px] text-gray-500 dark:text-gray-400">시장</span><Bar t={refrigMix.mkt.tot} m={refrigMix.mkt.m} /></div>
-                      <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[9.5px] text-gray-400">{refrigMix.keys.slice(0, 5).map((k) => <span key={k} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: RC[k] || "#94a3b8" }} />{k}</span>)}<span className="text-gray-400">· 녹색=저GWP</span></div>
-                    </div>
+                    <RefrigDonut keys={refrigMix.keys} lg={refrigMix.lg} mkt={refrigMix.mkt} colors={RC} />
                   </Sub>
                 )
               })()}
