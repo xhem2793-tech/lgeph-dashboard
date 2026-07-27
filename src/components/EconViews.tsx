@@ -439,14 +439,14 @@ export function RatesView() {
         <ChartCard seg="CE" title="카드·계좌 보급률" unit="% 성인 · 연간" labels={cards.labels} series={cards.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="신용카드 보유" b /><Lg c={C.blue} t="직불카드 보유" /><Lg c={C.emer} t="계좌 보유" /></>}
           meaning={<>성인 카드·계좌 보유율(Findex) — <b className="text-gray-700 dark:text-gray-200">가전 결제·할부 수단의 구조</b></>}
-          ai={<>계좌보유는 27%→50%로 급등했으나 <b className="font-semibold text-rose-600 dark:text-rose-400">신용카드는 3%대로 정체</b> → 카드 무이자할부보다 <b className="font-semibold text-emerald-600 dark:text-emerald-400">리테일러·핀테크 할부(BNPL)·현금·직불 중심</b> 판매금융 설계가 시장 특성에 부합</>}
+          ai={<>계좌보유는 27%→50%로 급등했으나 <b className="font-semibold text-rose-600 dark:text-rose-400">신용카드는 3%대로 정체</b> → 카드 무이자할부보다 <b className="font-semibold text-emerald-600 dark:text-emerald-400">리테일러·핀테크 할부(BNPL)·현금·직불 중심</b> 판매금융 설계가 시장 특성에 부합. <b>트렌드</b>: 계좌·카드 모두 2021년 급등(팬데믹 정부지원금 계좌지급·디지털드라이브)했다가 카드는 2024년 반락 — 계좌는 유지, 결제는 e-wallet으로 이동.</>}
           tone="rose" src={src("World Bank Global Findex 카드·계좌 보유율 · 격년(2011~2024)")} />
       )}
       {finuse.series.length > 0 && (
         <ChartCard seg="CE" title="차입·저축 행태" unit="% 성인 · 연간" labels={finuse.labels} series={finuse.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.rose} t="차입 경험" b /><Lg c={C.emer} t="금융기관 저축" /></>}
           meaning={<>성인 차입·저축 경험율(Findex) — <b className="text-gray-700 dark:text-gray-200">가전 구매 자금조달 성향</b></>}
-          ai={<>차입율 <b className="font-semibold">72%</b>로 높지만 대부분 <b className="font-semibold text-amber-600 dark:text-amber-400">가족·비공식 채널</b>(카드 3%뿐) → 저축률 상승기·송금 유입기에 대형가전 수요, <b className="font-semibold text-emerald-600 dark:text-emerald-400">유연 할부·계약금 낮춘 상품</b>이 전환 견인</>}
+          ai={<>차입율 <b className="font-semibold">72%</b>로 높지만 대부분 <b className="font-semibold text-amber-600 dark:text-amber-400">가족·비공식 채널</b>(카드 3%뿐) → 저축률 상승기·송금 유입기에 대형가전 수요, <b className="font-semibold text-emerald-600 dark:text-emerald-400">유연 할부·계약금 낮춘 상품</b>이 전환 견인. <b>트렌드</b>: 차입율은 2017·2021 하락 후 2024년 72%로 재상승(물가·생활비 압박), 금융기관 저축률은 12%(2017)→24%(2024) 꾸준히 개선.</>}
           tone="emerald" src={src("World Bank Global Findex 차입·저축율 · 격년(2011~2024)")} />
       )}
         </> },
@@ -549,7 +549,7 @@ export function GrowthView() {
         <ChartCard seg="CE·B2B" title="GDP 성장률" unit="전년비 %" kind="bar" labels={gdp.labels} series={gdp.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="GDP 성장률" b />}
           meaning={<>실질 GDP 성장률 — <b className="text-gray-700 dark:text-gray-200">가전 시장 전체 파이의 크기</b> (연간 장기 + 최근 분기)</>}
-          ai={<>성장 둔화기엔 재량소비 위축 → <b className="font-semibold text-amber-600 dark:text-amber-400">보급형 방어</b>, 확장기엔 프리미엄·신규수요 가속</>}
+          ai={<>성장 둔화기엔 재량소비 위축 → <b className="font-semibold text-amber-600 dark:text-amber-400">보급형 방어</b>, 확장기엔 프리미엄·신규수요 가속. <b>트렌드</b>: 2020년 코로나로 <b className="font-semibold text-rose-600 dark:text-rose-400">-9.5% 급락</b>(역대 최악) 후 2022~2023 7%대 반등, 2024~ 5~6%대 안정 성장.</>}
           tone="emerald" src={src("PSA 국민계정 GDP · 분기/연")} />
       )}
       {demand.series.length > 0 && (
@@ -580,7 +580,7 @@ export function GrowthView() {
         <ChartCard seg="B2B" title="평균 가동률" unit="% (레벨)" labels={cap.labels} series={cap.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.amber} t="평균 가동률" b />}
           meaning={<>산업·건설 평균 설비 가동률 — <b className="text-gray-700 dark:text-gray-200">공급 여력·경기 과열/둔화</b></>}
-          ai={<>가동률 하락은 수요 둔화·유휴 신호 → <b className="font-semibold text-amber-600 dark:text-amber-400">보수적 재고·판가</b>, 상승 지속 시 공급 병목 대비</>}
+          ai={<>가동률 하락은 수요 둔화·유휴 신호 → <b className="font-semibold text-amber-600 dark:text-amber-400">보수적 재고·판가</b>, 상승 지속 시 공급 병목 대비. <b>트렌드</b>: 제조 가동률 2020년 코로나 저점 후 회복해 2024~ 77~79%대 안정(팬데믹 전 수준 상회).</>}
           tone="amber" src={src("PSA 산업생산조사 가동률 · 월")} />
       )}
       {va.series.length > 0 && (
@@ -624,7 +624,7 @@ export function GrowthView() {
         <ChartCard seg="CE·B2B" title="주거용 부동산가격 상승률" unit="전년비 % · 분기" labels={rrepi.labels} series={rrepi.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="명목" b /><Lg c={C.teal} t="실질(물가조정)" /></>}
           meaning={<>주택가격 상승률(명목·실질) — <b className="text-gray-700 dark:text-gray-200">주거 자산효과·신규주택 = 프리미엄 가전 교체·초도수요 동인</b></>}
-          ai={<>주택가격 상승은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">자산효과·신규 입주 = 프리미엄·빌트인 가전 수요</b>, 실질 하락(명목이 물가 하회) 시 소비여력 위축 경계 · <b className="text-gray-500 dark:text-gray-400">BIS(BSP RREPI 원천)</b></>}
+          ai={<>주택가격 상승은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">자산효과·신규 입주 = 프리미엄·빌트인 가전 수요</b>, 실질 하락(명목이 물가 하회) 시 소비여력 위축 경계 · <b className="text-gray-500 dark:text-gray-400">BIS(BSP RREPI 원천)</b>. <b>트렌드</b>: 2024년 명목 7~9%였으나 2025년 2%대로 급둔화, 실질은 마이너스 근접 — 주택경기 냉각 신호.</>}
           tone="emerald" src={src("BIS 주거용 부동산가격지수(BSP RREPI 원천) · 분기")} />
       )}
         </> },
@@ -633,7 +633,7 @@ export function GrowthView() {
         <ChartCard seg="CE·B2B" title="도소매 유통 성장" unit="전년비 %" labels={ret.labels} series={ret.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="도소매 거래" b /><Lg c={C.teal} t="소매 부가가치" /><Lg c={C.amber} t="도매 부가가치" /></>}
           meaning={<>도소매업 성장률 — <b className="text-gray-700 dark:text-gray-200">유통 채널 활력·소비 실현</b></>}
-          ai={<>도소매 성장 가속은 채널 판매 여건 개선 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">유통 프로모·진열 확대 적기</b></>}
+          ai={<>도소매 성장 가속은 채널 판매 여건 개선 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">유통 프로모·진열 확대 적기</b>. <b>트렌드</b>: 2020년 코로나로 <b className="font-semibold text-rose-600 dark:text-rose-400">-14% 급락</b> 후 2021~2022 9%대 반등, 2024~ 5%대 안정 성장.</>}
           tone="emerald" src={src("PSA 국민계정 도소매업 · 분기")} />
       )}
       {rsale.series.length > 0 && (
@@ -716,14 +716,14 @@ export function LaborView() {
         <ChartCard seg="CE" title="실업·불완전고용률" unit="%" labels={un.labels} series={un.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="실업률" b /><Lg c={C.rose} t="불완전고용" /></>}
           meaning={<>고용 여건 — <b className="text-gray-700 dark:text-gray-200">가처분소득·내구재 구매 여력</b></>}
-          ai={<>실업·불완전고용 하락은 소득 안정 신호 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 수요 우호</b>, 상승 시 필수·보급형 우선</>}
+          ai={<>실업·불완전고용 하락은 소득 안정 신호 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 수요 우호</b>, 상승 시 필수·보급형 우선. <b>트렌드</b>: 실업률 2020년 코로나 <b className="font-semibold text-rose-600 dark:text-rose-400">17.6% 급등</b> 후 2024~ 3~5%로 정상화(역대 최저권), 불완전고용은 12%대 잔존.</>}
           tone="rose" src={src("PSA 노동력조사(LFS) · 월/분기")} />
       )}
       {remL.series.length > 0 && (
         <ChartCard seg="CE" title="OFW 송금액 (개인·현금)" unit="십억$ · 월별" labels={remL.labels} series={remL.series}
           legend={<><Lg c={C.ind} t="개인송금(현금+현물)" b /><Lg c={C.emer} t="현금송금" b /></>}
           meaning={<>해외근로자 송금 — <b className="text-gray-700 dark:text-gray-200">필리핀 가전·프리미엄 구매의 핵심 재원</b></>}
-          ai={<>송금 유입은 가전 특히 <b className="font-semibold text-emerald-600 dark:text-emerald-400">프리미엄·대형 수요를 견인</b> → 송금 성수기(4Q·연말)에 프리미엄 캠페인 집중</>}
+          ai={<>송금 유입은 가전 특히 <b className="font-semibold text-emerald-600 dark:text-emerald-400">프리미엄·대형 수요를 견인</b> → 송금 성수기(4Q·연말)에 프리미엄 캠페인 집중. <b>트렌드</b>: 2020년 코로나 소폭 위축 후 곧 회복, 개인송금 월 <b className="font-semibold">30억$대 사상 최고</b> — 연말(12월) 계절 급증 뚜렷.</>}
           tone="emerald" src={src("BSP OFW 개인·현금송금 · 월별(2005~)")} />
       )}
       {rem.series.length > 0 && (
@@ -893,7 +893,7 @@ export function SentimentView() {
         <ChartCard seg="CE" title="내구재 구매의향" unit="지수" labels={dur.labels} series={dur.series} decimals={1}
           legend={<Lg c={C.ind} t="내구재 구매의향" b />}
           meaning={<>가전 등 내구재 구매 의향 — <b className="text-gray-700 dark:text-gray-200">실판매의 3~6개월 직접 선행</b></>}
-          ai={<>구매의향 반등은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">수개월 뒤 가전 실판매 회복</b>을 예고 → 반등 초입에 신제품·프리미엄 출시 타이밍</>}
+          ai={<>구매의향 반등은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">수개월 뒤 가전 실판매 회복</b>을 예고 → 반등 초입에 신제품·프리미엄 출시 타이밍. <b>트렌드</b>: 확산지수 대체로 마이너스(비관 우세), 2020 코로나 급락 후 회복했으나 2026년 재악화(-70) — 물가·금리 부담 반영.</>}
           tone="emerald" src={src("BSP 소비자기대조사 내구재 구매의향 · 분기")} />
       )}
       {cci.series.length > 0 && (
@@ -949,7 +949,7 @@ export function PricesView() {
         <ChartCard seg="CE" title="전체 물가 (헤드라인 CPI)" unit="전년비 %" labels={allI.labels} series={allI.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t="전체" b />}
           meaning={<>헤드라인 물가 상승률 — <b className="text-gray-700 dark:text-gray-200">가처분소득·재량지출 여력의 직접 결정</b></>}
-          ai={<>전체 물가 4% 상회 시 필수재 쏠림 → <b className="font-semibold text-amber-600 dark:text-amber-400">가전 구매 이연</b>, 둔화 국면엔 재량소비·프리미엄 전환 회복</>}
+          ai={<>전체 물가 4% 상회 시 필수재 쏠림 → <b className="font-semibold text-amber-600 dark:text-amber-400">가전 구매 이연</b>, 둔화 국면엔 재량소비·프리미엄 전환 회복. <b>트렌드</b>: 2018 6%대(쌀·유가)→2020~21 2%대 안정→2022~23 6~8% 재급등(식품·에너지)→2024초 둔화 후 2025 쌀·식품發 재상승.</>}
           tone="rose" src={src("PSA CPI 상승률(전체) · 월별")} />
       )}
       {food.series.length > 0 && (
@@ -963,7 +963,7 @@ export function PricesView() {
         <ChartCard seg="CE" title="쌀 물가" unit="전년비 %" labels={rice.labels} series={rice.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.amber} t="쌀" b />}
           meaning={<>주식(쌀) 물가 상승률 — <b className="text-gray-700 dark:text-gray-200">체감물가·정책 민감도 최고 품목</b></>}
-          ai={<>쌀값 급등은 체감물가·정책개입(수입관세·상한제)을 촉발 → <b className="font-semibold text-amber-600 dark:text-amber-400">소비심리 위축 신호</b>, 안정 시 재량소비 여력 반등</>}
+          ai={<>쌀값 급등은 체감물가·정책개입(수입관세·상한제)을 촉발 → <b className="font-semibold text-amber-600 dark:text-amber-400">소비심리 위축 신호</b>, 안정 시 재량소비 여력 반등. <b>트렌드</b>: 2023~24 쌀값 두 자릿수 급등(엘니뇨·수출제한·관세) 후 2025 관세인하로 둔화 — 체감물가의 핵심 변동요인.</>}
           tone="amber" src={src("PSA CPI 상승률(쌀) · 월별")} />
       )}
       {dine.series.length > 0 && (
