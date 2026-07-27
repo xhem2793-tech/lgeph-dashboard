@@ -324,7 +324,7 @@ export function ApplianceView() {
         { key: "PPI_domestic_appliances", label: "가전 PPI YoY", fmt: (v) => v + "%", tone: "rose" },
         { key: "meralco_residential_rate", label: "전기료", fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
       ]}>
-      <MarketCard />
+      {false && <MarketCard />}
       <OwnershipCard d={d} />
       {ppi.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="가전 생산자물가 PPI" unit="전년비 %" labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
