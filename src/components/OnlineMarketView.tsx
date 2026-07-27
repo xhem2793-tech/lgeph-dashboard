@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { ChartCard, fmtLabels } from "@/components/EconChart"
 import { AgendaCard } from "@/components/EconViews"
 import { macroDual, marketEstimates, latestMacro, type MktEst } from "@/lib/supabase"
+import { Segmented } from "@/components/Segmented"
 
 /** 온라인 시장 — 이커머스 규모·성장 + 디지털/결제/통신 인프라(온라인 가전 구매 저변).
  *  레이아웃: 접이식 배너 + 좌측 차트그리드(표준 카드) + 우측 아젠다(다른 뷰와 동일). */
@@ -32,7 +33,7 @@ function seaChart(obj: Record<string, Record<string, number>>) {
   const years = Object.keys(obj).map(Number).sort((a, b) => a - b)
   const labels = years.map((y) => "'" + String(y).slice(2))
   const order = ["id", "vn", "th", "my", "sg", "ph"] // ph 마지막=위에 그려짐
-  const series = order.map((c) => ({ name: SEA_NAME[c], color: SEA_COL[c], w: c === "ph" ? 2.6 : 1.2, data: years.map((y) => { const v = obj[String(y)]?.[c]; return v == null || v === 0 ? NaN : v }) }))
+  const series = order.map((c) => ({ name: SEA_NAME[c], color: SEA_COL[c], w: c === "ph" ? 2.4 : 1.4, endLabel: c === "ph" ? "필리핀" : undefined, data: years.map((y) => { const v = obj[String(y)]?.[c]; return v == null || v === 0 ? NaN : v }) }))
   return { labels, series }
 }
 const seaRank = (obj: Record<string, Record<string, number>>) => { const yrs = Object.keys(obj).map(Number).sort((a, b) => b - a); const last = obj[String(yrs[0])] || {}; const arr = Object.entries(last).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]); const r = arr.findIndex(([c]) => c === "ph"); return r >= 0 ? { rank: r + 1, of: arr.length } : null }
@@ -43,6 +44,7 @@ export default function OnlineMarketView() {
   const [kv, setKv] = useState<Record<string, { value: number; date: string }>>({})
   const [open, setOpen] = useState(false)
   const [srcOpen, setSrcOpen] = useState(false)
+  const [tab, setTab] = useState<"ph" | "sea">("ph")
   useEffect(() => {
     Promise.all(KEYS.map((k) => macroDual(k).then((r) => [k, r] as const)))
       .then((rs) => setD(Object.fromEntries(rs))).catch(() => {})
@@ -54,7 +56,10 @@ export default function OnlineMarketView() {
   const med = vals.length ? (vals.length % 2 ? vals[(vals.length - 1) / 2] : (vals[vals.length / 2 - 1] + vals[vals.length / 2]) / 2) : null
   const cagr = useMemo(() => { const c = est.map((e) => e.cagr).filter((v): v is number => v != null); return c.length ? c.reduce((a, b) => a + b, 0) / c.length : null }, [est])
 
-  const digital = build(d, [{ key: "internet_penetration", name: "인터넷 이용률", color: C.ind }, { key: "account_ownership", name: "금융계정 보유", color: C.emer }])
+  // 인터넷 이용률은 WB·ITU(SEA 비교와 동일 소스)로 통일 — DB annual_indicators(89%)와 WB(67%) 불일치 해소
+  const phInternet: Series = Object.entries(SEA.internet).map(([y, o]) => ({ date: y + "-01-01", value: o.ph })).filter((x) => x.value != null).sort((a, b) => a.date.localeCompare(b.date))
+  const dd = { ...d, internet_wb: phInternet }
+  const digital = build(dd, [{ key: "internet_wb", name: "인터넷 이용률", color: C.ind }, { key: "account_ownership", name: "금융계정 보유", color: C.emer }])
   const infra = build(d, [{ key: "mobile_per100", name: "모바일 가입/100", color: C.blue }, { key: "broadband_per100", name: "브로드밴드/100", color: C.violet }])
   const pay = build(d, [{ key: "credit_card_ownership", name: "신용카드 보유", color: C.rose }, { key: "debit_card_ownership", name: "직불카드 보유", color: C.blue }, { key: "credit_card_used", name: "신용카드 사용", color: C.amber }])
   const secure = build(d, [{ key: "secure_internet_servers", name: "보안 인터넷서버", color: C.violet }])
@@ -73,7 +78,7 @@ export default function OnlineMarketView() {
       <div className="overflow-hidden rounded-xl border border-violet-100 dark:border-violet-500/25 bg-gradient-to-r from-violet-50 dark:from-violet-500/10 via-violet-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm" style={{ animation: "fadeOnly .5s ease both" }}>
         <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white shadow-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="14" rx="2" /><path d="M8 21h8M12 18v3" /></svg></div>
-          <div className="min-w-0 flex-1 text-[13px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">온라인 시장</b> — 이커머스 {med != null ? <b className="text-violet-700 dark:text-violet-300">${med.toFixed(1)}B</b> : "—"}·연 {cagr != null ? cagr.toFixed(0) + "%" : "—"} 성장 · 인터넷 {kv.internet_penetration ? Math.round(kv.internet_penetration.value) + "%" : "—"}·계정 {kv.account_ownership ? Math.round(kv.account_ownership.value) + "%" : "—"} — 온라인 가전 구매 저변</div>
+          <div className="min-w-0 flex-1 text-[13px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">온라인 시장</b> — 이커머스 {med != null ? <b className="text-violet-700 dark:text-violet-300">${med.toFixed(1)}B</b> : "—"}·연 {cagr != null ? cagr.toFixed(0) + "%" : "—"} 성장 · 인터넷 {phInternet.length ? Math.round(phInternet[phInternet.length - 1].value) + "%" : "—"}·계정 {kv.account_ownership ? Math.round(kv.account_ownership.value) + "%" : "—"} — 온라인 가전 구매 저변</div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-violet-500 dark:text-violet-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
         </div>
         <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
@@ -86,6 +91,12 @@ export default function OnlineMarketView() {
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
         <section className="flex flex-col gap-4">
+          <div className="flex items-center gap-2" style={{ animation: "fadeOnly .4s ease both" }}>
+            <Segmented value={tab} onChange={(k) => setTab(k as "ph" | "sea")} size="sm" options={[{ k: "ph", label: "이커머스·디지털(PH)" }, { k: "sea", label: "동남아 6개국 비교" }]} />
+            <span className="text-[11px] text-gray-400 dark:text-gray-500">{tab === "sea" ? "필리핀 상대 위치 · ●필리핀 라인 강조" : "필리핀 이커머스·디지털·결제 지표"}</span>
+          </div>
+
+          {tab === "ph" && <>
           {/* 이커머스 시장규모 */}
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
             <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
@@ -157,13 +168,9 @@ export default function OnlineMarketView() {
                 src={src("World Bank WDI 보안 인터넷서버 · 연간")} />
             )}
           </div>
+          </>}
 
-          {/* 동남아 6개국 비교 — 환율 차트처럼 PH 상대 위치 */}
-          <div className="mt-1 flex items-center gap-2 px-0.5">
-            <span className="h-[16px] w-1 rounded bg-violet-500" />
-            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">동남아 6개국 비교</h2>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">필리핀 상대 위치 · <b className="text-violet-600 dark:text-violet-400">●필리핀 강조</b></span>
-          </div>
+          {tab === "sea" && (
           <div className="grid items-stretch gap-4 sm:grid-cols-2">
             <ChartCard seg="CE" title="인터넷 이용률 — 6개국" unit="% · 연간" labels={sInternet.labels} series={sInternet.series} decimals={0} seriesUnit="%"
               legend={seaLegend}
@@ -191,6 +198,7 @@ export default function OnlineMarketView() {
               ai={<>모바일은 역내 공통 포화 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">모바일 커머스·앱 채널이 온라인 가전 판매의 기본 인프라</b></>}
               src={src("World Bank·ITU 모바일 가입 · 6개국")} />
           </div>
+          )}
         </section>
 
         <aside className="flex flex-col gap-4"><AgendaCard /></aside>
