@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react"
 import { macroMonthly, calendarUpcoming, seaCompare, marketEstimates } from "@/lib/supabase"
 import type { MktEst } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
-import { ChartCard, Lg, SLine, moLabel } from "@/components/EconChart"
+import { ChartCard, Lg, SLine, fmtLabels } from "@/components/EconChart"
 import GdpComposition from "@/components/GdpComposition"
 
 /** 주요 지표 카테고리 뷰 — 전부 Supabase(macro_indicators, geo_level=national) 실측.
@@ -40,7 +40,7 @@ function build(d: Mon, windowYears: number, specs: Spec[]): { series: SLine[]; l
     const m = new Map(d[s.key].dates.map((dt, i) => [dt, d[s.key].values[i]]))
     return { name: s.name, color: s.color, w: s.w, endLabel: s.endLabel, data: axis.map((dt) => { const v = m.get(dt); return v == null ? NaN : (s.tf ? s.tf(v) : v) }) }
   })
-  const labels = axis.map(moLabel)
+  const labels = fmtLabels(axis)
   return { series, labels }
 }
 
