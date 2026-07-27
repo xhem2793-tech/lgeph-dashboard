@@ -76,17 +76,74 @@ function useInView() {
   return [ref, on] as const
 }
 
-function Sub({ title, seg, note, idx = 0, children }: { title: string; seg?: string; note: React.ReactNode; idx?: number; children: React.ReactNode }) {
+type CsvData = { head: string[]; rows: (string | number)[][] }
+function dlImgFrom(el: HTMLElement | null, name: string) {
+  const svg = el?.querySelector("svg"); if (!svg) return
+  const c = svg.cloneNode(true) as SVGElement; c.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+  const b = new Blob([new XMLSerializer().serializeToString(c)], { type: "image/svg+xml;charset=utf-8" })
+  const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name + ".svg"; a.click(); URL.revokeObjectURL(a.href)
+}
+function dlCsvFrom(csv: CsvData, name: string) {
+  const esc = (v: string | number) => `"${String(v).replace(/"/g, '""')}"`
+  const text = [csv.head.map(esc).join(","), ...csv.rows.map((r) => r.map(esc).join(","))].join("\n")
+  const b = new Blob(["﻿" + text], { type: "text/csv;charset=utf-8" })
+  const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = name + ".csv"; a.click(); URL.revokeObjectURL(a.href)
+}
+const IcoBtn = ({ onClick, title, d, fill = false }: { onClick: () => void; title: string; d: string; fill?: boolean }) => (
+  <button type="button" onClick={onClick} title={title} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-teal-600 dark:hover:bg-gray-800 dark:hover:text-teal-400">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill={fill ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: d }} />
+  </button>
+)
+const ICO = { expand: '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>', img: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>', csv: '<path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 21h16"/>' }
+
+function Sub({ title, seg, note, idx = 0, csv, children }: { title: string; seg?: string; note: React.ReactNode; idx?: number; csv?: CsvData; children: React.ReactNode }) {
   const [ref, on] = useInView()
+  const cardRef = useRef<HTMLDivElement | null>(null)
+  const [big, setBig] = useState(false)
   return (
-    <div ref={ref} className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: on ? "fadeUp .5s cubic-bezier(.16,1,.3,1) both" : undefined, animationDelay: Math.min(idx, 6) * 0.06 + "s", opacity: on ? undefined : 0 }}>
+    <>
+    <div ref={(el) => { cardRef.current = el; (ref as React.MutableRefObject<HTMLDivElement | null>).current = el }} className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: on ? "fadeUp .5s cubic-bezier(.16,1,.3,1) both" : undefined, animationDelay: Math.min(idx, 6) * 0.06 + "s", opacity: on ? undefined : 0 }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {seg && <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:text-teal-300">{seg}</span>}
+        <span className="ml-auto flex shrink-0 items-center gap-0.5">
+          <IcoBtn onClick={() => dlImgFrom(cardRef.current, "에너지_" + title)} title="이미지(SVG) 다운로드" d={ICO.img} />
+          {csv && <IcoBtn onClick={() => dlCsvFrom(csv, "에너지_" + title)} title="데이터(CSV) 다운로드" d={ICO.csv} />}
+          <IcoBtn onClick={() => setBig(true)} title="크게 보기 + 데이터 표" d={ICO.expand} />
+        </span>
       </div>
       <div key={on ? "in" : "out"} className="mt-2 flex h-[200px] items-center justify-center overflow-hidden">{on ? children : null}</div>
       <p className="mt-2 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{note}</p>
     </div>
+    {big && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setBig(false)}>
+        <div className="flex max-h-[92vh] w-full max-w-[880px] flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xl" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
+          <div className="flex shrink-0 items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+            <span className="h-[16px] w-1 rounded bg-teal-500" />
+            <h3 className="text-[15px] font-bold text-gray-900 dark:text-gray-50">{title}</h3>
+            {seg && <span className="rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-bold text-teal-700 dark:text-teal-300">{seg}</span>}
+            <span className="ml-auto flex items-center gap-0.5">
+              <IcoBtn onClick={() => dlImgFrom(document.getElementById("bigchart-" + idx), "에너지_" + title)} title="이미지 다운로드" d={ICO.img} />
+              {csv && <IcoBtn onClick={() => dlCsvFrom(csv, "에너지_" + title)} title="CSV 다운로드" d={ICO.csv} />}
+              <button type="button" onClick={() => setBig(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+            </span>
+          </div>
+          <div className="overflow-y-auto p-4">
+            <div id={"bigchart-" + idx} className="flex h-[46vh] w-full items-center justify-center">{children}</div>
+            <p className="mt-1 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2 text-[11.5px] leading-relaxed text-gray-600 dark:text-gray-300">{note}</p>
+            {csv && (
+              <div className="mt-4 overflow-x-auto">
+                <table className="w-full border-collapse text-[12px]">
+                  <thead><tr className="border-b border-gray-200 dark:border-gray-700">{csv.head.map((h, i) => <th key={i} className={"py-1.5 px-2 font-semibold text-gray-500 dark:text-gray-400 " + (i === 0 ? "text-left" : "text-right")}>{h}</th>)}</tr></thead>
+                  <tbody>{csv.rows.map((r, ri) => <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (/^lg$/i.test(String(r[0])) ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>{r.map((c, ci) => <td key={ci} className={"py-1.5 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}</tr>)}</tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
 function HBar({ items, hiName }: { items: { name: string; v: number; n?: number }[]; hiName?: string }) {
@@ -139,7 +196,7 @@ function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { la
 function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: number; isLG: boolean; n?: number }[]; metric: string }) {
   const [h, setH] = useState<number | null>(null)
   if (pts.length < 2) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
-  const W = 340, H = 250, L = 40, R = 14, T = 16, B = 30
+  const W = 400, H = 200, L = 40, R = 14, T = 14, B = 30
   const exs = pts.map((p) => p.eff), kys = pts.map((p) => p.kwh)
   const pad = (lo: number, hi: number) => { const d = (hi - lo) * 0.12 || 1; return [lo - d, hi + d] as const }
   const [ex0, ex1] = pad(Math.min(...exs), Math.max(...exs)), [ky0, ky1] = pad(Math.min(...kys), Math.max(...kys))
@@ -248,9 +305,9 @@ export default function EnergyLabelView() {
     // 모델 2개 이상 브랜드 + LG(1개만 있어도) 전체 랭킹
     const all = Object.entries(by).map(([name, a]) => ({ name, v: avgOf(a)!, n: a.length })).filter((x) => x.n >= 2 || /^lg$/i.test(x.name)).sort((a, b) => b.v - a.v)
     const lgIdx = all.findIndex((x) => /^lg$/i.test(x.name))
-    // 상위 8개 표시하되, LG가 8위 밖이면 8번째 자리에 강제로 끼워넣어 항상 노출(냉장고처럼 효율순위 낮아도 위치 확인)
-    let disp = all.slice(0, 8)
-    if (lgIdx >= 8) disp = [...all.slice(0, 7), all[lgIdx]]
+    // 상위 5개 + LG(순위 밖이면 6번째에 끼워넣어 항상 노출)
+    let disp = all.slice(0, 5)
+    if (lgIdx >= 5) disp = [...all.slice(0, 5), all[lgIdx]]
     return { rank: disp, lgR: lgIdx >= 0 ? all[lgIdx] : undefined, lgRk: lgIdx >= 0 ? lgIdx + 1 : 0, brandCount: all.length }
   }, [segRows])
   const gap = lgR && rank[0] ? ((rank[0].v - lgR.v) / lgR.v) * 100 : null
@@ -290,20 +347,16 @@ export default function EnergyLabelView() {
   }, [segRows])
   // 냉매(에어컨) — extra는 energyLabels에서 stype만 파싱했으므로 rows의 원본 대신 model/eff 기반 분리 불가 → segment refrigerant via rows extra not available; use kwh TCO instead
 
-  // TCO — 선택 세그먼트 LG vs 리더 vs 평균 월 전기요금(₱)
+  // TCO — 선택 세그먼트 월 전기요금(₱) 낮은 순 상위 5개 브랜드 + LG(순위 밖이면 추가)
   const tco = useMemo(() => {
-    const kwhAll = segRows.map((r) => r.kwh).filter((v): v is number => v != null && v > 0)
-    const lgK = segRows.filter((r) => /^lg$/i.test(r.brand)).map((r) => r.kwh).filter((v): v is number => v != null && v > 0)
-    // 리더(효율 1위 브랜드)
-    const leadName = rank[0]?.name
-    const ldK = leadName ? segRows.filter((r) => r.brand === leadName).map((r) => r.kwh).filter((v): v is number => v != null && v > 0) : []
-    const g = [
-      { label: "LG", kwh: avgOf(lgK) },
-      { label: leadName || "리더", kwh: avgOf(ldK) },
-      { label: "시장평균", kwh: avgOf(kwhAll) },
-    ].filter((x) => x.kwh != null)
-    return g.map((x) => ({ label: x.label, cost: Math.round((x.kwh as number) * rate) }))
-  }, [segRows, rank, rate])
+    const by: Record<string, number[]> = {}
+    for (const r of segRows) if (r.kwh != null && r.kwh > 0) (by[r.brand] = by[r.brand] || []).push(r.kwh)
+    const all = Object.entries(by).map(([label, a]) => ({ label, kwh: avgOf(a)!, n: a.length })).filter((x) => x.n >= 2 || /^lg$/i.test(x.label)).sort((a, b) => a.kwh - b.kwh)
+    const lgIdx = all.findIndex((x) => /^lg$/i.test(x.label))
+    let disp = all.slice(0, 5)
+    if (lgIdx >= 5) disp = [...all.slice(0, 5), all[lgIdx]]
+    return disp.map((x) => ({ label: x.label, cost: Math.round(x.kwh * rate), isLG: /^lg$/i.test(x.label) }))
+  }, [segRows, rate])
 
   const grade = useMemo(() => {
     const by: Record<string, EnergyRow[]> = {}; for (const r of segRows) (by[r.brand] = by[r.brand] || []).push(r)
@@ -336,7 +389,7 @@ export default function EnergyLabelView() {
                 <li>• <b>포지션</b>: 이 세그먼트 {brandCount}개사 중 <b className="text-teal-700 dark:text-teal-300">{lgRk}위</b>({cur.metric} {lgR.v.toFixed(2)}), 리더 {rank[0]?.name} 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? "낮음" : "높음"}.</li>
                 {strong && weak && <li>• <b>용량대 강·약</b>: <b className="text-emerald-600 dark:text-emerald-400">{strong.label}</b> 시장평균 +{strong.diff.toFixed(2)} 강세, <b className="text-rose-600 dark:text-rose-400">{weak.label}</b> {weak.diff.toFixed(2)} 열세 → 차기 개발 우선순위.</li>}
                 {lgGrade && <li>• <b>등급 믹스</b>: LG 5성 {lgGrade.s5.toFixed(0)}%(4성 {lgGrade.s4.toFixed(0)}%) — {lgGrade.s5 >= 60 ? "프리미엄 효율 라인 견고" : "5성 확대 여지"}.</li>}
-                {tco.length >= 2 && tco[0].label === "LG" && <li>• <b>전력비용(TCO)</b>: LG 월 약 <b>₱{tco[0].cost.toLocaleString()}</b>, 리더 대비 {tco[1] ? (tco[0].cost - tco[1].cost > 0 ? `₱${(tco[0].cost - tco[1].cost).toLocaleString()} 높음(효율 개선 시 절감 소구)` : `₱${(tco[1].cost - tco[0].cost).toLocaleString()} 낮음(절감 마케팅 가능)`) : "—"}.</li>}
+                {(() => { const lgT = tco.find((t) => t.isLG); const best = tco[0]; if (!lgT || !best) return null; const diff = lgT.cost - best.cost; return <li>• <b>전력비용(TCO)</b>: LG 월 약 <b>₱{lgT.cost.toLocaleString()}</b>, 최저 {best.label}({`₱${best.cost.toLocaleString()}`}) 대비 {diff > 0 ? `₱${diff.toLocaleString()} 높음(효율 개선 시 절감 소구)` : diff < 0 ? `₱${(-diff).toLocaleString()} 낮음(절감 마케팅 가능)` : "동일"}.</li> })()}
               </ul>
             </div></div>
           </div>
@@ -383,10 +436,10 @@ export default function EnergyLabelView() {
             </div>
             )}
             <div key={`seg-${typ}-${segIdx}`} className="grid items-stretch gap-4 sm:grid-cols-2">
-              <Sub idx={0} title="브랜드 효율 랭킹" seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} note={lgR ? <>같은 스펙 내 평균 {cur.metric}. LG {lgRk}위·리더 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? "낮아 최고효율 격차가 곧 개발 타깃" : "높아 프리미엄 소구 가능"}. 막대 hover 시 모델수.</> : <><b>LG는 이 세그먼트에 등록 모델 없음</b>(현지 미출시) — 시장 브랜드만 비교. 진입 검토 시 벤치마크로 활용.</>}><HBar items={rank} hiName="LG" /></Sub>
-              <Sub idx={1} title="효율 ↔ 월전력 관계" seg={seg?.k} note={<>가로=효율({cur.metric}), 세로=월 소비전력. <b>우측·상단</b>이 고효율·저전력(우수). LG 점 위치로 <b>효율 대비 실제 전력소비</b> 경쟁력 확인.</>}><Scatter pts={scatterData} metric={cur.metric} /></Sub>
-              <Sub idx={2} title="용량대별 LG vs 시장" note={<>용량 세그먼트별 평균 {cur.metric}. {weak ? <>LG는 <b className="text-rose-600 dark:text-rose-400">{weak.label}</b>에서 시장 대비 열세 — 차기 라인업의 효율 스펙 상향 1순위.</> : "세그먼트별 LG 포지션."}</>}><GroupBars groups={bySegChart} /></Sub>
-              <Sub idx={3} title="월 전기요금 (TCO)" seg={seg?.k} note={<>평균 월 소비전력×가정용 전기료(Meralco ₱{rate.toFixed(1)}/kWh{rateAsOf?" · "+rateAsOf:""}) 추정. 효율이 높을수록 전기요금↓ — <b>에너지 절감액을 판매 메시지로 전환</b>(고효율 프리미엄 정당화).</>}>
+              <Sub idx={0} title="브랜드 효율 랭킹" seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} note={lgR ? <>같은 스펙 내 평균 {cur.metric}. LG {lgRk}위·리더 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? "낮아 최고효율 격차가 곧 개발 타깃" : "높아 프리미엄 소구 가능"}. 막대 hover 시 모델수.</> : <><b>LG는 이 세그먼트에 등록 모델 없음</b>(현지 미출시) — 시장 브랜드만 비교. 진입 검토 시 벤치마크로 활용.</>} csv={{ head: ["브랜드", cur.metric, "모델수"], rows: rank.map((r) => [r.name, r.v.toFixed(2), r.n]) }}><HBar items={rank} hiName="LG" /></Sub>
+              <Sub idx={1} title="효율 ↔ 월전력 관계" seg={seg?.k} note={<>가로=효율({cur.metric}), 세로=월 소비전력. <b>우측·상단</b>이 고효율·저전력(우수). LG 점 위치로 <b>효율 대비 실제 전력소비</b> 경쟁력 확인.</>} csv={{ head: ["브랜드", cur.metric, "월전력(kWh)"], rows: scatterData.map((p) => [p.name, p.eff.toFixed(2), Math.round(p.kwh)]) }}><Scatter pts={scatterData} metric={cur.metric} /></Sub>
+              <Sub idx={2} title="용량대별 LG vs 시장" note={<>용량 세그먼트별 평균 {cur.metric}. {weak ? <>LG는 <b className="text-rose-600 dark:text-rose-400">{weak.label}</b>에서 시장 대비 열세 — 차기 라인업의 효율 스펙 상향 1순위.</> : "세그먼트별 LG 포지션."}</>} csv={{ head: ["용량대", "LG " + cur.metric, "시장 " + cur.metric], rows: bySegChart.map((g) => [g.label, g.lg != null ? g.lg.toFixed(2) : "—", g.mkt.toFixed(2)]) }}><GroupBars groups={bySegChart} /></Sub>
+              <Sub idx={3} title="월 전기요금 (TCO)" seg={seg?.k} note={<>평균 월 소비전력×가정용 전기료(Meralco ₱{rate.toFixed(1)}/kWh{rateAsOf?" · "+rateAsOf:""}) 추정. 효율이 높을수록 전기요금↓ — <b>에너지 절감액을 판매 메시지로 전환</b>(고효율 프리미엄 정당화).</>} csv={{ head: ["브랜드", "월 전기요금(₱)"], rows: tco.map((t) => [t.label, t.cost]) }}>
                 <div className="w-full">{tco.length === 0 ? <div className="flex h-28 items-center justify-center text-[12px] text-gray-400">데이터 부족</div> : (() => {
                   const mx = Math.max(...tco.map((t) => t.cost), 1)
                   return <div className="flex flex-col gap-2">{tco.map((t, i) => { const isLG = t.label === "LG"; return (
@@ -398,7 +451,7 @@ export default function EnergyLabelView() {
                   ) })}<span className="mt-0.5 text-[9.5px] text-gray-400">월 추정 · 낮을수록 유리</span></div>
                 })()}</div>
               </Sub>
-              <Sub idx={4} title="브랜드 등급 분포(별점)" seg={seg?.k} note="라인업의 5·4·3성↓ 구성. 소형 니치는 5성 100%가 흔하므로 모델수와 함께 해석.">
+              <Sub idx={4} title="브랜드 등급 분포(별점)" seg={seg?.k} note="라인업의 5·4·3성↓ 구성. 소형 니치는 5성 100%가 흔하므로 모델수와 함께 해석." csv={{ head: ["브랜드", "5성%", "4성%", "3성↓%", "모델수"], rows: grade.map((g) => [g.name, g.s5.toFixed(0), g.s4.toFixed(0), g.s3.toFixed(0), g.n]) }}>
                 <div className="w-full">{grade.length === 0 ? <div className="flex h-28 items-center justify-center text-[12px] text-gray-400">데이터 부족</div> : (
                   <div className="flex flex-col gap-1.5">
                     {grade.map((g, i) => { const isLG = /^lg$/i.test(g.name); return (
@@ -417,7 +470,7 @@ export default function EnergyLabelView() {
                 const lgR32 = refrigMix.lg.tot ? (refrigMix.lg.m.R32 || 0) / refrigMix.lg.tot * 100 : null
                 const Bar = ({ t, m }: { t: number; m: Record<string, number> }) => <span className="flex h-4 flex-1 overflow-hidden rounded">{refrigMix.keys.map((k, i) => { const w = t ? (m[k] || 0) / t * 100 : 0; if (!w) return null; return <span key={k} title={`${k} ${w.toFixed(0)}%`} style={{ width: w + "%", background: RC[k] || "#94a3b8", animation: "growX .5s ease both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: "left" }} /> })}</span>
                 return (
-                  <Sub idx={5} title="냉매 믹스 (환경·GWP)" seg={seg?.k} note={<>저GWP 냉매(R32·R290) 비중 = 환경규제 대응력. LG R32 {lgR32 != null ? <b>{lgR32.toFixed(0)}%</b> : "—"} — <b>친환경 냉매 소구</b>는 유럽·규제강화 시장의 프리미엄 근거.</>}>
+                  <Sub idx={5} title="냉매 믹스 (환경·GWP)" seg={seg?.k} note={<>저GWP 냉매(R32·R290) 비중 = 환경규제 대응력. LG R32 {lgR32 != null ? <b>{lgR32.toFixed(0)}%</b> : "—"} — <b>친환경 냉매 소구</b>는 유럽·규제강화 시장의 프리미엄 근거.</>} csv={{ head: ["냉매", "LG %", "시장 %"], rows: refrigMix.keys.map((k) => [k, refrigMix.lg.tot ? ((refrigMix.lg.m[k] || 0) / refrigMix.lg.tot * 100).toFixed(0) : "—", refrigMix.mkt.tot ? ((refrigMix.mkt.m[k] || 0) / refrigMix.mkt.tot * 100).toFixed(0) : "—"]) }}>
                     <div className="flex w-full flex-col gap-2.5">
                       <div className="flex items-center gap-2"><span className="w-12 shrink-0 text-right text-[11px] font-bold text-teal-600 dark:text-teal-400">LG</span>{refrigMix.lg.tot ? <Bar t={refrigMix.lg.tot} m={refrigMix.lg.m} /> : <span className="flex-1 text-[10px] text-gray-400">데이터 없음</span>}</div>
                       <div className="flex items-center gap-2"><span className="w-12 shrink-0 text-right text-[11px] text-gray-500 dark:text-gray-400">시장</span><Bar t={refrigMix.mkt.tot} m={refrigMix.mkt.m} /></div>
