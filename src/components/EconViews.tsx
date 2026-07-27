@@ -927,7 +927,9 @@ export function LaborView() {
 // ══════════════════════════════════════════════════════════════════════
 // 기업·소비 심리 — CCI·BCI·내구재 구매의향
 // ══════════════════════════════════════════════════════════════════════
-const SENTIMENT_KEYS = ["economic_sentiment_composite", "consumer_confidence_index", "consumer_confidence_next12m", "business_confidence_index", "business_confidence_next12m", "durables_buying_intention"]
+const SENTIMENT_KEYS = ["economic_sentiment_composite", "consumer_confidence_index", "consumer_confidence_next12m", "business_confidence_index", "business_confidence_next12m", "durables_buying_intention", "bes_overall_ci", "bes_ci_next_q", "bes_ci_next12m", "bes_ci_manufacturing", "bes_ci_retail", "bes_ci_services", "bes_credit_access", "bes_financial_condition", "bes_capacity_util", "bes_employment_outlook", "bes_expansion_plans"]
+// BSP BES 최신 분기(2025Q4) 사업 제약요인(%응답) — 리포트 정성 콘텐츠(확산지수 아님, 복수응답)
+const BES_CONSTRAINTS: [string, number][] = [["경쟁 심화", 63.7], ["수요 부족", 34.7], ["기타", 27.6], ["고금리", 21.7], ["불명확 경제법령", 16.3], ["재무 문제", 14.4], ["노동 문제", 11.2], ["신용 접근난", 7.7], ["설비 부족", 7.2], ["원자재 부족", 3.9]]
 export function SentimentView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(SENTIMENT_KEYS)
@@ -936,15 +938,24 @@ export function SentimentView() {
   const cci = build(d, n, [{ key: "consumer_confidence_index", name: "현재 CCI", color: C.ind, w: 2 }, { key: "consumer_confidence_next12m", name: "향후 12개월", color: C.emer }])
   const bci = build(d, n, [{ key: "business_confidence_index", name: "현재 BCI", color: C.ind, w: 2 }, { key: "business_confidence_next12m", name: "향후 12개월", color: C.blue }])
   const dur = build(d, n, [{ key: "durables_buying_intention", name: "내구재 구매의향", color: C.ind, w: 2 }])
-  const empty = !cci.series.length && !bci.series.length && !dur.series.length && !esi.series.length
+  // BES(기업경기전망조사) 분기 — 2001~2025
+  const besOverall = build(d, n, [{ key: "bes_overall_ci", name: "당분기", color: C.ind, w: 2 }, { key: "bes_ci_next_q", name: "차분기 전망", color: C.emer }])
+  const besSector = build(d, n, [{ key: "bes_ci_manufacturing", name: "제조업", color: C.rose, w: 2 }, { key: "bes_ci_retail", name: "도소매", color: C.ind }, { key: "bes_ci_services", name: "서비스", color: C.emer }])
+  const besOps = build(d, n, [{ key: "bes_credit_access", name: "신용접근", color: C.ind, w: 2 }, { key: "bes_financial_condition", name: "재무여건", color: C.rose }])
+  const besJob = build(d, n, [{ key: "bes_employment_outlook", name: "고용전망(차분기)", color: C.ind, w: 2 }, { key: "bes_expansion_plans", name: "설비확장 계획", color: C.emer }])
+  const besCap = build(d, n, [{ key: "bes_capacity_util", name: "평균 가동률", color: C.amber, w: 2 }])
+  const cmax = Math.max(...BES_CONSTRAINTS.map((x) => x[1]), 1)
+  const empty = !cci.series.length && !bci.series.length && !dur.series.length && !esi.series.length && !besOverall.series.length
   return (
-    <Shell title="기업·소비 심리" sub="소비자심리 CCI·기업심리 BCI·내구재 구매의향 — 수요 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d} accent="violet"
+    <Shell title="기업·소비 심리" sub="소비자심리 CCI·기업심리 BCI·BES 기업경기 — 수요 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d} accent="violet"
       banner={{ summary: (kv) => <>소비자심리 CCI {B(f1(kv.consumer_confidence_index))}·기업심리 BCI {B(f1(kv.business_confidence_index))}·내구재 구매의향 {B(f1(kv.durables_buying_intention))} — {(kv.consumer_confidence_index ?? 0) < 0 ? "심리 위축, 수요 회복 지연 국면" : "심리 개선, 수요 회복 초입"}</>, headline: <><b className="font-semibold text-gray-900 dark:text-gray-50">소비·기업 심리 = 수요의 3~6개월 선행</b></>, lg: <>내구재 구매의향·CCI 반등 초입에 <b className="font-semibold">신제품·프리미엄 출시 타이밍</b> · 악화 시 가성비·필수형 우선</> }}
       kpiDefs={[
         { key: "consumer_confidence_index", label: "소비자심리 CCI", fmt: (v) => String(v), tone: "emerald" },
         { key: "business_confidence_index", label: "기업심리 BCI", fmt: (v) => String(v), tone: "emerald" },
         { key: "durables_buying_intention", label: "내구재 구매의향", fmt: (v) => String(v), tone: "emerald" },
-      ]}>
+      ]}
+      sections={[
+        { key: "summary", label: "심리 요약", node: <>
       {esi.series.length > 0 && (
         <ChartCard seg="CE·B2B" title="경제심리지수 (자체산출·실험적)" unit="지수 · 평균100 · 분기" labels={esi.labels} series={esi.series} decimals={1}
           legend={<Lg c={C.ind} t="경제심리지수" b />}
@@ -973,7 +984,60 @@ export function SentimentView() {
           ai={<>BCI 개선은 유통·B2B 발주 확대 여건 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">채널 재고·프로젝트 수주</b> 우호</>}
           tone="emerald" src={src("BSP 기업기대조사(BES) · 분기")} />
       )}
-    </Shell>
+        </> },
+        { key: "bes", label: "기업경기(BES) 전체분석", node: <>
+      {besOverall.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="BES 기업경기 종합지수" unit="확산지수 · 분기(2001~)" labels={besOverall.labels} series={besOverall.series} decimals={1} seriesUnit=""
+          legend={<><Lg c={C.ind} t="당분기" b /><Lg c={C.emer} t="차분기 전망" /></>}
+          meaning={<>기업의 경기 체감·전망 — <b className="text-gray-700 dark:text-gray-200">투자·발주·채용의 선행</b></>}
+          ai={<>당분기 확산지수 <b className="font-semibold text-emerald-600 dark:text-emerald-400">플러스=낙관 우세</b>. <b>트렌드</b>: 2020 코로나 급락(-30대) 후 회복해 2025년 20~30대 낙관 유지, 차분기 전망은 통상 당분기보다 높음(개선 기대). 낙관 지속은 유통·B2B 발주 확대 여건 → 채널 재고·프로젝트 수주 우호.</>}
+          tone="emerald" src={src("BSP Business Expectations Survey 종합 · 분기")} />
+      )}
+      {besSector.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="BES 업종별 신뢰" unit="확산지수 · 분기" labels={besSector.labels} series={besSector.series} decimals={1} seriesUnit=""
+          legend={<><Lg c={C.rose} t="제조업" b /><Lg c={C.ind} t="도소매" /><Lg c={C.emer} t="서비스" /></>}
+          meaning={<>업종별 경기 체감 — <b className="text-gray-700 dark:text-gray-200">가전 유통(도소매)·제조 업황</b></>}
+          ai={<><b className="font-semibold">도소매 신뢰</b>가 가전 유통 채널 활력의 직접 프록시. <b>트렌드</b>: 제조업 신뢰가 도소매·서비스보다 낮게 지속(10대) — 고금리·수요불안 반영. 도소매 반등 시 오프라인 판매·발주 회복 신호.</>}
+          tone="emerald" src={src("BSP BES 업종별(당분기) · 분기")} />
+      )}
+      {besJob.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="BES 고용전망·설비확장" unit="지수·% · 분기" labels={besJob.labels} series={besJob.series} decimals={1} seriesUnit=""
+          legend={<><Lg c={C.ind} t="고용전망(차분기)" b /><Lg c={C.emer} t="설비확장 계획%" /></>}
+          meaning={<>기업 채용·투자 의향 — <b className="text-gray-700 dark:text-gray-200">소득·B2B 수요의 중기 선행</b></>}
+          ai={<>고용전망 상승은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가계 소득·구매력 개선</b> → 가전 수요 저변 확대. 설비확장 계획은 B2B 냉난방·설비 수요 선행. <b>트렌드</b>: 고용전망 꾸준히 플러스나 2025말 둔화(12대), 확장계획 15% 안팎 유지.</>}
+          tone="emerald" src={src("BSP BES 고용전망(차분기)·설비확장 · 분기")} />
+      )}
+      {besOps.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="BES 신용접근·재무여건" unit="확산지수 · 분기" labels={besOps.labels} series={besOps.series} decimals={1} seriesUnit=""
+          legend={<><Lg c={C.ind} t="신용접근" b /><Lg c={C.rose} t="재무여건" /></>}
+          meaning={<>기업 자금·재무 체감 — <b className="text-gray-700 dark:text-gray-200">유통 운전자금·발주 여력</b></>}
+          ai={<>재무여건이 <b className="font-semibold text-rose-600 dark:text-rose-400">지속 마이너스</b>면 유통·협력사 자금난 → 발주·재고 보수화 위험. <b>트렌드</b>: 재무여건 -15~-18대 만성 부진, 신용접근도 0 부근/음(-)으로 하락 — 고금리 부담 반영, 유통 여신 모니터링 필요.</>}
+          tone="rose" src={src("BSP BES 신용접근·재무여건 · 분기")} />
+      )}
+      {besCap.series.length > 0 && (
+        <ChartCard seg="B2B" title="BES 평균 가동률" unit="% · 분기" labels={besCap.labels} series={besCap.series} decimals={1} seriesUnit="%"
+          legend={<Lg c={C.amber} t="평균 가동률(산업·건설)" b />}
+          meaning={<>설비 가동 수준 — <b className="text-gray-700 dark:text-gray-200">공급 여력·과열/둔화</b></>}
+          ai={<>가동률 <b className="font-semibold">70%대</b>는 여유 있는 공급 국면 = 수요 확대 시 즉응 가능. <b>트렌드</b>: 코로나 저점 후 71% 안팎 안정 — 급격한 공급 병목 신호는 없음.</>}
+          tone="amber" src={src("BSP BES 산업·건설 평균 가동률 · 분기")} />
+      )}
+      <div className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+        <div className="flex items-center gap-1.5"><h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">기업 사업 제약요인</h3><span className="ml-auto text-[10.5px] font-medium text-gray-400 dark:text-gray-500">%응답 · 25Q4 · 복수</span></div>
+        <p className="mt-1.5 min-h-[30px] text-[10.5px] leading-relaxed text-gray-500 dark:text-gray-400">기업이 꼽은 경영 애로 — <b className="text-gray-700 dark:text-gray-200">수요·금리·경쟁 압력 구조</b></p>
+        <div className="mt-1 flex flex-1 flex-col justify-center gap-1.5">
+          {BES_CONSTRAINTS.map((c, i) => (
+            <div key={c[0]} className="flex items-center gap-2" title={`${c[0]} ${c[1]}%`}>
+              <span className="w-[72px] shrink-0 truncate text-right text-[10.5px] text-gray-500 dark:text-gray-400">{c[0]}</span>
+              <span className="h-3.5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800"><span className="block h-full rounded" style={{ width: (c[1] / cmax * 100) + "%", background: i === 0 ? C.rose : i < 4 ? C.ind : "#94a3b8", animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: "left center" }} /></span>
+              <span className="w-9 shrink-0 text-right text-[10.5px] font-semibold tabular-nums text-gray-700 dark:text-gray-200">{c[1]}%</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-2 border-l-2 border-violet-300 dark:border-violet-500/40 pl-2 text-[10.5px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-violet-700 dark:text-violet-300">LG 인사이트</b> <b className="font-semibold">경쟁 심화(64%)·수요 부족(35%)</b>이 최대 애로 — 가전도 가격·프로모 경쟁 격화 예상. 고금리(22%)는 할부 설계·B2B 발주에 부담 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">무이자 할부·TCO 절감 소구로 방어</b>.</p>
+        <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> BSP Business Expectations Survey 제약요인 · 최신분기</p>
+      </div>
+        </> },
+      ]} />
   )
 }
 
