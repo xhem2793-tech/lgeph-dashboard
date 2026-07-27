@@ -2,7 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
-import { energyLabels, latestMacro, type EnergyRow } from "@/lib/supabase"
+import { energyLabels, latestMacro, brandPriceRanges, type EnergyRow, type PriceRange } from "@/lib/supabase"
 import { AgendaCard } from "@/components/EconViews"
 import { Segmented } from "@/components/Segmented"
 
@@ -111,6 +111,16 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children }: { title: strin
   const cardRef = useRef<HTMLDivElement | null>(null)
   const [big, setBig] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
+  const [sortCol, setSortCol] = useState(-1) // -1=기본(원래순)
+  const [sortDesc, setSortDesc] = useState(true)
+  const pNum = (v: string | number) => { const n = parseFloat(String(v).replace(/[^0-9.\-]/g, "")); return Number.isFinite(n) ? n : null }
+  const sortedRows = (() => {
+    if (!csv) return [] as (string | number)[][]
+    if (sortCol < 0) return csv.rows
+    const rows = [...csv.rows]
+    rows.sort((a, b) => { const an = pNum(a[sortCol]), bn = pNum(b[sortCol]); let c: number; if (an != null && bn != null) c = an - bn; else c = String(a[sortCol]).localeCompare(String(b[sortCol])); return sortDesc ? -c : c })
+    return rows
+  })()
   return (
     <>
     <div ref={(el) => { cardRef.current = el; (ref as React.MutableRefObject<HTMLDivElement | null>).current = el }} className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: on ? "fadeUp .5s cubic-bezier(.16,1,.3,1) both" : undefined, animationDelay: Math.min(idx, 6) * 0.06 + "s", opacity: on ? undefined : 0 }}>
@@ -156,16 +166,29 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children }: { title: strin
               <button type="button" onClick={() => setBig(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
             </span>
           </div>
-          <div className="overflow-y-auto p-4">
-            <div id={"bigchart-" + idx} className="flex h-[46vh] w-full items-center justify-center">{children}</div>
-            <p className="mt-2 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
-            {ai && <div className="mt-2 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2.5"><p className="text-[11.5px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-teal-700 dark:text-teal-300">LG 인사이트</b> {ai}</p></div>}
+          {/* 좌: 큰 차트+의미·인사이트 / 우: 정렬 가능한 데이터 표 */}
+          <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 lg:flex-row lg:overflow-hidden">
+            <div className="flex min-w-0 flex-col lg:w-[56%] lg:overflow-y-auto lg:pr-1">
+              <div id={"bigchart-" + idx} className="flex h-[38vh] w-full items-center justify-center lg:h-[58vh]">{children}</div>
+              <p className="mt-2 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
+              {ai && <div className="mt-2 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2.5"><p className="text-[11.5px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-teal-700 dark:text-teal-300">LG 인사이트</b> {ai}</p></div>}
+            </div>
             {csv && (
-              <div className="mt-4 overflow-x-auto">
-                <table className="w-full border-collapse text-[12px]">
-                  <thead><tr className="border-b border-gray-200 dark:border-gray-700">{csv.head.map((h, i) => <th key={i} className={"py-1.5 px-2 font-semibold text-gray-500 dark:text-gray-400 " + (i === 0 ? "text-left" : "text-right")}>{h}</th>)}</tr></thead>
-                  <tbody>{csv.rows.map((r, ri) => <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (/^lg$/i.test(String(r[0])) ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>{r.map((c, ci) => <td key={ci} className={"py-1.5 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}</tr>)}</tbody>
-                </table>
+              <div className="flex min-h-0 flex-col lg:w-[44%] lg:border-l lg:border-gray-100 lg:dark:border-gray-800 lg:pl-4">
+                <div className="mb-2 flex shrink-0 flex-wrap items-center gap-1.5">
+                  <span className="mr-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">정렬</span>
+                  <button type="button" onClick={() => setSortCol(-1)} className={"rounded-md px-2 py-1 text-[11px] font-semibold transition-all " + (sortCol < 0 ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-500/15")}>기본순</button>
+                  {csv.head.map((h, i) => (
+                    <button key={i} type="button" onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"rounded-md px-2 py-1 text-[11px] font-semibold transition-all " + (sortCol === i ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-500/15")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</button>
+                  ))}
+                </div>
+                <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
+                  <table className="w-full border-collapse text-[12px]">
+                    <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900/95"><tr className="border-b border-gray-200 dark:border-gray-700">{csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-1.5 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</th>)}</tr></thead>
+                    <tbody>{sortedRows.map((r, ri) => <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (/^lg$/i.test(String(r[0])) ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>{r.map((c, ci) => <td key={ci} className={"py-1.5 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}</tr>)}</tbody>
+                  </table>
+                </div>
+                <p className="mt-1.5 shrink-0 text-[10px] text-gray-400 dark:text-gray-500">열 머리글·버튼 클릭 시 해당 기준 정렬(재클릭=오름/내림) · <b className="text-teal-600 dark:text-teal-400">LG 강조</b></p>
               </div>
             )}
           </div>
@@ -449,6 +472,37 @@ function RefrigDonut({ keys, lg, mkt, colors }: { keys: string[]; lg: { m: Recor
   )
 }
 
+// 가격대 박스 — 브랜드별 소매가 분포(박스=P25~P75, 세로선=중앙값, 수염=P10~P90). LG teal 강조·growX 애니메이션.
+function PriceBox({ items }: { items: PriceRange[] }) {
+  const [h, setH] = useState<number | null>(null)
+  if (!items.length) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">가격 데이터 부족</div>
+  const max = Math.max(...items.map((i) => i.p90), 1)
+  const rowH = 25, padL = 58, padR = 46, W = 360, H = items.length * rowH + 4
+  const bx = (v: number) => padL + (W - padL - padR) * (v / max)
+  const fmt = (v: number) => (v >= 1000 ? "₱" + Math.round(v / 1000) + "k" : "₱" + Math.round(v))
+  return (
+    <div className="flex h-full w-full flex-col">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
+        {items.map((a, i) => { const y = i * rowH + rowH / 2, isLG = /^lg$/i.test(a.brand), col = isLG ? TEAL : "#94a3b8", dim = h != null && h !== i, bw = Math.max(2, bx(a.p75) - bx(a.p25))
+          return (
+            <g key={a.brand} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.4 : 1, transition: "opacity .15s", cursor: "default" }}>
+              <rect x={0} y={i * rowH} width={W} height={rowH} fill="transparent" /><title>{a.brand} · 중앙 ₱{a.med.toLocaleString()} · P25~P75 ₱{a.p25.toLocaleString()}~₱{a.p75.toLocaleString()} · {a.n}모델</title>
+              <text x={padL - 6} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight={isLG ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{a.brand}</text>
+              <line x1={bx(a.p10)} y1={y} x2={bx(a.p90)} y2={y} stroke={col} strokeWidth="1" strokeOpacity="0.5" className={isLG ? "" : "dark:opacity-70"} />
+              <line x1={bx(a.p10)} y1={y - 3} x2={bx(a.p10)} y2={y + 3} stroke={col} strokeWidth="1" strokeOpacity="0.5" />
+              <line x1={bx(a.p90)} y1={y - 3} x2={bx(a.p90)} y2={y + 3} stroke={col} strokeWidth="1" strokeOpacity="0.5" />
+              <rect x={bx(a.p25)} y={y - 5.5} width={bw} height={11} rx="2.5" fill={col} fillOpacity={isLG ? 0.85 : 0.32} stroke={col} strokeWidth={isLG ? 1.2 : 0.6} style={{ animation: "growX .55s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: `${bx(a.p25)}px 0` }} />
+              <line x1={bx(a.med)} y1={y - 6.5} x2={bx(a.med)} y2={y + 6.5} stroke={isLG ? "#fff" : "#475569"} strokeWidth="1.8" className={isLG ? "" : "dark:stroke-gray-200"} style={{ animation: "fadeIn .4s ease both", animationDelay: (0.35 + i * 0.05) + "s" }} />
+              <text x={W - padR + 4} y={y + 3.5} fontSize="10" fontWeight={isLG ? 800 : 600} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>{fmt(a.med)}</text>
+            </g>
+          )
+        })}
+      </svg>
+      <div className="mt-1 flex shrink-0 flex-wrap items-center gap-x-3 gap-y-0.5 text-[9.5px] text-gray-400"><span className="inline-flex items-center gap-1"><span className="h-2 w-3 rounded-sm" style={{ background: TEAL, opacity: 0.4 }} />박스=P25~P75</span><span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-0 border-l-2 border-gray-500" />중앙값</span><span>수염=P10~P90 · 우측=중앙가</span></div>
+    </div>
+  )
+}
+
 // LG 커버리지 매트릭스 — 설치형(행) × 용량(열). 셀=LG 모델수, 색농도=LG 평균효율. LG 라인업 전모를 한 화면에.
 type Cell = { lgN: number; lgEff: number | null; mktN: number; mktEff: number | null }
 function Heatmap({ rowLabels, colLabels, cells, metric, effLo, effHi }: { rowLabels: string[]; colLabels: string[]; cells: Record<string, Cell>; metric: string; effLo: number; effHi: number }) {
@@ -500,10 +554,14 @@ export default function EnergyLabelView() {
   const [modelOpen, setModelOpen] = useState(false)
   const [mSort, setMSort] = useState<"eff" | "kwh" | "star">("eff")
   const [mLgOnly, setMLgOnly] = useState(false)
+  const [priceRanges, setPriceRanges] = useState<PriceRange[]>([])
   useEffect(() => {
     energyLabels().then((r) => { setRows(r); setLoaded(true) }).catch(() => setLoaded(true))
     latestMacro(["meralco_residential_rate"]).then((m) => { const r = m.meralco_residential_rate; if (r) { setRate(r.value); setRateAsOf(r.date.slice(2, 4) + "." + Number(r.date.slice(5, 7))) } }).catch(() => {})
   }, [])
+  // 브랜드별 가격대(소매) — 카테고리 변경 시 fetch. 에너지 라벨 cat → competitor_prices 카테고리 매핑.
+  const CAT_KO: Record<string, string> = { acu: "에어컨", ref: "냉장고", tvl: "TV" }
+  useEffect(() => { const ko = CAT_KO[cat]; if (!ko) { setPriceRanges([]); return } brandPriceRanges(ko).then(setPriceRanges).catch(() => setPriceRanges([])) }, [cat]) // eslint-disable-line
 
   const cur = CATS.find((c) => c.key === cat)!
   const segs = SEG[cat] || []
@@ -608,6 +666,15 @@ export default function EnergyLabelView() {
       return { name, eff: avgOf(effs)!, s5, n: a.length, isLG: /^lg$/i.test(name) }
     }).filter((x) => (x.n >= 2 || x.isLG) && Number.isFinite(x.eff))
   }, [segRows])
+  // 브랜드별 가격대 — 중앙가 상위 7 + LG(순위 밖이면 추가). 카테고리 단위(세그먼트 무관).
+  const priceDisp = useMemo(() => {
+    if (!priceRanges.length) return []
+    const lgIdx = priceRanges.findIndex((p) => /^lg$/i.test(p.brand))
+    let disp = priceRanges.slice(0, 7)
+    if (lgIdx >= 7) disp = [...priceRanges.slice(0, 7), priceRanges[lgIdx]]
+    return disp
+  }, [priceRanges])
+  const lgPrice = priceRanges.find((p) => /^lg$/i.test(p.brand))
   const lgSegPos = useMemo(() => bySegChart.map((g) => ({ label: g.label, diff: g.lg != null ? g.lg - g.mkt : null })).filter((x) => x.diff != null) as { label: string; diff: number }[], [bySegChart])
   const strong = [...lgSegPos].sort((a, b) => b.diff - a.diff)[0]
   const weak = [...lgSegPos].sort((a, b) => a.diff - b.diff)[0]
@@ -699,6 +766,9 @@ export default function EnergyLabelView() {
               <Sub idx={6} title="효율 분포 (히스토그램)" seg={seg?.k} meaning={<>이 세그먼트 전 모델의 {cur.metric} 분포 — <b className="text-teal-600 dark:text-teal-400">teal=LG 포함분</b>, 주황 점선=시장 중앙값.</>} ai={<>LG 막대가 <b className="font-semibold text-emerald-600 dark:text-emerald-400">중앙값 오른쪽(고효율)</b>에 몰려 있으면 세그먼트 상위권, 왼쪽이면 개선 필요. 분포가 좌우로 넓으면 브랜드 간 효율 편차가 커 <b className="font-semibold">고효율 차별화 여지가 크고</b>, 촘촘하면 스펙 경쟁이 상향 평준화됐다는 신호.</>} csv={{ head: ["구간(하한)", "모델수"], rows: (() => { const v = histData.vals; if (v.length < 4) return []; const lo = Math.min(...v), hi = Math.max(...v), nb = Math.min(8, Math.max(5, Math.round(Math.sqrt(v.length)))), bw = (hi - lo) / nb || 1; const b = Array(nb).fill(0); for (const x of v) { let k = Math.floor((x - lo) / bw); if (k >= nb) k = nb - 1; if (k < 0) k = 0; b[k]++ } return b.map((n, i) => [(lo + bw * i).toFixed(2), n]) })() }}><EffHist vals={histData.vals} lgVals={histData.lgVals} metric={cur.metric} /></Sub>
               <Sub idx={7} title="용량↔효율 지형" meaning={<>{cur.label} 전 용량대 개별 모델의 <b className="text-gray-700 dark:text-gray-200">용량 대비 효율</b> 지형 — <b className="text-teal-600 dark:text-teal-400">teal=LG</b>.</>} ai={<>보통 용량이 커질수록 효율이 낮아지는 추세가 있어, <b className="font-semibold">LG 점이 같은 용량대의 시장 무리보다 위쪽</b>이면 효율 우위. LG teal 점이 특정 용량대에 없으면 <b className="font-semibold text-amber-600 dark:text-amber-400">라인업 공백(진입 기회)</b>, 아래쪽에 몰리면 해당 용량 효율 개선이 과제.</>} csv={{ head: ["브랜드", cur.specUnit, cur.metric], rows: capData.map((p) => [p.name, p.spec, p.eff.toFixed(2)]) }}><CapScatter pts={capData} metric={cur.metric} specUnit={cur.specUnit} /></Sub>
               <Sub idx={8} title="브랜드 포지셔닝" seg={seg?.k} meaning={<>x=평균 {cur.metric}, y=5성 비중, <b className="text-gray-700 dark:text-gray-200">버블 크기=모델수(라인업 폭)</b> — 3축 동시 비교.</>} ai={<><b className="font-semibold text-emerald-600 dark:text-emerald-400">우상단·큰 버블</b>=고효율·프리미엄·풀라인업(이상적). LG 버블이 우상단이면 효율·등급·라인업 폭 3박자를 갖춘 것이고, 작으면 <b className="font-semibold">라인업 확장</b>, 좌측이면 <b className="font-semibold">효율 상향</b>, 하단이면 <b className="font-semibold">5성 모델 확대</b>가 각각의 과제.</>} csv={{ head: ["브랜드", cur.metric, "5성%", "모델수"], rows: bubbleData.map((p) => [p.name, p.eff.toFixed(2), p.s5.toFixed(0), p.n]) }}><Bubble items={bubbleData} metric={cur.metric} /></Sub>
+              {CAT_KO[cat] && priceDisp.length > 0 && (
+              <Sub idx={9} title="브랜드별 가격대 (소매)" seg={CAT_KO[cat]} meaning={<>온라인 리테일러 실판매가 분포 — <b className="text-gray-700 dark:text-gray-200">박스=P25~P75, 세로선=중앙값</b>. 효율(위 차트)과 <b className="text-gray-700 dark:text-gray-200">가격 포지션</b>을 함께 해석.</>} ai={lgPrice ? <>LG {CAT_KO[cat]} 중앙가 <b className="font-semibold text-teal-700 dark:text-teal-300">₱{Math.round(lgPrice.med).toLocaleString()}</b>(P25~P75 ₱{Math.round(lgPrice.p25).toLocaleString()}~₱{Math.round(lgPrice.p75).toLocaleString()}) — {priceDisp[0] && priceDisp[0].med > lgPrice.med * 1.1 ? <><b className="font-semibold">{priceDisp[0].brand}</b> 등 프리미엄 대비 중가 포지션</> : <>상위 가격대에 위치</>}. <b>가격대 폭이 넓을수록</b> 보급형~프리미엄 풀커버, 좁으면 특정 층 집중. 효율 우위 세그먼트에서 가격 프리미엄을 <b className="font-semibold text-emerald-600 dark:text-emerald-400">에너지 절감 TCO로 정당화</b>하는 전략이 유효.</> : <>브랜드별 소매 가격대 — LG 가격 포지션과 프리미엄/보급 커버리지 진단(효율 대비 가격 매력도).</>} csv={{ head: ["브랜드", "P10", "P25", "중앙값", "P75", "P90", "모델수"], rows: priceDisp.map((p) => [p.brand, Math.round(p.p10), Math.round(p.p25), Math.round(p.med), Math.round(p.p75), Math.round(p.p90), p.n]) }}><PriceBox items={priceDisp} /></Sub>
+              )}
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <button type="button" onClick={() => setModelOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".28s" }}>

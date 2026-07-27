@@ -70,6 +70,13 @@ export async function energyLabels(): Promise<EnergyRow[]> {
   })
 }
 
+export type PriceRange = { brand: string; n: number; p10: number; p25: number; med: number; p75: number; p90: number }
+// 브랜드별 가격대 — competitor_prices 최신주 스냅샷 분위수(v_brand_price_ranges 뷰). catKo=에어컨/냉장고/TV/세탁기
+export async function brandPriceRanges(catKo: string): Promise<PriceRange[]> {
+  const rows = await sb(`v_brand_price_ranges?category=eq.${encodeURIComponent(catKo)}&select=brand,n,p10,p25,med,p75,p90&order=med.desc`)
+  return rows.map((r) => ({ brand: r.brand as string, n: Number(r.n), p10: num(r.p10)!, p25: num(r.p25)!, med: num(r.med)!, p75: num(r.p75)!, p90: num(r.p90)! }))
+}
+
 export async function annualGroup(groupLabel: string) {
   const rows = await sb(`annual_indicators?group_label=eq.${encodeURIComponent(groupLabel)}&select=indicator,year,value&order=year`)
   return rows.map((r) => ({ indicator: r.indicator as string, year: Number(r.year), value: num(r.value)! }))
