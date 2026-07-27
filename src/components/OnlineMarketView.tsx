@@ -24,6 +24,19 @@ function build(d: Record<string, Series>, specs: Spec[]) {
 
 const KEYS = ["internet_penetration", "account_ownership", "mobile_per100", "broadband_per100", "credit_card_ownership", "debit_card_ownership", "credit_card_used", "secure_internet_servers", "saved_at_fi_pct"]
 
+// 동남아 6개국 비교(WB WDI·Findex) — 환율 차트처럼 PH의 상대 위치. ph=강조.
+const SEA: Record<string, Record<string, Record<string, number>>> = {"internet":{"2012":{"id":14.5,"my":65.8,"ph":30.8,"sg":72,"th":26.5,"vn":36.8},"2013":{"id":14.9,"my":57.1,"ph":32.7,"sg":80.9,"th":28.9,"vn":38.5},"2014":{"id":17.1,"my":63.7,"ph":34.7,"sg":79.0,"th":34.9,"vn":41},"2015":{"id":22.1,"my":71.1,"ph":36.9,"sg":79.0,"th":39.3,"vn":45},"2016":{"id":25.4,"my":78.8,"ph":39.2,"sg":84.5,"th":47.5,"vn":53},"2017":{"id":32.3,"my":80.1,"ph":41.6,"sg":84.5,"th":52.9,"vn":58.1},"2018":{"id":39.9,"my":81.2,"ph":44.1,"sg":88.2,"th":56.8,"vn":69.8},"2019":{"id":47.7,"my":84.2,"ph":43.0,"sg":88.9,"th":66.7,"vn":68.7},"2020":{"id":53.7,"my":89.6,"ph":53.8,"sg":92.0,"th":77.8,"vn":70.3},"2021":{"id":62.1,"my":96.8,"ph":66.9,"sg":96.9,"th":85.3,"vn":74.2},"2022":{"id":66.5,"my":97.4,"ph":75.2,"sg":96.0,"th":88.0,"vn":78.6},"2023":{"id":69.2,"my":97.7,"ph":77.9,"sg":94.3,"th":89.5,"vn":78.1},"2024":{"id":72.8,"my":98.0,"ph":67.3,"sg":94.4,"th":90.9,"vn":84.2}},"broadband":{"2012":{"id":1.2,"my":9.8,"ph":2.1,"sg":27.1,"th":6.5,"vn":5.3},"2014":{"id":1.3,"my":10.0,"ph":2.8,"sg":27.0,"th":7.7,"vn":6.5},"2016":{"id":2.0,"my":8.6,"ph":2.8,"sg":28.5,"th":10.2,"vn":9.7},"2018":{"id":3.3,"my":8.2,"ph":3.5,"sg":26.5,"th":12.9,"vn":13.5},"2020":{"id":3.9,"my":9.9,"ph":7.1,"sg":26.9,"th":16.0,"vn":17.0},"2021":{"id":4.5,"my":10.9,"ph":8.5,"sg":27.5,"th":17.3,"vn":19.5},"2022":{"id":4.8,"my":12.2,"ph":7.6,"sg":27.6,"th":17.5,"vn":21.4},"2023":{"id":4.8,"my":13.0,"ph":6.5,"sg":27.4,"th":14.5,"vn":22.7},"2024":{"id":4.9,"my":13.5,"ph":7.1,"sg":27.8,"th":14.9,"vn":23.7}},"mobile":{"2012":{"id":111.6,"my":139.3,"ph":101.8,"sg":152.4,"th":122.4,"vn":147.1},"2014":{"id":125.8,"my":146.4,"ph":107.3,"sg":148.5,"th":138.3,"vn":148.5},"2016":{"id":145.7,"my":136.7,"ph":112.5,"sg":151.7,"th":168.9,"vn":128.3},"2018":{"id":118.3,"my":128.9,"ph":123.0,"sg":152.1,"th":175.3,"vn":146.1},"2020":{"id":129.4,"my":129.0,"ph":133.5,"sg":150.3,"th":162.3,"vn":141.7},"2021":{"id":132.2,"my":137.7,"ph":144.4,"sg":158.0,"th":168.5,"vn":136.8},"2022":{"id":122.9,"my":138.2,"ph":147.4,"sg":173.0,"th":176.2,"vn":137.9},"2023":{"id":125.2,"my":142.7,"ph":117.3,"sg":173.2,"th":168.6,"vn":131.0},"2024":{"id":122.5,"my":139.7,"ph":115.3,"sg":170.8,"th":160.6,"vn":127.6}},"account":{"2011":{"id":19.6,"my":66.2,"ph":26.6,"sg":98.2,"th":72.7,"vn":21.4},"2014":{"id":36.1,"my":80.7,"ph":31.3,"sg":96.4,"th":78.1,"vn":31.0},"2017":{"id":48.9,"my":85.3,"ph":34.5,"sg":97.9,"th":81.6,"vn":30.8},"2021":{"id":51.8,"my":88.4,"ph":51.4,"sg":97.5,"th":95.6},"2024":{"id":56.3,"my":88.7,"ph":50.2,"sg":98.0,"th":91.8,"vn":70.6}},"creditcard":{"2011":{"ph":3.2,"id":0.5,"th":4.5,"vn":1.2,"my":11.9,"sg":37.3},"2014":{"ph":3.2,"id":1.6,"th":5.7,"vn":1.9,"my":20.2,"sg":35.4},"2017":{"ph":1.9,"id":2.4,"th":9.8,"vn":4.1,"my":21.3,"sg":48.9},"2021":{"ph":8.1,"id":1.6,"th":22.6,"my":7.9,"sg":41.7},"2024":{"ph":3.0,"id":5.9,"th":8.0,"vn":5.8,"my":13.2}}}
+const SEA_NAME: Record<string, string> = { ph: "필리핀", id: "인도네시아", th: "태국", vn: "베트남", my: "말레이시아", sg: "싱가포르" }
+const SEA_COL: Record<string, string> = { ph: "#4f46e5", sg: "#0ea5e9", th: "#f59e0b", vn: "#ec4899", my: "#10b981", id: "#94a3b8" }
+function seaChart(obj: Record<string, Record<string, number>>) {
+  const years = Object.keys(obj).map(Number).sort((a, b) => a - b)
+  const labels = years.map((y) => "'" + String(y).slice(2))
+  const order = ["id", "vn", "th", "my", "sg", "ph"] // ph 마지막=위에 그려짐
+  const series = order.map((c) => ({ name: SEA_NAME[c], color: SEA_COL[c], w: c === "ph" ? 2.6 : 1.2, data: years.map((y) => { const v = obj[String(y)]?.[c]; return v == null || v === 0 ? NaN : v }) }))
+  return { labels, series }
+}
+const seaRank = (obj: Record<string, Record<string, number>>) => { const yrs = Object.keys(obj).map(Number).sort((a, b) => b - a); const last = obj[String(yrs[0])] || {}; const arr = Object.entries(last).filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]); const r = arr.findIndex(([c]) => c === "ph"); return r >= 0 ? { rank: r + 1, of: arr.length } : null }
+
 export default function OnlineMarketView() {
   const [d, setD] = useState<Record<string, Series>>({})
   const [est, setEst] = useState<MktEst[]>([])
@@ -45,6 +58,10 @@ export default function OnlineMarketView() {
   const infra = build(d, [{ key: "mobile_per100", name: "모바일 가입/100", color: C.blue }, { key: "broadband_per100", name: "브로드밴드/100", color: C.violet }])
   const pay = build(d, [{ key: "credit_card_ownership", name: "신용카드 보유", color: C.rose }, { key: "debit_card_ownership", name: "직불카드 보유", color: C.blue }, { key: "credit_card_used", name: "신용카드 사용", color: C.amber }])
   const secure = build(d, [{ key: "secure_internet_servers", name: "보안 인터넷서버", color: C.violet }])
+
+  const sInternet = seaChart(SEA.internet), sAccount = seaChart(SEA.account), sCard = seaChart(SEA.creditcard), sBb = seaChart(SEA.broadband), sMob = seaChart(SEA.mobile)
+  const rInternet = seaRank(SEA.internet), rCard = seaRank(SEA.creditcard), rAccount = seaRank(SEA.account), rBb = seaRank(SEA.broadband)
+  const seaLegend = <>{["ph", "sg", "th", "my", "vn", "id"].map((c) => <Lg key={c} c={SEA_COL[c]} t={SEA_NAME[c]} />)}</>
 
   const src = (t: string) => <><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> {t}</>
 
@@ -139,6 +156,40 @@ export default function OnlineMarketView() {
                 ai={<>보안 인프라 확충은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">온라인 결제 신뢰·플랫폼 성숙</b> → 공식몰·마켓플레이스 플래그십 확대 여건</>}
                 src={src("World Bank WDI 보안 인터넷서버 · 연간")} />
             )}
+          </div>
+
+          {/* 동남아 6개국 비교 — 환율 차트처럼 PH 상대 위치 */}
+          <div className="mt-1 flex items-center gap-2 px-0.5">
+            <span className="h-[16px] w-1 rounded bg-violet-500" />
+            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">동남아 6개국 비교</h2>
+            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">필리핀 상대 위치 · <b className="text-violet-600 dark:text-violet-400">●필리핀 강조</b></span>
+          </div>
+          <div className="grid items-stretch gap-4 sm:grid-cols-2">
+            <ChartCard seg="CE" title="인터넷 이용률 — 6개국" unit="% · 연간" labels={sInternet.labels} series={sInternet.series} decimals={0} seriesUnit="%"
+              legend={seaLegend}
+              meaning={<>동남아 인터넷 침투 비교 — 필리핀 {rInternet ? <b className="text-gray-700 dark:text-gray-200">{rInternet.of}개국 중 {rInternet.rank}위</b> : ""}</>}
+              ai={<>필리핀 인터넷 침투는 <b className="font-semibold text-amber-600 dark:text-amber-400">역내 중하위권</b> — 도시·청년층 집중 온라인 캠페인 여지, 지방 커버리지 확대가 이커머스 볼륨의 관건</>}
+              src={src("World Bank·ITU 인터넷 이용률 · 6개국 연간")} />
+            <ChartCard seg="CE" title="금융계정 보유율 — 6개국" unit="% 성인 · 연간" labels={sAccount.labels} series={sAccount.series} decimals={0} seriesUnit="%"
+              legend={seaLegend}
+              meaning={<>계정 보유(전자결제 저변) 비교 — 필리핀 {rAccount ? <b className="text-gray-700 dark:text-gray-200">{rAccount.of}개국 중 {rAccount.rank}위</b> : ""}</>}
+              ai={<>계정 보유는 급상승했으나 <b className="font-semibold text-amber-600 dark:text-amber-400">태국·말련 대비 낮음</b> → 이커머스 성장여력 큼(미포용층 = 신규 온라인 수요 풀)</>}
+              src={src("World Bank Global Findex 계정 보유율 · 6개국")} />
+            <ChartCard seg="CE" title="신용카드 보유율 — 6개국" unit="% 성인 · 연간" labels={sCard.labels} series={sCard.series} decimals={0} seriesUnit="%"
+              legend={seaLegend}
+              meaning={<>신용카드 보급 비교 — 필리핀 {rCard ? <b className="text-rose-600 dark:text-rose-400">{rCard.of}개국 중 {rCard.rank}위(최하위권)</b> : ""}</>}
+              ai={<>필리핀 신용카드 <b className="font-semibold text-rose-600 dark:text-rose-400">3%로 역내 최저</b> — 카드할부 의존 어려움 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">BNPL·직불·현금·리테일러 할부</b>가 온라인 가전 전환의 핵심</>}
+              src={src("World Bank Global Findex 신용카드 보유율 · 6개국")} />
+            <ChartCard seg="CE" title="고정 브로드밴드 — 6개국" unit="100명당 · 연간" labels={sBb.labels} series={sBb.series} decimals={0} seriesUnit=""
+              legend={seaLegend}
+              meaning={<>고정 브로드밴드 보급 비교 — 필리핀 {rBb ? <b className="text-gray-700 dark:text-gray-200">{rBb.of}개국 중 {rBb.rank}위</b> : ""}</>}
+              ai={<>고정망 보급 낮아 <b className="font-semibold text-amber-600 dark:text-amber-400">모바일 우선(mobile-first) 커머스</b> 구조 → 앱·모바일 최적화 스토어·결제가 필수</>}
+              src={src("World Bank·ITU 고정 브로드밴드 · 6개국")} />
+            <ChartCard seg="CE" title="모바일 가입 — 6개국" unit="100명당 · 연간" labels={sMob.labels} series={sMob.series} decimals={0} seriesUnit=""
+              legend={seaLegend}
+              meaning={<>모바일 가입 밀도 비교 — 역내 대부분 100%+ 포화</>}
+              ai={<>모바일은 역내 공통 포화 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">모바일 커머스·앱 채널이 온라인 가전 판매의 기본 인프라</b></>}
+              src={src("World Bank·ITU 모바일 가입 · 6개국")} />
           </div>
         </section>
 
