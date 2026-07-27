@@ -375,7 +375,7 @@ export function ApplianceView() {
 // ══════════════════════════════════════════════════════════════════════
 // 통화·금리·신용 — 정책금리·M3·가계신용
 // ══════════════════════════════════════════════════════════════════════
-const RATES_KEYS = ["policy_rate_monthly", "BSP_policy_rate", "interbank_call_rate", "m3_growth_yoy", "broad_money_growth", "domestic_credit_pct_gdp", "bank_loan_growth_yoy", "consumer_loan_growth_yoy", "credit_card_loan_growth_yoy", "current_account_pct_gdp", "fdi_net_inflow_usd", "trade_balance_gdp", "exports_gdp", "imports_gdp", "govt_exp_gdp", "reserves_usd"]
+const RATES_KEYS = ["policy_rate_monthly", "BSP_policy_rate", "interbank_call_rate", "m3_growth_yoy", "broad_money_growth", "domestic_credit_pct_gdp", "bank_loan_growth_yoy", "consumer_loan_growth_yoy", "credit_card_loan_growth_yoy", "current_account_pct_gdp", "fdi_net_inflow_usd", "trade_balance_gdp", "exports_gdp", "imports_gdp", "govt_exp_gdp", "reserves_usd", "credit_card_ownership", "debit_card_ownership", "credit_card_used", "borrowed_any_pct", "saved_at_fi_pct", "account_ownership"]
 export function RatesView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(RATES_KEYS)
@@ -389,6 +389,8 @@ export function RatesView() {
   const trade = build(d, n, [{ key: "exports_gdp", name: "수출", color: C.emer, w: 2 }, { key: "imports_gdp", name: "수입", color: C.rose }, { key: "trade_balance_gdp", name: "무역수지", color: C.ind, w: 2 }]) // %GDP
   const reserves = build(d, n, [{ key: "reserves_usd", name: "외환보유액", color: C.ind, w: 2, tf: (v) => v / 1e9 }]) // USD→십억$
   const govt = build(d, n, [{ key: "govt_exp_gdp", name: "정부지출", color: C.ind, w: 2 }, { key: "services_pct_gdp", name: "서비스업 비중", color: C.emer }]) // %GDP
+  const cards = build(d, n, [{ key: "credit_card_ownership", name: "신용카드 보유", color: C.ind, w: 2 }, { key: "debit_card_ownership", name: "직불카드 보유", color: C.blue }, { key: "account_ownership", name: "계좌 보유", color: C.emer }]) // Findex 연간 %
+  const finuse = build(d, n, [{ key: "borrowed_any_pct", name: "차입 경험", color: C.rose, w: 2 }, { key: "saved_at_fi_pct", name: "금융기관 저축", color: C.emer }]) // Findex 연간 %
   const empty = !pol.series.length && !loan.series.length && !m3.series.length && !credit.series.length && !cab.series.length && !fdi.series.length && !trade.series.length && !reserves.series.length && !govt.series.length
   return (
     <Shell title="통화·금리·신용" sub="기준금리·통화량 M3·가계신용 — 할부·카드 구매력" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d} accent="blue"
@@ -398,7 +400,7 @@ export function RatesView() {
         { key: "m3_growth_yoy", label: "통화량 M3", fmt: (v) => v + "%", tone: "emerald" },
         { key: "consumer_loan_growth_yoy", label: "소비자대출", fmt: (v) => v + "%", tone: "emerald" },
         { key: "credit_card_loan_growth_yoy", label: "신용카드 대출", fmt: (v) => v + "%", tone: "emerald" },
-        { key: "bank_loan_growth_yoy", label: "은행 총대출", fmt: (v) => v + "%", tone: "emerald" },
+        { key: "credit_card_ownership", label: "신용카드 보유율", fmt: (v) => v + "%", tone: "rose" },
       ]}
       sections={[
         { key: "rate_credit", label: "금리·신용", node: <>
@@ -422,6 +424,22 @@ export function RatesView() {
           meaning={<>GDP 대비 민간신용 잔액 — <b className="text-gray-700 dark:text-gray-200">가전 할부·카드 구매의 구조적 여력</b></>}
           ai={<>신용침투는 10년간 28%→50% 확대 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">할부·카드 기반 내구재 구매 여력 구조적 상승</b> → 프리미엄 할부 프로모 지속 유효</>}
           tone="emerald" src={src("World Bank 민간신용(%GDP) · 연간 · 월별 대출증가율은 상단 KPI")} />
+      )}
+        </> },
+        { key: "consumer_fin", label: "소비 금융·결제", node: <>
+      {cards.series.length > 0 && (
+        <ChartCard seg="CE" title="카드·계좌 보급률" unit="% 성인 · 연간" labels={cards.labels} series={cards.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.ind} t="신용카드 보유" b /><Lg c={C.blue} t="직불카드 보유" /><Lg c={C.emer} t="계좌 보유" /></>}
+          meaning={<>성인 카드·계좌 보유율(Findex) — <b className="text-gray-700 dark:text-gray-200">가전 결제·할부 수단의 구조</b></>}
+          ai={<>계좌보유는 27%→50%로 급등했으나 <b className="font-semibold text-rose-600 dark:text-rose-400">신용카드는 3%대로 정체</b> → 카드 무이자할부보다 <b className="font-semibold text-emerald-600 dark:text-emerald-400">리테일러·핀테크 할부(BNPL)·현금·직불 중심</b> 판매금융 설계가 시장 특성에 부합</>}
+          tone="rose" src={src("World Bank Global Findex 카드·계좌 보유율 · 격년(2011~2024)")} />
+      )}
+      {finuse.series.length > 0 && (
+        <ChartCard seg="CE" title="차입·저축 행태" unit="% 성인 · 연간" labels={finuse.labels} series={finuse.series} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.rose} t="차입 경험" b /><Lg c={C.emer} t="금융기관 저축" /></>}
+          meaning={<>성인 차입·저축 경험율(Findex) — <b className="text-gray-700 dark:text-gray-200">가전 구매 자금조달 성향</b></>}
+          ai={<>차입율 <b className="font-semibold">72%</b>로 높지만 대부분 <b className="font-semibold text-amber-600 dark:text-amber-400">가족·비공식 채널</b>(카드 3%뿐) → 저축률 상승기·송금 유입기에 대형가전 수요, <b className="font-semibold text-emerald-600 dark:text-emerald-400">유연 할부·계약금 낮춘 상품</b>이 전환 견인</>}
+          tone="emerald" src={src("World Bank Global Findex 차입·저축율 · 격년(2011~2024)")} />
       )}
         </> },
         { key: "money_ext", label: "통화·대외", node: <>
