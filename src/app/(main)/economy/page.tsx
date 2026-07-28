@@ -7,6 +7,7 @@ import RegionMapView from "@/components/RegionMapView"
 import RegionPriceExtras from "@/components/RegionPriceExtras"
 import EnergyLabelView from "@/components/EnergyLabelView"
 import OnlineMarketView from "@/components/OnlineMarketView"
+import WeatherView from "@/components/WeatherView"
 import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView, PricesView } from "@/components/EconViews"
 import { useLang } from "@/lib/i18n"
 
@@ -25,6 +26,7 @@ const NAV: NavItem[] = [
   { id: "appliance", ko: "가전 선행지표", sub: "가전 물가·PPI·수입액·실질가격 갭", count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
   { id: "energy", ko: "에너지 라벨", sub: "에어컨·냉장고·TV 브랜드별 에너지효율·별점(DOE)", count: "4", group: "가전 인텔리전스", star: true, subs: ["브랜드별 효율", "5성 비중", "카테고리별"] },
   { id: "online", ko: "온라인 시장", sub: "이커머스 규모·디지털/통신 침투", count: "3", group: "가전 인텔리전스", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
+  { id: "weather", ko: "날씨·재난", sub: "냉방도일 CDD·기온·태풍·지진", count: "4", group: "환경·리스크", subs: ["냉방도일 CDD", "월평균 기온", "태풍 경보", "지진 활동"] },
 ]
 
 function Soon({ label }: { label: string }) {
@@ -47,6 +49,7 @@ export default function Page() {
     if (active === "fx") return <FxView />
     if (active === "energy") return <EnergyLabelView />
     if (active === "online") return <OnlineMarketView />
+    if (active === "weather") return <WeatherView />
     if (active === "prices") return <PricesView />
     if (active === "growth") return <GrowthView />
     if (active === "labor") return <LaborView />

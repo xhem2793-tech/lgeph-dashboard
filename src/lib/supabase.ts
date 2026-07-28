@@ -993,6 +993,38 @@ export async function seaCompare(indicator: string) {
 }
 
 // ============================================================
+// 날씨·재난 도메인 (weather · weather_alerts · earthquakes)
+// ============================================================
+export type WxDay = { date: string; maxT: number | null; avgT: number | null; minT: number | null; rain: number | null; heat: number | null; condition: string | null }
+export async function weatherRecent(days = 120): Promise<WxDay[]> {
+  const from = new Date(Date.now() - days * 86400000).toISOString().slice(0, 10)
+  const rows = await sb(`weather?select=date,max_temp,avg_temp,min_temp,rainfall,heat_index,condition&date=gte.${from}&order=date.asc&limit=1000`)
+  return (rows ?? []).map((r: any) => ({ date: r.date, maxT: num(r.max_temp), avgT: num(r.avg_temp), minT: num(r.min_temp), rain: num(r.rainfall), heat: num(r.heat_index), condition: r.condition ?? null }))
+}
+
+export type Typhoon = { name: string; category: string; maxSignal: number; headline: string; asOf: string; inPar: boolean }
+/** 태풍 — 이름별 최신 상태 1건씩(가장 최근 as_of), 최신순 */
+export async function typhoonAlerts(limit = 8): Promise<Typhoon[]> {
+  const rows = await sb(`weather_alerts?select=name,category,max_signal,headline,as_of,in_par&alert_type=eq.TC&order=as_of.desc&limit=60`)
+  const seen = new Set<string>()
+  const out: Typhoon[] = []
+  for (const r of (rows ?? []) as any[]) {
+    if (seen.has(r.name)) continue
+    seen.add(r.name)
+    out.push({ name: r.name, category: r.category ?? "", maxSignal: Number(r.max_signal ?? 0), headline: r.headline ?? "", asOf: r.as_of, inPar: Boolean(r.in_par) })
+    if (out.length >= limit) break
+  }
+  return out
+}
+
+export type Quake = { at: string; mag: number; place: string; lat: number; lon: number; depth: number | null }
+export async function earthquakesRecent(days = 365, minMag = 4): Promise<Quake[]> {
+  const from = new Date(Date.now() - days * 86400000).toISOString()
+  const rows = await sb(`earthquakes?select=occurred_at,mag,place,lat,lon,depth_km&occurred_at=gte.${from}&mag=gte.${minMag}&order=occurred_at.desc&limit=1000`)
+  return (rows ?? []).map((r: any) => ({ at: r.occurred_at, mag: Number(r.mag), place: r.place ?? "", lat: Number(r.lat), lon: Number(r.lon), depth: num(r.depth_km) }))
+}
+
+// ============================================================
 // 발간 리포트 매니페스트 (public/reports/index.json)
 //  · 정적 매니페스트 — 발행 스크립트(scripts/publish-report.mjs)가 갱신한다.
 //  · 뉴스·리포트 페이지가 런타임에 읽어 카드로 노출 → "발행 = 자동 대시보드 반영".
