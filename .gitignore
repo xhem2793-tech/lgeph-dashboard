@@ -31,6 +31,9 @@ yarn-error.log*
 # resend key for publish-report script (do NOT commit)
 scripts/.resendkey
 
+# weekly-insight generator intermediates
+scripts/.weekly/
+
 # vercel
 .vercel
 

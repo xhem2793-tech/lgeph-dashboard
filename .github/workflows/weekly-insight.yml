@@ -1,0 +1,40 @@
+name: 주간 시장 인사이트 자동 발행
+
+# 매주 월요일 09:00(Asia/Manila = 01:00 UTC) 자동 생성 → 대시보드 반영.
+#  · 이메일은 발송하지 않음(사람이 검토 후 별도 발송). 발송을 켜려면 아래 run 에 --send 추가 + RESEND_API_KEY 시크릿 등록.
+#  · 수동 실행: Actions 탭 → 이 워크플로 → Run workflow.
+on:
+  schedule:
+    - cron: "0 1 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Chrome 설치
+        uses: browser-actions/setup-chrome@v1
+        id: chrome
+        with:
+          chrome-version: stable
+
+      - name: git 사용자 설정
+        run: |
+          git config user.name "axlgeph-bot"
+          git config user.email "weekly@axlgeph.report"
+
+      - name: 주간 인사이트 생성 + 발행(이메일 미발송)
+        env:
+          CHROME_PATH: ${{ steps.chrome.outputs.chrome-path }}
+          # 발송을 켜려면 아래 주석 해제 + 저장소 시크릿 RESEND_API_KEY 등록, 그리고 run 에 --send 추가
+          # RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+        run: node scripts/weekly-insight.mjs --deploy

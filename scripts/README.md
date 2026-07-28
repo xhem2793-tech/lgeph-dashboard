@@ -22,6 +22,22 @@ npm run publish-report -- ./my-report.json --deploy    # + git commit/push(자�
 3. **이메일(Resend)** — 본문 인라인 썸네일 + PDF 첨부, 지정 수신자에게 발송
 4. **배포** — `--deploy` 시 `git add/commit/push` → Cloudflare Pages 자동 빌드
 
+## 주간 시장 인사이트 자동 발행 (`weekly-insight.mjs`)
+
+SONA 브리핑 포맷을 참고한 **주 1회 자동 리포트**. Supabase 최신 데이터(거시·환율·에너지·정책 일정·경쟁 뉴스)를
+수집해 단일 16:9 슬라이드를 조립하고, 헤드리스 Chrome 으로 PDF·JPG 를 렌더한 뒤 발행 파이프라인에 넘깁니다.
+값은 전부 수집 데이터 기반이며(추정 금지) 변화(▲▼)는 직전 관측 대비 자동 계산.
+
+```bash
+npm run weekly-insight            # 생성 → 대시보드 반영(이메일 미발송)
+npm run weekly-insight -- --send   # + 법인 이메일 발송(명시적일 때만)
+npm run weekly-insight -- --deploy  # + git commit/push(자동 배포)
+```
+
+- **기본값은 이메일 미발송** — SONA 처럼 사람이 검토 후 `--send` 로만 발송.
+- 스케줄: `.github/workflows/weekly-insight.yml` — 매주 월요일 09:00(Manila) 자동 실행,
+  대시보드에 반영(커밋/푸시)하되 이메일은 보내지 않음(발송은 시크릿+`--send` 로 opt-in).
+
 ## Resend 키
 
 `RESEND_API_KEY` 환경변수 또는 `scripts/.resendkey`(gitignore)에서 읽습니다.
