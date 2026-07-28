@@ -28,6 +28,9 @@ yarn-error.log*
 # local env files
 .env*.local
 
+# resend key for publish-report script (do NOT commit)
+scripts/.resendkey
+
 # vercel
 .vercel
 

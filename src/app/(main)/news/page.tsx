@@ -6,11 +6,13 @@ import {
   indicatorChips,
   regBoard,
   analysisPosts,
+  publishedReports,
   freshness,
   fmtStamp,
   type FeedItem,
   type Chip,
   type RegBoardItem,
+  type PubReport,
 } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 import { Segmented } from "@/components/Segmented"
@@ -451,6 +453,7 @@ export default function Page() {
   const [chips, setChips] = React.useState<Record<string, Chip>>({})
   const [regs, setRegs] = React.useState<RegBoardItem[]>([])
   const [posts, setPosts] = React.useState<Awaited<ReturnType<typeof analysisPosts>>>([])
+  const [reports, setReports] = React.useState<PubReport[]>([])
   const [stamp, setStamp] = React.useState<string | null>(null)
   const [modal, setModal] = React.useState<Doc | null>(null)
   const [closing, setClosing] = React.useState(false)
@@ -481,6 +484,7 @@ export default function Page() {
       })
       .catch(() => {})
     newsFeed(0).then(setFeed).catch(() => setFeed([]))
+    publishedReports().then(setReports).catch(() => setReports([]))
   }, [])
 
   React.useEffect(() => {
@@ -551,15 +555,18 @@ export default function Page() {
     [posts, pick],
   )
 
-  // 고정 브리핑 — 규제·정책 카테고리에 노출, 클릭 시 PDF 원문(새 탭)
-  const SONA_DOC: Doc = {
-    id: "sona2026", kind: "insight", topic: "규제·정책", product: "전 제품 영향",
-    title: "2026 국정연설(SONA) 정책 종합 브리핑",
-    summary: "마르코스 제5차 SONA — 전기요금 인하(시스템로스·VAT 제거)·소득세 감면·Build Better More 인프라 등 정책 요지와 가전 사업 함의 요약.",
-    so: "전력비·구매력 부양으로 가전 수요 우호, 최대 변수는 EPIRA 개정 입법.",
-    source: "경영기획", date: "2026-07-28", url: "/SONA2026_Brief_1p.pdf", image: null, chipKeys: [],
-  }
-  const all = React.useMemo(() => [SONA_DOC, ...newsDocs, ...regDocs, ...insightDocs], [newsDocs, regDocs, insightDocs]) // eslint-disable-line react-hooks/exhaustive-deps
+  // 발간 리포트 — reports/index.json 매니페스트에서 로드(발행 스크립트가 갱신).
+  //  분류 지정 토픽에 노출, 클릭 시 PDF 원문(새 탭). 발행 = 자동 대시보드 반영.
+  const reportDocs: Doc[] = React.useMemo(
+    () =>
+      reports.map((r) => ({
+        id: "rep-" + r.id, kind: "insight" as Kind, topic: r.topic, product: "전 제품 영향",
+        title: r.title, summary: r.summary, so: r.so,
+        source: r.source, date: r.date, url: r.pdf, image: r.thumb ?? null, chipKeys: [],
+      })),
+    [reports],
+  )
+  const all = React.useMemo(() => [...reportDocs, ...newsDocs, ...regDocs, ...insightDocs], [reportDocs, newsDocs, regDocs, insightDocs])
 
   const counts = React.useMemo(() => {
     const m: Record<string, number> = { 전체: all.length }

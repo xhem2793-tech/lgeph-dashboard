@@ -1,0 +1,23 @@
+{
+  "id": "weekly-2026-w31",
+  "title": "필리핀 주간동향 2026-W31",
+  "summary": "이번 주 거시·정책·가전시장 핵심 동향 요약. 유가·환율 리스크와 규제 시행 일정, 경쟁사 프로모션 강도 변화를 종합.",
+  "so": "연료비 전가에 따른 대형가전 구매 지연·가격민감도 확대 주시. 페소 표시 수입원가·부품 조달비 영향 점검 권고.",
+  "topic": "인사이트",
+  "kind": "주간 인사이트",
+  "source": "경영기획",
+  "date": "2026-08-01",
+  "pdf": "./weekly_w31.pdf",
+  "pdfName": "Weekly_2026_W31.pdf",
+  "thumb": "./weekly_w31.jpg",
+  "email": {
+    "send": true,
+    "from": "필리핀 주간동향 <weekly@axlgeph.report>",
+    "replyTo": "xhem2793@gmail.com",
+    "subject": "[필리핀 주간동향] 2026-W31 주간 인사이트",
+    "greeting": "안녕하세요. 2026년 31주차 필리핀 주간동향 리포트 송부드립니다.",
+    "to": [
+      "xhem2793@gmail.com"
+    ]
+  }
+}

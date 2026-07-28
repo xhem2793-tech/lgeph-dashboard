@@ -1,0 +1,18 @@
+{
+  "reports": [
+    {
+      "id": "sona2026",
+      "title": "2026 국정연설(SONA) 정책 종합 브리핑",
+      "summary": "마르코스 제5차 SONA — 전기요금 인하(시스템로스·VAT 제거)·소득세 감면·Build Better More 인프라 등 정책 요지와 가전 사업 함의 요약.",
+      "so": "전력비·구매력 부양으로 가전 수요 우호, 최대 변수는 EPIRA 개정 입법.",
+      "topic": "규제·정책",
+      "kind": "정책 브리핑",
+      "source": "경영기획",
+      "date": "2026-07-28",
+      "pdf": "/SONA2026_Brief_1p.pdf",
+      "thumb": "/reports/sona2026.jpg",
+      "sentAt": "2026-07-28",
+      "recipients": 11
+    }
+  ]
+}

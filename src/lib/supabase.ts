@@ -992,6 +992,37 @@ export async function seaCompare(indicator: string) {
   return out
 }
 
+// ============================================================
+// 발간 리포트 매니페스트 (public/reports/index.json)
+//  · 정적 매니페스트 — 발행 스크립트(scripts/publish-report.mjs)가 갱신한다.
+//  · 뉴스·리포트 페이지가 런타임에 읽어 카드로 노출 → "발행 = 자동 대시보드 반영".
+// ============================================================
+export type PubReport = {
+  id: string
+  title: string
+  summary: string
+  so: string
+  topic: string        // 뉴스 분류(예: 규제·정책·인사이트)
+  kind: string         // 리포트 종류 라벨(예: 정책 브리핑·주간 인사이트)
+  source: string
+  date: string         // 발행일 YYYY-MM-DD
+  pdf: string          // 원문 PDF 경로
+  thumb?: string | null // 미리보기 이미지(없으면 카테고리 아트)
+  sentAt?: string | null // 이메일 발송일(발송 안 했으면 null)
+  recipients?: number | null // 수신 인원
+}
+export async function publishedReports(): Promise<PubReport[]> {
+  try {
+    const r = await fetch("/reports/index.json", { cache: "no-store" })
+    if (!r.ok) return []
+    const j = await r.json()
+    const list = (j?.reports ?? []) as PubReport[]
+    return [...list].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+  } catch {
+    return []
+  }
+}
+
 
 // ============================================================
 // 물가·생활비 도메인 데이터 (economy /prices)
