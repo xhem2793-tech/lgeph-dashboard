@@ -82,6 +82,18 @@ function period(a: CompAd) {
 const briefBody = (b: string | null) => clean((b || "").split("[실무]")[0])
 const offerShort = (o: string | null) => clean(o).replace(/\s*\([^)]*\)\s*$/, "")
 
+/** 요약 한 덩어리를 문단으로 — 뉴스 모달과 동일 규칙(문장 단위, ~170자 병합) */
+function para(s: string): string[] {
+  if (!s) return []
+  const out: string[] = []
+  for (const x of s.split(/(?<=[.。!?])\s+/)) {
+    const last = out[out.length - 1]
+    if (last && (last + x).length < 170) out[out.length - 1] = last + " " + x
+    else out.push(x)
+  }
+  return out
+}
+
 function Hi({ text, q }: { text: string; q: string }) {
   const k = q.trim()
   if (!k || !text) return <>{text}</>
@@ -120,43 +132,116 @@ function Card({ a, onOpen, q = "" }: { a: CompAd; onOpen: () => void; q?: string
   )
 }
 
+/** 경쟁사 광고 상세 — 뉴스·정책 모달과 동일 레이아웃(좌 액센트 바 · 200px 히어로 · 시사점/본문 요약 · 원문 버튼).
+ *  색은 상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber)로 액센트 바에만. 애니메이션도 뉴스와 동일. */
 function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
   const [closing, setClosing] = useState(false)
+  const [imgErr, setImgErr] = useState(false)
   const st = stOf(a.status)
   const impl = a.body && a.body.includes("[실무]") ? a.body.split("[실무]") : null
   const bodyMain = impl ? clean(impl[0]) : clean(a.body)
   const bodyImpl = impl ? clean(impl.slice(1).join(" ")) : null
-  const close = () => { setClosing(true); setTimeout(onClose, 230) }
+  const close = () => { setClosing(true); setTimeout(onClose, 240) }
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") close() }
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [])
+  const showImg = !!a.image_url && !imgErr
+  const accent = st ? st.dot : "bg-indigo-500"
   const meta: string[] = []
   if (a.ad_started_on) meta.push("게재 " + a.ad_started_on + (a.days_since_start != null ? " (" + a.days_since_start + "일차)" : ""))
   if (a.ends_on) meta.push("종료 " + a.ends_on + (a.days_to_end != null && a.days_to_end >= 0 ? " (D-" + a.days_to_end + ")" : ""))
   meta.push("제품 " + prodLabel(a.category || "기타"))
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-auto bg-gray-900/40 p-4 backdrop-blur-sm sm:p-8" style={{ animation: (closing ? "backOut" : "backIn") + " .22s ease both" }} onClick={close}>
-      <div className="w-full max-w-[420px] overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl" style={{ animation: (closing ? "modalOut" : "modalIn") + " .34s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
-        <div className={"flex items-center justify-between gap-3 px-5 py-3.5 " + (st ? st.band : "bg-gray-50 dark:bg-gray-900")}>
-          <div className="flex items-center gap-2">
-            <span className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{a.brand}</span>
-            <span className="rounded border border-gray-300/60 dark:border-gray-700/60 px-1.5 py-0.5 text-[10px] font-medium text-gray-500 dark:text-gray-400">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
-            {st && <span className={"inline-flex items-center gap-1.5 rounded-full bg-white/70 dark:bg-gray-900/70 px-2.5 py-1 text-[11px] font-bold " + st.text}><span className={"h-1.5 w-1.5 rounded-full " + st.dot} />{st.label}{a.days_to_end != null && a.days_to_end >= 0 ? " D-" + a.days_to_end : ""}</span>}
-          </div>
-          <button onClick={close} aria-label="닫기" className="shrink-0 rounded-full p-1 text-gray-400 dark:text-gray-500 transition-colors hover:bg-white/60 dark:hover:bg-gray-900/60 hover:text-gray-700 dark:hover:text-gray-200">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
-          </button>
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+      style={{ animation: closing ? "backOut .24s ease both" : "backIn .24s ease both" }}
+      onClick={close}
+    >
+      <div
+        className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl"
+        style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <span className={"absolute inset-y-0 left-0 z-10 w-1 " + accent} />
+        <button
+          type="button"
+          onClick={close}
+          aria-label="닫기"
+          className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
+        >
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+
+        {/* 히어로 — 광고 이미지, 없으면 브랜드 그라디언트 폴백 */}
+        <div className="relative h-[200px] w-full shrink-0 overflow-hidden">
+          {showImg ? (
+            <img src={a.image_url || ""} alt="" className="h-full w-full object-cover" onError={() => setImgErr(true)} />
+          ) : (
+            <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-indigo-500 to-violet-600">
+              <span className="text-[30px] font-bold tracking-tight text-white">{a.brand}</span>
+              <span className="text-[10px] font-medium text-white/70">광고 이미지 없음</span>
+            </div>
+          )}
+          {st && (
+            <span className={"absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 dark:bg-gray-900/90 px-2.5 py-1 text-[11px] font-bold shadow-sm backdrop-blur " + st.text}>
+              <span className={"h-1.5 w-1.5 rounded-full " + st.dot} />
+              {st.label}{a.days_to_end != null && a.days_to_end >= 0 ? " D-" + a.days_to_end : ""}
+            </span>
+          )}
         </div>
-        <div className="px-5 py-4">
-          <p className="text-[14px] font-bold leading-snug text-gray-900 dark:text-gray-50">{clean(a.headline)}</p>
-          {a.offer && <span className="mt-2.5 inline-block rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[12px] font-semibold text-emerald-700 dark:text-emerald-300">{clean(a.offer)}</span>}
-          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-3 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400">{meta.join(" · ")}</p>
-          {bodyMain && <div className="mt-3 rounded-xl bg-gray-50 dark:bg-gray-900 p-3.5 text-[12.5px] leading-relaxed text-gray-700 dark:text-gray-200">{bodyMain}</div>}
-          {bodyImpl && <div className="mt-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-500/10 p-3.5 text-[12.5px] leading-relaxed text-indigo-800"><span className="font-bold">실무</span> {bodyImpl}</div>}
-          <p className="mt-3 text-[10.5px] text-gray-400 dark:text-gray-500">Meta 광고 라이브러리(자체 수집) · {a.confidence || "—"}</p>
+
+        <div className="overflow-y-auto px-7 pb-7 pt-5">
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+            <span className="font-semibold text-indigo-600 dark:text-indigo-400">{a.brand}</span>
+            <span className="text-gray-300 dark:text-gray-600">·</span>
+            <span>{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+            <span className="text-gray-300 dark:text-gray-600">·</span>
+            <span className="num">{a.ad_started_on || "상시"}</span>
+          </div>
+
+          <h3 className="mt-2 text-[20px] font-semibold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{clean(a.headline)}</h3>
+
+          {a.offer && (
+            <span className="mt-3 inline-block rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[12.5px] font-semibold text-emerald-700 dark:text-emerald-300">{clean(a.offer)}</span>
+          )}
+
+          {bodyImpl && (
+            <div className="mt-4 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-3">
+              <p className="text-[10.5px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-400">시사점</p>
+              <p className="mt-1 text-[14px] leading-[1.7] text-gray-800 dark:text-gray-100">{bodyImpl}</p>
+            </div>
+          )}
+
+          {bodyMain && (
+            <div className="mt-5">
+              <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
+              <div className="mt-1 space-y-2">
+                {para(bodyMain).map((p, i) => (
+                  <p key={i} className="text-[13px] leading-[1.7] text-gray-600 dark:text-gray-300">{p}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-5 border-t border-gray-100 dark:border-gray-800 pt-3">
+            <p className="text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400">{meta.join(" · ")}</p>
+            <p className="mt-1 text-[10.5px] text-gray-400 dark:text-gray-500">Meta 광고 라이브러리(자체 수집) · {a.confidence || "—"}</p>
+          </div>
+
+          {a.ad_url && (
+            <a
+              href={a.ad_url}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-[13px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95"
+            >
+              원문 광고 보기 · {a.brand}
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M7 17L17 7M17 7H8M17 7v9" /></svg>
+            </a>
+          )}
         </div>
       </div>
     </div>
