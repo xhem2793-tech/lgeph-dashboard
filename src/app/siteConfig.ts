@@ -15,7 +15,7 @@ export const siteConfig = {
     { name: "경쟁사 가격", href: "/competitors" },
     { name: "경쟁사 광고", href: "/competitor-ads" },
     { name: "캘린더", href: "/calendar" },
-    { name: "자료", href: "/appendix" },
+    { name: "리포트", href: "/reports" },
   ],
   externalLink: {
     blocks: "https://blocks.tremor.so/templates#dashboard",

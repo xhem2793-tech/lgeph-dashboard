@@ -61,6 +61,7 @@ export const DICT = {
   nav_competitor_ads: { ko: "경쟁사 광고", en: "Rival Ads" },
   nav_calendar: { ko: "캘린더", en: "Calendar" },
   nav_appendix: { ko: "자료", en: "Appendix" },
+  nav_reports: { ko: "리포트", en: "Reports" },
   search_ph: { ko: "지표·뉴스·키워드 검색", en: "Search indicators, news, keywords" },
   org: { ko: "LGE-PH 경영기획", en: "LGE-PH Strategy" },
   brief_title: { ko: "금주 브리핑", en: "This Week's Briefing" },

@@ -7,7 +7,7 @@ import React from "react"
 import { useTheme } from "next-themes"
 import { useLang } from "@/lib/i18n"
 
-const NAV_KEY: Record<string, "nav_overview" | "nav_economy" | "nav_news" | "nav_competitors" | "nav_competitor_ads" | "nav_calendar" | "nav_appendix"> = {
+const NAV_KEY: Record<string, "nav_overview" | "nav_economy" | "nav_news" | "nav_competitors" | "nav_competitor_ads" | "nav_calendar" | "nav_appendix" | "nav_reports"> = {
   "/overview": "nav_overview",
   "/economy": "nav_economy",
   "/news": "nav_news",
@@ -15,6 +15,7 @@ const NAV_KEY: Record<string, "nav_overview" | "nav_economy" | "nav_news" | "nav
   "/competitor-ads": "nav_competitor_ads",
   "/calendar": "nav_calendar",
   "/appendix": "nav_appendix",
+  "/reports": "nav_reports",
 }
 
 /** 슬라이딩 알약 토글 — 활성 옵션 뒤로 흰 스위치가 부드럽게 이동(cubic-bezier).
