@@ -68,6 +68,8 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     let showIdx: number[]
     if (yearFirst.length >= 3) { const step = Math.max(1, Math.ceil(yearFirst.length / 8)); showIdx = yearFirst.filter((_, k) => k % step === 0) }
     else { const k = Math.min(5, n); showIdx = Array.from({ length: k }, (_, j) => Math.round((j * (n - 1)) / (k - 1 || 1))) }
+    // 최소 픽셀 간격 강제 — 시간비례 X에서 라벨이 겹치지 않도록(장기·혼합빈도 시계열 대응)
+    { const MINPX = 34; const kept: number[] = []; for (const idx of [...showIdx].sort((a, b) => a - b)) { if (!kept.length || X(idx) - X(kept[kept.length - 1]) >= MINPX) kept.push(idx) } showIdx = kept }
     const showSet = new Set(showIdx)
     labels.forEach((lb, i) => { if (!showSet.has(i)) return; const an = i <= 1 ? "start" : i >= n - 2 ? "end" : "middle"; const tx = el("text", { x: X(i), y: B + 13, "text-anchor": an, "font-size": 10, fill: axisCol }); tx.textContent = lb; svg.appendChild(tx) })
     const cross = el("line", { x1: 0, y1: T, x2: 0, y2: B, stroke: CO.cross, "stroke-width": 1, "stroke-dasharray": "3 3", opacity: 0 }); svg.appendChild(cross)

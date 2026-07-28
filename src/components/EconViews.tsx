@@ -197,6 +197,14 @@ const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electr
 const HS_YRS = ["'15", "'16", "'17", "'18", "'19", "'20", "'21", "'22", "'23", "'24"]
 const HS_TOTALS: Record<string, number[]> = { ac: [205, 329, 371, 398, 466, 358, 376, 458, 531, 666], ref: [245, 331, 358, 387, 426, 380, 428, 452, 452, 501], tv: [176, 338, 399, 471, 466, 382, 460, 418, 373, 383], wash: [43, 78, 102, 128, 120, 95, 128, 149, 159, 178] }
 const HS_ORIGIN: Record<string, number[]> = { cn: [28.9, 27, 29.7, 35.1, 37.8, 41.8, 44.3, 43.2, 44.1, 48.7], th: [19.4, 16.3, 16.4, 15.6, 16.4, 16.1, 16.4, 17.5, 15.5, 14], vn: [4.8, 13, 12.8, 10.2, 9.6, 10.8, 12, 12.1, 12.8, 11.4], kr: [3.9, 6.7, 5.2, 4.4, 4.1, 2.9, 2.5, 2.6, 3, 3.1] }
+// 품목별 원산지 점유%(4대 원산지) — 제품 필터 연동용
+const HS_ORIGIN_CAT: Record<string, Record<string, number[]>> = {
+  ref: { cn: [32.3, 35.0, 39.5, 43.6, 43.9, 47.1, 54.9, 53.9, 55.4, 57.5], th: [26.6, 20.5, 16.9, 14.0, 15.3, 13.3, 12.3, 14.1, 12.2, 13.1], vn: [0.4, 3.1, 8.4, 9.8, 9.7, 10.2, 8.3, 11.8, 11.5, 11.6], kr: [3.3, 5.4, 4.3, 3.6, 3.2, 2.5, 2.9, 1.8, 2.2, 2.2] },
+  ac: { cn: [27.4, 29.8, 26.1, 30.2, 40.1, 39.3, 36.5, 34.2, 40.9, 48.9], th: [22.7, 24.8, 30.4, 32.1, 31.3, 34.4, 40.6, 37.2, 28.2, 22.0], vn: [6.5, 4.5, 4.3, 3.0, 0.4, 0.0, 0.1, 0.1, 0.1, 0.1], kr: [5.2, 7.8, 6.5, 5.5, 4.9, 3.9, 2.5, 2.7, 3.4, 3.5] },
+  wash: { cn: [53.1, 39.1, 36.7, 36.8, 42.3, 44.7, 49.8, 53.6, 51.1, 53.4], th: [25.4, 29.9, 25.3, 23.5, 24.0, 22.3, 17.7, 15.7, 17.6, 14.8], vn: [3.8, 9.8, 10.9, 13.2, 15.3, 18.0, 20.7, 18.7, 15.6, 19.5], kr: [2.2, 7.2, 8.1, 9.4, 8.6, 6.1, 5.3, 6.5, 8.7, 9.6] },
+  tv: { cn: [20.1, 13.6, 22.5, 31.8, 28.9, 38.2, 39.2, 37.6, 32.1, 34.8], th: [3.9, 0.8, 0.6, 0.7, 0.5, 0.3, 0.2, 0.4, 0.4, 0.9], vn: [9.2, 31.8, 25.3, 15.7, 17.3, 19.7, 22.8, 23.1, 31.3, 26.8], kr: [3.8, 6.8, 4.2, 2.9, 2.9, 1.6, 1.3, 2.0, 1.0, 0.5] },
+}
+const PROD_HS: Record<string, string> = { "냉장고": "ref", "세탁·건조": "wash", "에어컨(RAC)": "ac", "공조(B2B)": "ac", "TV·AV": "tv", "모니터·사이니지": "tv" }
 // 가전 시장규모·이커머스 — 다중기관 추정 범위 + 근거(백데이터). 단일 숫자 아닌 삼각검증.
 function MarketCard() {
   const [appl, setAppl] = useState<MktEst[]>([])
@@ -400,13 +408,19 @@ export function ApplianceView() {
           ai={<>에어컨 수입이 <b className="font-semibold text-emerald-600 dark:text-emerald-400">2015 $205M→2024 $666M(3.2배)</b>로 최대·최고성장(냉방수요·기후) → 에어컨 라인 우선순위. 냉장고·세탁기도 견조, TV는 최근 정체. <b>트렌드</b>: 전 품목 우상향, 코로나(2020) 일시 조정 후 회복.</>}
           tone="amber" src={src("UN Comtrade 필리핀 수입액 HS 8415·8418·8450·8528 · 연간")} />
       )}
-      {show(["전 제품"]) && (
-        <ChartCard seg="전 제품·CE·B2B" title="가전 수입 원산지 점유율" unit="% · 연간(4품목 합산)" labels={HS_YRS} series={[{ name: "중국", color: C.rose, w: 2.4, data: HS_ORIGIN.cn }, { name: "태국", color: C.amber, data: HS_ORIGIN.th }, { name: "베트남", color: C.emer, data: HS_ORIGIN.vn }, { name: "한국", color: C.ind, w: 2, data: HS_ORIGIN.kr }]} decimals={1} seriesUnit="%"
+      {(() => {
+        const hcat = PROD_HS[prod] // 전체=집계, 특정 제품=해당 HS 원산지
+        const og = hcat ? HS_ORIGIN_CAT[hcat] : HS_ORIGIN
+        const scope = hcat ? prod : "4품목 합산"
+        const lastKr = og.kr[og.kr.length - 1], lastCn = og.cn[og.cn.length - 1], firstCn = og.cn[0]
+        return (
+        <ChartCard seg="전 제품·CE·B2B" title={"가전 수입 원산지 점유율" + (hcat ? " · " + prod : "")} unit={"% · 연간(" + scope + ")"} labels={HS_YRS} series={[{ name: "중국", color: C.rose, w: 2.4, data: og.cn }, { name: "태국", color: C.amber, data: og.th }, { name: "베트남", color: C.emer, data: og.vn }, { name: "한국", color: C.ind, w: 2, data: og.kr }]} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.rose} t="중국" b /><Lg c={C.amber} t="태국" /><Lg c={C.emer} t="베트남" /><Lg c={C.ind} t="한국" b /></>}
-          meaning={<>가전 수입 원산지 구성 — <b className="text-gray-700 dark:text-gray-200">경쟁 원산지·조달 구조</b></>}
-          ai={<>중국이 <b className="font-semibold text-rose-600 dark:text-rose-400">2015 29%→2024 49%</b>로 절반 육박, <b className="font-semibold text-rose-600 dark:text-rose-400">한국은 3%대 정체</b> = 필리핀 완제품 시장을 중국계가 장악. LG는 <b className="font-semibold">현지·역내(태국·베트남) 생산·조달로 원가·물류 대응</b>하거나 고효율·프리미엄 차별화가 관건. 베트남 부상(TV·세탁기)도 주시.</>}
-          tone="rose" src={src("UN Comtrade 원산지별 수입액(4품목 합산) · 연간")} />
-      )}
+          meaning={<>{hcat ? prod : "가전"} 수입 원산지 구성 — <b className="text-gray-700 dark:text-gray-200">경쟁 원산지·조달 구조</b>{hcat ? "" : " · 제품 필터로 품목별 전환"}</>}
+          ai={<>중국이 <b className="font-semibold text-rose-600 dark:text-rose-400">{firstCn}%→{lastCn}%</b>로 상승, <b className="font-semibold text-rose-600 dark:text-rose-400">한국은 {lastKr}%</b> = {hcat === "wash" ? "세탁기는 그나마 한국 9%대·베트남 급상승(20%)" : hcat === "tv" ? "TV는 베트남(27%)이 중국 다음 2위, 한국 0.5%로 최저" : hcat === "ac" ? "에어컨은 태국(22%)이 중국 다음 조달허브, 한국 3%대" : hcat === "ref" ? "냉장고는 중국 57%로 편중 최고, 한국 2%대 최저" : "필리핀 완제품 시장을 중국계가 장악"}. LG는 <b className="font-semibold">현지·역내(태국·베트남) 생산·조달로 원가·물류 대응</b>하거나 고효율·프리미엄 차별화가 관건.</>}
+          tone="rose" src={src("UN Comtrade 원산지별 수입액 · 연간" + (hcat ? " (HS " + ({ ref: "8418", ac: "8415", wash: "8450", tv: "8528" }[hcat]) + ")" : " (4품목 합산)"))} />
+        )
+      })()}
     </Shell>
   )
 }
@@ -948,6 +962,42 @@ export function LaborView() {
 const SENTIMENT_KEYS = ["economic_sentiment_composite", "consumer_confidence_index", "consumer_confidence_next12m", "business_confidence_index", "business_confidence_next12m", "durables_buying_intention", "bes_overall_ci", "bes_ci_next_q", "bes_ci_next12m", "bes_ci_manufacturing", "bes_ci_retail", "bes_ci_services", "bes_credit_access", "bes_financial_condition", "bes_capacity_util", "bes_employment_outlook", "bes_expansion_plans"]
 // BSP BES 최신 분기(2025Q4) 사업 제약요인(%응답) — 리포트 정성 콘텐츠(확산지수 아님, 복수응답)
 const BES_CONSTRAINTS: [string, number][] = [["경쟁 심화", 63.7], ["수요 부족", 34.7], ["기타", 27.6], ["고금리", 21.7], ["불명확 경제법령", 16.3], ["재무 문제", 14.4], ["노동 문제", 11.2], ["신용 접근난", 7.7], ["설비 부족", 7.2], ["원자재 부족", 3.9]]
+// BES 사업 제약요인 카드 — 6개 기본 + 더보기, 접이식 LG 인사이트(다른 차트와 높이 일치)
+function ConstraintsCard() {
+  const [more, setMore] = useState(false)
+  const [aiOpen, setAiOpen] = useState(false)
+  const cmax = Math.max(...BES_CONSTRAINTS.map((x) => x[1]), 1)
+  const shown = more ? BES_CONSTRAINTS : BES_CONSTRAINTS.slice(0, 6)
+  return (
+    <div className="flex h-full min-w-0 flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+      <div className="flex items-center gap-1.5">
+        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">기업 사업 제약요인</h3>
+        <span className="shrink-0 rounded bg-violet-50 dark:bg-violet-500/10 px-1.5 py-0.5 text-[9px] font-bold text-violet-700 dark:text-violet-300">B2B</span>
+        <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">%응답 · 25Q4 · 복수</span>
+      </div>
+      <div className="mt-2 flex flex-col gap-1.5">
+        {shown.map((c, i) => (
+          <div key={c[0]} className="flex items-center gap-2" title={`${c[0]} ${c[1]}%`}>
+            <span className="w-[68px] shrink-0 truncate text-right text-[10.5px] text-gray-500 dark:text-gray-400">{c[0]}</span>
+            <span className="h-3.5 min-w-0 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800"><span className="block h-full rounded" style={{ width: (c[1] / cmax * 100) + "%", background: i === 0 && !more ? C.rose : c[0] === "경쟁 심화" ? C.rose : i < 4 ? C.ind : "#94a3b8", animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: "left center" }} /></span>
+            <span className="w-9 shrink-0 text-right text-[10.5px] font-semibold tabular-nums text-gray-700 dark:text-gray-200">{c[1]}%</span>
+          </div>
+        ))}
+      </div>
+      <button type="button" onClick={() => setMore((v) => !v)} className="mt-1.5 self-start text-[10.5px] font-semibold text-violet-600 dark:text-violet-400 transition-colors hover:text-violet-700 dark:hover:text-violet-300">{more ? "접기 ▲" : `더보기 (+${BES_CONSTRAINTS.length - 6}) ▼`}</button>
+      <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 기업이 꼽은 경영 애로 — 수요·금리·경쟁 압력 구조</p>
+      <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[10.5px] font-bold text-violet-600 dark:text-violet-400 transition-colors hover:text-violet-700 dark:hover:text-violet-300">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
+        LG 인사이트
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+      </button>
+      <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}>
+        <div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-violet-300 dark:border-violet-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold">경쟁 심화(64%)·수요 부족(35%)</b>이 최대 애로 — 가전도 가격·프로모 경쟁 격화 예상. 고금리(22%)는 할부 설계·B2B 발주에 부담 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">무이자 할부·TCO 절감 소구로 방어</b>.</p></div></div>
+      </div>
+      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> BSP Business Expectations Survey 제약요인 · 최신분기</p>
+    </div>
+  )
+}
 export function SentimentView() {
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(SENTIMENT_KEYS)
@@ -962,7 +1012,6 @@ export function SentimentView() {
   const besOps = build(d, n, [{ key: "bes_credit_access", name: "신용접근", color: C.ind, w: 2 }, { key: "bes_financial_condition", name: "재무여건", color: C.rose }])
   const besJob = build(d, n, [{ key: "bes_employment_outlook", name: "고용전망(차분기)", color: C.ind, w: 2 }, { key: "bes_expansion_plans", name: "설비확장 계획", color: C.emer }])
   const besCap = build(d, n, [{ key: "bes_capacity_util", name: "평균 가동률", color: C.amber, w: 2 }])
-  const cmax = Math.max(...BES_CONSTRAINTS.map((x) => x[1]), 1)
   const empty = !cci.series.length && !bci.series.length && !dur.series.length && !esi.series.length && !besOverall.series.length
   return (
     <Shell title="기업·소비 심리" sub="소비자심리 CCI·기업심리 BCI·BES 기업경기 — 수요 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d} accent="violet"
@@ -1039,21 +1088,7 @@ export function SentimentView() {
           ai={<>가동률 <b className="font-semibold">70%대</b>는 여유 있는 공급 국면 = 수요 확대 시 즉응 가능. <b>트렌드</b>: 코로나 저점 후 71% 안팎 안정 — 급격한 공급 병목 신호는 없음.</>}
           tone="amber" src={src("BSP BES 산업·건설 평균 가동률 · 분기")} />
       )}
-      <div className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
-        <div className="flex items-center gap-1.5"><h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">기업 사업 제약요인</h3><span className="ml-auto text-[10.5px] font-medium text-gray-400 dark:text-gray-500">%응답 · 25Q4 · 복수</span></div>
-        <p className="mt-1.5 min-h-[30px] text-[10.5px] leading-relaxed text-gray-500 dark:text-gray-400">기업이 꼽은 경영 애로 — <b className="text-gray-700 dark:text-gray-200">수요·금리·경쟁 압력 구조</b></p>
-        <div className="mt-1 flex flex-1 flex-col justify-center gap-1.5">
-          {BES_CONSTRAINTS.map((c, i) => (
-            <div key={c[0]} className="flex items-center gap-2" title={`${c[0]} ${c[1]}%`}>
-              <span className="w-[72px] shrink-0 truncate text-right text-[10.5px] text-gray-500 dark:text-gray-400">{c[0]}</span>
-              <span className="h-3.5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800"><span className="block h-full rounded" style={{ width: (c[1] / cmax * 100) + "%", background: i === 0 ? C.rose : i < 4 ? C.ind : "#94a3b8", animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: "left center" }} /></span>
-              <span className="w-9 shrink-0 text-right text-[10.5px] font-semibold tabular-nums text-gray-700 dark:text-gray-200">{c[1]}%</span>
-            </div>
-          ))}
-        </div>
-        <p className="mt-2 border-l-2 border-violet-300 dark:border-violet-500/40 pl-2 text-[10.5px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-violet-700 dark:text-violet-300">LG 인사이트</b> <b className="font-semibold">경쟁 심화(64%)·수요 부족(35%)</b>이 최대 애로 — 가전도 가격·프로모 경쟁 격화 예상. 고금리(22%)는 할부 설계·B2B 발주에 부담 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">무이자 할부·TCO 절감 소구로 방어</b>.</p>
-        <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> BSP Business Expectations Survey 제약요인 · 최신분기</p>
-      </div>
+      <ConstraintsCard />
         </> },
       ]} />
   )
