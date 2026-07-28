@@ -150,15 +150,6 @@ function Spark({ p2, p1, p0 }: { p2: number | null; p1: number | null; p0: numbe
   )
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="border-t border-gray-100 dark:border-gray-800 px-3 py-3 first:border-t-0">
-      <p className="mb-2 text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</p>
-      {children}
-    </div>
-  )
-}
-
 function FacetMenu({ label, value, active, children }: { label: string; value: string; active: boolean; children: React.ReactNode }) {
   return (
     <details className="group relative">
@@ -391,30 +382,39 @@ export default function Competitors() {
       <style>{"@keyframes viewIn{from{opacity:0;transform:translateY(8px) scale(.995)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
 
       <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
-        <aside style={{ animation: "viewIn .45s ease both" }} className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
-          <Section title="보기">
+        <aside style={{ animation: "viewIn .45s ease both" }} className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[61px]">
+          {/* 좌 메뉴 — 뉴스·경쟁사 광고 사이드바와 동일한 구조(아이콘 헤더·그룹 라벨·우측 상태 메타) */}
+          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
+            <p className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분석</p>
+          </div>
+          <div className="px-3 py-3">
             <div className="flex flex-col gap-0.5">
               {GROUPS.map((g) => (
-                <div key={g.group} className="mt-1.5 first:mt-0">
-                  <div className="px-1.5 pb-0.5 pt-1 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{g.group}</div>
+                <React.Fragment key={g.group}>
+                  <p className="mb-1 mt-2.5 px-1.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 first:mt-0">{g.group}</p>
                   {g.items.map((it) => (
                     <button
                       key={it.key}
                       type="button"
                       onClick={() => setView(it.key)}
                       className={
-                        "group flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left transition-all duration-200 hover:-translate-y-px active:scale-[.99] " +
+                        "group rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
                         (view === it.key ? "bg-indigo-50 dark:bg-indigo-500/10" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
                       }
                     >
-                      <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (it.status === "live" ? "bg-emerald-500" : "bg-gray-300")} />
-                      <span className={"flex-1 truncate text-[13px] transition-colors duration-200 " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-600 dark:text-gray-300")}>{it.label}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className={"flex-1 truncate text-[13px] transition-colors duration-300 " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>{it.label}</span>
+                        {it.status === "live"
+                          ? <span className="shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[9px] font-bold text-emerald-600 dark:text-emerald-400">LIVE</span>
+                          : <span className="shrink-0 text-[9.5px] font-medium text-gray-400 dark:text-gray-500">예정</span>}
+                      </span>
                     </button>
                   ))}
-                </div>
+                </React.Fragment>
               ))}
             </div>
-          </Section>
+          </div>
 
           <div className="border-t border-gray-100 dark:border-gray-800 px-3 py-2.5">
             <button
