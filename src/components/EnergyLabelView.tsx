@@ -106,7 +106,7 @@ const IcoBtn = ({ onClick, title, d, fill = false }: { onClick: () => void; titl
 )
 const ICO = { expand: '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>', img: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>', csv: '<path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 21h16"/>' }
 
-function Sub({ title, seg, meaning, ai, idx = 0, csv, children }: { title: string; seg?: string; meaning: React.ReactNode; ai?: React.ReactNode; idx?: number; csv?: CsvData; children: React.ReactNode }) {
+function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: { title: string; seg?: string; meaning: React.ReactNode; ai?: React.ReactNode; idx?: number; csv?: CsvData; children: React.ReactNode; bigChildren?: React.ReactNode }) {
   const [ref, on] = useInView()
   const cardRef = useRef<HTMLDivElement | null>(null)
   const [big, setBig] = useState(false)
@@ -166,15 +166,15 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children }: { title: strin
               <button type="button" onClick={() => setBig(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
             </span>
           </div>
-          {/* 좌: 큰 차트+의미·인사이트 / 우: 정렬 가능한 데이터 표 */}
+          {/* 좌: 큰 차트(전체목록)+의미·인사이트 / 우: 정렬 가능한 데이터 표 */}
           <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto p-4 lg:flex-row lg:overflow-hidden">
-            <div className="flex min-w-0 flex-col lg:w-[56%] lg:overflow-y-auto lg:pr-1">
-              <div id={"bigchart-" + idx} className="flex h-[38vh] w-full items-center justify-center lg:h-[58vh]">{children}</div>
+            <div className="flex min-w-0 flex-col lg:w-[60%] lg:overflow-y-auto lg:pr-1">
+              <div id={"bigchart-" + idx} className="flex h-[46vh] w-full items-center justify-center lg:h-[66vh]">{bigChildren ?? children}</div>
               <p className="mt-2 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
               {ai && <div className="mt-2 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2.5"><p className="text-[11.5px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-teal-700 dark:text-teal-300">LG 인사이트</b> {ai}</p></div>}
             </div>
             {csv && (
-              <div className="flex min-h-0 flex-col lg:w-[44%] lg:border-l lg:border-gray-100 lg:dark:border-gray-800 lg:pl-4">
+              <div className="flex min-h-0 flex-col lg:w-[40%] lg:border-l lg:border-gray-100 lg:dark:border-gray-800 lg:pl-4">
                 <div className="mb-2 flex shrink-0 flex-wrap items-center gap-1.5">
                   <span className="mr-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">정렬</span>
                   <button type="button" onClick={() => setSortCol(-1)} className={"rounded-md px-2 py-1 text-[11px] font-semibold transition-all " + (sortCol < 0 ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-500/15")}>기본순</button>
@@ -584,15 +584,15 @@ export default function EnergyLabelView() {
   const seg = segs[segIdx] || segs[0]
   const segRows = useMemo(() => catRows.filter((r) => byType(r) && seg && inSeg(r, seg)), [catRows, seg, typ])
 
-  const { rank, lgR, lgRk, brandCount } = useMemo(() => {
+  const { rank, rankAll, lgR, lgRk, brandCount } = useMemo(() => {
     const by: Record<string, number[]> = {}; for (const r of segRows) (by[r.brand] = by[r.brand] || []).push(r.eff!)
     // 모델 2개 이상 브랜드 + LG(1개만 있어도) 전체 랭킹
     const all = Object.entries(by).map(([name, a]) => ({ name, v: avgOf(a)!, n: a.length })).filter((x) => x.n >= 2 || /^lg$/i.test(x.name)).sort((a, b) => b.v - a.v)
     const lgIdx = all.findIndex((x) => /^lg$/i.test(x.name))
-    // 상위 5개 + LG(순위 밖이면 6번째에 끼워넣어 항상 노출)
+    // 상위 5개 + LG(순위 밖이면 6번째에 끼워넣어 항상 노출) — 카드용. 확대 시엔 rankAll(전체) 사용.
     let disp = all.slice(0, 5)
     if (lgIdx >= 5) disp = [...all.slice(0, 5), all[lgIdx]]
-    return { rank: disp, lgR: lgIdx >= 0 ? all[lgIdx] : undefined, lgRk: lgIdx >= 0 ? lgIdx + 1 : 0, brandCount: all.length }
+    return { rank: disp, rankAll: all, lgR: lgIdx >= 0 ? all[lgIdx] : undefined, lgRk: lgIdx >= 0 ? lgIdx + 1 : 0, brandCount: all.length }
   }, [segRows])
   const gap = lgR && rank[0] ? ((rank[0].v - lgR.v) / lgR.v) * 100 : null
 
@@ -640,19 +640,21 @@ export default function EnergyLabelView() {
   // 냉매(에어컨) — extra는 energyLabels에서 stype만 파싱했으므로 rows의 원본 대신 model/eff 기반 분리 불가 → segment refrigerant via rows extra not available; use kwh TCO instead
 
   // TCO — 선택 세그먼트 월 전기요금(₱) 낮은 순 상위 5개 브랜드 + LG(순위 밖이면 추가)
-  const tco = useMemo(() => {
+  const { tco, tcoAll } = useMemo(() => {
     const by: Record<string, number[]> = {}
     for (const r of segRows) if (r.kwh != null && r.kwh > 0) (by[r.brand] = by[r.brand] || []).push(r.kwh)
     const all = Object.entries(by).map(([label, a]) => ({ label, kwh: avgOf(a)!, n: a.length })).filter((x) => x.n >= 2 || /^lg$/i.test(x.label)).sort((a, b) => a.kwh - b.kwh)
     const lgIdx = all.findIndex((x) => /^lg$/i.test(x.label))
     let disp = all.slice(0, 5)
     if (lgIdx >= 5) disp = [...all.slice(0, 5), all[lgIdx]]
-    return disp.map((x) => ({ label: x.label, cost: Math.round(x.kwh * rate), isLG: /^lg$/i.test(x.label) }))
+    const mk = (arr: typeof all) => arr.map((x) => ({ label: x.label, cost: Math.round(x.kwh * rate), isLG: /^lg$/i.test(x.label) }))
+    return { tco: mk(disp), tcoAll: mk(all) }
   }, [segRows, rate])
 
-  const grade = useMemo(() => {
+  const { grade, gradeAll } = useMemo(() => {
     const by: Record<string, EnergyRow[]> = {}; for (const r of segRows) (by[r.brand] = by[r.brand] || []).push(r)
-    return Object.entries(by).map(([name, a]) => { const st = a.filter((r) => r.star != null); const p = (f: (s: number) => boolean) => st.length ? st.filter((r) => f(r.star ?? 0)).length / st.length * 100 : 0; return { name, n: a.length, s5: p((s) => s >= 5), s4: p((s) => s === 4), s3: p((s) => s <= 3) } }).filter((x) => x.n >= 3).sort((a, b) => b.s5 - a.s5).slice(0, 6)
+    const all = Object.entries(by).map(([name, a]) => { const st = a.filter((r) => r.star != null); const p = (f: (s: number) => boolean) => st.length ? st.filter((r) => f(r.star ?? 0)).length / st.length * 100 : 0; return { name, n: a.length, s5: p((s) => s >= 5), s4: p((s) => s === 4), s3: p((s) => s <= 3) } }).filter((x) => x.n >= 3).sort((a, b) => b.s5 - a.s5)
+    return { grade: all.slice(0, 6), gradeAll: all }
   }, [segRows])
 
   // LG 강·약 세그먼트(분석 요약)
@@ -753,13 +755,13 @@ export default function EnergyLabelView() {
             </div>
             )}
             <div key={`seg-${typ}-${segIdx}`} className="grid items-stretch gap-4 sm:grid-cols-2">
-              <Sub idx={0} title="브랜드 효율 랭킹" seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} meaning={<>같은 세그먼트 브랜드 평균 {cur.metric} — <b className="text-gray-700 dark:text-gray-200">높을수록 고효율</b></>} ai={lgR ? <>LG는 이 세그먼트 <b className="font-semibold text-teal-700 dark:text-teal-300">{lgRk}위</b>, 리더 {rank[0]?.name} 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? <>낮아 <b className="font-semibold">최고효율 격차가 곧 차기 개발 타깃</b></> : <>높아 <b className="font-semibold text-emerald-600 dark:text-emerald-400">프리미엄 효율 소구 가능</b></>}. 상위 브랜드와의 {cur.metric} 갭을 스펙 로드맵에 반영.</> : <><b className="font-semibold">LG는 이 세그먼트 등록 모델 없음</b>(현지 미출시) — 시장 벤치마크로 진입 검토 시 목표 효율선 설정에 활용.</>} csv={{ head: ["브랜드", cur.metric, "모델수"], rows: rank.map((r) => [r.name, r.v.toFixed(2), r.n]) }}><HBar items={rank} hiName="LG" /></Sub>
+              <Sub idx={0} title="브랜드 효율 랭킹" seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} meaning={<>같은 세그먼트 브랜드 평균 {cur.metric} — <b className="text-gray-700 dark:text-gray-200">높을수록 고효율</b></>} ai={lgR ? <>LG는 이 세그먼트 <b className="font-semibold text-teal-700 dark:text-teal-300">{lgRk}위</b>, 리더 {rank[0]?.name} 대비 {gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? <>낮아 <b className="font-semibold">최고효율 격차가 곧 차기 개발 타깃</b></> : <>높아 <b className="font-semibold text-emerald-600 dark:text-emerald-400">프리미엄 효율 소구 가능</b></>}. 상위 브랜드와의 {cur.metric} 갭을 스펙 로드맵에 반영.</> : <><b className="font-semibold">LG는 이 세그먼트 등록 모델 없음</b>(현지 미출시) — 시장 벤치마크로 진입 검토 시 목표 효율선 설정에 활용.</>} csv={{ head: ["브랜드", cur.metric, "모델수"], rows: rankAll.map((r) => [r.name, r.v.toFixed(2), r.n]) }} bigChildren={<HBar items={rankAll} hiName="LG" />}><HBar items={rank} hiName="LG" /></Sub>
               <Sub idx={1} title="효율 ↔ 월전력 관계" seg={seg?.k} meaning={<>가로=효율, 세로=월전력 — <b className="text-gray-700 dark:text-gray-200">우상단</b>이 고효율·저전력</>} ai={<>같은 효율이라도 실제 월전력은 다를 수 있어 <b className="font-semibold">효율 스펙과 실사용 전력의 정합성</b>이 관건. LG 점이 우상단 음영(우수 구간)에 있으면 <b className="font-semibold text-emerald-600 dark:text-emerald-400">‘고효율=저전기료’ 메시지가 실측으로 뒷받침</b>되고, 아니면 라벨효율 대비 소비전력 개선이 과제.</>} csv={{ head: ["브랜드", cur.metric, "월전력(kWh)"], rows: scatterData.map((p) => [p.name, p.eff.toFixed(2), Math.round(p.kwh)]) }}><Scatter pts={scatterData} metric={cur.metric} /></Sub>
               <Sub idx={2} title="용량대별 LG vs 시장" meaning={<>용량대별 <b className="text-gray-700 dark:text-gray-200">LG vs 시장평균</b> {cur.metric} — 효율 포지션</>} ai={weak && strong ? <>LG는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">{strong.label}</b>에서 시장 대비 +{strong.diff.toFixed(2)} 강세인 반면 <b className="font-semibold text-rose-600 dark:text-rose-400">{weak.label}</b>는 {weak.diff.toFixed(2)} 열세 → <b className="font-semibold">열세 용량대의 효율 스펙 상향이 차기 라인업 1순위</b>. 강세 용량대는 프리미엄 가격 방어에 활용.</> : <>용량대별 LG 포지션 — 시장평균 상회 구간은 프리미엄, 하회 구간은 개선 타깃.</>} csv={{ head: ["용량대", "LG " + cur.metric, "시장 " + cur.metric], rows: bySegChart.map((g) => [g.label, g.lg != null ? g.lg.toFixed(2) : "—", g.mkt.toFixed(2)]) }}><GroupBars groups={bySegChart} /></Sub>
-              <Sub idx={3} title="월 전기요금 (TCO)" seg={seg?.k} meaning={<>월소비전력×전기료(Meralco) 추정 — <b className="text-gray-700 dark:text-gray-200">낮을수록 유리</b></>} ai={(() => { const lgT = tco.find((t) => t.isLG); const best = tco[0]; if (!lgT || !best) return <>효율이 높을수록 월 전기요금↓ — <b className="font-semibold text-emerald-600 dark:text-emerald-400">연간 절감액을 구매 설득 메시지로 전환</b>(고효율 프리미엄 정당화).</>; const diff = lgT.cost - best.cost; return <>LG 월 약 <b>₱{lgT.cost.toLocaleString()}</b>, 최저 {best.label}(₱{best.cost.toLocaleString()}) 대비 {diff > 0 ? <>₱{diff.toLocaleString()} 높아 <b className="font-semibold">효율 개선 시 절감 소구 여지</b></> : diff < 0 ? <>₱{(-diff).toLocaleString()} 낮아 <b className="font-semibold text-emerald-600 dark:text-emerald-400">연 ₱{((-diff) * 12).toLocaleString()} 절감 마케팅 가능</b></> : "동일"}. 필리핀 高전기료 구조상 TCO 절감은 강한 구매 동인.</> })()} csv={{ head: ["브랜드", "월 전기요금(₱)"], rows: tco.map((t) => [t.label, t.cost]) }}>
+              <Sub idx={3} title="월 전기요금 (TCO)" seg={seg?.k} meaning={<>월소비전력×전기료(Meralco) 추정 — <b className="text-gray-700 dark:text-gray-200">낮을수록 유리</b></>} ai={(() => { const lgT = tco.find((t) => t.isLG); const best = tco[0]; if (!lgT || !best) return <>효율이 높을수록 월 전기요금↓ — <b className="font-semibold text-emerald-600 dark:text-emerald-400">연간 절감액을 구매 설득 메시지로 전환</b>(고효율 프리미엄 정당화).</>; const diff = lgT.cost - best.cost; return <>LG 월 약 <b>₱{lgT.cost.toLocaleString()}</b>, 최저 {best.label}(₱{best.cost.toLocaleString()}) 대비 {diff > 0 ? <>₱{diff.toLocaleString()} 높아 <b className="font-semibold">효율 개선 시 절감 소구 여지</b></> : diff < 0 ? <>₱{(-diff).toLocaleString()} 낮아 <b className="font-semibold text-emerald-600 dark:text-emerald-400">연 ₱{((-diff) * 12).toLocaleString()} 절감 마케팅 가능</b></> : "동일"}. 필리핀 高전기료 구조상 TCO 절감은 강한 구매 동인.</> })()} csv={{ head: ["브랜드", "월 전기요금(₱)"], rows: tcoAll.map((t) => [t.label, t.cost]) }} bigChildren={<CostLollipop items={tcoAll} />}>
                 <CostLollipop items={tco} />
               </Sub>
-              <Sub idx={4} title="브랜드 등급 분포(별점)" seg={seg?.k} meaning={<>브랜드별 <b className="text-gray-700 dark:text-gray-200">5·4·3성↓ 구성</b> — 모델수와 함께 해석</>} ai={lgGrade ? <>LG 5성 <b className="font-semibold text-emerald-600 dark:text-emerald-400">{lgGrade.s5.toFixed(0)}%</b>(4성 {lgGrade.s4.toFixed(0)}%) — {lgGrade.s5 >= 60 ? <b className="font-semibold">프리미엄 효율 라인이 견고</b> : <b className="font-semibold text-amber-600 dark:text-amber-400">5성 비중 확대 여지</b>}. DOE 별점은 소비자·유통 진열의 직접 소구 포인트라 5성 라인 폭이 매대 경쟁력으로 직결.</> : <>고별점 비중이 높은 브랜드일수록 프리미엄 진열·인증 마케팅에 유리 — LG 미등록 세그먼트는 진입 시 5성 라인 우선 확보가 관건.</>} csv={{ head: ["브랜드", "5성%", "4성%", "3성↓%", "모델수"], rows: grade.map((g) => [g.name, g.s5.toFixed(0), g.s4.toFixed(0), g.s3.toFixed(0), g.n]) }}>
+              <Sub idx={4} title="브랜드 등급 분포(별점)" seg={seg?.k} meaning={<>브랜드별 <b className="text-gray-700 dark:text-gray-200">5·4·3성↓ 구성</b> — 모델수와 함께 해석</>} ai={lgGrade ? <>LG 5성 <b className="font-semibold text-emerald-600 dark:text-emerald-400">{lgGrade.s5.toFixed(0)}%</b>(4성 {lgGrade.s4.toFixed(0)}%) — {lgGrade.s5 >= 60 ? <b className="font-semibold">프리미엄 효율 라인이 견고</b> : <b className="font-semibold text-amber-600 dark:text-amber-400">5성 비중 확대 여지</b>}. DOE 별점은 소비자·유통 진열의 직접 소구 포인트라 5성 라인 폭이 매대 경쟁력으로 직결.</> : <>고별점 비중이 높은 브랜드일수록 프리미엄 진열·인증 마케팅에 유리 — LG 미등록 세그먼트는 진입 시 5성 라인 우선 확보가 관건.</>} csv={{ head: ["브랜드", "5성%", "4성%", "3성↓%", "모델수"], rows: gradeAll.map((g) => [g.name, g.s5.toFixed(0), g.s4.toFixed(0), g.s3.toFixed(0), g.n]) }} bigChildren={<GradeStack rows={gradeAll} />}>
                 <GradeStack rows={grade} />
               </Sub>
               {cat === "acu" && refrigMix.mkt.tot > 0 && (() => {
@@ -775,7 +777,7 @@ export default function EnergyLabelView() {
               <Sub idx={7} title="용량↔효율 지형" meaning={<>전 용량대 <b className="text-gray-700 dark:text-gray-200">용량 대비 효율</b> 지형 — <b className="text-teal-600 dark:text-teal-400">teal=LG</b></>} ai={<>보통 용량이 커질수록 효율이 낮아지는 추세가 있어, <b className="font-semibold">LG 점이 같은 용량대의 시장 무리보다 위쪽</b>이면 효율 우위. LG teal 점이 특정 용량대에 없으면 <b className="font-semibold text-amber-600 dark:text-amber-400">라인업 공백(진입 기회)</b>, 아래쪽에 몰리면 해당 용량 효율 개선이 과제.</>} csv={{ head: ["브랜드", cur.specUnit, cur.metric], rows: capData.map((p) => [p.name, p.spec, p.eff.toFixed(2)]) }}><CapScatter pts={capData} metric={cur.metric} specUnit={cur.specUnit} /></Sub>
               <Sub idx={8} title="브랜드 포지셔닝" seg={seg?.k} meaning={<>x=효율, y=5성%, <b className="text-gray-700 dark:text-gray-200">크기=모델수</b> — 3축 동시 비교</>} ai={<><b className="font-semibold text-emerald-600 dark:text-emerald-400">우상단·큰 버블</b>=고효율·프리미엄·풀라인업(이상적). LG 버블이 우상단이면 효율·등급·라인업 폭 3박자를 갖춘 것이고, 작으면 <b className="font-semibold">라인업 확장</b>, 좌측이면 <b className="font-semibold">효율 상향</b>, 하단이면 <b className="font-semibold">5성 모델 확대</b>가 각각의 과제.</>} csv={{ head: ["브랜드", cur.metric, "5성%", "모델수"], rows: bubbleData.map((p) => [p.name, p.eff.toFixed(2), p.s5.toFixed(0), p.n]) }}><Bubble items={bubbleData} metric={cur.metric} /></Sub>
               {CAT_KO[cat] && priceDisp.length > 0 && (
-              <Sub idx={9} title="브랜드별 가격대 (소매)" seg={CAT_KO[cat]} meaning={<>리테일러 실판매가 분포 — <b className="text-gray-700 dark:text-gray-200">박스=P25~P75, 선=중앙값</b></>} ai={lgPrice ? <>LG {CAT_KO[cat]} 중앙가 <b className="font-semibold text-teal-700 dark:text-teal-300">₱{Math.round(lgPrice.med).toLocaleString()}</b>(P25~P75 ₱{Math.round(lgPrice.p25).toLocaleString()}~₱{Math.round(lgPrice.p75).toLocaleString()}) — {priceDisp[0] && priceDisp[0].med > lgPrice.med * 1.1 ? <><b className="font-semibold">{priceDisp[0].brand}</b> 등 프리미엄 대비 중가 포지션</> : <>상위 가격대에 위치</>}. <b>가격대 폭이 넓을수록</b> 보급형~프리미엄 풀커버, 좁으면 특정 층 집중. 효율 우위 세그먼트에서 가격 프리미엄을 <b className="font-semibold text-emerald-600 dark:text-emerald-400">에너지 절감 TCO로 정당화</b>하는 전략이 유효.</> : <>브랜드별 소매 가격대 — LG 가격 포지션과 프리미엄/보급 커버리지 진단(효율 대비 가격 매력도).</>} csv={{ head: ["브랜드", "P10", "P25", "중앙값", "P75", "P90", "모델수"], rows: priceDisp.map((p) => [p.brand, Math.round(p.p10), Math.round(p.p25), Math.round(p.med), Math.round(p.p75), Math.round(p.p90), p.n]) }}><PriceBox items={priceDisp} /></Sub>
+              <Sub idx={9} title="브랜드별 가격대 (소매)" seg={CAT_KO[cat]} meaning={<>리테일러 실판매가 분포 — <b className="text-gray-700 dark:text-gray-200">박스=P25~P75, 선=중앙값</b></>} ai={lgPrice ? <>LG {CAT_KO[cat]} 중앙가 <b className="font-semibold text-teal-700 dark:text-teal-300">₱{Math.round(lgPrice.med).toLocaleString()}</b>(P25~P75 ₱{Math.round(lgPrice.p25).toLocaleString()}~₱{Math.round(lgPrice.p75).toLocaleString()}) — {priceDisp[0] && priceDisp[0].med > lgPrice.med * 1.1 ? <><b className="font-semibold">{priceDisp[0].brand}</b> 등 프리미엄 대비 중가 포지션</> : <>상위 가격대에 위치</>}. <b>가격대 폭이 넓을수록</b> 보급형~프리미엄 풀커버, 좁으면 특정 층 집중. 효율 우위 세그먼트에서 가격 프리미엄을 <b className="font-semibold text-emerald-600 dark:text-emerald-400">에너지 절감 TCO로 정당화</b>하는 전략이 유효.</> : <>브랜드별 소매 가격대 — LG 가격 포지션과 프리미엄/보급 커버리지 진단(효율 대비 가격 매력도).</>} csv={{ head: ["브랜드", "P10", "P25", "중앙값", "P75", "P90", "모델수"], rows: priceRanges.map((p) => [p.brand, Math.round(p.p10), Math.round(p.p25), Math.round(p.med), Math.round(p.p75), Math.round(p.p90), p.n]) }} bigChildren={<PriceBox items={priceRanges} />}><PriceBox items={priceDisp} /></Sub>
               )}
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
