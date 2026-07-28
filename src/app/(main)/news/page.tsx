@@ -116,6 +116,17 @@ const PRODUCTS: { group: string; items: { key: string; chips: string[] }[] }[] =
 ]
 
 
+/** 제품 키워드 검색 — 제품군을 유의어로 확장해 본문에서 OR 매칭.
+ *  뉴스 원문은 제품 필드가 비어있는 경우가 많아, 제목·요약·시사점 텍스트를 유의어로 훑는다. */
+const PROD_KW: { key: string; label: string; syn: string[] }[] = [
+  { key: "ac", label: "에어컨", syn: ["에어컨", "RAC", "냉방", "인버터", "aircon", "air con"] },
+  { key: "ref", label: "냉장고", syn: ["냉장고", "김치냉장고", "냉동", "refriger"] },
+  { key: "wash", label: "세탁·건조", syn: ["세탁기", "세탁", "건조기", "워시타워", "washer", "dryer"] },
+  { key: "tv", label: "TV·AV", syn: ["TV", "티비", "올레드", "OLED", "QLED", "사운드바", "디스플레이"] },
+  { key: "air", label: "에어케어", syn: ["공기청정", "에어케어", "정수기", "제습", "가습", "청정기"] },
+  { key: "b2b", label: "공조·B2B", syn: ["칠러", "VRF", "시스템에어컨", "데이터센터", "공조", "히트펌프", "상업용"] },
+]
+
 const PAGE = 20
 
 function ageDays(s: string) {
@@ -455,6 +466,7 @@ export default function Page() {
   const [prod, setProd] = React.useState("에어컨·RAC")
   const [sort, setSort] = React.useState<"new" | "impact">("new")
   const [q, setQ] = React.useState("")
+  const [prodKw, setProdKw] = React.useState<string | null>(null)
   const [focused, setFocused] = React.useState(false)
   const [openDup, setOpenDup] = React.useState<Set<string>>(new Set())
   const [newsOpen, setNewsOpen] = React.useState(false)
@@ -503,7 +515,7 @@ export default function Page() {
 
   React.useEffect(() => {
     setPage(1)
-  }, [menu, sort, q, mode, prod])
+  }, [menu, sort, q, mode, prod, prodKw])
 
   /** 세 소스를 표준형으로 */
   const newsDocs: Doc[] = React.useMemo(
@@ -603,6 +615,15 @@ export default function Page() {
           : all.filter((x) => x.topic === menu)
     const k = q.trim().toLowerCase()
     if (k) d = d.filter((x) => (x.title + " " + x.summary + " " + x.so + " " + x.source).toLowerCase().includes(k))
+    // 제품 키워드 — 유의어 OR 매칭(제목·요약·시사점)
+    const pk = PROD_KW.find((p) => p.key === prodKw)
+    if (pk) {
+      const syn = pk.syn.map((s) => s.toLowerCase())
+      d = d.filter((x) => {
+        const hay = (x.title + " " + x.summary + " " + x.so).toLowerCase()
+        return syn.some((s) => hay.includes(s))
+      })
+    }
     if (sort === "impact") {
       const score = (x: Doc) => {
         if (x.kind === "reg") {
@@ -620,7 +641,7 @@ export default function Page() {
       d = [...d].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
     }
     return d
-  }, [all, menu, q, sort, chips, mode, prod])
+  }, [all, menu, q, sort, chips, mode, prod, prodKw])
 
   /** 같은 사건은 한 줄로 접는다 — 매체가 셋이면 세 줄이 아니라 "관련 2건" */
   const groups = React.useMemo(() => groupDocs(shown), [shown])
@@ -722,9 +743,41 @@ export default function Page() {
         <div className="flex min-w-0 flex-col gap-4">
         <InsightBanner banner={banner} open={newsOpen} onToggle={() => setNewsOpen((v) => !v)} />
         <header className="relative flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-            <div className="flex shrink-0 items-center gap-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               {/* 정렬 */}
               <Segmented value={sort} onChange={(k) => setSort(k as "new" | "impact")} options={[{ k: "new", label: "최신순" }, { k: "impact", label: "영향도순" }]} size="sm" />
+              {/* 제품 키워드 검색 — 제품군 유의어 OR 매칭 */}
+              <div className="flex items-center gap-1">
+                <span className="mr-0.5 hidden text-[10.5px] font-semibold text-gray-400 dark:text-gray-500 sm:inline">제품</span>
+                {PROD_KW.map((p) => {
+                  const on = prodKw === p.key
+                  return (
+                    <button
+                      key={p.key}
+                      type="button"
+                      onClick={() => setProdKw(on ? null : p.key)}
+                      className={
+                        "rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " +
+                        (on
+                          ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
+                          : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")
+                      }
+                    >
+                      {p.label}
+                    </button>
+                  )
+                })}
+                {prodKw && (
+                  <button
+                    type="button"
+                    onClick={() => setProdKw(null)}
+                    aria-label="제품 필터 해제"
+                    className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400"
+                  >
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
