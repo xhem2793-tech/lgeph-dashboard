@@ -53,13 +53,10 @@ export async function oilDaily(n = 30) {
 
 export type EnergyRow = { category: string; brand: string; model: string; eff: number | null; metric: string; star: number | null; kwh: number | null; spec: number | null; stype: string; refrigerant: string; gwp: number | null }
 export async function energyLabels(): Promise<EnergyRow[]> {
-  // PostgREST 행 상한(1000) 대응 — offset 페이지네이션으로 전량 수집
-  const all: any[] = []
-  for (let off = 0; off < 8000; off += 1000) {
-    const rows = await sb(`energy_labels?select=category,brand,model_code,product_name,efficiency_val,efficiency_metric,star_rating,monthly_kwh,extra&order=id&limit=1000&offset=${off}`)
-    all.push(...rows)
-    if (rows.length < 1000) break
-  }
+  // PostgREST 행 상한(1000) 대응 — 오프셋 페이지를 **병렬**로 가져와 로딩 지연 최소화(기존 순차 → 병렬).
+  const sel = "energy_labels?select=category,brand,model_code,product_name,efficiency_val,efficiency_metric,star_rating,monthly_kwh,extra&order=id&limit=1000"
+  const pages = await Promise.all(Array.from({ length: 8 }, (_, i) => sb(`${sel}&offset=${i * 1000}`).catch(() => [])))
+  const all: any[] = pages.flat()
   return all.map((r) => {
     const ex = (r.extra && typeof r.extra === "object") ? r.extra : {}
     // 스펙(세그먼트 기준): 에어컨=냉방kW, 냉장고=용량L, TV=화면inch

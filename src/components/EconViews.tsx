@@ -399,7 +399,7 @@ export function ApplianceView() {
         {PRODS.map((p) => <button key={p} type="button" onClick={() => setProd(p)} className={"rounded-lg px-2.5 py-1 text-[12px] font-semibold transition-all " + (prod === p ? "bg-teal-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-teal-500/15")}>{p}</button>)}
       </div>
       {show(["전 제품"]) && <OwnershipCard d={d} />}
-      {show(["전 제품", "냉장고", "TV·AV"]) && <RegionOwnCard />}
+      {false && <RegionOwnCard />}{/* 지역별 보유율 — 지도(RegionMap)에 반영 예정, 잠시 숨김 */}
       {show(["전 제품"]) && ppi.series.length > 0 && (
         <ChartCard seg="전 제품·CE·B2B" title="가전 생산자물가 PPI" unit="전년비 %" labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="가전 PPI" b /><Lg c={C.rose} t="전기기기" /><Lg c={C.blue} t="전자" /><Lg c={C.brown} t="제조업 전체" /></>}
