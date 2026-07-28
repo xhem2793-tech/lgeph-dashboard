@@ -551,7 +551,15 @@ export default function Page() {
     [posts, pick],
   )
 
-  const all = React.useMemo(() => [...newsDocs, ...regDocs, ...insightDocs], [newsDocs, regDocs, insightDocs])
+  // 고정 브리핑 — 규제·정책 카테고리에 노출, 클릭 시 PDF 원문(새 탭)
+  const SONA_DOC: Doc = {
+    id: "sona2026", kind: "insight", topic: "규제·정책", product: "전 제품 영향",
+    title: "2026 국정연설(SONA) 정책 종합 브리핑",
+    summary: "마르코스 제5차 SONA — 전기요금 인하(시스템로스·VAT 제거)·소득세 감면·Build Better More 인프라 등 정책 요지와 가전 사업 함의 요약.",
+    so: "전력비·구매력 부양으로 가전 수요 우호, 최대 변수는 EPIRA 개정 입법.",
+    source: "경영기획", date: "2026-07-28", url: "/SONA2026_Brief_1p.pdf", image: null, chipKeys: [],
+  }
+  const all = React.useMemo(() => [SONA_DOC, ...newsDocs, ...regDocs, ...insightDocs], [newsDocs, regDocs, insightDocs]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const counts = React.useMemo(() => {
     const m: Record<string, number> = { 전체: all.length }
@@ -797,11 +805,13 @@ export default function Page() {
                       role="button"
                       tabIndex={0}
                       onClick={() => {
-                        setModal(d)
+                        if (d.url && /\.pdf($|\?)/i.test(d.url)) window.open(d.url, "_blank", "noopener")
+                        else setModal(d)
                       }}
                       onKeyDown={(ev) => {
                         if (ev.key === "Enter") {
-                          setModal(d)
+                          if (d.url && /\.pdf($|\?)/i.test(d.url)) window.open(d.url, "_blank", "noopener")
+                          else setModal(d)
                         }
                       }}
                       style={{
