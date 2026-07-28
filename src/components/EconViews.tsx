@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useState } from "react"
-import { macroMonthly, upcomingAgenda, seaCompare, marketEstimates } from "@/lib/supabase"
+import { macroMonthly, upcomingAgenda, seaCompare, marketEstimates, regionMetric } from "@/lib/supabase"
 import type { AgendaItem, CalEvent } from "@/lib/supabase"
 import EventModal from "@/components/EventModal"
 import type { MktEst } from "@/lib/supabase"
@@ -321,6 +321,53 @@ function OwnershipCard({ d }: { d: Mon }) {
     </div>
   )
 }
+// 지역 짧은 라벨 — "Region IV-A (...)"→RIV-A, "National Capital Region (NCR)"→NCR 등
+const shortRegion = (g: string) => {
+  const rm = g.match(/^Region ([\dIVX]+-?[AB]?)/); if (rm) return "R" + rm[1]
+  const pm = g.match(/\(([^)]+)\)/); if (pm) return pm[1].replace(/\s*Region$/, "")
+  return g.replace(/\s*Region$/, "").slice(0, 10)
+}
+// 지역별 가전 보유율(침투 격차) — 냉장고·TV 17개 지역. 전국 하회 = 침투 여력(기회).
+function RegionOwnCard() {
+  const [ap, setAp] = useState<"ref" | "tv">("ref")
+  const [data, setData] = useState<Record<string, Record<string, number>>>({})
+  useEffect(() => { regionMetric(["appl_own_ref_region", "appl_own_tv_region"]).then(setData).catch(() => {}) }, [])
+  const key = ap === "ref" ? "appl_own_ref_region" : "appl_own_tv_region"
+  const nat = ap === "ref" ? 46.2 : 75.7
+  const rows = Object.entries(data[key] || {}).map(([g, v]) => ({ g, v, s: shortRegion(g) })).sort((a, b) => a.v - b.v)
+  if (!rows.length) return null
+  const max = Math.max(...rows.map((r) => r.v), nat, 1)
+  const low = rows[0], high = rows[rows.length - 1]
+  return (
+    <div className="col-span-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+      <div className="flex flex-wrap items-center gap-1.5">
+        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 보유율 (침투 격차)</h3>
+        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">CE</span>
+        <span className="ml-1 inline-flex overflow-hidden rounded-md border border-gray-200 dark:border-gray-700 text-[11px] font-semibold">
+          {([["ref", "냉장고"], ["tv", "TV"]] as const).map(([k, lbl]) => <button key={k} type="button" onClick={() => setAp(k)} className={"px-2.5 py-1 transition-colors " + (ap === k ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/15")}>{lbl}</button>)}
+        </span>
+        <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">가구 % · 2022 · 전국 {nat}%</span>
+      </div>
+      <div className="mt-3 grid gap-x-5 gap-y-1.5 sm:grid-cols-2">
+        {rows.map((r, i) => { const below = r.v < nat
+          return (
+            <div key={r.g} className="flex items-center gap-2" title={`${r.g} · ${r.v}%`}>
+              <span className="w-12 shrink-0 truncate text-right text-[10.5px] font-medium text-gray-500 dark:text-gray-400">{r.s}</span>
+              <span className="relative h-4 min-w-0 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
+                <span className="block h-full rounded" style={{ width: (r.v / max * 100) + "%", background: below ? C.amber : C.ind, animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.05 + i * 0.02) + "s", transformOrigin: "left center" }} />
+                <span className="absolute inset-y-0" style={{ left: (nat / max * 100) + "%", width: "1px", background: "rgba(120,120,140,.55)" }} />
+              </span>
+              <span className={"w-8 shrink-0 text-right text-[10.5px] font-semibold tabular-nums " + (below ? "text-amber-600 dark:text-amber-400" : "text-gray-700 dark:text-gray-200")}>{r.v}%</span>
+            </div>
+          )
+        })}
+      </div>
+      <p className="mt-3 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 지역별 가구 보유율 — <b className="text-amber-600 dark:text-amber-400">전국({nat}%) 하회(주황) = 침투 여력</b>, 세로선=전국 평균</p>
+      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> {ap === "ref" ? "냉장고" : "TV"} 최저 <b className="font-semibold text-amber-600 dark:text-amber-400">{low.s}({low.v}%)</b> vs 최고 {high.s}({high.v}%) — <b className="font-semibold text-emerald-600 dark:text-emerald-400">저침투 지역(민다나오·MIMAROPA·비콜)은 보급형 볼륨존·유통망 확대 기회</b>, 고침투 지역(NCR·루손)은 교체·프리미엄 중심. 전기보급·소득과 함께 저침투 지역이 다음 성장축.</p></div>
+      <p className="mt-2.5 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> PSA 2022 가구 가전 보유(지역별) · 전국=2020 인구주택총조사</p>
+    </div>
+  )
+}
 const PRODS = ["전체", "냉장고", "세탁·건조", "에어컨(RAC)", "TV·AV", "공조(B2B)", "모니터·사이니지"]
 export function ApplianceView() {
   const [win, setWin] = useState("2Y")
@@ -352,6 +399,7 @@ export function ApplianceView() {
         {PRODS.map((p) => <button key={p} type="button" onClick={() => setProd(p)} className={"rounded-lg px-2.5 py-1 text-[12px] font-semibold transition-all " + (prod === p ? "bg-teal-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-teal-500/15")}>{p}</button>)}
       </div>
       {show(["전 제품"]) && <OwnershipCard d={d} />}
+      {show(["전 제품", "냉장고", "TV·AV"]) && <RegionOwnCard />}
       {show(["전 제품"]) && ppi.series.length > 0 && (
         <ChartCard seg="전 제품·CE·B2B" title="가전 생산자물가 PPI" unit="전년비 %" labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t="가전 PPI" b /><Lg c={C.rose} t="전기기기" /><Lg c={C.blue} t="전자" /><Lg c={C.brown} t="제조업 전체" /></>}
@@ -959,7 +1007,7 @@ export function LaborView() {
 // ══════════════════════════════════════════════════════════════════════
 // 기업·소비 심리 — CCI·BCI·내구재 구매의향
 // ══════════════════════════════════════════════════════════════════════
-const SENTIMENT_KEYS = ["economic_sentiment_composite", "consumer_confidence_index", "consumer_confidence_next12m", "business_confidence_index", "business_confidence_next12m", "durables_buying_intention", "bes_overall_ci", "bes_ci_next_q", "bes_ci_next12m", "bes_ci_manufacturing", "bes_ci_retail", "bes_ci_services", "bes_credit_access", "bes_financial_condition", "bes_capacity_util", "bes_employment_outlook", "bes_expansion_plans"]
+const SENTIMENT_KEYS = ["economic_sentiment_composite", "consumer_confidence_index", "consumer_confidence_next12m", "business_confidence_index", "business_confidence_next12m", "durables_buying_intention", "bes_overall_ci", "bes_ci_next_q", "bes_ci_next12m", "bes_ci_manufacturing", "bes_ci_retail", "bes_ci_services", "bes_credit_access", "bes_financial_condition", "bes_capacity_util", "bes_employment_outlook", "bes_expansion_plans", "bes_con_competition", "bes_con_demand", "bes_con_interest", "bes_con_financial", "ces_durables_buy", "ces_durables_intent"]
 // BSP BES 최신 분기(2025Q4) 사업 제약요인(%응답) — 리포트 정성 콘텐츠(확산지수 아님, 복수응답)
 const BES_CONSTRAINTS: [string, number][] = [["경쟁 심화", 63.7], ["수요 부족", 34.7], ["기타", 27.6], ["고금리", 21.7], ["불명확 경제법령", 16.3], ["재무 문제", 14.4], ["노동 문제", 11.2], ["신용 접근난", 7.7], ["설비 부족", 7.2], ["원자재 부족", 3.9]]
 // BES 사업 제약요인 카드 — 6개 기본 + 더보기, 접이식 LG 인사이트(다른 차트와 높이 일치)
@@ -1012,6 +1060,8 @@ export function SentimentView() {
   const besOps = build(d, n, [{ key: "bes_credit_access", name: "신용접근", color: C.ind, w: 2 }, { key: "bes_financial_condition", name: "재무여건", color: C.rose }])
   const besJob = build(d, n, [{ key: "bes_employment_outlook", name: "고용전망(차분기)", color: C.ind, w: 2 }, { key: "bes_expansion_plans", name: "설비확장 계획", color: C.emer }])
   const besCap = build(d, n, [{ key: "bes_capacity_util", name: "평균 가동률", color: C.amber, w: 2 }])
+  const besCon = build(d, n, [{ key: "bes_con_competition", name: "경쟁 심화", color: C.rose, w: 2.4 }, { key: "bes_con_demand", name: "수요 부족", color: C.ind, w: 2 }, { key: "bes_con_interest", name: "고금리", color: C.amber }, { key: "bes_con_financial", name: "재무 문제", color: C.emer }])
+  const cesDur = build(d, n, [{ key: "ces_durables_buy", name: "내구재 구매 가구%", color: C.emer, w: 2 }])
   const empty = !cci.series.length && !bci.series.length && !dur.series.length && !esi.series.length && !besOverall.series.length
   return (
     <Shell title="기업·소비 심리" sub="소비자심리 CCI·기업심리 BCI·BES 기업경기 — 수요 선행" win={win} setWin={setWin} loaded={loaded} empty={empty} d={d} accent="violet"
@@ -1087,6 +1137,20 @@ export function SentimentView() {
           meaning={<>설비 가동 수준 — <b className="text-gray-700 dark:text-gray-200">공급 여력·과열/둔화</b></>}
           ai={<>가동률 <b className="font-semibold">70%대</b>는 여유 있는 공급 국면 = 수요 확대 시 즉응 가능. <b>트렌드</b>: 코로나 저점 후 71% 안팎 안정 — 급격한 공급 병목 신호는 없음.</>}
           tone="amber" src={src("BSP BES 산업·건설 평균 가동률 · 분기")} />
+      )}
+      {besCon.series.length > 0 && (
+        <ChartCard seg="CE·B2B" title="사업 제약요인 추이" unit="%응답 · 분기(복수)" labels={besCon.labels} series={besCon.series} decimals={0} seriesUnit="%"
+          legend={<><Lg c={C.rose} t="경쟁 심화" b /><Lg c={C.ind} t="수요 부족" /><Lg c={C.amber} t="고금리" /><Lg c={C.emer} t="재무 문제" /></>}
+          meaning={<>기업 애로요인의 시간 변화 — <b className="text-gray-700 dark:text-gray-200">경쟁·수요·금리 압력의 추세</b></>}
+          ai={<><b className="font-semibold text-rose-600 dark:text-rose-400">경쟁 심화가 60%대로 지속 상승</b>(가전도 가격·프로모전 격화), 수요 부족 30%대 고착. <b>트렌드</b>: 고금리 애로는 2023~24 급등 후 2025 완화(23→22%)로 금리 부담 정점 통과 시사, 재무 문제는 15%로 안정. 경쟁·수요가 구조적 최대 리스크.</>}
+          tone="rose" src={src("BSP BES 사업 제약요인 · 분기 2001~")} />
+      )}
+      {cesDur.series.length > 0 && (
+        <ChartCard seg="CE" title="소비자 내구재 구매 (CES)" unit="% 가구 · 분기" labels={cesDur.labels} series={cesDur.series} decimals={1} seriesUnit="%"
+          legend={<Lg c={C.emer} t="내구재 구매 가구비중" b />}
+          meaning={<>내구재(가전 등)를 실제 구매한 가구 비중 — <b className="text-gray-700 dark:text-gray-200">가전 실수요의 직접 지표</b></>}
+          ai={<>BSP <b className="font-semibold">소비자기대조사(CES)</b>의 내구재 구매 가구비중 — 기존 구매‘의향’ 지수(2016 종료)를 대체하는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">2026Q2까지 최신 실구매 지표</b>. <b>트렌드</b>: 팬데믹 전 9%대→최근 <b className="font-semibold text-rose-600 dark:text-rose-400">4%대로 위축</b>(고물가·금리로 대형가전 구매 지연), 구매의향 확산지수도 -70대 비관 — 심리 반등 시점이 가전 실판매 회복 신호.</>}
+          tone="emerald" src={src("BSP CES 내구재 구매 가구비중(Tab7) · 분기")} />
       )}
       <ConstraintsCard />
         </> },
