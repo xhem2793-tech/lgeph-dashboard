@@ -1017,6 +1017,29 @@ export async function typhoonAlerts(limit = 8): Promise<Typhoon[]> {
   return out
 }
 
+// 수입 단가 — import_prices(UN Comtrade). World(partner 0) 월별 단가 시계열 + 최신월 원산지 점유
+export type ImpSeries = Record<string, { label: string; dates: string[]; values: number[] }>
+export async function importPriceSeries(): Promise<ImpSeries> {
+  const rows = await sb("import_prices?select=hs,hs_label,period_date,unit_price_kg&partner_code=eq.0&order=period_date.asc&limit=1000")
+  const out: ImpSeries = {}
+  for (const r of (rows ?? []) as any[]) {
+    const g = (out[r.hs] = out[r.hs] || { label: r.hs_label, dates: [], values: [] })
+    g.dates.push(r.period_date); g.values.push(Number(r.unit_price_kg))
+  }
+  return out
+}
+export type ImpOrigin = { partner: string; cif: number; unit: number; share: number }
+/** 최신월 원산지 점유(가전 HS별) — partner_code!=0 */
+export async function importOrigins(hs: string): Promise<{ date: string; origins: ImpOrigin[] } | null> {
+  const last = await sb(`import_prices?select=period_date&hs=eq.${hs}&partner_code=eq.0&order=period_date.desc&limit=1`)
+  const date = (last ?? [])[0]?.period_date
+  if (!date) return null
+  const rows = await sb(`import_prices?select=partner_name,cif_value,unit_price_kg&hs=eq.${hs}&period_date=eq.${date}&partner_code=neq.0&order=cif_value.desc`)
+  const list = (rows ?? []) as any[]
+  const tot = list.reduce((s, r) => s + Number(r.cif_value), 0) || 1
+  return { date, origins: list.map((r) => ({ partner: r.partner_name, cif: Number(r.cif_value), unit: Number(r.unit_price_kg), share: (Number(r.cif_value) / tot) * 100 })) }
+}
+
 export type Quake = { at: string; mag: number; place: string; lat: number; lon: number; depth: number | null }
 export async function earthquakesRecent(days = 365, minMag = 4): Promise<Quake[]> {
   const from = new Date(Date.now() - days * 86400000).toISOString()
