@@ -10,7 +10,9 @@
     "generate": "node src/data/generateData.js",
     "publish-report": "node scripts/publish-report.mjs",
     "update-banners": "node scripts/update-banners.mjs",
-    "weekly-insight": "node scripts/weekly-insight.mjs"
+    "weekly-insight": "node scripts/weekly-insight.mjs",
+    "ingest-bsp-rppi": "node scripts/ingest-bsp-rppi.mjs",
+    "ingest-dpwh-infra": "node scripts/ingest-dpwh-infra.mjs"
   },
   "dependencies": {
     "@internationalized/date": "^3.10.0",

@@ -38,6 +38,26 @@ npm run weekly-insight -- --deploy  # + git commit/push(자동 배포)
 - 스케줄: `.github/workflows/weekly-insight.yml` — 매주 월요일 09:00(Manila) 자동 실행,
   대시보드에 반영(커밋/푸시)하되 이메일은 보내지 않음(발송은 시크릿+`--send` 로 opt-in).
 
+## 데이터 수집 스크립트 (신규 지표)
+
+무료 소스에서 지표를 수집해 Supabase(`macro_indicators` 등)에 적재합니다. `SB_PAT`(Management API PAT)
+env 또는 `scripts/.sbpat` 필요(둘 다 gitignore).
+
+| 스크립트 | 소스 | 적재 | 비고 |
+|---|---|---|---|
+| `ingest-bsp-rppi.mjs` | BSP RPPI.xlsx(공개 Excel) | `rppi_index/_condo/_house/_yoy` | 부동산 #20 · `--dry` 파싱만 · 이 환경서 동작 확인 |
+| `ingest-dpwh-infra.mjs` | DPWH Transparency API | `infra_projects_regional`(지역×연도×카테고리) | 인프라 #17 · **Cloudflare 차단** → 브라우저망에서 실행 · `--max=N` |
+
+```bash
+node scripts/ingest-bsp-rppi.mjs           # BSP 주택가격지수 갱신(2026Q1까지)
+node scripts/ingest-dpwh-infra.mjs --dry   # DPWH 집계 미리보기(적재 없음)
+node scripts/ingest-dpwh-infra.mjs         # 지역별 인프라 예산 집계 적재
+```
+
+- 참고 소스(무료 keyless, 이미 반영): USGS FDSN(지진)·Open-Meteo(CDD)·UN Comtrade(수입단가).
+- DPWH 는 헤드리스/데이터센터 IP 에서 403(Cloudflare) — 일반 브라우저망에서 실행하세요.
+- KOTRA(data.go.kr) 는 사용자가 무료 서비스키 발급 시 연동 예정.
+
 ## Resend 키
 
 `RESEND_API_KEY` 환경변수 또는 `scripts/.resendkey`(gitignore)에서 읽습니다.
