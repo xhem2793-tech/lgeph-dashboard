@@ -193,6 +193,10 @@ const src = (s: string) => (<><b className="font-semibold text-gray-500 dark:tex
 // 가전 선행지표 — PPI·수입·가전물가·전기료
 // ══════════════════════════════════════════════════════════════════════
 const APPLIANCE_KEYS = ["PPI_domestic_appliances", "PPI_electrical", "PPI_electronics", "PPI_manufacturing", "imports_home_appliances", "imports_consumer_electronics", "imports_telecom", "INF_household_appliances", "INF_aircon", "INF_all_items", "meralco_residential_rate", "appl_own_ref", "appl_own_wash", "appl_own_tv", "appl_own_cool", "appl_own_mobile", "cdd_monthly", "temp_monthly", "energy_households", "appliance_market_usd", "appliance_market_cagr", "ecommerce_market_usd", "ecommerce_weekly_pct", "elec_consumption_pc", "elec_access_pct"]
+// UN Comtrade 필리핀 가전 수입(HS 8415 에어컨·8418 냉장고·8450 세탁기·8528 TV/모니터) 2015~2024 · 백만$·원산지%(4품목 합산)
+const HS_YRS = ["'15", "'16", "'17", "'18", "'19", "'20", "'21", "'22", "'23", "'24"]
+const HS_TOTALS: Record<string, number[]> = { ac: [205, 329, 371, 398, 466, 358, 376, 458, 531, 666], ref: [245, 331, 358, 387, 426, 380, 428, 452, 452, 501], tv: [176, 338, 399, 471, 466, 382, 460, 418, 373, 383], wash: [43, 78, 102, 128, 120, 95, 128, 149, 159, 178] }
+const HS_ORIGIN: Record<string, number[]> = { cn: [28.9, 27, 29.7, 35.1, 37.8, 41.8, 44.3, 43.2, 44.1, 48.7], th: [19.4, 16.3, 16.4, 15.6, 16.4, 16.1, 16.4, 17.5, 15.5, 14], vn: [4.8, 13, 12.8, 10.2, 9.6, 10.8, 12, 12.1, 12.8, 11.4], kr: [3.9, 6.7, 5.2, 4.4, 4.1, 2.9, 2.5, 2.6, 3, 3.1] }
 // 가전 시장규모·이커머스 — 다중기관 추정 범위 + 근거(백데이터). 단일 숫자 아닌 삼각검증.
 function MarketCard() {
   const [appl, setAppl] = useState<MktEst[]>([])
@@ -388,6 +392,20 @@ export function ApplianceView() {
           meaning={<>국민 1인당 연간 전력사용량 — <b className="text-gray-700 dark:text-gray-200">전력화·가전 보유 심화 프록시</b></>}
           ai={<>필리핀 1인당 전력소비는 <b className="font-semibold text-amber-600 dark:text-amber-400">900kWh대로 태국(약 3,000)·말련(약 5,000)의 1/3 이하</b> = <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 보급·대형화 성장여력이 큰 저변</b>. <b>트렌드</b>: 소득 증가와 함께 완만한 우상향 — 냉장고·에어컨 등 상시가동 가전 확산의 구조적 순풍, 다만 高전기료가 고효율 수요를 동시에 자극.</>}
           tone="emerald" src={src("World Bank WDI 1인당 전력소비(EG.USE.ELEC.KH.PC) · 연간")} />
+      )}
+      {show(["전 제품", "냉장고", "세탁기", "에어컨(RAC)", "TV"]) && (
+        <ChartCard seg="전 제품·CE" title="품목별 가전 수입 규모 (HS)" unit="백만$ · 연간" labels={HS_YRS} series={[{ name: "에어컨", color: C.rose, w: 2, data: HS_TOTALS.ac }, { name: "냉장고", color: C.ind, w: 2, data: HS_TOTALS.ref }, { name: "TV·모니터", color: C.blue, data: HS_TOTALS.tv }, { name: "세탁기", color: C.emer, data: HS_TOTALS.wash }]} decimals={0} seriesUnit="백만$"
+          legend={<><Lg c={C.rose} t="에어컨" b /><Lg c={C.ind} t="냉장고" b /><Lg c={C.blue} t="TV·모니터" /><Lg c={C.emer} t="세탁기" /></>}
+          meaning={<>HS코드별 완제품 수입액 — <b className="text-gray-700 dark:text-gray-200">품목별 공급 규모·성장</b></>}
+          ai={<>에어컨 수입이 <b className="font-semibold text-emerald-600 dark:text-emerald-400">2015 $205M→2024 $666M(3.2배)</b>로 최대·최고성장(냉방수요·기후) → 에어컨 라인 우선순위. 냉장고·세탁기도 견조, TV는 최근 정체. <b>트렌드</b>: 전 품목 우상향, 코로나(2020) 일시 조정 후 회복.</>}
+          tone="amber" src={src("UN Comtrade 필리핀 수입액 HS 8415·8418·8450·8528 · 연간")} />
+      )}
+      {show(["전 제품"]) && (
+        <ChartCard seg="전 제품·CE·B2B" title="가전 수입 원산지 점유율" unit="% · 연간(4품목 합산)" labels={HS_YRS} series={[{ name: "중국", color: C.rose, w: 2.4, data: HS_ORIGIN.cn }, { name: "태국", color: C.amber, data: HS_ORIGIN.th }, { name: "베트남", color: C.emer, data: HS_ORIGIN.vn }, { name: "한국", color: C.ind, w: 2, data: HS_ORIGIN.kr }]} decimals={1} seriesUnit="%"
+          legend={<><Lg c={C.rose} t="중국" b /><Lg c={C.amber} t="태국" /><Lg c={C.emer} t="베트남" /><Lg c={C.ind} t="한국" b /></>}
+          meaning={<>가전 수입 원산지 구성 — <b className="text-gray-700 dark:text-gray-200">경쟁 원산지·조달 구조</b></>}
+          ai={<>중국이 <b className="font-semibold text-rose-600 dark:text-rose-400">2015 29%→2024 49%</b>로 절반 육박, <b className="font-semibold text-rose-600 dark:text-rose-400">한국은 3%대 정체</b> = 필리핀 완제품 시장을 중국계가 장악. LG는 <b className="font-semibold">현지·역내(태국·베트남) 생산·조달로 원가·물류 대응</b>하거나 고효율·프리미엄 차별화가 관건. 베트남 부상(TV·세탁기)도 주시.</>}
+          tone="rose" src={src("UN Comtrade 원산지별 수입액(4품목 합산) · 연간")} />
       )}
     </Shell>
   )
