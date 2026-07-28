@@ -9,6 +9,7 @@ import EnergyLabelView from "@/components/EnergyLabelView"
 import OnlineMarketView from "@/components/OnlineMarketView"
 import WeatherView from "@/components/WeatherView"
 import ImportPriceView from "@/components/ImportPriceView"
+import HousingView from "@/components/HousingView"
 import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView, PricesView } from "@/components/EconViews"
 import { useLang } from "@/lib/i18n"
 
@@ -22,6 +23,7 @@ const NAV: NavItem[] = [
   { id: "growth", ko: "국민계정·성장", sub: "GDP·투자·건설·산업생산·가동률", count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
   { id: "labor", ko: "고용·임금·소득", sub: "실업률·최저임금·OFW 송금", count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
   { id: "sentiment", ko: "기업·소비 심리", sub: "소비자심리 CCI·기업심리 BCI·BES 기업경기", count: "11", group: "실물경제", subs: ["소비자심리 CCI", "기업심리 BCI", "내구재 구매의향", "BES 종합·업종·고용", "사업 제약요인"] },
+  { id: "housing", ko: "부동산·주택", sub: "주택가격지수 RPPI·건축허가·공실(가전 상관 최고)", count: "4", group: "실물경제", subs: ["주택가격지수 RPPI", "RPPI 상승률", "주거 건축허가", "오피스 공실·건설"] },
   { id: "fx", ko: "환율·원가", sub: "대달러·실효환율·역내 통화·수입원가", count: "7", group: "외환·금융", subs: ["동남아 6개국 통화", "₱/USD 기본 환율", "실효환율 NEER·REER", "수입 원가 영향"] },
   { id: "rates", ko: "통화·금리·신용", sub: "기준금리·통화량 M3·가계신용", count: "9", group: "외환·금융", subs: ["기준금리 BSP", "통화량 M3", "가계·카드 대출"] },
   { id: "appliance", ko: "가전 선행지표", sub: "가전 물가·PPI·수입액·실질가격 갭", count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
@@ -53,6 +55,7 @@ export default function Page() {
     if (active === "online") return <OnlineMarketView />
     if (active === "weather") return <WeatherView />
     if (active === "importprice") return <ImportPriceView />
+    if (active === "housing") return <HousingView />
     if (active === "prices") return <PricesView />
     if (active === "growth") return <GrowthView />
     if (active === "labor") return <LaborView />

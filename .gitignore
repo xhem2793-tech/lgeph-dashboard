@@ -40,3 +40,5 @@ scripts/.weekly/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+scripts/.sbpat
+scripts/.bsp_rppi.xlsx
