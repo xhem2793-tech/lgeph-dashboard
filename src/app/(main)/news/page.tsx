@@ -7,6 +7,7 @@ import {
   regBoard,
   analysisPosts,
   publishedReports,
+  pageBanner,
   freshness,
   fmtStamp,
   type FeedItem,
@@ -16,6 +17,17 @@ import {
 } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
 import { Segmented } from "@/components/Segmented"
+import { InsightBanner, type Banner } from "@/components/InsightBanner"
+
+/** 배너 폴백 — 매니페스트 로드 실패 시 표시(주간 자동 갱신 대상) */
+const NEWS_BANNER: Banner = {
+  title: "유가·환율 리스크 부각",
+  summary: "디젤 10.68페소 인상(중동發), 6월 국제수지 흑자 34억달러로 대외 완충 개선",
+  body: "중동발 유가 쇼크로 **디젤 리터당 10.68페소** 인상(3일 분산)돼 물류비·실질구매력 부담 확대. 한편 **6월 국제수지 흑자 34억달러**(2년래 최대)로 대외 완충은 개선됐으나, BSP는 연말 BoP 적자 확대를 전망해 하반기 환율 변동성 여지.",
+  insight: "연료비 전가에 따른 대형가전 구매 지연·가격민감도, 페소 표시 수입원가·부품 조달비 영향 주시 권고.",
+  insightLabel: "LG 관점",
+  period: "2026-W31",
+}
 
 /** 주요뉴스 — 좌 메뉴 / 피드 / 규제 상시.
  *
@@ -454,6 +466,7 @@ export default function Page() {
   const [regs, setRegs] = React.useState<RegBoardItem[]>([])
   const [posts, setPosts] = React.useState<Awaited<ReturnType<typeof analysisPosts>>>([])
   const [reports, setReports] = React.useState<PubReport[]>([])
+  const [banner, setBanner] = React.useState<Banner>(NEWS_BANNER)
   const [stamp, setStamp] = React.useState<string | null>(null)
   const [modal, setModal] = React.useState<Doc | null>(null)
   const [closing, setClosing] = React.useState(false)
@@ -485,6 +498,7 @@ export default function Page() {
       .catch(() => {})
     newsFeed(0).then(setFeed).catch(() => setFeed([]))
     publishedReports().then(setReports).catch(() => setReports([]))
+    pageBanner("news").then((b) => { if (b) setBanner(b as Banner) }).catch(() => {})
   }, [])
 
   React.useEffect(() => {
@@ -706,7 +720,7 @@ export default function Page() {
 
         {/* ── 중앙 : 결론 앵커 + 피드 ── */}
         <div className="flex min-w-0 flex-col gap-4">
-        <div onClick={() => setNewsOpen((v) => !v)} className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm transition-shadow hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}><div className="flex items-center gap-3 px-4 py-3"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 12l5-3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /></svg></div><div className="min-w-0 flex-1 truncate text-[13px] text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">유가·환율 리스크 부각</b> — 디젤 10.68페소 인상(중동發), 6월 국제수지 흑자 34억달러로 대외 완충 개선</div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 dark:text-indigo-300 transition-transform duration-300" style={{ transform: newsOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg></div><div style={{ display: "grid", gridTemplateRows: newsOpen ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}><div className="overflow-hidden"><div className="border-t border-indigo-100/70 dark:border-indigo-500/25 px-4 pb-3.5 pt-3"><p className="text-[13px] leading-relaxed text-gray-700 dark:text-gray-200">중동발 유가 쇼크로 <b className="text-gray-900 dark:text-gray-50">디젤 리터당 10.68페소</b> 인상(3일 분산)돼 물류비·실질구매력 부담 확대. 한편 <b className="text-gray-900 dark:text-gray-50">6월 국제수지 흑자 34억달러</b>(2년래 최대)로 대외 완충은 개선됐으나, BSP는 연말 BoP 적자 확대를 전망해 하반기 환율 변동성 여지.</p><p className="mt-2 flex items-start gap-1.5 text-[12.5px] leading-relaxed text-indigo-700 dark:text-indigo-300"><span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 관점</span><span>연료비 전가에 따른 대형가전 구매 지연·가격민감도, 페소 표시 수입원가·부품 조달비 영향 주시 권고.</span></p></div></div></div></div>
+        <InsightBanner banner={banner} open={newsOpen} onToggle={() => setNewsOpen((v) => !v)} />
         <header className="relative flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <div className="flex shrink-0 items-center gap-3">
               {/* 정렬 */}

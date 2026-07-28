@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "generate": "node src/data/generateData.js",
-    "publish-report": "node scripts/publish-report.mjs"
+    "publish-report": "node scripts/publish-report.mjs",
+    "update-banners": "node scripts/update-banners.mjs"
   },
   "dependencies": {
     "@internationalized/date": "^3.10.0",

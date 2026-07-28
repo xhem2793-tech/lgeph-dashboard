@@ -1,10 +1,21 @@
 "use client"
 
 import React from "react"
-import { fxStrip } from "@/lib/supabase"
+import { fxStrip, pageBanner } from "@/lib/supabase"
 import { CountUp } from "@/components/ProChartCore"
 import { Segmented } from "@/components/Segmented"
 import { useIsDark, chartColors } from "@/components/EconChart"
+import { InsightBanner, type Banner } from "@/components/InsightBanner"
+
+/** 배너 폴백 — 매니페스트(public/banners.json) 로드 실패 시 표시(월간 자동 갱신 대상) */
+const FX_BANNER: Banner = {
+  title: "페소 약세 심화",
+  summary: "₱/USD 61.3(5년 전 50.0), 동남아 6개국 중 최대 낙폭 · NEER 88.7로 하락하나 REER 98.1은 유지(물가가 명목약세 상쇄)",
+  body: "페소는 대달러 **₱/USD 61.3**으로 5년 전(50.0) 대비 크게 약세이고, 동남아 6개국을 대미달러로 지수화하면 **페소 낙폭이 가장 큽니다**. BIS 명목실효환율(NEER)도 96.8→88.7로 하락. 다만 실질실효환율(REER)은 **98.1로 거의 유지** — 필리핀 물가가 교역상대국보다 빨리 올라 명목 약세를 상쇄했기 때문입니다.",
+  insight: "**NEER↓ = 원가 압박**(조달통화 대비 페소 약세로 수입 가전 COGS 상방), **REER 유지 = 실질 구매력 정체**(대형·프리미엄 수요 부담). 위안 강세(대페소 +17%)로 중국 조달 방어가 1순위.",
+  insightLabel: "LG 관점",
+  period: "2026-07",
+}
 
 /** 환율 뷰 — 전부 실측 데이터.
  *  · 시계열: Alpha Vantage 월별 양자환율(역내 6개국·원·위안·루피·엔·유로·₱/USD) + BIS 공식 실효환율(NEER·REER, Broad 64개국).
@@ -185,7 +196,9 @@ export default function FxView() {
   const [s, setS] = React.useState<Strip | null>(null)
   const [open, setOpen] = React.useState(false)
   const [win, setWin] = React.useState("2Y")
+  const [banner, setBanner] = React.useState<Banner>(FX_BANNER)
   React.useEffect(() => { fxStrip().then(setS).catch(() => setS({ asOf: null, pairs: {}, peers: [] })) }, [])
+  React.useEffect(() => { pageBanner("fx").then((b) => { if (b) setBanner(b as Banner) }).catch(() => {}) }, [])
 
   const n = WINDOWS.find((w) => w.k === win)!.n
   const labels = lastN(DATA.labels, n)
@@ -242,31 +255,8 @@ export default function FxView() {
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
 
-      {/* 배너 — 주요뉴스·경쟁사와 동일 */}
-      <div onClick={() => setOpen((v) => !v)} className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm transition-shadow hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
-        <div className="flex items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 12l5-3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /></svg>
-          </div>
-          <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700 dark:text-gray-200">
-            <b className="font-semibold text-gray-900 dark:text-gray-50">페소 약세 심화</b> — ₱/USD 61.3(5년 전 50.0), 동남아 6개국 중 최대 낙폭 · NEER 88.7로 하락하나 REER 98.1은 유지(물가가 명목약세 상쇄)
-          </div>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 dark:text-indigo-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
-        </div>
-        <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
-          <div className="overflow-hidden">
-            <div className="border-t border-indigo-100/70 dark:border-indigo-500/25 px-4 pb-3.5 pt-3">
-              <p className="text-[13px] leading-relaxed text-gray-700 dark:text-gray-200">
-                페소는 대달러 <b className="text-gray-900 dark:text-gray-50">₱/USD 61.3</b>으로 5년 전(50.0) 대비 크게 약세이고, 동남아 6개국을 대미달러로 지수화하면 <b className="text-gray-900 dark:text-gray-50">페소 낙폭이 가장 큽니다</b>. BIS 명목실효환율(NEER)도 96.8→88.7로 하락. 다만 실질실효환율(REER)은 <b className="text-gray-900 dark:text-gray-50">98.1로 거의 유지</b> — 필리핀 물가가 교역상대국보다 빨리 올라 명목 약세를 상쇄했기 때문입니다.
-              </p>
-              <p className="mt-2 flex items-start gap-1.5 text-[12.5px] leading-relaxed text-indigo-700 dark:text-indigo-300">
-                <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 관점</span>
-                <span><b className="font-semibold">NEER↓ = 원가 압박</b>(조달통화 대비 페소 약세로 수입 가전 COGS 상방), <b className="font-semibold">REER 유지 = 실질 구매력 정체</b>(대형·프리미엄 수요 부담). 위안 강세(대페소 +17%)로 중국 조달 방어가 1순위.</span>
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* 배너 — 주요뉴스·경쟁사와 동일(매니페스트 기반, 월간 자동 갱신) */}
+      <InsightBanner banner={banner} open={open} onToggle={() => setOpen((v) => !v)} />
 
       {/* 본문: 좌 차트 + 우 상시 위젯(286px) */}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">

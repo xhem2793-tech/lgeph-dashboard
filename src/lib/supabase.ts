@@ -1023,6 +1023,32 @@ export async function publishedReports(): Promise<PubReport[]> {
   }
 }
 
+// ============================================================
+// 페이지 인사이트 배너 매니페스트 (public/banners.json)
+//  · 주간/월간 자동 갱신 — scripts/update-banners.mjs 가 워딩·기간을 갱신.
+//  · 각 페이지(뉴스·경쟁사 광고·환율)가 자기 키로 읽어 상단 배너에 노출.
+// ============================================================
+export type PageBanner = {
+  title: string
+  summary: string
+  body: string
+  insight: string
+  insightLabel?: string
+  period?: string | null
+  cadence?: string | null
+  updatedAt?: string | null
+}
+export async function pageBanner(key: string): Promise<PageBanner | null> {
+  try {
+    const r = await fetch("/banners.json", { cache: "no-store" })
+    if (!r.ok) return null
+    const j = await r.json()
+    return (j?.[key] ?? null) as PageBanner | null
+  } catch {
+    return null
+  }
+}
+
 
 // ============================================================
 // 물가·생활비 도메인 데이터 (economy /prices)

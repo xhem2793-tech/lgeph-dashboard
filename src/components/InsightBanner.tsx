@@ -1,0 +1,67 @@
+"use client"
+
+import React from "react"
+
+/** 페이지 상단 인사이트 배너 — 뉴스·경쟁사 광고·환율 뷰가 공유하는 단일 컴포넌트.
+ *  워딩은 public/banners.json 매니페스트에서 로드(주간/월간 자동 갱신).
+ *  본문·인사이트는 **굵게** 마크업 지원. 접힘/펼침 애니메이션은 기존 배너와 동일. */
+
+export type Banner = {
+  title: string         // 굵은 리드 문구
+  summary: string       // 접힘 상태 한 줄(— 뒤 요약)
+  body: string          // 펼침 본문(**굵게** 지원)
+  insight: string       // LG 관점/대응 문장
+  insightLabel?: string // 기본 "LG 관점"
+  period?: string | null // 기간 라벨(예: 2026-W31 · 2026-07)
+  cadence?: string | null // weekly | monthly
+  updatedAt?: string | null
+}
+
+/** **굵게** → <b> 로 렌더 */
+function rich(s: string): React.ReactNode[] {
+  return s.split(/(\*\*[^*]+\*\*)/g).map((p, i) =>
+    p.startsWith("**") && p.endsWith("**") ? (
+      <b key={i} className="font-semibold text-gray-900 dark:text-gray-50">{p.slice(2, -2)}</b>
+    ) : (
+      <React.Fragment key={i}>{p}</React.Fragment>
+    ),
+  )
+}
+
+const GlyphInsight = (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 12l5-3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /></svg>
+)
+
+export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open: boolean; onToggle: () => void }) {
+  return (
+    <div
+      onClick={onToggle}
+      className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm transition-shadow hover:shadow-md"
+      style={{ animation: "fadeUp .5s ease both" }}
+    >
+      <div className="flex items-center gap-3 px-4 py-3">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">{GlyphInsight}</div>
+        <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700 dark:text-gray-200">
+          <b className="font-semibold text-gray-900 dark:text-gray-50">{banner.title}</b> — {banner.summary}
+        </div>
+        {banner.period && (
+          <span className="hidden shrink-0 rounded-full bg-white/70 dark:bg-gray-900/70 px-2 py-0.5 text-[9.5px] font-semibold text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-100 dark:ring-indigo-500/25 sm:inline">
+            {banner.period}
+          </span>
+        )}
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 dark:text-indigo-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+      </div>
+      <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
+        <div className="overflow-hidden">
+          <div className="border-t border-indigo-100/70 dark:border-indigo-500/25 px-4 pb-3.5 pt-3">
+            <p className="text-[13px] leading-relaxed text-gray-700 dark:text-gray-200">{rich(banner.body)}</p>
+            <p className="mt-2 flex items-start gap-1.5 text-[12.5px] leading-relaxed text-indigo-700 dark:text-indigo-300">
+              <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">{banner.insightLabel || "LG 관점"}</span>
+              <span>{rich(banner.insight)}</span>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
