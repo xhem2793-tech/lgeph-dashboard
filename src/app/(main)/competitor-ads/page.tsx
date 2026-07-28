@@ -26,6 +26,7 @@ const STATUS: St[] = [
   { key: "진행중", label: "진행중", text: "text-emerald-700 dark:text-emerald-300", dot: "bg-emerald-500", band: "bg-emerald-50 dark:bg-emerald-500/10" },
   { key: "새로시작", label: "새로시작", text: "text-indigo-700 dark:text-indigo-300", dot: "bg-indigo-500", band: "bg-indigo-50 dark:bg-indigo-500/10" },
   { key: "종료예정", label: "종료예정", text: "text-amber-700 dark:text-amber-300", dot: "bg-amber-500", band: "bg-amber-50 dark:bg-amber-500/10" },
+  { key: "종료", label: "종료됨", text: "text-gray-500 dark:text-gray-400", dot: "bg-gray-400 dark:bg-gray-500", band: "bg-gray-100 dark:bg-gray-800" },
 ]
 const stOf = (s: string) => STATUS.find((x) => x.key === s)
 const BRANDS = ["Samsung", "TCL", "Hisense", "Midea", "Sharp", "Panasonic"]
@@ -117,8 +118,9 @@ function Card({ a, onOpen, q = "" }: { a: CompAd; onOpen: () => void; q?: string
   const conf = a.confidence === "CONFIRMED" ? "확인" : a.confidence ? "AI" : ""
   const openSrc = (e: React.MouseEvent) => { e.stopPropagation(); if (a.ad_url) window.open(a.ad_url, "_blank", "noopener") }
   const brief = briefBody(a.body)
+  const ended = a.status === "종료"
   return (
-    <button onClick={onOpen} className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99]">
+    <button onClick={onOpen} className={"group flex h-full w-full flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99] " + (ended ? "opacity-70 hover:opacity-100" : "")}>
       <Thumb a={a} />
       <div className="flex flex-1 flex-col p-2.5">
         <div className="flex items-center gap-1.5">
