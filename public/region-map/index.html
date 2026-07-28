@@ -375,7 +375,7 @@
     <div class="brand">
       <div class="ki">Republic of the Philippines</div>
       <h1>필리핀 행정 지역</h1>
-      <div class="sub">17개 지역 · 지역을 클릭하면 확대되며 세부 정보를 보여줍니다</div>
+      <div class="sub">17개 지역 · 클릭하면 확대·세부 정보 · 스크롤로 확대/축소, 드래그로 이동</div>
     </div>
     <button class="backbtn" id="back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -984,6 +984,58 @@ d3.json("data/ph-regions.geojson").then(geo=>{
   try{ new ResizeObserver(()=>{ if(!selected) fitMap(); }).observe(document.querySelector(".stage")); }
   catch(e){ window.addEventListener("resize",()=>{ if(!selected) fitMap(); }); }
 
+  // ── 마우스 스크롤 확대/축소 + 드래그 이동 (#9) ──
+  (function enablePanZoom(){
+    const stage=document.querySelector(".stage");
+    const MINS=1, MAXS=12;
+    function apply(){
+      const n=g.node();
+      n.style.transition="transform .08s linear";  // 휠/드래그는 즉각 반응, 클릭 드릴다운은 selectRegion 이 .95s 로 복원
+      n.style.transform=`translate(${curT.tx}px,${curT.ty}px) scale(${curT.scale})`;
+    }
+    stage.addEventListener("wheel",(e)=>{
+      e.preventDefault();
+      const r=svg.node().getBoundingClientRect();
+      if(!r.width||!r.height) return;
+      const px=(e.clientX-r.left)/r.width*W, py=(e.clientY-r.top)/r.height*H; // 커서 위치(뷰박스 좌표)
+      const ns0=curT.scale*(e.deltaY<0?1.15:1/1.15);
+      let ns=Math.min(MAXS,Math.max(MINS,ns0));
+      const wx=(px-curT.tx)/curT.scale, wy=(py-curT.ty)/curT.scale;
+      let ntx=px-ns*wx, nty=py-ns*wy;
+      if(ns<=1.0001){ ns=1; ntx=0; nty=0; }        // 원배율로 돌아오면 정확히 초기 위치로
+      curT={tx:ntx,ty:nty,scale:ns};
+      apply();
+      stage.style.cursor=ns>1?"grab":"";
+    },{passive:false});
+    // 드래그 이동 — 확대 상태(scale>1)에서만
+    let drag=null;
+    stage.addEventListener("pointerdown",(e)=>{
+      if(curT.scale<=1||e.button!==0) return;
+      drag={x:e.clientX,y:e.clientY,tx:curT.tx,ty:curT.ty,moved:false};
+      stage.style.cursor="grabbing";
+      try{ stage.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    stage.addEventListener("pointermove",(e)=>{
+      if(!drag) return;
+      const r=svg.node().getBoundingClientRect();
+      const sx=W/r.width, sy=H/r.height;
+      if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>3) drag.moved=true;
+      curT={tx:drag.tx+(e.clientX-drag.x)*sx, ty:drag.ty+(e.clientY-drag.y)*sy, scale:curT.scale};
+      apply();
+    });
+    function endDrag(){
+      if(!drag) return;
+      if(drag.moved){  // 드래그였다면 뒤따르는 지역 클릭(선택) 억제
+        const swallow=(ev)=>{ ev.stopPropagation(); ev.preventDefault(); };
+        stage.addEventListener("click",swallow,true);
+        setTimeout(()=>stage.removeEventListener("click",swallow,true),60);
+      }
+      drag=null; stage.style.cursor=curT.scale>1?"grab":"";
+    }
+    stage.addEventListener("pointerup",endDrag);
+    stage.addEventListener("pointercancel",endDrag);
+  })();
+
   buildCategoryNav();
   buildList();
   applyChoropleth(curMapMetric);
@@ -1020,6 +1072,7 @@ function selectRegion(d){
   const tx=W/2-scale*cx, ty=H/2-scale*cy;
   curT={tx,ty,scale};
   const node=g.node();
+  node.style.transition="transform .95s cubic-bezier(.65,0,.18,1)";  // 휠 조작 후에도 드릴다운은 부드럽게
   node.style.transform=`translate(${tx}px,${ty}px) scale(${scale})`;
 
   // selected label positioned in screen space after the zoom settles
@@ -1046,7 +1099,9 @@ function resetView(){
   selected=null; level="map";
   g.selectAll("path.region").classed("selected",false).classed("dimmed",false);
   curT={tx:0,ty:0,scale:1};
+  g.node().style.transition="transform .95s cubic-bezier(.65,0,.18,1)";
   g.node().style.transform="translate(0px,0px) scale(1)";
+  const _st=document.querySelector(".stage"); if(_st) _st.style.cursor="";
   hideLabels();
   applyChoropleth(curMapMetric);
   renderHeadline(null);
