@@ -979,6 +979,14 @@ export async function allIndicatorLatest(): Promise<Record<string, { value: numb
   return out
 }
 
+// 단일 지표 전체 시계열(국가지표) — 자세히보기·엑셀 다운로드용
+export async function indicatorSeries(indicator: string): Promise<{ date: string; value: number }[]> {
+  const rows = (await sb(
+    "macro_indicators?geo=in.(PHILIPPINES,PH)&indicator=eq." + encodeURIComponent(indicator) + "&select=value,period_date&order=period_date.asc&limit=3000"
+  )) as { value: number; period_date: string }[]
+  return rows.map((r) => ({ date: r.period_date, value: Number(r.value) }))
+}
+
 // 지역별 지표(geo_level='region') 최신값 — { [indicator]: { [geo]: value } }
 export async function regionMetric(indicators: string[]) {
   const list = indicators.map((s) => encodeURIComponent(s)).join(",")

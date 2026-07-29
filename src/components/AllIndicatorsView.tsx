@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
-import { dataProvenance, allIndicatorLatest, fmtStamp, type Provenance } from "@/lib/supabase"
+import { dataProvenance, allIndicatorLatest, indicatorSeries, fmtStamp, type Provenance } from "@/lib/supabase"
 import { sourceLink } from "@/components/DataVerification"
 import { Segmented } from "@/components/Segmented"
 import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
@@ -10,6 +10,15 @@ import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
  *  각 지표의 최신값·직전 대비·데이터 기간·원본 코드·출처 링크·신뢰도를 한 줄로. 행 클릭 시 해당 분류 차트로 이동. */
 
 const ym = (d: string) => (d ? d.slice(0, 4) + "." + Number(d.slice(5, 7)) + "월" : "—")
+
+// 전망(forecast) 지표 — provenance(실측 검증 뷰)에 없으므로 별도 메타로 목록에 포함. 값은 v_latest_indicator에서.
+const FORECAST_META: Record<string, { label: string; source: string; cat: string }> = {
+  cpi_forecast_adb: { label: "소비자물가 상승률 전망(ADB)", source: "ADB 전망", cat: "prices" },
+  cpi_inflation_forecast: { label: "인플레이션 전망(시장·BSP)", source: "BSP/시장 전망", cat: "prices" },
+  gdp_forecast_adb: { label: "GDP 성장률 전망(ADB)", source: "ADB 전망", cat: "growth" },
+  gdp_forecast_imf: { label: "GDP 성장률 전망(IMF)", source: "IMF 전망", cat: "growth" },
+  ofw_remittance_forecast: { label: "OFW 송금액 전망($B)", source: "BSP/시장 전망", cat: "labor" },
+}
 function fmtVal(v: number): string {
   if (v == null || Number.isNaN(v)) return "—"
   const a = Math.abs(v)
@@ -38,12 +47,34 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
   const [cat, setCat] = useState("all")
   const [sort, setSort] = useState<"cat" | "recent">("cat")
   const [loadedAt, setLoadedAt] = useState<Date | null>(null)
+  const [detail, setDetail] = useState<Row | null>(null)
 
   useEffect(() => {
     Promise.all([dataProvenance().catch(() => []), allIndicatorLatest().catch(() => ({}))]).then(([p, l]) => {
       setProv(p as Provenance[]); setLatest(l as Record<string, { value: number; period: string; prev: number | null }>); setLoadedAt(new Date())
     })
   }, [])
+
+  // 엑셀(CSV) 다운로드 — 해당 지표 전체 시계열 + 전기/전년 대비
+  async function downloadExcel(r: Row) {
+    const series = await indicatorSeries(r.indicator).catch(() => [])
+    if (!series.length) return
+    const head = ["기간", "값", "전기대비(%)", "전년대비(%)"]
+    const lines = series.map((p, i) => {
+      const prev = i > 0 ? series[i - 1].value : null
+      const yrAgoDate = (Number(p.date.slice(0, 4)) - 1) + p.date.slice(4)
+      const ya = series.find((x) => x.date === yrAgoDate)
+      const mom = prev != null && prev !== 0 ? ((p.value - prev) / Math.abs(prev)) * 100 : null
+      const yoy = ya && ya.value !== 0 ? ((p.value - ya.value) / Math.abs(ya.value)) * 100 : null
+      return [p.date, p.value, mom == null ? "" : mom.toFixed(2), yoy == null ? "" : yoy.toFixed(2)]
+    })
+    const csv = "﻿" + [head, ...lines].map((row) => row.join(",")).join("\r\n")
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url; a.download = (r.label || r.indicator) + ".csv"; a.click()
+    URL.revokeObjectURL(url)
+  }
 
   // 행 클릭 → 해당 분류 차트로 이동(onPick 있으면 동일 페이지 전환, 없으면 경제지표로 라우팅)
   function goChart(catKey: string) {
@@ -66,7 +97,15 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
       const ex = byLabel.get(key)
       if (!ex || score(r) > score(ex)) byLabel.set(key, r)
     }
-    return Array.from(byLabel.values())
+    const out = Array.from(byLabel.values())
+    // 전망 지표 주입(provenance 미포함) — 전망치·기준(출처)을 명시
+    const have = new Set(out.map((r) => r.indicator))
+    for (const [ind, meta] of Object.entries(FORECAST_META)) {
+      const lv = latest[ind]
+      if (!lv || have.has(ind)) continue
+      out.push({ indicator: ind, label: meta.label, source: meta.source, source_ref: null, confidence: "FORECAST", levels: null, mn: lv.period, mx: lv.period, n: 1, cat: meta.cat, catKo: catKo(meta.cat), value: lv.value, period: lv.period, prev: lv.prev })
+    }
+    return out
   }, [prov, latest])
 
   const catCounts = useMemo(() => {
@@ -104,14 +143,8 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
       <section className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white dark:from-indigo-500/10 dark:via-transparent dark:to-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
         <h1 className="text-[18px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">전체 지표 리스트 · 출처 검증</h1>
         <p className="mt-1 text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">
-          분류별 차트 대신 <b className="font-semibold text-gray-800 dark:text-gray-100">모든 지표를 한 화면에서</b> — 최신값·직전 대비·데이터 기간·<b className="font-semibold text-gray-800 dark:text-gray-100">원본 코드·출처 링크·신뢰도</b>까지. 지표 행을 클릭하면 <b className="font-semibold text-indigo-600 dark:text-indigo-400">해당 분류 차트로 이동</b>합니다.
+          분류별 차트 대신 <b className="font-semibold text-gray-800 dark:text-gray-100">모든 지표를 한 화면에서</b> — 최신값·직전 대비·데이터 기간·<b className="font-semibold text-gray-800 dark:text-gray-100">출처 링크·신뢰도</b>까지. 각 지표의 <b className="font-semibold text-indigo-600 dark:text-indigo-400">자세히보기(시계열·전년비/전월비)·엑셀 다운로드</b>를 지원합니다.
         </p>
-        <div className="mt-2.5 flex flex-wrap items-center gap-4 text-[12px]">
-          <span className="text-gray-500 dark:text-gray-400">총 지표 <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
-          <span className="text-gray-500 dark:text-gray-400">검색 결과 <b className="text-indigo-600 dark:text-indigo-400">{filtered.length}</b></span>
-          <span className="text-gray-500 dark:text-gray-400">CONFIRMED <b className="text-emerald-600 dark:text-emerald-400">{confN}</b></span>
-          <span className="text-gray-500 dark:text-gray-400">분류 <b className="text-gray-900 dark:text-gray-50">{Object.keys(catCounts).length}</b></span>
-        </div>
       </section>
 
       {/* 정렬(주요뉴스와 동일 Segmented) + 검색(우측) + 최종 갱신(뉴스와 동일 위치·포맷) */}
@@ -146,6 +179,14 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
         ))}
       </div>
 
+      {/* 요약 스탯 — 하단으로 이동 */}
+      <div className="flex flex-wrap items-center gap-4 text-[12px]">
+        <span className="text-gray-500 dark:text-gray-400">총 지표 <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
+        <span className="text-gray-500 dark:text-gray-400">검색 결과 <b className="text-indigo-600 dark:text-indigo-400">{filtered.length}</b></span>
+        <span className="text-gray-500 dark:text-gray-400">CONFIRMED <b className="text-emerald-600 dark:text-emerald-400">{confN}</b></span>
+        <span className="text-gray-500 dark:text-gray-400">분류 <b className="text-gray-900 dark:text-gray-50">{Object.keys(catCounts).length}</b></span>
+      </div>
+
       {/* 분류순: 카테고리별 섹션 */}
       {grouped && grouped.map(([k, items]) => (
         <section key={k} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
@@ -155,7 +196,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
             <span className="text-[11px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
             {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="ml-auto text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">차트 전체 보기 →</button>}
           </header>
-          <IndTable items={items} q={q} showCat={false} onRow={goChart} />
+          <IndTable items={items} q={q} showCat={false} onRow={goChart} onDetail={setDetail} onExcel={downloadExcel} />
         </section>
       ))}
 
@@ -167,7 +208,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
             <h2 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">최신 업데이트순</h2>
             <span className="text-[11px] text-gray-400 dark:text-gray-500">{flat.length}개 지표 · 최근 관측 우선</span>
           </header>
-          <IndTable items={flat} q={q} showCat onRow={goChart} />
+          <IndTable items={flat} q={q} showCat onRow={goChart} onDetail={setDetail} onExcel={downloadExcel} />
         </section>
       )}
 
@@ -176,23 +217,25 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
       )}
 
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
-        최신값=국가지표(PHILIPPINES) 최신 관측 · 직전 대비=직전 관측 대비 증감 · 기간=데이터 보유 범위(관측수) · <b className="font-semibold text-gray-500 dark:text-gray-400">「원본 ↗」으로 발행기관 원본에 직접 접근·재현</b>. 분류는 자동 키워드 매칭.
+        최신값=국가지표(PHILIPPINES) 최신 관측 · 직전 대비=직전 관측 대비 증감 · 기간=데이터 보유 범위(관측수) · <b className="font-semibold text-gray-500 dark:text-gray-400">자세히보기=시계열(연·분기·월)+전년비·전월비, 엑셀=CSV 다운로드</b> · 「전망」은 ADB·IMF·BSP 예측치.
       </p>
+
+      {detail && <IndicatorDetail row={detail} onClose={() => setDetail(null)} onExcel={downloadExcel} />}
     </div>
   )
 }
 
-function IndTable({ items, q, showCat, onRow }: { items: Row[]; q: string; showCat: boolean; onRow: (cat: string) => void }) {
+function IndTable({ items, q, showCat, onRow, onDetail, onExcel }: { items: Row[]; q: string; showCat: boolean; onRow: (cat: string) => void; onDetail: (r: Row) => void; onExcel: (r: Row) => void }) {
   // 고정 컬럼폭 — 카테고리별 표가 동일 위치에 정렬되도록(table-layout:fixed)
-  const cols = showCat ? ["22%", "9%", "9%", "9%", "8%", "13%", "13%", "12%", "5%"] : ["26%", "10%", "10%", "9%", "14%", "14%", "12%", "5%"]
+  const cols = showCat ? ["23%", "10%", "10%", "10%", "9%", "13%", "9%", "16%"] : ["27%", "11%", "11%", "10%", "14%", "10%", "17%"]
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[820px] table-fixed text-[12px]">
+      <table className="w-full min-w-[860px] table-fixed text-[12px]">
         <colgroup>{cols.map((w, i) => <col key={i} style={{ width: w }} />)}</colgroup>
         <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[10.5px] font-semibold uppercase text-gray-400 dark:text-gray-500">
           <th className="px-4 py-1.5">지표</th>
           {showCat && <th className="px-2 py-1.5">분류</th>}
-          <th className="px-2 py-1.5 text-right">최신값</th><th className="px-2 py-1.5 text-right">직전 대비</th><th className="px-2 py-1.5">기준</th><th className="px-2 py-1.5">기간</th><th className="px-2 py-1.5">원본 코드</th><th className="px-2 py-1.5">출처</th><th className="px-2 py-1.5 text-center">검증</th>
+          <th className="px-2 py-1.5 text-right">최신값</th><th className="px-2 py-1.5 text-right">직전 대비</th><th className="px-2 py-1.5">기준</th><th className="px-2 py-1.5">기간</th><th className="px-2 py-1.5">출처</th><th className="px-2 py-1.5 text-center">액션</th>
         </tr></thead>
         <tbody>
           {items.map((r) => {
@@ -214,14 +257,126 @@ function IndTable({ items, q, showCat, onRow }: { items: Row[]; q: string; showC
                 <td className={"px-2 py-1.5 text-right tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "—" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.period)}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-400 dark:text-gray-500">{ym(r.mn)}~{ym(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>
-                <td className="truncate px-2 py-1.5 font-mono text-[10.5px] text-gray-500 dark:text-gray-400" title={r.source_ref ?? ""}><Hi text={r.source_ref?.replace(/^https?:\/\/\S+/, "URL") ?? "—"} q={q} /></td>
                 <td className="truncate px-2 py-1.5" title={r.source}>{link ? <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"><Hi text={r.source} q={q} /> ↗</a> : <span className="text-gray-500 dark:text-gray-400"><Hi text={r.source} q={q} /></span>}</td>
-                <td className="px-2 py-1.5 text-center">{(r.confidence || "").toUpperCase() === "CONFIRMED" ? <span className="text-emerald-600 dark:text-emerald-400">✓</span> : <span className="text-amber-500">추정</span>}</td>
+                <td className="px-2 py-1.5">
+                  <div className="flex items-center justify-center gap-1">
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onDetail(r) }} className="rounded-md border border-gray-200 dark:border-gray-700 px-2 py-0.5 text-[10.5px] font-semibold text-gray-600 dark:text-gray-300 transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-400 active:scale-95">자세히</button>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onExcel(r) }} title="엑셀(CSV) 다운로드" className="rounded-md border border-gray-200 dark:border-gray-700 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 active:scale-95">엑셀</button>
+                  </div>
+                </td>
               </tr>
             )
           })}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+// 지표 자세히보기 — 시계열(월/분기/연)을 엑셀 표처럼, 전월비·전년비 반영
+function IndicatorDetail({ row, onClose, onExcel }: { row: Row; onClose: () => void; onExcel: (r: Row) => void }) {
+  const [series, setSeries] = useState<{ date: string; value: number }[] | null>(null)
+  const [gran, setGran] = useState<"month" | "quarter" | "year">("month")
+
+  useEffect(() => { indicatorSeries(row.indicator).then(setSeries).catch(() => setSeries([])) }, [row.indicator])
+
+  // 네이티브 주기 추정(월/분기/연) → 사용 가능한 granularity 결정
+  const native = useMemo(() => {
+    if (!series || series.length < 2) return "month"
+    const gaps: number[] = []
+    for (let i = 1; i < series.length; i++) {
+      const a = series[i - 1].date, b = series[i].date
+      gaps.push((Number(b.slice(0, 4)) - Number(a.slice(0, 4))) * 12 + (Number(b.slice(5, 7)) - Number(a.slice(5, 7))))
+    }
+    gaps.sort((x, y) => x - y); const med = gaps[Math.floor(gaps.length / 2)] || 1
+    return med >= 10 ? "year" : med >= 2 ? "quarter" : "month"
+  }, [series])
+  const grans = native === "year" ? ["year"] : native === "quarter" ? ["quarter", "year"] : ["month", "quarter", "year"]
+  useEffect(() => { if (!grans.includes(gran)) setGran(native as "month" | "quarter" | "year") }, [native]) // eslint-disable-line
+
+  // 리샘플 + 전기/전년 대비
+  const table = useMemo(() => {
+    if (!series || !series.length) return []
+    const keyOf = (d: string) => {
+      const y = d.slice(0, 4), m = Number(d.slice(5, 7))
+      if (gran === "year") return y
+      if (gran === "quarter") return y + "-Q" + (Math.floor((m - 1) / 3) + 1)
+      return y + "." + String(m).padStart(2, "0")
+    }
+    const map = new Map<string, number>()
+    for (const p of series) map.set(keyOf(p.date), p.value) // asc → 마지막(최신)이 대표
+    const keys = Array.from(map.keys())
+    const prevYearKey = (k: string) => {
+      if (gran === "year") return String(Number(k) - 1)
+      if (gran === "quarter") return (Number(k.slice(0, 4)) - 1) + k.slice(4)
+      return (Number(k.slice(0, 4)) - 1) + k.slice(4)
+    }
+    return keys.map((k, i) => {
+      const v = map.get(k)!
+      const prev = i > 0 ? map.get(keys[i - 1])! : null
+      const ya = map.get(prevYearKey(k))
+      const mom = prev != null && prev !== 0 ? ((v - prev) / Math.abs(prev)) * 100 : null
+      const yoy = ya != null && ya !== 0 ? ((v - ya) / Math.abs(ya)) * 100 : null
+      return { k, v, mom, yoy }
+    }).reverse() // 최신 우선
+  }, [series, gran])
+
+  const label = (k: string) => (gran === "year" ? k + "년" : gran === "quarter" ? k.replace("-", " ") : k.slice(0, 4) + "." + Number(k.slice(5)) + "월")
+  const pct = (x: number | null) => (x == null ? "—" : (x >= 0 ? "+" : "") + x.toFixed(1) + "%")
+  const gname: Record<string, string> = { month: "월별", quarter: "분기별", year: "연도별" }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="flex max-h-[85vh] w-full max-w-[680px] flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }}>
+        <div className="flex items-start gap-3 border-b border-gray-100 dark:border-gray-800 px-5 py-3.5">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-[15px] font-bold text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h3>
+            <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-gray-500 dark:text-gray-400">
+              <span>{row.source}</span><span className="text-gray-300 dark:text-gray-600">·</span>
+              <span>{row.catKo}</span><span className="text-gray-300 dark:text-gray-600">·</span>
+              <span>{ym(row.mn)}~{ym(row.mx)} ({row.n}관측)</span>
+              {row.confidence === "FORECAST" && <span className="rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[10px] font-bold text-amber-700 dark:text-amber-300">전망</span>}
+            </div>
+          </div>
+          <button type="button" onClick={onClose} className="shrink-0 rounded-full p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+        </div>
+        <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-5 py-2.5">
+          <div className="flex items-center gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5">
+            {grans.map((g) => (
+              <button key={g} type="button" onClick={() => setGran(g as "month" | "quarter" | "year")}
+                className={"rounded-md px-2.5 py-1 text-[11.5px] font-semibold transition-all " + (gran === g ? "bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600")}>{gname[g]}</button>
+            ))}
+          </div>
+          <button type="button" onClick={() => onExcel(row)} className="ml-auto inline-flex items-center gap-1 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[11.5px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all hover:-translate-y-0.5 active:scale-95">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+            엑셀 다운로드
+          </button>
+        </div>
+        <div className="min-h-0 flex-1 overflow-auto">
+          {series == null ? (
+            <div className="flex h-40 items-center justify-center text-[13px] text-gray-400">불러오는 중…</div>
+          ) : table.length === 0 ? (
+            <div className="flex h-40 items-center justify-center text-[13px] text-gray-400">시계열 데이터 없음</div>
+          ) : (
+            <table className="w-full text-[12.5px]">
+              <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/80 backdrop-blur"><tr className="text-left text-[10.5px] font-semibold uppercase text-gray-500 dark:text-gray-400">
+                <th className="px-5 py-2">기간</th><th className="px-3 py-2 text-right">값</th><th className="px-3 py-2 text-right">{gran === "year" ? "전년대비" : gran === "quarter" ? "전분기대비" : "전월대비"}</th><th className="px-5 py-2 text-right">전년동기대비</th>
+              </tr></thead>
+              <tbody>
+                {table.map((t) => (
+                  <tr key={t.k} className="border-t border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5">
+                    <td className="px-5 py-1.5 font-medium text-gray-800 dark:text-gray-100">{label(t.k)}</td>
+                    <td className="px-3 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{fmtVal(t.v)}</td>
+                    <td className={"px-3 py-1.5 text-right tabular-nums " + (t.mom == null ? "text-gray-300 dark:text-gray-600" : t.mom >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.mom)}</td>
+                    <td className={"px-5 py-1.5 text-right tabular-nums " + (t.yoy == null ? "text-gray-300 dark:text-gray-600" : t.yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.yoy)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+        <div className="border-t border-gray-100 dark:border-gray-800 px-5 py-2 text-[10px] text-gray-400 dark:text-gray-500">{gname[gran]} 시계열 · 값=기간 말 관측 · 상승 <span className="text-rose-500">적색</span>/하락 <span className="text-emerald-500">녹색</span> · 출처 {row.source}</div>
+      </div>
     </div>
   )
 }
