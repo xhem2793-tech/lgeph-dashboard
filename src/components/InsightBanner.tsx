@@ -41,14 +41,14 @@ export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open
     >
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">{GlyphInsight}</div>
-        <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700 dark:text-gray-200">
-          <b className="font-semibold text-gray-900 dark:text-gray-50">{banner.title}</b> — {banner.summary}
-        </div>
         {banner.period && (
-          <span className="hidden shrink-0 rounded-full bg-white/70 dark:bg-gray-900/70 px-2 py-0.5 text-[9.5px] font-semibold text-indigo-600 dark:text-indigo-400 ring-1 ring-indigo-100 dark:ring-indigo-500/25 sm:inline">
+          <span className="shrink-0 rounded-md bg-indigo-600 px-2 py-1 text-[11px] font-bold text-white shadow-sm">
             {banner.period}
           </span>
         )}
+        <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700 dark:text-gray-200">
+          <b className="font-semibold text-gray-900 dark:text-gray-50">{banner.title}</b> — {banner.summary}
+        </div>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 dark:text-indigo-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
       </div>
       <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
