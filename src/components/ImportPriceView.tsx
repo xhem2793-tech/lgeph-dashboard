@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { importPriceSeries, importOrigins, type ImpSeries, type ImpOrigin } from "@/lib/supabase"
 import { ChartCard, Lg, fmtLabels, type SLine } from "@/components/EconChart"
 import { Segmented } from "@/components/Segmented"
+import { AgendaCard } from "@/components/EconViews"
 
 /** 수입 단가 — UN Comtrade 필리핀 가전 수입(HS 8418/8415/8450/8528)의 월별 단가($/kg)와 원산지 점유·단가.
  *  조달원가·수입가전 경쟁 구도(중국 저가·한국 프리미엄)를 추적. 무역데이터 특성상 최신 확보월 기준. */
@@ -67,7 +68,8 @@ export default function ImportPriceView() {
         <span className="text-[11px] text-gray-400 dark:text-gray-500">HS {hs}{lastDate ? " · 최신 확보 " + fmtMonth(lastDate) : ""}</span>
       </div>
 
-      <div className="grid items-stretch gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+      <div className="grid items-stretch gap-4 sm:grid-cols-2">
         {/* 단가 추이 */}
         {chart.series.length ? (
           <ChartCard
@@ -108,6 +110,8 @@ export default function ImportPriceView() {
           <p className="mt-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 막대=수입액 점유, 우측=원산지별 단가($/kg) — <b className="text-gray-700 dark:text-gray-200">중국 저가 대량·한국 고단가</b> 구도 확인</p>
           <p className="mt-auto pt-2 text-[10px] text-gray-400 dark:text-gray-500">UN Comtrade · 최신 확보월 원산지별 CIF 점유·단가</p>
         </div>
+      </div>
+        <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
 
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">UN Comtrade 필리핀 수입 통계(HS 8418 냉장고·8415 에어컨·8450 세탁기·8528 TV) · 단가=CIF÷순중량($/kg) · 무역데이터 특성상 발표 지연(최신 확보월 기준) · 연간 수입액은 &lt;가전 선행지표&gt; 참조</p>

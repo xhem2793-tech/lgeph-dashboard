@@ -1040,6 +1040,13 @@ export async function importOrigins(hs: string): Promise<{ date: string; origins
   return { date, origins: list.map((r) => ({ partner: r.partner_name, cif: Number(r.cif_value), unit: Number(r.unit_price_kg), share: (Number(r.cif_value) / tot) * 100 })) }
 }
 
+// 지역별 인프라 투자 — DPWH Transparency(infra_regional). 예산·건수·집행 상태.
+export type InfraRegion = { region: string; projects: number; budgetB: number; completed: number; ongoing: number; forProc: number }
+export async function infraRegional(): Promise<InfraRegion[]> {
+  const rows = await sb("infra_regional?select=region,projects,budget_php_b,completed,ongoing,for_proc&order=budget_php_b.desc")
+  return (rows ?? []).map((r: any) => ({ region: r.region, projects: Number(r.projects), budgetB: Number(r.budget_php_b), completed: Number(r.completed), ongoing: Number(r.ongoing), forProc: Number(r.for_proc) }))
+}
+
 export type Quake = { at: string; mag: number; place: string; lat: number; lon: number; depth: number | null }
 export async function earthquakesRecent(days = 365, minMag = 4): Promise<Quake[]> {
   const from = new Date(Date.now() - days * 86400000).toISOString()

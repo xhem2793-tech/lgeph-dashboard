@@ -1,8 +1,16 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
-import { macroMonthly } from "@/lib/supabase"
+import { macroMonthly, infraRegional, type InfraRegion } from "@/lib/supabase"
 import { ChartCard, Lg, fmtLabels, type SLine } from "@/components/EconChart"
+import { AgendaCard } from "@/components/EconViews"
+
+const REGSHORT: Record<string, string> = {
+  "National Capital Region": "NCR", "Cordillera Administrative Region": "CAR", "Negros Island Region": "NIR",
+  "Region I": "I 일로코스", "Region II": "II 카가얀", "Region III": "III 중부루손", "Region IV-A": "IV-A 칼라바르손",
+  "Region V": "V 비콜", "Region VI": "VI 서비사야", "Region VII": "VII 중부비사야", "Region VIII": "VIII 동부비사야",
+  "Region IX": "IX 삼보앙가", "Region X": "X 북민다나오", "Region XI": "XI 다바오", "Region XII": "XII 소크사르젠", "Region XIII": "XIII 카라가",
+}
 
 /** 부동산·주택 — 가전 판매와 상관 최고 분야. BSP 주택가격지수(RPPI)·건축허가·공실·건설투자.
  *  주택 공급(허가·완공)과 가격은 빌트인·초도 가전 수요의 핵심 선행지표. 데이터: macro_indicators + BSP RPPI(2019=100, 분기). */
@@ -46,6 +54,11 @@ export default function HousingView() {
   const permits = useMemo(() => build(d, years, [{ key: "permits_residential_floorarea", name: "주거 연면적", color: C.teal, tf: (v) => v / 1e6 }]), [d, years])
   const other = useMemo(() => build(d, years, [{ key: "office_vacancy_ncr", name: "오피스 공실률 NCR", color: C.amber }, { key: "construction_gva_growth", name: "건설 GVA 성장", color: C.ind }]), [d, years])
 
+  const [infra, setInfra] = useState<InfraRegion[]>([])
+  useEffect(() => { infraRegional().then(setInfra).catch(() => {}) }, [])
+  const infraMax = infra.length ? Math.max(...infra.map((r) => r.budgetB)) : 1
+  const infraTot = infra.reduce((s, r) => s + r.budgetB, 0)
+
   const rppiLast = d.rppi_index?.values?.at(-1)
   const yoyLast = d.rppi_yoy?.values?.at(-1)
   const rppiDate = d.rppi_index?.dates?.at(-1)
@@ -68,7 +81,8 @@ export default function HousingView() {
         </div>
       </div>
 
-      <div className="grid items-stretch gap-4 lg:grid-cols-2">
+      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+      <div className="grid items-stretch gap-4 sm:grid-cols-2">
         {rppi.series.length ? (
           <ChartCard title="주택가격지수 RPPI" seg="CE" unit="2019=100 · 분기" decimals={1}
             legend={<><Lg c={C.ind} t="전체" b /><Lg c={C.rose} t="콘도" /><Lg c={C.emer} t="단독주택" /></>}
@@ -104,6 +118,33 @@ export default function HousingView() {
             ai={<>공실률 상승은 상업용 신규 착공·B2B 공조 수요 둔화 신호, 건설 GVA 성장은 <b className="font-semibold">시스템에어컨·칠러</b> 발주 환경. 공실 개선+건설 확장 조합이 B2B 우호적.</>}
             src="Colliers·PSA(공실률·건설 GVA)" />
         ) : <Soon label="오피스 공실·건설투자" />}
+
+        {/* 지역별 인프라 투자 — DPWH (B2B 공조·빌트인 발주 환경) */}
+        {infra.length > 0 && (
+          <div className="flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm sm:col-span-2" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+            <div className="flex items-center gap-1.5">
+              <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 인프라 투자 (DPWH)</h3>
+              <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300">B2B</span>
+              <span className="ml-auto text-[10.5px] text-gray-400 dark:text-gray-500">총 ₱{Math.round(infraTot).toLocaleString()}B · {infra.length}개 지역</span>
+            </div>
+            <div className="mt-2.5 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
+              {infra.map((r) => (
+                <div key={r.region} className="flex items-center gap-2">
+                  <span className="w-[92px] shrink-0 truncate text-[11.5px] font-semibold text-gray-700 dark:text-gray-200" title={r.region}>{REGSHORT[r.region] || r.region}</span>
+                  <div className="relative h-4 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
+                    <div className="absolute inset-y-0 left-0 rounded bg-amber-500/85" style={{ width: Math.max(3, (r.budgetB / infraMax) * 100) + "%" }} />
+                  </div>
+                  <span className="w-[52px] shrink-0 text-right text-[11px] font-bold tabular-nums text-gray-800 dark:text-gray-100">₱{r.budgetB.toFixed(0)}B</span>
+                  <span className="hidden w-[64px] shrink-0 text-right text-[10px] tabular-nums text-gray-400 dark:text-gray-500 sm:inline">{(r.projects / 1000).toFixed(1)}k건</span>
+                </div>
+              ))}
+            </div>
+            <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 지역별 공공 인프라 예산·프로젝트 — <b className="text-gray-700 dark:text-gray-200">신규 청사·병원·상업복합의 시스템에어컨·칠러 발주 환경</b> 대리(Build Better More 연계)</p>
+            <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">DPWH Transparency(공개) · 지역별 예산·건수·집행상태 집계</p>
+          </div>
+        )}
+      </div>
+        <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
 
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">BSP 주택가격지수(RPPI, 2019=100, 분기·전국) · PSA 건축허가 · 공실률(Colliers)·건설 GVA(PSA) · NCR/지역별 세부·프리셀링·모기지는 분기 리포트 수동 취합 예정</p>
