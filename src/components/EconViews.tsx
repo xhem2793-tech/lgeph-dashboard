@@ -655,7 +655,7 @@ export function GrowthView() {
   const ret = build(d, n, [{ key: "wholesale_retail_trade_yoy", name: "도소매 거래", color: C.ind, w: 2 }, { key: "retail_gva_growth", name: "소매 부가가치", color: C.teal }, { key: "wholesale_gva_growth", name: "도매 부가가치", color: C.amber }])
   const permit = build(d, n, [{ key: "permits_nonresidential_floorarea", name: "비주거 착공면적", color: C.ind, w: 2, tf: (v) => v / 1e6 }])
   const permitV = build(d, n, [{ key: "permits_residential_value", name: "주거 건축허가액", color: C.violet, w: 2, tf: (v) => v / 1e6 }]) // 천PHP→십억₱
-  const va = build(d, n, [{ key: "manufacturing_va_growth", name: "제조업", color: C.ind, w: 2 }, { key: "industry_va_growth", name: "산업", color: C.rose }, { key: "services_va_growth", name: "서비스", color: C.emer }])
+  const va = build(d, n, [{ key: "manufacturing_va_growth", name: "제조업", color: C.ind, w: 2 }, { key: "industry_gva_yoy", name: "산업", color: C.rose }, { key: "services_gva_yoy", name: "서비스", color: C.emer }]) // 산업·서비스는 최신 vintage(gva_yoy)로 통일 — 구 va_growth와 값 불일치 제거
   const rsale = build(d, n, [{ key: "retail_sales_growth", name: "소매판매 증가율", color: C.ind, w: 2 }]) // 연간 6년(COVID 저점)
   const pcap = build(d, n, [{ key: "gdp_per_capita_usd", name: "1인당 GDP", color: C.ind, w: 2 }]) // USD, 연간 — 구매력·시장규모
   const tour = build(d, n, [{ key: "tourism_arrivals", name: "국제 관광객", color: C.teal, w: 2 }]) // 백만명, 연간 — 서비스·소비 동력
