@@ -1249,6 +1249,52 @@ function renderInfra(name){
     <div style="font-size:8.5px;color:#94a3b8;margin-top:5px">DPWH Transparency · 지역별 프로젝트 예산·집행</div>
   </div>`;
 }
+// 현재 선택된 지표의 카테고리(MAP_GROUP) 판별
+function curMetricCat(){ const g=MAP_GROUPS.find(g=>g.keys.includes(curMapMetric)); return g?g.label:""; }
+// 카테고리별 전용 상세 — 물가면 물가상세, 인프라면 인프라상세…
+function renderFocus(name){
+  const box=document.getElementById("d-infra"); if(!box) return;
+  const cat=curMetricCat();
+  if(cat.includes("인프라")){ renderInfra(name); return; }
+  box.innerHTML="";
+  const e=ECON[name]||{};
+  const wrap=(title,badge,body,src)=>`<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(148,163,184,.25)">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><span style="font-size:12px;font-weight:800;color:#0f1420">${title}</span>
+    <span style="margin-left:auto;font-size:8.5px;font-weight:700;color:#3730a3;background:#eef0fb;border:1px solid #e0e3f4;border-radius:3px;padding:1px 5px">${badge}</span></div>${body}
+    <div style="font-size:8.5px;color:#94a3b8;margin-top:6px">${src}</div></div>`;
+  const bar=(label,val,pct,color,valtxt)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+    <span style="width:70px;font-size:10px;color:#475569;flex-shrink:0">${label}</span>
+    <span style="flex:1;height:9px;background:#eef0f4;border-radius:3px;overflow:hidden;position:relative"><span style="position:absolute;inset:0 auto 0 0;width:${Math.max(3,Math.min(100,pct))}%;background:${color};border-radius:3px"></span></span>
+    <span style="width:60px;text-align:right;font-size:10px;font-weight:700;color:#334155">${valtxt}</span></div>`;
+  if(cat.includes("물가")){
+    const per=(MONTHS.length&&typeof fmtMonth==="function")?fmtMonth(MONTHS[curMonthIdx]):"";
+    const items=[["appl_cpi","가전"],["aircon_cpi","에어컨"],["food_cpi","식품"],["elec_cpi","전기"],["rice_cpi","쌀"],["transport_cpi","운송"]];
+    const rows=items.map(([k,ko])=>({ko,v:mVal(name,k)})).filter(x=>!isNaN(x.v));
+    if(!rows.length) return;
+    const mx=Math.max(...rows.map(r=>Math.abs(r.v)),3);
+    const body=rows.map(r=>bar(r.ko, r.v, Math.abs(r.v)/mx*100, r.v>=0?"#e11d48":"#059669",(r.v>0?"+":"")+r.v.toFixed(1)+"%")).join("");
+    box.innerHTML=wrap("지역 물가 (전년비)"+(per?` · ${per}`:""),"CPI",body,"PSA 소비자물가지수(지역별)");
+  } else if(cat.includes("가전보급")){
+    const rows=[["냉장고 보유",e.own_ref],["TV 보유",e.own_tv],["전기 보급",e.electrif]].filter(x=>x[1]!=null);
+    if(!rows.length) return;
+    const body=rows.map(([l,v])=>bar(l,v,v,"#4f46e5",v.toFixed(0)+"%")).join("")
+      +(e.own_ref!=null?`<div style="font-size:10px;color:#64748b;margin-top:5px">냉장고 미보급갭 <b style="color:#b45309">${(100-e.own_ref).toFixed(0)}%p</b> = 잠재 수요</div>`:"");
+    box.innerHTML=wrap("가전 보급·기회","DHS 2022",body,"PSA·DHS 인구보건조사");
+  } else if(cat.includes("경제규모")){
+    if(e.grdp_size==null&&e.grdp_pc==null) return;
+    const body=`<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px">
+      ${e.grdp_size!=null?`<span>경제규모 <b style="font-size:13px">₱${e.grdp_size.toFixed(1)}조</b></span>`:""}
+      ${e.grdp_pc!=null?`<span style="color:#475569">1인당 <b>${pesoKo(e.grdp_pc)}</b></span>`:""}</div>`;
+    box.innerHTML=wrap("지역 경제규모 (GRDP)","2025",body,"PSA 지역계정(불변2018)");
+  } else if(cat.includes("인구")){
+    if(e.pop_n==null&&e.income_real==null&&e.poverty==null) return;
+    const body=`<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px">
+      ${e.pop_n!=null?`<span>인구 <b style="font-size:13px">${Math.round(e.pop_n*100).toLocaleString()}만명</b></span>`:""}
+      ${e.income_real!=null?`<span style="color:#475569">가구소득 <b>${pesoKo(e.income_real)}</b></span>`:""}
+      ${e.poverty!=null?`<span style="color:#b45309">빈곤율 <b>${e.poverty.toFixed(1)}%</b></span>`:""}</div>`;
+    box.innerHTML=wrap("인구·소득","2020–23",body,"PSA 인구총조사·FIES");
+  }
+}
 function showDetail(name){
   const info=DATA[name]||{};
   document.getElementById("d-code").textContent=info.code||"—";
@@ -1264,7 +1310,7 @@ function showDetail(name){
   renderKPI(name);
   renderSummary(name);
   renderMetrics(name);
-  renderInfra(name);
+  renderFocus(name);
   renderTags(name);
   document.getElementById("detail").classList.add("show");
   document.getElementById("detail").querySelector(".detail-scroll").scrollTop=0;
