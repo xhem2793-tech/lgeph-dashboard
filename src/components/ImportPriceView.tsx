@@ -57,15 +57,17 @@ export default function ImportPriceView() {
         </div>
       </div>
 
-      {/* 제품 + 기간 토글 — 타 경제지표 뷰와 동일(Segmented, 기간 우측 정렬) */}
-      <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-        <Segmented value={hs} onChange={setHs} options={HS.map((h) => ({ k: h.hs, label: h.label }))} size="sm" />
-        <span className="text-[11px] text-gray-400 dark:text-gray-500">HS {hs}{lastDate ? " · 최신 확보 " + fmtMonth(lastDate) : ""}</span>
-        <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: "전체" }]} /></span>
-      </div>
-
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-      <div className="grid items-stretch gap-4 sm:grid-cols-2">
+      <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+        {/* 제품 + 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
+        <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+          <span className="h-[18px] w-1 rounded bg-indigo-500" />
+          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전 수입 단가</h2>
+          <Segmented value={hs} onChange={setHs} options={HS.map((h) => ({ k: h.hs, label: h.label }))} size="sm" />
+          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">HS {hs}{lastDate ? " · 최신 확보 " + fmtMonth(lastDate) : ""}</span>
+          <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: "전체" }]} /></span>
+        </header>
+        <div className="grid items-stretch gap-4 sm:grid-cols-2">
         {/* 단가 추이 */}
         {chart.series.length ? (
           <ChartCard
@@ -107,6 +109,7 @@ export default function ImportPriceView() {
           <p className="mt-auto pt-2 text-[10px] text-gray-400 dark:text-gray-500">UN Comtrade · 최신 확보월 원산지별 CIF 점유·단가</p>
         </div>
       </div>
+      </section>
         <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
 

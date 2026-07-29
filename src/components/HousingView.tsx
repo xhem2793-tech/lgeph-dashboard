@@ -79,16 +79,16 @@ export default function HousingView() {
         </div>
       </div>
 
-      {/* 기간 토글 — 타 경제지표 뷰와 동일(Segmented, 우측 정렬) */}
-      <header className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-        <span className="h-[18px] w-1 rounded bg-indigo-500" />
-        <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">부동산·주택</h2>
-        <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">RPPI·건축허가·공실·인프라</span>
-        <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k }))} /></span>
-      </header>
-
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-      <div className="grid items-stretch gap-4 sm:grid-cols-2">
+      <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+        {/* 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
+        <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+          <span className="h-[18px] w-1 rounded bg-indigo-500" />
+          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">부동산·주택</h2>
+          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">RPPI·건축허가·공실·인프라</span>
+          <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k }))} /></span>
+        </header>
+        <div className="grid items-stretch gap-4 sm:grid-cols-2">
         {rppi.series.length ? (
           <ChartCard title="주택가격지수 RPPI" seg="CE" unit="2019=100 · 분기" decimals={1}
             legend={<><Lg c={C.ind} t="전체" b /><Lg c={C.rose} t="콘도" /><Lg c={C.emer} t="단독주택" /></>}
@@ -149,7 +149,8 @@ export default function HousingView() {
             <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">DPWH Transparency(공개) · 지역별 예산·건수·집행상태 집계</p>
           </div>
         )}
-      </div>
+        </div>
+      </section>
         <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
 

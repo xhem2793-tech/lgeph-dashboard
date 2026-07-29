@@ -430,16 +430,18 @@
           <div class="sum-line" id="d-summary">—</div>
           <div class="tags" id="d-tags"></div>
         </div>
-        <div class="kpigrid">
+        <div class="kpigrid" id="d-kpigrid">
           <div class="kc"><div class="kc-k">총 셀아웃</div><div class="kc-v" id="k-sell">—</div></div>
           <div class="kc"><div class="kc-k">전년 대비 성장률</div><div class="kc-v" id="k-yoy">—</div></div>
           <div class="kc"><div class="kc-k">전국 기여도</div><div class="kc-v" id="k-share">—</div></div>
           <div class="kc"><div class="kc-k">1인당 셀아웃 <small>지수·전국=100</small></div><div class="kc-v" id="k-pc">—</div></div>
         </div>
         <div class="sec">
-          <div class="lb">시장·경제 지표 <span class="avgkey"><i></i> 전국 평균</span></div>
-          <div class="srcnote"><span class="sb sb-ec" id="econ-src">경제 데이터: 폴백(내장 근사치)</span></div>
-          <div class="metrics" id="d-metrics"></div>
+          <div id="d-market">
+            <div class="lb" id="d-focus-lb">시장·경제 지표 <span class="avgkey"><i></i> 전국 평균</span></div>
+            <div class="srcnote"><span class="sb sb-ec" id="econ-src">경제 데이터: 폴백(내장 근사치)</span></div>
+            <div class="metrics" id="d-metrics"></div>
+          </div>
           <div id="d-infra"></div>
         </div>
         <div class="sec">
@@ -1255,6 +1257,12 @@ function curMetricCat(){ const g=MAP_GROUPS.find(g=>g.keys.includes(curMapMetric
 function renderFocus(name){
   const box=document.getElementById("d-infra"); if(!box) return;
   const cat=curMetricCat();
+  const catActive=!!(curMapMetric&&curMapMetric!=="none");
+  // 미검증(셀아웃·기여도·성장) KPI·요약 상시 숨김(#20)
+  const kg=document.getElementById("d-kpigrid"); if(kg) kg.style.display="none";
+  const sm=document.getElementById("d-summary"); if(sm) sm.style.display="none";
+  // 카테고리 선택 시 종합 지표 숨기고 해당 카테고리 전용 상세만(전체=종합 지표)
+  const mk=document.getElementById("d-market"); if(mk) mk.style.display=catActive?"none":"";
   if(cat.includes("인프라")){ renderInfra(name); return; }
   box.innerHTML="";
   const e=ECON[name]||{};
