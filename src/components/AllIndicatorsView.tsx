@@ -153,7 +153,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
 
   return (
     <div className="flex flex-col gap-4">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes detFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes bkFade{from{opacity:0}to{opacity:1}}"}</style>
 
       <section className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white dark:from-indigo-500/10 dark:via-transparent dark:to-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
         <h1 className="text-[18px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">전체 지표 리스트 · 출처 검증</h1>
@@ -212,7 +212,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
             <span className="text-[11px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
             {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="ml-auto text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">차트 전체 보기 →</button>}
           </header>
-          <IndTable items={items} q={q} showCat={false} onRow={goChart} onDetail={setDetail} onExcel={downloadExcel} />
+          <IndTable items={items} q={q} showCat={false} onDetail={setDetail} onExcel={downloadExcel} />
         </section>
       ))}
 
@@ -224,7 +224,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
             <h2 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">최신 업데이트순</h2>
             <span className="text-[11px] text-gray-400 dark:text-gray-500">{flat.length}개 지표 · 최근 관측 우선</span>
           </header>
-          <IndTable items={flat} q={q} showCat onRow={goChart} onDetail={setDetail} onExcel={downloadExcel} />
+          <IndTable items={flat} q={q} showCat onDetail={setDetail} onExcel={downloadExcel} />
         </section>
       )}
 
@@ -236,12 +236,12 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
         최신값=국가지표(PHILIPPINES) 최신 관측 · 직전 대비=직전 관측 대비 증감 · 기간=데이터 보유 범위(관측수) · <b className="font-semibold text-gray-500 dark:text-gray-400">자세히보기=시계열(연·분기·월)+전년비·전월비, 엑셀=CSV 다운로드</b> · 「전망」은 ADB·IMF·BSP 예측치.
       </p>
 
-      {detail && <IndicatorDetail row={detail} onClose={() => setDetail(null)} onExcel={downloadExcel} />}
+      {detail && <IndicatorDetail row={detail} onClose={() => setDetail(null)} onExcel={downloadExcel} onOpenChart={goChart} />}
     </div>
   )
 }
 
-function IndTable({ items, q, showCat, onRow, onDetail, onExcel }: { items: Row[]; q: string; showCat: boolean; onRow: (cat: string) => void; onDetail: (r: Row) => void; onExcel: (r: Row) => void }) {
+function IndTable({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: string; showCat: boolean; onDetail: (r: Row) => void; onExcel: (r: Row) => void }) {
   // 고정 컬럼폭 — 카테고리별 표가 동일 위치에 정렬되도록(table-layout:fixed)
   const cols = showCat ? ["20%", "9%", "9%", "7%", "9%", "8%", "12%", "9%", "17%"] : ["24%", "10%", "7%", "10%", "9%", "13%", "10%", "17%"]
   return (
@@ -257,16 +257,15 @@ function IndTable({ items, q, showCat, onRow, onDetail, onExcel }: { items: Row[
           {items.map((r) => {
             const chg = r.value != null && r.prev != null && r.prev !== 0 ? r.value - r.prev : null
             const up = chg != null && chg >= 0
-            const nav = NAV_IDS.has(r.cat)
             const link = sourceLink(r.source, r.source_ref)
             const u = inferUnit(r.indicator, r.label || "")
             return (
-              <tr key={r.indicator} onClick={nav ? () => onRow(r.cat) : undefined}
-                className={"group border-b border-gray-50 dark:border-gray-800/50 transition-colors " + (nav ? "cursor-pointer hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10" : "hover:bg-gray-50/60 dark:hover:bg-gray-800/30")}>
+              <tr key={r.indicator} onClick={() => onDetail(r)}
+                className="group cursor-pointer border-b border-gray-50 dark:border-gray-800/50 transition-all duration-200 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
                 <td className="px-4 py-1.5">
                   <div className="flex items-center gap-1.5">
-                    <span className={"truncate font-medium " + (nav ? "text-gray-800 dark:text-gray-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-300" : "text-gray-800 dark:text-gray-100")} title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></span>
-                    {nav && <span className="shrink-0 text-[10px] font-semibold text-indigo-500 opacity-0 transition-opacity group-hover:opacity-100">차트 →</span>}
+                    <span className="truncate font-medium text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></span>
+                    <span className="shrink-0 text-[10px] font-semibold text-indigo-500 opacity-0 transition-opacity group-hover:opacity-100">자세히 →</span>
                   </div>
                 </td>
                 {showCat && <td className="truncate px-2 py-1.5 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
@@ -292,7 +291,7 @@ function IndTable({ items, q, showCat, onRow, onDetail, onExcel }: { items: Row[
 }
 
 // 지표 자세히보기 — 시계열(월/분기/연)을 엑셀 표처럼, 전월비·전년비 반영
-function IndicatorDetail({ row, onClose, onExcel }: { row: Row; onClose: () => void; onExcel: (r: Row) => void }) {
+function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onClose: () => void; onExcel: (r: Row) => void; onOpenChart: (cat: string) => void }) {
   const [series, setSeries] = useState<{ date: string; value: number }[] | null>(null)
   const [gran, setGran] = useState<"month" | "quarter" | "year">("month")
 
@@ -343,10 +342,12 @@ function IndicatorDetail({ row, onClose, onExcel }: { row: Row; onClose: () => v
   const pct = (x: number | null) => (x == null ? "—" : (x >= 0 ? "+" : "") + x.toFixed(1) + "%")
   const gname: Record<string, string> = { month: "월별", quarter: "분기별", year: "연도별" }
   const u = inferUnit(row.indicator, row.label || "")
+  const chartData = useMemo(() => table.slice().reverse().map((t) => ({ k: t.k, v: t.v })), [table]) // 차트는 시간순(과거→최신)
+  const canOpen = NAV_IDS.has(row.cat)
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
-      <div className="flex max-h-[85vh] w-full max-w-[680px] flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose} style={{ animation: "bkFade .2s ease both" }}>
+      <div className="flex max-h-[88vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: "detFade .3s cubic-bezier(.16,1,.3,1) both" }}>
         <div className="flex items-start gap-3 border-b border-gray-100 dark:border-gray-800 px-5 py-3.5">
           <div className="min-w-0 flex-1">
             <h3 className="truncate text-[15px] font-bold text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h3>
@@ -363,38 +364,93 @@ function IndicatorDetail({ row, onClose, onExcel }: { row: Row; onClose: () => v
           <div className="flex items-center gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5">
             {grans.map((g) => (
               <button key={g} type="button" onClick={() => setGran(g as "month" | "quarter" | "year")}
-                className={"rounded-md px-2.5 py-1 text-[11.5px] font-semibold transition-all " + (gran === g ? "bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600")}>{gname[g]}</button>
+                className={"rounded-md px-2.5 py-1 text-[11.5px] font-semibold transition-all duration-200 " + (gran === g ? "bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600")}>{gname[g]}</button>
             ))}
           </div>
-          <button type="button" onClick={() => onExcel(row)} className="ml-auto inline-flex items-center gap-1 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[11.5px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all hover:-translate-y-0.5 active:scale-95">
+          {canOpen && <button type="button" onClick={() => { onOpenChart(row.cat); onClose() }} className="ml-auto inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11.5px] font-semibold text-indigo-600 dark:text-indigo-400 transition-all hover:-translate-y-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 active:scale-95">경제지표에서 보기 →</button>}
+          <button type="button" onClick={() => onExcel(row)} className={(canOpen ? "" : "ml-auto ") + "inline-flex items-center gap-1 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[11.5px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all hover:-translate-y-0.5 active:scale-95"}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
-            엑셀 다운로드
+            엑셀
           </button>
         </div>
-        <div className="min-h-0 flex-1 overflow-auto">
+        <div className="min-h-0 flex-1 overflow-auto p-4">
           {series == null ? (
-            <div className="flex h-40 items-center justify-center text-[13px] text-gray-400">불러오는 중…</div>
+            <div className="flex h-56 items-center justify-center text-[13px] text-gray-400">불러오는 중…</div>
           ) : table.length === 0 ? (
-            <div className="flex h-40 items-center justify-center text-[13px] text-gray-400">시계열 데이터 없음</div>
+            <div className="flex h-56 items-center justify-center text-[13px] text-gray-400">시계열 데이터 없음</div>
           ) : (
-            <table className="w-full text-[12.5px]">
-              <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/80 backdrop-blur"><tr className="text-left text-[10.5px] font-semibold uppercase text-gray-500 dark:text-gray-400">
-                <th className="px-5 py-2">기간</th><th className="px-3 py-2 text-right">값</th><th className="px-3 py-2 text-right">{gran === "year" ? "전년대비" : gran === "quarter" ? "전분기대비" : "전월대비"}</th>{gran !== "year" && <th className="px-5 py-2 text-right">전년동기대비</th>}
-              </tr></thead>
-              <tbody>
-                {table.map((t) => (
-                  <tr key={t.k} className="border-t border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5">
-                    <td className="px-5 py-1.5 font-medium text-gray-800 dark:text-gray-100">{label(t.k)}</td>
-                    <td className="px-3 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(t.v) + (u.suffix || "")}</td>
-                    <td className={"px-3 py-1.5 text-right tabular-nums " + (t.mom == null ? "text-gray-300 dark:text-gray-600" : t.mom >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.mom)}</td>
-                    {gran !== "year" && <td className={"px-5 py-1.5 text-right tabular-nums " + (t.yoy == null ? "text-gray-300 dark:text-gray-600" : t.yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.yoy)}</td>}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <div className="flex flex-col gap-4">
+              {/* 차트 카드 */}
+              <div key={gran} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) both" }}>
+                <div className="mb-2 flex items-center gap-2">
+                  <span className="h-[15px] w-1 rounded bg-indigo-500" />
+                  <h4 className="text-[13px] font-bold text-gray-900 dark:text-gray-50">추이 <span className="text-[11px] font-semibold text-gray-400">· {gname[gran]}</span></h4>
+                  <span className="ml-auto text-[11px] tabular-nums text-gray-500 dark:text-gray-400">최신 <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
+                </div>
+                <MiniChart data={chartData} gran={gran} />
+              </div>
+              {/* 엑셀형 표 카드 */}
+              <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) .06s both" }}>
+                <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
+                  <span className="h-[15px] w-1 rounded bg-emerald-500" />
+                  <h4 className="text-[13px] font-bold text-gray-900 dark:text-gray-50">시계열 표 <span className="text-[11px] font-semibold text-gray-400">· 전기·전년 대비</span></h4>
+                  <button type="button" onClick={() => onExcel(row)} className="ml-auto inline-flex items-center gap-1 rounded-md border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all hover:-translate-y-0.5 active:scale-95">엑셀 ↓</button>
+                </div>
+                <div className="max-h-[320px] overflow-auto">
+                  <table className="w-full text-[12.5px]">
+                    <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/90 backdrop-blur"><tr className="text-left text-[10.5px] font-semibold uppercase text-gray-500 dark:text-gray-400">
+                      <th className="px-4 py-2">기간</th><th className="px-3 py-2 text-right">값</th><th className="px-3 py-2 text-right">{gran === "year" ? "전년대비" : gran === "quarter" ? "전분기대비" : "전월대비"}</th>{gran !== "year" && <th className="px-4 py-2 text-right">전년동기대비</th>}
+                    </tr></thead>
+                    <tbody>
+                      {table.map((t) => (
+                        <tr key={t.k} className="border-t border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5">
+                          <td className="px-4 py-1.5 font-medium text-gray-800 dark:text-gray-100">{label(t.k)}</td>
+                          <td className="px-3 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(t.v) + (u.suffix || "")}</td>
+                          <td className={"px-3 py-1.5 text-right tabular-nums " + (t.mom == null ? "text-gray-300 dark:text-gray-600" : t.mom >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.mom)}</td>
+                          {gran !== "year" && <td className={"px-4 py-1.5 text-right tabular-nums " + (t.yoy == null ? "text-gray-300 dark:text-gray-600" : t.yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.yoy)}</td>}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
           )}
         </div>
         <div className="border-t border-gray-100 dark:border-gray-800 px-5 py-2 text-[10px] text-gray-400 dark:text-gray-500">{gname[gran]} 시계열 · 값=기간 말 관측 · 상승 <span className="text-rose-500">적색</span>/하락 <span className="text-emerald-500">녹색</span> · 출처 {row.source}</div>
+      </div>
+    </div>
+  )
+}
+
+// 지표 추이 미니 차트(SVG, 부드러운 드로우 애니메이션)
+function MiniChart({ data, gran }: { data: { k: string; v: number }[]; gran: string }) {
+  if (!data || data.length < 2) return <div className="flex h-44 items-center justify-center text-[12px] text-gray-400">차트 표시에 데이터가 부족합니다</div>
+  const W = 640, H = 190, padL = 6, padR = 6, padT = 12, padB = 24
+  const vals = data.map((d) => d.v)
+  let mn = Math.min(...vals), mx = Math.max(...vals)
+  if (mn === mx) { mn -= 1; mx += 1 }
+  const rng = mx - mn; mn -= rng * 0.12; mx += rng * 0.12
+  const X = (i: number) => padL + (W - padL - padR) * (data.length === 1 ? 0.5 : i / (data.length - 1))
+  const Y = (v: number) => padT + (H - padT - padB) * (1 - (v - mn) / (mx - mn))
+  const linePts = data.map((d, i) => `${X(i).toFixed(1)},${Y(d.v).toFixed(1)}`).join(" ")
+  const areaD = `M ${X(0).toFixed(1)},${(H - padB).toFixed(1)} L ` + data.map((d, i) => `${X(i).toFixed(1)},${Y(d.v).toFixed(1)}`).join(" L ") + ` L ${X(data.length - 1).toFixed(1)},${(H - padB).toFixed(1)} Z`
+  const lab = (k: string) => (gran === "year" ? k : gran === "quarter" ? k.replace("-", " ") : k.slice(2, 4) + "." + Number(k.slice(5)))
+  const xi = Array.from(new Set([0, Math.floor((data.length - 1) / 2), data.length - 1]))
+  const gy = [0, 0.5, 1].map((f) => padT + (H - padT - padB) * f)
+  const last = data[data.length - 1]
+  return (
+    <div className="relative w-full">
+      <style>{"@keyframes drawLine{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}@keyframes detFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes areaIn{from{opacity:0}to{opacity:1}}"}</style>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: 190, display: "block" }}>
+        <defs><linearGradient id="miniArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6366f1" stopOpacity="0.28" /><stop offset="100%" stopColor="#6366f1" stopOpacity="0" /></linearGradient></defs>
+        {gy.map((y, i) => <line key={i} x1={padL} y1={y} x2={W - padR} y2={y} stroke="currentColor" className="text-gray-200 dark:text-gray-700" strokeWidth="0.6" strokeDasharray="3 3" />)}
+        <path d={areaD} fill="url(#miniArea)" style={{ animation: "areaIn .8s ease .2s both" }} />
+        <polyline points={linePts} fill="none" stroke="#4f46e5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" pathLength={1} style={{ strokeDasharray: 1, animation: "drawLine 1.1s cubic-bezier(.4,0,.2,1) both" }} />
+        <circle cx={X(data.length - 1)} cy={Y(last.v)} r="3.2" fill="#4f46e5" style={{ animation: "areaIn .4s ease 1s both" }} />
+      </svg>
+      <div className="mt-1 flex justify-between px-1 text-[9.5px] tabular-nums text-gray-400 dark:text-gray-500">
+        {xi.map((i) => <span key={i}>{lab(data[i].k)}</span>)}
       </div>
     </div>
   )
