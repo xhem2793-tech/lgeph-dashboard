@@ -29,6 +29,26 @@ function fmtVal(v: number): string {
   return v.toFixed(2)
 }
 
+// 값 단위 추론(%/₱/$/지수/℃/명) — 라벨·지표키 기반 휴리스틱
+function inferUnit(indicator: string, label: string): { prefix?: string; suffix?: string; note: string } {
+  const s = (indicator + " " + (label || "")).toLowerCase()
+  if (/유가|oil_|휘발유|경유|디젤|등유|gasoline|diesel|kerosene|ron9|meralco|요금|소매가/.test(s)) return { prefix: "₱", note: "₱(페소)" }
+  if (/brent|수출액|수입액|송금|remittance|fdi|reserves|_usd|market_usd|외환보유|gni|gdp_total/.test(s)) return { prefix: "$", note: "$(미달러)" }
+  if (/php_usd|환율|exchange/.test(s)) return { prefix: "₱", note: "₱/$(환율)" }
+  if (/임금|wage/.test(s)) return { prefix: "₱", note: "₱(페소)" }
+  if (/율|률|금리|증가율|상승률|비중|참가율|점유|inflation|growth|_yoy|ratio|_pct|share|forecast|rate$|_rate\b/.test(s)) return { suffix: "%", note: "% (율)" }
+  if (/지수|index|\bcci\b|\bbci\b|rppi|psei|_ci_|confidence|sentiment|composite|gini/.test(s)) return { suffix: "", note: "지수(index)" }
+  if (/기온|temperature/.test(s)) return { suffix: "℃", note: "℃(기온)" }
+  if (/cdd|냉방도일/.test(s)) return { suffix: "", note: "냉방도일" }
+  if (/인구|population|취업자|employed|고용|households|가구/.test(s)) return { suffix: "", note: "명·수" }
+  return { suffix: "", note: "값" }
+}
+function valWithUnit(r: Row): string {
+  if (r.value == null || Number.isNaN(r.value)) return "—"
+  const u = inferUnit(r.indicator, r.label || "")
+  return (u.prefix || "") + fmtVal(r.value) + (u.suffix || "")
+}
+
 /** 검색어 하이라이트 — 뉴스 검색과 동일(노란 mark) */
 function Hi({ text, q }: { text: string; q: string }) {
   const k = q.trim()
@@ -254,7 +274,10 @@ function IndTable({ items, q, showCat, onRow, onDetail, onExcel }: { items: Row[
                   </div>
                 </td>
                 {showCat && <td className="truncate px-2 py-1.5 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
-                <td className="px-2 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? fmtVal(r.value) : "—"}</td>
+                <td className="px-2 py-1.5 text-right">
+                  <div className="font-bold tabular-nums text-gray-900 dark:text-gray-50">{valWithUnit(r)}</div>
+                  <div className="text-[9px] font-normal text-gray-400 dark:text-gray-500">{inferUnit(r.indicator, r.label || "").note}</div>
+                </td>
                 <td className={"px-2 py-1.5 text-right tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "—" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.period)}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-400 dark:text-gray-500">{ym(r.mn)}~{ym(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>
@@ -325,6 +348,7 @@ function IndicatorDetail({ row, onClose, onExcel }: { row: Row; onClose: () => v
   const label = (k: string) => (gran === "year" ? k + "년" : gran === "quarter" ? k.replace("-", " ") : k.slice(0, 4) + "." + Number(k.slice(5)) + "월")
   const pct = (x: number | null) => (x == null ? "—" : (x >= 0 ? "+" : "") + x.toFixed(1) + "%")
   const gname: Record<string, string> = { month: "월별", quarter: "분기별", year: "연도별" }
+  const u = inferUnit(row.indicator, row.label || "")
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
@@ -361,15 +385,15 @@ function IndicatorDetail({ row, onClose, onExcel }: { row: Row; onClose: () => v
           ) : (
             <table className="w-full text-[12.5px]">
               <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/80 backdrop-blur"><tr className="text-left text-[10.5px] font-semibold uppercase text-gray-500 dark:text-gray-400">
-                <th className="px-5 py-2">기간</th><th className="px-3 py-2 text-right">값</th><th className="px-3 py-2 text-right">{gran === "year" ? "전년대비" : gran === "quarter" ? "전분기대비" : "전월대비"}</th><th className="px-5 py-2 text-right">전년동기대비</th>
+                <th className="px-5 py-2">기간</th><th className="px-3 py-2 text-right">값</th><th className="px-3 py-2 text-right">{gran === "year" ? "전년대비" : gran === "quarter" ? "전분기대비" : "전월대비"}</th>{gran !== "year" && <th className="px-5 py-2 text-right">전년동기대비</th>}
               </tr></thead>
               <tbody>
                 {table.map((t) => (
                   <tr key={t.k} className="border-t border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5">
                     <td className="px-5 py-1.5 font-medium text-gray-800 dark:text-gray-100">{label(t.k)}</td>
-                    <td className="px-3 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{fmtVal(t.v)}</td>
+                    <td className="px-3 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(t.v) + (u.suffix || "")}</td>
                     <td className={"px-3 py-1.5 text-right tabular-nums " + (t.mom == null ? "text-gray-300 dark:text-gray-600" : t.mom >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.mom)}</td>
-                    <td className={"px-5 py-1.5 text-right tabular-nums " + (t.yoy == null ? "text-gray-300 dark:text-gray-600" : t.yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.yoy)}</td>
+                    {gran !== "year" && <td className={"px-5 py-1.5 text-right tabular-nums " + (t.yoy == null ? "text-gray-300 dark:text-gray-600" : t.yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.yoy)}</td>}
                   </tr>
                 ))}
               </tbody>
