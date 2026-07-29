@@ -651,6 +651,23 @@ async function loadRegionalCensus(){
     if(selected) showDetail(selected.properties.REGION);
   }catch(e){ console.warn("지역 인구/빈곤 로드 건너뜀:",e); }
 }
+// 지역별 인프라 투자(DPWH) — 연도별 예산(₱B). 최신연도=choropleth, 연도 시계열=상세 팝업.
+async function loadRegionalInfra(){
+  try{
+    const rr=await fetch(`${SB_CPI.url}/rest/v1/macro_indicators?geo_level=eq.region&indicator=eq.infra_budget_region&select=geo,period_date,value&order=period_date.asc`,
+      {headers:{apikey:SB_CPI.key,Authorization:"Bearer "+SB_CPI.key}});
+    if(!rr.ok) return;
+    const rows=await rr.json();
+    rows.forEach(row=>{ const reg=REG_CPI_MAP[row.geo]; if(!reg) return; ECON[reg]=ECON[reg]||{};
+      ECON[reg].infra_series=ECON[reg].infra_series||{};
+      ECON[reg].infra_series[row.period_date.slice(0,4)]=Number(row.value);
+      ECON[reg].infra_budget=Number(row.value); // period asc → 최신연도가 마지막(덮어씀)
+    });
+    if(typeof computeEconStats==="function") computeEconStats();
+    if(curMapMetric && curMapMetric!=="none") applyChoropleth(curMapMetric);
+    if(selected) showDetail(selected.properties.REGION);
+  }catch(e){ console.warn("지역 인프라 로드 건너뜀:",e); }
+}
 
 const svg = d3.select("#map");
 let level="map";
@@ -719,10 +736,7 @@ function usdOf(v){ const u=v/PHPUSD; if(u>=1e9) return "$"+(u/1e9).toFixed(1)+"B
 const MAPMETRICS=[
   {key:"none",     label:"전체", none:true},
   {key:"opp",      label:"종합 기회점수", val:oppScore, fmt:v=>Math.round(v)+"점", src:"합성(PSA·DHS)", yr:"2020–25"},
-  {key:"growth",   label:"성장률",       div:true, val:growthVal,    fmt:v=>(v>0?"+":"")+v.toFixed(1)+"%", src:"내부(예시)", yr:"—"},
-  {key:"contrib",  label:"전국 기여도",  val:contribution, fmt:v=>v+"%", src:"내부(예시)", yr:"—"},
-  {key:"percap",   label:"1인당 셀아웃", val:percapIndex,  fmt:v=>Math.round(v), src:"내부(예시)", yr:"—"},
-  {key:"potential",label:"성장 여력",    val:potentialGap, fmt:v=>(v>0?"+":"")+v.toFixed(1)+"p", src:"내부(예시)", yr:"—"},
+  {key:"infra",    label:"인프라 투자(DPWH)", val:name=>{const v=ECON[name]&&ECON[name].infra_budget;return v!=null?v:NaN;}, fmt:v=>"₱"+Math.round(v)+"B", src:"DPWH Transparency", yr:"2025"},
   {key:"pop_n",    label:"인구",         val:name=>{const v=ECON[name]&&ECON[name].pop_n;return v!=null?v:NaN;}, fmt:v=>Math.round(v*100).toLocaleString()+"만명", src:"PSA 인구총조사", yr:"2020"},
   {key:"income_real",label:"평균 가구소득(연)", val:name=>{const v=ECON[name]&&ECON[name].income_real;return v!=null?v:NaN;}, fmt:v=>"연 "+pesoKo(v)+" ("+usdOf(v)+")", src:"PSA 가계소득지출조사(FIES)", yr:"2023"},
   {key:"poverty",  label:"빈곤율",       val:name=>{const v=ECON[name]&&ECON[name].poverty;return v!=null?v:NaN;}, fmt:v=>v.toFixed(1)+"%", src:"PSA 빈곤통계", yr:"2023"},
@@ -750,7 +764,8 @@ const METRIC_URL={
   appl_cpi:"https://psa.gov.ph/statistics/consumer-price-index", aircon_cpi:"https://psa.gov.ph/statistics/consumer-price-index",
   food_cpi:"https://psa.gov.ph/statistics/consumer-price-index", elec_cpi:"https://psa.gov.ph/statistics/consumer-price-index",
   rice_cpi:"https://psa.gov.ph/statistics/consumer-price-index", transport_cpi:"https://psa.gov.ph/statistics/consumer-price-index",
-  opp:"" // 자체 합성(구성지표는 각 항목 링크 참조)
+  opp:"", // 자체 합성(구성지표는 각 항목 링크 참조)
+  infra:"https://transparency.dpwh.gov.ph/"
 };
 function metricUrl(k){ return METRIC_URL[k]||""; }
 let curMapMetric="none";
@@ -803,7 +818,7 @@ const MAP_GROUPS=[
   {label:"경제규모 (GRDP·2025)", keys:["grdp_pc","grdp_size"]},
   {label:"가전보급·기회 (DHS 2022)", keys:["own_ref","own_tv","electrif","ref_gap"]},
   {label:"인구·소득", keys:["pop_n","income_real","poverty"]},
-  {label:"가전시장 (내부·예시)", keys:["growth","contrib","percap","potential"]},
+  {label:"인프라 투자 (DPWH)", keys:["infra"]},
   {label:"물가 (전년비)", keys:["appl_cpi","aircon_cpi","food_cpi","elec_cpi","rice_cpi","transport_cpi"]},
 ];
 const NAVCATS=[{label:"전체",none:true}].concat(MAP_GROUPS);
@@ -1007,25 +1022,27 @@ d3.json("data/ph-regions.geojson").then(geo=>{
       apply();
       stage.style.cursor=ns>1?"grab":"";
     },{passive:false});
-    // 드래그 이동 — 확대 상태(scale>1)에서만
+    // 드래그 이동 — 확대 상태(scale>1)에서만. 클릭 보존을 위해 '실제 이동(>4px)' 후에만 포인터 캡처.
     let drag=null;
     stage.addEventListener("pointerdown",(e)=>{
       if(curT.scale<=1||e.button!==0) return;
-      drag={x:e.clientX,y:e.clientY,tx:curT.tx,ty:curT.ty,moved:false};
-      stage.style.cursor="grabbing";
-      try{ stage.setPointerCapture(e.pointerId); }catch(_){}
+      // 캡처하지 않고 시작점만 기록 → 순수 클릭은 지역 path 로 그대로 전달(선택 동작 보존)
+      drag={x:e.clientX,y:e.clientY,tx:curT.tx,ty:curT.ty,moved:false,captured:false,id:e.pointerId};
     });
     stage.addEventListener("pointermove",(e)=>{
       if(!drag) return;
+      const dist=Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y);
+      if(!drag.moved && dist<=4) return; // 임계 이하 미세이동은 무시(클릭으로 간주)
+      drag.moved=true;
+      if(!drag.captured){ stage.style.cursor="grabbing"; try{ stage.setPointerCapture(drag.id); }catch(_){}; drag.captured=true; }
       const r=svg.node().getBoundingClientRect();
       const sx=W/r.width, sy=H/r.height;
-      if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>3) drag.moved=true;
       curT={tx:drag.tx+(e.clientX-drag.x)*sx, ty:drag.ty+(e.clientY-drag.y)*sy, scale:curT.scale};
       apply();
     });
     function endDrag(){
       if(!drag) return;
-      if(drag.moved){  // 드래그였다면 뒤따르는 지역 클릭(선택) 억제
+      if(drag.moved){  // 실제 드래그였을 때만 뒤따르는 지역 클릭(선택) 억제
         const swallow=(ev)=>{ ev.stopPropagation(); ev.preventDefault(); };
         stage.addEventListener("click",swallow,true);
         setTimeout(()=>stage.removeEventListener("click",swallow,true),60);
@@ -1042,6 +1059,7 @@ d3.json("data/ph-regions.geojson").then(geo=>{
   loadEconomic();
   loadRegionalCpi();
   loadRegionalCensus();
+  loadRegionalInfra();
 });
 
 function centroidXY(d){ return path.centroid(d); }
