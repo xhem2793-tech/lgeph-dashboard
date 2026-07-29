@@ -30,23 +30,18 @@ function fmtVal(v: number): string {
 }
 
 // 값 단위 추론(%/₱/$/지수/℃/명) — 라벨·지표키 기반 휴리스틱
-function inferUnit(indicator: string, label: string): { prefix?: string; suffix?: string; note: string } {
+function inferUnit(indicator: string, label: string): { prefix?: string; suffix?: string; unit: string; note: string } {
   const s = (indicator + " " + (label || "")).toLowerCase()
-  if (/유가|oil_|휘발유|경유|디젤|등유|gasoline|diesel|kerosene|ron9|meralco|요금|소매가/.test(s)) return { prefix: "₱", note: "₱(페소)" }
-  if (/brent|수출액|수입액|송금|remittance|fdi|reserves|_usd|market_usd|외환보유|gni|gdp_total/.test(s)) return { prefix: "$", note: "$(미달러)" }
-  if (/php_usd|환율|exchange/.test(s)) return { prefix: "₱", note: "₱/$(환율)" }
-  if (/임금|wage/.test(s)) return { prefix: "₱", note: "₱(페소)" }
-  if (/율|률|금리|증가율|상승률|비중|참가율|점유|inflation|growth|_yoy|ratio|_pct|share|forecast|rate$|_rate\b/.test(s)) return { suffix: "%", note: "% (율)" }
-  if (/지수|index|\bcci\b|\bbci\b|rppi|psei|_ci_|confidence|sentiment|composite|gini/.test(s)) return { suffix: "", note: "지수(index)" }
-  if (/기온|temperature/.test(s)) return { suffix: "℃", note: "℃(기온)" }
-  if (/cdd|냉방도일/.test(s)) return { suffix: "", note: "냉방도일" }
-  if (/인구|population|취업자|employed|고용|households|가구/.test(s)) return { suffix: "", note: "명·수" }
-  return { suffix: "", note: "값" }
-}
-function valWithUnit(r: Row): string {
-  if (r.value == null || Number.isNaN(r.value)) return "—"
-  const u = inferUnit(r.indicator, r.label || "")
-  return (u.prefix || "") + fmtVal(r.value) + (u.suffix || "")
+  if (/유가|oil_|휘발유|경유|디젤|등유|gasoline|diesel|kerosene|ron9|meralco|요금|소매가/.test(s)) return { prefix: "₱", unit: "₱", note: "₱(페소)" }
+  if (/brent|수출액|수입액|송금|remittance|fdi|reserves|_usd|market_usd|외환보유|gni|gdp_total/.test(s)) return { prefix: "$", unit: "$", note: "$(미달러)" }
+  if (/php_usd|환율|exchange/.test(s)) return { prefix: "₱", unit: "₱/$", note: "₱/$(환율)" }
+  if (/임금|wage/.test(s)) return { prefix: "₱", unit: "₱", note: "₱(페소)" }
+  if (/율|률|금리|증가율|상승률|비중|참가율|점유|inflation|growth|_yoy|ratio|_pct|share|forecast|rate$|_rate\b/.test(s)) return { suffix: "%", unit: "%", note: "% (율)" }
+  if (/지수|index|\bcci\b|\bbci\b|rppi|psei|_ci_|confidence|sentiment|composite|gini/.test(s)) return { suffix: "", unit: "지수", note: "지수(index)" }
+  if (/기온|temperature/.test(s)) return { suffix: "℃", unit: "℃", note: "℃(기온)" }
+  if (/cdd|냉방도일/.test(s)) return { suffix: "", unit: "CDD", note: "냉방도일" }
+  if (/인구|population|취업자|employed|고용|households|가구/.test(s)) return { suffix: "", unit: "명·수", note: "명·수" }
+  return { suffix: "", unit: "값", note: "값" }
 }
 
 /** 검색어 하이라이트 — 뉴스 검색과 동일(노란 mark) */
@@ -248,15 +243,15 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
 
 function IndTable({ items, q, showCat, onRow, onDetail, onExcel }: { items: Row[]; q: string; showCat: boolean; onRow: (cat: string) => void; onDetail: (r: Row) => void; onExcel: (r: Row) => void }) {
   // 고정 컬럼폭 — 카테고리별 표가 동일 위치에 정렬되도록(table-layout:fixed)
-  const cols = showCat ? ["23%", "10%", "10%", "10%", "9%", "13%", "9%", "16%"] : ["27%", "11%", "11%", "10%", "14%", "10%", "17%"]
+  const cols = showCat ? ["20%", "9%", "9%", "7%", "9%", "8%", "12%", "9%", "17%"] : ["24%", "10%", "7%", "10%", "9%", "13%", "10%", "17%"]
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[860px] table-fixed text-[12px]">
+      <table className="w-full min-w-[880px] table-fixed text-[12px]">
         <colgroup>{cols.map((w, i) => <col key={i} style={{ width: w }} />)}</colgroup>
         <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[10.5px] font-semibold uppercase text-gray-400 dark:text-gray-500">
           <th className="px-4 py-1.5">지표</th>
           {showCat && <th className="px-2 py-1.5">분류</th>}
-          <th className="px-2 py-1.5 text-right">최신값</th><th className="px-2 py-1.5 text-right">직전 대비</th><th className="px-2 py-1.5">기준</th><th className="px-2 py-1.5">기간</th><th className="px-2 py-1.5">출처</th><th className="px-2 py-1.5 text-center">액션</th>
+          <th className="px-2 py-1.5 text-right">최신값</th><th className="px-2 py-1.5 text-center">단위</th><th className="px-2 py-1.5 text-right">직전 대비</th><th className="px-2 py-1.5">기준</th><th className="px-2 py-1.5">기간</th><th className="px-2 py-1.5">출처</th><th className="px-2 py-1.5 text-center">액션</th>
         </tr></thead>
         <tbody>
           {items.map((r) => {
@@ -264,6 +259,7 @@ function IndTable({ items, q, showCat, onRow, onDetail, onExcel }: { items: Row[
             const up = chg != null && chg >= 0
             const nav = NAV_IDS.has(r.cat)
             const link = sourceLink(r.source, r.source_ref)
+            const u = inferUnit(r.indicator, r.label || "")
             return (
               <tr key={r.indicator} onClick={nav ? () => onRow(r.cat) : undefined}
                 className={"group border-b border-gray-50 dark:border-gray-800/50 transition-colors " + (nav ? "cursor-pointer hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10" : "hover:bg-gray-50/60 dark:hover:bg-gray-800/30")}>
@@ -274,10 +270,8 @@ function IndTable({ items, q, showCat, onRow, onDetail, onExcel }: { items: Row[
                   </div>
                 </td>
                 {showCat && <td className="truncate px-2 py-1.5 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
-                <td className="px-2 py-1.5 text-right">
-                  <div className="font-bold tabular-nums text-gray-900 dark:text-gray-50">{valWithUnit(r)}</div>
-                  <div className="text-[9px] font-normal text-gray-400 dark:text-gray-500">{inferUnit(r.indicator, r.label || "").note}</div>
-                </td>
+                <td className="px-2 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
+                <td className="px-2 py-1.5 text-center"><span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500 dark:text-gray-400">{u.unit}</span></td>
                 <td className={"px-2 py-1.5 text-right tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "—" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.period)}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-400 dark:text-gray-500">{ym(r.mn)}~{ym(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>

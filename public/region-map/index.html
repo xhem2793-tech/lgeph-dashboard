@@ -1218,39 +1218,51 @@ const CATKO={"Roads":"도로","Buildings and Facilities":"건물·시설","Flood
 function natAvgM(ck){ const v=Object.keys(DATA).map(r=>mVal(r,ck)).filter(x=>!isNaN(x)); return v.length?v.reduce((a,b)=>a+b,0)/v.length:NaN; }
 function frContext(name){
   const d=DATA[name]||{};
-  const chips=(d.ind||[]).map(t=>`<span style="display:inline-block;background:#eef2ff;color:#3730a3;border:1px solid #e0e7ff;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:600;margin:3px 4px 0 0">${t}</span>`).join("");
-  const cities=(d.cities||[]).length?`<div style="font-size:10px;color:#64748b;margin-top:6px">주요 도시 · ${d.cities.join(" · ")}</div>`:"";
-  return `<div style="background:#f8fafc;border:1px solid #eef0f4;border-radius:10px;padding:12px 14px;margin-top:9px">
-    <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:#475569;font-weight:600">
+  const chips=(d.ind||[]).map(t=>`<span style="display:inline-block;background:#eef2ff;color:#3730a3;border:1px solid #e0e7ff;border-radius:6px;padding:3px 10px;font-size:11.5px;font-weight:600;margin:4px 5px 0 0">${t}</span>`).join("");
+  const cities=(d.cities||[]).length?`<div style="font-size:11.5px;color:#64748b;margin-top:8px">주요 도시 · ${d.cities.join(" · ")}</div>`:"";
+  return `<div style="background:#f8fafc;border:1px solid #eef0f4;border-radius:11px;padding:14px 16px;margin-top:10px">
+    <div style="display:flex;flex-wrap:wrap;gap:14px;font-size:12.5px;color:#475569;font-weight:600">
       <span>🏙 중심도시 <b style="color:#0f1420">${d.cap||"—"}</b></span>
       <span>👥 인구 <b style="color:#0f1420">${d.pop||"—"}</b></span>
       <span>📐 면적 <b style="color:#0f1420">${d.area||"—"}</b></span>
       <span>밀도 <b style="color:#0f1420">${d.den||"—"}</b></span>
     </div>
-    ${d.intro?`<div style="font-size:11.5px;line-height:1.65;color:#334155;margin-top:8px">${d.intro}</div>`:""}
-    ${chips?`<div style="margin-top:5px">${chips}</div>`:""}
+    ${d.intro?`<div style="font-size:13px;line-height:1.75;color:#334155;margin-top:10px">${d.intro}</div>`:""}
+    ${chips?`<div style="margin-top:7px">${chips}</div>`:""}
     ${cities}
   </div>`;
 }
 function frShell(name,title,badge,bc,body,src){
   return `<div style="margin-top:2px">
-    <div style="display:flex;align-items:center;gap:9px;margin:12px 0 0">
-      <span style="width:5px;height:19px;border-radius:3px;background:${bc}"></span>
-      <span style="font-size:15.5px;font-weight:800;color:#0f1420">${title}</span>
-      <span style="margin-left:auto;font-size:9px;font-weight:800;color:${bc};background:${bc}14;border:1px solid ${bc}33;border-radius:4px;padding:2px 8px">${badge}</span>
+    <div style="display:flex;align-items:center;gap:10px;margin:12px 0 0">
+      <span style="width:6px;height:22px;border-radius:3px;background:${bc}"></span>
+      <span style="font-size:19px;font-weight:800;color:#0f1420;letter-spacing:-.01em">${title}</span>
+      <span style="margin-left:auto;font-size:10.5px;font-weight:800;color:${bc};background:${bc}14;border:1px solid ${bc}33;border-radius:5px;padding:3px 10px">${badge}</span>
     </div>
     ${frContext(name)}
-    <div style="margin-top:11px">${body}</div>
-    <div style="font-size:8.5px;color:#94a3b8;margin-top:11px;border-top:1px solid #f0f1f5;padding-top:7px">${src}</div>
+    <div style="margin-top:13px">${body}</div>
+    <div style="font-size:9.5px;color:#94a3b8;margin-top:13px;border-top:1px solid #f0f1f5;padding-top:9px">${src}</div>
   </div>`;
 }
-function frBig(items){ return `<div style="display:flex;gap:8px;flex-wrap:wrap">`+items.map(m=>`<div style="flex:1;min-width:88px;background:#fff;border:1px solid #e8eaf0;border-radius:9px;padding:10px 12px"><div style="font-size:9.5px;color:#64748b;font-weight:600;line-height:1.3">${m.k}</div><div style="font-size:20px;font-weight:800;line-height:1.15;color:${m.color||'#0f1420'}">${m.v}</div>${m.sub?`<div style="font-size:9px;color:#94a3b8;margin-top:1px">${m.sub}</div>`:""}</div>`).join("")+`</div>`; }
-function frBar(label,pct,color,valtxt){ return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
-  <span style="width:82px;font-size:11px;color:#475569;flex-shrink:0">${label}</span>
-  <span style="flex:1;height:11px;background:#eef0f4;border-radius:4px;overflow:hidden;position:relative"><span style="position:absolute;inset:0 auto 0 0;width:${Math.max(3,Math.min(100,pct))}%;background:${color};border-radius:4px"></span></span>
-  <span style="width:58px;text-align:right;font-size:11px;font-weight:700;color:#334155">${valtxt}</span></div>`; }
-function frAnalysis(html){ return `<div style="margin-top:12px"><div style="font-size:11px;font-weight:800;color:#334155;margin-bottom:4px">📋 분석</div><div style="background:#fbfbfd;border:1px solid #eef0f4;border-radius:9px;padding:11px 13px;font-size:11.5px;line-height:1.75;color:#2b313b">${html}</div></div>`; }
-function frLG(html){ return `<div style="margin-top:9px;background:linear-gradient(180deg,#f0fdf4,#f8fffb);border:1px solid #bbf7d0;border-radius:9px;padding:10px 13px"><div style="font-size:11px;font-weight:800;color:#047857;margin-bottom:3px">◈ LG 시사점</div><div style="font-size:11.5px;line-height:1.7;color:#173d2b">${html}</div></div>`; }
+function frBig(items){ return `<div style="display:flex;gap:10px;flex-wrap:wrap">`+items.map(m=>`<div style="flex:1;min-width:98px;background:#fff;border:1px solid #e8eaf0;border-radius:11px;padding:14px 16px"><div style="font-size:11.5px;color:#64748b;font-weight:600;line-height:1.3">${m.k}</div><div style="font-size:28px;font-weight:800;line-height:1.1;color:${m.color||'#0f1420'};margin-top:3px">${m.v}</div>${m.sub?`<div style="font-size:10.5px;color:#94a3b8;margin-top:3px">${m.sub}</div>`:""}</div>`).join("")+`</div>`; }
+function frBar(label,pct,color,valtxt){ return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:7px">
+  <span style="width:96px;font-size:12.5px;color:#475569;flex-shrink:0">${label}</span>
+  <span style="flex:1;height:15px;background:#eef0f4;border-radius:5px;overflow:hidden;position:relative"><span style="position:absolute;inset:0 auto 0 0;width:${Math.max(3,Math.min(100,pct))}%;background:${color};border-radius:5px"></span></span>
+  <span style="width:68px;text-align:right;font-size:12.5px;font-weight:700;color:#334155">${valtxt}</span></div>`; }
+function frAnalysis(html){ return `<div style="margin-top:15px"><div style="font-size:12.5px;font-weight:800;color:#334155;margin-bottom:6px">📋 분석</div><div style="background:#fbfbfd;border:1px solid #eef0f4;border-radius:11px;padding:15px 17px;font-size:13.5px;line-height:1.9;color:#2b313b">${html}</div></div>`; }
+function frLG(html){ return `<div style="margin-top:11px;background:linear-gradient(180deg,#f0fdf4,#f8fffb);border:1px solid #bbf7d0;border-radius:11px;padding:14px 17px"><div style="font-size:12.5px;font-weight:800;color:#047857;margin-bottom:5px">◈ LG 시사점</div><div style="font-size:13.5px;line-height:1.85;color:#173d2b">${html}</div></div>`; }
+// 관련 자료·지표 링크(카테고리별)
+const REL_LINKS={
+  prices:[["PSA 소비자물가지수","https://psa.gov.ph/statistics/prices"],["BSP 인플레이션 통계","https://www.bsp.gov.ph/SitePages/Statistics/Inflation.aspx"]],
+  appliance:[["PSA 인구총조사","https://psa.gov.ph/statistics/census/population-and-housing"],["PSA 인구보건조사(DHS)","https://psa.gov.ph/"]],
+  grdp:[["PSA 지역계정(GRDP)","https://psa.gov.ph/statistics/grdp"]],
+  pop:[["PSA 인구총조사","https://psa.gov.ph/statistics/census"],["PSA FIES 가계소득조사","https://psa.gov.ph/statistics/income-expenditure"]],
+  infra:[["DPWH Transparency","https://transparency.dpwh.gov.ph/"],["Build Better More","https://www.dpwh.gov.ph/"]],
+};
+function frLinks(items,related){ let h="";
+  if(related&&related.length) h+=`<div style="margin-top:12px"><div style="font-size:11px;font-weight:800;color:#334155;margin-bottom:5px">📊 함께 보는 지표</div><div style="font-size:11.5px;line-height:1.7;color:#475569">${related}</div></div>`;
+  if(items&&items.length) h+=`<div style="margin-top:10px"><div style="font-size:11px;font-weight:800;color:#334155;margin-bottom:5px">🔗 관련 자료·출처</div><div style="display:flex;flex-wrap:wrap;gap:7px">`+items.map(([t,u])=>`<a href="${u}" target="_blank" rel="noopener" style="font-size:11px;color:#3730a3;background:#eef2ff;border:1px solid #e0e7ff;border-radius:7px;padding:5px 11px;text-decoration:none;font-weight:600">${t} ↗</a>`).join("")+`</div></div>`;
+  return h; }
 const sgn=(v)=>(v>0?"+":"")+v.toFixed(1)+"%";
 // 분야별 대표 사업유형·LG 기회·주시 포인트(인사이트 중심)
 const INFRA_INSIGHT={
@@ -1292,7 +1304,8 @@ function renderInfra(name){
   box.innerHTML=frShell(name, (d.ko||name)+" 인프라 투자", "DPWH · B2B", "#b45309",
     big+bars+analysis+
     frLG(ins.op)+
-    `<div style="margin-top:9px;background:#fffdf7;border:1px solid #fde9c8;border-radius:9px;padding:10px 13px"><div style="font-size:11px;font-weight:800;color:#b45309;margin-bottom:3px">◈ 주시 포인트</div><div style="font-size:11.5px;line-height:1.7;color:#3d2f14">${ins.wa}</div></div>`,
+    `<div style="margin-top:11px;background:#fffdf7;border:1px solid #fde9c8;border-radius:11px;padding:14px 17px"><div style="font-size:12.5px;font-weight:800;color:#b45309;margin-bottom:5px">◈ 주시 포인트</div><div style="font-size:13.5px;line-height:1.85;color:#3d2f14">${ins.wa}</div></div>`+
+    frLinks(REL_LINKS.infra,"부동산·주택(RPPI·건축허가) · 건설 GVA·투자 — 경제지표 > 부동산·주택 / 국민계정·성장"),
     "DPWH Transparency · 지역별 프로젝트 예산·건수·집행상태 집계(누적)");
 }
 // 현재 선택된 지표의 카테고리(MAP_GROUP) 판별
@@ -1328,7 +1341,8 @@ function renderFocus(name){
       frAnalysis(`${d.ko||name}의 가전 물가는 전년비 <b>${sgn(appl)}</b>로 ${cmp} 수준이다. `+
         (!isNaN(food)?`식품(${sgn(food)})·`:``)+(!isNaN(elec)?`전기(${sgn(elec)}) `:``)+`등 필수 생활물가는 가계의 재량소비 여력을 좌우한다. `+
         (hi?`필수물가 부담이 큰 편이어서 대형·프리미엄 가전 구매는 이연되고 가격민감도가 높아지는 국면이다.`:`필수물가가 비교적 안정적이어서 내구재 구매 여력에는 우호적인 편이다.`))+
-      frLG(hi?`가격민감도가 높은 만큼 <b>할부·프로모션·에너지효율(전기료 절감) 소구</b>가 효과적이다. 볼륨존 라인업으로 진입 장벽을 낮추는 전략을 우선한다.`:`물가 안정 국면에서는 <b>프리미엄·신제품·IoT</b> 확대 여지가 크다. 가전 물가 흐름을 교체수요 자극의 타이밍 지표로 활용한다.`),
+      frLG(hi?`가격민감도가 높은 만큼 <b>할부·프로모션·에너지효율(전기료 절감) 소구</b>가 효과적이다. 볼륨존 라인업으로 진입 장벽을 낮추는 전략을 우선한다.`:`물가 안정 국면에서는 <b>프리미엄·신제품·IoT</b> 확대 여지가 크다. 가전 물가 흐름을 교체수요 자극의 타이밍 지표로 활용한다.`)+
+      frLinks(REL_LINKS.prices,"전국 소비자물가(CPI)·품목별 물가 · 소비심리(CCI) · 가전 물가·PPI — 경제지표 > 물가 / 기업·소비 심리 / 가전 선행지표"),
       "PSA 소비자물가지수(지역별)");
   } else if(cat.includes("가전보급")){
     const rows=[["냉장고 보유율",e.own_ref],["TV 보유율",e.own_tv],["전기 보급률",e.electrif]].filter(x=>x[1]!=null);
@@ -1341,7 +1355,8 @@ function renderFocus(name){
       big+bars+
       frAnalysis(`${d.ko||name}의 냉장고 보유율은 <b>${e.own_ref!=null?e.own_ref.toFixed(0)+"%":"—"}</b>로, 미보급 <b>${gap!=null?gap.toFixed(0)+"%p":"—"}</b>가 잠재 신규수요다. 중심도시 <b>${d.cap||"—"}</b>를 축으로 도시가구는 교체·업그레이드, 외곽은 초도 보급 여력이 공존한다. `+
         (lowElec?`전기 보급률 ${e.electrif.toFixed(0)}%는 상시가동 가전 확산의 <b>병목</b>으로, 전력 인프라 개선이 수요 확대의 전제다.`:`전기 보급률 ${e.electrif!=null?e.electrif.toFixed(0)+"%":"높은 수준"}로 상시가동 가전 사용 기반은 갖춰져 있다.`))+
-      frLG(gap!=null&&gap>25?`미보급갭이 커 <b>엔트리·고효율 모델로 신규 침투</b>할 여지가 크다. 첫 구매 접근성(가격·할부·에너지효율)을 높이는 전략이 유효하다.`:`보급이 성숙해 <b>교체·업그레이드·프리미엄</b> 수요가 중심이다. 대형화·IoT·에너지효율로 상향 판매를 노린다.`),
+      frLG(gap!=null&&gap>25?`미보급갭이 커 <b>엔트리·고효율 모델로 신규 침투</b>할 여지가 크다. 첫 구매 접근성(가격·할부·에너지효율)을 높이는 전략이 유효하다.`:`보급이 성숙해 <b>교체·업그레이드·프리미엄</b> 수요가 중심이다. 대형화·IoT·에너지효율로 상향 판매를 노린다.`)+
+      frLinks(REL_LINKS.appliance,"가전 물가·PPI · 수입 단가 · 온라인 시장 침투 — 경제지표 > 가전 선행지표 / 수입 단가 / 온라인 시장"),
       "PSA·DHS 인구보건조사·인구총조사");
   } else if(cat.includes("경제규모")){
     if(e.grdp_size==null&&e.grdp_pc==null){ box.innerHTML=frShell(name,"지역 경제규모","GRDP","#1d4ed8","<div style='font-size:11px;color:#94a3b8'>이 지역의 GRDP 데이터가 아직 없습니다.</div>","PSA 지역계정"); return; }
@@ -1352,7 +1367,8 @@ function renderFocus(name){
       big+
       frAnalysis(`${d.ko||name}의 경제규모는 <b>₱${e.grdp_size!=null?e.grdp_size.toFixed(1):"—"}조</b>${rank?`로 전국 ${rank}위`:""} 수준이다. 주력 산업은 <b>${(d.ind||[]).slice(0,3).join("·")||"—"}</b>이며, 중심도시 <b>${d.cap||"—"}</b>가 소비·유통의 거점 역할을 한다. `+
         `1인당 GRDP ${e.grdp_pc!=null?pesoKo(e.grdp_pc):"—"}는 지역 구매력의 대리지표로, 경제규모가 클수록 가전 시장 볼륨과 상업·B2B 발주 잠재력이 크다.`)+
-      frLG(`경제규모·산업기반을 고려한 <b>시장 우선순위와 채널·물류 투자 배분</b>의 근거로 활용한다. 제조·상업 집적지는 B2B(공조), 소비 거점은 유통망 밀도 확대가 유효하다.`),
+      frLG(`경제규모·산업기반을 고려한 <b>시장 우선순위와 채널·물류 투자 배분</b>의 근거로 활용한다. 제조·상업 집적지는 B2B(공조), 소비 거점은 유통망 밀도 확대가 유효하다.`)+
+      frLinks(REL_LINKS.grdp,"GDP 성장·산업생산·가동률 · 소매판매 — 경제지표 > 국민계정·성장"),
       "PSA 지역계정(불변2018)");
   } else if(cat.includes("인구")){
     if(e.pop_n==null&&e.income_real==null&&e.poverty==null){ box.innerHTML=frShell(name,"인구·소득","PSA","#0f766e","<div style='font-size:11px;color:#94a3b8'>이 지역의 인구·소득 데이터가 아직 없습니다.</div>","PSA 인구총조사·FIES"); return; }
@@ -1362,7 +1378,8 @@ function renderFocus(name){
       big+
       frAnalysis(`${d.ko||name}은(는) 인구 <b>${e.pop_n!=null?Math.round(e.pop_n*100).toLocaleString()+"만명":d.pop||"—"}</b> 규모로, 중심도시 ${d.cap||"—"}를 포함한다. 평균 가구소득은 <b>${e.income_real!=null?pesoKo(e.income_real):"—"}</b>, 빈곤율은 <b>${e.poverty!=null?e.poverty.toFixed(1)+"%":"—"}</b>다. `+
         (poor?`상대적으로 높은 빈곤율은 가격민감도가 크다는 신호로, 엔트리·볼륨존 수요가 두텁다.`:`소득 기반이 비교적 견조해 중상위·프리미엄 수요 여력이 있다.`))+
-      frLG(poor?`가격 접근성이 관건인 시장이다. <b>엔트리 라인업·할부·에너지효율 절감 소구</b>로 볼륨을 확보한다.`:`구매력이 받쳐주는 시장이다. <b>프리미엄·대형·IoT</b> 라인업과 체험형 채널로 상향 판매를 노린다.`),
+      frLG(poor?`가격 접근성이 관건인 시장이다. <b>엔트리 라인업·할부·에너지효율 절감 소구</b>로 볼륨을 확보한다.`:`구매력이 받쳐주는 시장이다. <b>프리미엄·대형·IoT</b> 라인업과 체험형 채널로 상향 판매를 노린다.`)+
+      frLinks(REL_LINKS.pop,"고용·임금·소득 · 소비심리(CCI) — 경제지표 > 고용·임금·소득 / 기업·소비 심리"),
       "PSA 인구총조사·FIES 가계소득조사");
   }
 }
