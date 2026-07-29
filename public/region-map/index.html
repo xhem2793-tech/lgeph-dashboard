@@ -432,8 +432,9 @@
         </div>
         <div class="sec">
           <div class="lb">시장·경제 지표 <span class="avgkey"><i></i> 전국 평균</span></div>
-          <div class="srcnote"><span class="sb sb-in">셀아웃·성장 = 2024 내부</span><span class="sb sb-ec" id="econ-src">경제 데이터: 폴백(내장 근사치)</span></div>
+          <div class="srcnote"><span class="sb sb-ec" id="econ-src">경제 데이터: 폴백(내장 근사치)</span></div>
           <div class="metrics" id="d-metrics"></div>
+          <div id="d-infra"></div>
         </div>
         <div class="sec">
           <div class="lb">지역 개요</div>
@@ -651,18 +652,37 @@ async function loadRegionalCensus(){
     if(selected) showDetail(selected.properties.REGION);
   }catch(e){ console.warn("지역 인구/빈곤 로드 건너뜀:",e); }
 }
-// 지역별 인프라 투자(DPWH) — 연도별 예산(₱B). 최신연도=choropleth, 연도 시계열=상세 팝업.
+// DPWH 지역명 → 지도 REGION 명(geojson) 매핑
+const DPWH2MAP={
+  "National Capital Region":"Metropolitan Manila","Cordillera Administrative Region":"Cordillera Administrative Region (CAR)",
+  "Region I":"Ilocos Region (Region I)","Region II":"Cagayan Valley (Region II)","Region III":"Central Luzon (Region III)",
+  "Region IV-A":"CALABARZON (Region IV-A)","Region V":"Bicol Region (Region V)","Region VI":"Western Visayas (Region VI)",
+  "Region VII":"Central Visayas (Region VII)","Region VIII":"Eastern Visayas (Region VIII)","Region IX":"Zamboanga Peninsula (Region IX)",
+  "Region X":"Northern Mindanao (Region X)","Region XI":"Davao Region (Region XI)","Region XII":"SOCCSKSARGEN (Region XII)","Region XIII":"Caraga (Region XIII)"
+};
+// 지역별 인프라 투자(DPWH) — 연도별 예산·진행중 건수·분야별 비중. 최신연도=choropleth, 시계열·상세=팝업.
 async function loadRegionalInfra(){
   try{
-    const rr=await fetch(`${SB_CPI.url}/rest/v1/macro_indicators?geo_level=eq.region&indicator=eq.infra_budget_region&select=geo,period_date,value&order=period_date.asc`,
-      {headers:{apikey:SB_CPI.key,Authorization:"Bearer "+SB_CPI.key}});
-    if(!rr.ok) return;
-    const rows=await rr.json();
-    rows.forEach(row=>{ const reg=REG_CPI_MAP[row.geo]; if(!reg) return; ECON[reg]=ECON[reg]||{};
+    const hdr={apikey:SB_CPI.key,Authorization:"Bearer "+SB_CPI.key};
+    const base=SB_CPI.url+"/rest/v1/";
+    const [yr, tot, cat] = await Promise.all([
+      fetch(base+"macro_indicators?geo_level=eq.region&indicator=eq.infra_budget_region&select=geo,period_date,value&order=period_date.asc",{headers:hdr}).then(r=>r.ok?r.json():[]),
+      fetch(base+"infra_regional?select=region,budget_php_b,projects,ongoing,completed,top_category,top_cat_budget",{headers:hdr}).then(r=>r.ok?r.json():[]),
+      fetch(base+"infra_regional_category?select=region,category,budget_php_b,ongoing&order=budget_php_b.desc",{headers:hdr}).then(r=>r.ok?r.json():[]),
+    ]);
+    // 연도별 시계열(geo=지도명 키) → 최신연도 choropleth 값
+    yr.forEach(row=>{ const reg=REG_CPI_MAP[row.geo]; if(!reg) return; ECON[reg]=ECON[reg]||{};
       ECON[reg].infra_series=ECON[reg].infra_series||{};
       ECON[reg].infra_series[row.period_date.slice(0,4)]=Number(row.value);
-      ECON[reg].infra_budget=Number(row.value); // period asc → 최신연도가 마지막(덮어씀)
-    });
+      ECON[reg].infra_budget=Number(row.value); });
+    // 총계·진행중·top 분야(DPWH명 → 지도명)
+    tot.forEach(row=>{ const reg=DPWH2MAP[row.region]; if(!reg) return; ECON[reg]=ECON[reg]||{};
+      ECON[reg].infra_total=Number(row.budget_php_b); ECON[reg].infra_projects=Number(row.projects);
+      ECON[reg].infra_ongoing=Number(row.ongoing); ECON[reg].infra_completed=Number(row.completed);
+      ECON[reg].infra_topcat=row.top_category; ECON[reg].infra_topcat_b=Number(row.top_cat_budget); });
+    // 분야별 리스트
+    cat.forEach(row=>{ const reg=DPWH2MAP[row.region]; if(!reg) return; ECON[reg]=ECON[reg]||{};
+      (ECON[reg].infra_cats=ECON[reg].infra_cats||[]).push({c:row.category, b:Number(row.budget_php_b), o:Number(row.ongoing)}); });
     if(typeof computeEconStats==="function") computeEconStats();
     if(curMapMetric && curMapMetric!=="none") applyChoropleth(curMapMetric);
     if(selected) showDetail(selected.properties.REGION);
@@ -1169,6 +1189,44 @@ function markList(name){
   d3.selectAll(".list-item").classed("active",function(){return this.getAttribute("data-name")===name;});
 }
 
+const CATKO={"Roads":"도로","Buildings and Facilities":"건물·시설","Flood Control and Drainage":"홍수통제·배수","Bridges":"교량","Water Provision and Storage":"상수도"};
+// 지역 인프라 투자(DPWH) 상세 — 총예산·진행중·분야별·연도별 추이
+function renderInfra(name){
+  const box=document.getElementById("d-infra"); if(!box) return; box.innerHTML="";
+  const e=ECON[name]||{}; if(e.infra_total==null){ return; }
+  const cats=(e.infra_cats||[]).slice().sort((a,b)=>b.b-a.b);
+  const catMax=cats.length?cats[0].b:1;
+  const ser=e.infra_series||{}; const yrs=Object.keys(ser).sort();
+  // 스파크라인
+  let spark="";
+  if(yrs.length>=2){
+    const vals=yrs.map(y=>ser[y]); const mn=Math.min(...vals), mx=Math.max(...vals), W=180,H=34;
+    const pts=vals.map((v,i)=>`${8+(W-16)*i/(vals.length-1)},${H-4-(H-8)*((v-mn)/((mx-mn)||1))}`).join(" ");
+    spark=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:34px;display:block;margin-top:2px">
+      <polyline points="${pts}" fill="none" stroke="#4f46e5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="${8+(W-16)}" cy="${H-4-(H-8)*((vals[vals.length-1]-mn)/((mx-mn)||1))}" r="2.4" fill="#4f46e5"/>
+      <text x="8" y="${H-1}" style="font-size:8px;fill:#9ca3af">${yrs[0]}</text>
+      <text x="${W-8}" y="${H-1}" text-anchor="end" style="font-size:8px;fill:#9ca3af">${yrs[yrs.length-1]}</text></svg>`;
+  }
+  box.innerHTML=`<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(148,163,184,.25)">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
+      <span style="font-size:12px;font-weight:800;color:var(--ink,#0f1420)">인프라 투자 (DPWH)</span>
+      <span style="margin-left:auto;font-size:8.5px;font-weight:700;color:#b45309;background:#fffaf0;border:1px solid #fde9c8;border-radius:3px;padding:1px 5px">B2B</span>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;margin-bottom:7px">
+      <span>총예산 <b style="font-size:13px">₱${Math.round(e.infra_total).toLocaleString()}B</b></span>
+      <span style="color:#059669">진행중 <b>${(e.infra_ongoing||0).toLocaleString()}건</b></span>
+      <span style="color:#64748b">완료 ${(e.infra_completed||0).toLocaleString()}건</span>
+    </div>
+    ${e.infra_topcat?`<div style="font-size:10.5px;color:#64748b;margin-bottom:6px">최다 분야 <b style="color:#0f1420">${CATKO[e.infra_topcat]||e.infra_topcat}</b> ₱${Math.round(e.infra_topcat_b)}B</div>`:""}
+    ${cats.map(c=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+      <span style="width:64px;font-size:10px;color:#475569;flex-shrink:0">${CATKO[c.c]||c.c}</span>
+      <span style="flex:1;height:9px;background:#eef0f4;border-radius:3px;overflow:hidden;position:relative"><span style="position:absolute;inset:0 auto 0 0;width:${Math.max(3,c.b/catMax*100)}%;background:#818cf8;border-radius:3px"></span></span>
+      <span style="width:46px;text-align:right;font-size:10px;font-weight:700;color:#334155">₱${Math.round(c.b)}B</span></div>`).join("")}
+    ${spark?`<div style="font-size:9.5px;color:#94a3b8;margin-top:8px">연도별 예산 추이(₱B)</div>${spark}`:""}
+    <div style="font-size:8.5px;color:#94a3b8;margin-top:5px">DPWH Transparency · 지역별 프로젝트 예산·집행</div>
+  </div>`;
+}
 function showDetail(name){
   const info=DATA[name]||{};
   document.getElementById("d-code").textContent=info.code||"—";
@@ -1184,6 +1242,7 @@ function showDetail(name){
   renderKPI(name);
   renderSummary(name);
   renderMetrics(name);
+  renderInfra(name);
   renderTags(name);
   document.getElementById("detail").classList.add("show");
   document.getElementById("detail").querySelector(".detail-scroll").scrollTop=0;
