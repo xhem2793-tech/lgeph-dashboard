@@ -167,6 +167,8 @@ export default function Calendar() {
   React.useEffect(() => { upcomingAgenda().then(setAgenda).catch(() => setAgenda([])) }, [])
 
   const crit = inMonth.filter((r) => r.importance >= 3).length
+  const todayIso = iso(today)
+  const todayEvents = React.useMemo(() => all.filter((r) => r.date === todayIso).sort((a, b) => b.importance - a.importance), [all, todayIso])
   const label =
     span === "2주"
       ? `${range.from.getMonth() + 1}/${range.from.getDate()} – ${range.to.getMonth() + 1}/${range.to.getDate()}`
@@ -367,6 +369,33 @@ export default function Calendar() {
             </button>
           ))}
         </div>
+
+        {todayEvents.length > 0 && (
+          <div className="mt-3 overflow-hidden rounded-xl border border-indigo-200 dark:border-indigo-500/40 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 to-white dark:to-gray-900 shadow-sm" style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) both" }}>
+            <div className="flex items-center gap-2 border-b border-indigo-100 dark:border-indigo-500/25 px-3.5 py-2">
+              <span className="flex h-5 items-center rounded-full bg-indigo-600 px-2 text-[10.5px] font-bold text-white">오늘</span>
+              <span className="text-[13px] font-bold text-gray-900 dark:text-gray-50">{todayIso.slice(5).replace("-", "/")} 발표·일정</span>
+              <span className="text-[11px] font-medium text-indigo-600 dark:text-indigo-400">{todayEvents.length}건</span>
+            </div>
+            <div className="flex flex-col divide-y divide-indigo-50 dark:divide-indigo-500/15">
+              {todayEvents.map((e) => {
+                const t = tone(e.category)
+                const up = e.actual !== null && e.previous !== null && e.actual > e.previous
+                const down = e.actual !== null && e.previous !== null && e.actual < e.previous
+                return (
+                  <button key={e.date + e.event} type="button" onClick={() => openEvent(e)} className="flex items-center gap-2.5 px-3.5 py-2 text-left transition-colors hover:bg-indigo-50/60 dark:hover:bg-indigo-500/10">
+                    <span className={"h-2 w-2 shrink-0 rounded-full " + t.dot} />
+                    <span className="shrink-0 text-[10.5px] font-semibold text-gray-500 dark:text-gray-400">{catLabel(e.category)}</span>
+                    <span className="min-w-0 flex-1 truncate text-[13px] font-semibold text-gray-900 dark:text-gray-50">{e.importance >= 3 ? "★ " : ""}{e.event}</span>
+                    {e.actual !== null ? (
+                      <span className={"shrink-0 text-[12px] font-bold tabular-nums " + (up ? "text-rose-600 dark:text-rose-400" : down ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-gray-50")}>{fmtVal(e.actual, e.unit)}</span>
+                    ) : e.releaseTime ? <span className="shrink-0 text-[11px] text-gray-500 dark:text-gray-400">{e.releaseTime}</span> : <span className="shrink-0 rounded bg-indigo-100 dark:bg-indigo-500/20 px-1.5 py-px text-[9.5px] font-bold text-indigo-700 dark:text-indigo-300">예정</span>}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {rows === null ? (
           <div className="flex min-h-[240px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
