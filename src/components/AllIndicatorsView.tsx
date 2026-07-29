@@ -9,6 +9,13 @@ import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
  *  각 지표의 최신값·직전 대비·데이터 기간·원본 코드·출처 링크·신뢰도를 한 줄로. 행 클릭 시 해당 분류 차트로 이동. */
 
 const ym = (d: string) => (d ? d.slice(0, 4) + "." + Number(d.slice(5, 7)) + "월" : "—")
+// 최종 갱신 — 주요 뉴스와 동일 개념, 초까지(마닐라 시간)
+function stampSec(d: Date | null): string {
+  if (!d) return "—"
+  const p = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).formatToParts(d)
+  const g = (t: string) => p.find((x) => x.type === t)?.value ?? "00"
+  return `${g("year")}.${g("month")}.${g("day")} ${g("hour")}:${g("minute")}:${g("second")}`
+}
 function fmtVal(v: number): string {
   if (v == null || Number.isNaN(v)) return "—"
   const a = Math.abs(v)
@@ -36,10 +43,12 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
   const [focused, setFocused] = useState(false)
   const [cat, setCat] = useState("all")
   const [sort, setSort] = useState<"cat" | "recent">("cat")
+  const [loadedAt, setLoadedAt] = useState<Date | null>(null)
 
   useEffect(() => {
-    dataProvenance().then(setProv).catch(() => setProv([]))
-    allIndicatorLatest().then(setLatest).catch(() => setLatest({}))
+    Promise.all([dataProvenance().catch(() => []), allIndicatorLatest().catch(() => ({}))]).then(([p, l]) => {
+      setProv(p as Provenance[]); setLatest(l as Record<string, { value: number; period: string; prev: number | null }>); setLoadedAt(new Date())
+    })
   }, [])
 
   // 행 클릭 → 해당 분류 차트로 이동(onPick 있으면 동일 페이지 전환, 없으면 경제지표로 라우팅)
@@ -49,11 +58,22 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
     else if (typeof window !== "undefined") window.location.href = "/economy/?v=" + catKey
   }
 
-  const rows: Row[] = useMemo(() => prov.map((p) => {
-    const c = classify(p.indicator, p.label || "")
-    const lv = latest[p.indicator]
-    return { ...p, cat: c.key, catKo: c.ko, value: lv ? lv.value : null, period: lv ? lv.period : p.mx, prev: lv ? lv.prev : null }
-  }), [prov, latest])
+  const rows: Row[] = useMemo(() => {
+    const mapped = prov.map((p) => {
+      const c = classify(p.indicator, p.label || "")
+      const lv = latest[p.indicator]
+      return { ...p, cat: c.key, catKo: c.ko, value: lv ? lv.value : null, period: lv ? lv.period : p.mx, prev: lv ? lv.prev : null }
+    })
+    // 중복 라벨 제거(전기 보급률 등) — 값 있음>CONFIRMED>관측수 순으로 대표 1개만
+    const score = (r: Row) => (r.value != null ? 4 : 0) + ((r.confidence || "").toUpperCase() === "CONFIRMED" ? 2 : 0) + (r.n || 0) / 1e6
+    const byLabel = new Map<string, Row>()
+    for (const r of mapped) {
+      const key = (r.label || r.indicator).trim().toLowerCase()
+      const ex = byLabel.get(key)
+      if (!ex || score(r) > score(ex)) byLabel.set(key, r)
+    }
+    return Array.from(byLabel.values())
+  }, [prov, latest])
 
   const catCounts = useMemo(() => {
     const m: Record<string, number> = {}
@@ -92,17 +112,25 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
         <p className="mt-1 text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">
           분류별 차트 대신 <b className="font-semibold text-gray-800 dark:text-gray-100">모든 지표를 한 화면에서</b> — 최신값·직전 대비·데이터 기간·<b className="font-semibold text-gray-800 dark:text-gray-100">원본 코드·출처 링크·신뢰도</b>까지. 지표 행을 클릭하면 <b className="font-semibold text-indigo-600 dark:text-indigo-400">해당 분류 차트로 이동</b>합니다.
         </p>
-        <div className="mt-2.5 flex flex-wrap gap-4 text-[12px]">
+        <div className="mt-2.5 flex flex-wrap items-center gap-4 text-[12px]">
           <span className="text-gray-500 dark:text-gray-400">총 지표 <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
           <span className="text-gray-500 dark:text-gray-400">검색 결과 <b className="text-indigo-600 dark:text-indigo-400">{filtered.length}</b></span>
           <span className="text-gray-500 dark:text-gray-400">CONFIRMED <b className="text-emerald-600 dark:text-emerald-400">{confN}</b></span>
           <span className="text-gray-500 dark:text-gray-400">분류 <b className="text-gray-900 dark:text-gray-50">{Object.keys(catCounts).length}</b></span>
+          <span className="ml-auto inline-flex items-center gap-1 text-gray-400 dark:text-gray-500">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+            최종 갱신 <b className="tabular-nums text-gray-600 dark:text-gray-300">{stampSec(loadedAt)}</b>
+          </span>
         </div>
       </section>
 
-      {/* 검색(뉴스와 동일 디자인·애니메이션) + 정렬 */}
+      {/* 정렬(알약형·좌측) + 검색(뉴스와 동일 디자인·애니메이션·우측) */}
       <div className="flex flex-wrap items-center gap-3">
-        <div className={"group relative transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[440px]" : "w-full max-w-[340px]")}>
+        <div className="flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 p-0.5">
+          <SortBtn on={sort === "cat"} onClick={() => setSort("cat")}>분류순</SortBtn>
+          <SortBtn on={sort === "recent"} onClick={() => setSort("recent")}>최신순</SortBtn>
+        </div>
+        <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[440px]" : "w-full max-w-[340px]")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
             <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
@@ -116,10 +144,6 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
           )}
-        </div>
-        <div className="ml-auto flex items-center gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5">
-          <SortBtn on={sort === "cat"} onClick={() => setSort("cat")}>분류순</SortBtn>
-          <SortBtn on={sort === "recent"} onClick={() => setSort("recent")}>최신순</SortBtn>
         </div>
       </div>
 
@@ -168,9 +192,12 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
 }
 
 function IndTable({ items, q, showCat, onRow }: { items: Row[]; q: string; showCat: boolean; onRow: (cat: string) => void }) {
+  // 고정 컬럼폭 — 카테고리별 표가 동일 위치에 정렬되도록(table-layout:fixed)
+  const cols = showCat ? ["22%", "9%", "9%", "9%", "8%", "13%", "13%", "12%", "5%"] : ["26%", "10%", "10%", "9%", "14%", "14%", "12%", "5%"]
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[820px] text-[12px]">
+      <table className="w-full min-w-[820px] table-fixed text-[12px]">
+        <colgroup>{cols.map((w, i) => <col key={i} style={{ width: w }} />)}</colgroup>
         <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[10.5px] font-semibold uppercase text-gray-400 dark:text-gray-500">
           <th className="px-4 py-1.5">지표</th>
           {showCat && <th className="px-2 py-1.5">분류</th>}
@@ -186,17 +213,18 @@ function IndTable({ items, q, showCat, onRow }: { items: Row[]; q: string; showC
               <tr key={r.indicator} onClick={nav ? () => onRow(r.cat) : undefined}
                 className={"group border-b border-gray-50 dark:border-gray-800/50 transition-colors " + (nav ? "cursor-pointer hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10" : "hover:bg-gray-50/60 dark:hover:bg-gray-800/30")}>
                 <td className="px-4 py-1.5">
-                  <span className={"font-medium " + (nav ? "text-gray-800 dark:text-gray-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-300" : "text-gray-800 dark:text-gray-100")}><Hi text={r.label || r.indicator} q={q} /></span>
-                  {nav && <span className="ml-1.5 text-[10px] font-semibold text-indigo-500 opacity-0 transition-opacity group-hover:opacity-100">차트 →</span>}
-                  <span className="ml-1.5 font-mono text-[10px] text-gray-300 dark:text-gray-600">{r.indicator}</span>
+                  <div className="flex items-center gap-1.5">
+                    <span className={"truncate font-medium " + (nav ? "text-gray-800 dark:text-gray-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-300" : "text-gray-800 dark:text-gray-100")} title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></span>
+                    {nav && <span className="shrink-0 text-[10px] font-semibold text-indigo-500 opacity-0 transition-opacity group-hover:opacity-100">차트 →</span>}
+                  </div>
                 </td>
-                {showCat && <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
+                {showCat && <td className="truncate px-2 py-1.5 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
                 <td className="px-2 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? fmtVal(r.value) : "—"}</td>
                 <td className={"px-2 py-1.5 text-right tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "—" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.period)}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-400 dark:text-gray-500">{ym(r.mn)}~{ym(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>
-                <td className="px-2 py-1.5 font-mono text-[10.5px] text-gray-500 dark:text-gray-400"><Hi text={r.source_ref?.replace(/^https?:\/\/\S+/, "URL") ?? "—"} q={q} /></td>
-                <td className="px-2 py-1.5">{link ? <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"><Hi text={r.source} q={q} /> ↗</a> : <span className="text-gray-500 dark:text-gray-400"><Hi text={r.source} q={q} /></span>}</td>
+                <td className="truncate px-2 py-1.5 font-mono text-[10.5px] text-gray-500 dark:text-gray-400" title={r.source_ref ?? ""}><Hi text={r.source_ref?.replace(/^https?:\/\/\S+/, "URL") ?? "—"} q={q} /></td>
+                <td className="truncate px-2 py-1.5" title={r.source}>{link ? <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"><Hi text={r.source} q={q} /> ↗</a> : <span className="text-gray-500 dark:text-gray-400"><Hi text={r.source} q={q} /></span>}</td>
                 <td className="px-2 py-1.5 text-center">{(r.confidence || "").toUpperCase() === "CONFIRMED" ? <span className="text-emerald-600 dark:text-emerald-400">✓</span> : <span className="text-amber-500">추정</span>}</td>
               </tr>
             )
@@ -210,7 +238,7 @@ function IndTable({ items, q, showCat, onRow }: { items: Row[]; q: string; showC
 function SortBtn({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button type="button" onClick={onClick}
-      className={"rounded-md px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 " + (on ? "bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300")}>
+      className={"rounded-full px-3.5 py-1 text-[12px] font-semibold transition-all duration-200 " + (on ? "bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300")}>
       {children}
     </button>
   )
