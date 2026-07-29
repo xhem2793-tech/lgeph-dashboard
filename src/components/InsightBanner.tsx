@@ -28,6 +28,16 @@ function rich(s: string): React.ReactNode[] {
   )
 }
 
+/** 기간 표기 — 2026-W31 → "31주차", 2026-07 → "7월"(연도 생략, 간결) */
+function fmtPeriod(p?: string | null): string {
+  if (!p) return ""
+  const w = p.match(/W(\d+)/)
+  if (w) return Number(w[1]) + "주차"
+  const m = p.match(/^\d{4}-(\d{2})$/)
+  if (m) return Number(m[1]) + "월"
+  return p
+}
+
 const GlyphInsight = (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 12l5-3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /></svg>
 )
@@ -43,7 +53,7 @@ export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">{GlyphInsight}</div>
         {banner.period && (
           <span className="shrink-0 rounded-md bg-indigo-600 px-2 py-1 text-[11px] font-bold text-white shadow-sm">
-            {banner.period}
+            {fmtPeriod(banner.period)}
           </span>
         )}
         <div className="min-w-0 flex-1 truncate text-[13px] text-gray-700 dark:text-gray-200">

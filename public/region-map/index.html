@@ -394,6 +394,12 @@
           <input type="range" class="mb-slider" id="m-slider" min="0" max="0" value="0">
           <button class="mb-btn" id="m-next" type="button" aria-label="다음 달">›</button>
         </div>
+        <div class="monthbar" id="yearbar" style="display:none">
+          <span class="mb-lbl" id="y-label">누적</span>
+          <button class="mb-btn" id="y-prev" type="button" aria-label="이전 연도">‹</button>
+          <input type="range" class="mb-slider" id="y-slider" min="0" max="0" value="0">
+          <button class="mb-btn" id="y-next" type="button" aria-label="다음 연도">›</button>
+        </div>
       </div>
     </div>
     <div class="loading" id="loading">지도 불러오는 중…</div>
@@ -756,7 +762,7 @@ function usdOf(v){ const u=v/PHPUSD; if(u>=1e9) return "$"+(u/1e9).toFixed(1)+"B
 const MAPMETRICS=[
   {key:"none",     label:"전체", none:true},
   {key:"opp",      label:"종합 기회점수", val:oppScore, fmt:v=>Math.round(v)+"점", src:"합성(PSA·DHS)", yr:"2020–25"},
-  {key:"infra",    label:"인프라 투자(DPWH)", val:name=>{const v=ECON[name]&&ECON[name].infra_budget;return v!=null?v:NaN;}, fmt:v=>"₱"+Math.round(v)+"B", src:"DPWH Transparency", yr:"2025"},
+  {key:"infra",    label:"인프라 투자(DPWH)", val:infraVal, fmt:v=>"₱"+Math.round(v)+"B", src:"DPWH Transparency", yr:"2019–26"},
   {key:"pop_n",    label:"인구",         val:name=>{const v=ECON[name]&&ECON[name].pop_n;return v!=null?v:NaN;}, fmt:v=>Math.round(v*100).toLocaleString()+"만명", src:"PSA 인구총조사", yr:"2020"},
   {key:"income_real",label:"평균 가구소득(연)", val:name=>{const v=ECON[name]&&ECON[name].income_real;return v!=null?v:NaN;}, fmt:v=>"연 "+pesoKo(v)+" ("+usdOf(v)+")", src:"PSA 가계소득지출조사(FIES)", yr:"2023"},
   {key:"poverty",  label:"빈곤율",       val:name=>{const v=ECON[name]&&ECON[name].poverty;return v!=null?v:NaN;}, fmt:v=>v.toFixed(1)+"%", src:"PSA 빈곤통계", yr:"2023"},
@@ -789,6 +795,10 @@ const METRIC_URL={
 };
 function metricUrl(k){ return METRIC_URL[k]||""; }
 let curMapMetric="none";
+// 인프라 연도 선택(누적 or 특정 연도) — 연도 슬라이더가 제어
+const INFRA_YEARS=["누적","2019","2020","2021","2022","2023","2024","2025","2026"];
+let infraYearSel="누적";
+function infraVal(name){ const e=ECON[name]; if(!e) return NaN; if(infraYearSel==="누적") return e.infra_total!=null?e.infra_total:NaN; return (e.infra_series&&e.infra_series[infraYearSel]!=null)?e.infra_series[infraYearSel]:NaN; }
 function metricColor(m,v,ext){
   if(m.div){
     const maxAbs=Math.max(Math.abs(ext.min),Math.abs(ext.max))||1, t=v/maxAbs;
@@ -802,6 +812,7 @@ function applyChoropleth(key){
   curMapMetric=key;
   const m=MAPMETRICS.find(x=>x.key===key);
   const mb=document.getElementById("monthbar"); if(mb) mb.style.display=(m&&m.monthly&&MONTHS.length>1)?"flex":"none"; // 월 선택은 인플레이션 지표에만
+  const yb=document.getElementById("yearbar"); if(yb) yb.style.display=(key==="infra")?"flex":"none"; // 연도 선택은 인프라에만
   document.querySelectorAll("#metric-chips .chip").forEach(b=>b.classList.toggle("on",b.dataset.k===key));
   // 출처 딥링크
   const srcEl=document.getElementById("metric-src");
@@ -866,6 +877,16 @@ function buildMonthBar(){
   sl.oninput=upd;
   document.getElementById("m-prev").onclick=()=>{ if(curMonthIdx>0){ sl.value=--curMonthIdx; upd(); } };
   document.getElementById("m-next").onclick=()=>{ if(curMonthIdx<MONTHS.length-1){ sl.value=++curMonthIdx; upd(); } };
+}
+function buildYearBar(){
+  const sl=document.getElementById("y-slider"), lbl=document.getElementById("y-label");
+  if(!sl) return;
+  let idx=INFRA_YEARS.indexOf(infraYearSel); if(idx<0) idx=0;
+  sl.max=INFRA_YEARS.length-1; sl.value=idx; lbl.textContent=infraYearSel;
+  const upd=()=>{ infraYearSel=INFRA_YEARS[+sl.value]; lbl.textContent=infraYearSel; if(curMapMetric==="infra")applyChoropleth("infra"); if(selected)showDetail(selected.properties.REGION); };
+  sl.oninput=upd;
+  document.getElementById("y-prev").onclick=()=>{ if(+sl.value>0){ sl.value=+sl.value-1; upd(); } };
+  document.getElementById("y-next").onclick=()=>{ if(+sl.value<INFRA_YEARS.length-1){ sl.value=+sl.value+1; upd(); } };
 }
 function showTip(e,d){
   const tip=document.getElementById("rtip"); if(!tip) return;
@@ -1074,6 +1095,7 @@ d3.json("data/ph-regions.geojson").then(geo=>{
   })();
 
   buildCategoryNav();
+  buildYearBar();
   buildList();
   applyChoropleth(curMapMetric);
   loadEconomic();
