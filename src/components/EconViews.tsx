@@ -159,7 +159,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
             <nav className="mb-3.5 flex flex-wrap gap-1.5">
               {sections.map((s) => (
                 <button key={s.key} type="button" onClick={() => setActiveSub(s.key)}
-                  className={"rounded-lg px-3 py-1.5 text-[12.5px] font-semibold transition-all duration-200 " + (activeSub === s.key ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300")}>
+                  className={"rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (activeSub === s.key ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")}>
                   {s.label}
                 </button>
               ))}

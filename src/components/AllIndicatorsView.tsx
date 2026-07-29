@@ -11,6 +11,7 @@ import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
  *  각 지표의 최신값·직전 대비·데이터 기간·원본 코드·출처 링크·신뢰도를 한 줄로. 행 클릭 시 해당 분류 차트로 이동. */
 
 const ym = (d: string) => (d ? d.slice(0, 4) + "." + Number(d.slice(5, 7)) + "월" : "—")
+const ymc = (d: string) => (d ? "’" + d.slice(2, 4) + "." + Number(d.slice(5, 7)) : "—") // 축약: '25.4
 
 // 전망(forecast) 지표 — provenance(실측 검증 뷰)에 없으므로 별도 메타로 목록에 포함. 값은 v_latest_indicator에서.
 const FORECAST_META: Record<string, { label: string; source: string; cat: string }> = {
@@ -274,7 +275,7 @@ function IndTable({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: s
                 <td className="px-2 py-1.5 text-center"><span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500 dark:text-gray-400">{u.unit}</span></td>
                 <td className={"px-2 py-1.5 text-right tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "—" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.period)}</td>
-                <td className="px-2 py-1.5 tabular-nums text-gray-400 dark:text-gray-500">{ym(r.mn)}~{ym(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>
+                <td className="px-2 py-1.5 tabular-nums text-gray-400 dark:text-gray-500">{ymc(r.mn)}~{ymc(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>
                 <td className="truncate px-2 py-1.5" title={r.source}>{link ? <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"><Hi text={r.source} q={q} /> ↗</a> : <span className="text-gray-500 dark:text-gray-400"><Hi text={r.source} q={q} /></span>}</td>
                 <td className="px-2 py-1.5">
                   <div className="flex items-center justify-center gap-1">
@@ -433,10 +434,10 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
 
 function FCat({ k, ko, n, cat, setCat }: { k: string; ko: string; n: number; cat: string; setCat: (v: string) => void }) {
   const on = cat === k
-  // 타 경제지표 뷰의 서브카테고리 탭과 동일 크기(px-3 py-1.5 text-[12.5px])
+  // 주요뉴스 제품별 레터박스와 동일 사이즈·디자인·애니메이션(알약 border pill)
   return (
     <button type="button" onClick={() => setCat(k)}
-      className={"rounded-lg px-3 py-1.5 text-[12.5px] font-semibold transition-all duration-200 " + (on ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300")}>
+      className={"rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (on ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")}>
       {ko} <span className={"ml-0.5 text-[10px] tabular-nums " + (on ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{n}</span>
     </button>
   )
