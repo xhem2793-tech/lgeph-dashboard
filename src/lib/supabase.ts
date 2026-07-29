@@ -1083,6 +1083,8 @@ export type PubReport = {
   thumb?: string | null // 미리보기 이미지(없으면 카테고리 아트)
   sentAt?: string | null // 이메일 발송일(발송 안 했으면 null)
   recipients?: number | null // 수신 인원
+  pdfName?: string | null // 다운로드 파일명
+  review?: boolean | null // 검토용(미발송, 대시보드 업로드만)
 }
 export async function publishedReports(): Promise<PubReport[]> {
   try {

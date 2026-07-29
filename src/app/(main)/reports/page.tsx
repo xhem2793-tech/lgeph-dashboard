@@ -59,6 +59,11 @@ function ReportCard({ r, i }: { r: PubReport; i: number }) {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4z" /></svg>
               발송 {r.recipients ?? "—"}명 · {fmtDate(r.sentAt)}
             </span>
+          ) : r.review ? (
+            <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 font-semibold text-amber-700 dark:text-amber-300">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+              검토용 · 미발송
+            </span>
           ) : (
             <span>미발송</span>
           )}
