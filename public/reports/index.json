@@ -2,16 +2,16 @@
   "reports": [
     {
       "id": "paxsilica2026",
-      "title": "Pax Silica 프로젝트 분석",
-      "summary": "미국 주도 AI·반도체 공급망 연합(Pax Silica)의 뉴클락시티 경제안보구역 — 투자 $40–70B·직접일자리 19만·수출 $200B 규모, 반도체 후공정·AI 데이터센터·핵심광물 가공 집약. 핵심 요약·산업 함의·리스크·LG 시사점.",
-      "so": "AI 데이터센터·반도체 팹 냉각 B2B가 최대 직접 기회. 착공·앵커테넌트·Region III 인프라 집행을 트리거로 단계적 대응 권고(일정·물·주권 리스크 상당).",
+      "title": "Pax Silica 프로젝트 브리핑",
+      "summary": "미국 주도 AI·반도체 공급망 연합(Pax Silica)의 뉴클락시티 경제안보구역 — 투자 $40–70B·직접일자리 19만·수출 $200B 규모, 반도체 후공정·AI 데이터센터·핵심광물 가공 집약. (2p) 워딩·기회 + 입지 지도·핵심 지표.",
+      "so": "직접 기회는 B2B 공조(칠러·SAC) — 데이터센터·팹·건물 냉각. 앵커 계약·2028 착공·Region III 전력·인프라를 트리거로 단계 대응(확정 전 과투자 지양).",
       "topic": "통상·산업정책",
-      "kind": "프로젝트 분석",
+      "kind": "프로젝트 브리핑",
       "source": "경영기획",
       "date": "2026-07-29",
-      "pdf": "/PaxSilica_Analysis.pdf?v=2",
-      "pdfName": "PaxSilica_Analysis.pdf",
-      "thumb": "/reports/paxsilica_analysis.png?v=2",
+      "pdf": "/PaxSilica_Deck.pdf",
+      "pdfName": "PaxSilica_Deck.pdf",
+      "thumb": "/reports/paxsilica_deck.png",
       "review": true
     },
     {
