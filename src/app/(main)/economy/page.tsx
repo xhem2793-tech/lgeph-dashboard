@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import DailyTrends from "@/components/DailyTrends"
 import FxView from "@/components/FxView"
 import RegionMapView from "@/components/RegionMapView"
@@ -12,6 +12,8 @@ import ImportPriceView from "@/components/ImportPriceView"
 import HousingView from "@/components/HousingView"
 import AllIndicatorsView from "@/components/AllIndicatorsView"
 import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView, PricesView } from "@/components/EconViews"
+import { dataProvenance } from "@/lib/supabase"
+import { countByCat } from "@/lib/indicatorCats"
 import { useLang } from "@/lib/i18n"
 
 /** 경제지표 — 좌측 카테고리 네비 + 각 도메인 뷰(환율과 동일 레이아웃). 물가 포함 전 카테고리 EconViews로 통일. */
@@ -48,9 +50,26 @@ export default function Page() {
   const { lang } = useLang()
   const en = lang === "en"
   const [active, setActive] = useState("regions")
+  const [counts, setCounts] = useState<Record<string, number>>({})
+  const [total, setTotal] = useState(0)
+
+  // 사이드바 카테고리 카운트를 실데이터(provenance)에서 실시간 집계
+  useEffect(() => {
+    dataProvenance().then((rows) => { setCounts(countByCat(rows)); setTotal(rows.length) }).catch(() => {})
+  }, [])
+
+  // 딥링크: /economy/?v=<카테고리> 로 진입 시 해당 뷰 활성화
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    const v = new URLSearchParams(window.location.search).get("v")
+    if (v && NAV.some((n) => n.id === v)) setActive(v)
+  }, [])
+
+  // 지표 기반 카테고리는 실시간 카운트, 구조적 항목(지도·일일동향·온라인)은 고정
+  const navCount = (n: NavItem) => (n.id === "all" ? (total ? String(total) : n.count) : counts[n.id] != null ? String(counts[n.id]) : n.count)
 
   function view() {
-    if (active === "all") return <AllIndicatorsView />
+    if (active === "all") return <AllIndicatorsView onPick={setActive} />
     if (active === "regions") return <div className="flex flex-col gap-3"><RegionMapView /><RegionPriceExtras /></div>
     if (active === "core") return <DailyTrends />
     if (active === "fx") return <FxView />
@@ -95,7 +114,7 @@ export default function Page() {
                     <span className={"flex-1 text-[13px] " + (active === n.id ? "font-bold text-indigo-700 dark:text-indigo-300" : "font-semibold text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
                       {n.ko}
                     </span>
-                    <span className="num shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{n.count}</span>
+                    <span className="num shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{navCount(n)}</span>
                   </button>
                 </div>
               ))}

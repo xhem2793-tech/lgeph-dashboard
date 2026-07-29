@@ -7,7 +7,7 @@ import type { Provenance } from "@/lib/supabase"
 /** 데이터 출처·검증 — 전 지표를 원본 출처·코드·기간·신뢰도와 함께 표로. 모든 숫자를 공개 원본으로 1클릭 검증. */
 
 // 출처 → 원본 URL 리졸버(가능하면 원본 페이지, 아니면 기관 포털)
-function sourceLink(source: string, ref: string | null): string | null {
+export function sourceLink(source: string, ref: string | null): string | null {
   const s = source || "", r = ref || ""
   // WB/IMF 코드 우선 — raw API URL·설명문 모두 사람용 지표 페이지로
   const wb = r.match(/[A-Z]{2}\.[A-Z]{2,4}\.[A-Z0-9._]+/) // WB WDI 코드

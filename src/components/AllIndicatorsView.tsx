@@ -2,29 +2,11 @@
 
 import React, { useEffect, useMemo, useState } from "react"
 import { dataProvenance, allIndicatorLatest, type Provenance } from "@/lib/supabase"
+import { sourceLink } from "@/components/DataVerification"
+import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
 
-/** 전체 지표 리스트 — 분류별로 나눠 보는 대신 모든 지표를 한 화면에서 검색·정렬로 훑어보는 목록 뷰(캘린더 리스트와 동일 개념).
- *  각 지표의 최신값·직전 대비·데이터 기간·출처·신뢰도를 한 줄로. */
-
-// 카테고리 분류(경제지표 네비와 정합) — 지표키+라벨 키워드 매칭, 위에서부터 우선
-const CATS: { key: string; ko: string; re: RegExp }[] = [
-  { key: "prices", ko: "물가·생활비", re: /cpi|inflation|price|물가|가격|생활비|유가|fuel|diesel|gasoline|meralco|전기|electric/i },
-  { key: "growth", ko: "국민계정·성장", re: /gdp|gva|growth|investment|construction|industrial|capacity|manufactur|생산|성장|투자|건설|permit|가동/i },
-  { key: "labor", ko: "고용·임금·소득", re: /unemploy|employ|wage|labor|labour|ofw|remittance|고용|임금|실업|송금|소득|income/i },
-  { key: "sentiment", ko: "기업·소비 심리", re: /confidence|sentiment|cci|bci|bes|expectation|심리|기대|경기전망/i },
-  { key: "housing", ko: "부동산·주택", re: /rppi|rrepi|housing|vacancy|property|residential|mortgage|주택|부동산|공실|건축허가|floorarea/i },
-  { key: "fx", ko: "환율·원가", re: /fx|usd|neer|reer|peso|exchange|dollar|환율|페소|실효환율/i },
-  { key: "rates", ko: "통화·금리·신용", re: /policy_rate|m3|money_supply|money|credit|loan|deposit|금리|통화|대출|신용|카드/i },
-  { key: "appliance", ko: "가전 선행지표", re: /appliance|_ppi|producer_price|가전|내구재/i },
-  { key: "energy", ko: "에너지 라벨", re: /energy_label|energy_star|doe_|효율|별점|star_rating/i },
-  { key: "importprice", ko: "수입 단가", re: /import|comtrade|수입|cif/i },
-  { key: "weather", ko: "날씨·재난", re: /cdd|temperature|temp_|typhoon|earthquake|quake|weather|enso|oni|기온|태풍|지진|냉방도일/i },
-]
-function classify(ind: string, label: string): { key: string; ko: string } {
-  const hay = ind + " " + label
-  for (const c of CATS) if (c.re.test(hay)) return { key: c.key, ko: c.ko }
-  return { key: "etc", ko: "기타" }
-}
+/** 전체 지표 리스트(+데이터 출처·검증 통합) — 분류별 차트 대신 모든 지표를 한 화면에서 검색·정렬로 훑어보고,
+ *  각 지표의 최신값·직전 대비·데이터 기간·원본 코드·출처 링크·신뢰도를 한 줄로. 행 클릭 시 해당 분류 차트로 이동. */
 
 const ym = (d: string) => (d ? d.slice(0, 4) + "." + Number(d.slice(5, 7)) + "월" : "—")
 function fmtVal(v: number): string {
@@ -37,26 +19,41 @@ function fmtVal(v: number): string {
   return v.toFixed(2)
 }
 
+/** 검색어 하이라이트 — 뉴스 검색과 동일(노란 mark) */
+function Hi({ text, q }: { text: string; q: string }) {
+  const k = q.trim()
+  if (!k || !text) return <>{text}</>
+  const parts = text.split(new RegExp("(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi"))
+  return <>{parts.map((p, i) => (p.toLowerCase() === k.toLowerCase() ? <mark key={i} className="rounded-sm bg-yellow-200 px-0.5 text-gray-900 dark:text-gray-50">{p}</mark> : <React.Fragment key={i}>{p}</React.Fragment>))}</>
+}
+
 type Row = Provenance & { cat: string; catKo: string; value: number | null; period: string; prev: number | null }
 
-export default function AllIndicatorsView() {
+export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string) => void }) {
   const [prov, setProv] = useState<Provenance[]>([])
   const [latest, setLatest] = useState<Record<string, { value: number; period: string; prev: number | null }>>({})
   const [q, setQ] = useState("")
+  const [focused, setFocused] = useState(false)
   const [cat, setCat] = useState("all")
+  const [sort, setSort] = useState<"cat" | "recent">("cat")
 
   useEffect(() => {
     dataProvenance().then(setProv).catch(() => setProv([]))
     allIndicatorLatest().then(setLatest).catch(() => setLatest({}))
   }, [])
 
-  const rows: Row[] = useMemo(() => {
-    return prov.map((p) => {
-      const c = classify(p.indicator, p.label || "")
-      const lv = latest[p.indicator]
-      return { ...p, cat: c.key, catKo: c.ko, value: lv ? lv.value : null, period: lv ? lv.period : p.mx, prev: lv ? lv.prev : null }
-    })
-  }, [prov, latest])
+  // 행 클릭 → 해당 분류 차트로 이동(onPick 있으면 동일 페이지 전환, 없으면 경제지표로 라우팅)
+  function goChart(catKey: string) {
+    if (!NAV_IDS.has(catKey)) return
+    if (onPick) onPick(catKey)
+    else if (typeof window !== "undefined") window.location.href = "/economy/?v=" + catKey
+  }
+
+  const rows: Row[] = useMemo(() => prov.map((p) => {
+    const c = classify(p.indicator, p.label || "")
+    const lv = latest[p.indicator]
+    return { ...p, cat: c.key, catKo: c.ko, value: lv ? lv.value : null, period: lv ? lv.period : p.mx, prev: lv ? lv.prev : null }
+  }), [prov, latest])
 
   const catCounts = useMemo(() => {
     const m: Record<string, number> = {}
@@ -66,90 +63,156 @@ export default function AllIndicatorsView() {
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase()
-    return rows.filter((r) => (cat === "all" || r.cat === cat) && (!s || (r.label + " " + r.indicator + " " + r.source + " " + r.catKo).toLowerCase().includes(s)))
+    return rows.filter((r) => (cat === "all" || r.cat === cat) && (!s || (r.label + " " + r.indicator + " " + r.source + " " + (r.source_ref ?? "") + " " + r.catKo).toLowerCase().includes(s)))
   }, [rows, q, cat])
 
-  // 카테고리별 그룹핑(전체 보기일 때)
+  // 분류순: 카테고리별 그룹 / 최신순: 최신 관측일(period) 내림차순 플랫
   const grouped = useMemo(() => {
+    if (sort === "recent") return null
     const order = [...CATS.map((c) => c.key), "etc"]
     const m: Record<string, Row[]> = {}
     for (const r of filtered) (m[r.cat] = m[r.cat] || []).push(r)
     for (const k of Object.keys(m)) m[k].sort((a, b) => (a.label || a.indicator).localeCompare(b.label || b.indicator, "ko"))
     return order.filter((k) => m[k]?.length).map((k) => [k, m[k]] as [string, Row[]])
-  }, [filtered])
+  }, [filtered, sort])
 
-  const catKo = (k: string) => (k === "etc" ? "기타" : CATS.find((c) => c.key === k)?.ko || k)
+  const flat = useMemo(() => {
+    if (sort !== "recent") return null
+    return [...filtered].sort((a, b) => (b.period || "").localeCompare(a.period || ""))
+  }, [filtered, sort])
+
+  const confN = rows.filter((r) => (r.confidence || "").toUpperCase() === "CONFIRMED").length
 
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
 
       <section className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white dark:from-indigo-500/10 dark:via-transparent dark:to-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
-        <h1 className="text-[18px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">전체 지표 리스트</h1>
+        <h1 className="text-[18px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">전체 지표 리스트 · 출처 검증</h1>
         <p className="mt-1 text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">
-          분류별 차트 대신 <b className="font-semibold text-gray-800 dark:text-gray-100">모든 지표를 한 화면에서</b> — 최신값·직전 대비·데이터 기간·출처·신뢰도를 한 줄로 검색·훑어보기.
+          분류별 차트 대신 <b className="font-semibold text-gray-800 dark:text-gray-100">모든 지표를 한 화면에서</b> — 최신값·직전 대비·데이터 기간·<b className="font-semibold text-gray-800 dark:text-gray-100">원본 코드·출처 링크·신뢰도</b>까지. 지표 행을 클릭하면 <b className="font-semibold text-indigo-600 dark:text-indigo-400">해당 분류 차트로 이동</b>합니다.
         </p>
         <div className="mt-2.5 flex flex-wrap gap-4 text-[12px]">
           <span className="text-gray-500 dark:text-gray-400">총 지표 <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
           <span className="text-gray-500 dark:text-gray-400">검색 결과 <b className="text-indigo-600 dark:text-indigo-400">{filtered.length}</b></span>
+          <span className="text-gray-500 dark:text-gray-400">CONFIRMED <b className="text-emerald-600 dark:text-emerald-400">{confN}</b></span>
           <span className="text-gray-500 dark:text-gray-400">분류 <b className="text-gray-900 dark:text-gray-50">{Object.keys(catCounts).length}</b></span>
         </div>
       </section>
 
-      {/* 검색 + 카테고리 필터 */}
-      <div className="flex flex-col gap-2.5">
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="지표·출처·분류 검색 (예: 물가, 정책금리, RPPI, World Bank)"
-          className="w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3.5 py-2 text-[13px] text-gray-800 dark:text-gray-100 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-500/20" />
-        <div className="flex flex-wrap gap-1.5">
-          <FCat k="all" ko="전체" n={rows.length} cat={cat} setCat={setCat} />
-          {[...CATS.map((c) => c.key), "etc"].filter((k) => catCounts[k]).map((k) => (
-            <FCat key={k} k={k} ko={catKo(k)} n={catCounts[k]} cat={cat} setCat={setCat} />
-          ))}
+      {/* 검색(뉴스와 동일 디자인·애니메이션) + 정렬 */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className={"group relative transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[440px]" : "w-full max-w-[340px]")}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
+            <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
+          </svg>
+          <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
+            placeholder="지표 · 원본코드 · 출처 · 분류 검색"
+            className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+          {q && (
+            <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기"
+              className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            </button>
+          )}
+        </div>
+        <div className="ml-auto flex items-center gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5">
+          <SortBtn on={sort === "cat"} onClick={() => setSort("cat")}>분류순</SortBtn>
+          <SortBtn on={sort === "recent"} onClick={() => setSort("recent")}>최신순</SortBtn>
         </div>
       </div>
 
-      {grouped.map(([k, items]) => (
+      {/* 카테고리 필터 칩 */}
+      <div className="flex flex-wrap gap-1.5">
+        <FCat k="all" ko="전체" n={rows.length} cat={cat} setCat={setCat} />
+        {[...CATS.map((c) => c.key), "etc"].filter((k) => catCounts[k]).map((k) => (
+          <FCat key={k} k={k} ko={catKo(k)} n={catCounts[k]} cat={cat} setCat={setCat} />
+        ))}
+      </div>
+
+      {/* 분류순: 카테고리별 섹션 */}
+      {grouped && grouped.map(([k, items]) => (
         <section key={k} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
           <header className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-[16px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{catKo(k)}</h2>
             <span className="text-[11px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
+            {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="ml-auto text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">차트 전체 보기 →</button>}
           </header>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[620px] text-[12px]">
-              <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[10.5px] font-semibold uppercase text-gray-400 dark:text-gray-500">
-                <th className="px-4 py-1.5">지표</th><th className="px-2 py-1.5 text-right">최신값</th><th className="px-2 py-1.5 text-right">직전 대비</th><th className="px-2 py-1.5">기준</th><th className="px-2 py-1.5">기간</th><th className="px-2 py-1.5">출처</th><th className="px-2 py-1.5 text-center">신뢰도</th>
-              </tr></thead>
-              <tbody>
-                {items.map((r) => {
-                  const chg = r.value != null && r.prev != null && r.prev !== 0 ? r.value - r.prev : null
-                  const up = chg != null && chg >= 0
-                  return (
-                    <tr key={r.indicator} className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/5">
-                      <td className="px-4 py-1.5 font-medium text-gray-800 dark:text-gray-100">{r.label || r.indicator}<span className="ml-1.5 font-mono text-[10px] text-gray-300 dark:text-gray-600">{r.indicator}</span></td>
-                      <td className="px-2 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? fmtVal(r.value) : "—"}</td>
-                      <td className={"px-2 py-1.5 text-right tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "—" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</td>
-                      <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.period)}</td>
-                      <td className="px-2 py-1.5 tabular-nums text-gray-400 dark:text-gray-500">{ym(r.mn)}~{ym(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>
-                      <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">{r.source}</td>
-                      <td className="px-2 py-1.5 text-center">{(r.confidence || "").toUpperCase() === "CONFIRMED" ? <span className="text-emerald-600 dark:text-emerald-400">✓</span> : <span className="text-amber-500">추정</span>}</td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+          <IndTable items={items} q={q} showCat={false} onRow={goChart} />
         </section>
       ))}
+
+      {/* 최신순: 단일 플랫 테이블 */}
+      {flat && (
+        <section className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+          <header className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
+            <span className="h-[16px] w-1 rounded bg-indigo-500" />
+            <h2 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">최신 업데이트순</h2>
+            <span className="text-[11px] text-gray-400 dark:text-gray-500">{flat.length}개 지표 · 최근 관측 우선</span>
+          </header>
+          <IndTable items={flat} q={q} showCat onRow={goChart} />
+        </section>
+      )}
 
       {prov.length > 0 && filtered.length === 0 && (
         <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 text-[13px] text-gray-400">검색 결과 없음</div>
       )}
 
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
-        최신값=국가지표(PHILIPPINES) 최신 관측 · 직전 대비=직전 관측 대비 증감 · 기간=데이터 보유 범위(관측수) · 출처·신뢰도는 「데이터 출처·검증」과 동일. 분류는 자동 키워드 매칭이며 원본 출처별 검증은 부록 참조.
+        최신값=국가지표(PHILIPPINES) 최신 관측 · 직전 대비=직전 관측 대비 증감 · 기간=데이터 보유 범위(관측수) · <b className="font-semibold text-gray-500 dark:text-gray-400">「원본 ↗」으로 발행기관 원본에 직접 접근·재현</b>. 분류는 자동 키워드 매칭.
       </p>
     </div>
+  )
+}
+
+function IndTable({ items, q, showCat, onRow }: { items: Row[]; q: string; showCat: boolean; onRow: (cat: string) => void }) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full min-w-[820px] text-[12px]">
+        <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[10.5px] font-semibold uppercase text-gray-400 dark:text-gray-500">
+          <th className="px-4 py-1.5">지표</th>
+          {showCat && <th className="px-2 py-1.5">분류</th>}
+          <th className="px-2 py-1.5 text-right">최신값</th><th className="px-2 py-1.5 text-right">직전 대비</th><th className="px-2 py-1.5">기준</th><th className="px-2 py-1.5">기간</th><th className="px-2 py-1.5">원본 코드</th><th className="px-2 py-1.5">출처</th><th className="px-2 py-1.5 text-center">검증</th>
+        </tr></thead>
+        <tbody>
+          {items.map((r) => {
+            const chg = r.value != null && r.prev != null && r.prev !== 0 ? r.value - r.prev : null
+            const up = chg != null && chg >= 0
+            const nav = NAV_IDS.has(r.cat)
+            const link = sourceLink(r.source, r.source_ref)
+            return (
+              <tr key={r.indicator} onClick={nav ? () => onRow(r.cat) : undefined}
+                className={"group border-b border-gray-50 dark:border-gray-800/50 transition-colors " + (nav ? "cursor-pointer hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10" : "hover:bg-gray-50/60 dark:hover:bg-gray-800/30")}>
+                <td className="px-4 py-1.5">
+                  <span className={"font-medium " + (nav ? "text-gray-800 dark:text-gray-100 group-hover:text-indigo-700 dark:group-hover:text-indigo-300" : "text-gray-800 dark:text-gray-100")}><Hi text={r.label || r.indicator} q={q} /></span>
+                  {nav && <span className="ml-1.5 text-[10px] font-semibold text-indigo-500 opacity-0 transition-opacity group-hover:opacity-100">차트 →</span>}
+                  <span className="ml-1.5 font-mono text-[10px] text-gray-300 dark:text-gray-600">{r.indicator}</span>
+                </td>
+                {showCat && <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
+                <td className="px-2 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? fmtVal(r.value) : "—"}</td>
+                <td className={"px-2 py-1.5 text-right tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "—" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</td>
+                <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.period)}</td>
+                <td className="px-2 py-1.5 tabular-nums text-gray-400 dark:text-gray-500">{ym(r.mn)}~{ym(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>
+                <td className="px-2 py-1.5 font-mono text-[10.5px] text-gray-500 dark:text-gray-400"><Hi text={r.source_ref?.replace(/^https?:\/\/\S+/, "URL") ?? "—"} q={q} /></td>
+                <td className="px-2 py-1.5">{link ? <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"><Hi text={r.source} q={q} /> ↗</a> : <span className="text-gray-500 dark:text-gray-400"><Hi text={r.source} q={q} /></span>}</td>
+                <td className="px-2 py-1.5 text-center">{(r.confidence || "").toUpperCase() === "CONFIRMED" ? <span className="text-emerald-600 dark:text-emerald-400">✓</span> : <span className="text-amber-500">추정</span>}</td>
+              </tr>
+            )
+          })}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+function SortBtn({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={onClick}
+      className={"rounded-md px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 " + (on ? "bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300")}>
+      {children}
+    </button>
   )
 }
 
