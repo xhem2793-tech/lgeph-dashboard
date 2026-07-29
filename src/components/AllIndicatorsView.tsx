@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { dataProvenance, allIndicatorLatest, indicatorSeries, fmtStamp, type Provenance } from "@/lib/supabase"
 import { sourceLink } from "@/components/DataVerification"
 import { Segmented } from "@/components/Segmented"
+import { LineChart, Lg } from "@/components/EconChart"
 import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
 
 /** 전체 지표 리스트(+데이터 출처·검증 통합) — 분류별 차트 대신 모든 지표를 한 화면에서 검색·정렬로 훑어보고,
@@ -344,6 +345,10 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
   const u = inferUnit(row.indicator, row.label || "")
   const chartData = useMemo(() => table.slice().reverse().map((t) => ({ k: t.k, v: t.v })), [table]) // 차트는 시간순(과거→최신)
   const canOpen = NAV_IDS.has(row.cat)
+  // 페이지 차트(LineChart)와 동일 포맷 — 라벨은 파서 호환 컴팩트('YY / YY.Qn / YY.M)
+  const chLabels = chartData.map((d) => (gran === "year" ? "'" + d.k.slice(2) : gran === "quarter" ? d.k.split("-")[0].slice(2) + "." + d.k.split("-")[1] : d.k.slice(2, 4) + "." + Number(d.k.slice(5))))
+  const chSeries = [{ name: row.label || row.indicator, color: "#4f46e5", data: chartData.map((d) => d.v), w: 2, endLabel: "" }]
+  const chDec = Math.abs(chartData[chartData.length - 1]?.v ?? 0) < 20 ? 1 : 0
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose} style={{ animation: "bkFade .2s ease both" }}>
@@ -380,14 +385,17 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
             <div className="flex h-56 items-center justify-center text-[13px] text-gray-400">시계열 데이터 없음</div>
           ) : (
             <div className="flex flex-col gap-4">
-              {/* 차트 카드 */}
-              <div key={gran} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) both" }}>
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="h-[15px] w-1 rounded bg-indigo-500" />
-                  <h4 className="text-[13px] font-bold text-gray-900 dark:text-gray-50">추이 <span className="text-[11px] font-semibold text-gray-400">· {gname[gran]}</span></h4>
-                  <span className="ml-auto text-[11px] tabular-nums text-gray-500 dark:text-gray-400">최신 <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
+              {/* 차트 카드 — 경제지표 페이지와 동일한 LineChart */}
+              <div key={gran} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) both" }}>
+                <div className="flex items-center gap-1.5">
+                  <h4 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h4>
+                  <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
                 </div>
-                <MiniChart data={chartData} gran={gran} />
+                <div className="mt-1.5 flex min-h-[26px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">
+                  <Lg c="#4f46e5" t={row.label || row.indicator} b />
+                  <span className="ml-auto tabular-nums text-gray-500 dark:text-gray-400">최신 <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
+                </div>
+                <LineChart series={chSeries} labels={chLabels} decimals={chDec} unit={u.suffix || ""} />
               </div>
               {/* 엑셀형 표 카드 */}
               <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) .06s both" }}>
@@ -418,39 +426,6 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
           )}
         </div>
         <div className="border-t border-gray-100 dark:border-gray-800 px-5 py-2 text-[10px] text-gray-400 dark:text-gray-500">{gname[gran]} 시계열 · 값=기간 말 관측 · 상승 <span className="text-rose-500">적색</span>/하락 <span className="text-emerald-500">녹색</span> · 출처 {row.source}</div>
-      </div>
-    </div>
-  )
-}
-
-// 지표 추이 미니 차트(SVG, 부드러운 드로우 애니메이션)
-function MiniChart({ data, gran }: { data: { k: string; v: number }[]; gran: string }) {
-  if (!data || data.length < 2) return <div className="flex h-44 items-center justify-center text-[12px] text-gray-400">차트 표시에 데이터가 부족합니다</div>
-  const W = 640, H = 190, padL = 6, padR = 6, padT = 12, padB = 24
-  const vals = data.map((d) => d.v)
-  let mn = Math.min(...vals), mx = Math.max(...vals)
-  if (mn === mx) { mn -= 1; mx += 1 }
-  const rng = mx - mn; mn -= rng * 0.12; mx += rng * 0.12
-  const X = (i: number) => padL + (W - padL - padR) * (data.length === 1 ? 0.5 : i / (data.length - 1))
-  const Y = (v: number) => padT + (H - padT - padB) * (1 - (v - mn) / (mx - mn))
-  const linePts = data.map((d, i) => `${X(i).toFixed(1)},${Y(d.v).toFixed(1)}`).join(" ")
-  const areaD = `M ${X(0).toFixed(1)},${(H - padB).toFixed(1)} L ` + data.map((d, i) => `${X(i).toFixed(1)},${Y(d.v).toFixed(1)}`).join(" L ") + ` L ${X(data.length - 1).toFixed(1)},${(H - padB).toFixed(1)} Z`
-  const lab = (k: string) => (gran === "year" ? k : gran === "quarter" ? k.replace("-", " ") : k.slice(2, 4) + "." + Number(k.slice(5)))
-  const xi = Array.from(new Set([0, Math.floor((data.length - 1) / 2), data.length - 1]))
-  const gy = [0, 0.5, 1].map((f) => padT + (H - padT - padB) * f)
-  const last = data[data.length - 1]
-  return (
-    <div className="relative w-full">
-      <style>{"@keyframes drawLine{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}@keyframes detFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes areaIn{from{opacity:0}to{opacity:1}}"}</style>
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ width: "100%", height: 190, display: "block" }}>
-        <defs><linearGradient id="miniArea" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#6366f1" stopOpacity="0.28" /><stop offset="100%" stopColor="#6366f1" stopOpacity="0" /></linearGradient></defs>
-        {gy.map((y, i) => <line key={i} x1={padL} y1={y} x2={W - padR} y2={y} stroke="currentColor" className="text-gray-200 dark:text-gray-700" strokeWidth="0.6" strokeDasharray="3 3" />)}
-        <path d={areaD} fill="url(#miniArea)" style={{ animation: "areaIn .8s ease .2s both" }} />
-        <polyline points={linePts} fill="none" stroke="#4f46e5" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" pathLength={1} style={{ strokeDasharray: 1, animation: "drawLine 1.1s cubic-bezier(.4,0,.2,1) both" }} />
-        <circle cx={X(data.length - 1)} cy={Y(last.v)} r="3.2" fill="#4f46e5" style={{ animation: "areaIn .4s ease 1s both" }} />
-      </svg>
-      <div className="mt-1 flex justify-between px-1 text-[9.5px] tabular-nums text-gray-400 dark:text-gray-500">
-        {xi.map((i) => <span key={i}>{lab(data[i].k)}</span>)}
       </div>
     </div>
   )
