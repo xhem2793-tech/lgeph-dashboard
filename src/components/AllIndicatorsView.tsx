@@ -350,6 +350,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
   const chLabels = chartData.map((d) => (gran === "year" ? "'" + d.k.slice(2) : gran === "quarter" ? d.k.split("-")[0].slice(2) + "." + d.k.split("-")[1] : d.k.slice(2, 4) + "." + Number(d.k.slice(5))))
   const chSeries = [{ name: row.label || row.indicator, color: "#4f46e5", data: chartData.map((d) => d.v), w: 2, endLabel: "" }]
   const chDec = Math.abs(chartData[chartData.length - 1]?.v ?? 0) < 20 ? 1 : 0
+  const chUnit = u.suffix || (u.prefix ? " " + u.prefix : u.unit && u.unit !== "값" ? " " + u.unit : "") // 툴팁 단위
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose} style={{ animation: "bkFade .2s ease both" }}>
@@ -396,7 +397,11 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                   <Lg c="#4f46e5" t={row.label || row.indicator} b />
                   <span className="ml-auto tabular-nums text-gray-500 dark:text-gray-400">최신 <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
                 </div>
-                <LineChart series={chSeries} labels={chLabels} decimals={chDec} unit={u.suffix || ""} />
+                {/* 축 글씨가 넓은 모달에서 과대해지지 않도록 폭 제한 + SVG 텍스트 축소 */}
+                <style>{".detchart svg text{font-size:6.8px}"}</style>
+                <div className="detchart mx-auto" style={{ maxWidth: 560 }}>
+                  <LineChart series={chSeries} labels={chLabels} decimals={chDec} unit={chUnit} />
+                </div>
               </div>
               {/* 엑셀형 표 카드 */}
               <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) .06s both" }}>
