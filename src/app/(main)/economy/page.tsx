@@ -49,7 +49,7 @@ function Soon({ label }: { label: string }) {
 export default function Page() {
   const { lang } = useLang()
   const en = lang === "en"
-  const [active, setActive] = useState("regions")
+  const [active, setActive] = useState("all")
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [total, setTotal] = useState(0)
 

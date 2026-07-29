@@ -1,21 +1,15 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
-import { dataProvenance, allIndicatorLatest, type Provenance } from "@/lib/supabase"
+import { dataProvenance, allIndicatorLatest, fmtStamp, type Provenance } from "@/lib/supabase"
 import { sourceLink } from "@/components/DataVerification"
+import { Segmented } from "@/components/Segmented"
 import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
 
 /** 전체 지표 리스트(+데이터 출처·검증 통합) — 분류별 차트 대신 모든 지표를 한 화면에서 검색·정렬로 훑어보고,
  *  각 지표의 최신값·직전 대비·데이터 기간·원본 코드·출처 링크·신뢰도를 한 줄로. 행 클릭 시 해당 분류 차트로 이동. */
 
 const ym = (d: string) => (d ? d.slice(0, 4) + "." + Number(d.slice(5, 7)) + "월" : "—")
-// 최종 갱신 — 주요 뉴스와 동일 개념, 초까지(마닐라 시간)
-function stampSec(d: Date | null): string {
-  if (!d) return "—"
-  const p = new Intl.DateTimeFormat("ko-KR", { timeZone: "Asia/Manila", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).formatToParts(d)
-  const g = (t: string) => p.find((x) => x.type === t)?.value ?? "00"
-  return `${g("year")}.${g("month")}.${g("day")} ${g("hour")}:${g("minute")}:${g("second")}`
-}
 function fmtVal(v: number): string {
   if (v == null || Number.isNaN(v)) return "—"
   const a = Math.abs(v)
@@ -117,20 +111,13 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
           <span className="text-gray-500 dark:text-gray-400">검색 결과 <b className="text-indigo-600 dark:text-indigo-400">{filtered.length}</b></span>
           <span className="text-gray-500 dark:text-gray-400">CONFIRMED <b className="text-emerald-600 dark:text-emerald-400">{confN}</b></span>
           <span className="text-gray-500 dark:text-gray-400">분류 <b className="text-gray-900 dark:text-gray-50">{Object.keys(catCounts).length}</b></span>
-          <span className="ml-auto inline-flex items-center gap-1 text-gray-400 dark:text-gray-500">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
-            최종 갱신 <b className="tabular-nums text-gray-600 dark:text-gray-300">{stampSec(loadedAt)}</b>
-          </span>
         </div>
       </section>
 
-      {/* 정렬(알약형·좌측) + 검색(뉴스와 동일 디자인·애니메이션·우측) */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 p-0.5">
-          <SortBtn on={sort === "cat"} onClick={() => setSort("cat")}>분류순</SortBtn>
-          <SortBtn on={sort === "recent"} onClick={() => setSort("recent")}>최신순</SortBtn>
-        </div>
-        <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[440px]" : "w-full max-w-[340px]")}>
+      {/* 정렬(주요뉴스와 동일 Segmented) + 검색(우측) + 최종 갱신(뉴스와 동일 위치·포맷) */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+        <Segmented value={sort} onChange={(k) => setSort(k as "cat" | "recent")} options={[{ k: "cat", label: "분류순" }, { k: "recent", label: "최신순" }]} size="sm" />
+        <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[420px]" : "w-full max-w-[320px]")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
             <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
@@ -145,6 +132,10 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
             </button>
           )}
         </div>
+        <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+          최종 갱신 {loadedAt ? fmtStamp(loadedAt.toISOString()) : "—"}
+          <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-bold text-emerald-700 dark:text-emerald-300">C</span>
+        </span>
       </div>
 
       {/* 카테고리 필터 칩 */}
@@ -235,20 +226,12 @@ function IndTable({ items, q, showCat, onRow }: { items: Row[]; q: string; showC
   )
 }
 
-function SortBtn({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) {
-  return (
-    <button type="button" onClick={onClick}
-      className={"rounded-full px-3.5 py-1 text-[12px] font-semibold transition-all duration-200 " + (on ? "bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300")}>
-      {children}
-    </button>
-  )
-}
-
 function FCat({ k, ko, n, cat, setCat }: { k: string; ko: string; n: number; cat: string; setCat: (v: string) => void }) {
   const on = cat === k
+  // 타 경제지표 뷰의 서브카테고리 탭과 동일 크기(px-3 py-1.5 text-[12.5px])
   return (
     <button type="button" onClick={() => setCat(k)}
-      className={"rounded-lg px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 " + (on ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300")}>
+      className={"rounded-lg px-3 py-1.5 text-[12.5px] font-semibold transition-all duration-200 " + (on ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300")}>
       {ko} <span className={"ml-0.5 text-[10px] tabular-nums " + (on ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{n}</span>
     </button>
   )
