@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { macroMonthly, infraRegional, type InfraRegion } from "@/lib/supabase"
 import { ChartCard, Lg, fmtLabels, type SLine } from "@/components/EconChart"
 import { AgendaCard } from "@/components/EconViews"
+import { Segmented } from "@/components/Segmented"
 
 const REGSHORT: Record<string, string> = {
   "National Capital Region": "NCR", "Cordillera Administrative Region": "CAR", "Negros Island Region": "NIR",
@@ -16,7 +17,7 @@ const REGSHORT: Record<string, string> = {
  *  주택 공급(허가·완공)과 가격은 빌트인·초도 가전 수요의 핵심 선행지표. 데이터: macro_indicators + BSP RPPI(2019=100, 분기). */
 
 const C = { ind: "#6366f1", rose: "#dc2626", emer: "#059669", amber: "#d99400", violet: "#7c3aed", teal: "#0f766e" }
-const WIN = [{ k: "2Y", n: 2 }, { k: "5Y", n: 5 }, { k: "전체", n: 12 }]
+const WIN = [{ k: "1Y", n: 1 }, { k: "2Y", n: 2 }, { k: "5Y", n: 5 }, { k: "전체", n: 12 }]
 type Mon = Record<string, { dates: string[]; values: number[] }>
 type Spec = { key: string; name: string; color: string; tf?: (v: number) => number }
 
@@ -75,11 +76,16 @@ export default function HousingView() {
           <div className="min-w-0 flex-1 text-[13px] leading-snug text-gray-700 dark:text-gray-200">
             <b className="font-semibold text-gray-900 dark:text-gray-50">주택·부동산</b> — RPPI(2019=100) <b className="text-indigo-700 dark:text-indigo-300">{f1(rppiLast)}</b>{yoyLast != null ? <> · 전년비 <b className={yoyLast >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoyLast >= 0 ? "+" : ""}{f1(yoyLast)}%</b></> : null}{rppiDate ? " (" + rppiDate.slice(0, 4) + "Q" + (Math.floor(Number(rppiDate.slice(5, 7)) / 3) + 1) + ")" : ""} — 주택 공급·가격은 <b className="text-gray-700 dark:text-gray-200">빌트인·초도 가전 수요</b> 선행
           </div>
-          <div className="hidden shrink-0 items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 p-0.5 sm:flex">
-            {WIN.map((w) => <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-colors " + (win === w.k ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400")}>{w.k}</button>)}
-          </div>
         </div>
       </div>
+
+      {/* 기간 토글 — 타 경제지표 뷰와 동일(Segmented, 우측 정렬) */}
+      <header className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+        <span className="h-[18px] w-1 rounded bg-indigo-500" />
+        <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">부동산·주택</h2>
+        <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">RPPI·건축허가·공실·인프라</span>
+        <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k }))} /></span>
+      </header>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
       <div className="grid items-stretch gap-4 sm:grid-cols-2">

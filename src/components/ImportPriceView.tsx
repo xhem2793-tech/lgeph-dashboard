@@ -32,7 +32,7 @@ export default function ImportPriceView() {
   useEffect(() => { importPriceSeries().then(setSer).catch(() => {}) }, [])
   useEffect(() => { setOrig(null); importOrigins(hs).then(setOrig).catch(() => {}) }, [hs])
 
-  const years = win === "1Y" ? 1 : win === "전체" ? 10 : 2
+  const years = win === "1Y" ? 1 : win === "5Y" ? 5 : win === "전체" ? 10 : 2
   const cur = HS.find((h) => h.hs === hs)!
   const chart = useMemo(() => toSeries(ser[hs], years, C.ind), [ser, hs, years])
   const latest = ser[hs]?.values?.at(-1)
@@ -54,18 +54,14 @@ export default function ImportPriceView() {
           <div className="min-w-0 flex-1 text-[13px] leading-snug text-gray-700 dark:text-gray-200">
             <b className="font-semibold text-gray-900 dark:text-gray-50">가전 수입 단가</b> — {cur.label} <b className="text-indigo-700 dark:text-indigo-300">{latest != null ? "$" + latest.toFixed(2) + "/kg" : "–"}</b>{latest != null && prev != null ? <span className={"ml-0.5 " + (latest >= prev ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{latest >= prev ? "▲" : "▼"}{Math.abs(latest - prev).toFixed(2)}</span> : null}{yoy != null ? <> · 전년비 <b className={yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoy >= 0 ? "+" : ""}{yoy.toFixed(1)}%</b></> : null} — 페소 표시 조달원가·경쟁 수입가 신호
           </div>
-          <div className="hidden shrink-0 items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 p-0.5 sm:flex">
-            {["1Y", "2Y", "전체"].map((w) => (
-              <button key={w} type="button" onClick={() => setWin(w)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-colors " + (win === w ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400")}>{w}</button>
-            ))}
-          </div>
         </div>
       </div>
 
-      {/* 제품 토글 */}
-      <div className="flex items-center gap-2">
+      {/* 제품 + 기간 토글 — 타 경제지표 뷰와 동일(Segmented, 기간 우측 정렬) */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
         <Segmented value={hs} onChange={setHs} options={HS.map((h) => ({ k: h.hs, label: h.label }))} size="sm" />
         <span className="text-[11px] text-gray-400 dark:text-gray-500">HS {hs}{lastDate ? " · 최신 확보 " + fmtMonth(lastDate) : ""}</span>
+        <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: "전체" }]} /></span>
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
