@@ -35,6 +35,66 @@ const relDays = (iso: string) => {
   return d <= 0 ? "오늘" : d === 1 ? "어제" : d < 30 ? d + "일 전" : Math.round(d / 30) + "개월 전"
 }
 const magColor = (m: number) => (m >= 6 ? "#b91c1c" : m >= 5 ? "#ea580c" : m >= 4.5 ? "#d99400" : "#0f766e")
+// PAGASA 열지수(Heat Index) 위험 단계
+function heatRisk(hi: number | null): { t: string; c: string; bg: string } {
+  if (hi == null) return { t: "—", c: "text-gray-500", bg: "bg-gray-100 dark:bg-gray-800" }
+  if (hi >= 52) return { t: "매우위험", c: "text-red-800 dark:text-red-300", bg: "bg-red-100 dark:bg-red-500/20" }
+  if (hi >= 42) return { t: "위험", c: "text-red-700 dark:text-red-400", bg: "bg-red-50 dark:bg-red-500/10" }
+  if (hi >= 33) return { t: "경보", c: "text-amber-700 dark:text-amber-300", bg: "bg-amber-50 dark:bg-amber-500/10" }
+  if (hi >= 27) return { t: "주의", c: "text-yellow-700 dark:text-yellow-300", bg: "bg-yellow-50 dark:bg-yellow-500/10" }
+  return { t: "안전", c: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-50 dark:bg-emerald-500/10" }
+}
+const MONF = ["1","2","3","4","5","6","7","8","9","10","11","12"]
+
+/** 월별 기후 평년 — 강수(막대) + 열지수(선). 우기(6~10월)·건기 패턴 */
+function ClimateChart({ mon }: { mon: { rain: number; hi: number }[] }) {
+  if (mon.length < 12) return <div className="flex h-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  const W = 420, H = 150, padB = 20, padT = 10, padL = 8
+  const rMax = Math.max(...mon.map((m) => m.rain), 1)
+  const hiMin = Math.min(...mon.map((m) => m.hi)), hiMax = Math.max(...mon.map((m) => m.hi))
+  const bw = (W - padL * 2) / 12
+  const ry = (v: number) => padT + (H - padT - padB) * (1 - v / rMax)
+  const hy = (v: number) => padT + (H - padT - padB) * (1 - (v - hiMin + 1) / (hiMax - hiMin + 2))
+  const hpts = mon.map((m, i) => `${padL + bw * i + bw / 2},${hy(m.hi)}`).join(" ")
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }}>
+      {/* 우기 음영 6~10월 */}
+      <rect x={padL + bw * 5} y={padT} width={bw * 5} height={H - padT - padB} fill="#38bdf8" fillOpacity="0.07" />
+      {mon.map((m, i) => (
+        <rect key={i} x={padL + bw * i + 2} y={ry(m.rain)} width={bw - 4} height={H - padB - ry(m.rain)} fill="#0ea5e9" fillOpacity="0.55" rx="1.5" />
+      ))}
+      <polyline points={hpts} fill="none" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      {mon.map((m, i) => <circle key={i} cx={padL + bw * i + bw / 2} cy={hy(m.hi)} r="1.8" fill="#dc2626" />)}
+      {MONF.map((mm, i) => <text key={i} x={padL + bw * i + bw / 2} y={H - 6} textAnchor="middle" className="fill-gray-400" style={{ fontSize: 8 }}>{mm}</text>)}
+      <text x={padL + bw * 7.5} y={padT + 8} textAnchor="middle" className="fill-sky-500" style={{ fontSize: 8.5, fontWeight: 700 }}>우기</text>
+    </svg>
+  )
+}
+
+/** 일별 기온(최저~최고 밴드+평균선) + 강수 막대 — 최근 N일 */
+function DailyChart({ days }: { days: WxDay[] }) {
+  const d = days.slice(-90).filter((x) => x.maxT != null && x.minT != null)
+  if (d.length < 3) return <div className="flex h-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  const W = 420, H = 150, padB = 18, padT = 8, padL = 6
+  const temps = d.flatMap((x) => [x.maxT!, x.minT!])
+  const tMin = Math.min(...temps) - 1, tMax = Math.max(...temps) + 1
+  const rMax = Math.max(...d.map((x) => x.rain ?? 0), 1)
+  const bw = (W - padL * 2) / d.length
+  const ty = (v: number) => padT + (H - padT - padB) * 0.62 * (1 - (v - tMin) / (tMax - tMin))
+  const x = (i: number) => padL + bw * i + bw / 2
+  const band = d.map((p, i) => `${x(i)},${ty(p.maxT!)}`).concat(d.slice().reverse().map((p, i) => `${x(d.length - 1 - i)},${ty(p.minT!)}`)).join(" ")
+  const avg = d.map((p, i) => `${x(i)},${ty(p.avgT ?? (p.maxT! + p.minT!) / 2)}`).join(" ")
+  const ry = (v: number) => H - padB - (H - padB - (padT + (H - padT - padB) * 0.66)) * (v / rMax)
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }}>
+      {d.map((p, i) => { const rr = p.rain ?? 0; if (!rr) return null; return <rect key={i} x={x(i) - bw / 2 + 0.4} y={ry(rr)} width={Math.max(0.8, bw - 0.8)} height={H - padB - ry(rr)} fill="#0ea5e9" fillOpacity="0.5" /> })}
+      <polygon points={band} fill="#f59e0b" fillOpacity="0.16" />
+      <polyline points={avg} fill="none" stroke="#d97706" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+      <text x={padL} y={H - 5} className="fill-gray-400" style={{ fontSize: 8 }}>{d[0].date.slice(5).replace("-", "/")}</text>
+      <text x={W - padL} y={H - 5} textAnchor="end" className="fill-gray-400" style={{ fontSize: 8 }}>{d[d.length - 1].date.slice(5).replace("-", "/")}</text>
+    </svg>
+  )
+}
 
 /** 최근 지진 규모 스트립 — 시간축 위 규모 점(색=규모) */
 function QuakeStrip({ quakes }: { quakes: Quake[] }) {
@@ -92,14 +152,13 @@ export default function WeatherView() {
 
   useEffect(() => {
     macroMonthly(["cdd_monthly", "temp_monthly", "enso_oni"]).then(setMon).catch(() => {})
-    weatherRecent(120).then(setWx).catch(() => {})
+    weatherRecent(400).then(setWx).catch(() => {})
     typhoonAlerts(8).then(setTys).catch(() => {})
     earthquakesRecent(365, 4).then(setEqs).catch(() => {})
   }, [])
 
   const years = WIN.find((w) => w.k === win)!.n
   const cdd = useMemo(() => monSeries(mon, "cdd_monthly", years, "냉방도일 CDD", C.rose), [mon, years])
-  const temp = useMemo(() => monSeries(mon, "temp_monthly", years, "월평균 기온", C.amber), [mon, years])
   const enso = useMemo(() => monSeries(mon, "enso_oni", Math.max(years, 3), "ONI 지수", C.blue), [mon, years])
   const oni = mon.enso_oni?.values?.at(-1)
   const phase = oni == null ? null
@@ -108,34 +167,85 @@ export default function WeatherView() {
     : { t: "중립(Neutral)", c: "text-gray-600 dark:text-gray-300", bg: "bg-gray-100 dark:bg-gray-800", dot: "bg-gray-400", d: "평년 수준 — 계절 패턴 우세" }
 
   const cddLatest = mon.cdd_monthly?.values?.at(-1)
-  const cddPrev = mon.cdd_monthly?.values?.at(-2)
   const activeTy = tys.filter((t) => t.maxSignal > 0)
   const bigQuakes = eqs.filter((q) => q.mag >= 5)
   const maxQuake = eqs.length ? Math.max(...eqs.map((q) => q.mag)) : null
-  const rainy = wx.filter((d) => (d.rain ?? 0) > 0).length
+  // 현재 기상(최신일) + 월별 기후 평년
+  const cur = wx.length ? wx[wx.length - 1] : null
+  const hr = heatRisk(cur?.heat ?? null)
+  const monthly = useMemo(() => {
+    const acc = Array.from({ length: 12 }, () => ({ r: 0, hi: 0, n: 0, hn: 0 }))
+    for (const d of wx) { const m = Number(d.date.slice(5, 7)) - 1; if (m < 0 || m > 11) continue; if (d.rain != null) { acc[m].r += d.rain } acc[m].n++; if (d.heat != null) { acc[m].hi += d.heat; acc[m].hn++ } }
+    return acc.map((a) => ({ rain: a.n ? a.r / a.n : 0, hi: a.hn ? a.hi / a.hn : 0 }))
+  }, [wx])
+  const season = cur ? (Number(cur.date.slice(5, 7)) >= 6 && Number(cur.date.slice(5, 7)) <= 10 ? "우기(6~10월)" : "건기(11~5월)") : ""
 
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"}</style>
 
-      {/* 배너 */}
-      <div className="overflow-hidden rounded-xl border border-rose-100 dark:border-rose-500/25 bg-gradient-to-r from-rose-50 dark:from-rose-500/10 via-rose-50/40 dark:via-transparent to-white dark:to-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rose-600 text-white shadow-sm">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v6M12 2l3 3M12 2 9 5" /><path d="M5 18a5 5 0 0 1 .5-9.9A6 6 0 0 1 17 9a4 4 0 0 1 1 7.9" /></svg>
+      {/* 현재 기상 히어로 — 날씨 대시보드 상단 */}
+      <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-sky-50 via-white to-white dark:from-sky-500/10 dark:via-gray-900 dark:to-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
+          {/* 현재 기온 */}
+          <div className="flex items-center gap-3">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white shadow-sm">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
+            </div>
+            <div>
+              <div className="flex items-baseline gap-1.5">
+                <span className="num text-[30px] font-extrabold leading-none text-gray-900 dark:text-gray-50">{cur?.maxT != null ? Math.round(cur.maxT) : "–"}°</span>
+                <span className="num text-[15px] font-semibold text-gray-400 dark:text-gray-500">/ {cur?.minT != null ? Math.round(cur.minT) : "–"}°</span>
+              </div>
+              <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">필리핀(전국 관측) · {cur ? cur.date.slice(5).replace("-", "/") : "—"} · {season}</div>
+            </div>
           </div>
-          <div className="min-w-0 flex-1 text-[13px] leading-snug text-gray-700 dark:text-gray-200">
-            <b className="font-semibold text-gray-900 dark:text-gray-50">기후·냉방·재난</b> — {phase ? <>ENSO <b className={phase.c.split(" ")[0]}>{phase.t}</b>(ONI {oni! > 0 ? "+" : ""}{oni!.toFixed(2)}) · </> : null}냉방도일 <b className="text-rose-700 dark:text-rose-300">{cddLatest != null ? Math.round(cddLatest) : "–"}</b>{cddLatest != null && cddPrev != null ? <span className={"ml-0.5 " + (cddLatest >= cddPrev ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{cddLatest >= cddPrev ? "▲" : "▼"}{Math.abs(Math.round(cddLatest - cddPrev))}</span> : null} · 활성 태풍 <b className="text-amber-700 dark:text-amber-300">{activeTy.length}</b>건 · 지진(M4+) <b className="text-orange-700 dark:text-orange-300">{eqs.length}</b>건
+          {/* 체감(열지수) */}
+          <div className="flex flex-col">
+            <span className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">체감(열지수)</span>
+            <span className="flex items-center gap-1.5">
+              <span className="num text-[20px] font-bold text-gray-900 dark:text-gray-50">{cur?.heat != null ? cur.heat.toFixed(1) + "°" : "–"}</span>
+              <span className={"rounded px-1.5 py-0.5 text-[10px] font-bold " + hr.bg + " " + hr.c}>{hr.t}</span>
+            </span>
           </div>
-          <div className="hidden shrink-0 items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 p-0.5 sm:flex">
+          {/* 타일 */}
+          <div className="flex flex-wrap items-center gap-2">
+            {[
+              { l: "강수", v: cur?.rain != null ? cur.rain.toFixed(0) + "mm" : "–", c: "text-sky-700 dark:text-sky-300" },
+              { l: "ENSO", v: phase ? phase.t : "–", c: phase ? phase.c.split(" ")[0] : "text-gray-500" },
+              { l: "냉방도일", v: cddLatest != null ? Math.round(cddLatest) + "" : "–", c: "text-rose-700 dark:text-rose-300" },
+              { l: "활성태풍", v: activeTy.length + "건", c: "text-amber-700 dark:text-amber-300" },
+              { l: "지진 M4+", v: eqs.length + "건", c: "text-orange-700 dark:text-orange-300" },
+            ].map((t) => (
+              <div key={t.l} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 px-2.5 py-1.5 text-center">
+                <div className="text-[9.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{t.l}</div>
+                <div className={"num text-[13px] font-bold " + t.c}>{t.v}</div>
+              </div>
+            ))}
+          </div>
+          <div className="ml-auto hidden shrink-0 items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 p-0.5 sm:flex">
             {WIN.map((w) => (
-              <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-colors " + (win === w.k ? "bg-rose-600 text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-rose-600 dark:hover:text-rose-400")}>{w.k}</button>
+              <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-colors " + (win === w.k ? "bg-sky-600 text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400")}>{w.k}</button>
             ))}
           </div>
         </div>
       </div>
 
       <div className="grid items-stretch gap-4 lg:grid-cols-2">
+        {/* 일별 기온·강수 */}
+        <Panel title="일별 기온·강수 (최근 90일)" seg="관측"
+          meaning={<>일 최저~최고 기온(음영)·평균(선) + 강수(파랑 막대) — 폭염·우기 강도 추적</>}
+          src="PAGASA 일별 관측(자체 수집)">
+          <div className="h-[150px] w-full">{wx.length ? <DailyChart days={wx} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}</div>
+        </Panel>
+
+        {/* 월별 기후 평년 — 우기/건기 */}
+        <Panel title="월별 기후 평년 (우기·건기)" seg="기후"
+          meaning={<>월별 평균 강수(파랑)·열지수(빨강) — <b className="text-sky-600 dark:text-sky-400">우기 6~10월</b> 다우, <b className="text-rose-600 dark:text-rose-400">건기 3~5월</b> 폭염</>}
+          src="PAGASA 관측 월별 집계">
+          <div className="h-[150px] w-full">{monthly.some((m) => m.hi > 0) ? <ClimateChart mon={monthly} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}</div>
+        </Panel>
+
         {/* ENSO 현황 — 엘니뇨/라니냐 */}
         <Panel
           title="ENSO — 엘니뇨 · 라니냐" seg="기후"
@@ -239,17 +349,6 @@ export default function WeatherView() {
           </div>
         </Panel>
 
-        {/* 계절 기온 */}
-        {temp.series.length ? (
-          <ChartCard
-            title="월평균 기온" seg="CE" unit="℃ · 월" decimals={1}
-            legend={<Lg c={C.amber} t="월평균 기온" b />}
-            series={temp.series} labels={temp.labels}
-            meaning={<>필리핀 우기(6~10월)·건기(11~5월) 계절성 — 최근 120일 강수일 <b className="text-gray-700 dark:text-gray-200">{rainy}일</b></>}
-            ai={<>고온 지속은 냉방 상시가동으로 이어져 <b className="font-semibold text-rose-600 dark:text-rose-400">에어컨·냉장 수요와 전력요금 부담</b>을 동시에 키움. 건기 폭염엔 인버터 고효율 소구, 우기엔 제습·에어케어 수요를 함께 주시.</>}
-            src="PAGASA 관측 월평균 기온"
-          />
-        ) : <Panel title="월평균 기온" meaning="데이터 로딩" src="PAGASA"><div className="flex h-40 items-center justify-center text-[12px] text-gray-400">불러오는 중</div></Panel>}
       </div>
 
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">냉방도일(CDD)·기온=PAGASA 관측 기반 · 태풍=PAGASA 공보 · 지진=USGS FDSN 실시간(필리핀 4~21°N/116~128°E, M4.0+) · 화산 경보(PHIVOLCS)는 공식 API 부재로 추후 반영</p>
