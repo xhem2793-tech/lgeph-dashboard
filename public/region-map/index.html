@@ -1214,6 +1214,44 @@ function markList(name){
 }
 
 const CATKO={"Roads":"도로","Buildings and Facilities":"건물·시설","Flood Control and Drainage":"홍수통제·배수","Bridges":"교량","Water Provision and Storage":"상수도"};
+// ── 리포트형 상세 빌더(카테고리 공용) ──
+function natAvgM(ck){ const v=Object.keys(DATA).map(r=>mVal(r,ck)).filter(x=>!isNaN(x)); return v.length?v.reduce((a,b)=>a+b,0)/v.length:NaN; }
+function frContext(name){
+  const d=DATA[name]||{};
+  const chips=(d.ind||[]).map(t=>`<span style="display:inline-block;background:#eef2ff;color:#3730a3;border:1px solid #e0e7ff;border-radius:5px;padding:2px 8px;font-size:10px;font-weight:600;margin:3px 4px 0 0">${t}</span>`).join("");
+  const cities=(d.cities||[]).length?`<div style="font-size:10px;color:#64748b;margin-top:6px">주요 도시 · ${d.cities.join(" · ")}</div>`:"";
+  return `<div style="background:#f8fafc;border:1px solid #eef0f4;border-radius:10px;padding:12px 14px;margin-top:9px">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;font-size:11px;color:#475569;font-weight:600">
+      <span>🏙 중심도시 <b style="color:#0f1420">${d.cap||"—"}</b></span>
+      <span>👥 인구 <b style="color:#0f1420">${d.pop||"—"}</b></span>
+      <span>📐 면적 <b style="color:#0f1420">${d.area||"—"}</b></span>
+      <span>밀도 <b style="color:#0f1420">${d.den||"—"}</b></span>
+    </div>
+    ${d.intro?`<div style="font-size:11.5px;line-height:1.65;color:#334155;margin-top:8px">${d.intro}</div>`:""}
+    ${chips?`<div style="margin-top:5px">${chips}</div>`:""}
+    ${cities}
+  </div>`;
+}
+function frShell(name,title,badge,bc,body,src){
+  return `<div style="margin-top:2px">
+    <div style="display:flex;align-items:center;gap:9px;margin:12px 0 0">
+      <span style="width:5px;height:19px;border-radius:3px;background:${bc}"></span>
+      <span style="font-size:15.5px;font-weight:800;color:#0f1420">${title}</span>
+      <span style="margin-left:auto;font-size:9px;font-weight:800;color:${bc};background:${bc}14;border:1px solid ${bc}33;border-radius:4px;padding:2px 8px">${badge}</span>
+    </div>
+    ${frContext(name)}
+    <div style="margin-top:11px">${body}</div>
+    <div style="font-size:8.5px;color:#94a3b8;margin-top:11px;border-top:1px solid #f0f1f5;padding-top:7px">${src}</div>
+  </div>`;
+}
+function frBig(items){ return `<div style="display:flex;gap:8px;flex-wrap:wrap">`+items.map(m=>`<div style="flex:1;min-width:88px;background:#fff;border:1px solid #e8eaf0;border-radius:9px;padding:10px 12px"><div style="font-size:9.5px;color:#64748b;font-weight:600;line-height:1.3">${m.k}</div><div style="font-size:20px;font-weight:800;line-height:1.15;color:${m.color||'#0f1420'}">${m.v}</div>${m.sub?`<div style="font-size:9px;color:#94a3b8;margin-top:1px">${m.sub}</div>`:""}</div>`).join("")+`</div>`; }
+function frBar(label,pct,color,valtxt){ return `<div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+  <span style="width:82px;font-size:11px;color:#475569;flex-shrink:0">${label}</span>
+  <span style="flex:1;height:11px;background:#eef0f4;border-radius:4px;overflow:hidden;position:relative"><span style="position:absolute;inset:0 auto 0 0;width:${Math.max(3,Math.min(100,pct))}%;background:${color};border-radius:4px"></span></span>
+  <span style="width:58px;text-align:right;font-size:11px;font-weight:700;color:#334155">${valtxt}</span></div>`; }
+function frAnalysis(html){ return `<div style="margin-top:12px"><div style="font-size:11px;font-weight:800;color:#334155;margin-bottom:4px">📋 분석</div><div style="background:#fbfbfd;border:1px solid #eef0f4;border-radius:9px;padding:11px 13px;font-size:11.5px;line-height:1.75;color:#2b313b">${html}</div></div>`; }
+function frLG(html){ return `<div style="margin-top:9px;background:linear-gradient(180deg,#f0fdf4,#f8fffb);border:1px solid #bbf7d0;border-radius:9px;padding:10px 13px"><div style="font-size:11px;font-weight:800;color:#047857;margin-bottom:3px">◈ LG 시사점</div><div style="font-size:11.5px;line-height:1.7;color:#173d2b">${html}</div></div>`; }
+const sgn=(v)=>(v>0?"+":"")+v.toFixed(1)+"%";
 // 분야별 대표 사업유형·LG 기회·주시 포인트(인사이트 중심)
 const INFRA_INSIGHT={
   "Buildings and Facilities":{proj:"정부청사·공립병원·학교·다목적 복합건물",op:"신규 건물에 <b>시스템에어컨·칠러·상업용 가전</b> 발주 — LG B2B 최우선 표적. 조기 스펙인 유효.",wa:"공공건물 착공·준공 스케줄, DPWH·지방정부 조달 공고."},
@@ -1237,39 +1275,25 @@ function renderInfra(name){
   let trend="";
   if(yrs.length>=2){ const a=ser[yrs[0]],b=ser[yrs[yrs.length-1]]; const up=b>=a; trend=`<span style="color:${up?'#059669':'#e11d48'};font-weight:700">${up?'▲':'▼'} ${yrs[0]}→${yrs[yrs.length-1]}</span>`; }
   const top3=cats.slice(0,3);
-  box.innerHTML=`<div style="margin-top:10px">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
-      <span style="font-size:13px;font-weight:800;color:#0f1420">${(e.ko||name)} 인프라 투자</span>
-      <span style="font-size:8.5px;font-weight:700;color:#b45309;background:#fffaf0;border:1px solid #fde9c8;border-radius:3px;padding:1px 5px">DPWH · B2B</span>
-    </div>
-    <div style="display:flex;gap:8px;margin-bottom:11px">
-      <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px">
-        <div style="font-size:9.5px;color:#059669;font-weight:700">진행중 프로젝트</div>
-        <div style="font-size:19px;font-weight:800;color:#047857;line-height:1.15">${(e.infra_ongoing||0).toLocaleString()}<span style="font-size:11px">건</span></div>
-        ${e.infra_completed?`<div style="font-size:9px;color:#94a3b8">완료 ${e.infra_completed.toLocaleString()}건</div>`:""}
-      </div>
-      <div style="flex:1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:8px 10px">
-        <div style="font-size:9.5px;color:#4f46e5;font-weight:700">총 사업예산</div>
-        <div style="font-size:19px;font-weight:800;color:#3730a3;line-height:1.15">₱${Math.round(total).toLocaleString()}<span style="font-size:11px">B</span></div>
-        ${trend?`<div style="font-size:9px">${trend}</div>`:""}
-      </div>
-    </div>
-    <div style="font-size:10.5px;color:#334155;margin-bottom:5px">가장 집중된 분야 — <b style="color:#0f1420">${topko}</b> <span style="color:#4f46e5;font-weight:700">전체의 ${topShare}%</span></div>
-    ${top3.map(c=>{const pct=Math.round(c.b/total*100);return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-      <span style="width:70px;font-size:10px;color:#475569;flex-shrink:0">${CATKO[c.c]||c.c}</span>
-      <span style="flex:1;height:9px;background:#eef0f4;border-radius:3px;overflow:hidden;position:relative"><span style="position:absolute;inset:0 auto 0 0;width:${Math.max(4,c.b/(top.b||1)*100)}%;background:#818cf8;border-radius:3px"></span></span>
-      <span style="width:52px;text-align:right;font-size:10px;font-weight:700;color:#334155">₱${Math.round(c.b)}B·${pct}%</span></div>`;}).join("")}
-    <div style="font-size:9.5px;color:#64748b;margin-top:6px">대표 사업: ${ins.proj}</div>
-    <div style="margin-top:11px;background:#f8fafc;border-left:3px solid #059669;border-radius:0 6px 6px 0;padding:8px 10px">
-      <div style="font-size:10px;font-weight:800;color:#047857;margin-bottom:2px">◈ LG 기회</div>
-      <div style="font-size:10px;line-height:1.55;color:#233">${ins.op}</div>
-    </div>
-    <div style="margin-top:6px;background:#f8fafc;border-left:3px solid #b45309;border-radius:0 6px 6px 0;padding:8px 10px">
-      <div style="font-size:10px;font-weight:800;color:#b45309;margin-bottom:2px">◈ 주시 포인트</div>
-      <div style="font-size:10px;line-height:1.55;color:#233">${ins.wa}</div>
-    </div>
-    <div style="font-size:8.5px;color:#94a3b8;margin-top:9px">DPWH Transparency · 지역별 프로젝트 예산·건수·집행상태 집계(누적)</div>
-  </div>`;
+  const d=DATA[name]||{};
+  const big=frBig([
+    {k:"진행중 프로젝트",v:(e.infra_ongoing||0).toLocaleString()+"건",color:"#047857",sub:e.infra_completed?"완료 "+e.infra_completed.toLocaleString()+"건":""},
+    {k:"총 사업예산",v:"₱"+Math.round(total).toLocaleString()+"B",color:"#3730a3",sub:trend?trend.replace(/<[^>]+>/g,""):""},
+    {k:"최다 분야 비중",v:topShare+"%",color:"#b45309",sub:topko},
+  ]);
+  const bars=`<div style="margin-top:11px"><div style="font-size:11px;font-weight:700;color:#334155;margin-bottom:6px">분야별 예산 집중도</div>`+
+    top3.map(c=>frBar(CATKO[c.c]||c.c, c.b/(top.b||1)*100, "#818cf8", "₱"+Math.round(c.b)+"B·"+Math.round(c.b/total*100)+"%")).join("")+`</div>`;
+  const analysis=frAnalysis(
+    `${d.cap||name} 일대를 포함한 ${d.ko||name}은(는) 현재 <b>${(e.infra_ongoing||0).toLocaleString()}건</b>의 공공 인프라 사업이 진행 중이며, 누적 사업예산은 <b>₱${Math.round(total).toLocaleString()}B</b> 규모다. `+
+    `투자는 <b>${topko}</b> 분야에 가장 집중(전체의 ${topShare}%)되어 있고, 대표 사업은 ${ins.proj} 등이다. `+
+    (yrs.length>=2?`연도별로는 ${yrs[0]}년 대비 ${yrs[yrs.length-1]}년 예산이 ${ser[yrs[yrs.length-1]]>=ser[yrs[0]]?"확대":"축소"}되는 흐름이다. `:"")+
+    `공공 발주는 이 지역의 상업·주거·산업시설 확충으로 이어져 가전 수요의 배후 환경을 형성한다.`
+  );
+  box.innerHTML=frShell(name, (d.ko||name)+" 인프라 투자", "DPWH · B2B", "#b45309",
+    big+bars+analysis+
+    frLG(ins.op)+
+    `<div style="margin-top:9px;background:#fffdf7;border:1px solid #fde9c8;border-radius:9px;padding:10px 13px"><div style="font-size:11px;font-weight:800;color:#b45309;margin-bottom:3px">◈ 주시 포인트</div><div style="font-size:11.5px;line-height:1.7;color:#3d2f14">${ins.wa}</div></div>`,
+    "DPWH Transparency · 지역별 프로젝트 예산·건수·집행상태 집계(누적)");
 }
 // 현재 선택된 지표의 카테고리(MAP_GROUP) 판별
 function curMetricCat(){ const g=MAP_GROUPS.find(g=>g.keys.includes(curMapMetric)); return g?g.label:""; }
@@ -1286,41 +1310,60 @@ function renderFocus(name){
   if(cat.includes("인프라")){ renderInfra(name); return; }
   box.innerHTML="";
   const e=ECON[name]||{};
-  const wrap=(title,badge,body,src)=>`<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(148,163,184,.25)">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:7px"><span style="font-size:12px;font-weight:800;color:#0f1420">${title}</span>
-    <span style="margin-left:auto;font-size:8.5px;font-weight:700;color:#3730a3;background:#eef0fb;border:1px solid #e0e3f4;border-radius:3px;padding:1px 5px">${badge}</span></div>${body}
-    <div style="font-size:8.5px;color:#94a3b8;margin-top:6px">${src}</div></div>`;
-  const bar=(label,val,pct,color,valtxt)=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-    <span style="width:70px;font-size:10px;color:#475569;flex-shrink:0">${label}</span>
-    <span style="flex:1;height:9px;background:#eef0f4;border-radius:3px;overflow:hidden;position:relative"><span style="position:absolute;inset:0 auto 0 0;width:${Math.max(3,Math.min(100,pct))}%;background:${color};border-radius:3px"></span></span>
-    <span style="width:60px;text-align:right;font-size:10px;font-weight:700;color:#334155">${valtxt}</span></div>`;
+  const d=DATA[name]||{};
   if(cat.includes("물가")){
     const per=(MONTHS.length&&typeof fmtMonth==="function")?fmtMonth(MONTHS[curMonthIdx]):"";
     const items=[["appl_cpi","가전"],["aircon_cpi","에어컨"],["food_cpi","식품"],["elec_cpi","전기"],["rice_cpi","쌀"],["transport_cpi","운송"]];
     const rows=items.map(([k,ko])=>({ko,v:mVal(name,k)})).filter(x=>!isNaN(x.v));
-    if(!rows.length) return;
+    if(!rows.length){ box.innerHTML=frShell(name,"지역 물가","CPI","#e11d48","<div style='font-size:11px;color:#94a3b8'>이 지역의 지역별 물가 데이터가 아직 없습니다.</div>","PSA 소비자물가지수(지역별)"); return; }
     const mx=Math.max(...rows.map(r=>Math.abs(r.v)),3);
-    const body=rows.map(r=>bar(r.ko, r.v, Math.abs(r.v)/mx*100, r.v>=0?"#e11d48":"#059669",(r.v>0?"+":"")+r.v.toFixed(1)+"%")).join("");
-    box.innerHTML=wrap("지역 물가 (전년비)"+(per?` · ${per}`:""),"CPI",body,"PSA 소비자물가지수(지역별)");
+    const appl=mVal(name,"appl_cpi"), food=mVal(name,"food_cpi"), elec=mVal(name,"elec_cpi");
+    const avg=natAvgM("appl_cpi");
+    const big=frBig([{k:"가전 물가(전년비)",v:sgn(appl),color:appl>=0?"#e11d48":"#059669"},{k:"식품 물가",v:isNaN(food)?"—":sgn(food),color:"#334155"},{k:"전기 물가",v:isNaN(elec)?"—":sgn(elec),color:"#334155"}]);
+    const bars=`<div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:#334155;margin-bottom:6px">품목별 물가 상승률(전년비)${per?` · ${per}`:""}</div>`+rows.map(r=>frBar(r.ko, Math.abs(r.v)/mx*100, r.v>=0?"#e11d48":"#059669", sgn(r.v))).join("")+`</div>`;
+    const cmp=(!isNaN(avg)&&!isNaN(appl))?(appl>avg+0.3?`전국 평균(${avg.toFixed(1)}%)을 웃도는`:appl<avg-0.3?`전국 평균(${avg.toFixed(1)}%)을 밑도는`:`전국 평균(${avg.toFixed(1)}%)과 유사한`):"";
+    const hi=(!isNaN(food)&&food>4)||(!isNaN(elec)&&elec>4);
+    box.innerHTML=frShell(name,"지역 물가",("CPI"+(per?" · "+per:"")),"#e11d48",
+      big+bars+
+      frAnalysis(`${d.ko||name}의 가전 물가는 전년비 <b>${sgn(appl)}</b>로 ${cmp} 수준이다. `+
+        (!isNaN(food)?`식품(${sgn(food)})·`:``)+(!isNaN(elec)?`전기(${sgn(elec)}) `:``)+`등 필수 생활물가는 가계의 재량소비 여력을 좌우한다. `+
+        (hi?`필수물가 부담이 큰 편이어서 대형·프리미엄 가전 구매는 이연되고 가격민감도가 높아지는 국면이다.`:`필수물가가 비교적 안정적이어서 내구재 구매 여력에는 우호적인 편이다.`))+
+      frLG(hi?`가격민감도가 높은 만큼 <b>할부·프로모션·에너지효율(전기료 절감) 소구</b>가 효과적이다. 볼륨존 라인업으로 진입 장벽을 낮추는 전략을 우선한다.`:`물가 안정 국면에서는 <b>프리미엄·신제품·IoT</b> 확대 여지가 크다. 가전 물가 흐름을 교체수요 자극의 타이밍 지표로 활용한다.`),
+      "PSA 소비자물가지수(지역별)");
   } else if(cat.includes("가전보급")){
-    const rows=[["냉장고 보유",e.own_ref],["TV 보유",e.own_tv],["전기 보급",e.electrif]].filter(x=>x[1]!=null);
-    if(!rows.length) return;
-    const body=rows.map(([l,v])=>bar(l,v,v,"#4f46e5",v.toFixed(0)+"%")).join("")
-      +(e.own_ref!=null?`<div style="font-size:10px;color:#64748b;margin-top:5px">냉장고 미보급갭 <b style="color:#b45309">${(100-e.own_ref).toFixed(0)}%p</b> = 잠재 수요</div>`:"");
-    box.innerHTML=wrap("가전 보급·기회","DHS 2022",body,"PSA·DHS 인구보건조사");
+    const rows=[["냉장고 보유율",e.own_ref],["TV 보유율",e.own_tv],["전기 보급률",e.electrif]].filter(x=>x[1]!=null);
+    if(!rows.length){ box.innerHTML=frShell(name,"가전 보급·기회","DHS","#4f46e5","<div style='font-size:11px;color:#94a3b8'>이 지역의 보급률 데이터가 아직 없습니다.</div>","PSA·DHS 인구보건조사"); return; }
+    const gap=e.own_ref!=null?100-e.own_ref:null;
+    const big=frBig([e.own_ref!=null?{k:"냉장고 보유율",v:e.own_ref.toFixed(0)+"%",color:"#4f46e5"}:null,gap!=null?{k:"냉장고 미보급갭",v:gap.toFixed(0)+"%p",color:"#b45309",sub:"잠재 신규수요"}:null,e.electrif!=null?{k:"전기 보급률",v:e.electrif.toFixed(0)+"%",color:"#059669"}:null].filter(Boolean));
+    const bars=`<div style="margin-top:12px"><div style="font-size:11px;font-weight:700;color:#334155;margin-bottom:6px">가전·전기 보급률</div>`+rows.map(([l,v])=>frBar(l, v, "#4f46e5", v.toFixed(0)+"%")).join("")+`</div>`;
+    const lowElec=e.electrif!=null&&e.electrif<95;
+    box.innerHTML=frShell(name,"가전 보급·기회","DHS·보급률","#4f46e5",
+      big+bars+
+      frAnalysis(`${d.ko||name}의 냉장고 보유율은 <b>${e.own_ref!=null?e.own_ref.toFixed(0)+"%":"—"}</b>로, 미보급 <b>${gap!=null?gap.toFixed(0)+"%p":"—"}</b>가 잠재 신규수요다. 중심도시 <b>${d.cap||"—"}</b>를 축으로 도시가구는 교체·업그레이드, 외곽은 초도 보급 여력이 공존한다. `+
+        (lowElec?`전기 보급률 ${e.electrif.toFixed(0)}%는 상시가동 가전 확산의 <b>병목</b>으로, 전력 인프라 개선이 수요 확대의 전제다.`:`전기 보급률 ${e.electrif!=null?e.electrif.toFixed(0)+"%":"높은 수준"}로 상시가동 가전 사용 기반은 갖춰져 있다.`))+
+      frLG(gap!=null&&gap>25?`미보급갭이 커 <b>엔트리·고효율 모델로 신규 침투</b>할 여지가 크다. 첫 구매 접근성(가격·할부·에너지효율)을 높이는 전략이 유효하다.`:`보급이 성숙해 <b>교체·업그레이드·프리미엄</b> 수요가 중심이다. 대형화·IoT·에너지효율로 상향 판매를 노린다.`),
+      "PSA·DHS 인구보건조사·인구총조사");
   } else if(cat.includes("경제규모")){
-    if(e.grdp_size==null&&e.grdp_pc==null) return;
-    const body=`<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px">
-      ${e.grdp_size!=null?`<span>경제규모 <b style="font-size:13px">₱${e.grdp_size.toFixed(1)}조</b></span>`:""}
-      ${e.grdp_pc!=null?`<span style="color:#475569">1인당 <b>${pesoKo(e.grdp_pc)}</b></span>`:""}</div>`;
-    box.innerHTML=wrap("지역 경제규모 (GRDP)","2025",body,"PSA 지역계정(불변2018)");
+    if(e.grdp_size==null&&e.grdp_pc==null){ box.innerHTML=frShell(name,"지역 경제규모","GRDP","#1d4ed8","<div style='font-size:11px;color:#94a3b8'>이 지역의 GRDP 데이터가 아직 없습니다.</div>","PSA 지역계정"); return; }
+    const sizes=Object.keys(ECON).map(r=>ECON[r].grdp_size).filter(x=>x!=null).sort((a,b)=>b-a);
+    const rank=e.grdp_size!=null?sizes.indexOf(e.grdp_size)+1:null;
+    const big=frBig([e.grdp_size!=null?{k:"지역내총생산(GRDP)",v:"₱"+e.grdp_size.toFixed(1)+"조",color:"#1d4ed8",sub:rank?`전국 ${rank}위 규모`:""}:null,e.grdp_pc!=null?{k:"1인당 GRDP",v:pesoKo(e.grdp_pc),color:"#334155"}:null].filter(Boolean));
+    box.innerHTML=frShell(name,"지역 경제규모","GRDP·2025","#1d4ed8",
+      big+
+      frAnalysis(`${d.ko||name}의 경제규모는 <b>₱${e.grdp_size!=null?e.grdp_size.toFixed(1):"—"}조</b>${rank?`로 전국 ${rank}위`:""} 수준이다. 주력 산업은 <b>${(d.ind||[]).slice(0,3).join("·")||"—"}</b>이며, 중심도시 <b>${d.cap||"—"}</b>가 소비·유통의 거점 역할을 한다. `+
+        `1인당 GRDP ${e.grdp_pc!=null?pesoKo(e.grdp_pc):"—"}는 지역 구매력의 대리지표로, 경제규모가 클수록 가전 시장 볼륨과 상업·B2B 발주 잠재력이 크다.`)+
+      frLG(`경제규모·산업기반을 고려한 <b>시장 우선순위와 채널·물류 투자 배분</b>의 근거로 활용한다. 제조·상업 집적지는 B2B(공조), 소비 거점은 유통망 밀도 확대가 유효하다.`),
+      "PSA 지역계정(불변2018)");
   } else if(cat.includes("인구")){
-    if(e.pop_n==null&&e.income_real==null&&e.poverty==null) return;
-    const body=`<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px">
-      ${e.pop_n!=null?`<span>인구 <b style="font-size:13px">${Math.round(e.pop_n*100).toLocaleString()}만명</b></span>`:""}
-      ${e.income_real!=null?`<span style="color:#475569">가구소득 <b>${pesoKo(e.income_real)}</b></span>`:""}
-      ${e.poverty!=null?`<span style="color:#b45309">빈곤율 <b>${e.poverty.toFixed(1)}%</b></span>`:""}</div>`;
-    box.innerHTML=wrap("인구·소득","2020–23",body,"PSA 인구총조사·FIES");
+    if(e.pop_n==null&&e.income_real==null&&e.poverty==null){ box.innerHTML=frShell(name,"인구·소득","PSA","#0f766e","<div style='font-size:11px;color:#94a3b8'>이 지역의 인구·소득 데이터가 아직 없습니다.</div>","PSA 인구총조사·FIES"); return; }
+    const big=frBig([e.pop_n!=null?{k:"인구",v:Math.round(e.pop_n*100).toLocaleString()+"만명",color:"#0f766e"}:null,e.income_real!=null?{k:"평균 가구소득(연)",v:pesoKo(e.income_real),color:"#334155"}:null,e.poverty!=null?{k:"빈곤율",v:e.poverty.toFixed(1)+"%",color:"#b45309"}:null].filter(Boolean));
+    const poor=e.poverty!=null&&e.poverty>15;
+    box.innerHTML=frShell(name,"인구·소득","인구·구매력","#0f766e",
+      big+
+      frAnalysis(`${d.ko||name}은(는) 인구 <b>${e.pop_n!=null?Math.round(e.pop_n*100).toLocaleString()+"만명":d.pop||"—"}</b> 규모로, 중심도시 ${d.cap||"—"}를 포함한다. 평균 가구소득은 <b>${e.income_real!=null?pesoKo(e.income_real):"—"}</b>, 빈곤율은 <b>${e.poverty!=null?e.poverty.toFixed(1)+"%":"—"}</b>다. `+
+        (poor?`상대적으로 높은 빈곤율은 가격민감도가 크다는 신호로, 엔트리·볼륨존 수요가 두텁다.`:`소득 기반이 비교적 견조해 중상위·프리미엄 수요 여력이 있다.`))+
+      frLG(poor?`가격 접근성이 관건인 시장이다. <b>엔트리 라인업·할부·에너지효율 절감 소구</b>로 볼륨을 확보한다.`:`구매력이 받쳐주는 시장이다. <b>프리미엄·대형·IoT</b> 라인업과 체험형 채널로 상향 판매를 노린다.`),
+      "PSA 인구총조사·FIES 가계소득조사");
   }
 }
 function showDetail(name){
