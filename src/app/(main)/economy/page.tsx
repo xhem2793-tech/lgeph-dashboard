@@ -10,6 +10,7 @@ import OnlineMarketView from "@/components/OnlineMarketView"
 import WeatherView from "@/components/WeatherView"
 import ImportPriceView from "@/components/ImportPriceView"
 import HousingView from "@/components/HousingView"
+import AllIndicatorsView from "@/components/AllIndicatorsView"
 import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView, PricesView } from "@/components/EconViews"
 import { useLang } from "@/lib/i18n"
 
@@ -17,6 +18,7 @@ import { useLang } from "@/lib/i18n"
 
 type NavItem = { id: string; ko: string; sub: string; count: string; group: string; accent?: boolean; star?: boolean; subs: string[] }
 const NAV: NavItem[] = [
+  { id: "all", ko: "전체 지표 리스트", sub: "모든 지표를 한 화면에서 검색·훑어보기(최신값·기간·출처)", count: "전체", group: "전국", star: true, subs: ["전체 지표 목록", "분류 필터", "지표 검색"] },
   { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도 + 지역 물가", count: "17", group: "전국", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운", "지역 물가 히트맵"] },
   { id: "core", ko: "일일동향", sub: "환율·유가 최근 30일 추이", count: "2", group: "핵심", subs: ["환율 30일", "유가 30일"] },
   { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별 물가", count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
@@ -48,6 +50,7 @@ export default function Page() {
   const [active, setActive] = useState("regions")
 
   function view() {
+    if (active === "all") return <AllIndicatorsView />
     if (active === "regions") return <div className="flex flex-col gap-3"><RegionMapView /><RegionPriceExtras /></div>
     if (active === "core") return <DailyTrends />
     if (active === "fx") return <FxView />

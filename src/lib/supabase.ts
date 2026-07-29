@@ -968,6 +968,17 @@ export async function dataProvenance(): Promise<Provenance[]> {
   return rows
 }
 
+// 전 국가지표 최신값 — { [indicator]: {value, period, prev} } (전체 지표 리스트용)
+// v_latest_indicator: indicator별 최신 관측 1행(+직전값). 1000행 캡 안전(≈194 지표)
+export async function allIndicatorLatest(): Promise<Record<string, { value: number; period: string; prev: number | null }>> {
+  const rows = (await sb(
+    "v_latest_indicator?select=indicator,value,period_date,prev_value"
+  )) as { indicator: string; value: number; period_date: string; prev_value: number | null }[]
+  const out: Record<string, { value: number; period: string; prev: number | null }> = {}
+  for (const r of rows) out[r.indicator] = { value: Number(r.value), period: r.period_date, prev: r.prev_value == null ? null : Number(r.prev_value) }
+  return out
+}
+
 // 지역별 지표(geo_level='region') 최신값 — { [indicator]: { [geo]: value } }
 export async function regionMetric(indicators: string[]) {
   const list = indicators.map((s) => encodeURIComponent(s)).join(",")
