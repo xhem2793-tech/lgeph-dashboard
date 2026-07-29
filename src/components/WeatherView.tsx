@@ -91,7 +91,7 @@ export default function WeatherView() {
   const [eqs, setEqs] = useState<Quake[]>([])
 
   useEffect(() => {
-    macroMonthly(["cdd_monthly", "temp_monthly"]).then(setMon).catch(() => {})
+    macroMonthly(["cdd_monthly", "temp_monthly", "enso_oni"]).then(setMon).catch(() => {})
     weatherRecent(120).then(setWx).catch(() => {})
     typhoonAlerts(8).then(setTys).catch(() => {})
     earthquakesRecent(365, 4).then(setEqs).catch(() => {})
@@ -100,6 +100,12 @@ export default function WeatherView() {
   const years = WIN.find((w) => w.k === win)!.n
   const cdd = useMemo(() => monSeries(mon, "cdd_monthly", years, "냉방도일 CDD", C.rose), [mon, years])
   const temp = useMemo(() => monSeries(mon, "temp_monthly", years, "월평균 기온", C.amber), [mon, years])
+  const enso = useMemo(() => monSeries(mon, "enso_oni", Math.max(years, 3), "ONI 지수", C.blue), [mon, years])
+  const oni = mon.enso_oni?.values?.at(-1)
+  const phase = oni == null ? null
+    : oni >= 0.5 ? { t: "엘니뇨", c: "text-rose-700 dark:text-rose-300", bg: "bg-rose-50 dark:bg-rose-500/10", dot: "bg-rose-500", d: "건조·고온 경향 — 냉방·냉장 수요↑, 가뭄·전력수급 리스크" }
+    : oni <= -0.5 ? { t: "라니냐", c: "text-sky-700 dark:text-sky-300", bg: "bg-sky-50 dark:bg-sky-500/10", dot: "bg-sky-500", d: "다우·태풍 경향 — 홍수·물류 차질, 제습·에어케어 수요" }
+    : { t: "중립(Neutral)", c: "text-gray-600 dark:text-gray-300", bg: "bg-gray-100 dark:bg-gray-800", dot: "bg-gray-400", d: "평년 수준 — 계절 패턴 우세" }
 
   const cddLatest = mon.cdd_monthly?.values?.at(-1)
   const cddPrev = mon.cdd_monthly?.values?.at(-2)
@@ -119,7 +125,7 @@ export default function WeatherView() {
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v6M12 2l3 3M12 2 9 5" /><path d="M5 18a5 5 0 0 1 .5-9.9A6 6 0 0 1 17 9a4 4 0 0 1 1 7.9" /></svg>
           </div>
           <div className="min-w-0 flex-1 text-[13px] leading-snug text-gray-700 dark:text-gray-200">
-            <b className="font-semibold text-gray-900 dark:text-gray-50">냉방 수요·재난 리스크</b> — 냉방도일 CDD <b className="text-rose-700 dark:text-rose-300">{cddLatest != null ? Math.round(cddLatest) : "–"}</b>{cddLatest != null && cddPrev != null ? <span className={"ml-0.5 " + (cddLatest >= cddPrev ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{cddLatest >= cddPrev ? "▲" : "▼"}{Math.abs(Math.round(cddLatest - cddPrev))}</span> : null} · 활성 태풍 <b className="text-amber-700 dark:text-amber-300">{activeTy.length}</b>건 · 최근 1년 지진(M4+) <b className="text-orange-700 dark:text-orange-300">{eqs.length}</b>건{maxQuake ? <>(최대 M{maxQuake.toFixed(1)})</> : null}
+            <b className="font-semibold text-gray-900 dark:text-gray-50">기후·냉방·재난</b> — {phase ? <>ENSO <b className={phase.c.split(" ")[0]}>{phase.t}</b>(ONI {oni! > 0 ? "+" : ""}{oni!.toFixed(2)}) · </> : null}냉방도일 <b className="text-rose-700 dark:text-rose-300">{cddLatest != null ? Math.round(cddLatest) : "–"}</b>{cddLatest != null && cddPrev != null ? <span className={"ml-0.5 " + (cddLatest >= cddPrev ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{cddLatest >= cddPrev ? "▲" : "▼"}{Math.abs(Math.round(cddLatest - cddPrev))}</span> : null} · 활성 태풍 <b className="text-amber-700 dark:text-amber-300">{activeTy.length}</b>건 · 지진(M4+) <b className="text-orange-700 dark:text-orange-300">{eqs.length}</b>건
           </div>
           <div className="hidden shrink-0 items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 p-0.5 sm:flex">
             {WIN.map((w) => (
@@ -130,6 +136,45 @@ export default function WeatherView() {
       </div>
 
       <div className="grid items-stretch gap-4 lg:grid-cols-2">
+        {/* ENSO 현황 — 엘니뇨/라니냐 */}
+        <Panel
+          title="ENSO — 엘니뇨 · 라니냐" seg="기후"
+          meaning={<>ONI(해수면온도 편차) — <b className="text-rose-600 dark:text-rose-400">+0.5↑ 엘니뇨</b>·<b className="text-sky-600 dark:text-sky-400">−0.5↓ 라니냐</b>·중립. 필리핀 강수·기온 계절성의 최대 변수</>}
+          src="NOAA CPC Oceanic Niño Index(ONI)"
+        >
+          {phase ? (
+            <div className="flex h-full flex-col">
+              <div className="flex items-center gap-3">
+                <span className={"flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[15px] font-extrabold " + phase.bg + " " + phase.c}>
+                  <span className={"h-2.5 w-2.5 rounded-full " + phase.dot} />{phase.t}
+                </span>
+                <span className="flex flex-col leading-tight">
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400">현재 ONI</span>
+                  <span className={"num text-[20px] font-bold " + phase.c}>{oni! > 0 ? "+" : ""}{oni!.toFixed(2)}</span>
+                </span>
+              </div>
+              <p className="mt-2.5 text-[12px] leading-relaxed text-gray-700 dark:text-gray-200"><b className="font-semibold">가전 함의</b> {phase.d}</p>
+              <div className="mt-2 flex gap-1 text-[9.5px] font-semibold">
+                <span className="rounded bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 text-rose-700 dark:text-rose-300">엘니뇨 ≥+0.5</span>
+                <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-gray-500 dark:text-gray-400">중립</span>
+                <span className="rounded bg-sky-50 dark:bg-sky-500/10 px-1.5 py-0.5 text-sky-700 dark:text-sky-300">라니냐 ≤−0.5</span>
+              </div>
+            </div>
+          ) : <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}
+        </Panel>
+
+        {/* ONI 추이 */}
+        {enso.series.length ? (
+          <ChartCard
+            title="ONI 지수 추이" seg="기후" unit="편차(℃) · 계절" decimals={2}
+            legend={<Lg c={C.blue} t="ONI(Niño 3.4 편차)" b />}
+            series={enso.series} labels={enso.labels}
+            meaning={<>3개월 이동 해수면온도 편차 — <b className="text-gray-700 dark:text-gray-200">추세 전환</b>(라니냐→엘니뇨 등)이 계절 리스크 신호</>}
+            ai={<>엘니뇨 국면은 <b className="font-semibold text-rose-600 dark:text-rose-400">고온·건조로 냉방(에어컨)·냉장 수요를 밀어올리나</b> 가뭄·전력수급 부담을, 라니냐는 <b className="font-semibold text-sky-600 dark:text-sky-400">다우·태풍으로 홍수·물류 차질과 제습·에어케어 수요</b>를 키움. 전환 시점을 성수기 재고·프로모 계획에 선반영.</>}
+            src="NOAA CPC ONI(Niño 3.4)"
+          />
+        ) : <Panel title="ONI 지수 추이" meaning="데이터 로딩" src="NOAA"><div className="flex h-40 items-center justify-center text-[12px] text-gray-400">불러오는 중</div></Panel>}
+
         {/* CDD */}
         {cdd.series.length ? (
           <ChartCard
