@@ -426,7 +426,7 @@
         <div class="en" id="d-en">Region</div>
       </div>
       <div class="detail-scroll">
-        <div class="summary">
+        <div class="summary" id="d-sum-wrap">
           <div class="sum-line" id="d-summary">—</div>
           <div class="tags" id="d-tags"></div>
         </div>
@@ -444,12 +444,12 @@
           </div>
           <div id="d-infra"></div>
         </div>
-        <div class="sec">
+        <div class="sec" id="d-sec-overview">
           <div class="lb">지역 개요</div>
           <p id="d-intro">—</p>
           <div class="geo" id="d-geo"></div>
         </div>
-        <div class="sec">
+        <div class="sec" id="d-sec-industry">
           <div class="lb">주요 산업</div>
           <div class="chips" id="d-ind"></div>
         </div>
@@ -1214,41 +1214,61 @@ function markList(name){
 }
 
 const CATKO={"Roads":"도로","Buildings and Facilities":"건물·시설","Flood Control and Drainage":"홍수통제·배수","Bridges":"교량","Water Provision and Storage":"상수도"};
-// 지역 인프라 투자(DPWH) 상세 — 총예산·진행중·분야별·연도별 추이
+// 분야별 대표 사업유형·LG 기회·주시 포인트(인사이트 중심)
+const INFRA_INSIGHT={
+  "Buildings and Facilities":{proj:"정부청사·공립병원·학교·다목적 복합건물",op:"신규 건물에 <b>시스템에어컨·칠러·상업용 가전</b> 발주 — LG B2B 최우선 표적. 조기 스펙인 유효.",wa:"공공건물 착공·준공 스케줄, DPWH·지방정부 조달 공고."},
+  "Flood Control and Drainage":{proj:"제방·배수로·홍수통제 구조물",op:"직접 B2B는 제한적이나 <b>침수 완화→주거 안정·재해복구 가전 교체</b> 수요.",wa:"우기 피해·복구 예산 집행, 상습 침수지 주거 재건 흐름."},
+  "Roads":{proj:"간선도로·지방도 포장·확장",op:"물류·접근성 개선 → <b>배후 상권·주거 개발</b>로 중장기 가전 수요 확대(간접).",wa:"도로 개통 구간의 신규 주거·상업지구 형성."},
+  "Bridges":{proj:"교량 신설·보강",op:"권역 연결성 강화 → 물류·개발 파급(간접 수요).",wa:"교량 연계 개발축·산업단지 조성 여부."},
+  "Water Provision and Storage":{proj:"상수도·저수·정수 시설",op:"<b>데이터센터·산업 용수 기반</b> 및 생활 인프라 개선.",wa:"용수 공급여력(대형 데이터센터 냉각 전제)."}
+};
+// 지역 인프라 투자(DPWH) — 인사이트 중심 상세(진행중·집중 분야·대표 사업·LG 기회·주시)
 function renderInfra(name){
-  const box=document.getElementById("d-infra"); if(!box) return; box.innerHTML="";
-  const e=ECON[name]||{}; if(e.infra_total==null){ return; }
+  const box=document.getElementById("d-infra"); if(!box) return;
+  const e=ECON[name]||{};
+  if(e.infra_total==null){ box.innerHTML=`<div style="margin-top:14px;font-size:11px;color:#94a3b8">이 지역의 DPWH 인프라 데이터가 아직 없습니다.</div>`; return; }
   const cats=(e.infra_cats||[]).slice().sort((a,b)=>b.b-a.b);
-  const catMax=cats.length?cats[0].b:1;
+  const total=e.infra_total||cats.reduce((s,c)=>s+c.b,0)||1;
+  const top=cats[0]; const topko=top?(CATKO[top.c]||top.c):(CATKO[e.infra_topcat]||e.infra_topcat||"—");
+  const topShare=top?Math.round(top.b/total*100):0;
+  const ins=INFRA_INSIGHT[top?top.c:e.infra_topcat]||{proj:"공공 인프라 사업",op:"지역 공공투자 확대는 배후 상권·주거·상업시설 수요로 파급된다.",wa:"주력 분야 착공·발주 동향."};
+  // 연도 추세(있으면)
   const ser=e.infra_series||{}; const yrs=Object.keys(ser).sort();
-  // 스파크라인
-  let spark="";
-  if(yrs.length>=2){
-    const vals=yrs.map(y=>ser[y]); const mn=Math.min(...vals), mx=Math.max(...vals), W=180,H=34;
-    const pts=vals.map((v,i)=>`${8+(W-16)*i/(vals.length-1)},${H-4-(H-8)*((v-mn)/((mx-mn)||1))}`).join(" ");
-    spark=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;height:34px;display:block;margin-top:2px">
-      <polyline points="${pts}" fill="none" stroke="#4f46e5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-      <circle cx="${8+(W-16)}" cy="${H-4-(H-8)*((vals[vals.length-1]-mn)/((mx-mn)||1))}" r="2.4" fill="#4f46e5"/>
-      <text x="8" y="${H-1}" style="font-size:8px;fill:#9ca3af">${yrs[0]}</text>
-      <text x="${W-8}" y="${H-1}" text-anchor="end" style="font-size:8px;fill:#9ca3af">${yrs[yrs.length-1]}</text></svg>`;
-  }
-  box.innerHTML=`<div style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(148,163,184,.25)">
-    <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px">
-      <span style="font-size:12px;font-weight:800;color:var(--ink,#0f1420)">인프라 투자 (DPWH)</span>
-      <span style="margin-left:auto;font-size:8.5px;font-weight:700;color:#b45309;background:#fffaf0;border:1px solid #fde9c8;border-radius:3px;padding:1px 5px">B2B</span>
+  let trend="";
+  if(yrs.length>=2){ const a=ser[yrs[0]],b=ser[yrs[yrs.length-1]]; const up=b>=a; trend=`<span style="color:${up?'#059669':'#e11d48'};font-weight:700">${up?'▲':'▼'} ${yrs[0]}→${yrs[yrs.length-1]}</span>`; }
+  const top3=cats.slice(0,3);
+  box.innerHTML=`<div style="margin-top:10px">
+    <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+      <span style="font-size:13px;font-weight:800;color:#0f1420">${(e.ko||name)} 인프라 투자</span>
+      <span style="font-size:8.5px;font-weight:700;color:#b45309;background:#fffaf0;border:1px solid #fde9c8;border-radius:3px;padding:1px 5px">DPWH · B2B</span>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;margin-bottom:7px">
-      <span>총예산 <b style="font-size:13px">₱${Math.round(e.infra_total).toLocaleString()}B</b></span>
-      <span style="color:#059669">진행중 <b>${(e.infra_ongoing||0).toLocaleString()}건</b></span>
-      <span style="color:#64748b">완료 ${(e.infra_completed||0).toLocaleString()}건</span>
+    <div style="display:flex;gap:8px;margin-bottom:11px">
+      <div style="flex:1;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:8px 10px">
+        <div style="font-size:9.5px;color:#059669;font-weight:700">진행중 프로젝트</div>
+        <div style="font-size:19px;font-weight:800;color:#047857;line-height:1.15">${(e.infra_ongoing||0).toLocaleString()}<span style="font-size:11px">건</span></div>
+        ${e.infra_completed?`<div style="font-size:9px;color:#94a3b8">완료 ${e.infra_completed.toLocaleString()}건</div>`:""}
+      </div>
+      <div style="flex:1;background:#eef2ff;border:1px solid #c7d2fe;border-radius:8px;padding:8px 10px">
+        <div style="font-size:9.5px;color:#4f46e5;font-weight:700">총 사업예산</div>
+        <div style="font-size:19px;font-weight:800;color:#3730a3;line-height:1.15">₱${Math.round(total).toLocaleString()}<span style="font-size:11px">B</span></div>
+        ${trend?`<div style="font-size:9px">${trend}</div>`:""}
+      </div>
     </div>
-    ${e.infra_topcat?`<div style="font-size:10.5px;color:#64748b;margin-bottom:6px">최다 분야 <b style="color:#0f1420">${CATKO[e.infra_topcat]||e.infra_topcat}</b> ₱${Math.round(e.infra_topcat_b)}B</div>`:""}
-    ${cats.map(c=>`<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
-      <span style="width:64px;font-size:10px;color:#475569;flex-shrink:0">${CATKO[c.c]||c.c}</span>
-      <span style="flex:1;height:9px;background:#eef0f4;border-radius:3px;overflow:hidden;position:relative"><span style="position:absolute;inset:0 auto 0 0;width:${Math.max(3,c.b/catMax*100)}%;background:#818cf8;border-radius:3px"></span></span>
-      <span style="width:46px;text-align:right;font-size:10px;font-weight:700;color:#334155">₱${Math.round(c.b)}B</span></div>`).join("")}
-    ${spark?`<div style="font-size:9.5px;color:#94a3b8;margin-top:8px">연도별 예산 추이(₱B)</div>${spark}`:""}
-    <div style="font-size:8.5px;color:#94a3b8;margin-top:5px">DPWH Transparency · 지역별 프로젝트 예산·집행</div>
+    <div style="font-size:10.5px;color:#334155;margin-bottom:5px">가장 집중된 분야 — <b style="color:#0f1420">${topko}</b> <span style="color:#4f46e5;font-weight:700">전체의 ${topShare}%</span></div>
+    ${top3.map(c=>{const pct=Math.round(c.b/total*100);return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px">
+      <span style="width:70px;font-size:10px;color:#475569;flex-shrink:0">${CATKO[c.c]||c.c}</span>
+      <span style="flex:1;height:9px;background:#eef0f4;border-radius:3px;overflow:hidden;position:relative"><span style="position:absolute;inset:0 auto 0 0;width:${Math.max(4,c.b/(top.b||1)*100)}%;background:#818cf8;border-radius:3px"></span></span>
+      <span style="width:52px;text-align:right;font-size:10px;font-weight:700;color:#334155">₱${Math.round(c.b)}B·${pct}%</span></div>`;}).join("")}
+    <div style="font-size:9.5px;color:#64748b;margin-top:6px">대표 사업: ${ins.proj}</div>
+    <div style="margin-top:11px;background:#f8fafc;border-left:3px solid #059669;border-radius:0 6px 6px 0;padding:8px 10px">
+      <div style="font-size:10px;font-weight:800;color:#047857;margin-bottom:2px">◈ LG 기회</div>
+      <div style="font-size:10px;line-height:1.55;color:#233">${ins.op}</div>
+    </div>
+    <div style="margin-top:6px;background:#f8fafc;border-left:3px solid #b45309;border-radius:0 6px 6px 0;padding:8px 10px">
+      <div style="font-size:10px;font-weight:800;color:#b45309;margin-bottom:2px">◈ 주시 포인트</div>
+      <div style="font-size:10px;line-height:1.55;color:#233">${ins.wa}</div>
+    </div>
+    <div style="font-size:8.5px;color:#94a3b8;margin-top:9px">DPWH Transparency · 지역별 프로젝트 예산·건수·집행상태 집계(누적)</div>
   </div>`;
 }
 // 현재 선택된 지표의 카테고리(MAP_GROUP) 판별
@@ -1259,10 +1279,10 @@ function renderFocus(name){
   const cat=curMetricCat();
   const catActive=!!(curMapMetric&&curMapMetric!=="none");
   // 미검증(셀아웃·기여도·성장) KPI·요약 상시 숨김(#20)
-  const kg=document.getElementById("d-kpigrid"); if(kg) kg.style.display="none";
-  const sm=document.getElementById("d-summary"); if(sm) sm.style.display="none";
-  // 카테고리 선택 시 종합 지표 숨기고 해당 카테고리 전용 상세만(전체=종합 지표)
-  const mk=document.getElementById("d-market"); if(mk) mk.style.display=catActive?"none":"";
+  ["d-kpigrid","d-summary"].forEach(id=>{const el=document.getElementById(id); if(el) el.style.display="none";});
+  // 카테고리 선택 시 종합 정보(개요·산업·주·시장지표 등) 전부 숨기고 해당 지표 전용 상세만.
+  // 전체(지표 미선택)=종합 레이아웃 복원.
+  ["d-sum-wrap","d-market","d-sec-overview","d-sec-industry","d-prov-sec","d-note"].forEach(id=>{const el=document.getElementById(id); if(el) el.style.display=catActive?"none":"";});
   if(cat.includes("인프라")){ renderInfra(name); return; }
   box.innerHTML="";
   const e=ECON[name]||{};
