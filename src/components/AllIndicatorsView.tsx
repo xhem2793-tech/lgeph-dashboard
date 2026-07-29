@@ -150,6 +150,15 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
       {/* 정렬(주요뉴스와 동일 Segmented) + 검색(우측) + 최종 갱신(뉴스와 동일 위치·포맷) */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
         <Segmented value={sort} onChange={(k) => setSort(k as "cat" | "recent")} options={[{ k: "cat", label: "분류순" }, { k: "recent", label: "최신순" }]} size="sm" />
+        <div className="flex flex-wrap items-center gap-2.5 text-[11.5px]">
+          <span className="text-gray-500 dark:text-gray-400">총 지표 <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
+          <span className="text-gray-300 dark:text-gray-600">·</span>
+          <span className="text-gray-500 dark:text-gray-400">검색 결과 <b className="text-indigo-600 dark:text-indigo-400">{filtered.length}</b></span>
+          <span className="text-gray-300 dark:text-gray-600">·</span>
+          <span className="text-gray-500 dark:text-gray-400">CONFIRMED <b className="text-emerald-600 dark:text-emerald-400">{confN}</b></span>
+          <span className="text-gray-300 dark:text-gray-600">·</span>
+          <span className="text-gray-500 dark:text-gray-400">분류 <b className="text-gray-900 dark:text-gray-50">{Object.keys(catCounts).length}</b></span>
+        </div>
         <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[420px]" : "w-full max-w-[320px]")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
@@ -177,14 +186,6 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
         {[...CATS.map((c) => c.key), "etc"].filter((k) => catCounts[k]).map((k) => (
           <FCat key={k} k={k} ko={catKo(k)} n={catCounts[k]} cat={cat} setCat={setCat} />
         ))}
-      </div>
-
-      {/* 요약 스탯 — 하단으로 이동 */}
-      <div className="flex flex-wrap items-center gap-4 text-[12px]">
-        <span className="text-gray-500 dark:text-gray-400">총 지표 <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
-        <span className="text-gray-500 dark:text-gray-400">검색 결과 <b className="text-indigo-600 dark:text-indigo-400">{filtered.length}</b></span>
-        <span className="text-gray-500 dark:text-gray-400">CONFIRMED <b className="text-emerald-600 dark:text-emerald-400">{confN}</b></span>
-        <span className="text-gray-500 dark:text-gray-400">분류 <b className="text-gray-900 dark:text-gray-50">{Object.keys(catCounts).length}</b></span>
       </div>
 
       {/* 분류순: 카테고리별 섹션 */}
