@@ -263,11 +263,28 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
     const blob = new Blob(["﻿" + [head, ...rows].join("\n")], { type: "text/csv;charset=utf-8" })
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = safe + ".csv"; a.click(); URL.revokeObjectURL(a.href)
   }
-  const dlImg = () => { // 차트 SVG 이미지 다운로드
+  const dlImg = () => { // 차트를 PNG 이미지로 저장(SVG→canvas 래스터화, 4x 고해상도·흰 배경)
     const svg = cardRef.current?.querySelector("svg"); if (!svg) return
-    const clone = svg.cloneNode(true) as SVGElement; clone.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-    const blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml;charset=utf-8" })
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = safe + ".svg"; a.click(); URL.revokeObjectURL(a.href)
+    const vb = (svg.getAttribute("viewBox") || "0 0 300 100").split(/\s+/).map(Number)
+    const vw = vb[2] || 300, vh = vb[3] || 100, scale = 4
+    const clone = svg.cloneNode(true) as SVGSVGElement
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg")
+    clone.setAttribute("width", String(vw)); clone.setAttribute("height", String(vh))
+    clone.style.fontFamily = "Pretendard, -apple-system, 'Malgun Gothic', system-ui, sans-serif"
+    const svgStr = new XMLSerializer().serializeToString(clone)
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement("canvas")
+      canvas.width = vw * scale; canvas.height = vh * scale
+      const ctx = canvas.getContext("2d"); if (!ctx) return
+      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      canvas.toBlob((blob) => {
+        if (!blob) return
+        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = safe + ".png"; a.click(); URL.revokeObjectURL(a.href)
+      }, "image/png")
+    }
+    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr)
   }
   return (
     <div ref={cardRef}
@@ -279,7 +296,7 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
         {seg && <span className={"shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold " + (seg === "B2B" ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" : seg === "CE" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-violet-50 dark:bg-violet-500/10 text-violet-700")}>{seg}</span>}
         {unit && <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
         <span className={"flex shrink-0 items-center gap-0.5 " + (unit ? "ml-1.5" : "ml-auto")}>
-          <button type="button" onClick={dlImg} title="이미지(SVG) 다운로드" className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400">
+          <button type="button" onClick={dlImg} title="이미지(PNG) 다운로드" className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
           </button>
           <button type="button" onClick={dlCsv} title="데이터(CSV) 다운로드" className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400">
