@@ -263,39 +263,20 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
     const blob = new Blob(["﻿" + [head, ...rows].join("\n")], { type: "text/csv;charset=utf-8" })
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = safe + ".csv"; a.click(); URL.revokeObjectURL(a.href)
   }
-  const dlImg = () => { // 차트를 PNG 이미지로 저장(SVG→canvas 래스터화, 4x 고해상도·흰 배경)
-    // 헤더 버튼 아이콘(24x24)이 아니라 실제 차트 SVG(viewBox 0 0 300 100)를 선택
-    const svg = (cardRef.current?.querySelector('svg[viewBox="0 0 300 100"]') || cardRef.current?.querySelector("svg")) as SVGSVGElement | null
-    if (!svg) return
-    const vb = (svg.getAttribute("viewBox") || "0 0 300 100").split(/\s+/).map(Number)
-    const vw = vb[2] || 300, vh = vb[3] || 100, scale = 4
-    const clone = svg.cloneNode(true) as SVGSVGElement
-    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-    clone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
-    clone.setAttribute("width", String(vw)); clone.setAttribute("height", String(vh)); clone.setAttribute("viewBox", "0 0 " + vw + " " + vh)
-    clone.removeAttribute("style")
-    // 애니메이션 중간(선 미표시) 상태로 캡처돼 흰 이미지가 되는 것 방지 — 최종 상태 강제 + 폰트 인라인
-    const st = document.createElementNS("http://www.w3.org/2000/svg", "style")
-    st.textContent = "*{opacity:1!important;stroke-dashoffset:0!important;transition:none!important;animation:none!important}text{font-family:Pretendard,-apple-system,'Malgun Gothic',system-ui,sans-serif}"
-    clone.insertBefore(st, clone.firstChild)
-    const svgStr = new XMLSerializer().serializeToString(clone)
-    const img = new Image()
-    img.onload = () => {
-      const canvas = document.createElement("canvas")
-      canvas.width = Math.round(vw * scale); canvas.height = Math.round(vh * scale)
-      const ctx = canvas.getContext("2d"); if (!ctx) return
-      ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height)
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      canvas.toBlob((blob) => {
-        if (!blob) return
-        const href = URL.createObjectURL(blob)
-        const a = document.createElement("a"); a.href = href; a.download = safe + ".png"
-        document.body.appendChild(a); a.click(); a.remove()
-        setTimeout(() => URL.revokeObjectURL(href), 4000)
-      }, "image/png")
-    }
-    img.onerror = () => { console.error("[chart] PNG export failed for", safe) }
-    img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr)
+  const dlImg = async () => { // 카드 전체를 PNG 이미지로 저장(제목·범례·차트·의미·인사이트·출처 포함)
+    const node = cardRef.current; if (!node) return
+    try {
+      const { toPng } = await import("html-to-image")
+      const url = await toPng(node, {
+        pixelRatio: 3,
+        backgroundColor: "#ffffff",
+        cacheBust: true,
+        // 다운로드 버튼(아이콘)은 캡처에서 제외
+        filter: (n) => !(n instanceof HTMLElement && n.dataset && n.dataset.noexport === "1"),
+      })
+      const a = document.createElement("a"); a.href = url; a.download = safe + ".png"
+      document.body.appendChild(a); a.click(); a.remove()
+    } catch (e) { console.error("[chart] PNG export failed for", safe, e) }
   }
   return (
     <div ref={cardRef}
@@ -306,7 +287,7 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
         <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {seg && <span className={"shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold " + (seg === "B2B" ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" : seg === "CE" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-violet-50 dark:bg-violet-500/10 text-violet-700")}>{seg}</span>}
         {unit && <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
-        <span className={"flex shrink-0 items-center gap-0.5 " + (unit ? "ml-1.5" : "ml-auto")}>
+        <span data-noexport="1" className={"flex shrink-0 items-center gap-0.5 " + (unit ? "ml-1.5" : "ml-auto")}>
           <button type="button" onClick={dlImg} title="이미지(PNG) 다운로드" className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
           </button>

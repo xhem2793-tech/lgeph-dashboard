@@ -324,11 +324,27 @@ const pmTicks = (min: number, max: number, count = 5): number[] => {
   return out
 }
 const pmShort = (n: number) => (n >= 1000 ? "₱" + (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/, "") + "k" : "₱" + Math.round(n))
-type PMCard = { b: string; tier: string; label: string; avg: number; shops: number; n: number; star: number | null; url: string | null; retailer: string | null; idx: number; left: number; top: number }
+type PMCard = { b: string; tier: string; label: string; avg: number; shops: number; n: number; star: number | null; kwh: number | null; url: string | null; retailer: string | null; idx: number; left: number; top: number }
 const DOE_CODE: Record<string, string> = { "에어컨": "acu", "TV": "tvl", "냉장고": "ref", "세탁기": "cwm" }
 const pmNorm = (s: string) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "")
 const pmShopLabel = (s: string) => (s === "SM Appliance" ? "SM" : s === "Western Appliances" ? "Western" : s === "Robinsons Appliances" ? "Robinsons" : s)
 const pmStarCls = (s: number | null) => (s == null ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500" : s >= 4 ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : s >= 2 ? "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300")
+// 호버 드롭다운 선택 — 좌측 세로 메뉴(마우스 오버로 옵션 펼침)
+function PmDrop({ label, sel, options, onSelect }: { label: string; sel: string; options: { k: string; t: string }[]; onSelect: (k: string) => void }) {
+  const cur = options.find((o) => o.k === sel)?.t ?? sel
+  return (
+    <div className="group relative">
+      <button type="button" className="flex w-full items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-left transition-colors group-hover:border-indigo-300 dark:group-hover:border-indigo-500/40">
+        <span className="text-[9.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</span>
+        <span className="ml-auto max-w-[84px] truncate text-[12px] font-semibold text-gray-800 dark:text-gray-100">{cur}</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" className="shrink-0 text-gray-300 transition-transform duration-200 group-hover:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
+      </button>
+      <div className="invisible absolute inset-x-0 top-[calc(100%-2px)] z-40 max-h-[240px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+        {options.map((o) => <button key={o.k} type="button" onClick={() => onSelect(o.k)} className={"block w-full truncate rounded-md px-2 py-1 text-left text-[12px] transition-colors " + (o.k === sel ? "bg-indigo-600 font-semibold text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")}>{o.t}</button>)}
+      </div>
+    </div>
+  )
+}
 
 function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("에어컨")
@@ -344,13 +360,14 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
   const effShop = shop === "전체" || shopList.includes(shop) ? shop : "전체"
   const exact = effShop !== "전체" // 거래선 지정 시 평균이 아니라 그 거래선 정확 단가
 
+  // DOE 라벨 인덱스 — 모델코드로 에너지등급(★)+전력소비(월kWh) 조인
   const starIdx = React.useMemo(() => {
     const code = DOE_CODE[cat]
-    if (!code || !elabels) return [] as { codeN: string; star: number | null }[]
+    if (!code || !elabels) return [] as { codeN: string; star: number | null; kwh: number | null }[]
     return elabels.filter((e) => e.category === code && e.model && e.model.length >= 5)
-      .map((e) => ({ codeN: pmNorm(e.model), star: e.star })).filter((e) => e.codeN.length >= 5)
+      .map((e) => ({ codeN: pmNorm(e.model), star: e.star, kwh: e.kwh })).filter((e) => e.codeN.length >= 5)
   }, [elabels, cat])
-  const starOf = React.useCallback((model: string) => { const m = pmNorm(model); for (const e of starIdx) if (m.includes(e.codeN)) return e.star; return null }, [starIdx])
+  const matchOf = React.useCallback((model: string) => { const m = pmNorm(model); for (const e of starIdx) if (m.includes(e.codeN)) return e; return null }, [starIdx])
 
   const { cards, brands, ticks, gmin, gmax, count, matched } = React.useMemo(() => {
     const seg = segs.find((s) => s.t === effSpec)
@@ -369,7 +386,7 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
     const ordered = top.sort((a, b) => a.avg - b.avg).map((x) => x.b)
     const brands = [...ordered.filter((b) => b !== "LG"), ...(ordered.includes("LG") ? ["LG"] : [])] // LG 맨 오른쪽
     const brandSet = new Set(brands)
-    const withStar = f0.filter((r) => brandSet.has(r.brand)).map((r) => ({ ...r, star: starOf(r.model) }))
+    const withStar = f0.filter((r) => brandSet.has(r.brand)).map((r) => { const el = matchOf(r.model); return { ...r, star: el ? el.star : null, kwh: el ? el.kwh : null } })
     const matched = withStar.filter((r) => r.star != null).length
     const passStar = (s: number | null) => (starF === "전체" ? true : starF === "★5" ? s === 5 : starF === "★4" ? s === 4 : s != null && s <= 3)
     const f = withStar.filter((r) => passStar(r.star))
@@ -382,9 +399,10 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
       f.filter((r) => r.brand === b && r.code && r.code.length >= 4 && !/^[≈]/.test(r.code) && r.code !== "N/A").forEach((r) => { (g[r.code] = g[r.code] || []).push(r) })
       const models = Object.entries(g).map(([code, list]) => {
         const best = list.reduce((a, x) => ((x.p0 ?? Infinity) < (a.p0 ?? Infinity) ? x : a))
-        return { code, price: best.p0 as number, url: best.url ?? null, retailer: best.retailer ?? null, shops: new Set(list.map((x) => x.retailer)).size, n: list.length, star: modeStar(list.map((x) => x.star)) }
+        const kwhs = list.map((x) => x.kwh).filter((v): v is number => v != null).sort((a, x) => a - x)
+        return { code, price: best.p0 as number, url: best.url ?? null, retailer: best.retailer ?? null, shops: new Set(list.map((x) => x.retailer)).size, n: list.length, star: modeStar(list.map((x) => x.star)), kwh: kwhs.length ? kwhs[Math.floor(kwhs.length / 2)] : null }
       }).filter((m) => m.price != null)
-      models.sort((a, b2) => b2.shops - a.shops || a.price - b2.price).slice(0, 5).forEach((m) => cards.push({ b, tier: tierOf(m.price), label: m.code, avg: m.price, shops: m.shops, n: m.n, star: m.star, url: m.url, retailer: m.retailer, idx: 0, left: 0, top: 0 }))
+      models.sort((a, b2) => b2.shops - a.shops || a.price - b2.price).slice(0, 5).forEach((m) => cards.push({ b, tier: tierOf(m.price), label: m.code, avg: m.price, shops: m.shops, n: m.n, star: m.star, kwh: m.kwh, url: m.url, retailer: m.retailer, idx: 0, left: 0, top: 0 }))
     })
     if (!cards.length) return { ...empty, matched }
     const cmin = Math.min(...cards.map((c) => c.avg)), cmax = Math.max(...cards.map((c) => c.avg))
@@ -397,25 +415,18 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
     cards.forEach((c) => { (cols[c.b] = cols[c.b] || []).push(c) })
     Object.values(cols).forEach((list) => { list.sort((a, b) => a.top - b.top); for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = Math.min(list[i - 1].top + GAP, maxTop) })
     return { cards, brands, ticks, gmin: axMin, gmax: axMax, count: f0.length, matched }
-  }, [R, cat, effSpec, effShop, starF, starOf]) // eslint-disable-line
+  }, [R, cat, effSpec, effShop, starF, matchOf]) // eslint-disable-line
   const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
   const minW = Math.max(1000, GUT + brands.length * 138 + 40)
-  const Sel = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
-    <button type="button" onClick={onClick} className={"w-full rounded-md px-2 py-1 text-left text-[12px] transition-colors " + (on ? "bg-indigo-600 font-semibold text-white shadow-sm" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")}>{children}</button>
-  )
-  const Sec = ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div><p className="mb-1 px-1 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</p><div className="flex flex-col gap-0.5">{children}</div></div>
-  )
-
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-start" style={{ animation: "fadeUp .5s ease both" }}>
-      {/* 좌측 세로 선택 레일 — 표처럼 세로로 선택 */}
-      <aside className="flex w-full shrink-0 flex-col gap-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2.5 shadow-sm sm:w-[150px] sm:sticky sm:top-[61px]">
-        <Sec label="제품">{cats.map((c) => <Sel key={c} on={cat === c} onClick={() => { setCat(c); setSpec("전체"); setShop("전체") }}>{c}</Sel>)}</Sec>
-        {segs.length > 0 && <Sec label="스펙"><Sel on={effSpec === "전체"} onClick={() => setSpec("전체")}>전체</Sel>{segs.map((s) => <Sel key={s.t} on={effSpec === s.t} onClick={() => setSpec(s.t)}>{s.t}</Sel>)}</Sec>}
-        <Sec label="거래선"><Sel on={effShop === "전체"} onClick={() => setShop("전체")}>전체</Sel>{shopList.map((s) => <Sel key={s} on={effShop === s} onClick={() => setShop(s)}>{pmShopLabel(s)}</Sel>)}</Sec>
-        <Sec label="에너지 등급">{["전체", "★5", "★4", "★3↓"].map((s) => <Sel key={s} on={starF === s} onClick={() => setStarF(s)}>{s}</Sel>)}</Sec>
+      {/* 좌측 세로 메뉴 — 마우스 오버로 펼치는 컴팩트 드롭다운 */}
+      <aside className="z-20 flex w-full shrink-0 flex-col gap-1.5 sm:w-[150px] sm:sticky sm:top-[61px]">
+        <PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setShop("전체") }} />
+        {segs.length > 0 && <PmDrop label="스펙" sel={effSpec} options={[{ k: "전체", t: "전체" }, ...segs.map((s) => ({ k: s.t, t: s.t }))]} onSelect={setSpec} />}
+        <PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} />
+        <PmDrop label="에너지" sel={starF} options={["전체", "★5", "★4", "★3↓"].map((s) => ({ k: s, t: s }))} onSelect={setStarF} />
       </aside>
 
       {/* 우측 매트릭스 */}
@@ -431,14 +442,17 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
             세로축 = <b className="text-gray-700 dark:text-gray-200">{exact ? pmShopLabel(effShop) + " 현금가" : "최저 현금가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-600 dark:text-indigo-400">LG</b>) · 카드 = 모델별(우상단 ★=New DOE 등급) · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 그 가격의 원문
           </p>
 
-          {/* 브랜드 컬럼 헤더 — 플롯 컬럼과 1:1 정렬 */}
-          <div className="flex border-b-2 border-gray-200 dark:border-gray-700 py-2 pr-4" style={{ paddingLeft: GUT }}>
-            {brands.map((b) => { const lg = b === "LG"; return (
-              <div key={b} className="min-w-0 flex-1 px-1 text-center">
-                <div className={"truncate text-[13px] font-extrabold tracking-tight " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{b}</div>
-                <div className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{brandN(b)}개</div>
-              </div>
-            ) })}
+          {/* 브랜드 컬럼 헤더 — 플롯과 동일 구조(px-4 + 게이지 GUT + flex-1)로 1:1 정렬 */}
+          <div className="flex border-b-2 border-gray-200 dark:border-gray-700 px-4 py-2">
+            <div className="shrink-0" style={{ width: GUT }} />
+            <div className="flex flex-1">
+              {brands.map((b) => { const lg = b === "LG"; return (
+                <div key={b} className="min-w-0 flex-1 px-1 text-center">
+                  <div className={"truncate text-[13px] font-extrabold tracking-tight " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{b}</div>
+                  <div className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{brandN(b)}개</div>
+                </div>
+              ) })}
+            </div>
           </div>
 
           {/* 플롯 — 좌 축 게이지 + 브랜드별 세로 레인(카드는 레인 내부에 가격순 배치) */}
@@ -466,14 +480,17 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
                       <div key={b} className={"relative min-w-0 flex-1 border-r border-gray-100 last:border-r-0 dark:border-gray-800/40 " + (lg ? "bg-indigo-50/40 dark:bg-indigo-500/5" : bi % 2 === 1 ? "bg-gray-50/50 dark:bg-gray-800/20" : "")}>
                         {cards.filter((c) => c.b === b).map((c, ci) => (
                           <a key={c.label + ci} href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer"
-                            title={`${c.b} · ${c.label} · ${peso(c.avg)}${c.retailer ? " @ " + pmShopLabel(c.retailer) : ""} · ${c.shops}개 유통 취급${c.star != null ? " · New DOE ★" + c.star : ""}${c.url ? " · 클릭→원문" : ""}`}
+                            title={`${c.b} · ${c.label} · ${peso(c.avg)}${c.retailer ? " @ " + pmShopLabel(c.retailer) : ""} · ${c.shops}개 유통 취급${c.star != null ? " · New DOE ★" + c.star : ""}${c.kwh != null ? " · " + Math.round(c.kwh) + "kWh/월" : ""}${c.url ? " · 클릭→원문" : ""}`}
                             className={"absolute left-1/2 block -translate-x-1/2 overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:-translate-y-0.5 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
                             style={{ top: c.top, width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "transform, opacity" }}>
                             <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
                             <div className="py-1.5 pl-3 pr-2">
                               <div className="flex items-center gap-1">
                                 <span className={"truncate text-[10px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
-                                {c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
+                                <span className="ml-auto flex shrink-0 items-center gap-0.5">
+                                  {c.kwh != null && <span className={"text-[8.5px] tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{Math.round(c.kwh)}kWh</span>}
+                                  {c.star != null && <span className={"rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
+                                </span>
                               </div>
                               <div className="mt-0.5 flex items-baseline gap-1">
                                 <span className="text-[14px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
