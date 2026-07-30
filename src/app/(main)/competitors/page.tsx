@@ -7,6 +7,8 @@ import {
   fmtStamp,
   promoIntensity,
   promoCampaigns,
+  energyLabels,
+  type EnergyRow,
   type PriceRow,
   type PromoIntensity,
   type PromoCampaign,
@@ -315,58 +317,96 @@ const pmTicks = (min: number, max: number, count = 5): number[] => {
   return out
 }
 const pmShort = (n: number) => (n >= 1000 ? "₱" + (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/, "") + "k" : "₱" + Math.round(n))
-type PMCard = { b: string; tier: string; avg: number; shops: number; n: number; idx: number; left: number; top: number }
+type PMCard = { b: string; tier: string; label: string; avg: number; shops: number; n: number; star: number | null; url: string | null; idx: number; left: number; top: number }
+const DOE_CODE: Record<string, string> = { "에어컨": "acu", "TV": "tvl", "냉장고": "ref", "세탁기": "cwm" }
+const pmNorm = (s: string) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "")
+const pmShopLabel = (s: string) => (s === "SM Appliance" ? "SM" : s === "Western Appliances" ? "Western" : s === "Robinsons Appliances" ? "Robinsons" : s)
+const pmStarCls = (s: number | null) => (s == null ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500" : s >= 4 ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : s >= 2 ? "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300")
 
-function PositioningMatrix({ rows }: { rows: PriceRow[] | null }) {
+function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("에어컨")
   const [spec, setSpec] = React.useState("전체")
+  const [mode, setMode] = React.useState<"브랜드" | "모델">("모델")
+  const [starF, setStarF] = React.useState("전체")
+  const [shop, setShop] = React.useState("전체")
   const R = rows ?? []
-  const H = 520, PAD = 20, BOTTOM = 10, CARD_W = 116, GAP = 44, GUT = 60
+  const H = 540, PAD = 22, BOTTOM = 14, CARD_W = 118, GAP = 46, GUT = 78
   const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
+  const shopList = React.useMemo(() => Array.from(new Set(R.filter((r) => r.category === cat).map((r) => r.retailer))).filter(Boolean), [R, cat])
   const segs = SEGMENTS[cat] ?? []
   const effSpec = spec === "전체" || segs.some((s) => s.t === spec) ? spec : "전체"
+  const effShop = shop === "전체" || shopList.includes(shop) ? shop : "전체"
 
-  const { cards, brands, ticks, gmin, gmax, count } = React.useMemo(() => {
+  const starIdx = React.useMemo(() => {
+    const code = DOE_CODE[cat]
+    if (!code || !elabels) return [] as { codeN: string; star: number | null }[]
+    return elabels.filter((e) => e.category === code && e.model && e.model.length >= 5)
+      .map((e) => ({ codeN: pmNorm(e.model), star: e.star })).filter((e) => e.codeN.length >= 5)
+  }, [elabels, cat])
+  const starOf = React.useCallback((model: string) => { const m = pmNorm(model); for (const e of starIdx) if (m.includes(e.codeN)) return e.star; return null }, [starIdx])
+
+  const { cards, brands, ticks, gmin, gmax, count, matched } = React.useMemo(() => {
     const seg = segs.find((s) => s.t === effSpec)
-    const f = R.filter((r) => r.category === cat && r.p0 != null && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)))
-    if (f.length < 3) return { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, count: f.length }
-    const prices = f.map((r) => r.p0 as number)
+    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)))
+    const empty = { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, count: f0.length, matched: 0 }
+    if (f0.length < 3) return empty
+    const prices = f0.map((r) => r.p0 as number)
     const pmin = Math.min(...prices), pmax = Math.max(...prices)
-    const tierOf = (p: number) => { const t = (p - pmin) / ((pmax - pmin) || 1); return t >= 0.6 ? "프리미엄" : t >= 0.3 ? "미드" : "엔트리" }
-    const byBrand: Record<string, PriceRow[]> = {}
-    f.forEach((r) => { (byBrand[r.brand] = byBrand[r.brand] || []).push(r) })
-    const bl = Object.entries(byBrand).map(([b, list]) => ({ b, n: list.length, avg: pmMean(list.map((x) => x.p0 as number)) })).filter((x) => x.n >= 2)
-    // 제품별 "제일 큰" 6~8개 브랜드(리스팅 수 기준) — 자사(LG)는 항상 포함, 표시는 평균가 오름차순
+    const tierOf = (p: number) => { const t = (p - pmin) / ((pmax - pmin) || 1); return t >= 0.66 ? "프리미엄" : t >= 0.33 ? "미드" : "엔트리" }
+    // 브랜드 선정: 리스팅 수 상위 6~8개(제일 큰 브랜드) · null/빈 브랜드 제외 · LG는 항상 맨 오른쪽
+    const byB0: Record<string, PriceRow[]> = {}
+    f0.forEach((r) => { (byB0[r.brand] = byB0[r.brand] || []).push(r) })
+    const bl = Object.entries(byB0).map(([b, list]) => ({ b, n: list.length, avg: pmMean(list.map((x) => x.p0 as number)) })).filter((x) => x.n >= 2 && x.b && x.b.trim() && x.b.toLowerCase() !== "null")
     let top = bl.slice().sort((a, b) => b.n - a.n).slice(0, 8)
     if (!top.some((x) => x.b === "LG")) { const lg = bl.find((x) => x.b === "LG"); if (lg) top = [...top.slice(0, 7), lg] }
-    const brands = top.sort((a, b) => a.avg - b.avg).map((x) => x.b)
+    const ordered = top.sort((a, b) => a.avg - b.avg).map((x) => x.b)
+    const brands = [...ordered.filter((b) => b !== "LG"), ...(ordered.includes("LG") ? ["LG"] : [])] // LG 맨 오른쪽
+    const brandSet = new Set(brands)
+    const withStar = f0.filter((r) => brandSet.has(r.brand)).map((r) => ({ ...r, star: starOf(r.model) }))
+    const matched = withStar.filter((r) => r.star != null).length
+    const passStar = (s: number | null) => (starF === "전체" ? true : starF === "★5" ? s === 5 : starF === "★4" ? s === 4 : s != null && s <= 3)
+    const f = withStar.filter((r) => passStar(r.star))
+    if (!f.length) return { ...empty, matched }
+    const modeStar = (arr: (number | null)[]) => { const v = arr.filter((x): x is number => x != null); if (!v.length) return null; const m: Record<number, number> = {}; v.forEach((x) => { m[x] = (m[x] || 0) + 1 }); return Number(Object.entries(m).sort((a, b) => b[1] - a[1])[0][0]) }
+    const cheapUrl = (list: { p0: number | null; url: string | null }[]) => { const best = list.reduce((a, b) => ((b.p0 ?? Infinity) < (a.p0 ?? Infinity) ? b : a)); return best.url ?? null }
     const cards: PMCard[] = []
-    brands.forEach((b) => {
-      const g: Record<string, PriceRow[]> = {}
-      byBrand[b].forEach((r) => { const t = tierOf(r.p0 as number); (g[t] = g[t] || []).push(r) })
-      Object.entries(g).forEach(([t, list]) => cards.push({ b, tier: t, avg: pmMean(list.map((x) => x.p0 as number)), shops: new Set(list.map((x) => x.retailer)).size, n: list.length, idx: 0, left: 0, top: 0 }))
-    })
+    if (mode === "브랜드") {
+      brands.forEach((b) => {
+        const g: Record<string, typeof f> = {}
+        f.filter((r) => r.brand === b).forEach((r) => { const t = tierOf(r.p0 as number); (g[t] = g[t] || []).push(r) })
+        Object.entries(g).forEach(([t, list]) => cards.push({ b, tier: t, label: t, avg: pmMean(list.map((x) => x.p0 as number)), shops: new Set(list.map((x) => x.retailer)).size, n: list.length, star: modeStar(list.map((x) => x.star)), url: cheapUrl(list), idx: 0, left: 0, top: 0 }))
+      })
+    } else {
+      brands.forEach((b) => {
+        const g: Record<string, typeof f> = {}
+        f.filter((r) => r.brand === b && r.code && r.code.length >= 4 && !/^[≈]/.test(r.code) && r.code !== "N/A").forEach((r) => { (g[r.code] = g[r.code] || []).push(r) })
+        const models = Object.entries(g).map(([code, list]) => ({ code, avg: pmMean(list.map((x) => x.p0 as number)), shops: new Set(list.map((x) => x.retailer)).size, n: list.length, star: modeStar(list.map((x) => x.star)), url: cheapUrl(list) }))
+        models.sort((a, b2) => b2.shops - a.shops || b2.n - a.n).slice(0, 5).forEach((m) => cards.push({ b, tier: tierOf(m.avg), label: m.code, avg: m.avg, shops: m.shops, n: m.n, star: m.star, url: m.url, idx: 0, left: 0, top: 0 }))
+      })
+    }
+    if (!cards.length) return { ...empty, matched }
     const cmin = Math.min(...cards.map((c) => c.avg)), cmax = Math.max(...cards.map((c) => c.avg))
-    const ticks = pmTicks(cmin, cmax, 5)
+    const ticks = pmTicks(cmin, cmax, 4)
     const axMin = Math.min(cmin, ticks[0] ?? cmin), axMax = Math.max(cmax, ticks[ticks.length - 1] ?? cmax)
     const topFor = (p: number) => PAD + ((axMax - p) / ((axMax - axMin) || 1)) * (H - PAD - BOTTOM)
     cards.forEach((c) => { c.idx = Math.round((c.avg / cmin) * 100); c.left = ((brands.indexOf(c.b) + 0.5) / brands.length) * 100; c.top = topFor(c.avg) })
     const cols: Record<string, PMCard[]> = {}
     cards.forEach((c) => { (cols[c.b] = cols[c.b] || []).push(c) })
     Object.values(cols).forEach((list) => { list.sort((a, b) => a.top - b.top); for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = list[i - 1].top + GAP })
-    return { cards, brands, ticks, gmin: axMin, gmax: axMax, count: f.length }
-  }, [R, cat, effSpec]) // eslint-disable-line
+    return { cards, brands, ticks, gmin: axMin, gmax: axMax, count: f0.length, matched }
+  }, [R, cat, effSpec, effShop, mode, starF, starOf]) // eslint-disable-line
   const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
-  const chip = (on: boolean) => "rounded-full border px-2.5 py-0.5 text-[11.5px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (on ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40")
+  const minW = Math.max(1000, GUT + brands.length * 138 + 40)
+  const chip = (on: boolean) => "rounded-full border px-2.5 py-1 text-[12px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (on ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40")
 
   return (
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
-      {/* 컨트롤: 제품(카테고리) + 스펙(세그먼트) */}
+      {/* 컨트롤: 제품 · 스펙 · 거래선 · 에너지 · 보기(브랜드/모델) */}
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
-          {cats.map((c) => <button key={c} type="button" onClick={() => { setCat(c); setSpec("전체") }} className={chip(cat === c)}>{c}</button>)}
+          {cats.map((c) => <button key={c} type="button" onClick={() => { setCat(c); setSpec("전체"); setShop("전체") }} className={chip(cat === c)}>{c}</button>)}
         </div>
         {segs.length > 0 && (
           <div className="flex flex-wrap items-center gap-1.5">
@@ -375,62 +415,78 @@ function PositioningMatrix({ rows }: { rows: PriceRow[] | null }) {
             {segs.map((s) => <button key={s.t} type="button" onClick={() => setSpec(s.t)} className={chip(effSpec === s.t)}>{s.t}</button>)}
           </div>
         )}
-        <span className="ml-auto text-[11px] text-gray-400 dark:text-gray-500"><b className="text-gray-600 dark:text-gray-300">{count}</b> 리스팅 · 5개 유통 평균</span>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">거래선</span>
+          <button type="button" onClick={() => setShop("전체")} className={chip(effShop === "전체")}>전체</button>
+          {shopList.map((s) => <button key={s} type="button" onClick={() => setShop(s)} className={chip(effShop === s)}>{pmShopLabel(s)}</button>)}
+        </div>
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">에너지</span>
+          {["전체", "★5", "★4", "★3↓"].map((s) => <button key={s} type="button" onClick={() => setStarF(s)} className={chip(starF === s)}>{s}</button>)}
+        </div>
+        <span className="ml-auto"><Segmented size="sm" value={mode} onChange={(k) => setMode(k as "브랜드" | "모델")} options={[{ k: "브랜드", label: "브랜드별" }, { k: "모델", label: "모델별" }]} /></span>
       </div>
 
       <div className="overflow-x-auto">
-        <div className="min-w-[980px] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ minWidth: minW }}>
           <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
             <span className="h-4 w-1 rounded bg-indigo-500" />
-            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가격 포지셔닝 · {cat}{effSpec !== "전체" ? " · " + effSpec : ""}</h2>
-            <span className="ml-auto rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">내부용</span>
+            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가격 포지셔닝 · {cat}{effSpec !== "전체" ? " · " + effSpec : ""}{effShop !== "전체" ? " · " + pmShopLabel(effShop) : ""} <span className="text-gray-300 dark:text-gray-600">·</span> {mode}별</h2>
+            <span className="ml-auto text-[10.5px] text-gray-400 dark:text-gray-500">{count} 리스팅 · DOE ★매칭 {matched}건</span>
+            <span className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">내부용</span>
           </header>
-          <p className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 px-4 py-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
-            세로축 = <b className="text-gray-700 dark:text-gray-200">5개 유통 평균 단가</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 고가) · 카드 = 가격대 세그먼트별 평균가 · <span className="tabular-nums">( )</span> = 가격지수(최저 평균=100) · <span className="tabular-nums">n곳</span> = 취급 유통 수
+          <p className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 px-4 py-2 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400">
+            세로축 = <b className="text-gray-700 dark:text-gray-200">{effShop === "전체" ? "5개 유통 평균 단가" : pmShopLabel(effShop) + " 단가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-600 dark:text-indigo-400">LG</b>) · 우상단 ★ = <b className="text-gray-700 dark:text-gray-200">New DOE 에너지등급</b> · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 원문 링크
           </p>
 
-          {/* 브랜드 컬럼 헤더(플롯과 정렬: 좌측 축 게이지 폭만큼 들여쓰기) */}
-          <div className="flex border-b border-gray-100 dark:border-gray-800 py-2 pr-3" style={{ paddingLeft: GUT + 12 }}>
+          {/* 브랜드 컬럼 헤더 — 글씨 확대·플롯과 정렬 */}
+          <div className="flex border-b-2 border-gray-200 dark:border-gray-700 py-2 pr-4" style={{ paddingLeft: GUT + 14 }}>
             {brands.map((b) => { const lg = b === "LG"; return (
-              <div key={b} className={"flex-1 border-b-2 pb-1 text-center " + (lg ? "border-indigo-500" : "border-transparent")}>
-                <div className={"text-[11px] font-bold " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-700 dark:text-gray-300")}>{b}</div>
-                <div className="text-[9.5px] tabular-nums text-gray-400 dark:text-gray-500">{brandN(b)}개</div>
+              <div key={b} className="flex-1 text-center">
+                <div className={"truncate text-[13px] font-extrabold tracking-tight " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{b}</div>
+                <div className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{brandN(b)}개</div>
               </div>
             ) })}
           </div>
 
-          {/* 플롯 — 좌 축 게이지 + 산점 */}
-          <div key={cat + effSpec} className="flex px-3 pb-2 pt-2" style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
+          {/* 플롯 — 카드만 개별 애니메이션(부모 transform 제거로 끊김 방지) */}
+          <div key={cat + effSpec + effShop + mode + starF} className="flex px-4 pb-3 pt-3">
             {cards.length === 0 ? (
-              <div className="flex h-40 w-full items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">해당 조건의 데이터가 부족합니다</div>
+              <div className="flex h-44 w-full items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">해당 조건의 데이터가 부족합니다</div>
             ) : (
               <>
-                {/* 세로축 라벨(₱) */}
+                {/* 세로축 게이지 */}
                 <div className="relative shrink-0" style={{ width: GUT, height: H }}>
                   {ticks.map((v) => (
-                    <span key={v} className="absolute right-1 -translate-y-1/2 text-[9.5px] font-medium tabular-nums text-gray-400 dark:text-gray-500" style={{ top: topFor(v) }}>{pmShort(v)}</span>
+                    <span key={v} className="absolute right-2 -translate-y-1/2 text-[11px] font-semibold tabular-nums text-gray-500 dark:text-gray-400" style={{ top: topFor(v) }}>{pmShort(v)}</span>
                   ))}
-                  <span className="absolute -left-1 top-1 text-[9px] font-bold uppercase tracking-wide text-gray-300 dark:text-gray-600">고가</span>
-                  <span className="absolute -left-1 text-[9px] font-bold uppercase tracking-wide text-gray-300 dark:text-gray-600" style={{ bottom: 2 }}>저가</span>
+                  <span className="absolute right-2 top-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">고가</span>
+                  <span className="absolute right-2 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500" style={{ bottom: 0 }}>저가</span>
                 </div>
-                {/* 산점 영역 */}
-                <div className="relative flex-1" style={{ height: H }}>
+                {/* 산점 영역 — 선명한 축·그리드 */}
+                <div className="relative flex-1 border-l-2 border-gray-200 dark:border-gray-700" style={{ height: H }}>
                   {ticks.map((v) => (
-                    <div key={v} className="pointer-events-none absolute inset-x-0 border-t border-dashed border-gray-100 dark:border-gray-800/70" style={{ top: topFor(v) }} />
+                    <div key={v} className="pointer-events-none absolute inset-x-0 border-t border-gray-200/80 dark:border-gray-700/60" style={{ top: topFor(v) }} />
                   ))}
+                  <div className="pointer-events-none absolute inset-x-0 bottom-0 border-t-2 border-gray-200 dark:border-gray-700" />
                   {cards.map((c, i) => { const lg = c.b === "LG"; return (
-                    <div key={c.b + c.tier} title={`${c.b} · ${c.tier} · 평균 ${peso(c.avg)} · ${c.shops}개 유통 · ${c.n}개 리스팅`}
-                      className={"absolute -translate-x-1/2 overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:-translate-y-0.5 hover:shadow-md " + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
-                      style={{ left: c.left + "%", top: c.top, width: CARD_W, animation: "rowIn .4s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 20) * 0.025 + "s" }}>
+                    <a key={c.b + c.label + i} href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer"
+                      title={`${c.b} · ${c.label} · 평균 ${peso(c.avg)} · ${c.shops}개 유통 · ${c.n}개${c.star != null ? " · New DOE ★" + c.star : ""}${c.url ? " · 클릭→원문" : ""}`}
+                      className={"absolute block -translate-x-1/2 overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:-translate-y-0.5 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
+                      style={{ left: c.left + "%", top: c.top, width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(i, 16) * 0.02) + "s", willChange: "transform, opacity" }}>
                       <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
                       <div className="py-1.5 pl-3 pr-2">
                         <div className="flex items-center gap-1">
-                          <span className={"text-[10px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.tier}</span>
-                          <span className={"ml-auto rounded px-1 text-[9px] font-bold leading-4 tabular-nums " + (lg ? "bg-indigo-500/60 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400")}>{c.shops}곳</span>
+                          <span className={"truncate text-[10px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
+                          {c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
                         </div>
-                        <div className="mt-0.5 text-[13.5px] font-bold leading-tight tabular-nums">{peso(c.avg)} <span className={"text-[10px] font-medium " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>({c.idx})</span></div>
+                        <div className="mt-0.5 flex items-baseline gap-1">
+                          <span className="text-[14px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
+                          <span className={"text-[10px] font-medium tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>({c.idx})</span>
+                          <span className={"ml-auto shrink-0 text-[9px] tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{c.shops}곳</span>
+                        </div>
                       </div>
-                    </div>
+                    </a>
                   ) })}
                 </div>
               </>
@@ -438,12 +494,14 @@ function PositioningMatrix({ rows }: { rows: PriceRow[] | null }) {
           </div>
 
           <footer className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-gray-100 dark:border-gray-800 px-4 py-2.5 text-[11px] text-gray-500 dark:text-gray-400">
-            <span className="font-semibold text-gray-600 dark:text-gray-300">가격 세그먼트</span>
-            <span className="inline-flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-gray-300 dark:bg-gray-600" />엔트리 · 미드 · 프리미엄 (해당 조건 가격 3분위 자동)</span>
+            <span className="font-semibold text-gray-600 dark:text-gray-300">New DOE ★</span>
+            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(5)}>★5·4</span>고효율</span>
+            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(3)}>★3·2</span></span>
+            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(1)}>★1</span>저효율</span>
             <span className="ml-auto inline-flex items-center gap-1.5"><span className="inline-block h-3 w-4 rounded bg-indigo-600" />자사(LG) · <span className="inline-block h-3 w-4 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />경쟁사</span>
           </footer>
         </div>
-        <p className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">데이터 = v_competitor_3d 5개 유통 최신 현금가 평균(브랜드×가격 세그먼트) · 가격지수 = 평균 ÷ 최저 세그먼트 평균 × 100 · New DOE ★등급은 별도 내부 데이터(미연동)</p>
+        <p className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">가격 = v_competitor_3d 거래선 현금가(동일 데이터·동일 숫자) · New DOE ★ = energy_labels 모델코드 매칭({DOE_CODE[cat] || "-"}) · 모델별=브랜드당 취급수 상위 5개 · 카드 클릭 시 원문 링크</p>
       </div>
     </div>
   )
@@ -660,6 +718,7 @@ export default function Competitors() {
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "deltaPct", asc: true })
   const [promo, setPromo] = React.useState<PromoIntensity[] | null>(null)
   const [camps, setCamps] = React.useState<PromoCampaign[]>([])
+  const [elabels, setElabels] = React.useState<EnergyRow[] | null>(null)
 
   React.useEffect(() => {
     freshness()
@@ -674,6 +733,9 @@ export default function Competitors() {
     promoCampaigns()
       .then(setCamps)
       .catch(() => setCamps([]))
+    energyLabels()
+      .then(setElabels)
+      .catch(() => setElabels([]))
   }, [])
 
   const toggle = (arr: string[], x: string, set: (v: string[]) => void) =>
@@ -843,7 +905,7 @@ export default function Competitors() {
           {view === "board" ? (
             <BoardView rows={rows} stamp={stamp} asOf={asOf} />
           ) : view === "asp" ? (
-            <PositioningMatrix rows={rows} />
+            <PositioningMatrix rows={rows} elabels={elabels} />
           ) : view === "promo" ? (
             <PromoView rows={promo} camps={camps} />
           ) : active?.status !== "live" ? (
