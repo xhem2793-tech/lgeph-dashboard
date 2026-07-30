@@ -309,13 +309,15 @@ function PmDrop({ label, sel, options, onSelect }: { label: string; sel: string;
   )
 }
 
-function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels: EnergyRow[] | null }) {
+function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels: EnergyRow[] | null; stamp: string | null }) {
   const [cat, setCat] = React.useState("에어컨")
   const [spec, setSpec] = React.useState("전체")
   const [starF, setStarF] = React.useState("전체")
   const [shop, setShop] = React.useState("전체")
+  const [q, setQ] = React.useState("")
+  const [focused, setFocused] = React.useState(false)
   const R = rows ?? []
-  const H = 580, PAD = 20, BOTTOM = 12, CARD_H = 72, CARD_W = 128, GAP = 60, GUT = 52
+  const H = 560, PAD = 18, BOTTOM = 10, CARD_H = 62, CARD_W = 116, GAP = 50, GUT = 50
   const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
   const shopList = React.useMemo(() => Array.from(new Set(R.filter((r) => r.category === cat).map((r) => r.retailer))).filter(Boolean), [R, cat])
   const segs = pmSpecsFor(cat)
@@ -381,25 +383,32 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
   }, [R, cat, effSpec, effShop, starF, matchOf]) // eslint-disable-line
   const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
-  const minW = Math.max(1160, GUT + brands.length * 156 + 24)
+  const minW = Math.max(1040, GUT + brands.length * 138 + 20)
+  const qq = q.trim().toLowerCase()
   return (
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
-      {/* 상단 가로 필터 — 마우스 오버로 펼치는 드롭다운 */}
+      {/* 상단 가로 필터 — 드롭다운 + 뉴스형 검색 + 최종갱신 */}
       <div className="relative z-20 flex flex-wrap items-center gap-2">
         <div className="w-[150px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setShop("전체") }} /></div>
         {segs.length > 0 && <div className="w-[150px]"><PmDrop label="스펙" sel={effSpec} options={[{ k: "전체", t: "전체" }, ...segs.map((s) => ({ k: s.t, t: s.t }))]} onSelect={setSpec} /></div>}
         <div className="w-[160px]"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
         <div className="w-[140px]"><PmDrop label="에너지" sel={starF} options={["전체", "★5", "★4", "★3↓"].map((s) => ({ k: s, t: s }))} onSelect={setStarF} /></div>
+        <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[300px]" : "w-[200px]")}>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+          <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델·브랜드 검색"
+            className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+          {q && <button type="button" onClick={() => setQ("")} aria-label="지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+        </div>
+        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 lg:flex">최종 {stamp ? fmtStamp(stamp) : "—"}<span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
       </div>
 
       {/* 매트릭스 */}
       <div className="overflow-x-auto">
         <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ minWidth: minW }}>
-          <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+          <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-4 w-1 rounded bg-indigo-500" />
-            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가격 포지셔닝 · {cat}{effSpec !== "전체" ? " · " + effSpec : ""}{effShop !== "전체" ? " · " + pmShopLabel(effShop) : ""}</h2>
-            <span className="ml-auto text-[10.5px] text-gray-400 dark:text-gray-500">{count} 리스팅 · DOE ★매칭 {matched}건</span>
-            <span className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">내부용</span>
+            <span className="text-[10.5px] text-gray-400 dark:text-gray-500">{count} 리스팅 · DOE ★매칭 {matched}건</span>
+            <span className="ml-auto rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">내부용</span>
           </header>
           <p className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 px-4 py-2 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400">
             세로축 = <b className="text-gray-700 dark:text-gray-200">{exact ? pmShopLabel(effShop) + " 현금가" : "최저 현금가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-600 dark:text-indigo-400">LG</b>) · 카드 = 모델별(우상단 ★=New DOE 등급) · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 그 가격의 원문
@@ -445,10 +454,10 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
                   <div className="absolute inset-0 flex">
                     {brands.map((b, bi) => { const lg = b === "LG"; return (
                       <div key={b} className={"relative min-w-0 flex-1 " + (lg ? "bg-indigo-50/40 dark:bg-indigo-500/5" : bi % 2 === 1 ? "bg-gray-50/50 dark:bg-gray-800/20" : "")}>
-                        {cards.filter((c) => c.b === b).map((c, ci) => (
+                        {cards.filter((c) => c.b === b).map((c, ci) => { const hit = !qq || (c.b + " " + c.label).toLowerCase().includes(qq); return (
                           <a key={c.label + ci} href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer"
                             title={`${c.b} · ${c.label} · ${peso(c.avg)}${c.retailer ? " @ " + pmShopLabel(c.retailer) : ""} · ${c.shops}개 유통 취급${c.star != null ? " · New DOE ★" + c.star : ""}${c.kwh != null ? " · " + Math.round(c.kwh) + "kWh/월" : ""}${c.url ? " · 클릭→원문" : ""}`}
-                            className={"absolute block overflow-hidden rounded-lg border transition-shadow duration-200 hover:z-30 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
+                            className={"absolute block overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (qq && !hit ? "opacity-20 " : "") + (qq && hit ? "z-20 ring-2 ring-indigo-500 " : "") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
                             style={{ top: c.top, left: "50%", marginLeft: -(CARD_W / 2), width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "opacity" }}>
                             <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
                             <div className="pl-3 pr-2">
@@ -468,7 +477,7 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
                               </div>
                             </div>
                           </a>
-                        ))}
+                        ) })}
                       </div>
                     ) })}
                   </div>
@@ -889,7 +898,7 @@ export default function Competitors() {
           {view === "board" ? (
             <BoardView rows={rows} stamp={stamp} asOf={asOf} elabels={elabels} />
           ) : view === "asp" ? (
-            <PositioningMatrix rows={rows} elabels={elabels} />
+            <PositioningMatrix rows={rows} elabels={elabels} stamp={stamp} />
           ) : view === "promo" ? (
             <PromoView rows={promo} camps={camps} />
           ) : active?.status !== "live" ? (
