@@ -63,7 +63,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
 
 const ALL = GROUPS.flatMap((g) => g.items)
 const BRANDS = ["LG", "Samsung", "Panasonic", "TCL", "Midea", "Hisense"]
-const SHOPS = ["Anson's", "Abenson", "SM Appliance"]
+const SHOPS = ["Anson's", "Abenson", "SM Appliance", "Western Appliances", "Robinsons Appliances"]
 
 /** 세그먼트 — 유통 매장이 실제로 진열을 나누는 축(설치형태·도어·급) */
 const SEGMENTS: Record<string, { t: string; re: RegExp }[]> = {
@@ -117,8 +117,8 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
   { k: "Anson's", label: "Anson's", live: true },
   { k: "Abenson", label: "Abenson", live: true },
   { k: "SM Appliance", label: "SM Appliance", live: true },
-  { k: "Western Appliance", label: "Western", live: false },
-  { k: "Robinsons Appliances", label: "Robinsons", live: false },
+  { k: "Western Appliances", label: "Western", live: true },
+  { k: "Robinsons Appliances", label: "Robinsons", live: true },
 ]
 
 type Anchor = { id: string; label: string; note?: string; brand: string; lg?: boolean; sku?: boolean; match: (r: PriceRow) => boolean }
@@ -130,10 +130,10 @@ const mk = (brand: string, cat: string, re?: RegExp, lo = 0, hi = Infinity) => (
 
 const BOARD_GROUPS: BoardGroup[] = [
   { cat: "에어컨", icon: "❄️", rows: [
-    { id: "ac-lg", label: "LG 인버터 스플릿", note: "인버터 최저가존", brand: "LG", lg: true, match: mk("LG", "에어컨", /inverter|split/i) },
-    { id: "ac-dk", label: "Daikin 인버터 스플릿", brand: "Daikin", match: mk("Daikin", "에어컨", /inverter|split/i) },
-    { id: "ac-pa", label: "Panasonic 인버터", brand: "Panasonic", match: mk("Panasonic", "에어컨", /inverter|split/i) },
-    { id: "ac-tcl", label: "TCL 인버터", note: "중국 가성비", brand: "TCL", match: mk("TCL", "에어컨", /inverter|split/i) },
+    { id: "ac-lg", label: "LG 에어컨 최저", note: "거래선별 엔트리가", brand: "LG", lg: true, match: mk("LG", "에어컨") },
+    { id: "ac-dk", label: "Daikin 에어컨 최저", brand: "Daikin", match: mk("Daikin", "에어컨") },
+    { id: "ac-pa", label: "Panasonic 에어컨 최저", brand: "Panasonic", match: mk("Panasonic", "에어컨") },
+    { id: "ac-tcl", label: "TCL 에어컨 최저", note: "중국 가성비", brand: "TCL", match: mk("TCL", "에어컨") },
   ] },
   { cat: "냉장고", icon: "🧊", rows: [
     { id: "rf-lg1", label: "LG 프렌치도어 20.8", note: "RVF-X208MC · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "냉장고", /RVF.?X208/i) },
@@ -196,7 +196,7 @@ function BoardView({ rows, stamp, asOf }: { rows: PriceRow[] | null; stamp: stri
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
         <p className="text-[11.5px] text-gray-500 dark:text-gray-400">
-          5개 거래선 × 대표 제품 <b className="text-gray-700 dark:text-gray-200">오늘가</b> · 행 내 <span className="font-semibold text-emerald-600 dark:text-emerald-400">최저가 강조</span> · ⭐<span className="font-medium">동일 SKU</span>는 3사 같은 모델 · Western·Robinsons <span className="font-medium text-gray-400 dark:text-gray-500">수집 예정</span>
+5개 거래선 × 대표 제품 <b className="text-gray-700 dark:text-gray-200">오늘가</b> · 행 내 <span className="font-semibold text-emerald-600 dark:text-emerald-400">최저가 강조</span> · ⭐<span className="font-medium">동일 SKU</span>는 여러 거래선 같은 모델
         </p>
         <div className="ml-auto flex items-center gap-2.5">
           {heat ? (
