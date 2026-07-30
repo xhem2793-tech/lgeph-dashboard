@@ -315,7 +315,7 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
   const [starF, setStarF] = React.useState("전체")
   const [shop, setShop] = React.useState("전체")
   const R = rows ?? []
-  const H = 560, PAD = 20, BOTTOM = 12, CARD_H = 56, CARD_W = 128, GAP = 48, GUT = 52
+  const H = 580, PAD = 20, BOTTOM = 12, CARD_H = 72, CARD_W = 128, GAP = 60, GUT = 52
   const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
   const shopList = React.useMemo(() => Array.from(new Set(R.filter((r) => r.category === cat).map((r) => r.retailer))).filter(Boolean), [R, cat])
   const segs = pmSpecsFor(cat)
@@ -451,18 +451,22 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
                             className={"absolute block overflow-hidden rounded-lg border transition-shadow duration-200 hover:z-30 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
                             style={{ top: c.top, left: "50%", marginLeft: -(CARD_W / 2), width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "opacity" }}>
                             <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
-                            <div className="py-1.5 pl-3 pr-2">
-                              <div className="flex items-center gap-1">
+                            <div className="pl-3 pr-2">
+                              {/* 1행 — 모델 서픽스 + 에너지등급(★) */}
+                              <div className="flex items-center gap-1 py-1">
                                 <span className={"truncate text-[10px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
-                                <span className="ml-auto flex shrink-0 items-center gap-0.5">
-                                  {c.kwh != null && <span className={"text-[8.5px] tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{Math.round(c.kwh)}kWh</span>}
-                                  {c.star != null && <span className={"rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
-                                </span>
+                                {c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
                               </div>
-                              <div className="mt-0.5 flex items-baseline gap-1">
+                              {/* 2행 — 가격 + 지수 */}
+                              <div className={"flex items-baseline gap-1 border-t py-1 " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
                                 <span className="text-[14px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
-                                <span title="가격지수 — 이 카테고리 최저가를 100으로 본 상대가격(159=최저가보다 59% 비쌈)" className={"cursor-help text-[10px] font-medium tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>지수{c.idx}</span>
+                                <span title="가격지수 — 이 카테고리 최저가를 100으로 본 상대가격(159=최저가보다 59% 비쌈)" className={"cursor-help text-[9.5px] font-medium tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>지수{c.idx}</span>
                                 <span className={"ml-auto shrink-0 truncate text-[9px] " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{c.retailer ? pmShopLabel(c.retailer) : c.shops + "곳"}</span>
+                              </div>
+                              {/* 3행 — 전력효율(월 소비전력) */}
+                              <div className={"flex items-center justify-between gap-1 border-t py-1 text-[9.5px] " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
+                                <span className={lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500"}>전력효율</span>
+                                <span className={"tabular-nums font-semibold " + (lg ? "text-white" : "text-gray-600 dark:text-gray-300")}>{c.kwh != null ? Math.round(c.kwh) + " kWh/월" : "—"}</span>
                               </div>
                             </div>
                           </a>
