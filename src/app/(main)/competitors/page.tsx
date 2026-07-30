@@ -360,11 +360,14 @@ const pmSpecsFor = (c: string) => (c === "에어컨" ? PM_AC_HP : (SEGMENTS[c] ?
 // 에어컨 설치형태(유형) — HP(스펙)와 별개 축. 우선순위 분류(포터블→스탠드→창문→벽걸이) + 브랜드 코드 인지.
 //   Carrier WCAR*=창문·CAC/CEP/CTD=스플릿, Panasonic CW*=창문·CS/CU=스플릿, Samsung AR##=스플릿,
 //   Midea MS*=스플릿, TCL TAC##CW/CS, LG LA=창문·HS=스플릿, Condura WCON/WRAC=창문, Kolin KAP=포터블·KA##M=스플릿.
-const AC_FORMS = ["창문형", "벽걸이형", "스탠드형", "포터블"]
+// 유형 우선순위: 포터블 → 스탠드(플로어) → 시스템(SAC: 카세트·천장·멀티·VRF·덕트) → 창문 → 벽걸이(스플릿)
+//   시스템에어컨(카세트/멀티스플릿/천장형)이 스탠드형으로 뭉뚱그려지던 문제 분리(2026-07-31).
+const AC_FORMS = ["창문형", "벽걸이형", "스탠드형", "시스템", "포터블"]
 const acFormOf = (m: string): string | null => {
   const s = m || ""
   if (/portable|\bKAP-?\d/i.test(s)) return "포터블"
-  if (/floor|ceiling|cassette|천장|스탠드|standing|\bFP\d|\bZ[0-9A-Z]{2}Q/i.test(s)) return "스탠드형"
+  if (/floor ?mount|floor ?standing|스탠드|\bstanding\b|\bZPNQ|53C[LN]V|53CFV|53KFV/i.test(s)) return "스탠드형"
+  if (/cassette|ceiling|천장|\bmulti[- ]?split|multi[- ]?v\b|\bvrf\b|\bvrv\b|ducted|concealed|시스템|\bZTNQ|\bZ\dUQ|\bZVNQ|\bZUAB|AMNQ|\bAC0\d{2}[A-Z]/i.test(s)) return "시스템"
   if (/window|창문|\bwdw\b|\bLA\d{3}|WCAR[A-Z]|WCON[A-Z]|WRAC|CW[- ]?[A-Z]{0,3}\d|TAC-?\d+CW|\bAW\d|\d+WC[A-Z]*\b/i.test(s)) return "창문형"
   if (/split|wall[- ]?mount|벽걸이|HS[NU]?\d{2}|\bAR\d{2}|CS[/-]?CU|\bCS-?[A-Z]{0,2}\d|CSCU|MS[A-Z]{1,3}-?\d|FTK[A-Z]|TAC-?\d+CS|(?:CAC|CEP|CTD|CAH)\d|KA-?\d+M/i.test(s)) return "벽걸이형"
   return null
@@ -506,8 +509,25 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const [shop, setShop] = React.useState("전체")
   const [q, setQ] = React.useState("")
   const [focused, setFocused] = React.useState(false)
+  const [dling, setDling] = React.useState(false)
+  const cardRef = React.useRef<HTMLDivElement>(null)
   const R = rows ?? []
-  const H = 940, PAD = 18, BOTTOM = 14, CARD_H = 56, CARD_W = 116, GAP = 50, GUT = 50
+  // 화면 플롯 높이 940(뉴스처럼 길게). 이미지 다운로드 시엔 이전 PPT 슬라이드 비율(560)로 압축 캡처
+  const [H, setH] = React.useState(940)
+  const PAD = 18, BOTTOM = 14, CARD_H = 56, CARD_W = 116, GAP = 50, GUT = 50
+  const dlPng = React.useCallback(async () => {
+    const node = cardRef.current; if (!node) return
+    setDling(true); setH(560) // PPT 슬라이드(16:9) 비율로 압축
+    await new Promise((r) => setTimeout(r, 380)) // 재렌더+페인트 대기
+    try {
+      const { toPng } = await import("html-to-image")
+      const url = await toPng(node, { pixelRatio: 2.5, backgroundColor: "#ffffff", cacheBust: true, filter: (n) => !(n instanceof HTMLElement && n.dataset.noexport === "1") })
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `LGEPH_가격포지셔닝_${cat}${form !== "전체" ? "_" + form : ""}_${stamp ? String(stamp).slice(0, 10) : "latest"}.png`
+      a.click()
+    } catch (e) { console.error(e) } finally { setH(940); setDling(false) }
+  }, [cat, form, stamp])
   const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
   const shopList = React.useMemo(() => Array.from(new Set(R.filter((r) => r.category === cat).map((r) => r.retailer))).filter(Boolean), [R, cat])
   const sizeList = pmSizeList(cat)   // 스펙(사이즈) 축: 에어컨=HP · 냉장고=cu.ft · 세탁기=kg · TV=인치
@@ -582,7 +602,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     cards.forEach((c) => { (cols[c.b] = cols[c.b] || []).push(c) })
     Object.values(cols).forEach((list) => { list.sort((a, b) => a.top - b.top); for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = Math.min(list[i - 1].top + GAP, maxTop) })
     return { cards, brands, ticks, gmin: axMin, gmax: axMax, count: f0.length, matched }
-  }, [R, cat, effSpec, effForm, effShop, starF, matchOf, specOf]) // eslint-disable-line
+  }, [R, cat, effSpec, effForm, effShop, starF, matchOf, specOf, H]) // eslint-disable-line
   const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
   const minW = Math.max(1040, GUT + brands.length * 138 + 20)
@@ -607,11 +627,17 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
 
       {/* 매트릭스 */}
       <div className="overflow-x-auto">
-        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ minWidth: minW }}>
+        <div ref={cardRef} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ minWidth: minW }}>
           <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-4 w-1 rounded bg-indigo-500" />
             <span className="text-[10.5px] text-gray-400 dark:text-gray-500">{count} 리스팅 · DOE ★매칭 {matched}건</span>
-            <span className="ml-auto rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">내부용</span>
+            <div className="ml-auto flex items-center gap-1.5">
+              <button type="button" onClick={dlPng} disabled={dling} data-noexport="1" title="카드 전체를 PPT 슬라이드 크기 이미지로 저장" className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[10.5px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-50">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+                {dling ? "생성중…" : "이미지"}
+              </button>
+              <span className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">내부용</span>
+            </div>
           </header>
           <p className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 px-4 py-2 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400">
             세로축 = <b className="text-gray-700 dark:text-gray-200">{exact ? pmShopLabel(effShop) + " 현금가" : "최저 현금가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-600 dark:text-indigo-400">LG</b>) · 카드 = 모델별(우상단 ★=New DOE 등급) · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 그 가격의 원문
