@@ -330,6 +330,15 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
  *  세그먼트(프리미엄/미드/엔트리) 평균가·가격지수·취급 유통수. 자사(LG) 인디고 강조.
  *  제품(카테고리)·스펙(세그먼트) 선택. New DOE ★는 미수집 → 가격 세그먼트로 대체.   */
 const PM_CATS = ["에어컨", "냉장고", "TV", "세탁기"]
+// 가격대(tier) 절대 기준(₱) — 카테고리별 실판매가 분위(p25~p75)에 맞춘 시장 세그먼트. [엔트리상한, 프리미엄하한]
+//   예: 에어컨 ₱3만 미만 LOW · 3~6만 MED · 6만+ 프리미엄 (₱5만=MED). 상대백분위가 아니라 절대금액.
+const PM_TIER_BANDS: Record<string, [number, number]> = {
+  "에어컨": [30000, 60000],
+  "TV": [35000, 80000],
+  "냉장고": [25000, 55000],
+  "세탁기": [22000, 50000],
+}
+const pmTierOf = (cat: string, p: number) => { const b = PM_TIER_BANDS[cat] || [25000, 60000]; return p >= b[1] ? "프리미엄" : p >= b[0] ? "미드" : "엔트리" }
 // 에어컨은 마력(HP)별로 스펙을 쪼갠다 — 그 외는 SEGMENTS(진열 세그먼트) 사용
 const PM_AC_HP: { t: string; re: RegExp }[] = [
   { t: "0.75HP↓", re: /0\.(5|75) ?HP/i },
@@ -359,7 +368,8 @@ const pmShopLabel = (s: string) => (s === "SM Appliance" ? "SM" : s === "Western
 const pmStarCls = (s: number | null) => (s == null ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500" : s >= 4 ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : s >= 2 ? "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300")
 // 가격대(tier) 라벨·색 — 엔트리=LOW(초록) · 미드=MED(파랑) · 프리미엄(주황)
 const pmTierLabel = (t: string) => (t === "프리미엄" ? "프리미엄" : t === "미드" ? "MED" : "LOW")
-const pmTierCls = (t: string) => (t === "프리미엄" ? "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300" : t === "미드" ? "bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300" : "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300")
+// 카드 왼쪽 세로 스트립 색 — 가격대 구분(배지 대신)
+const pmTierBar = (t: string) => (t === "프리미엄" ? "bg-amber-400 dark:bg-amber-500" : t === "미드" ? "bg-sky-400 dark:bg-sky-500" : "bg-emerald-400 dark:bg-emerald-500")
 // 호버 드롭다운 선택 — 좌측 세로 메뉴(마우스 오버로 옵션 펼침)
 function PmDrop({ label, sel, options, onSelect }: { label: string; sel: string; options: { k: string; t: string }[]; onSelect: (k: string) => void }) {
   const cur = options.find((o) => o.k === sel)?.t ?? sel
@@ -406,9 +416,8 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSpecHit(cat, r.model, effSpec))
     const empty = { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, count: f0.length, matched: 0 }
     if (f0.length < 3) return empty
-    const prices = f0.map((r) => r.p0 as number)
-    const pmin = Math.min(...prices), pmax = Math.max(...prices)
-    const tierOf = (p: number) => { const t = (p - pmin) / ((pmax - pmin) || 1); return t >= 0.66 ? "프리미엄" : t >= 0.33 ? "미드" : "엔트리" }
+    // 가격대는 카테고리별 절대 기준(PM_TIER_BANDS) — 상대백분위 아님
+    const tierOf = (p: number) => pmTierOf(cat, p)
     // 브랜드 선정: 리스팅 수 상위 6~8개(제일 큰 브랜드) · null/빈 브랜드 제외 · LG는 항상 맨 오른쪽
     const byB0: Record<string, PriceRow[]> = {}
     f0.forEach((r) => { (byB0[r.brand] = byB0[r.brand] || []).push(r) })
@@ -512,8 +521,8 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
                 <div className="relative flex-1" style={{ height: H }}>
                   {/* 좌측 세로축(absolute → 컬럼 폭에 영향 없음, 정렬 유지) */}
                   <div className="pointer-events-none absolute inset-y-0 left-0 border-l-2 border-gray-200 dark:border-gray-700" />
-                  {/* 중간 가격대(Mid) 밴드 — 회색 배경 */}
-                  <div className="pointer-events-none absolute inset-x-0 bg-gray-100/70 dark:bg-gray-800/30" style={{ top: topFor(gmin + (gmax - gmin) * 0.66), height: Math.max(0, topFor(gmin + (gmax - gmin) * 0.33) - topFor(gmin + (gmax - gmin) * 0.66)) }} />
+                  {/* 중간 가격대(MED) 밴드 — 절대 기준(PM_TIER_BANDS) 구간을 회색 배경으로 */}
+                  {(() => { const b = PM_TIER_BANDS[cat] || [25000, 60000]; const t = topFor(Math.min(b[1], gmax)); const bot = topFor(Math.max(b[0], gmin)); return <div className="pointer-events-none absolute inset-x-0 bg-gray-100/70 dark:bg-gray-800/30" style={{ top: t, height: Math.max(0, bot - t) }} /> })()}
                   {ticks.map((v) => (
                     <div key={v} className="pointer-events-none absolute inset-x-0 border-t border-gray-200/80 dark:border-gray-700/60" style={{ top: topFor(v) }} />
                   ))}
@@ -528,18 +537,18 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
                             title={`${c.b} · ${c.label} · ${peso(c.avg)}${c.retailer ? " @ " + pmShopLabel(c.retailer) : ""} · ${c.shops}개 유통 취급${c.star != null ? " · New DOE ★" + c.star : ""}${c.kwh != null ? " · " + Math.round(c.kwh) + "kWh/월" : ""}${c.url ? " · 클릭→원문" : ""}`}
                             className={"absolute block overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (qq && !hit ? "opacity-20 " : "") + (qq && hit ? "z-20 ring-2 ring-indigo-500 " : "") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
                             style={{ top: c.top, left: "50%", marginLeft: -(CARD_W / 2), width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "opacity" }}>
-                            <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
+                            {/* 왼쪽 세로 스트립 = 가격대 색(LOW 초록·MED 파랑·프리미엄 주황) — 배지 대체 */}
+                            <span className={"absolute inset-y-0 left-0 w-1.5 " + pmTierBar(c.tier)} title={"가격대: " + pmTierLabel(c.tier)} />
                             <div className="pl-2.5 pr-2">
                               {/* 1행 — 모델 서픽스 + 에너지등급(★) */}
                               <div className="flex items-center gap-1 py-0.5">
                                 <span className={"truncate text-[9.5px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
                                 {c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[8.5px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
                               </div>
-                              {/* 2행 — 가격 + 지수(최저가=100) + 가격대 */}
+                              {/* 2행 — 가격 + 지수(최저가=100). 가격대는 왼쪽 색 스트립으로 표시 */}
                               <div className={"flex items-center gap-1 border-t py-0.5 " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
-                                <span className="text-[12.5px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
-                                <span className={"tabular-nums text-[8.5px] font-semibold leading-none " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")} title="최저가=100 기준 지수">{c.idx}</span>
-                                <span className={"ml-auto shrink-0 rounded px-1 text-[8px] font-bold leading-4 " + pmTierCls(c.tier)}>{pmTierLabel(c.tier)}</span>
+                                <span className="text-[13px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
+                                <span className={"ml-auto tabular-nums text-[9px] font-semibold leading-none " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")} title="최저가=100 기준 지수">{c.idx}</span>
                               </div>
                               {/* 3행 — 전력효율(월 소비전력) */}
                               <div className={"flex items-center justify-between gap-1 border-t py-0.5 text-[9px] " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
@@ -562,6 +571,11 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
             <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(5)}>★5·4</span>고효율</span>
             <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(3)}>★3·2</span></span>
             <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(1)}>★1</span>저효율</span>
+            <span className="mx-0.5 h-3 w-px bg-gray-200 dark:bg-gray-700" />
+            <span className="font-semibold text-gray-600 dark:text-gray-300">가격대</span>
+            <span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-1.5 rounded-sm bg-emerald-400 dark:bg-emerald-500" />LOW 〈₱{Math.round((PM_TIER_BANDS[cat]?.[0] ?? 25000) / 10000)}만</span>
+            <span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-1.5 rounded-sm bg-sky-400 dark:bg-sky-500" />MED</span>
+            <span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-1.5 rounded-sm bg-amber-400 dark:bg-amber-500" />프리미엄 ₱{Math.round((PM_TIER_BANDS[cat]?.[1] ?? 60000) / 10000)}만+</span>
             <span className="ml-auto inline-flex items-center gap-1.5"><span className="inline-block h-3 w-4 rounded bg-indigo-600" />자사(LG) · <span className="inline-block h-3 w-4 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />경쟁사</span>
           </footer>
         </div>
