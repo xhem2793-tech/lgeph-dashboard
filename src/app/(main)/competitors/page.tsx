@@ -124,20 +124,18 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
 
 const deltaCol = (d: number | null) => (d == null || d === 0 ? "text-gray-400 dark:text-gray-500" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")
 
-type PivRow = { cat: string; brand: string; code: string; model: string; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
+type PivRow = { cat: string; brand: string; code: string; model: string; capacity: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
 function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; stamp: string | null; asOf: string; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("전체")
   const [spec, setSpec] = React.useState("전체")
-  const [brand, setBrand] = React.useState("전체")
   const [q, setQ] = React.useState("")
-  const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "min", asc: true })
+  const [focused, setFocused] = React.useState(false)
+  const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "min", asc: false })
   const R = rows ?? []
   const loading = rows === null
-  const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => R.some((r) => r.category === c))], [R])
+  const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => R.some((r) => r.category === c && r.brand === "LG"))], [R])
   const segs = cat === "전체" ? [] : pmSpecsFor(cat)
   const effSpec = spec === "전체" || segs.some((s) => s.t === spec) ? spec : "전체"
-  const brandsList = React.useMemo(() => ["전체", ...Array.from(new Set(R.filter((r) => cat === "전체" || r.category === cat).map((r) => r.brand))).filter(Boolean).sort()], [R, cat])
-  const effBrand = brand === "전체" || brandsList.includes(brand) ? brand : "전체"
   // DOE ★ 인덱스(카테고리별)
   const starIdx = React.useMemo(() => {
     const m: Record<string, { codeN: string; star: number | null }[]> = {}
@@ -149,7 +147,7 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
   const data = React.useMemo(() => {
     const seg = segs.find((s) => s.t === effSpec)
     const kw = q.trim().toLowerCase()
-    const f = R.filter((r) => r.p0 != null && (cat === "전체" || r.category === cat) && (effBrand === "전체" || r.brand === effBrand) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)) && r.code && r.code.length >= 3 && (!kw || (r.code + " " + r.model + " " + r.brand).toLowerCase().includes(kw)))
+    const f = R.filter((r) => r.p0 != null && r.brand === "LG" && (cat === "전체" || r.category === cat) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)) && r.code && r.code.length >= 3 && (!kw || (r.code + " " + r.model).toLowerCase().includes(kw)))
     const g: Record<string, PriceRow[]> = {}
     f.forEach((r) => { (g[r.brand + "|" + r.code] = g[r.brand + "|" + r.code] || []).push(r) })
     const out: PivRow[] = Object.values(g).map((list) => {
@@ -164,7 +162,8 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
       const min = prices.length ? Math.min(...prices) : null
       const max = prices.length ? Math.max(...prices) : null
       const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
-      return { cat: r0.category, brand: r0.brand, code: r0.code, model: r0.model, cells, min, spread, star: starFor(r0.category, r0.model) }
+      const srps = list.map((x) => x.srp).filter((v): v is number => v != null)
+      return { cat: r0.category, brand: r0.brand, code: r0.code, model: r0.model, capacity: r0.capacity ?? null, srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
     })
     const dir = sort.asc ? 1 : -1
     const shopIdx = BOARD_SHOPS.findIndex((s) => s.k === sort.k)
@@ -175,32 +174,42 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
       return (typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y))) * dir
     })
     return out
-  }, [R, cat, effSpec, effBrand, q, sort]) // eslint-disable-line
+  }, [R, cat, effSpec, q, sort]) // eslint-disable-line
   const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
   const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
-  const chip = (on: boolean) => "rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition-all hover:-translate-y-0.5 active:scale-95 " + (on ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40")
 
   return (
     <div className="flex flex-col gap-2.5">
-      {/* 검색·필터 — 제품/스펙/브랜드/모델 */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <div className="flex flex-wrap items-center gap-1"><span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>{cats.map((c) => <button key={c} type="button" onClick={() => { setCat(c); setSpec("전체") }} className={chip(cat === c)}>{c}</button>)}</div>
-        {segs.length > 0 && <div className="flex flex-wrap items-center gap-1"><span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">스펙</span><button type="button" onClick={() => setSpec("전체")} className={chip(effSpec === "전체")}>전체</button>{segs.map((s) => <button key={s.t} type="button" onClick={() => setSpec(s.t)} className={chip(effSpec === s.t)}>{s.t}</button>)}</div>}
-        <div className="relative ml-auto">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" /></svg>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="모델·코드·브랜드 검색" className="w-[220px] rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-1.5 pl-9 pr-3 text-[12px] outline-none focus:border-indigo-400 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+      {/* 검색·필터 — LG 기본 · 제품/스펙 호버 드롭다운 · 뉴스형 검색 · 최종갱신(맨오른쪽) */}
+      <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+        <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10.5px] font-bold text-white shadow-sm">LG</span>
+        <div className="w-[150px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체") }} /></div>
+        {segs.length > 0 && <div className="w-[140px]"><PmDrop label="스펙" sel={effSpec} options={[{ k: "전체", t: "전체" }, ...segs.map((s) => ({ k: s.t, t: s.t }))]} onSelect={setSpec} /></div>}
+        <div className="ml-auto flex items-center gap-3">
+          <div className={"group relative transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[320px]" : "w-[220px]")}>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+            <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델·코드 검색"
+              className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+            {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+          </div>
+          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최종 {stamp ? fmtStamp(stamp) : md(asOf)}<span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
         </div>
-        <select value={effBrand} onChange={(e) => setBrand(e.target.value)} className="rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-gray-200 outline-none">
-          {brandsList.map((b) => <option key={b} value={b}>{b === "전체" ? "전 브랜드" : b}</option>)}
-        </select>
       </div>
 
       <div className="max-h-[640px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full min-w-[940px] border-collapse text-[12px]">
+        <table className="w-full min-w-[1080px] table-fixed border-collapse text-[12px]">
+          <colgroup>
+            <col style={{ width: 58 }} /><col style={{ width: 52 }} /><col style={{ width: 132 }} /><col style={{ width: 64 }} /><col style={{ width: 80 }} /><col style={{ width: 30 }} />
+            {BOARD_SHOPS.map((s) => <col key={s.k} style={{ width: 100 }} />)}
+            <col style={{ width: 86 }} /><col style={{ width: 70 }} />
+          </colgroup>
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
             <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
-              <th className="cursor-pointer whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-left" onClick={() => setS("brand")}>분류·브랜드{arrow("brand")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left" onClick={() => setS("code")}>모델{arrow("code")}</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">분류</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">브랜드</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-left" onClick={() => setS("code")}>모델{arrow("code")}</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">스펙</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-right">SRP</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title="New DOE 에너지등급">★</th>
               {BOARD_SHOPS.map((s) => (
                 <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-right " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
@@ -211,16 +220,16 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={BOARD_SHOPS.length + 5} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">불러오는 중…</td></tr>
+              <tr><td colSpan={BOARD_SHOPS.length + 8} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">불러오는 중…</td></tr>
             ) : data.length === 0 ? (
-              <tr><td colSpan={BOARD_SHOPS.length + 5} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">조건에 맞는 모델 없음</td></tr>
-            ) : data.slice(0, 300).map((r, ri) => { const lg = r.brand === "LG"; return (
-              <tr key={r.brand + r.code + ri} className={"border-b border-gray-50 dark:border-gray-800/50 transition-colors " + (lg ? "bg-indigo-50/30 dark:bg-indigo-500/5 hover:bg-indigo-50/60" : "hover:bg-gray-50 dark:hover:bg-gray-800/40")}>
-                <td className={"whitespace-nowrap border-r px-2 py-1.5 " + (lg ? "border-indigo-100 dark:border-indigo-500/20" : "border-gray-100 dark:border-gray-800")}>
-                  <span className="text-[10px] text-gray-400 dark:text-gray-500">{r.cat}</span>
-                  <span className={"ml-1 font-semibold " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{r.brand}</span>
-                </td>
-                <td className="whitespace-nowrap px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code}</td>
+              <tr><td colSpan={BOARD_SHOPS.length + 8} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">조건에 맞는 모델 없음</td></tr>
+            ) : data.slice(0, 300).map((r, ri) => (
+              <tr key={r.brand + r.code + ri} style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s" }} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
+                <td className="truncate px-2 py-1.5 text-[10.5px] text-gray-500 dark:text-gray-400">{r.cat}</td>
+                <td className="px-2 py-1.5 font-semibold text-indigo-700 dark:text-indigo-300">{r.brand}</td>
+                <td className="truncate border-r border-gray-100 dark:border-gray-800 px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code}</td>
+                <td className="truncate px-2 py-1.5 text-[11px] text-gray-500 dark:text-gray-400">{r.capacity || "—"}</td>
+                <td className="px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
                 <td className="px-1 py-1.5 text-center">{r.star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(r.star)}>★{r.star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
                 {r.cells.map((c, i) => (
                   <td key={i} className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums" style={c && r.min != null && c.price === r.min ? { background: "rgba(16,185,129,0.08)" } : undefined}>
@@ -235,11 +244,11 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right font-bold tabular-nums text-emerald-700 dark:text-emerald-300">{r.min != null ? peso(r.min) : "—"}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums">{r.spread == null ? <span className="text-gray-300 dark:text-gray-600">—</span> : <span className={"font-semibold " + (r.spread >= 5 ? "text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>{r.spread.toFixed(1)}%</span>}</td>
               </tr>
-            ) })}
+            ))}
           </tbody>
         </table>
       </div>
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">모델(브랜드+코드) × 5개 거래선 오늘가 피벗 · 셀=거래선 최저 현금가(클릭→원문)·행 최저가 초록 · ▼▲=전일 대비 · 스프레드=(최고−최저)/최저 · ★=New DOE 등급 · {Math.min(data.length, 300)}/{data.length}행 · 기준일 {md(asOf)}{stamp ? " · 최종 " + fmtStamp(stamp) : ""}</p>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">LG 모델 × 5개 거래선 오늘가 피벗(경쟁사 제외·유통별 가격차 점검) · 셀=거래선 최저 현금가(클릭→원문)·행 최저가 초록·고가순 정렬 · ▼▲=전일 대비 · 스프레드=(최고−최저)/최저 ≥5% 적색 · ★=New DOE 등급 · {Math.min(data.length, 300)}/{data.length}행 · 기준일 {md(asOf)}{stamp ? " · 최종 " + fmtStamp(stamp) : ""}</p>
     </div>
   )
 }
@@ -251,9 +260,12 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
 const PM_CATS = ["에어컨", "냉장고", "TV", "세탁기"]
 // 에어컨은 마력(HP)별로 스펙을 쪼갠다 — 그 외는 SEGMENTS(진열 세그먼트) 사용
 const PM_AC_HP: { t: string; re: RegExp }[] = [
+  { t: "0.75HP↓", re: /0\.(5|75) ?HP/i },
   { t: "1.0HP", re: /(^|[^\d.])1(\.0)? ?HP/i },
   { t: "1.5HP", re: /1\.5 ?HP/i },
-  { t: "2.0HP↑", re: /(2(\.0)?|2\.5|3(\.0)?) ?HP/i },
+  { t: "2.0HP", re: /(^|[^\d.])2(\.0)? ?HP/i },
+  { t: "2.5HP", re: /2\.5 ?HP/i },
+  { t: "3.0HP↑", re: /(3(\.0)?|3\.5|4(\.0)?|5(\.0)?) ?HP/i },
 ]
 const pmSpecsFor = (c: string) => (c === "에어컨" ? PM_AC_HP : (SEGMENTS[c] ?? []))
 const pmMean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0)
@@ -361,17 +373,17 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
   const minW = Math.max(1000, GUT + brands.length * 138 + 40)
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-start" style={{ animation: "fadeUp .5s ease both" }}>
-      {/* 좌측 세로 메뉴 — 마우스 오버로 펼치는 컴팩트 드롭다운 */}
-      <aside className="z-20 flex w-full shrink-0 flex-col gap-1.5 sm:w-[150px] sm:sticky sm:top-[61px]">
-        <PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setShop("전체") }} />
-        {segs.length > 0 && <PmDrop label="스펙" sel={effSpec} options={[{ k: "전체", t: "전체" }, ...segs.map((s) => ({ k: s.t, t: s.t }))]} onSelect={setSpec} />}
-        <PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} />
-        <PmDrop label="에너지" sel={starF} options={["전체", "★5", "★4", "★3↓"].map((s) => ({ k: s, t: s }))} onSelect={setStarF} />
-      </aside>
+    <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
+      {/* 상단 가로 필터 — 마우스 오버로 펼치는 드롭다운 */}
+      <div className="relative z-20 flex flex-wrap items-center gap-2">
+        <div className="w-[150px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setShop("전체") }} /></div>
+        {segs.length > 0 && <div className="w-[150px]"><PmDrop label="스펙" sel={effSpec} options={[{ k: "전체", t: "전체" }, ...segs.map((s) => ({ k: s.t, t: s.t }))]} onSelect={setSpec} /></div>}
+        <div className="w-[160px]"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
+        <div className="w-[140px]"><PmDrop label="에너지" sel={starF} options={["전체", "★5", "★4", "★3↓"].map((s) => ({ k: s, t: s }))} onSelect={setStarF} /></div>
+      </div>
 
-      {/* 우측 매트릭스 */}
-      <div className="min-w-0 flex-1 overflow-x-auto">
+      {/* 매트릭스 */}
+      <div className="overflow-x-auto">
         <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ minWidth: minW }}>
           <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
             <span className="h-4 w-1 rounded bg-indigo-500" />
@@ -424,8 +436,8 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
                         {cards.filter((c) => c.b === b).map((c, ci) => (
                           <a key={c.label + ci} href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer"
                             title={`${c.b} · ${c.label} · ${peso(c.avg)}${c.retailer ? " @ " + pmShopLabel(c.retailer) : ""} · ${c.shops}개 유통 취급${c.star != null ? " · New DOE ★" + c.star : ""}${c.kwh != null ? " · " + Math.round(c.kwh) + "kWh/월" : ""}${c.url ? " · 클릭→원문" : ""}`}
-                            className={"absolute left-1/2 block -translate-x-1/2 overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:-translate-y-0.5 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
-                            style={{ top: c.top, width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "transform, opacity" }}>
+                            className={"absolute block overflow-hidden rounded-lg border transition-shadow duration-200 hover:z-30 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
+                            style={{ top: c.top, left: "50%", marginLeft: -(CARD_W / 2), width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "opacity" }}>
                             <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
                             <div className="py-1.5 pl-3 pr-2">
                               <div className="flex items-center gap-1">
@@ -845,7 +857,7 @@ export default function Competitors() {
           className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm"
           style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}
         >
-          {view !== "movers" && view !== "asp" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+          {view !== "movers" && view !== "asp" && view !== "board" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
             <h2 className="flex items-baseline gap-2 text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">
               {active?.label}
               <span className={"rounded border px-1 py-px text-[9px] font-semibold " + BADGE[active?.status ?? "plan"].c}>
