@@ -526,8 +526,17 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   }, [elabels, cat])
   const matchOf = React.useCallback((model: string) => { const m = doeNorm(DOE_CODE[cat] || "", model); for (const e of starIdx) if (m.includes(e.codeN)) return e; return null }, [starIdx, cat])
 
+  // 스펙은 모델(canon)마다 동일 → 같은 모델의 모든 거래선 리스팅의 이름+capacity(구조화 스펙 포함)를 합쳐
+  //   하나의 스펙문자열로 만든다. 어느 한 거래선이 서술적 이름/구조화 스펙을 가지면 그 모델 전체가 정확 분류됨(99% 레버).
+  const specText = React.useMemo(() => {
+    const m: Record<string, string> = {}
+    R.forEach((r) => { if (r.category !== cat) return; const cc = canonCode(r.model, r.code); if (!cc) return; m[cc] = (m[cc] || "") + " " + r.model + " " + (r.capacity || "") })
+    return m
+  }, [R, cat])
+  const specOf = React.useCallback((r: PriceRow) => { const cc = canonCode(r.model, r.code); return (cc && specText[cc]) || (r.model + " " + (r.capacity || "")) }, [specText])
+
   const { cards, brands, ticks, gmin, gmax, count, matched } = React.useMemo(() => {
-    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSizeHit(cat, r.model, r.capacity, effSpec) && pmFormHit(cat, r.model, effForm))
+    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSizeHit(cat, specOf(r), null, effSpec) && pmFormHit(cat, specOf(r), effForm))
     const empty = { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, count: f0.length, matched: 0 }
     if (f0.length < 3) return empty
     // 가격대는 카테고리별 절대 기준(PM_TIER_BANDS) — 상대백분위 아님
@@ -573,7 +582,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     cards.forEach((c) => { (cols[c.b] = cols[c.b] || []).push(c) })
     Object.values(cols).forEach((list) => { list.sort((a, b) => a.top - b.top); for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = Math.min(list[i - 1].top + GAP, maxTop) })
     return { cards, brands, ticks, gmin: axMin, gmax: axMax, count: f0.length, matched }
-  }, [R, cat, effSpec, effForm, effShop, starF, matchOf]) // eslint-disable-line
+  }, [R, cat, effSpec, effForm, effShop, starF, matchOf, specOf]) // eslint-disable-line
   const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
   const minW = Math.max(1040, GUT + brands.length * 138 + 20)
