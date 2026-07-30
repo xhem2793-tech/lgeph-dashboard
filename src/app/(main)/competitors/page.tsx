@@ -13,7 +13,6 @@ import {
   type PromoIntensity,
   type PromoCampaign,
 } from "@/lib/supabase"
-import { Segmented } from "@/components/Segmented"
 
 /** 경쟁사 가격 — 좌 1/4 메뉴판 + 우 3/4 콘텐츠.
  *
@@ -123,182 +122,124 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
   { k: "Robinsons Appliances", label: "Robinsons", live: true },
 ]
 
-type Anchor = { id: string; label: string; note?: string; brand: string; lg?: boolean; sku?: boolean; match: (r: PriceRow) => boolean }
-type BoardGroup = { cat: string; icon: string; rows: Anchor[] }
-
-/** 매처 빌더 — 브랜드+카테고리(+모델 정규식, 가격밴드) */
-const mk = (brand: string, cat: string, re?: RegExp, lo = 0, hi = Infinity) => (r: PriceRow) =>
-  r.brand === brand && r.category === cat && (re ? re.test(r.model) : true) && r.p0 != null && r.p0 >= lo && r.p0 < hi
-
-const BOARD_GROUPS: BoardGroup[] = [
-  { cat: "에어컨", icon: "❄️", rows: [
-    { id: "ac-lg", label: "LG 에어컨 최저", note: "거래선별 엔트리가", brand: "LG", lg: true, match: mk("LG", "에어컨") },
-    { id: "ac-dk", label: "Daikin 에어컨 최저", brand: "Daikin", match: mk("Daikin", "에어컨") },
-    { id: "ac-pa", label: "Panasonic 에어컨 최저", brand: "Panasonic", match: mk("Panasonic", "에어컨") },
-    { id: "ac-tcl", label: "TCL 에어컨 최저", note: "중국 가성비", brand: "TCL", match: mk("TCL", "에어컨") },
-  ] },
-  { cat: "냉장고", icon: "🧊", rows: [
-    { id: "rf-lg1", label: "LG 프렌치도어 20.8", note: "RVF-X208MC · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "냉장고", /RVF.?X208/i) },
-    { id: "rf-lg2", label: "LG 양문형 23.8", note: "RVS-X238MC · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "냉장고", /RVS.?X238/i) },
-    { id: "rf-ss", label: "Samsung 양문형(SBS)", brand: "Samsung", match: mk("Samsung", "냉장고", /side by side|sbs/i, 40000) },
-    { id: "rf-cd", label: "Condura 2도어 중형", note: "현지 가성비", brand: "Condura", match: mk("Condura", "냉장고", undefined, 15000, 45000) },
-  ] },
-  { cat: "TV", icon: "📺", rows: [
-    { id: "tv-lg", label: 'LG UHD 43"', note: "43UA73 · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "TV", /43UA7|43UA/i) },
-    { id: "tv-tcl", label: 'TCL 43" QLED/FHD', note: "43S5K · 동일SKU", brand: "TCL", sku: true, match: mk("TCL", "TV", /43S5K/i) },
-    { id: "tv-hs", label: 'Hisense 43" 4K', note: "43A6Q", brand: "Hisense", match: mk("Hisense", "TV", /43A6Q|43A6|43A4/i) },
-    { id: "tv-ss", label: 'Samsung 55" 4K', brand: "Samsung", match: mk("Samsung", "TV", /55/, 25000, 90000) },
-  ] },
-  { cat: "세탁기", icon: "🌀", rows: [
-    { id: "wm-lg1", label: "LG 워시타워 올인원", note: "WT2117NHB · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "세탁기", /WT2117/i) },
-    { id: "wm-lg2", label: "LG 드럼 12kg", note: "FV1412 · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "세탁기", /FV1412/i) },
-    { id: "wm-pa", label: "Panasonic 세탁기", brand: "Panasonic", match: mk("Panasonic", "세탁기", undefined, 12000, 60000) },
-    { id: "wm-ss", label: "Samsung 세탁기", brand: "Samsung", match: mk("Samsung", "세탁기", undefined, 15000, 70000) },
-  ] },
-]
-
-type Cell = { live: boolean; price: number | null; n: number; delta: number | null; disc: number | null; isLow: boolean; heat: string }
-
-/** 히트맵 조건부 서식 — 행 내 저가(연녹)→고가(연적) 3-stop 보간(디자인 시안 1c 방식). */
-const HEAT_STOPS = [[209, 239, 214], [253, 246, 201], [250, 214, 214]]
-const heatRgb = (t: number) => {
-  const lerp = (a: number[], b: number[], k: number) => a.map((v, i) => Math.round(v + (b[i] - v) * k))
-  const c = t < 0.5 ? lerp(HEAT_STOPS[0], HEAT_STOPS[1], t / 0.5) : lerp(HEAT_STOPS[1], HEAT_STOPS[2], (t - 0.5) / 0.5)
-  return `rgb(${c[0]},${c[1]},${c[2]})`
-}
-const deltaFmt = (d: number | null) => (d == null || d === 0 ? "—" : (d < 0 ? "▼ " : "▲ ") + peso(Math.abs(d)).slice(1))
 const deltaCol = (d: number | null) => (d == null || d === 0 ? "text-gray-400 dark:text-gray-500" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")
 
-function BoardView({ rows, stamp, asOf }: { rows: PriceRow[] | null; stamp: string | null; asOf: string }) {
-  const [mode, setMode] = React.useState<"표준" | "히트맵">("표준")
+type PivRow = { cat: string; brand: string; code: string; model: string; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
+function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; stamp: string | null; asOf: string; elabels: EnergyRow[] | null }) {
+  const [cat, setCat] = React.useState("전체")
+  const [spec, setSpec] = React.useState("전체")
+  const [brand, setBrand] = React.useState("전체")
+  const [q, setQ] = React.useState("")
+  const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "min", asc: true })
   const R = rows ?? []
   const loading = rows === null
-  const compute = (row: Anchor): { cells: Cell[]; min: number | null; spread: number | null } => {
-    const cells: Cell[] = BOARD_SHOPS.map((s) => {
-      if (!s.live) return { live: false, price: null, n: 0, delta: null, disc: null, isLow: false, heat: "" }
-      const ms = R.filter((r) => r.retailer === s.k && r.p0 != null && row.match(r))
-      if (!ms.length) return { live: true, price: null, n: 0, delta: null, disc: null, isLow: false, heat: "" }
-      const best = ms.reduce((a, b) => ((b.p0 as number) < (a.p0 as number) ? b : a))
-      return { live: true, price: best.p0 as number, n: ms.length, delta: best.deltaPhp ?? null, disc: best.discountPct ?? null, isLow: false, heat: "" }
+  const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => R.some((r) => r.category === c))], [R])
+  const segs = cat === "전체" ? [] : pmSpecsFor(cat)
+  const effSpec = spec === "전체" || segs.some((s) => s.t === spec) ? spec : "전체"
+  const brandsList = React.useMemo(() => ["전체", ...Array.from(new Set(R.filter((r) => cat === "전체" || r.category === cat).map((r) => r.brand))).filter(Boolean).sort()], [R, cat])
+  const effBrand = brand === "전체" || brandsList.includes(brand) ? brand : "전체"
+  // DOE ★ 인덱스(카테고리별)
+  const starIdx = React.useMemo(() => {
+    const m: Record<string, { codeN: string; star: number | null }[]> = {}
+    ;(elabels || []).forEach((e) => { if (e.model && e.model.length >= 5) (m[e.category] = m[e.category] || []).push({ codeN: pmNorm(e.model), star: e.star }) })
+    return m
+  }, [elabels])
+  const starFor = (c: string, model: string) => { const code = DOE_CODE[c]; const idx = code ? starIdx[code] : null; if (!idx) return null; const mm = pmNorm(model); for (const e of idx) if (mm.includes(e.codeN)) return e.star; return null }
+
+  const data = React.useMemo(() => {
+    const seg = segs.find((s) => s.t === effSpec)
+    const kw = q.trim().toLowerCase()
+    const f = R.filter((r) => r.p0 != null && (cat === "전체" || r.category === cat) && (effBrand === "전체" || r.brand === effBrand) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)) && r.code && r.code.length >= 3 && (!kw || (r.code + " " + r.model + " " + r.brand).toLowerCase().includes(kw)))
+    const g: Record<string, PriceRow[]> = {}
+    f.forEach((r) => { (g[r.brand + "|" + r.code] = g[r.brand + "|" + r.code] || []).push(r) })
+    const out: PivRow[] = Object.values(g).map((list) => {
+      const r0 = list[0]
+      const cells = BOARD_SHOPS.map((s) => {
+        const ms = list.filter((r) => r.retailer === s.k)
+        if (!ms.length) return null
+        const best = ms.reduce((a, b) => ((b.p0 as number) < (a.p0 as number) ? b : a))
+        return { price: best.p0 as number, delta: best.deltaPhp ?? null, url: best.url ?? null }
+      })
+      const prices = cells.filter((c): c is { price: number; delta: number | null; url: string | null } => c != null).map((c) => c.price)
+      const min = prices.length ? Math.min(...prices) : null
+      const max = prices.length ? Math.max(...prices) : null
+      const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
+      return { cat: r0.category, brand: r0.brand, code: r0.code, model: r0.model, cells, min, spread, star: starFor(r0.category, r0.model) }
     })
-    const prices = cells.filter((c) => c.live && c.price != null).map((c) => c.price as number)
-    const min = prices.length ? Math.min(...prices) : null
-    const max = prices.length ? Math.max(...prices) : null
-    cells.forEach((c) => {
-      if (c.live && c.price != null && min != null) {
-        c.isLow = c.price === min
-        c.heat = max != null && max > min ? heatRgb((c.price - min) / (max - min)) : heatRgb(0)
-      }
+    const dir = sort.asc ? 1 : -1
+    const shopIdx = BOARD_SHOPS.findIndex((s) => s.k === sort.k)
+    out.sort((a, b) => {
+      let x: number | string | null = null, y: number | string | null = null
+      if (sort.k === "min") { x = a.min; y = b.min } else if (sort.k === "spread") { x = a.spread; y = b.spread } else if (sort.k === "brand") { x = a.brand; y = b.brand } else if (sort.k === "code") { x = a.code; y = b.code } else if (shopIdx >= 0) { x = a.cells[shopIdx]?.price ?? null; y = b.cells[shopIdx]?.price ?? null }
+      if (x == null) return 1; if (y == null) return -1
+      return (typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y))) * dir
     })
-    const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
-    return { cells, min, spread }
-  }
-  const heat = mode === "히트맵"
+    return out
+  }, [R, cat, effSpec, effBrand, q, sort]) // eslint-disable-line
+  const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
+  const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
+  const chip = (on: boolean) => "rounded-full border px-2.5 py-1 text-[11.5px] font-medium transition-all hover:-translate-y-0.5 active:scale-95 " + (on ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40")
+
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <p className="text-[11.5px] text-gray-500 dark:text-gray-400">
-5개 거래선 × 대표 제품 <b className="text-gray-700 dark:text-gray-200">오늘가</b> · 행 내 <span className="font-semibold text-emerald-600 dark:text-emerald-400">최저가 강조</span> · ⭐<span className="font-medium">동일 SKU</span>는 여러 거래선 같은 모델
-        </p>
-        <div className="ml-auto flex items-center gap-2.5">
-          {heat ? (
-            <span className="flex items-center gap-1.5 text-[10.5px] text-gray-500 dark:text-gray-400">싸다<span className="inline-block h-2.5 w-24 rounded-full" style={{ background: "linear-gradient(90deg,#d1efd6,#fdf6c9,#fad6d6)" }} />비싸다</span>
-          ) : (
-            <span className="flex items-center gap-2 text-[10.5px] text-gray-500 dark:text-gray-400">
-              <span className="inline-flex items-center gap-1"><span className="rounded bg-emerald-100 dark:bg-emerald-500/15 px-1 text-[8.5px] font-bold text-emerald-700 dark:text-emerald-300">최저</span>행 최저가</span>
-              <span className="inline-flex items-center gap-1"><span className="text-emerald-600">▼</span>전일↓</span>
-              <span className="inline-flex items-center gap-1"><span className="text-rose-600">▲</span>전일↑</span>
-            </span>
-          )}
-          <Segmented size="sm" value={mode} onChange={(k) => setMode(k as "표준" | "히트맵")} options={[{ k: "표준", label: "표준" }, { k: "히트맵", label: "히트맵" }]} />
+    <div className="flex flex-col gap-2.5">
+      {/* 검색·필터 — 제품/스펙/브랜드/모델 */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+        <div className="flex flex-wrap items-center gap-1"><span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>{cats.map((c) => <button key={c} type="button" onClick={() => { setCat(c); setSpec("전체") }} className={chip(cat === c)}>{c}</button>)}</div>
+        {segs.length > 0 && <div className="flex flex-wrap items-center gap-1"><span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">스펙</span><button type="button" onClick={() => setSpec("전체")} className={chip(effSpec === "전체")}>전체</button>{segs.map((s) => <button key={s.t} type="button" onClick={() => setSpec(s.t)} className={chip(effSpec === s.t)}>{s.t}</button>)}</div>}
+        <div className="relative ml-auto">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" /></svg>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="모델·코드·브랜드 검색" className="w-[220px] rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-1.5 pl-9 pr-3 text-[12px] outline-none focus:border-indigo-400 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
         </div>
+        <select value={effBrand} onChange={(e) => setBrand(e.target.value)} className="rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[12px] text-gray-700 dark:text-gray-200 outline-none">
+          {brandsList.map((b) => <option key={b} value={b}>{b === "전체" ? "전 브랜드" : b}</option>)}
+        </select>
       </div>
-      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full min-w-[860px] border-collapse text-[12px]">
+
+      <div className="max-h-[640px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
+        <table className="w-full min-w-[940px] border-collapse text-[12px]">
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
-            <tr>
-              <th className="whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">제품 / 모델</th>
+            <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
+              <th className="cursor-pointer whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-left" onClick={() => setS("brand")}>분류·브랜드{arrow("brand")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left" onClick={() => setS("code")}>모델{arrow("code")}</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title="New DOE 에너지등급">★</th>
               {BOARD_SHOPS.map((s) => (
-                <th key={s.k} className={"whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-3 py-2 " + (heat ? "text-center " : "text-right ") + "font-semibold " + (s.live ? "text-gray-600 dark:text-gray-300" : "text-gray-400 dark:text-gray-600")}>
-                  {s.label}
-                  {!s.live && <span className="ml-1 rounded bg-gray-100 dark:bg-gray-800 px-1 py-px text-[8.5px] font-medium text-gray-400 dark:text-gray-500">수집예정</span>}
-                </th>
+                <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-right " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
               ))}
-              <th className="whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-3 py-2 text-right font-semibold text-gray-600 dark:text-gray-300" title="라이브 거래선 간 최고가/최저가 격차">스프레드</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-right" onClick={() => setS("min")}>최저{arrow("min")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-right" onClick={() => setS("spread")}>스프레드{arrow("spread")}</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={BOARD_SHOPS.length + 2} className="px-3 py-12 text-center text-[12px] text-gray-400 dark:text-gray-500">불러오는 중…</td></tr>
-            ) : BOARD_GROUPS.map((g) => (
-              <React.Fragment key={g.cat}>
-                <tr className="bg-gray-50/70 dark:bg-gray-800/40">
-                  <td colSpan={BOARD_SHOPS.length + 2} className="border-b border-t border-gray-100 dark:border-gray-800 px-3 py-1.5 text-[11px] font-bold tracking-tight text-gray-700 dark:text-gray-200">
-                    <span className="mr-1.5">{g.icon}</span>{g.cat}
+              <tr><td colSpan={BOARD_SHOPS.length + 5} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">불러오는 중…</td></tr>
+            ) : data.length === 0 ? (
+              <tr><td colSpan={BOARD_SHOPS.length + 5} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">조건에 맞는 모델 없음</td></tr>
+            ) : data.slice(0, 300).map((r, ri) => { const lg = r.brand === "LG"; return (
+              <tr key={r.brand + r.code + ri} className={"border-b border-gray-50 dark:border-gray-800/50 transition-colors " + (lg ? "bg-indigo-50/30 dark:bg-indigo-500/5 hover:bg-indigo-50/60" : "hover:bg-gray-50 dark:hover:bg-gray-800/40")}>
+                <td className={"whitespace-nowrap border-r px-2 py-1.5 " + (lg ? "border-indigo-100 dark:border-indigo-500/20" : "border-gray-100 dark:border-gray-800")}>
+                  <span className="text-[10px] text-gray-400 dark:text-gray-500">{r.cat}</span>
+                  <span className={"ml-1 font-semibold " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{r.brand}</span>
+                </td>
+                <td className="whitespace-nowrap px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code}</td>
+                <td className="px-1 py-1.5 text-center">{r.star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(r.star)}>★{r.star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
+                {r.cells.map((c, i) => (
+                  <td key={i} className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums" style={c && r.min != null && c.price === r.min ? { background: "rgba(16,185,129,0.08)" } : undefined}>
+                    {!c ? <span className="text-gray-300 dark:text-gray-600">—</span> : (
+                      <a href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer" className={c.url ? "cursor-pointer hover:underline" : ""}>
+                        <span className={"font-bold " + (r.min != null && c.price === r.min ? "text-emerald-700 dark:text-emerald-300" : "text-gray-900 dark:text-gray-50")}>{peso(c.price)}</span>
+                        {c.delta != null && c.delta !== 0 && <span className={"ml-1 text-[9px] " + deltaCol(c.delta)}>{c.delta < 0 ? "▼" : "▲"}</span>}
+                      </a>
+                    )}
                   </td>
-                </tr>
-                {g.rows.map((row, ri) => {
-                  const { cells, spread } = compute(row)
-                  return (
-                    <tr key={row.id} style={{ animation: "rowIn .3s ease both", animationDelay: Math.min(ri, 8) * 0.03 + "s" }}
-                      className={"border-b border-gray-100 dark:border-gray-800 transition-colors " + (row.lg && !heat ? "bg-indigo-50/40 dark:bg-indigo-500/5 hover:bg-indigo-50/70 dark:hover:bg-indigo-500/10" : "hover:bg-gray-50 dark:hover:bg-gray-800/40")}>
-                      <td className={"whitespace-nowrap border-r px-3 py-2 align-top " + (row.lg ? "border-indigo-100 dark:border-indigo-500/20" : "border-gray-100 dark:border-gray-800")}>
-                        <span className="flex items-center gap-1.5">
-                          {row.lg && <span className="h-3.5 w-1 shrink-0 rounded bg-indigo-500" />}
-                          {row.sku && <span title="3사 동일 모델" className="shrink-0 text-[10px]">⭐</span>}
-                          <span className={"font-semibold " + (row.lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{row.label}</span>
-                        </span>
-                        {row.note && <span className="mt-0.5 block pl-2.5 text-[10px] text-gray-400 dark:text-gray-500">{row.note}</span>}
-                      </td>
-                      {cells.map((c, i) => (
-                        heat ? (
-                          <td key={i} className="border-l border-white dark:border-gray-900 px-2 py-2 text-center align-middle" style={c.live && c.price != null ? { background: c.heat } : undefined}>
-                            {!c.live ? <span className="text-[11px] text-gray-300 dark:text-gray-700">·</span> : c.price == null ? <span className="text-gray-300 dark:text-gray-600">—</span> : (
-                              <>
-                                <div className="text-[13px] font-bold tabular-nums text-gray-900">{peso(c.price)}</div>
-                                <div className={"text-[10px] tabular-nums " + (c.delta == null || c.delta === 0 ? "text-gray-500" : c.delta < 0 ? "text-emerald-700" : "text-rose-700")}>{deltaFmt(c.delta)}</div>
-                              </>
-                            )}
-                          </td>
-                        ) : (
-                          <td key={i} className="border-l border-gray-100 dark:border-gray-800 px-3 py-2 align-top" style={c.live && c.isLow ? { background: "rgba(16,185,129,0.06)" } : undefined}>
-                            {!c.live ? (
-                              <div className="text-right text-[11px] text-gray-300 dark:text-gray-700">·</div>
-                            ) : c.price == null ? (
-                              <div className="text-right text-gray-300 dark:text-gray-600">—</div>
-                            ) : (
-                              <div className="flex flex-col items-end gap-1">
-                                <div className="flex items-baseline gap-1.5">
-                                  <span className={"text-[14px] font-bold tabular-nums " + (c.isLow ? "text-emerald-700 dark:text-emerald-300" : "text-gray-900 dark:text-gray-50")}>{peso(c.price)}</span>
-                                  <span className={"text-[10px] tabular-nums " + deltaCol(c.delta)}>{deltaFmt(c.delta)}</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  {c.disc != null && c.disc > 0 && <span className="rounded bg-amber-50 dark:bg-amber-500/10 px-1 py-px text-[9px] font-bold tabular-nums text-amber-700 dark:text-amber-300">-{c.disc.toFixed(0)}%</span>}
-                                  {c.isLow && <span className="rounded bg-emerald-600 px-1.5 py-px text-[8.5px] font-bold text-white">최저</span>}
-                                </div>
-                              </div>
-                            )}
-                          </td>
-                        )
-                      ))}
-                      <td className="whitespace-nowrap border-l border-gray-200 dark:border-gray-800 px-3 py-2 text-right align-top tabular-nums">
-                        {spread == null ? <span className="text-gray-300 dark:text-gray-600">—</span> : (
-                          <span className={"font-semibold " + (spread >= 5 ? "text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>{spread.toFixed(1)}%</span>
-                        )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </React.Fragment>
-            ))}
+                ))}
+                <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right font-bold tabular-nums text-emerald-700 dark:text-emerald-300">{r.min != null ? peso(r.min) : "—"}</td>
+                <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums">{r.spread == null ? <span className="text-gray-300 dark:text-gray-600">—</span> : <span className={"font-semibold " + (r.spread >= 5 ? "text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>{r.spread.toFixed(1)}%</span>}</td>
+              </tr>
+            ) })}
           </tbody>
         </table>
       </div>
-      <p className="mt-0.5 flex items-start gap-1.5 text-[11.5px] leading-relaxed text-indigo-700 dark:text-indigo-300">
-        <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 시사점</span>
-        <span>⭐동일 SKU 행의 <b>스프레드 ≥5%</b>(적색)는 채널 간 가격 정합성·MAP 이슈 신호 — 우선 점검 대상. 대량존(엔트리 인버터·43″)은 현지·중국 브랜드와 직접 경합하므로 프로모 대응 트리거로 활용.</span>
-      </p>
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">셀 = 각 거래선 매칭 리스팅의 오늘가 최저값 · 전일변동·할인율(SRP 대비)은 해당 리스팅 기준 · 스프레드 = (최고−최저)/최저 · 기준일 {md(asOf)}{stamp ? " · 최종 " + fmtStamp(stamp) : ""}</p>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">모델(브랜드+코드) × 5개 거래선 오늘가 피벗 · 셀=거래선 최저 현금가(클릭→원문)·행 최저가 초록 · ▼▲=전일 대비 · 스프레드=(최고−최저)/최저 · ★=New DOE 등급 · {Math.min(data.length, 300)}/{data.length}행 · 기준일 {md(asOf)}{stamp ? " · 최종 " + fmtStamp(stamp) : ""}</p>
     </div>
   )
 }
@@ -920,7 +861,7 @@ export default function Competitors() {
           </header>)}
 
           {view === "board" ? (
-            <BoardView rows={rows} stamp={stamp} asOf={asOf} />
+            <BoardView rows={rows} stamp={stamp} asOf={asOf} elabels={elabels} />
           ) : view === "asp" ? (
             <PositioningMatrix rows={rows} elabels={elabels} />
           ) : view === "promo" ? (
