@@ -349,6 +349,32 @@ const PM_AC_HP: { t: string; re: RegExp }[] = [
   { t: "3.0HP↑", re: /(3(\.0)?|3\.5|4(\.0)?|5(\.0)?) ?HP/i },
 ]
 const pmSpecsFor = (c: string) => (c === "에어컨" ? PM_AC_HP : (SEGMENTS[c] ?? []))
+// 에어컨 설치형태(유형) — HP(스펙)와 별개 축. 창문형(LA코드/window)·벽걸이형(스플릿, HS코드)·스탠드형(플로어·천장·카세트, Z코드)·포터블
+const AC_FORM: { t: string; re: RegExp }[] = [
+  { t: "창문형", re: /window|\bwdw\b|창문|\bLA\d{3}/i },
+  { t: "벽걸이형", re: /split|wall|벽걸이|\bHS[NU]?\d{2}/i },
+  { t: "스탠드형", re: /floor|ceiling|cassette|천장|스탠드|standing|\bZ[0-9A-Z]{2}Q/i },
+  { t: "포터블", re: /portable/i },
+]
+const acFormHit = (model: string, formT: string) => { if (formT === "전체") return true; const f = AC_FORM.find((x) => x.t === formT); return f ? f.re.test(model || "") : true }
+
+// 사이즈(용량/화면) 버킷 — 포지셔닝 "스펙(사이즈)" 축. 에어컨은 HP(별도), 나머지는 용량/인치.
+const REF_SIZE = ["7cu.ft↓", "7~14", "14~22", "22cu.ft↑"]
+const WM_SIZE = ["8kg↓", "8~11", "11kg↑"]
+const TV_SIZE = ["43˝↓", "43~54", "55~64", "65~74", "75˝↑"]
+const pmSizeBucket = (cat: string, model: string, capacity: string | null): string | null => {
+  const src = (model || "") + " " + (capacity || "")
+  const num = (re: RegExp) => { const x = src.match(re); return x ? parseFloat(x[1]) : null }
+  if (cat === "냉장고") { const v = num(/(\d+(?:\.\d+)?)\s*cu/i); if (v == null) return null; return v < 7 ? "7cu.ft↓" : v < 14 ? "7~14" : v < 22 ? "14~22" : "22cu.ft↑" }
+  if (cat === "세탁기") { const v = num(/(\d+(?:\.\d+)?)\s*kg/i); if (v == null) return null; return v < 8 ? "8kg↓" : v < 11 ? "8~11" : "11kg↑" }
+  if (cat === "TV") { let v = num(/(\d{2,3})\s*(?:inch|in\b|˝|")/i); if (v == null) { const x = src.match(/\b(\d{2,3})\b/); v = x ? parseFloat(x[1]) : null } if (v == null || v < 20 || v > 120) return null; return v < 43 ? "43˝↓" : v < 55 ? "43~54" : v < 65 ? "55~64" : v < 75 ? "65~74" : "75˝↑" }
+  return null
+}
+// 두 축 목록·매처 — 유형(form) + 스펙(size). 에어컨만 유형=설치형태·스펙=HP, 나머지는 유형=SEGMENTS·스펙=용량/인치
+const pmSizeList = (c: string) => (c === "에어컨" ? PM_AC_HP.map((x) => x.t) : c === "냉장고" ? REF_SIZE : c === "세탁기" ? WM_SIZE : c === "TV" ? TV_SIZE : [])
+const pmSizeHit = (cat: string, model: string, capacity: string | null, t: string) => { if (t === "전체") return true; if (cat === "에어컨") return acHpBucket(model) === t; return pmSizeBucket(cat, model, capacity) === t }
+const pmFormsFor = (c: string) => (c === "에어컨" ? AC_FORM.map((x) => x.t) : (SEGMENTS[c] ?? []).map((x) => x.t))
+const pmFormHit = (cat: string, model: string, t: string) => { if (t === "전체") return true; if (cat === "에어컨") return acFormHit(model, t); const s = (SEGMENTS[cat] ?? []).find((x) => x.t === t); return s ? s.re.test(model || "") : true }
 const pmMean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0)
 const pmTicks = (min: number, max: number, count = 5): number[] => {
   const range = (max - min) || 1, raw = range / count, mag = Math.pow(10, Math.floor(Math.log10(raw))), norm = raw / mag
@@ -390,6 +416,7 @@ function PmDrop({ label, sel, options, onSelect }: { label: string; sel: string;
 function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels: EnergyRow[] | null; stamp: string | null }) {
   const [cat, setCat] = React.useState("에어컨")
   const [spec, setSpec] = React.useState("전체")
+  const [form, setForm] = React.useState("전체")
   const [starF, setStarF] = React.useState("전체")
   const [shop, setShop] = React.useState("전체")
   const [q, setQ] = React.useState("")
@@ -398,8 +425,10 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const H = 560, PAD = 18, BOTTOM = 14, CARD_H = 56, CARD_W = 116, GAP = 50, GUT = 50
   const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
   const shopList = React.useMemo(() => Array.from(new Set(R.filter((r) => r.category === cat).map((r) => r.retailer))).filter(Boolean), [R, cat])
-  const segs = pmSpecsFor(cat)
-  const effSpec = spec === "전체" || segs.some((s) => s.t === spec) ? spec : "전체"
+  const sizeList = pmSizeList(cat)   // 스펙(사이즈) 축: 에어컨=HP · 냉장고=cu.ft · 세탁기=kg · TV=인치
+  const formList = pmFormsFor(cat)   // 유형(형태) 축: 에어컨=창문/벽걸이/스탠드 · 그 외=SEGMENTS(도어/패널/로드)
+  const effSpec = spec === "전체" || sizeList.includes(spec) ? spec : "전체"
+  const effForm = form === "전체" || formList.includes(form) ? form : "전체"
   const effShop = shop === "전체" || shopList.includes(shop) ? shop : "전체"
   const exact = effShop !== "전체" // 거래선 지정 시 평균이 아니라 그 거래선 정확 단가
 
@@ -413,7 +442,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const matchOf = React.useCallback((model: string) => { const m = doeNorm(DOE_CODE[cat] || "", model); for (const e of starIdx) if (m.includes(e.codeN)) return e; return null }, [starIdx, cat])
 
   const { cards, brands, ticks, gmin, gmax, count, matched } = React.useMemo(() => {
-    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSpecHit(cat, r.model, effSpec))
+    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSizeHit(cat, r.model, r.capacity, effSpec) && pmFormHit(cat, r.model, effForm))
     const empty = { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, count: f0.length, matched: 0 }
     if (f0.length < 3) return empty
     // 가격대는 카테고리별 절대 기준(PM_TIER_BANDS) — 상대백분위 아님
@@ -458,7 +487,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     cards.forEach((c) => { (cols[c.b] = cols[c.b] || []).push(c) })
     Object.values(cols).forEach((list) => { list.sort((a, b) => a.top - b.top); for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = Math.min(list[i - 1].top + GAP, maxTop) })
     return { cards, brands, ticks, gmin: axMin, gmax: axMax, count: f0.length, matched }
-  }, [R, cat, effSpec, effShop, starF, matchOf]) // eslint-disable-line
+  }, [R, cat, effSpec, effForm, effShop, starF, matchOf]) // eslint-disable-line
   const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
   const minW = Math.max(1040, GUT + brands.length * 138 + 20)
@@ -467,9 +496,10 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
       {/* 상단 가로 필터 — 드롭다운 + 뉴스형 검색 + 최종갱신 */}
       <div className="relative z-20 flex flex-wrap items-center gap-2">
-        <div className="w-[150px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setShop("전체") }} /></div>
-        {segs.length > 0 && <div className="w-[150px]"><PmDrop label="스펙" sel={effSpec} options={[{ k: "전체", t: "전체" }, ...segs.map((s) => ({ k: s.t, t: s.t }))]} onSelect={setSpec} /></div>}
-        <div className="w-[160px]"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
+        <div className="w-[140px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm("전체"); setShop("전체") }} /></div>
+        {formList.length > 0 && <div className="w-[136px]"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...formList.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>}
+        {sizeList.length > 0 && <div className="w-[130px]"><PmDrop label={cat === "에어컨" ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSpec} options={[{ k: "전체", t: "전체" }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
+        <div className="w-[150px]"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
         <div className="w-[140px]"><PmDrop label="에너지" sel={starF} options={["전체", "★5", "★4", "★3↓"].map((s) => ({ k: s, t: s }))} onSelect={setStarF} /></div>
         <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[300px]" : "w-[200px]")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
