@@ -172,7 +172,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
 
   return (
     <div className="flex flex-col gap-4">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes detFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes bkFade{from{opacity:0}to{opacity:1}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes detFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes bkFade{from{opacity:0}to{opacity:1}}@keyframes detSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
 
       <section className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white dark:from-indigo-500/10 dark:via-transparent dark:to-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
         <h1 className="text-[18px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">전체 지표 리스트 · 출처 검증</h1>
@@ -412,21 +412,24 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
             <div className="flex h-56 items-center justify-center text-[13px] text-gray-400">시계열 데이터 없음</div>
           ) : (
             <div className="flex flex-col gap-4">
-              {/* 차트 카드 — 경제지표 페이지와 동일한 LineChart */}
-              <div key={win} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "detFade .32s cubic-bezier(.16,1,.3,1) both" }}>
+              {/* 차트 카드 — 경제지표 페이지와 동일한 LineChart. 토글(Segmented)은 카드에 상주(리마운트 X)해 슬라이드 애니메이션 유지 */}
+              <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm">
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
                   <h4 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h4>
                   <span className="shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
                   <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: "전체" }]} /></span>
                 </div>
-                <div className="mt-1.5 flex min-h-[26px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">
-                  <Lg c="#4f46e5" t={row.label || row.indicator} b />
-                  <span className="ml-auto tabular-nums text-gray-500 dark:text-gray-400">최신 <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
-                </div>
                 {/* 축 글씨가 넓은 모달에서 과대해지지 않도록 폭 제한 + SVG 텍스트 축소 */}
                 <style>{".detchart svg text{font-size:6.8px}"}</style>
-                <div className="detchart mx-auto" style={{ maxWidth: 560 }}>
-                  <LineChart series={chSeries} labels={chLabels} decimals={chDec} unit={chUnit} />
+                {/* 기간 토글에 맞춰 차트/최신값만 부드럽게 리렌더(카드·토글은 유지) */}
+                <div key={"ch-" + win} style={{ animation: "detSwap .34s cubic-bezier(.16,1,.3,1) both" }}>
+                  <div className="mt-1.5 flex min-h-[26px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">
+                    <Lg c="#4f46e5" t={row.label || row.indicator} b />
+                    <span className="ml-auto tabular-nums text-gray-500 dark:text-gray-400">최신 <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
+                  </div>
+                  <div className="detchart mx-auto" style={{ maxWidth: 560 }}>
+                    <LineChart series={chSeries} labels={chLabels} decimals={chDec} unit={chUnit} />
+                  </div>
                 </div>
                 {/* 의미 + LG 인사이트 — 페이지 차트카드와 동일 위치 */}
                 <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {(CAT_MI[row.cat] || CAT_MI.etc).mean}</p>
@@ -435,7 +438,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                 </div>
               </div>
               {/* 엑셀형 표 카드 */}
-              <div key={win} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) .06s both" }}>
+              <div key={"tb-" + win} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "detSwap .36s cubic-bezier(.16,1,.3,1) .05s both" }}>
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
                   <span className="h-[15px] w-1 rounded bg-emerald-500" />
                   <h4 className="text-[13px] font-bold text-gray-900 dark:text-gray-50">시계열 표 <span className="text-[11px] font-semibold text-gray-400">· 전기·전년 대비</span></h4>
