@@ -379,12 +379,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
           <button type="button" onClick={onClose} className="shrink-0 rounded-full p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
         </div>
         <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-5 py-2.5">
-          <div className="flex items-center gap-1 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5">
-            {grans.map((g) => (
-              <button key={g} type="button" onClick={() => setGran(g as "month" | "quarter" | "year")}
-                className={"rounded-md px-2.5 py-1 text-[11.5px] font-semibold transition-all duration-200 " + (gran === g ? "bg-white dark:bg-gray-700 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600")}>{gname[g]}</button>
-            ))}
-          </div>
+          <span className="text-[11.5px] font-semibold text-gray-500 dark:text-gray-400">{gname[gran]} 시계열 <span className="font-normal text-gray-400 dark:text-gray-500">· 기간 토글로 조정</span></span>
           {canOpen && <button type="button" onClick={() => { onOpenChart(row.cat); onClose() }} className="ml-auto inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-[11.5px] font-semibold text-indigo-600 dark:text-indigo-400 transition-all hover:-translate-y-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 active:scale-95">경제지표에서 보기 →</button>}
           <button type="button" onClick={() => onExcel(row)} className={(canOpen ? "" : "ml-auto ") + "inline-flex items-center gap-1 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[11.5px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all hover:-translate-y-0.5 active:scale-95"}>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
