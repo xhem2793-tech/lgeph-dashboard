@@ -276,7 +276,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
         </div>
       </div>
 
-      <div className="max-h-[640px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
+      <div className="max-h-[1040px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
         <table className="w-full min-w-[1080px] table-fixed border-collapse text-[12px]">
           <colgroup>
             <col style={{ width: 54 }} /><col style={{ width: 58 }} /><col style={{ width: 132 }} /><col style={{ width: 32 }} /><col style={{ width: 66 }} /><col style={{ width: 80 }} />
@@ -507,7 +507,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const [q, setQ] = React.useState("")
   const [focused, setFocused] = React.useState(false)
   const R = rows ?? []
-  const H = 560, PAD = 18, BOTTOM = 14, CARD_H = 56, CARD_W = 116, GAP = 50, GUT = 50
+  const H = 940, PAD = 18, BOTTOM = 14, CARD_H = 56, CARD_W = 116, GAP = 50, GUT = 50
   const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
   const shopList = React.useMemo(() => Array.from(new Set(R.filter((r) => r.category === cat).map((r) => r.retailer))).filter(Boolean), [R, cat])
   const sizeList = pmSizeList(cat)   // 스펙(사이즈) 축: 에어컨=HP · 냉장고=cu.ft · 세탁기=kg · TV=인치
@@ -705,6 +705,9 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
           </footer>
         </div>
         <p className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">{exact ? pmShopLabel(effShop) + " 현금가" : "브랜드×모델 최저 현금가"} · New DOE ★ = energy_labels 모델코드 매칭({DOE_CODE[cat] || "-"}) · 브랜드당 취급수 상위 5개 모델 · 카드 클릭 시 그 가격의 원문 링크</p>
+        <p className="mt-1 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">
+          ※ 유형·스펙 분류는 유통 상품속성·모델명에서 추출(모델 단위로 전 거래선 공유). <b className="font-semibold text-gray-500 dark:text-gray-400">정확도 전브랜드 유형 96%·스펙 93%(자사 LG 96%·91%)</b> · 분류 안 되는 잔여는 <b className="font-semibold">기타</b>로 노출돼 필터에서 사라지지 않음 · 가격·스펙·프로모는 수집 가능하나 판매량·점유율은 GfK 패널(비공개) 필요
+        </p>
       </div>
     </div>
   )
