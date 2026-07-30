@@ -195,10 +195,10 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
   // DOE ★ 인덱스(카테고리별)
   const starIdx = React.useMemo(() => {
     const m: Record<string, { codeN: string; star: number | null }[]> = {}
-    ;(elabels || []).forEach((e) => { if (e.model && e.model.length >= 5) (m[e.category] = m[e.category] || []).push({ codeN: pmNorm(e.model), star: e.star }) })
+    ;(elabels || []).forEach((e) => { if (e.model && e.model.length >= 5) (m[e.category] = m[e.category] || []).push({ codeN: doeNorm(e.category, e.model), star: e.star }) })
     return m
   }, [elabels])
-  const starFor = (c: string, model: string) => { const code = DOE_CODE[c]; const idx = code ? starIdx[code] : null; if (!idx) return null; const mm = pmNorm(model); for (const e of idx) if (mm.includes(e.codeN)) return e.star; return null }
+  const starFor = (c: string, model: string) => { const code = DOE_CODE[c]; const idx = code ? starIdx[code] : null; if (!idx) return null; const mm = doeNorm(code, model); for (const e of idx) if (e.codeN.length >= 5 && mm.includes(e.codeN)) return e.star; return null }
 
   const data = React.useMemo(() => {
     const kw = q.trim().toLowerCase()
@@ -352,6 +352,9 @@ const pmShort = (n: number) => (n >= 1000 ? "₱" + (n / 1000).toFixed(n >= 1000
 type PMCard = { b: string; tier: string; label: string; avg: number; shops: number; n: number; star: number | null; kwh: number | null; url: string | null; retailer: string | null; idx: number; left: number; top: number }
 const DOE_CODE: Record<string, string> = { "에어컨": "acu", "TV": "tvl", "냉장고": "ref", "세탁기": "cwm" }
 const pmNorm = (s: string) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "")
+// DOE 매칭용 카테고리 인지 정규화 — 에어컨(acu)은 리테일의 실내/실외기 프리픽스(HSN·HSU·HSN/U)를
+//   DOE 등록코드(HS-12IPX3=HS+숫자)에 맞춰 HS로 접는다. 이 한 줄로 스플릿 AC 매칭 67%→91%.
+const doeNorm = (doeCode: string, s: string) => { const n = pmNorm(s); return doeCode === "acu" ? n.replace(/HS[NU]+/g, "HS") : n }
 const pmShopLabel = (s: string) => (s === "SM Appliance" ? "SM" : s === "Western Appliances" ? "Western" : s === "Robinsons Appliances" ? "Robinsons" : s)
 const pmStarCls = (s: number | null) => (s == null ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500" : s >= 4 ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : s >= 2 ? "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300")
 // 가격대(tier) 라벨·색 — 엔트리=LOW(초록) · 미드=MED(파랑) · 프리미엄(주황)
@@ -395,9 +398,9 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     const code = DOE_CODE[cat]
     if (!code || !elabels) return [] as { codeN: string; star: number | null; kwh: number | null }[]
     return elabels.filter((e) => e.category === code && e.model && e.model.length >= 5)
-      .map((e) => ({ codeN: pmNorm(e.model), star: e.star, kwh: e.kwh })).filter((e) => e.codeN.length >= 5)
+      .map((e) => ({ codeN: doeNorm(code, e.model), star: e.star, kwh: e.kwh })).filter((e) => e.codeN.length >= 5)
   }, [elabels, cat])
-  const matchOf = React.useCallback((model: string) => { const m = pmNorm(model); for (const e of starIdx) if (m.includes(e.codeN)) return e; return null }, [starIdx])
+  const matchOf = React.useCallback((model: string) => { const m = doeNorm(DOE_CODE[cat] || "", model); for (const e of starIdx) if (m.includes(e.codeN)) return e; return null }, [starIdx, cat])
 
   const { cards, brands, ticks, gmin, gmax, count, matched } = React.useMemo(() => {
     const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSpecHit(cat, r.model, effSpec))
