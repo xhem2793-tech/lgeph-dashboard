@@ -598,6 +598,42 @@ export async function competitorTable(max = 6000): Promise<PriceRow[]> {
   })
 }
 
+/** 경쟁사 일간 스냅샷 — LG 전용, v_competitor_daily. board 달력(과거 특정일 피벗)용. 하루×거래선×모델 최저가. */
+export type DailyRow = {
+  d: string
+  retailer: string
+  brand: string
+  category: string
+  model: string
+  code: string
+  capacity: string | null
+  price: number | null
+  srp: number | null
+  url: string | null
+}
+
+export async function competitorDaily(max = 12000): Promise<DailyRow[]> {
+  const page = 1000
+  const rows: any[] = []
+  for (let off = 0; off < max; off += page) {
+    const chunk = await sb("v_competitor_daily?select=*&order=d.desc&offset=" + off + "&limit=" + page)
+    rows.push(...(chunk ?? []))
+    if (!chunk || chunk.length < page) break
+  }
+  return rows.map((r: any) => ({
+    d: r.d,
+    retailer: r.retailer,
+    brand: r.brand,
+    category: classify(r.model, r.category),
+    model: clean(r.model),
+    code: modelCode(r.model, r.url),
+    capacity: r.capacity ?? null,
+    price: num(r.price),
+    srp: num(r.srp),
+    url: r.url ?? null,
+  }))
+}
+
 /** 정부 규제 동향 — 통관·물류·세무·관세·표준. Critical 우선, 최신순 */
 export type RegAlert = {
   id: number

@@ -3,6 +3,7 @@
 import React from "react"
 import {
   competitorTable,
+  competitorDaily,
   freshness,
   fmtStamp,
   promoIntensity,
@@ -10,6 +11,7 @@ import {
   energyLabels,
   type EnergyRow,
   type PriceRow,
+  type DailyRow,
   type PromoIntensity,
   type PromoCampaign,
 } from "@/lib/supabase"
@@ -150,15 +152,26 @@ const canonCode = (model: string, code: string | null) => {
   return toks.sort((a, b) => b.length - a.length)[0] || ""
 }
 type PivRow = { cat: string; brand: string; code: string; model: string; capacity: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
-function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; stamp: string | null; asOf: string; elabels: EnergyRow[] | null }) {
+function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp: string | null; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("전체")
   const [spec, setSpec] = React.useState("전체")
   const [q, setQ] = React.useState("")
   const [focused, setFocused] = React.useState(false)
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "min", asc: false })
-  const R = rows ?? []
-  const loading = rows === null
-  const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => R.some((r) => r.category === c && r.brand === "LG"))], [R])
+  const [selDate, setSelDate] = React.useState<string | null>(null)
+  const D = daily ?? []
+  const loading = daily === null
+  // 이력 날짜(내림차순) — 달력·이전/다음 이동은 실제 데이터가 있는 날짜만 대상
+  const dates = React.useMemo(() => Array.from(new Set(D.map((r) => r.d))).sort((a, b) => b.localeCompare(a)), [D])
+  const curDate = selDate && dates.includes(selDate) ? selDate : dates[0] ?? null
+  const curIdx = curDate ? dates.indexOf(curDate) : -1
+  const prevDate = curIdx >= 0 && curIdx < dates.length - 1 ? dates[curIdx + 1] : null
+  const isLatest = curIdx <= 0
+  const isOldest = curIdx < 0 || curIdx >= dates.length - 1
+  const goOlder = () => { if (!isOldest) setSelDate(dates[curIdx + 1]) }
+  const goNewer = () => { if (!isLatest) setSelDate(dates[curIdx - 1]) }
+  const pickDate = (v: string) => { if (!v) return; setSelDate(dates.find((d) => d <= v) ?? dates[dates.length - 1] ?? null) }
+  const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => D.some((r) => r.category === c))], [D])
   const segs = cat === "전체" ? [] : pmSpecsFor(cat)
   const effSpec = spec === "전체" || segs.some((s) => s.t === spec) ? spec : "전체"
   // DOE ★ 인덱스(카테고리별)
@@ -172,23 +185,28 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
   const data = React.useMemo(() => {
     const seg = segs.find((s) => s.t === effSpec)
     const kw = q.trim().toLowerCase()
-    const f = R.filter((r) => r.p0 != null && r.brand === "LG" && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
-    const g: Record<string, PriceRow[]> = {}
+    // 전일(직전 데이터일) 최저가 인덱스 — canonCode|거래선 → 가격(▼▲ 전일 대비)
+    const prevIdx: Record<string, number> = {}
+    D.filter((r) => r.d === prevDate && r.price != null).forEach((r) => { const cc = canonCode(r.model, r.code); if (!cc) return; const k = cc + "|" + r.retailer; prevIdx[k] = Math.min(prevIdx[k] ?? Infinity, r.price as number) })
+    const f = D.filter((r) => r.d === curDate && r.price != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
+    const g: Record<string, DailyRow[]> = {}
     f.forEach((r) => { const cc = canonCode(r.model, r.code); (g[r.brand + "|" + cc] = g[r.brand + "|" + cc] || []).push(r) })
     const out: PivRow[] = Object.values(g).map((list) => {
       const r0 = list[0]
+      const cc = canonCode(r0.model, r0.code)
       const cells = BOARD_SHOPS.map((s) => {
         const ms = list.filter((r) => r.retailer === s.k)
         if (!ms.length) return null
-        const best = ms.reduce((a, b) => ((b.p0 as number) < (a.p0 as number) ? b : a))
-        return { price: best.p0 as number, delta: best.deltaPhp ?? null, url: best.url ?? null }
+        const best = ms.reduce((a, b) => ((b.price as number) < (a.price as number) ? b : a))
+        const pv = prevIdx[cc + "|" + s.k]
+        return { price: best.price as number, delta: pv != null ? (best.price as number) - pv : null, url: best.url ?? null }
       })
       const prices = cells.filter((c): c is { price: number; delta: number | null; url: string | null } => c != null).map((c) => c.price)
       const min = prices.length ? Math.min(...prices) : null
       const max = prices.length ? Math.max(...prices) : null
       const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
       const srps = list.map((x) => x.srp).filter((v): v is number => v != null)
-      return { cat: r0.category, brand: r0.brand, code: canonCode(r0.model, r0.code) || r0.code, model: r0.model, capacity: pmSpecOf(r0.category, r0.model, r0.capacity), srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
+      return { cat: r0.category, brand: r0.brand, code: cc || r0.code, model: r0.model, capacity: pmSpecOf(r0.category, r0.model, r0.capacity), srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
     })
     const dir = sort.asc ? 1 : -1
     const shopIdx = BOARD_SHOPS.findIndex((s) => s.k === sort.k)
@@ -199,7 +217,7 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
       return (typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y))) * dir
     })
     return out
-  }, [R, cat, effSpec, q, sort]) // eslint-disable-line
+  }, [D, curDate, prevDate, cat, effSpec, q, sort]) // eslint-disable-line
   const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
   const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
 
@@ -210,6 +228,18 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
         <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10.5px] font-bold text-white shadow-sm">LG</span>
         <div className="w-[150px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체") }} /></div>
         {segs.length > 0 && <div className="w-[140px]"><PmDrop label="스펙" sel={effSpec} options={[{ k: "전체", t: "전체" }, ...segs.map((s) => ({ k: s.t, t: s.t }))]} onSelect={setSpec} /></div>}
+        {/* 날짜 네비게이터 — 과거 특정일 스냅샷(◀ 이전일 · ▶ 다음일 · 📅 달력에서 선택) */}
+        {dates.length > 0 && (
+          <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-1 py-0.5 shadow-sm">
+            <button type="button" onClick={goOlder} disabled={isOldest} aria-label="이전 날짜" className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
+            <span className="min-w-[74px] text-center text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{curDate ? md(curDate) : "—"}{isLatest && <span className="ml-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[8.5px] font-semibold text-emerald-700 dark:text-emerald-300">최신</span>}</span>
+            <button type="button" onClick={goNewer} disabled={isLatest} aria-label="다음 날짜" className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg></button>
+            <label className="relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400" title="달력에서 날짜 선택">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+              <input type="date" value={curDate ?? ""} min={dates[dates.length - 1]} max={dates[0]} onChange={(e) => pickDate(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label="날짜 선택" />
+            </label>
+          </div>
+        )}
         <div className="ml-auto flex items-center gap-3">
           <div className={"group relative transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[320px]" : "w-[220px]")}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
@@ -217,7 +247,7 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
               className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
             {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
           </div>
-          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최종 {stamp ? fmtStamp(stamp) : md(asOf)}<span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
+          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최종 {stamp ? fmtStamp(stamp) : curDate ? md(curDate) : "—"}<span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
         </div>
       </div>
 
@@ -249,7 +279,7 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
             ) : data.length === 0 ? (
               <tr><td colSpan={BOARD_SHOPS.length + 8} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">조건에 맞는 모델 없음</td></tr>
             ) : data.slice(0, 300).map((r, ri) => (
-              <tr key={r.brand + r.code + ri} style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s" }} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
+              <tr key={curDate + r.brand + r.code + ri} style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s" }} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
                 <td className="px-2 py-1.5 font-semibold text-indigo-700 dark:text-indigo-300">{r.brand}</td>
                 <td className="truncate px-2 py-1.5 text-[10.5px] text-gray-500 dark:text-gray-400">{r.cat}</td>
                 <td className="truncate px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code}</td>
@@ -273,7 +303,7 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
           </tbody>
         </table>
       </div>
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">LG 모델 × 5개 거래선 오늘가 피벗(경쟁사 제외·유통별 가격차 점검) · 셀=거래선 최저 현금가(클릭→원문)·행 최저가 초록·고가순 정렬 · ▼▲=전일 대비 · 스프레드=(최고−최저)/최저 ≥5% 적색 · ★=New DOE 등급 · {Math.min(data.length, 300)}/{data.length}행 · 기준일 {md(asOf)}{stamp ? " · 최종 " + fmtStamp(stamp) : ""}</p>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">LG 모델 × {BOARD_SHOPS.length}개 거래선 {curDate ? md(curDate) : ""} 스냅샷(경쟁사 제외·유통별 가격차 점검) · 셀=거래선 최저 현금가(클릭→원문)·행 최저가 초록·고가순 정렬 · ▼▲={prevDate ? md(prevDate) + " 대비" : "전일 대비"} · 스프레드=(최고−최저)/최저 ≥5% 적색 · ★=New DOE 등급 · {Math.min(data.length, 300)}/{data.length}행{stamp ? " · 최종 " + fmtStamp(stamp) : ""}</p>
     </div>
   )
 }
@@ -726,6 +756,7 @@ export default function Competitors() {
   const [band, setBand] = React.useState("전체")
   const [onlyMoved, setOnlyMoved] = React.useState(false)
   const [rows, setRows] = React.useState<PriceRow[] | null>(null)
+  const [daily, setDaily] = React.useState<DailyRow[] | null>(null)
   const [stamp, setStamp] = React.useState<string | null>(null)
   const [q, setQ] = React.useState("")
   const [priceOpen, setPriceOpen] = React.useState(false)
@@ -742,6 +773,9 @@ export default function Competitors() {
     competitorTable(4000)
       .then((rs) => setRows(rs.filter((r) => brandShown(r.brand, r.category))))
       .catch(() => setRows([]))
+    competitorDaily()
+      .then(setDaily)
+      .catch(() => setDaily([]))
     promoIntensity(14)
       .then(setPromo)
       .catch(() => setPromo([]))
@@ -918,7 +952,7 @@ export default function Competitors() {
           </header>)}
 
           {view === "board" ? (
-            <BoardView rows={rows} stamp={stamp} asOf={asOf} elabels={elabels} />
+            <BoardView daily={daily} stamp={stamp} elabels={elabels} />
           ) : view === "asp" ? (
             <PositioningMatrix rows={rows} elabels={elabels} stamp={stamp} />
           ) : view === "promo" ? (
