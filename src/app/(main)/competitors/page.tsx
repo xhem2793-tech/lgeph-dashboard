@@ -11,6 +11,7 @@ import {
   type PromoIntensity,
   type PromoCampaign,
 } from "@/lib/supabase"
+import { Segmented } from "@/components/Segmented"
 
 /** 경쟁사 가격 — 좌 1/4 메뉴판 + 우 3/4 콘텐츠.
  *
@@ -154,36 +155,69 @@ const BOARD_GROUPS: BoardGroup[] = [
   ] },
 ]
 
-type Cell = { live: boolean; price: number | null; n: number }
+type Cell = { live: boolean; price: number | null; n: number; delta: number | null; disc: number | null; isLow: boolean; heat: string }
+
+/** 히트맵 조건부 서식 — 행 내 저가(연녹)→고가(연적) 3-stop 보간(디자인 시안 1c 방식). */
+const HEAT_STOPS = [[209, 239, 214], [253, 246, 201], [250, 214, 214]]
+const heatRgb = (t: number) => {
+  const lerp = (a: number[], b: number[], k: number) => a.map((v, i) => Math.round(v + (b[i] - v) * k))
+  const c = t < 0.5 ? lerp(HEAT_STOPS[0], HEAT_STOPS[1], t / 0.5) : lerp(HEAT_STOPS[1], HEAT_STOPS[2], (t - 0.5) / 0.5)
+  return `rgb(${c[0]},${c[1]},${c[2]})`
+}
+const deltaFmt = (d: number | null) => (d == null || d === 0 ? "—" : (d < 0 ? "▼ " : "▲ ") + peso(Math.abs(d)).slice(1))
+const deltaCol = (d: number | null) => (d == null || d === 0 ? "text-gray-400 dark:text-gray-500" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")
 
 function BoardView({ rows, stamp, asOf }: { rows: PriceRow[] | null; stamp: string | null; asOf: string }) {
+  const [mode, setMode] = React.useState<"표준" | "히트맵">("표준")
   const R = rows ?? []
   const loading = rows === null
   const compute = (row: Anchor): { cells: Cell[]; min: number | null; spread: number | null } => {
     const cells: Cell[] = BOARD_SHOPS.map((s) => {
-      if (!s.live) return { live: false, price: null, n: 0 }
+      if (!s.live) return { live: false, price: null, n: 0, delta: null, disc: null, isLow: false, heat: "" }
       const ms = R.filter((r) => r.retailer === s.k && r.p0 != null && row.match(r))
-      if (!ms.length) return { live: true, price: null, n: 0 }
-      return { live: true, price: Math.min(...ms.map((r) => r.p0 as number)), n: ms.length }
+      if (!ms.length) return { live: true, price: null, n: 0, delta: null, disc: null, isLow: false, heat: "" }
+      const best = ms.reduce((a, b) => ((b.p0 as number) < (a.p0 as number) ? b : a))
+      return { live: true, price: best.p0 as number, n: ms.length, delta: best.deltaPhp ?? null, disc: best.discountPct ?? null, isLow: false, heat: "" }
     })
     const prices = cells.filter((c) => c.live && c.price != null).map((c) => c.price as number)
     const min = prices.length ? Math.min(...prices) : null
     const max = prices.length ? Math.max(...prices) : null
+    cells.forEach((c) => {
+      if (c.live && c.price != null && min != null) {
+        c.isLow = c.price === min
+        c.heat = max != null && max > min ? heatRgb((c.price - min) / (max - min)) : heatRgb(0)
+      }
+    })
     const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
     return { cells, min, spread }
   }
+  const heat = mode === "히트맵"
   return (
     <div className="flex flex-col gap-2">
-      <p className="text-[11.5px] text-gray-500 dark:text-gray-400">
-        5개 거래선 × 대표 제품 <b className="text-gray-700 dark:text-gray-200">오늘가</b> 비교 · 행 내 <span className="font-semibold text-emerald-600 dark:text-emerald-400">최저가 강조</span> · ⭐<span className="font-medium">동일 SKU</span>는 3사 같은 모델 · Western·Robinsons <span className="font-medium text-gray-400 dark:text-gray-500">수집 예정</span>
-      </p>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <p className="text-[11.5px] text-gray-500 dark:text-gray-400">
+          5개 거래선 × 대표 제품 <b className="text-gray-700 dark:text-gray-200">오늘가</b> · 행 내 <span className="font-semibold text-emerald-600 dark:text-emerald-400">최저가 강조</span> · ⭐<span className="font-medium">동일 SKU</span>는 3사 같은 모델 · Western·Robinsons <span className="font-medium text-gray-400 dark:text-gray-500">수집 예정</span>
+        </p>
+        <div className="ml-auto flex items-center gap-2.5">
+          {heat ? (
+            <span className="flex items-center gap-1.5 text-[10.5px] text-gray-500 dark:text-gray-400">싸다<span className="inline-block h-2.5 w-24 rounded-full" style={{ background: "linear-gradient(90deg,#d1efd6,#fdf6c9,#fad6d6)" }} />비싸다</span>
+          ) : (
+            <span className="flex items-center gap-2 text-[10.5px] text-gray-500 dark:text-gray-400">
+              <span className="inline-flex items-center gap-1"><span className="rounded bg-emerald-100 dark:bg-emerald-500/15 px-1 text-[8.5px] font-bold text-emerald-700 dark:text-emerald-300">최저</span>행 최저가</span>
+              <span className="inline-flex items-center gap-1"><span className="text-emerald-600">▼</span>전일↓</span>
+              <span className="inline-flex items-center gap-1"><span className="text-rose-600">▲</span>전일↑</span>
+            </span>
+          )}
+          <Segmented size="sm" value={mode} onChange={(k) => setMode(k as "표준" | "히트맵")} options={[{ k: "표준", label: "표준" }, { k: "히트맵", label: "히트맵" }]} />
+        </div>
+      </div>
       <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full min-w-[820px] border-collapse text-[12px]">
+        <table className="w-full min-w-[860px] border-collapse text-[12px]">
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
             <tr>
-              <th className="whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">제품</th>
+              <th className="whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">제품 / 모델</th>
               {BOARD_SHOPS.map((s) => (
-                <th key={s.k} className={"whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-3 py-2 text-right font-semibold " + (s.live ? "text-gray-600 dark:text-gray-300" : "text-gray-400 dark:text-gray-600")}>
+                <th key={s.k} className={"whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-3 py-2 " + (heat ? "text-center " : "text-right ") + "font-semibold " + (s.live ? "text-gray-600 dark:text-gray-300" : "text-gray-400 dark:text-gray-600")}>
                   {s.label}
                   {!s.live && <span className="ml-1 rounded bg-gray-100 dark:bg-gray-800 px-1 py-px text-[8.5px] font-medium text-gray-400 dark:text-gray-500">수집예정</span>}
                 </th>
@@ -202,33 +236,50 @@ function BoardView({ rows, stamp, asOf }: { rows: PriceRow[] | null; stamp: stri
                   </td>
                 </tr>
                 {g.rows.map((row, ri) => {
-                  const { cells, min, spread } = compute(row)
+                  const { cells, spread } = compute(row)
                   return (
                     <tr key={row.id} style={{ animation: "rowIn .3s ease both", animationDelay: Math.min(ri, 8) * 0.03 + "s" }}
-                      className={"border-b border-gray-100 dark:border-gray-800 transition-colors " + (row.lg ? "bg-indigo-50/40 dark:bg-indigo-500/5 hover:bg-indigo-50/70 dark:hover:bg-indigo-500/10" : "hover:bg-gray-50 dark:hover:bg-gray-800/40")}>
-                      <td className={"whitespace-nowrap border-r px-3 py-1.5 " + (row.lg ? "border-indigo-100 dark:border-indigo-500/20" : "border-gray-100 dark:border-gray-800")}>
+                      className={"border-b border-gray-100 dark:border-gray-800 transition-colors " + (row.lg && !heat ? "bg-indigo-50/40 dark:bg-indigo-500/5 hover:bg-indigo-50/70 dark:hover:bg-indigo-500/10" : "hover:bg-gray-50 dark:hover:bg-gray-800/40")}>
+                      <td className={"whitespace-nowrap border-r px-3 py-2 align-top " + (row.lg ? "border-indigo-100 dark:border-indigo-500/20" : "border-gray-100 dark:border-gray-800")}>
                         <span className="flex items-center gap-1.5">
                           {row.lg && <span className="h-3.5 w-1 shrink-0 rounded bg-indigo-500" />}
                           {row.sku && <span title="3사 동일 모델" className="shrink-0 text-[10px]">⭐</span>}
-                          <span className={"font-medium " + (row.lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{row.label}</span>
+                          <span className={"font-semibold " + (row.lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{row.label}</span>
                         </span>
                         {row.note && <span className="mt-0.5 block pl-2.5 text-[10px] text-gray-400 dark:text-gray-500">{row.note}</span>}
                       </td>
                       {cells.map((c, i) => (
-                        <td key={i} className={"whitespace-nowrap px-3 py-1.5 text-right tabular-nums " + (!c.live ? "text-gray-300 dark:text-gray-700" : c.price == null ? "text-gray-300 dark:text-gray-600" : c.price === min ? "font-bold text-emerald-700 dark:text-emerald-300" : "text-gray-800 dark:text-gray-100")}>
-                          {!c.live ? (
-                            <span className="text-[11px]">·</span>
-                          ) : c.price == null ? (
-                            "—"
-                          ) : (
-                            <span className="inline-flex items-center gap-1">
-                              {c.price === min && min != null && <span className="rounded bg-emerald-100 dark:bg-emerald-500/15 px-1 py-px text-[8.5px] font-bold text-emerald-700 dark:text-emerald-300">최저</span>}
-                              {peso(c.price)}
-                            </span>
-                          )}
-                        </td>
+                        heat ? (
+                          <td key={i} className="border-l border-white dark:border-gray-900 px-2 py-2 text-center align-middle" style={c.live && c.price != null ? { background: c.heat } : undefined}>
+                            {!c.live ? <span className="text-[11px] text-gray-300 dark:text-gray-700">·</span> : c.price == null ? <span className="text-gray-300 dark:text-gray-600">—</span> : (
+                              <>
+                                <div className="text-[13px] font-bold tabular-nums text-gray-900">{peso(c.price)}</div>
+                                <div className={"text-[10px] tabular-nums " + (c.delta == null || c.delta === 0 ? "text-gray-500" : c.delta < 0 ? "text-emerald-700" : "text-rose-700")}>{deltaFmt(c.delta)}</div>
+                              </>
+                            )}
+                          </td>
+                        ) : (
+                          <td key={i} className="border-l border-gray-100 dark:border-gray-800 px-3 py-2 align-top" style={c.live && c.isLow ? { background: "rgba(16,185,129,0.06)" } : undefined}>
+                            {!c.live ? (
+                              <div className="text-right text-[11px] text-gray-300 dark:text-gray-700">·</div>
+                            ) : c.price == null ? (
+                              <div className="text-right text-gray-300 dark:text-gray-600">—</div>
+                            ) : (
+                              <div className="flex flex-col items-end gap-1">
+                                <div className="flex items-baseline gap-1.5">
+                                  <span className={"text-[14px] font-bold tabular-nums " + (c.isLow ? "text-emerald-700 dark:text-emerald-300" : "text-gray-900 dark:text-gray-50")}>{peso(c.price)}</span>
+                                  <span className={"text-[10px] tabular-nums " + deltaCol(c.delta)}>{deltaFmt(c.delta)}</span>
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  {c.disc != null && c.disc > 0 && <span className="rounded bg-amber-50 dark:bg-amber-500/10 px-1 py-px text-[9px] font-bold tabular-nums text-amber-700 dark:text-amber-300">-{c.disc.toFixed(0)}%</span>}
+                                  {c.isLow && <span className="rounded bg-emerald-600 px-1.5 py-px text-[8.5px] font-bold text-white">최저</span>}
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        )
                       ))}
-                      <td className="whitespace-nowrap border-l border-gray-100 dark:border-gray-800 px-3 py-1.5 text-right tabular-nums">
+                      <td className="whitespace-nowrap border-l border-gray-200 dark:border-gray-800 px-3 py-2 text-right align-top tabular-nums">
                         {spread == null ? <span className="text-gray-300 dark:text-gray-600">—</span> : (
                           <span className={"font-semibold " + (spread >= 5 ? "text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>{spread.toFixed(1)}%</span>
                         )}
@@ -245,7 +296,7 @@ function BoardView({ rows, stamp, asOf }: { rows: PriceRow[] | null; stamp: stri
         <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 시사점</span>
         <span>⭐동일 SKU 행의 <b>스프레드 ≥5%</b>(적색)는 채널 간 가격 정합성·MAP 이슈 신호 — 우선 점검 대상. 대량존(엔트리 인버터·43″)은 현지·중국 브랜드와 직접 경합하므로 프로모 대응 트리거로 활용.</span>
       </p>
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">셀 = 각 거래선 매칭 리스팅의 오늘가 최저값 · 스프레드 = (최고−최저)/최저 · 기준일 {md(asOf)}{stamp ? " · 최종 " + fmtStamp(stamp) : ""}</p>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">셀 = 각 거래선 매칭 리스팅의 오늘가 최저값 · 전일변동·할인율(SRP 대비)은 해당 리스팅 기준 · 스프레드 = (최고−최저)/최저 · 기준일 {md(asOf)}{stamp ? " · 최종 " + fmtStamp(stamp) : ""}</p>
     </div>
   )
 }
