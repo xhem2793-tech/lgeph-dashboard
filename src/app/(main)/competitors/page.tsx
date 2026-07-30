@@ -73,7 +73,7 @@ const BRANDS = [...SHOWN_BRANDS, ...AC_EXTRA_BRANDS]
 // 카테고리 기준 노출 여부: 공통 9개는 전 카테고리, Kolin·Daikin은 에어컨만
 const brandShown = (brand: string, category: string) =>
   SHOWN_BRANDS.includes(brand) || (category === "에어컨" && AC_EXTRA_BRANDS.includes(brand))
-const SHOPS = ["Anson's", "Abenson", "SM Appliance", "Western Appliances", "Robinsons Appliances", "Emcor"]
+const SHOPS = ["Anson's", "Abenson", "SM Appliance", "Western Appliances", "Robinsons Appliances", "Emcor", "Addessa"]
 
 /** 세그먼트 — 유통 매장이 실제로 진열을 나누는 축(설치형태·도어·급) */
 const SEGMENTS: Record<string, { t: string; re: RegExp }[]> = {
@@ -130,6 +130,7 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
   { k: "Robinsons Appliances", label: "Robinsons", live: true },
   { k: "Western Appliances", label: "Western", live: true },
   { k: "Emcor", label: "Emcor", live: true },
+  { k: "Addessa", label: "Addessa", live: true },
 ]
 
 const deltaCol = (d: number | null) => (d == null || d === 0 ? "text-gray-400 dark:text-gray-500" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")
