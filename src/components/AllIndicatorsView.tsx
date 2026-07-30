@@ -34,15 +34,14 @@ function fmtVal(v: number): string {
 // 값 단위 추론(%/₱/$/지수/℃/명) — 라벨·지표키 기반 휴리스틱
 function inferUnit(indicator: string, label: string): { prefix?: string; suffix?: string; unit: string; note: string } {
   const s = (indicator + " " + (label || "")).toLowerCase()
-  if (/유가|oil_|휘발유|경유|디젤|등유|gasoline|diesel|kerosene|ron9|meralco|요금|소매가/.test(s)) return { prefix: "₱", unit: "₱", note: "₱(페소)" }
+  if (/유가|oil_|휘발유|경유|디젤|등유|gasoline|diesel|kerosene|ron9|meralco|요금|소매가|임금|wage|grdp|금액/.test(s)) return { prefix: "₱", unit: "₱", note: "₱(페소)" }
   if (/brent|수출액|수입액|송금|remittance|fdi|reserves|_usd|market_usd|외환보유|gni|gdp_total/.test(s)) return { prefix: "$", unit: "$", note: "$(미달러)" }
   if (/php_usd|환율|exchange/.test(s)) return { prefix: "₱", unit: "₱/$", note: "₱/$(환율)" }
-  if (/임금|wage/.test(s)) return { prefix: "₱", unit: "₱", note: "₱(페소)" }
-  if (/율|률|금리|증가율|상승률|비중|참가율|점유|inflation|growth|_yoy|ratio|_pct|share|forecast|rate$|_rate\b/.test(s)) return { suffix: "%", unit: "%", note: "% (율)" }
-  if (/지수|index|\bcci\b|\bbci\b|rppi|psei|_ci_|confidence|sentiment|composite|gini/.test(s)) return { suffix: "", unit: "지수", note: "지수(index)" }
+  if (/율|률|금리|증가율|상승률|비중|참가율|점유|inflation|growth|_yoy|yoy|ratio|_pct|_gdp|share|forecast|rate$|_rate\b|ppi/.test(s)) return { suffix: "%", unit: "%", note: "% (율)" }
+  if (/지수|index|\bcci\b|\bbci\b|rppi|psei|_ci_|confidence|sentiment|composite|gini|cpi_/.test(s)) return { suffix: "", unit: "지수", note: "지수(index)" }
   if (/기온|temperature/.test(s)) return { suffix: "℃", unit: "℃", note: "℃(기온)" }
   if (/cdd|냉방도일/.test(s)) return { suffix: "", unit: "CDD", note: "냉방도일" }
-  if (/인구|population|취업자|employed|고용|households|가구/.test(s)) return { suffix: "", unit: "명·수", note: "명·수" }
+  if (/인구|population|취업자|employed|고용|households|가구|arrivals|관광객|입국자/.test(s)) return { suffix: "", unit: "명·수", note: "명·수" }
   return { suffix: "", unit: "값", note: "값" }
 }
 
@@ -296,8 +295,20 @@ function IndTable({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: s
 function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onClose: () => void; onExcel: (r: Row) => void; onOpenChart: (cat: string) => void }) {
   const [series, setSeries] = useState<{ date: string; value: number }[] | null>(null)
   const [gran, setGran] = useState<"month" | "quarter" | "year">("month")
+  const [win, setWin] = useState("전체")
 
   useEffect(() => { indicatorSeries(row.indicator).then(setSeries).catch(() => setSeries([])) }, [row.indicator])
+
+  // 기간 윈도우 필터(1Y/2Y/5Y/전체) — 페이지 차트와 동일
+  const winSeries = useMemo(() => {
+    if (!series || series.length < 2) return series || []
+    const yrs = win === "1Y" ? 1 : win === "2Y" ? 2 : win === "5Y" ? 5 : 100
+    if (yrs >= 100) return series
+    const last = series[series.length - 1].date
+    const cutoff = (Number(last.slice(0, 4)) - yrs) + last.slice(4)
+    const f = series.filter((p) => p.date >= cutoff)
+    return f.length >= 2 ? f : series.slice(-Math.min(2, series.length))
+  }, [series, win])
 
   // 네이티브 주기 추정(월/분기/연) → 사용 가능한 granularity 결정
   const native = useMemo(() => {
@@ -315,7 +326,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
 
   // 리샘플 + 전기/전년 대비
   const table = useMemo(() => {
-    if (!series || !series.length) return []
+    if (!winSeries || !winSeries.length) return []
     const keyOf = (d: string) => {
       const y = d.slice(0, 4), m = Number(d.slice(5, 7))
       if (gran === "year") return y
@@ -323,7 +334,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
       return y + "." + String(m).padStart(2, "0")
     }
     const map = new Map<string, number>()
-    for (const p of series) map.set(keyOf(p.date), p.value) // asc → 마지막(최신)이 대표
+    for (const p of winSeries) map.set(keyOf(p.date), p.value) // asc → 마지막(최신)이 대표
     const keys = Array.from(map.keys())
     const prevYearKey = (k: string) => {
       if (gran === "year") return String(Number(k) - 1)
@@ -338,7 +349,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
       const yoy = ya != null && ya !== 0 ? ((v - ya) / Math.abs(ya)) * 100 : null
       return { k, v, mom, yoy }
     }).reverse() // 최신 우선
-  }, [series, gran])
+  }, [winSeries, gran])
 
   const label = (k: string) => (gran === "year" ? k + "년" : gran === "quarter" ? k.replace("-", " ") : k.slice(0, 4) + "." + Number(k.slice(5)) + "월")
   const pct = (x: number | null) => (x == null ? "—" : (x >= 0 ? "+" : "") + x.toFixed(1) + "%")
@@ -353,7 +364,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
   const chUnit = u.suffix || (u.prefix ? " " + u.prefix : u.unit && u.unit !== "값" ? " " + u.unit : "") // 툴팁 단위
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose} style={{ animation: "bkFade .2s ease both" }}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose} style={{ animation: "bkFade .2s ease both" }}>
       <div className="flex max-h-[88vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: "detFade .3s cubic-bezier(.16,1,.3,1) both" }}>
         <div className="flex items-start gap-3 border-b border-gray-100 dark:border-gray-800 px-5 py-3.5">
           <div className="min-w-0 flex-1">
@@ -389,9 +400,10 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
             <div className="flex flex-col gap-4">
               {/* 차트 카드 — 경제지표 페이지와 동일한 LineChart */}
               <div key={gran} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) both" }}>
-                <div className="flex items-center gap-1.5">
+                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
                   <h4 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h4>
-                  <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
+                  <span className="shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
+                  <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: "전체" }]} /></span>
                 </div>
                 <div className="mt-1.5 flex min-h-[26px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">
                   <Lg c="#4f46e5" t={row.label || row.indicator} b />
