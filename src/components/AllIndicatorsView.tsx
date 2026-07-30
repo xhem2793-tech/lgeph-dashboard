@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
+import { createPortal } from "react-dom"
 import { dataProvenance, allIndicatorLatest, indicatorSeries, fmtStamp, type Provenance } from "@/lib/supabase"
 import { sourceLink } from "@/components/DataVerification"
 import { Segmented } from "@/components/Segmented"
@@ -380,8 +381,9 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
   const chDec = Math.abs(chartData[chartData.length - 1]?.v ?? 0) < 20 ? 1 : 0
   const chUnit = u.suffix || (u.prefix ? " " + u.prefix : u.unit && u.unit !== "값" ? " " + u.unit : "") // 툴팁 단위
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4" onClick={onClose} style={{ animation: "bkFade .2s ease both" }}>
+  if (typeof document === "undefined") return null
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6" onClick={onClose} style={{ animation: "bkFade .2s ease both" }}>
       <div className="flex max-h-[88vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: "detFade .3s cubic-bezier(.16,1,.3,1) both" }}>
         <div className="flex items-start gap-3 border-b border-gray-100 dark:border-gray-800 px-5 py-3.5">
           <div className="min-w-0 flex-1">
@@ -462,7 +464,8 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
         </div>
         <div className="border-t border-gray-100 dark:border-gray-800 px-5 py-2 text-[10px] text-gray-400 dark:text-gray-500">{gname[gran]} 시계열 · 값=기간 말 관측 · 상승 <span className="text-rose-500">적색</span>/하락 <span className="text-emerald-500">녹색</span> · 출처 {row.source}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 
