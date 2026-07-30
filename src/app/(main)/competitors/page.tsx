@@ -124,6 +124,16 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
 
 const deltaCol = (d: number | null) => (d == null || d === 0 ? "text-gray-400 dark:text-gray-500" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")
 
+// 스펙 도출 — capacity 필드가 비면 모델명에서 HP/인치/용량을 추출
+const pmSpecOf = (cat: string, model: string, capacity: string | null) => {
+  if (capacity && capacity.trim()) return capacity.trim()
+  const m = model || ""
+  if (cat === "에어컨") { const hp = m.match(/(\d(?:\.\d)?)\s?HP/i); return hp ? hp[1] + "HP" : "" }
+  if (cat === "TV") { const inch = m.match(/(\d{2,3})\s?(?:인치|형|["”]|in\b)/i) || m.match(/(?:^|\s)(\d{2,3})(?=[A-Za-z])/); const v = inch ? Number(inch[1]) : 0; return v >= 24 && v <= 120 ? v + '"' : "" }
+  if (cat === "냉장고") { const cf = m.match(/(\d{1,3}(?:\.\d)?)\s?(?:cu\.?\s?ft|cuft|큐피트|cu\.f)/i); const L = m.match(/(\d{2,4})\s?L\b/i); return cf ? cf[1] + "cuft" : L ? L[1] + "L" : "" }
+  if (cat === "세탁기") { const kg = m.match(/(\d{1,2}(?:\.\d)?)\s?kg/i); return kg ? kg[1] + "kg" : "" }
+  return ""
+}
 type PivRow = { cat: string; brand: string; code: string; model: string; capacity: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
 function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; stamp: string | null; asOf: string; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("전체")
@@ -163,7 +173,7 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
       const max = prices.length ? Math.max(...prices) : null
       const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
       const srps = list.map((x) => x.srp).filter((v): v is number => v != null)
-      return { cat: r0.category, brand: r0.brand, code: r0.code, model: r0.model, capacity: r0.capacity ?? null, srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
+      return { cat: r0.category, brand: r0.brand, code: r0.code, model: r0.model, capacity: pmSpecOf(r0.category, r0.model, r0.capacity), srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
     })
     const dir = sort.asc ? 1 : -1
     const shopIdx = BOARD_SHOPS.findIndex((s) => s.k === sort.k)
@@ -199,18 +209,18 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
       <div className="max-h-[640px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
         <table className="w-full min-w-[1080px] table-fixed border-collapse text-[12px]">
           <colgroup>
-            <col style={{ width: 58 }} /><col style={{ width: 52 }} /><col style={{ width: 132 }} /><col style={{ width: 64 }} /><col style={{ width: 80 }} /><col style={{ width: 30 }} />
+            <col style={{ width: 54 }} /><col style={{ width: 58 }} /><col style={{ width: 132 }} /><col style={{ width: 32 }} /><col style={{ width: 66 }} /><col style={{ width: 80 }} />
             {BOARD_SHOPS.map((s) => <col key={s.k} style={{ width: 100 }} />)}
             <col style={{ width: 86 }} /><col style={{ width: 70 }} />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
             <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">분류</th>
               <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">브랜드</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-left" onClick={() => setS("code")}>모델{arrow("code")}</th>
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">스펙</th>
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-right">SRP</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">분류</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left" onClick={() => setS("code")}>모델{arrow("code")}</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title="New DOE 에너지등급">★</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">스펙</th>
+              <th className="whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-right">SRP</th>
               {BOARD_SHOPS.map((s) => (
                 <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-right " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
               ))}
@@ -225,12 +235,12 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
               <tr><td colSpan={BOARD_SHOPS.length + 8} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">조건에 맞는 모델 없음</td></tr>
             ) : data.slice(0, 300).map((r, ri) => (
               <tr key={r.brand + r.code + ri} style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s" }} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
-                <td className="truncate px-2 py-1.5 text-[10.5px] text-gray-500 dark:text-gray-400">{r.cat}</td>
                 <td className="px-2 py-1.5 font-semibold text-indigo-700 dark:text-indigo-300">{r.brand}</td>
-                <td className="truncate border-r border-gray-100 dark:border-gray-800 px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code}</td>
-                <td className="truncate px-2 py-1.5 text-[11px] text-gray-500 dark:text-gray-400">{r.capacity || "—"}</td>
-                <td className="px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
+                <td className="truncate px-2 py-1.5 text-[10.5px] text-gray-500 dark:text-gray-400">{r.cat}</td>
+                <td className="truncate px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code}</td>
                 <td className="px-1 py-1.5 text-center">{r.star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(r.star)}>★{r.star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
+                <td className="truncate px-2 py-1.5 text-[11px] text-gray-500 dark:text-gray-400">{r.capacity || "—"}</td>
+                <td className="border-r border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
                 {r.cells.map((c, i) => (
                   <td key={i} className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums" style={c && r.min != null && c.price === r.min ? { background: "rgba(16,185,129,0.08)" } : undefined}>
                     {!c ? <span className="text-gray-300 dark:text-gray-600">—</span> : (
@@ -430,6 +440,8 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
                     <div key={v} className="pointer-events-none absolute inset-x-0 border-t border-gray-200/80 dark:border-gray-700/60" style={{ top: topFor(v) }} />
                   ))}
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 border-t-2 border-gray-200 dark:border-gray-700" />
+                  {/* 브랜드 컬럼 세로 구분선(가시성) */}
+                  {brands.map((b, i) => (i > 0 ? <div key={"v" + b} className="pointer-events-none absolute inset-y-0 border-l border-gray-200/70 dark:border-gray-700/50" style={{ left: (i / brands.length) * 100 + "%" }} /> : null))}
                   <div className="absolute inset-0 flex">
                     {brands.map((b, bi) => { const lg = b === "LG"; return (
                       <div key={b} className={"relative min-w-0 flex-1 " + (lg ? "bg-indigo-50/40 dark:bg-indigo-500/5" : bi % 2 === 1 ? "bg-gray-50/50 dark:bg-gray-800/20" : "")}>
@@ -449,7 +461,7 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
                               </div>
                               <div className="mt-0.5 flex items-baseline gap-1">
                                 <span className="text-[14px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
-                                <span className={"text-[10px] font-medium tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>({c.idx})</span>
+                                <span title="가격지수 — 이 카테고리 최저가를 100으로 본 상대가격(159=최저가보다 59% 비쌈)" className={"cursor-help text-[10px] font-medium tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>지수{c.idx}</span>
                                 <span className={"ml-auto shrink-0 truncate text-[9px] " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{c.retailer ? pmShopLabel(c.retailer) : c.shops + "곳"}</span>
                               </div>
                             </div>
