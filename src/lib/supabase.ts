@@ -548,8 +548,10 @@ const CAT_RULES: { t: string; re: RegExp }[] = [
   { t: "프로젝터", re: /projector|cinebeam/i },
   { t: "전자레인지·오븐", re: /microwave|oven|air fryer/i },
   { t: "냉동고", re: /chest freezer|upright freezer|\bfreezer\b/i },
+  // 세탁기 판정을 건조기보다 먼저 — 워시타워·"Washer & Dryer" 콤보는 이름에 dryer가 있어도 세탁기다.
+  //   (Anson 워시타워·프론트로드 콤보가 건조기로 오분류돼 board 세탁기에서 누락되던 문제) 순수 건조기만 아래로.
+  { t: "세탁기", re: /wash ?tower|washtower|워시타워|washing machine|washer|twin ?wash|laundry/i },
   { t: "건조기", re: /\bdryer\b|heat pump dry/i },
-  { t: "세탁기", re: /washing machine|washer|twin ?wash|laundry/i },
   { t: "냉장고", re: /refrigerator|fridge|side by side|inverter ref\b/i },
   { t: "에어컨", re: /aircon|air ?condition|split type|window type|cassette|floor mounted|hvac|\bacu\b/i },
   { t: "TV", re: /\btv\b|oled|qned|nano ?cell|uhd|4k smart|led tv/i },
