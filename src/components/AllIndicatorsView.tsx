@@ -82,7 +82,7 @@ function Hi({ text, q }: { text: string; q: string }) {
 
 type Row = Provenance & { cat: string; catKo: string; value: number | null; period: string; prev: number | null }
 
-export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string) => void }) {
+export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?: (catKey: string) => void; layout?: "list" | "card" }) {
   const [prov, setProv] = useState<Provenance[]>([])
   const [latest, setLatest] = useState<Record<string, { value: number; period: string; prev: number | null }>>({})
   const [q, setQ] = useState("")
@@ -236,7 +236,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
             <span className="text-[11px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
             {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="ml-auto text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">차트 전체 보기 →</button>}
           </header>
-          <IndTable items={items} q={q} showCat={false} onDetail={setDetail} onExcel={downloadExcel} />
+          {layout === "card" ? <IndCards items={items} q={q} showCat={false} onDetail={setDetail} onExcel={downloadExcel} /> : <IndTable items={items} q={q} showCat={false} onDetail={setDetail} onExcel={downloadExcel} />}
         </section>
       ))}
 
@@ -248,7 +248,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
             <h2 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">최신 업데이트순</h2>
             <span className="text-[11px] text-gray-400 dark:text-gray-500">{flat.length}개 지표 · 최근 관측 우선</span>
           </header>
-          <IndTable items={flat} q={q} showCat onDetail={setDetail} onExcel={downloadExcel} />
+          {layout === "card" ? <IndCards items={flat} q={q} showCat onDetail={setDetail} onExcel={downloadExcel} /> : <IndTable items={flat} q={q} showCat onDetail={setDetail} onExcel={downloadExcel} />}
         </section>
       )}
 
@@ -310,6 +310,50 @@ function IndTable({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: s
           })}
         </tbody>
       </table>
+    </div>
+  )
+}
+
+// 카드형 — 리스트(테이블)와 동일 데이터·동일 액션, 카드 그리드 레이아웃
+function IndCards({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: string; showCat: boolean; onDetail: (r: Row) => void; onExcel: (r: Row) => void }) {
+  return (
+    <div className="grid grid-cols-1 gap-2.5 p-3 sm:grid-cols-2 xl:grid-cols-3">
+      {items.map((r, i) => {
+        const chg = r.value != null && r.prev != null && r.prev !== 0 ? r.value - r.prev : null
+        const up = chg != null && chg >= 0
+        const link = sourceLink(r.source, r.source_ref)
+        const u = inferUnit(r.indicator, r.label || "")
+        return (
+          <div key={r.indicator} onClick={() => onDetail(r)}
+            style={{ animation: "fadeUp .4s cubic-bezier(.16,1,.3,1) both", animationDelay: Math.min(i, 12) * 0.02 + "s" }}
+            className="group flex cursor-pointer flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md">
+            <div className="flex items-start gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {showCat && <span className="rounded-full bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9.5px] font-semibold text-indigo-600 dark:text-indigo-400">{r.catKo}</span>}
+                  {r.confidence === "FORECAST" && <span className="rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[9.5px] font-bold text-amber-700 dark:text-amber-300">전망</span>}
+                </div>
+                <h3 className="mt-1 truncate text-[13px] font-bold text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></h3>
+              </div>
+              <span className="shrink-0 rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[9.5px] font-semibold text-gray-500 dark:text-gray-400">{u.unit}</span>
+            </div>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-[20px] font-extrabold leading-none tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</span>
+              <span className={"text-[11.5px] font-semibold tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</span>
+            </div>
+            <div className="mt-2 flex items-center gap-x-2 gap-y-0.5 text-[10.5px] text-gray-400 dark:text-gray-500">
+              <span className="tabular-nums">{ym(r.period)}</span>
+              <span className="text-gray-300 dark:text-gray-600">·</span>
+              <span className="tabular-nums">{ymc(r.mn)}~{ymc(r.mx)}</span>
+              {link ? <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="ml-auto shrink-0 font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">{r.source} ↗</a> : <span className="ml-auto shrink-0 truncate">{r.source}</span>}
+            </div>
+            <div className="mt-2.5 flex items-center gap-1.5 border-t border-gray-50 dark:border-gray-800/50 pt-2">
+              <button type="button" onClick={(e) => { e.stopPropagation(); onDetail(r) }} className="flex-1 rounded-md border border-gray-200 dark:border-gray-700 py-1 text-[11px] font-semibold text-gray-600 dark:text-gray-300 transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-400 active:scale-95">자세히</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); onExcel(r) }} title="엑셀(CSV) 다운로드" className="flex-1 rounded-md border border-gray-200 dark:border-gray-700 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 active:scale-95">엑셀</button>
+            </div>
+          </div>
+        )
+      })}
     </div>
   )
 }

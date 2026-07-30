@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import DailyTrends from "@/components/DailyTrends"
 import FxView from "@/components/FxView"
 import RegionMapView from "@/components/RegionMapView"
 import RegionPriceExtras from "@/components/RegionPriceExtras"
@@ -12,6 +11,7 @@ import ImportPriceView from "@/components/ImportPriceView"
 import HousingView from "@/components/HousingView"
 import AllIndicatorsView from "@/components/AllIndicatorsView"
 import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView, PricesView } from "@/components/EconViews"
+import { Segmented } from "@/components/Segmented"
 import { dataProvenance } from "@/lib/supabase"
 import { countByCat } from "@/lib/indicatorCats"
 import { useLang } from "@/lib/i18n"
@@ -20,9 +20,7 @@ import { useLang } from "@/lib/i18n"
 
 type NavItem = { id: string; ko: string; sub: string; count: string; group: string; accent?: boolean; star?: boolean; subs: string[] }
 const NAV: NavItem[] = [
-  { id: "all", ko: "전체 지표 리스트", sub: "모든 지표를 한 화면에서 검색·훑어보기(최신값·기간·출처)", count: "전체", group: "전국", star: true, subs: ["전체 지표 목록", "분류 필터", "지표 검색"] },
   { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도 + 지역 물가", count: "17", group: "전국", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운", "지역 물가 히트맵"] },
-  { id: "core", ko: "일일동향", sub: "환율·유가 최근 30일 추이", count: "2", group: "핵심", subs: ["환율 30일", "유가 30일"] },
   { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별 물가", count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
   { id: "growth", ko: "국민계정·성장", sub: "GDP·투자·건설·산업생산·가동률", count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
   { id: "labor", ko: "고용·임금·소득", sub: "실업률·최저임금·OFW 송금", count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
@@ -50,6 +48,7 @@ export default function Page() {
   const { lang } = useLang()
   const en = lang === "en"
   const [active, setActive] = useState("all")
+  const [layout, setLayout] = useState<"list" | "card">("list")
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [total, setTotal] = useState(0)
 
@@ -69,9 +68,8 @@ export default function Page() {
   const navCount = (n: NavItem) => (n.id === "all" ? (total ? String(total) : n.count) : counts[n.id] != null ? String(counts[n.id]) : n.count)
 
   function view() {
-    if (active === "all") return <AllIndicatorsView onPick={setActive} />
+    if (active === "all") return <AllIndicatorsView onPick={setActive} layout={layout} />
     if (active === "regions") return <div className="flex flex-col gap-3"><RegionMapView /><RegionPriceExtras /></div>
-    if (active === "core") return <DailyTrends />
     if (active === "fx") return <FxView />
     if (active === "energy") return <EnergyLabelView />
     if (active === "online") return <OnlineMarketView />
@@ -95,6 +93,15 @@ export default function Page() {
           <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
             <p className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{en ? "View" : "보기"}</p>
+          </div>
+          {/* 전체 지표 리스트 — 리스트형/카드형 선택 옵션 */}
+          <div className="border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">
+            <button type="button" onClick={() => setActive("all")} className={"mb-1.5 flex w-full items-center gap-1.5 rounded-lg px-2 py-1.5 text-left transition-all duration-300 " + (active === "all" ? "bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/25" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={active === "all" ? "text-indigo-500" : "text-gray-400 dark:text-gray-500"}><path d="M3 4h18M3 12h18M3 20h18" /></svg>
+              <span className={"flex-1 text-[13px] " + (active === "all" ? "font-bold text-indigo-700 dark:text-indigo-300" : "font-semibold text-gray-800 dark:text-gray-100")}>전체 지표</span>
+              <span className="num text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{total || ""}</span>
+            </button>
+            <Segmented size="sm" value={layout} onChange={(k) => { setActive("all"); setLayout(k as "list" | "card") }} options={[{ k: "list", label: "리스트형" }, { k: "card", label: "카드형" }]} />
           </div>
           <div className="px-3 py-3">
             <nav className="flex flex-col gap-0.5">
