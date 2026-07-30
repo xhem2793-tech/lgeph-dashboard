@@ -7,6 +7,15 @@ import { sourceLink } from "@/components/DataVerification"
 import { Segmented } from "@/components/Segmented"
 import { LineChart, Lg } from "@/components/EconChart"
 import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
+import { InsightBanner, type Banner } from "@/components/InsightBanner"
+
+/** 전체 지표 리스트 상단 배너 — 뉴스·경쟁사광고와 동일한 InsightBanner(크기·스타일 통일). */
+const ALL_BANNER: Banner = {
+  title: "전체 지표 리스트 · 출처 검증",
+  summary: "모든 지표를 한 화면에서 — 최신값·직전 대비·기간·출처·신뢰도",
+  body: "분류별 차트 대신 **모든 지표를 한 화면에서** 훑어봅니다 — 최신값·직전 대비·데이터 기간·**출처 링크·신뢰도**까지 한 줄로 정리. 각 지표의 **자세히보기(시계열·전년비/전월비)·엑셀 다운로드**를 지원합니다.",
+  insight: "출처·신뢰도가 검증된 지표만 의사결정에 활용 — 원본 링크로 즉시 교차 확인이 가능합니다.",
+}
 
 /** 전체 지표 리스트(+데이터 출처·검증 통합) — 분류별 차트 대신 모든 지표를 한 화면에서 검색·정렬로 훑어보고,
  *  각 지표의 최신값·직전 대비·데이터 기간·원본 코드·출처 링크·신뢰도를 한 줄로. 행 클릭 시 해당 분류 차트로 이동. */
@@ -82,6 +91,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
   const [sort, setSort] = useState<"cat" | "recent">("cat")
   const [loadedAt, setLoadedAt] = useState<Date | null>(null)
   const [detail, setDetail] = useState<Row | null>(null)
+  const [bnOpen, setBnOpen] = useState(false)
 
   useEffect(() => {
     Promise.all([dataProvenance().catch(() => []), allIndicatorLatest().catch(() => ({}))]).then(([p, l]) => {
@@ -174,12 +184,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes detFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes bkFade{from{opacity:0}to{opacity:1}}@keyframes detSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
 
-      <section className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white dark:from-indigo-500/10 dark:via-transparent dark:to-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
-        <h1 className="text-[18px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">전체 지표 리스트 · 출처 검증</h1>
-        <p className="mt-1 text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">
-          분류별 차트 대신 <b className="font-semibold text-gray-800 dark:text-gray-100">모든 지표를 한 화면에서</b> — 최신값·직전 대비·데이터 기간·<b className="font-semibold text-gray-800 dark:text-gray-100">출처 링크·신뢰도</b>까지. 각 지표의 <b className="font-semibold text-indigo-600 dark:text-indigo-400">자세히보기(시계열·전년비/전월비)·엑셀 다운로드</b>를 지원합니다.
-        </p>
-      </section>
+      <InsightBanner banner={ALL_BANNER} open={bnOpen} onToggle={() => setBnOpen((v) => !v)} />
 
       {/* 정렬(주요뉴스와 동일 Segmented) + 검색(우측) + 최종 갱신(뉴스와 동일 위치·포맷) */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
