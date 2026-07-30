@@ -134,6 +134,13 @@ const pmSpecOf = (cat: string, model: string, capacity: string | null) => {
   if (cat === "냉장고") { if (/side by side|sxs|양문/i.test(m)) return "SxS"; if (/instaview|인스타뷰/i.test(m)) return "InstaView"; if (/french|multi ?door|멀티도어|프렌치/i.test(m)) return "French"; if (/bottom|하냉/i.test(m)) return "BMF"; if (/top ?mount|two ?door|2 ?door|상냉/i.test(m)) return "2-Door"; return cap }
   return cap
 }
+// 거래선 병합용 정규 코드 — 모델명+코드에서 영문+숫자 혼합 최장 토큰(≥5) 추출(거래선마다 다른 표기 흡수)
+const canonCode = (model: string, code: string | null) => {
+  const pre = code && code.length >= 4 && !/^[≈]/.test(code) && code !== "N/A" ? code + " " : ""
+  const src = (pre + (model || "")).toUpperCase().replace(/[^A-Z0-9 -]/g, " ")
+  const toks = src.split(/[\s-]+/).filter((x) => /[A-Z]/.test(x) && /\d/.test(x) && x.length >= 5)
+  return toks.sort((a, b) => b.length - a.length)[0] || ""
+}
 type PivRow = { cat: string; brand: string; code: string; model: string; capacity: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
 function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; stamp: string | null; asOf: string; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("전체")
@@ -157,9 +164,9 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
   const data = React.useMemo(() => {
     const seg = segs.find((s) => s.t === effSpec)
     const kw = q.trim().toLowerCase()
-    const f = R.filter((r) => r.p0 != null && r.brand === "LG" && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)) && r.code && r.code.length >= 3 && (!kw || (r.code + " " + r.model).toLowerCase().includes(kw)))
+    const f = R.filter((r) => r.p0 != null && r.brand === "LG" && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
     const g: Record<string, PriceRow[]> = {}
-    f.forEach((r) => { (g[r.brand + "|" + r.code] = g[r.brand + "|" + r.code] || []).push(r) })
+    f.forEach((r) => { const cc = canonCode(r.model, r.code); (g[r.brand + "|" + cc] = g[r.brand + "|" + cc] || []).push(r) })
     const out: PivRow[] = Object.values(g).map((list) => {
       const r0 = list[0]
       const cells = BOARD_SHOPS.map((s) => {
@@ -173,7 +180,7 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
       const max = prices.length ? Math.max(...prices) : null
       const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
       const srps = list.map((x) => x.srp).filter((v): v is number => v != null)
-      return { cat: r0.category, brand: r0.brand, code: r0.code, model: r0.model, capacity: pmSpecOf(r0.category, r0.model, r0.capacity), srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
+      return { cat: r0.category, brand: r0.brand, code: canonCode(r0.model, r0.code) || r0.code, model: r0.model, capacity: pmSpecOf(r0.category, r0.model, r0.capacity), srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
     })
     const dir = sort.asc ? 1 : -1
     const shopIdx = BOARD_SHOPS.findIndex((s) => s.k === sort.k)
@@ -215,17 +222,17 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
           </colgroup>
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
             <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">브랜드</th>
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">분류</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left" onClick={() => setS("code")}>모델{arrow("code")}</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">브랜드</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">분류</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("code")}>모델{arrow("code")}</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title="New DOE 에너지등급">★</th>
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">스펙</th>
-              <th className="whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-right">SRP</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">스펙</th>
+              <th className="whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-center">SRP</th>
               {BOARD_SHOPS.map((s) => (
-                <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-right " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
+                <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
               ))}
-              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-right" onClick={() => setS("min")}>최저{arrow("min")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-right" onClick={() => setS("spread")}>스프레드{arrow("spread")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("min")}>최저{arrow("min")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("spread")}>스프레드{arrow("spread")}</th>
             </tr>
           </thead>
           <tbody>
@@ -317,7 +324,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const [q, setQ] = React.useState("")
   const [focused, setFocused] = React.useState(false)
   const R = rows ?? []
-  const H = 560, PAD = 18, BOTTOM = 10, CARD_H = 62, CARD_W = 116, GAP = 50, GUT = 50
+  const H = 560, PAD = 18, BOTTOM = 14, CARD_H = 56, CARD_W = 116, GAP = 50, GUT = 50
   const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
   const shopList = React.useMemo(() => Array.from(new Set(R.filter((r) => r.category === cat).map((r) => r.retailer))).filter(Boolean), [R, cat])
   const segs = pmSpecsFor(cat)
@@ -460,20 +467,20 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
                             className={"absolute block overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (qq && !hit ? "opacity-20 " : "") + (qq && hit ? "z-20 ring-2 ring-indigo-500 " : "") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
                             style={{ top: c.top, left: "50%", marginLeft: -(CARD_W / 2), width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "opacity" }}>
                             <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
-                            <div className="pl-3 pr-2">
+                            <div className="pl-2.5 pr-2">
                               {/* 1행 — 모델 서픽스 + 에너지등급(★) */}
-                              <div className="flex items-center gap-1 py-1">
-                                <span className={"truncate text-[10px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
-                                {c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
+                              <div className="flex items-center gap-1 py-0.5">
+                                <span className={"truncate text-[9.5px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
+                                {c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[8.5px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
                               </div>
                               {/* 2행 — 가격만 */}
-                              <div className={"border-t py-1 " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
-                                <span className="text-[15px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
+                              <div className={"border-t py-0.5 " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
+                                <span className="text-[14px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
                               </div>
                               {/* 3행 — 전력효율(월 소비전력) */}
-                              <div className={"flex items-center justify-between gap-1 border-t py-1 text-[9.5px] " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
-                                <span className={lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500"}>전력효율</span>
-                                <span className={"tabular-nums font-semibold " + (lg ? "text-white" : "text-gray-600 dark:text-gray-300")}>{c.kwh != null ? Math.round(c.kwh) + " kWh/월" : "—"}</span>
+                              <div className={"flex items-center justify-between gap-1 border-t py-0.5 text-[9px] " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
+                                <span className={lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500"}>전력</span>
+                                <span className={"tabular-nums font-semibold " + (lg ? "text-white" : "text-gray-600 dark:text-gray-300")}>{c.kwh != null ? Math.round(c.kwh) + " kWh" : "—"}</span>
                               </div>
                             </div>
                           </a>
