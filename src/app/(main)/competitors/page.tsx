@@ -27,6 +27,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
   {
     group: "매일 보는 것",
     items: [
+      { key: "board", no: 0, label: "오늘의 가격 비교", desc: "5개 거래선 × 대표 제품 오늘가 매트릭스", status: "live" },
       { key: "movers", no: 1, label: "일일 가격 변동", desc: "3일 가격·변동폭·할인율", status: "live" },
       { key: "outlier", no: 12, label: "이상치 알림", desc: "임계 초과 급변 · VALIDATION REQ", status: "next" },
     ],
@@ -106,6 +107,148 @@ const BADGE: Record<Status, { t: string; c: string }> = {
 const peso = (n: number | null) => (n == null ? "—" : "₱" + Math.round(n).toLocaleString("en-US"))
 const pct = (n: number | null) => (n == null ? "—" : (n > 0 ? "+" : "") + n.toFixed(1) + "%")
 const md = (s: string | null) => (s ? s.slice(5).replace("-", "/") : "—")
+
+/* ─── 오늘의 가격 비교 보드(제품 × 거래선 매트릭스) ─────────────────────────────
+ *  열 = 5개 거래선(현재 3사 라이브 + Western·Robinsons 수집 예정),
+ *  행 = 카테고리별 대표 제품(하이브리드: ⭐동일SKU + 대표 스펙 앵커).
+ *  셀 = 해당 거래선의 매칭 리스팅 오늘가 최저값. 행 내 최저가 강조, LG 행 인디고.       */
+const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
+  { k: "Anson's", label: "Anson's", live: true },
+  { k: "Abenson", label: "Abenson", live: true },
+  { k: "SM Appliance", label: "SM Appliance", live: true },
+  { k: "Western Appliance", label: "Western", live: false },
+  { k: "Robinsons Appliances", label: "Robinsons", live: false },
+]
+
+type Anchor = { id: string; label: string; note?: string; brand: string; lg?: boolean; sku?: boolean; match: (r: PriceRow) => boolean }
+type BoardGroup = { cat: string; icon: string; rows: Anchor[] }
+
+/** 매처 빌더 — 브랜드+카테고리(+모델 정규식, 가격밴드) */
+const mk = (brand: string, cat: string, re?: RegExp, lo = 0, hi = Infinity) => (r: PriceRow) =>
+  r.brand === brand && r.category === cat && (re ? re.test(r.model) : true) && r.p0 != null && r.p0 >= lo && r.p0 < hi
+
+const BOARD_GROUPS: BoardGroup[] = [
+  { cat: "에어컨", icon: "❄️", rows: [
+    { id: "ac-lg", label: "LG 인버터 스플릿", note: "인버터 최저가존", brand: "LG", lg: true, match: mk("LG", "에어컨", /inverter|split/i) },
+    { id: "ac-dk", label: "Daikin 인버터 스플릿", brand: "Daikin", match: mk("Daikin", "에어컨", /inverter|split/i) },
+    { id: "ac-pa", label: "Panasonic 인버터", brand: "Panasonic", match: mk("Panasonic", "에어컨", /inverter|split/i) },
+    { id: "ac-tcl", label: "TCL 인버터", note: "중국 가성비", brand: "TCL", match: mk("TCL", "에어컨", /inverter|split/i) },
+  ] },
+  { cat: "냉장고", icon: "🧊", rows: [
+    { id: "rf-lg1", label: "LG 프렌치도어 20.8", note: "RVF-X208MC · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "냉장고", /RVF.?X208/i) },
+    { id: "rf-lg2", label: "LG 양문형 23.8", note: "RVS-X238MC · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "냉장고", /RVS.?X238/i) },
+    { id: "rf-ss", label: "Samsung 양문형(SBS)", brand: "Samsung", match: mk("Samsung", "냉장고", /side by side|sbs/i, 40000) },
+    { id: "rf-cd", label: "Condura 2도어 중형", note: "현지 가성비", brand: "Condura", match: mk("Condura", "냉장고", undefined, 15000, 45000) },
+  ] },
+  { cat: "TV", icon: "📺", rows: [
+    { id: "tv-lg", label: 'LG UHD 43"', note: "43UA73 · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "TV", /43UA7|43UA/i) },
+    { id: "tv-tcl", label: 'TCL 43" QLED/FHD', note: "43S5K · 동일SKU", brand: "TCL", sku: true, match: mk("TCL", "TV", /43S5K/i) },
+    { id: "tv-hs", label: 'Hisense 43" 4K', note: "43A6Q", brand: "Hisense", match: mk("Hisense", "TV", /43A6Q|43A6|43A4/i) },
+    { id: "tv-ss", label: 'Samsung 55" 4K', brand: "Samsung", match: mk("Samsung", "TV", /55/, 25000, 90000) },
+  ] },
+  { cat: "세탁기", icon: "🌀", rows: [
+    { id: "wm-lg1", label: "LG 워시타워 올인원", note: "WT2117NHB · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "세탁기", /WT2117/i) },
+    { id: "wm-lg2", label: "LG 드럼 12kg", note: "FV1412 · 동일SKU", brand: "LG", lg: true, sku: true, match: mk("LG", "세탁기", /FV1412/i) },
+    { id: "wm-pa", label: "Panasonic 세탁기", brand: "Panasonic", match: mk("Panasonic", "세탁기", undefined, 12000, 60000) },
+    { id: "wm-ss", label: "Samsung 세탁기", brand: "Samsung", match: mk("Samsung", "세탁기", undefined, 15000, 70000) },
+  ] },
+]
+
+type Cell = { live: boolean; price: number | null; n: number }
+
+function BoardView({ rows, stamp, asOf }: { rows: PriceRow[] | null; stamp: string | null; asOf: string }) {
+  const R = rows ?? []
+  const loading = rows === null
+  const compute = (row: Anchor): { cells: Cell[]; min: number | null; spread: number | null } => {
+    const cells: Cell[] = BOARD_SHOPS.map((s) => {
+      if (!s.live) return { live: false, price: null, n: 0 }
+      const ms = R.filter((r) => r.retailer === s.k && r.p0 != null && row.match(r))
+      if (!ms.length) return { live: true, price: null, n: 0 }
+      return { live: true, price: Math.min(...ms.map((r) => r.p0 as number)), n: ms.length }
+    })
+    const prices = cells.filter((c) => c.live && c.price != null).map((c) => c.price as number)
+    const min = prices.length ? Math.min(...prices) : null
+    const max = prices.length ? Math.max(...prices) : null
+    const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
+    return { cells, min, spread }
+  }
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-[11.5px] text-gray-500 dark:text-gray-400">
+        5개 거래선 × 대표 제품 <b className="text-gray-700 dark:text-gray-200">오늘가</b> 비교 · 행 내 <span className="font-semibold text-emerald-600 dark:text-emerald-400">최저가 강조</span> · ⭐<span className="font-medium">동일 SKU</span>는 3사 같은 모델 · Western·Robinsons <span className="font-medium text-gray-400 dark:text-gray-500">수집 예정</span>
+      </p>
+      <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-800">
+        <table className="w-full min-w-[820px] border-collapse text-[12px]">
+          <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
+            <tr>
+              <th className="whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-3 py-2 text-left font-semibold text-gray-600 dark:text-gray-300">제품</th>
+              {BOARD_SHOPS.map((s) => (
+                <th key={s.k} className={"whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-3 py-2 text-right font-semibold " + (s.live ? "text-gray-600 dark:text-gray-300" : "text-gray-400 dark:text-gray-600")}>
+                  {s.label}
+                  {!s.live && <span className="ml-1 rounded bg-gray-100 dark:bg-gray-800 px-1 py-px text-[8.5px] font-medium text-gray-400 dark:text-gray-500">수집예정</span>}
+                </th>
+              ))}
+              <th className="whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-3 py-2 text-right font-semibold text-gray-600 dark:text-gray-300" title="라이브 거래선 간 최고가/최저가 격차">스프레드</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loading ? (
+              <tr><td colSpan={BOARD_SHOPS.length + 2} className="px-3 py-12 text-center text-[12px] text-gray-400 dark:text-gray-500">불러오는 중…</td></tr>
+            ) : BOARD_GROUPS.map((g) => (
+              <React.Fragment key={g.cat}>
+                <tr className="bg-gray-50/70 dark:bg-gray-800/40">
+                  <td colSpan={BOARD_SHOPS.length + 2} className="border-b border-t border-gray-100 dark:border-gray-800 px-3 py-1.5 text-[11px] font-bold tracking-tight text-gray-700 dark:text-gray-200">
+                    <span className="mr-1.5">{g.icon}</span>{g.cat}
+                  </td>
+                </tr>
+                {g.rows.map((row, ri) => {
+                  const { cells, min, spread } = compute(row)
+                  return (
+                    <tr key={row.id} style={{ animation: "rowIn .3s ease both", animationDelay: Math.min(ri, 8) * 0.03 + "s" }}
+                      className={"border-b border-gray-100 dark:border-gray-800 transition-colors " + (row.lg ? "bg-indigo-50/40 dark:bg-indigo-500/5 hover:bg-indigo-50/70 dark:hover:bg-indigo-500/10" : "hover:bg-gray-50 dark:hover:bg-gray-800/40")}>
+                      <td className={"whitespace-nowrap border-r px-3 py-1.5 " + (row.lg ? "border-indigo-100 dark:border-indigo-500/20" : "border-gray-100 dark:border-gray-800")}>
+                        <span className="flex items-center gap-1.5">
+                          {row.lg && <span className="h-3.5 w-1 shrink-0 rounded bg-indigo-500" />}
+                          {row.sku && <span title="3사 동일 모델" className="shrink-0 text-[10px]">⭐</span>}
+                          <span className={"font-medium " + (row.lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{row.label}</span>
+                        </span>
+                        {row.note && <span className="mt-0.5 block pl-2.5 text-[10px] text-gray-400 dark:text-gray-500">{row.note}</span>}
+                      </td>
+                      {cells.map((c, i) => (
+                        <td key={i} className={"whitespace-nowrap px-3 py-1.5 text-right tabular-nums " + (!c.live ? "text-gray-300 dark:text-gray-700" : c.price == null ? "text-gray-300 dark:text-gray-600" : c.price === min ? "font-bold text-emerald-700 dark:text-emerald-300" : "text-gray-800 dark:text-gray-100")}>
+                          {!c.live ? (
+                            <span className="text-[11px]">·</span>
+                          ) : c.price == null ? (
+                            "—"
+                          ) : (
+                            <span className="inline-flex items-center gap-1">
+                              {c.price === min && min != null && <span className="rounded bg-emerald-100 dark:bg-emerald-500/15 px-1 py-px text-[8.5px] font-bold text-emerald-700 dark:text-emerald-300">최저</span>}
+                              {peso(c.price)}
+                            </span>
+                          )}
+                        </td>
+                      ))}
+                      <td className="whitespace-nowrap border-l border-gray-100 dark:border-gray-800 px-3 py-1.5 text-right tabular-nums">
+                        {spread == null ? <span className="text-gray-300 dark:text-gray-600">—</span> : (
+                          <span className={"font-semibold " + (spread >= 5 ? "text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>{spread.toFixed(1)}%</span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </React.Fragment>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="mt-0.5 flex items-start gap-1.5 text-[11.5px] leading-relaxed text-indigo-700 dark:text-indigo-300">
+        <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 시사점</span>
+        <span>⭐동일 SKU 행의 <b>스프레드 ≥5%</b>(적색)는 채널 간 가격 정합성·MAP 이슈 신호 — 우선 점검 대상. 대량존(엔트리 인버터·43″)은 현지·중국 브랜드와 직접 경합하므로 프로모 대응 트리거로 활용.</span>
+      </p>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">셀 = 각 거래선 매칭 리스팅의 오늘가 최저값 · 스프레드 = (최고−최저)/최저 · 기준일 {md(asOf)}{stamp ? " · 최종 " + fmtStamp(stamp) : ""}</p>
+    </div>
+  )
+}
 
 /** 화면 표 = CSV. Excel에서 바로 열리도록 UTF-8 BOM */
 function exportCsv(rows: PriceRow[], name: string) {
@@ -303,7 +446,7 @@ function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camps: Prom
 }
 
 export default function Competitors() {
-  const [view, setView] = React.useState("movers")
+  const [view, setView] = React.useState("board")
   const [cat, setCat] = React.useState("전체")
   const [brands, setBrands] = React.useState<string[]>(["LG"])
   const [shops, setShops] = React.useState<string[]>([...SHOPS])
@@ -498,7 +641,9 @@ export default function Competitors() {
             </span>
           </header>)}
 
-          {view === "promo" ? (
+          {view === "board" ? (
+            <BoardView rows={rows} stamp={stamp} asOf={asOf} />
+          ) : view === "promo" ? (
             <PromoView rows={promo} camps={camps} />
           ) : active?.status !== "live" ? (
             <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
