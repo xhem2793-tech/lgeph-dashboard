@@ -269,21 +269,30 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
     const vw = vb[2] || 300, vh = vb[3] || 100, scale = 4
     const clone = svg.cloneNode(true) as SVGSVGElement
     clone.setAttribute("xmlns", "http://www.w3.org/2000/svg")
-    clone.setAttribute("width", String(vw)); clone.setAttribute("height", String(vh))
-    clone.style.fontFamily = "Pretendard, -apple-system, 'Malgun Gothic', system-ui, sans-serif"
+    clone.setAttribute("xmlns:xlink", "http://www.w3.org/1999/xlink")
+    clone.setAttribute("width", String(vw)); clone.setAttribute("height", String(vh)); clone.setAttribute("viewBox", "0 0 " + vw + " " + vh)
+    clone.removeAttribute("style")
+    // 애니메이션 중간(선 미표시) 상태로 캡처돼 흰 이미지가 되는 것 방지 — 최종 상태 강제 + 폰트 인라인
+    const st = document.createElementNS("http://www.w3.org/2000/svg", "style")
+    st.textContent = "*{opacity:1!important;stroke-dashoffset:0!important;transition:none!important;animation:none!important}text{font-family:Pretendard,-apple-system,'Malgun Gothic',system-ui,sans-serif}"
+    clone.insertBefore(st, clone.firstChild)
     const svgStr = new XMLSerializer().serializeToString(clone)
     const img = new Image()
     img.onload = () => {
       const canvas = document.createElement("canvas")
-      canvas.width = vw * scale; canvas.height = vh * scale
+      canvas.width = Math.round(vw * scale); canvas.height = Math.round(vh * scale)
       const ctx = canvas.getContext("2d"); if (!ctx) return
       ctx.fillStyle = "#ffffff"; ctx.fillRect(0, 0, canvas.width, canvas.height)
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
       canvas.toBlob((blob) => {
         if (!blob) return
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = safe + ".png"; a.click(); URL.revokeObjectURL(a.href)
+        const href = URL.createObjectURL(blob)
+        const a = document.createElement("a"); a.href = href; a.download = safe + ".png"
+        document.body.appendChild(a); a.click(); a.remove()
+        setTimeout(() => URL.revokeObjectURL(href), 4000)
       }, "image/png")
     }
+    img.onerror = () => { console.error("[chart] PNG export failed for", safe) }
     img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr)
   }
   return (
