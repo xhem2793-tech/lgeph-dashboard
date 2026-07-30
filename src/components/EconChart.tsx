@@ -264,7 +264,9 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = safe + ".csv"; a.click(); URL.revokeObjectURL(a.href)
   }
   const dlImg = () => { // 차트를 PNG 이미지로 저장(SVG→canvas 래스터화, 4x 고해상도·흰 배경)
-    const svg = cardRef.current?.querySelector("svg"); if (!svg) return
+    // 헤더 버튼 아이콘(24x24)이 아니라 실제 차트 SVG(viewBox 0 0 300 100)를 선택
+    const svg = (cardRef.current?.querySelector('svg[viewBox="0 0 300 100"]') || cardRef.current?.querySelector("svg")) as SVGSVGElement | null
+    if (!svg) return
     const vb = (svg.getAttribute("viewBox") || "0 0 300 100").split(/\s+/).map(Number)
     const vw = vb[2] || 300, vh = vb[3] || 100, scale = 4
     const clone = svg.cloneNode(true) as SVGSVGElement
