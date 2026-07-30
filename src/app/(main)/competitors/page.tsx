@@ -369,25 +369,97 @@ const acFormOf = (m: string): string | null => {
   if (/split|wall[- ]?mount|벽걸이|HS[NU]?\d{2}|\bAR\d{2}|CS[/-]?CU|\bCS-?[A-Z]{0,2}\d|CSCU|MS[A-Z]{1,3}-?\d|FTK[A-Z]|TAC-?\d+CS|(?:CAC|CEP|CTD|CAH)\d|KA-?\d+M/i.test(s)) return "벽걸이형"
   return null
 }
-const acFormHit = (model: string, formT: string) => formT === "전체" || acFormOf(model) === formT
+// 냉장고 도어형(유형) — 텍스트 + 브랜드 코드프리픽스(LG RV[SFTB]·Samsung R[SFTB]·Condura C**·Haier HR*)
+const REF_FORMS = ["SxS", "프렌치", "상냉동", "하냉동", "단문형", "냉동고"]
+const refFormOf = (m: string): string | null => {
+  const s = m || ""
+  if (/side by side|sxs|instaview|\bRVS|\bRS\d|\bRH\d/i.test(s)) return "SxS"
+  if (/french|multi ?door|4 ?door|\bRVF|\bRF\d|\bNR-?[YD]|HRF/i.test(s)) return "프렌치"
+  if (/bottom ?(?:mount|freezer)|BMF|\bRUB|\bRVB|\bRB\d|\bNR-?B[QXW]/i.test(s)) return "하냉동"
+  if (/top ?mount|two ?door|2[- ]?door|double ?door|\bRVT|\bRUT|\bRT\d|TMNF|\bNRB[QY]|\bCTD|\bCMD|\bHR-?\d/i.test(s)) return "상냉동"
+  if (/single ?door|1[- ]?door|personal|mini ?bar|\bCPR|\bGL-?\d/i.test(s)) return "단문형"
+  if (/chest|showcase|\bfreezer\b|\bCUF|\bCTF|\bCCH|\bGR-?V|\bSC\d|\bHCF|upright|beverage/i.test(s)) return "냉동고"
+  return null
+}
+// 세탁기 로드형(유형)
+const WM_FORMS = ["프론트", "탑로드", "트윈", "워시타워"]
+const wmFormOf = (m: string): string | null => {
+  const s = m || ""
+  if (/wash ?tower|washtower|\bWT\d/i.test(s)) return "워시타워"
+  if (/twin ?(?:wash|tub)|\bTWT|twinwash|jumbo|\bMA\d/i.test(s)) return "트윈"
+  if (/front[- ]?load|frontload|\bFV\d|\bWW\d|\bNA-?[VS]|\bNAW|\bTWF|\bMFC|\bMF\d|drum|\bWD\d/i.test(s)) return "프론트"
+  if (/top[- ]?load|topload|\bT[0-9]\d{3}|\bWA\d|\bNA-?F|\bTWA|\bCWM|\bHWM|fully ?auto/i.test(s)) return "탑로드"
+  return null
+}
+// TV 패널(유형) — 모든 TV는 최소 LED로 귀결(미상 없음)
+const TV_FORMS = ["OLED", "QNED", "QLED", "ULED", "NanoCell", "MiniLED", "UHD", "FHD", "HD", "LED"]
+const tvFormOf = (m: string): string | null => {
+  const s = m || ""
+  if (/\boled\b/i.test(s)) return "OLED"
+  if (/qned/i.test(s)) return "QNED"
+  if (/qled/i.test(s)) return "QLED"
+  if (/uled/i.test(s)) return "ULED"
+  if (/nano ?cell|\bnano\b/i.test(s)) return "NanoCell"
+  if (/mini ?led|miniled/i.test(s)) return "MiniLED"
+  if (/uhd|\b4k\b|crystal|\bUA\d|\bNU\d|\bUQ\d|\bUR\d|\bUT\d/i.test(s)) return "UHD"
+  if (/full ?hd|\bfhd\b/i.test(s)) return "FHD"
+  if (/\bhd\b/i.test(s)) return "HD"
+  if (/led ?tv|smart tv|google tv|\btv\b|signage|video ?wall|\d{2}[A-Z]/i.test(s)) return "LED"
+  return null
+}
+const pmFormOf = (cat: string, m: string): string | null =>
+  cat === "에어컨" ? acFormOf(m) : cat === "냉장고" ? refFormOf(m) : cat === "세탁기" ? wmFormOf(m) : cat === "TV" ? tvFormOf(m) : null
 
-// 사이즈(용량/화면) 버킷 — 포지셔닝 "스펙(사이즈)" 축. 에어컨은 HP(별도), 나머지는 용량/인치.
+// ── 스펙(사이즈) 축 — 에어컨=HP, 냉장고=cu.ft, 세탁기=kg, TV=인치. 명시단위 우선, 없으면 브랜드 코드에서 추론 ──
 const REF_SIZE = ["7cu.ft↓", "7~14", "14~22", "22cu.ft↑"]
 const WM_SIZE = ["8kg↓", "8~11", "11kg↑"]
 const TV_SIZE = ["43˝↓", "43~54", "55~64", "65~74", "75˝↑"]
-const pmSizeBucket = (cat: string, model: string, capacity: string | null): string | null => {
-  const src = (model || "") + " " + (capacity || "")
-  const num = (re: RegExp) => { const x = src.match(re); return x ? parseFloat(x[1]) : null }
-  if (cat === "냉장고") { const v = num(/(\d+(?:\.\d+)?)\s*cu/i); if (v == null) return null; return v < 7 ? "7cu.ft↓" : v < 14 ? "7~14" : v < 22 ? "14~22" : "22cu.ft↑" }
-  if (cat === "세탁기") { const v = num(/(\d+(?:\.\d+)?)\s*kg/i); if (v == null) return null; return v < 8 ? "8kg↓" : v < 11 ? "8~11" : "11kg↑" }
-  if (cat === "TV") { let v = num(/(\d{2,3})\s*(?:inch|in\b|˝|")/i); if (v == null) { const x = src.match(/\b(\d{2,3})\b/); v = x ? parseFloat(x[1]) : null } if (v == null || v < 20 || v > 120) return null; return v < 43 ? "43˝↓" : v < 55 ? "43~54" : v < 65 ? "55~64" : v < 75 ? "65~74" : "75˝↑" }
+const _mnum = (s: string, re: RegExp) => { const x = s.match(re); return x ? parseFloat(x[1]) : null }
+const refCuft = (s: string): number | null => {
+  const v = _mnum(s, /(\d+(?:\.\d+)?)\s*cu/i); if (v != null) return v
+  const L = _mnum(s, /(\d{3})\s*(?:L\b|li?ters?)/i); if (L != null && L >= 80 && L <= 800) return +(L * 0.0353).toFixed(1)
+  let c = s.match(/\b(?:RVS|RVF|RVT|RVB|RUB|RUS|RUT|CMD|CTD)-?[A-Z]?(\d{2,3})/i)
+  if (c) { const n = parseInt(c[1], 10) / 10; if (n >= 3 && n <= 40) return n }
+  // 파나소닉·하이어·삼성 등은 코드에 리터(L)를 담는다 → cu.ft 환산(L×0.0353)
+  c = s.match(/\b(?:NR[-\s]?[A-Z]{1,2}|HRF-?[A-Z]{0,3}|HR[-\s]?|SC|HCF|GR[-\s]?[A-Z]|BCD|RS|RF|RT|RB|RL|RH|CCH|CPR)(\d{2,3})/i)
+  if (c) { const L2 = parseInt(c[1], 10); if (L2 >= 60 && L2 <= 800) return +(L2 * 0.0353).toFixed(1); if (L2 >= 30 && L2 < 60) return +(L2 / 10).toFixed(1) }
   return null
 }
-// 두 축 목록·매처 — 유형(form) + 스펙(size). 에어컨만 유형=설치형태·스펙=HP, 나머지는 유형=SEGMENTS·스펙=용량/인치
-const pmSizeList = (c: string) => (c === "에어컨" ? PM_AC_HP.map((x) => x.t) : c === "냉장고" ? REF_SIZE : c === "세탁기" ? WM_SIZE : c === "TV" ? TV_SIZE : [])
-const pmSizeHit = (cat: string, model: string, capacity: string | null, t: string) => { if (t === "전체") return true; if (cat === "에어컨") return acHpBucket(model) === t; return pmSizeBucket(cat, model, capacity) === t }
-const pmFormsFor = (c: string) => (c === "에어컨" ? AC_FORMS : (SEGMENTS[c] ?? []).map((x) => x.t))
-const pmFormHit = (cat: string, model: string, t: string) => { if (t === "전체") return true; if (cat === "에어컨") return acFormHit(model, t); const s = (SEGMENTS[cat] ?? []).find((x) => x.t === t); return s ? s.re.test(model || "") : true }
+const wmKgOf = (s: string): number | null => {
+  const v = _mnum(s, /(\d+(?:\.\d+)?)\s*kg/i); if (v != null) return v
+  const cw = s.match(/CWM(\d+(?:\.\d+)?)/i); if (cw) { const n = parseFloat(cw[1]); if (n >= 4 && n <= 30) return n }
+  // 파나소닉 NA-[문자]+숫자: 선두 2~3자리를 /10 해 4~30 되는 해석 채택(W8023→8.0·S056→5.6·FD90→9.0·W10523→10.5)
+  const p = s.match(/\bNA[-\s]?[A-Z]{1,2}(\d{2,4})/i); if (p) { const d = p[1]; for (const k of [3, 2]) { if (d.length >= k) { const n = parseInt(d.slice(0, k), 10) / 10; if (n >= 4 && n <= 30) return n } } }
+  let c = s.match(/\b(?:FV|WW|WA|WD|WT)(\d{2})/i); if (c) { let n = parseInt(c[1], 10); if (n > 30) n /= 10; if (n >= 4 && n <= 30) return n }
+  const t = s.match(/\bT2(\d)(\d)(\d)/i); if (t) { const a = +t[1], b = +t[2], c2 = +t[3]; const n = a >= 3 ? a * 10 + b : (b === 0 ? c2 : b + (c2 >= 5 ? 0.5 : 0)); if (n >= 4 && n <= 30) return n }
+  c = s.match(/\b(?:TWA|TWF|TWT|TWD)(\d{2,3})/i); if (c) { let n = parseInt(c[1], 10); while (n > 30) n /= 10; if (n >= 4 && n <= 30) return n }
+  c = s.match(/\bM[AF](\d{2,3})/i); if (c) { let n = parseInt(c[1], 10); while (n > 30) n /= 10; if (n >= 4 && n <= 30) return n }
+  c = s.match(/\bHWM(\d{2,3})/i); if (c) { let n = parseInt(c[1], 10); if (n > 30) n /= 10; if (n >= 4 && n <= 30) return n }
+  return null
+}
+const tvInOf = (s: string): number | null => {
+  const v = _mnum(s, /(\d{2,3})\s*(?:inch|in\b|˝|")/i); if (v != null && v >= 20 && v <= 120) return v
+  let c = s.match(/\b(?:QA|UA|QN|QE|UN|KD|XR|TH|LH|OLED)(\d{2,3})/i)
+  if (c) { const n = parseInt(c[1], 10); if (n >= 20 && n <= 120) return n }
+  c = s.match(/\bH(\d{2,3})[A-Z]/i)
+  if (c) { const n = parseInt(c[1], 10); if (n >= 20 && n <= 120) return n }
+  c = s.match(/(?:^|\s)(\d{2,3})(?:["˝]|\s?inch|[A-Z]{2})/i)
+  if (c) { const n = parseInt(c[1], 10); if (n >= 20 && n <= 120) return n }
+  return null
+}
+const pmSizeBucket = (cat: string, model: string, capacity: string | null): string | null => {
+  const src = (model || "") + " " + (capacity || "")
+  if (cat === "냉장고") { const v = refCuft(src); return v == null ? null : v < 7 ? "7cu.ft↓" : v < 14 ? "7~14" : v < 22 ? "14~22" : "22cu.ft↑" }
+  if (cat === "세탁기") { const v = wmKgOf(src); return v == null ? null : v < 8 ? "8kg↓" : v < 11 ? "8~11" : "11kg↑" }
+  if (cat === "TV") { const v = tvInOf(src); return v == null ? null : v < 43 ? "43˝↓" : v < 55 ? "43~54" : v < 65 ? "55~64" : v < 75 ? "65~74" : "75˝↑" }
+  return null
+}
+// 두 축 목록·매처 — 분류 안 되는 잔여는 "기타"로 흡수(필터에서 제품이 사라지지 않게)
+const ETC = "기타"
+const pmFormsFor = (c: string) => { const base = c === "에어컨" ? AC_FORMS : c === "냉장고" ? REF_FORMS : c === "세탁기" ? WM_FORMS : c === "TV" ? TV_FORMS : []; return base.length ? [...base, ETC] : [] }
+const pmFormHit = (cat: string, model: string, t: string) => { if (t === "전체") return true; const f = pmFormOf(cat, model); return t === ETC ? f == null : f === t }
+const pmSizeList = (c: string) => { const base = c === "에어컨" ? PM_AC_HP.map((x) => x.t) : c === "냉장고" ? REF_SIZE : c === "세탁기" ? WM_SIZE : c === "TV" ? TV_SIZE : []; return base.length ? [...base, ETC] : [] }
+const pmSizeHit = (cat: string, model: string, capacity: string | null, t: string) => { if (t === "전체") return true; const b = cat === "에어컨" ? acHpBucket(model) : pmSizeBucket(cat, model, capacity); return t === ETC ? b == null : b === t }
 const pmMean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0)
 const pmTicks = (min: number, max: number, count = 5): number[] => {
   const range = (max - min) || 1, raw = range / count, mag = Math.pow(10, Math.floor(Math.log10(raw))), norm = raw / mag
