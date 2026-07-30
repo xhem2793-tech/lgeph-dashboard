@@ -740,7 +740,7 @@ export default function Page() {
         </aside>
 
         {/* ── 중앙 : 결론 앵커 + 피드 ── */}
-        <div className="flex min-w-0 flex-col gap-4">
+        <div className="flex min-h-[calc(100vh-96px)] min-w-0 flex-col gap-4">
         <InsightBanner banner={banner} open={newsOpen} onToggle={() => setNewsOpen((v) => !v)} />
         <header className="relative flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
