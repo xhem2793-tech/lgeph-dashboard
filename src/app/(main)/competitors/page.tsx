@@ -124,15 +124,15 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
 
 const deltaCol = (d: number | null) => (d == null || d === 0 ? "text-gray-400 dark:text-gray-500" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")
 
-// 스펙 도출 — capacity 필드가 비면 모델명에서 HP/인치/용량을 추출
+// 스펙 도출 — 타입 기준(AC=HP, TV=패널, 세탁기=F/L·T/L, 냉장고=도어형). 모델명 우선, 없으면 capacity
 const pmSpecOf = (cat: string, model: string, capacity: string | null) => {
-  if (capacity && capacity.trim()) return capacity.trim()
   const m = model || ""
-  if (cat === "에어컨") { const hp = m.match(/(\d(?:\.\d)?)\s?HP/i); return hp ? hp[1] + "HP" : "" }
-  if (cat === "TV") { const inch = m.match(/(\d{2,3})\s?(?:인치|형|["”]|in\b)/i) || m.match(/(?:^|\s)(\d{2,3})(?=[A-Za-z])/); const v = inch ? Number(inch[1]) : 0; return v >= 24 && v <= 120 ? v + '"' : "" }
-  if (cat === "냉장고") { const cf = m.match(/(\d{1,3}(?:\.\d)?)\s?(?:cu\.?\s?ft|cuft|큐피트|cu\.f)/i); const L = m.match(/(\d{2,4})\s?L\b/i); return cf ? cf[1] + "cuft" : L ? L[1] + "L" : "" }
-  if (cat === "세탁기") { const kg = m.match(/(\d{1,2}(?:\.\d)?)\s?kg/i); return kg ? kg[1] + "kg" : "" }
-  return ""
+  const cap = (capacity || "").trim()
+  if (cat === "에어컨") { const hp = m.match(/(\d(?:\.\d)?)\s?HP/i); if (hp) return hp[1] + "HP"; if (/window|창문/i.test(m)) return "창문형"; if (/split|벽걸이/i.test(m)) return "스플릿"; if (/floor|ceiling|cassette|천장|스탠드/i.test(m)) return "스탠드"; return cap }
+  if (cat === "TV") { if (/oled/i.test(m)) return "OLED"; if (/qned/i.test(m)) return "QNED"; if (/nano ?cell/i.test(m)) return "NanoCell"; if (/qled/i.test(m)) return "QLED"; if (/uhd|4k/i.test(m)) return "UHD"; if (/fhd|full ?hd/i.test(m)) return "FHD"; if (/hd\b/i.test(m)) return "HD"; return cap }
+  if (cat === "세탁기") { if (/twin ?wash/i.test(m)) return "TwinWash"; if (/wash ?tower|워시타워/i.test(m)) return "워시타워"; if (/front ?load|drum|프론트/i.test(m)) return "F/L"; if (/top ?load|탑로드/i.test(m)) return "T/L"; return cap }
+  if (cat === "냉장고") { if (/side by side|sxs|양문/i.test(m)) return "SxS"; if (/instaview|인스타뷰/i.test(m)) return "InstaView"; if (/french|multi ?door|멀티도어|프렌치/i.test(m)) return "French"; if (/bottom|하냉/i.test(m)) return "BMF"; if (/top ?mount|two ?door|2 ?door|상냉/i.test(m)) return "2-Door"; return cap }
+  return cap
 }
 type PivRow = { cat: string; brand: string; code: string; model: string; capacity: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
 function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; stamp: string | null; asOf: string; elabels: EnergyRow[] | null }) {
@@ -157,7 +157,7 @@ function BoardView({ rows, stamp, asOf, elabels }: { rows: PriceRow[] | null; st
   const data = React.useMemo(() => {
     const seg = segs.find((s) => s.t === effSpec)
     const kw = q.trim().toLowerCase()
-    const f = R.filter((r) => r.p0 != null && r.brand === "LG" && (cat === "전체" || r.category === cat) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)) && r.code && r.code.length >= 3 && (!kw || (r.code + " " + r.model).toLowerCase().includes(kw)))
+    const f = R.filter((r) => r.p0 != null && r.brand === "LG" && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)) && r.code && r.code.length >= 3 && (!kw || (r.code + " " + r.model).toLowerCase().includes(kw)))
     const g: Record<string, PriceRow[]> = {}
     f.forEach((r) => { (g[r.brand + "|" + r.code] = g[r.brand + "|" + r.code] || []).push(r) })
     const out: PivRow[] = Object.values(g).map((list) => {
@@ -457,11 +457,9 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
                                 <span className={"truncate text-[10px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
                                 {c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
                               </div>
-                              {/* 2행 — 가격 + 지수 */}
-                              <div className={"flex items-baseline gap-1 border-t py-1 " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
-                                <span className="text-[14px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
-                                <span title="가격지수 — 이 카테고리 최저가를 100으로 본 상대가격(159=최저가보다 59% 비쌈)" className={"cursor-help text-[9.5px] font-medium tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>지수{c.idx}</span>
-                                <span className={"ml-auto shrink-0 truncate text-[9px] " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{c.retailer ? pmShopLabel(c.retailer) : c.shops + "곳"}</span>
+                              {/* 2행 — 가격만 */}
+                              <div className={"border-t py-1 " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
+                                <span className="text-[15px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
                               </div>
                               {/* 3행 — 전력효율(월 소비전력) */}
                               <div className={"flex items-center justify-between gap-1 border-t py-1 text-[9.5px] " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>

@@ -52,6 +52,11 @@ export async function oilDaily(n = 30) {
 }
 
 export type EnergyRow = { category: string; brand: string; model: string; eff: number | null; metric: string; star: number | null; kwh: number | null; spec: number | null; stype: string; refrigerant: string; gwp: number | null }
+// product_name에서 모델코드 토큰 추출(TV처럼 model_code가 비고 제품명에 코드가 박힌 경우 대응). 영문+숫자 혼합·5자↑ 마지막 토큰.
+function pnCode(pn: string): string {
+  const toks = String(pn || "").split(/[\s(),"“”/]+/).map((t) => t.replace(/[^A-Za-z0-9-]/g, "")).filter((t) => /[A-Za-z]/.test(t) && /\d/.test(t) && t.replace(/-/g, "").length >= 5)
+  return toks.length ? toks[toks.length - 1] : ""
+}
 export async function energyLabels(): Promise<EnergyRow[]> {
   // PostgREST 행 상한(1000) 대응 — 오프셋 페이지를 **병렬**로 가져와 로딩 지연 최소화(기존 순차 → 병렬).
   const sel = "energy_labels?select=category,brand,model_code,product_name,efficiency_val,efficiency_metric,star_rating,monthly_kwh,extra&order=id&limit=1000"
@@ -63,7 +68,7 @@ export async function energyLabels(): Promise<EnergyRow[]> {
     const spec = num(ex.cooling_kw) ?? num(ex.volume_l) ?? num(ex.screen_in)
     const stype = (ex.installation || ex.ref_type || ex.tv_type || "") as string
     const refrigerant = (ex.refrigerant || "") as string
-    return { category: r.category, brand: r.brand, model: r.model_code || r.product_name || "", eff: num(r.efficiency_val), metric: r.efficiency_metric, star: num(r.star_rating), kwh: num(r.monthly_kwh), spec, stype, refrigerant, gwp: num(ex.gwp) }
+    return { category: r.category, brand: r.brand, model: r.model_code || pnCode(r.product_name) || "", eff: num(r.efficiency_val), metric: r.efficiency_metric, star: num(r.star_rating), kwh: num(r.monthly_kwh), spec, stype, refrigerant, gwp: num(ex.gwp) }
   })
 }
 
