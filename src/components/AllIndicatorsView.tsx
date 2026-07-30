@@ -433,7 +433,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
   if (typeof document === "undefined") return null
   return createPortal(
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6" onClick={onClose} style={{ animation: "bkFade .2s ease both" }}>
-      <div className="relative flex max-h-[88vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: "detModalIn .34s cubic-bezier(.22,1,.36,1) both" }}>
+      <div className="relative flex max-h-[88vh] w-full max-w-[760px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl" onClick={(e) => e.stopPropagation()} style={{ animation: "detModalIn .38s cubic-bezier(.22,1,.36,1) both", willChange: "transform, opacity" }}>
         <span className={"absolute inset-y-0 left-0 z-10 w-1 " + (row.confidence === "FORECAST" ? "bg-amber-500" : "bg-indigo-500")} />
         <button type="button" onClick={onClose} aria-label="닫기" className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
         <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-6">
@@ -470,7 +470,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                 {/* 축 글씨가 넓은 모달에서 과대해지지 않도록 폭 제한 + SVG 텍스트 축소 */}
                 <style>{".detchart svg text{font-size:6.8px}"}</style>
                 {/* 기간 토글에 맞춰 차트/최신값만 부드럽게 리렌더(카드·토글은 유지) */}
-                <div key={"ch-" + win} style={{ animation: "detSwap .34s cubic-bezier(.16,1,.3,1) both" }}>
+                <div key={"ch-" + win} style={{ animation: "bkFade .4s ease both" }}>
                   <div className="mt-1.5 flex min-h-[26px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">
                     <Lg c="#4f46e5" t={row.label || row.indicator} b />
                     <span className="ml-auto tabular-nums text-gray-500 dark:text-gray-400">최신 <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
@@ -486,7 +486,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                 </div>
               </div>
               {/* 엑셀형 표 카드 */}
-              <div key={"tb-" + win} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "detSwap .36s cubic-bezier(.16,1,.3,1) .05s both" }}>
+              <div key={"tb-" + win} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "bkFade .45s ease .06s both" }}>
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
                   <span className="h-[15px] w-1 rounded bg-emerald-500" />
                   <h4 className="text-[13px] font-bold text-gray-900 dark:text-gray-50">시계열 표 <span className="text-[11px] font-semibold text-gray-400">· 전기·전년 대비</span></h4>

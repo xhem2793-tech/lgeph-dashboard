@@ -468,7 +468,9 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
                   <span className="absolute right-2 top-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">고가</span>
                   <span className="absolute right-2 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500" style={{ bottom: 2 }}>저가</span>
                 </div>
-                <div className="relative flex-1 border-l-2 border-gray-200 dark:border-gray-700" style={{ height: H }}>
+                <div className="relative flex-1" style={{ height: H }}>
+                  {/* 좌측 세로축(absolute → 컬럼 폭에 영향 없음, 정렬 유지) */}
+                  <div className="pointer-events-none absolute inset-y-0 left-0 border-l-2 border-gray-200 dark:border-gray-700" />
                   {/* 중간 가격대(Mid) 밴드 — 회색 배경 */}
                   <div className="pointer-events-none absolute inset-x-0 bg-gray-100/70 dark:bg-gray-800/30" style={{ top: topFor(gmin + (gmax - gmin) * 0.66), height: Math.max(0, topFor(gmin + (gmax - gmin) * 0.33) - topFor(gmin + (gmax - gmin) * 0.66)) }} />
                   {ticks.map((v) => (
@@ -477,7 +479,7 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 border-t-2 border-gray-200 dark:border-gray-700" />
                   <div className="absolute inset-0 flex">
                     {brands.map((b, bi) => { const lg = b === "LG"; return (
-                      <div key={b} className={"relative min-w-0 flex-1 border-r border-gray-100 last:border-r-0 dark:border-gray-800/40 " + (lg ? "bg-indigo-50/40 dark:bg-indigo-500/5" : bi % 2 === 1 ? "bg-gray-50/50 dark:bg-gray-800/20" : "")}>
+                      <div key={b} className={"relative min-w-0 flex-1 " + (lg ? "bg-indigo-50/40 dark:bg-indigo-500/5" : bi % 2 === 1 ? "bg-gray-50/50 dark:bg-gray-800/20" : "")}>
                         {cards.filter((c) => c.b === b).map((c, ci) => (
                           <a key={c.label + ci} href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer"
                             title={`${c.b} · ${c.label} · ${peso(c.avg)}${c.retailer ? " @ " + pmShopLabel(c.retailer) : ""} · ${c.shops}개 유통 취급${c.star != null ? " · New DOE ★" + c.star : ""}${c.kwh != null ? " · " + Math.round(c.kwh) + "kWh/월" : ""}${c.url ? " · 클릭→원문" : ""}`}
