@@ -63,8 +63,15 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
 ]
 
 const ALL = GROUPS.flatMap((g) => g.items)
-const BRANDS = ["LG", "Samsung", "Panasonic", "TCL", "Midea", "Hisense"]
-const SHOPS = ["Anson's", "Abenson", "SM Appliance", "Western Appliances", "Robinsons Appliances"]
+// 대시보드에 노출할 브랜드 화이트리스트 — 수집(스크래핑)은 전 브랜드 하되, 표시는 이 브랜드만
+const SHOWN_BRANDS = ["LG", "Samsung", "Panasonic", "TCL", "Haier", "Condura", "Midea", "Hisense", "Carrier"]
+// 에어컨 카테고리에서만 추가로 노출할 브랜드
+const AC_EXTRA_BRANDS = ["Kolin", "Daikin"]
+const BRANDS = [...SHOWN_BRANDS, ...AC_EXTRA_BRANDS]
+// 카테고리 기준 노출 여부: 공통 9개는 전 카테고리, Kolin·Daikin은 에어컨만
+const brandShown = (brand: string, category: string) =>
+  SHOWN_BRANDS.includes(brand) || (category === "에어컨" && AC_EXTRA_BRANDS.includes(brand))
+const SHOPS = ["Anson's", "Abenson", "SM Appliance", "Western Appliances", "Robinsons Appliances", "Emcor"]
 
 /** 세그먼트 — 유통 매장이 실제로 진열을 나누는 축(설치형태·도어·급) */
 const SEGMENTS: Record<string, { t: string; re: RegExp }[]> = {
@@ -120,6 +127,7 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
   { k: "Anson's", label: "Anson's", live: true },
   { k: "Robinsons Appliances", label: "Robinsons", live: true },
   { k: "Western Appliances", label: "Western", live: true },
+  { k: "Emcor", label: "Emcor", live: true },
 ]
 
 const deltaCol = (d: number | null) => (d == null || d === 0 ? "text-gray-400 dark:text-gray-500" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")
@@ -299,6 +307,9 @@ const DOE_CODE: Record<string, string> = { "에어컨": "acu", "TV": "tvl", "냉
 const pmNorm = (s: string) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "")
 const pmShopLabel = (s: string) => (s === "SM Appliance" ? "SM" : s === "Western Appliances" ? "Western" : s === "Robinsons Appliances" ? "Robinsons" : s)
 const pmStarCls = (s: number | null) => (s == null ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500" : s >= 4 ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : s >= 2 ? "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300")
+// 가격대(tier) 라벨·색 — 엔트리=LOW(초록) · 미드=MED(파랑) · 프리미엄(주황)
+const pmTierLabel = (t: string) => (t === "프리미엄" ? "프리미엄" : t === "미드" ? "MED" : "LOW")
+const pmTierCls = (t: string) => (t === "프리미엄" ? "bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300" : t === "미드" ? "bg-sky-100 dark:bg-sky-500/20 text-sky-700 dark:text-sky-300" : "bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300")
 // 호버 드롭다운 선택 — 좌측 세로 메뉴(마우스 오버로 옵션 펼침)
 function PmDrop({ label, sel, options, onSelect }: { label: string; sel: string; options: { k: string; t: string }[]; onSelect: (k: string) => void }) {
   const cur = options.find((o) => o.k === sel)?.t ?? sel
@@ -353,8 +364,10 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     const byB0: Record<string, PriceRow[]> = {}
     f0.forEach((r) => { (byB0[r.brand] = byB0[r.brand] || []).push(r) })
     const bl = Object.entries(byB0).map(([b, list]) => ({ b, n: list.length, avg: pmMean(list.map((x) => x.p0 as number)) })).filter((x) => x.n >= 2 && x.b && x.b.trim() && x.b.toLowerCase() !== "null")
-    let top = bl.slice().sort((a, b) => b.n - a.n).slice(0, 8)
-    if (!top.some((x) => x.b === "LG")) { const lg = bl.find((x) => x.b === "LG"); if (lg) top = [...top.slice(0, 7), lg] }
+    // 포지셔닝에는 8개만 노출 — 규모(리스팅 수) 상위로 뽑고 LG는 항상 포함
+    const cap = 8
+    let top = bl.slice().sort((a, b) => b.n - a.n).slice(0, cap)
+    if (!top.some((x) => x.b === "LG")) { const lg = bl.find((x) => x.b === "LG"); if (lg) top = [...top.slice(0, cap - 1), lg] }
     const ordered = top.sort((a, b) => a.avg - b.avg).map((x) => x.b)
     const brands = [...ordered.filter((b) => b !== "LG"), ...(ordered.includes("LG") ? ["LG"] : [])] // LG 맨 오른쪽
     const brandSet = new Set(brands)
@@ -473,9 +486,11 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
                                 <span className={"truncate text-[9.5px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
                                 {c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[8.5px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
                               </div>
-                              {/* 2행 — 가격만 */}
-                              <div className={"border-t py-0.5 " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
-                                <span className="text-[14px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
+                              {/* 2행 — 가격 + 지수(최저가=100) + 가격대 */}
+                              <div className={"flex items-center gap-1 border-t py-0.5 " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
+                                <span className="text-[12.5px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
+                                <span className={"tabular-nums text-[8.5px] font-semibold leading-none " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")} title="최저가=100 기준 지수">{c.idx}</span>
+                                <span className={"ml-auto shrink-0 rounded px-1 text-[8px] font-bold leading-4 " + pmTierCls(c.tier)}>{pmTierLabel(c.tier)}</span>
                               </div>
                               {/* 3행 — 전력효율(월 소비전력) */}
                               <div className={"flex items-center justify-between gap-1 border-t py-0.5 text-[9px] " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
@@ -725,7 +740,7 @@ export default function Competitors() {
       .then((f) => setStamp(f.prices ?? null))
       .catch(() => {})
     competitorTable(4000)
-      .then(setRows)
+      .then((rs) => setRows(rs.filter((r) => brandShown(r.brand, r.category))))
       .catch(() => setRows([]))
     promoIntensity(14)
       .then(setPromo)
