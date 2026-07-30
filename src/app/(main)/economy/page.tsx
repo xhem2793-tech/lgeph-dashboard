@@ -119,7 +119,7 @@ export default function Page() {
             </nav>
           </div>
         </aside>
-        <div className="min-h-[calc(100vh-96px)] min-w-0" style={{ animation: "fadeUp .5s ease both" }}>
+        <div className="min-h-[1200px] min-w-0" style={{ animation: "fadeUp .5s ease both" }}>
           {/* 경쟁사 광고 페이지와 동일: 뷰 전환 시 viewIn */}
           <div key={active} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>{view()}</div>
         </div>

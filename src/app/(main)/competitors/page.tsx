@@ -1046,7 +1046,7 @@ export default function Competitors() {
           </div>
         </aside>
 
-        <div style={{ animation: "fadeUp .5s ease both" }} className="flex min-h-[calc(100vh-96px)] min-w-0 flex-col gap-4">
+        <div style={{ animation: "fadeUp .5s ease both" }} className="flex min-h-[1200px] min-w-0 flex-col gap-4">
         {view === "movers" ? (() => {
           const R = rows || []
           const cu = R.filter((r) => (r.deltaPct ?? 0) < 0).length
