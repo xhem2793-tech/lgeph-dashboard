@@ -335,9 +335,11 @@ function PositioningMatrix({ rows }: { rows: PriceRow[] | null }) {
     const tierOf = (p: number) => { const t = (p - pmin) / ((pmax - pmin) || 1); return t >= 0.6 ? "프리미엄" : t >= 0.3 ? "미드" : "엔트리" }
     const byBrand: Record<string, PriceRow[]> = {}
     f.forEach((r) => { (byBrand[r.brand] = byBrand[r.brand] || []).push(r) })
-    const bl = Object.entries(byBrand).map(([b, list]) => ({ b, n: list.length, avg: pmMean(list.map((x) => x.p0 as number)) })).filter((x) => x.n >= 2).sort((a, b) => a.avg - b.avg)
-    let brands = bl.slice(0, 9).map((x) => x.b)
-    if (!brands.includes("LG") && byBrand["LG"] && byBrand["LG"].length) brands = [...brands.slice(0, 8), "LG"]
+    const bl = Object.entries(byBrand).map(([b, list]) => ({ b, n: list.length, avg: pmMean(list.map((x) => x.p0 as number)) })).filter((x) => x.n >= 2)
+    // 제품별 "제일 큰" 6~8개 브랜드(리스팅 수 기준) — 자사(LG)는 항상 포함, 표시는 평균가 오름차순
+    let top = bl.slice().sort((a, b) => b.n - a.n).slice(0, 8)
+    if (!top.some((x) => x.b === "LG")) { const lg = bl.find((x) => x.b === "LG"); if (lg) top = [...top.slice(0, 7), lg] }
+    const brands = top.sort((a, b) => a.avg - b.avg).map((x) => x.b)
     const cards: PMCard[] = []
     brands.forEach((b) => {
       const g: Record<string, PriceRow[]> = {}
