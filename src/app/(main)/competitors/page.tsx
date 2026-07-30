@@ -115,11 +115,11 @@ const md = (s: string | null) => (s ? s.slice(5).replace("-", "/") : "—")
  *  행 = 카테고리별 대표 제품(하이브리드: ⭐동일SKU + 대표 스펙 앵커).
  *  셀 = 해당 거래선의 매칭 리스팅 오늘가 최저값. 행 내 최저가 강조, LG 행 인디고.       */
 const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
-  { k: "Anson's", label: "Anson's", live: true },
   { k: "Abenson", label: "Abenson", live: true },
-  { k: "SM Appliance", label: "SM Appliance", live: true },
-  { k: "Western Appliances", label: "Western", live: true },
+  { k: "SM Appliance", label: "SM", live: true },
+  { k: "Anson's", label: "Anson's", live: true },
   { k: "Robinsons Appliances", label: "Robinsons", live: true },
+  { k: "Western Appliances", label: "Western", live: true },
 ]
 
 const deltaCol = (d: number | null) => (d == null || d === 0 ? "text-gray-400 dark:text-gray-500" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")
@@ -315,7 +315,7 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
   const [starF, setStarF] = React.useState("전체")
   const [shop, setShop] = React.useState("전체")
   const R = rows ?? []
-  const H = 560, PAD = 20, BOTTOM = 12, CARD_H = 56, CARD_W = 122, GAP = 48, GUT = 78
+  const H = 560, PAD = 20, BOTTOM = 12, CARD_H = 56, CARD_W = 128, GAP = 48, GUT = 52
   const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
   const shopList = React.useMemo(() => Array.from(new Set(R.filter((r) => r.category === cat).map((r) => r.retailer))).filter(Boolean), [R, cat])
   const segs = pmSpecsFor(cat)
@@ -381,7 +381,7 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
   }, [R, cat, effSpec, effShop, starF, matchOf]) // eslint-disable-line
   const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
-  const minW = Math.max(1000, GUT + brands.length * 138 + 40)
+  const minW = Math.max(1160, GUT + brands.length * 156 + 24)
   return (
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
       {/* 상단 가로 필터 — 마우스 오버로 펼치는 드롭다운 */}
