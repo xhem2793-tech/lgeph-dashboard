@@ -308,6 +308,13 @@ function BoardView({ rows, stamp, asOf }: { rows: PriceRow[] | null; stamp: stri
  *  세그먼트(프리미엄/미드/엔트리) 평균가·가격지수·취급 유통수. 자사(LG) 인디고 강조.
  *  제품(카테고리)·스펙(세그먼트) 선택. New DOE ★는 미수집 → 가격 세그먼트로 대체.   */
 const PM_CATS = ["에어컨", "냉장고", "TV", "세탁기"]
+// 에어컨은 마력(HP)별로 스펙을 쪼갠다 — 그 외는 SEGMENTS(진열 세그먼트) 사용
+const PM_AC_HP: { t: string; re: RegExp }[] = [
+  { t: "1.0HP", re: /(^|[^\d.])1(\.0)? ?HP/i },
+  { t: "1.5HP", re: /1\.5 ?HP/i },
+  { t: "2.0HP↑", re: /(2(\.0)?|2\.5|3(\.0)?) ?HP/i },
+]
+const pmSpecsFor = (c: string) => (c === "에어컨" ? PM_AC_HP : (SEGMENTS[c] ?? []))
 const pmMean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0)
 const pmTicks = (min: number, max: number, count = 5): number[] => {
   const range = (max - min) || 1, raw = range / count, mag = Math.pow(10, Math.floor(Math.log10(raw))), norm = raw / mag
@@ -330,12 +337,13 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
   const [starF, setStarF] = React.useState("전체")
   const [shop, setShop] = React.useState("전체")
   const R = rows ?? []
-  const H = 540, PAD = 22, BOTTOM = 14, CARD_W = 118, GAP = 46, GUT = 78
+  const H = 560, PAD = 20, BOTTOM = 12, CARD_H = 56, CARD_W = 122, GAP = 48, GUT = 78
   const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
   const shopList = React.useMemo(() => Array.from(new Set(R.filter((r) => r.category === cat).map((r) => r.retailer))).filter(Boolean), [R, cat])
-  const segs = SEGMENTS[cat] ?? []
+  const segs = pmSpecsFor(cat)
   const effSpec = spec === "전체" || segs.some((s) => s.t === spec) ? spec : "전체"
   const effShop = shop === "전체" || shopList.includes(shop) ? shop : "전체"
+  const exact = effShop !== "전체" // 거래선 지정 시 평균이 아니라 그 거래선 정확 단가
 
   const starIdx = React.useMemo(() => {
     const code = DOE_CODE[cat]
@@ -388,42 +396,35 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
     const cmin = Math.min(...cards.map((c) => c.avg)), cmax = Math.max(...cards.map((c) => c.avg))
     const ticks = pmTicks(cmin, cmax, 4)
     const axMin = Math.min(cmin, ticks[0] ?? cmin), axMax = Math.max(cmax, ticks[ticks.length - 1] ?? cmax)
-    const topFor = (p: number) => PAD + ((axMax - p) / ((axMax - axMin) || 1)) * (H - PAD - BOTTOM)
-    cards.forEach((c) => { c.idx = Math.round((c.avg / cmin) * 100); c.left = ((brands.indexOf(c.b) + 0.5) / brands.length) * 100; c.top = topFor(c.avg) })
+    const topFor = (p: number) => PAD + ((axMax - p) / ((axMax - axMin) || 1)) * (H - PAD - BOTTOM - CARD_H)
+    const maxTop = H - BOTTOM - CARD_H
+    cards.forEach((c) => { c.idx = Math.round((c.avg / cmin) * 100); c.top = topFor(c.avg) })
     const cols: Record<string, PMCard[]> = {}
     cards.forEach((c) => { (cols[c.b] = cols[c.b] || []).push(c) })
-    Object.values(cols).forEach((list) => { list.sort((a, b) => a.top - b.top); for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = list[i - 1].top + GAP })
+    Object.values(cols).forEach((list) => { list.sort((a, b) => a.top - b.top); for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = Math.min(list[i - 1].top + GAP, maxTop) })
     return { cards, brands, ticks, gmin: axMin, gmax: axMax, count: f0.length, matched }
   }, [R, cat, effSpec, effShop, mode, starF, starOf]) // eslint-disable-line
-  const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM)
+  const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
   const minW = Math.max(1000, GUT + brands.length * 138 + 40)
   const chip = (on: boolean) => "rounded-full border px-2.5 py-1 text-[12px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (on ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40")
 
+  const Grp = ({ label, children }: { label: string; children: React.ReactNode }) => (
+    <div className="flex items-center gap-1.5">
+      <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</span>
+      <div className="flex flex-wrap items-center gap-1">{children}</div>
+    </div>
+  )
+  const Div = () => <span className="hidden h-5 w-px shrink-0 bg-gray-200 dark:bg-gray-700 sm:block" />
+
   return (
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
-      {/* 컨트롤: 제품 · 스펙 · 거래선 · 에너지 · 보기(브랜드/모델) */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
-          {cats.map((c) => <button key={c} type="button" onClick={() => { setCat(c); setSpec("전체"); setShop("전체") }} className={chip(cat === c)}>{c}</button>)}
-        </div>
-        {segs.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">스펙</span>
-            <button type="button" onClick={() => setSpec("전체")} className={chip(effSpec === "전체")}>전체</button>
-            {segs.map((s) => <button key={s.t} type="button" onClick={() => setSpec(s.t)} className={chip(effSpec === s.t)}>{s.t}</button>)}
-          </div>
-        )}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">거래선</span>
-          <button type="button" onClick={() => setShop("전체")} className={chip(effShop === "전체")}>전체</button>
-          {shopList.map((s) => <button key={s} type="button" onClick={() => setShop(s)} className={chip(effShop === s)}>{pmShopLabel(s)}</button>)}
-        </div>
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">에너지</span>
-          {["전체", "★5", "★4", "★3↓"].map((s) => <button key={s} type="button" onClick={() => setStarF(s)} className={chip(starF === s)}>{s}</button>)}
-        </div>
+      {/* 컨트롤 — 정갈한 단일 툴바(라벨 그룹 · 구분선 · 우측 보기 토글) */}
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+        <Grp label="제품">{cats.map((c) => <button key={c} type="button" onClick={() => { setCat(c); setSpec("전체"); setShop("전체") }} className={chip(cat === c)}>{c}</button>)}</Grp>
+        {segs.length > 0 && <><Div /><Grp label="스펙"><button type="button" onClick={() => setSpec("전체")} className={chip(effSpec === "전체")}>전체</button>{segs.map((s) => <button key={s.t} type="button" onClick={() => setSpec(s.t)} className={chip(effSpec === s.t)}>{s.t}</button>)}</Grp></>}
+        <Div /><Grp label="거래선"><button type="button" onClick={() => setShop("전체")} className={chip(effShop === "전체")}>전체</button>{shopList.map((s) => <button key={s} type="button" onClick={() => setShop(s)} className={chip(effShop === s)}>{pmShopLabel(s)}</button>)}</Grp>
+        <Div /><Grp label="에너지">{["전체", "★5", "★4", "★3↓"].map((s) => <button key={s} type="button" onClick={() => setStarF(s)} className={chip(starF === s)}>{s}</button>)}</Grp>
         <span className="ml-auto"><Segmented size="sm" value={mode} onChange={(k) => setMode(k as "브랜드" | "모델")} options={[{ k: "브랜드", label: "브랜드별" }, { k: "모델", label: "모델별" }]} /></span>
       </div>
 
@@ -436,58 +437,64 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
             <span className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">내부용</span>
           </header>
           <p className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 px-4 py-2 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-            세로축 = <b className="text-gray-700 dark:text-gray-200">{effShop === "전체" ? "5개 유통 평균 단가" : pmShopLabel(effShop) + " 단가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-600 dark:text-indigo-400">LG</b>) · 우상단 ★ = <b className="text-gray-700 dark:text-gray-200">New DOE 에너지등급</b> · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 원문 링크
+            세로축 = <b className="text-gray-700 dark:text-gray-200">{exact ? pmShopLabel(effShop) + " 현금가" : "5개 유통 평균가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-600 dark:text-indigo-400">LG</b>) · 우상단 ★ = <b className="text-gray-700 dark:text-gray-200">New DOE 등급</b> · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 원문
           </p>
 
-          {/* 브랜드 컬럼 헤더 — 글씨 확대·플롯과 정렬 */}
-          <div className="flex border-b-2 border-gray-200 dark:border-gray-700 py-2 pr-4" style={{ paddingLeft: GUT + 14 }}>
+          {/* 브랜드 컬럼 헤더 — 플롯 컬럼과 1:1 정렬 */}
+          <div className="flex border-b-2 border-gray-200 dark:border-gray-700 py-2 pr-4" style={{ paddingLeft: GUT }}>
             {brands.map((b) => { const lg = b === "LG"; return (
-              <div key={b} className="flex-1 text-center">
+              <div key={b} className="min-w-0 flex-1 px-1 text-center">
                 <div className={"truncate text-[13px] font-extrabold tracking-tight " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{b}</div>
                 <div className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{brandN(b)}개</div>
               </div>
             ) })}
           </div>
 
-          {/* 플롯 — 카드만 개별 애니메이션(부모 transform 제거로 끊김 방지) */}
+          {/* 플롯 — 좌 축 게이지 + 브랜드별 컬럼(카드는 컬럼 내부 배치 → 잘림/겹침 방지) */}
           <div key={cat + effSpec + effShop + mode + starF} className="flex px-4 pb-3 pt-3">
             {cards.length === 0 ? (
               <div className="flex h-44 w-full items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">해당 조건의 데이터가 부족합니다</div>
             ) : (
               <>
-                {/* 세로축 게이지 */}
                 <div className="relative shrink-0" style={{ width: GUT, height: H }}>
                   {ticks.map((v) => (
                     <span key={v} className="absolute right-2 -translate-y-1/2 text-[11px] font-semibold tabular-nums text-gray-500 dark:text-gray-400" style={{ top: topFor(v) }}>{pmShort(v)}</span>
                   ))}
                   <span className="absolute right-2 top-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">고가</span>
-                  <span className="absolute right-2 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500" style={{ bottom: 0 }}>저가</span>
+                  <span className="absolute right-2 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500" style={{ bottom: 2 }}>저가</span>
                 </div>
-                {/* 산점 영역 — 선명한 축·그리드 */}
                 <div className="relative flex-1 border-l-2 border-gray-200 dark:border-gray-700" style={{ height: H }}>
+                  {/* 가로 그리드 + 하단 축(선명) */}
                   {ticks.map((v) => (
                     <div key={v} className="pointer-events-none absolute inset-x-0 border-t border-gray-200/80 dark:border-gray-700/60" style={{ top: topFor(v) }} />
                   ))}
                   <div className="pointer-events-none absolute inset-x-0 bottom-0 border-t-2 border-gray-200 dark:border-gray-700" />
-                  {cards.map((c, i) => { const lg = c.b === "LG"; return (
-                    <a key={c.b + c.label + i} href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer"
-                      title={`${c.b} · ${c.label} · 평균 ${peso(c.avg)} · ${c.shops}개 유통 · ${c.n}개${c.star != null ? " · New DOE ★" + c.star : ""}${c.url ? " · 클릭→원문" : ""}`}
-                      className={"absolute block -translate-x-1/2 overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:-translate-y-0.5 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
-                      style={{ left: c.left + "%", top: c.top, width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(i, 16) * 0.02) + "s", willChange: "transform, opacity" }}>
-                      <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
-                      <div className="py-1.5 pl-3 pr-2">
-                        <div className="flex items-center gap-1">
-                          <span className={"truncate text-[10px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
-                          {c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
-                        </div>
-                        <div className="mt-0.5 flex items-baseline gap-1">
-                          <span className="text-[14px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
-                          <span className={"text-[10px] font-medium tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>({c.idx})</span>
-                          <span className={"ml-auto shrink-0 text-[9px] tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{c.shops}곳</span>
-                        </div>
+                  {/* 브랜드 컬럼 — 카드는 각 컬럼 중앙에 상주 */}
+                  <div className="absolute inset-0 flex">
+                    {brands.map((b) => (
+                      <div key={b} className="relative min-w-0 flex-1 border-r border-gray-100 last:border-r-0 dark:border-gray-800/50">
+                        {cards.filter((c) => c.b === b).map((c, ci) => { const lg = b === "LG"; return (
+                          <a key={c.label + ci} href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer"
+                            title={`${c.b} · ${c.label} · ${exact ? "" : "평균 "}${peso(c.avg)} · ${c.shops}개 유통 · ${c.n}개${c.star != null ? " · New DOE ★" + c.star : ""}${c.url ? " · 클릭→원문" : ""}`}
+                            className={"absolute left-1/2 block -translate-x-1/2 overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:-translate-y-0.5 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
+                            style={{ top: c.top, width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "transform, opacity" }}>
+                            <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
+                            <div className="py-1.5 pl-3 pr-2">
+                              <div className="flex items-center gap-1">
+                                <span className={"truncate text-[10px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
+                                {c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
+                              </div>
+                              <div className="mt-0.5 flex items-baseline gap-1">
+                                <span className="text-[14px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
+                                <span className={"text-[10px] font-medium tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>({c.idx})</span>
+                                <span className={"ml-auto shrink-0 text-[9px] tabular-nums " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{c.shops}곳</span>
+                              </div>
+                            </div>
+                          </a>
+                        ) })}
                       </div>
-                    </a>
-                  ) })}
+                    ))}
+                  </div>
                 </div>
               </>
             )}
@@ -501,7 +508,7 @@ function PositioningMatrix({ rows, elabels }: { rows: PriceRow[] | null; elabels
             <span className="ml-auto inline-flex items-center gap-1.5"><span className="inline-block h-3 w-4 rounded bg-indigo-600" />자사(LG) · <span className="inline-block h-3 w-4 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />경쟁사</span>
           </footer>
         </div>
-        <p className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">가격 = v_competitor_3d 거래선 현금가(동일 데이터·동일 숫자) · New DOE ★ = energy_labels 모델코드 매칭({DOE_CODE[cat] || "-"}) · 모델별=브랜드당 취급수 상위 5개 · 카드 클릭 시 원문 링크</p>
+        <p className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">{exact ? pmShopLabel(effShop) + " 현금가" : "5개 유통 평균가"} · New DOE ★ = energy_labels 모델코드 매칭({DOE_CODE[cat] || "-"}) · 모델별=브랜드당 취급수 상위 5개 · 카드 클릭 시 원문 링크</p>
       </div>
     </div>
   )
