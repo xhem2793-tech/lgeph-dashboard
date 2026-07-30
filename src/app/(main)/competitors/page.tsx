@@ -134,11 +134,29 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
 
 const deltaCol = (d: number | null) => (d == null || d === 0 ? "text-gray-400 dark:text-gray-500" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")
 
+// LG 에어컨 마력(HP) 추론 — ①명시 "X HP" 텍스트 ②윈도우 LA코드=번호/100(LA150=1.5) ③스플릿 HS/HSN코드=BTU천→HP(HS12=1.5)
+const acHpNum = (m: string): number | null => {
+  const t = m.match(/(\d(?:\.\d)?)\s?HP/i); if (t) return parseFloat(t[1])
+  const la = m.match(/\bLA(\d{3})/i); if (la) { const n = parseInt(la[1], 10) / 100; if (n >= 0.4 && n <= 6) return n }
+  const hs = m.match(/\bHS[NU]?(\d{2})/i); if (hs) { const b = parseInt(hs[1], 10); return b <= 8 ? 0.75 : b <= 10 ? 1.0 : b <= 15 ? 1.5 : b <= 20 ? 2.0 : b <= 26 ? 2.5 : 3.0 }
+  return null
+}
+const acHpLabel = (m: string): string | null => { const h = acHpNum(m); return h == null ? null : (Number.isInteger(h) ? h.toFixed(1) : String(h)) + "HP" }
+// 포지셔닝/보드 스펙 필터 버킷 — PM_AC_HP 라벨과 일치
+const acHpBucket = (m: string): string | null => { const h = acHpNum(m); return h == null ? null : h <= 0.9 ? "0.75HP↓" : h <= 1.24 ? "1.0HP" : h <= 1.74 ? "1.5HP" : h <= 2.24 ? "2.0HP" : h <= 2.9 ? "2.5HP" : "3.0HP↑" }
+// 스펙 필터 매칭 — 에어컨은 HP 버킷(코드추론 포함), 그 외는 SEGMENTS 진열 세그먼트 정규식
+const pmSpecHit = (cat: string, model: string, specT: string) => {
+  if (specT === "전체") return true
+  if (cat === "에어컨") return acHpBucket(model) === specT
+  const s = (SEGMENTS[cat] ?? []).find((x) => x.t === specT)
+  return s ? s.re.test(model) : true
+}
+
 // 스펙 도출 — 타입 기준(AC=HP, TV=패널, 세탁기=F/L·T/L, 냉장고=도어형). 모델명 우선, 없으면 capacity
 const pmSpecOf = (cat: string, model: string, capacity: string | null) => {
   const m = model || ""
   const cap = (capacity || "").trim()
-  if (cat === "에어컨") { const hp = m.match(/(\d(?:\.\d)?)\s?HP/i); if (hp) return hp[1] + "HP"; if (/window|창문/i.test(m)) return "창문형"; if (/split|벽걸이/i.test(m)) return "스플릿"; if (/floor|ceiling|cassette|천장|스탠드/i.test(m)) return "스탠드"; return cap }
+  if (cat === "에어컨") { const hp = acHpLabel(m); if (hp) return hp; if (/window|창문/i.test(m)) return "창문형"; if (/split|벽걸이/i.test(m)) return "스플릿"; if (/floor|ceiling|cassette|천장|스탠드/i.test(m)) return "스탠드"; return cap }
   if (cat === "TV") { if (/oled/i.test(m)) return "OLED"; if (/qned/i.test(m)) return "QNED"; if (/nano ?cell/i.test(m)) return "NanoCell"; if (/qled/i.test(m)) return "QLED"; if (/uhd|4k/i.test(m)) return "UHD"; if (/fhd|full ?hd/i.test(m)) return "FHD"; if (/hd\b/i.test(m)) return "HD"; return cap }
   if (cat === "세탁기") { if (/twin ?wash/i.test(m)) return "TwinWash"; if (/wash ?tower|워시타워/i.test(m)) return "워시타워"; if (/front ?load|drum|프론트/i.test(m)) return "F/L"; if (/top ?load|탑로드/i.test(m)) return "T/L"; return cap }
   if (cat === "냉장고") { if (/side by side|sxs|양문/i.test(m)) return "SxS"; if (/instaview|인스타뷰/i.test(m)) return "InstaView"; if (/french|multi ?door|멀티도어|프렌치/i.test(m)) return "French"; if (/bottom|하냉/i.test(m)) return "BMF"; if (/top ?mount|two ?door|2 ?door|상냉/i.test(m)) return "2-Door"; return cap }
@@ -183,12 +201,11 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
   const starFor = (c: string, model: string) => { const code = DOE_CODE[c]; const idx = code ? starIdx[code] : null; if (!idx) return null; const mm = pmNorm(model); for (const e of idx) if (mm.includes(e.codeN)) return e.star; return null }
 
   const data = React.useMemo(() => {
-    const seg = segs.find((s) => s.t === effSpec)
     const kw = q.trim().toLowerCase()
     // 전일(직전 데이터일) 최저가 인덱스 — canonCode|거래선 → 가격(▼▲ 전일 대비)
     const prevIdx: Record<string, number> = {}
     D.filter((r) => r.d === prevDate && r.price != null).forEach((r) => { const cc = canonCode(r.model, r.code); if (!cc) return; const k = cc + "|" + r.retailer; prevIdx[k] = Math.min(prevIdx[k] ?? Infinity, r.price as number) })
-    const f = D.filter((r) => r.d === curDate && r.price != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
+    const f = D.filter((r) => r.d === curDate && r.price != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmSpecHit(cat, r.model, effSpec) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
     const g: Record<string, DailyRow[]> = {}
     f.forEach((r) => { const cc = canonCode(r.model, r.code); (g[r.brand + "|" + cc] = g[r.brand + "|" + cc] || []).push(r) })
     const out: PivRow[] = Object.values(g).map((list) => {
@@ -383,8 +400,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const matchOf = React.useCallback((model: string) => { const m = pmNorm(model); for (const e of starIdx) if (m.includes(e.codeN)) return e; return null }, [starIdx])
 
   const { cards, brands, ticks, gmin, gmax, count, matched } = React.useMemo(() => {
-    const seg = segs.find((s) => s.t === effSpec)
-    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)))
+    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSpecHit(cat, r.model, effSpec))
     const empty = { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, count: f0.length, matched: 0 }
     if (f0.length < 3) return empty
     const prices = f0.map((r) => r.p0 as number)

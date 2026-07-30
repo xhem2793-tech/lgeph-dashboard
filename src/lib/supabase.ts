@@ -539,7 +539,7 @@ function modelCode(model: string, url?: string | null) {
  *  제품 성격이 다르면 가격 비교의 의미도 다르므로 제목 기준으로 다시 나눈다. */
 const CAT_RULES: { t: string; re: RegExp }[] = [
   { t: "제습기", re: /dehumidif/i },
-  { t: "공기청정기", re: /air ?purifier|purifier/i },
+  { t: "공기청정기", re: /air ?purifier|purifier|puricare|air ?cleaner|aero ?booster/i },
   { t: "정수기", re: /water (purifier|dispenser)/i },
   { t: "청소기", re: /vacuum|cordzero|stick clean/i },
   { t: "오디오", re: /soundbar|sound bar|speaker|xboom|home theater|audio system/i },
