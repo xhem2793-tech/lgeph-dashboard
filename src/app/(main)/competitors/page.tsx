@@ -301,93 +301,148 @@ function BoardView({ rows, stamp, asOf }: { rows: PriceRow[] | null; stamp: stri
   )
 }
 
-/* ─── 가격 포지셔닝 매트릭스(ASP) — Claude Design 핸드오프 재현 ─────────────────
- *  세로=NET 현금가(위=고가), 가로=브랜드 열. 카드=세그먼트·New DOE ★등급·가격·가격지수.
- *  자사(LG) 인디고 강조. star/segment는 내부 SRAC 데크 값(스크래핑 대상 아님).      */
-const PM_BRANDS = ["Midea", "TCL", "KS", "Carrier", "Condura", "Panasonic", "Samsung", "Daikin", "LG"]
-// [brand, segment(AI Air/Premium/STD), star, priceNET, index(최저가=100)]
-const PM_DATA: [string, string, number, number, number][] = [
-  ["Midea", "AI Air", 5, 40994, 141], ["Midea", "STD", 4, 28998, 100],
-  ["TCL", "AI Air", 5, 41994, 145], ["TCL", "STD", 3, 29998, 103],
-  ["KS", "Premium", 5, 45098, 156], ["KS", "Premium", 5, 34997, 121], ["KS", "STD", 4, 30998, 107],
-  ["Carrier", "STD", 5, 38998, 134], ["Carrier", "Premium", 5, 32998, 114],
-  ["Condura", "STD", 3, 29993, 103],
-  ["Panasonic", "AI Air", 5, 45991, 159], ["Panasonic", "Premium", 4, 39991, 138], ["Panasonic", "STD", 4, 32997, 114],
-  ["Samsung", "AI Air", 5, 48994, 169], ["Samsung", "Premium", 5, 37991, 131], ["Samsung", "STD", 4, 30998, 107],
-  ["Daikin", "AI Air", 5, 54994, 190], ["Daikin", "Premium", 5, 43991, 152], ["Daikin", "STD", 2, 36998, 128],
-  ["LG", "AI Air", 5, 51994, 179], ["LG", "Premium", 4, 46991, 162], ["LG", "STD", 4, 35998, 124], ["LG", "STD", 4, 33997, 117], ["LG", "STD", 4, 31998, 110],
-]
-type PMItem = { b: string; tier: string; star: number; price: number; idx: number; left: number; top: number }
+/* ─── 가격 포지셔닝 매트릭스(ASP) — 실데이터 기반 ────────────────────────────────
+ *  세로=5개 유통 평균 단가(위=고가), 가로=브랜드(좌 저가→우 고가). 카드=브랜드×가격
+ *  세그먼트(프리미엄/미드/엔트리) 평균가·가격지수·취급 유통수. 자사(LG) 인디고 강조.
+ *  제품(카테고리)·스펙(세그먼트) 선택. New DOE ★는 미수집 → 가격 세그먼트로 대체.   */
+const PM_CATS = ["에어컨", "냉장고", "TV", "세탁기"]
+const pmMean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0)
+const pmTicks = (min: number, max: number, count = 5): number[] => {
+  const range = (max - min) || 1, raw = range / count, mag = Math.pow(10, Math.floor(Math.log10(raw))), norm = raw / mag
+  const step = (norm < 1.5 ? 1 : norm < 3 ? 2 : norm < 7 ? 5 : 10) * mag
+  const out: number[] = []
+  for (let v = Math.ceil(min / step) * step; v <= max + 1e-6; v += step) out.push(v)
+  return out
+}
+const pmShort = (n: number) => (n >= 1000 ? "₱" + (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/, "") + "k" : "₱" + Math.round(n))
+type PMCard = { b: string; tier: string; avg: number; shops: number; n: number; idx: number; left: number; top: number }
 
-function PositioningMatrix() {
-  const PMIN = 27000, PMAX = 57000, H = 600, PAD = 14, CARD_W = 104, GAP = 46
-  const items = React.useMemo<PMItem[]>(() => {
-    const topFor = (p: number) => PAD + ((PMAX - p) / (PMAX - PMIN)) * (H - 2 * PAD - 40)
-    const leftFor = (b: string) => ((PM_BRANDS.indexOf(b) + 0.5) / PM_BRANDS.length) * 100
-    const its: PMItem[] = PM_DATA.map(([b, tier, star, price, idx]) => ({ b: b as string, tier: tier as string, star: star as number, price: price as number, idx: idx as number, left: leftFor(b as string), top: topFor(price as number) }))
-    const cols: Record<string, PMItem[]> = {}
-    its.forEach((it) => { (cols[it.left] = cols[it.left] || []).push(it) })
-    Object.values(cols).forEach((list) => {
-      list.sort((a, b) => a.top - b.top)
-      for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = list[i - 1].top + GAP
+function PositioningMatrix({ rows }: { rows: PriceRow[] | null }) {
+  const [cat, setCat] = React.useState("에어컨")
+  const [spec, setSpec] = React.useState("전체")
+  const R = rows ?? []
+  const H = 520, PAD = 20, BOTTOM = 10, CARD_W = 116, GAP = 44, GUT = 60
+  const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
+  const segs = SEGMENTS[cat] ?? []
+  const effSpec = spec === "전체" || segs.some((s) => s.t === spec) ? spec : "전체"
+
+  const { cards, brands, ticks, gmin, gmax, count } = React.useMemo(() => {
+    const seg = segs.find((s) => s.t === effSpec)
+    const f = R.filter((r) => r.category === cat && r.p0 != null && (effSpec === "전체" || (seg ? seg.re.test(r.model) : true)))
+    if (f.length < 3) return { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, count: f.length }
+    const prices = f.map((r) => r.p0 as number)
+    const pmin = Math.min(...prices), pmax = Math.max(...prices)
+    const tierOf = (p: number) => { const t = (p - pmin) / ((pmax - pmin) || 1); return t >= 0.6 ? "프리미엄" : t >= 0.3 ? "미드" : "엔트리" }
+    const byBrand: Record<string, PriceRow[]> = {}
+    f.forEach((r) => { (byBrand[r.brand] = byBrand[r.brand] || []).push(r) })
+    const bl = Object.entries(byBrand).map(([b, list]) => ({ b, n: list.length, avg: pmMean(list.map((x) => x.p0 as number)) })).filter((x) => x.n >= 2).sort((a, b) => a.avg - b.avg)
+    let brands = bl.slice(0, 9).map((x) => x.b)
+    if (!brands.includes("LG") && byBrand["LG"] && byBrand["LG"].length) brands = [...brands.slice(0, 8), "LG"]
+    const cards: PMCard[] = []
+    brands.forEach((b) => {
+      const g: Record<string, PriceRow[]> = {}
+      byBrand[b].forEach((r) => { const t = tierOf(r.p0 as number); (g[t] = g[t] || []).push(r) })
+      Object.entries(g).forEach(([t, list]) => cards.push({ b, tier: t, avg: pmMean(list.map((x) => x.p0 as number)), shops: new Set(list.map((x) => x.retailer)).size, n: list.length, idx: 0, left: 0, top: 0 }))
     })
-    return its
-  }, [])
-  const starCls = (s: number) => (s >= 4 ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : s >= 2 ? "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300")
-  const won = (n: number) => "₱" + n.toLocaleString("en-US")
+    const cmin = Math.min(...cards.map((c) => c.avg)), cmax = Math.max(...cards.map((c) => c.avg))
+    const ticks = pmTicks(cmin, cmax, 5)
+    const axMin = Math.min(cmin, ticks[0] ?? cmin), axMax = Math.max(cmax, ticks[ticks.length - 1] ?? cmax)
+    const topFor = (p: number) => PAD + ((axMax - p) / ((axMax - axMin) || 1)) * (H - PAD - BOTTOM)
+    cards.forEach((c) => { c.idx = Math.round((c.avg / cmin) * 100); c.left = ((brands.indexOf(c.b) + 0.5) / brands.length) * 100; c.top = topFor(c.avg) })
+    const cols: Record<string, PMCard[]> = {}
+    cards.forEach((c) => { (cols[c.b] = cols[c.b] || []).push(c) })
+    Object.values(cols).forEach((list) => { list.sort((a, b) => a.top - b.top); for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = list[i - 1].top + GAP })
+    return { cards, brands, ticks, gmin: axMin, gmax: axMax, count: f.length }
+  }, [R, cat, effSpec]) // eslint-disable-line
+  const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM)
+  const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
+  const chip = (on: boolean) => "rounded-full border px-2.5 py-0.5 text-[11.5px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (on ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40")
+
   return (
-    <div className="overflow-x-auto">
-      <div className="mx-auto min-w-[960px] max-w-[1040px] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
-        <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
-          <span className="h-4 w-1 rounded bg-indigo-500" />
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">SRAC vs 경쟁사 <span className="text-gray-300 dark:text-gray-600">·</span> 1.0HP 가격 <span className="text-gray-300 dark:text-gray-600">·</span> New DOE Star</h2>
-          <span className="ml-auto rounded border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-rose-600 dark:text-rose-400">INTERNAL USE ONLY</span>
-        </header>
-        <p className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 px-4 py-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
-          세로축 = <b className="text-gray-700 dark:text-gray-200">NET 현금가</b>(위=고가) · 카드 우상단 ★ = <b className="text-gray-700 dark:text-gray-200">2026 New DOE 에너지효율 등급</b> · Carrier·Condura 브랜드 분리 · <span className="tabular-nums">( )</span> = 가격지수, 최저가 <span className="tabular-nums">28,998=100</span>
-        </p>
-        <div className="flex border-b border-gray-100 dark:border-gray-800 px-4 pt-3">
-          {PM_BRANDS.map((b) => {
-            const lg = b === "LG"
-            return <div key={b} className={"flex-1 border-b-2 pb-2 text-center text-[11px] font-bold " + (lg ? "border-indigo-500 text-indigo-700 dark:text-indigo-300" : "border-transparent text-gray-700 dark:text-gray-300")}>{b}</div>
-          })}
+    <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
+      {/* 컨트롤: 제품(카테고리) + 스펙(세그먼트) */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
+          {cats.map((c) => <button key={c} type="button" onClick={() => { setCat(c); setSpec("전체") }} className={chip(cat === c)}>{c}</button>)}
         </div>
-        <div className="relative px-4 pb-3">
-          <div className="relative" style={{ height: H }}>
-            {[1 / 3, 2 / 3].map((f) => (
-              <div key={f} className="pointer-events-none absolute inset-x-0 border-t border-dashed border-gray-100 dark:border-gray-800" style={{ top: PAD + f * (H - 2 * PAD - 40) + 20 }} />
-            ))}
-            {items.map(({ b, tier, star, price, idx, left, top }, i) => {
-              const lg = b === "LG"
-              return (
-                <div key={i} className={"absolute -translate-x-1/2 overflow-hidden rounded-md border transition-all duration-200 hover:z-20 hover:-translate-y-0.5 hover:shadow-md " + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")} style={{ left: left + "%", top, width: CARD_W }}>
-                  <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
-                  <div className="py-1.5 pl-3 pr-2">
-                    <div className="flex items-center gap-1">
-                      <span className={"text-[10px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{tier}</span>
-                      <span className={"ml-auto rounded px-1 text-[10px] font-bold leading-4 " + starCls(star)}>★{star}</span>
-                    </div>
-                    <div className="mt-0.5 text-[14px] font-bold leading-tight tabular-nums">{won(price)} <span className={"text-[10px] font-medium " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>({idx})</span></div>
-                  </div>
-                </div>
-              )
-            })}
+        {segs.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="mr-0.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">스펙</span>
+            <button type="button" onClick={() => setSpec("전체")} className={chip(effSpec === "전체")}>전체</button>
+            {segs.map((s) => <button key={s.t} type="button" onClick={() => setSpec(s.t)} className={chip(effSpec === s.t)}>{s.t}</button>)}
           </div>
-          <div className="pointer-events-none absolute left-4 top-0 flex h-[600px] flex-col justify-between py-3 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">
-            <span>High <span className="font-medium normal-case text-gray-300 dark:text-gray-600">고가</span></span>
-            <span>Mid <span className="font-medium normal-case text-gray-300 dark:text-gray-600">중가</span></span>
-            <span>Low <span className="font-medium normal-case text-gray-300 dark:text-gray-600">저가</span></span>
-          </div>
-        </div>
-        <footer className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-gray-100 dark:border-gray-800 px-4 py-2.5 text-[11px] text-gray-500 dark:text-gray-400">
-          <span className="font-semibold text-gray-600 dark:text-gray-300">New DOE Star</span>
-          <span className="inline-flex items-center gap-1"><span className="inline-flex h-4 items-center rounded bg-emerald-50 dark:bg-emerald-500/15 px-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">★5</span><span className="inline-flex h-4 items-center rounded bg-emerald-50 dark:bg-emerald-500/15 px-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">★4</span><span className="text-gray-400 dark:text-gray-500">고효율</span></span>
-          <span className="inline-flex items-center gap-1"><span className="inline-flex h-4 items-center rounded bg-amber-50 dark:bg-amber-500/15 px-1 text-[10px] font-bold text-amber-700 dark:text-amber-300">★3</span><span className="inline-flex h-4 items-center rounded bg-amber-50 dark:bg-amber-500/15 px-1 text-[10px] font-bold text-amber-700 dark:text-amber-300">★2</span></span>
-          <span className="inline-flex items-center gap-1"><span className="inline-flex h-4 items-center rounded bg-rose-50 dark:bg-rose-500/15 px-1 text-[10px] font-bold text-rose-700 dark:text-rose-300">★1</span><span className="text-gray-400 dark:text-gray-500">저효율</span></span>
-          <span className="ml-auto inline-flex items-center gap-1.5"><span className="inline-block h-3 w-4 rounded bg-indigo-600" />자사(LG) · <span className="inline-block h-3 w-4 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />경쟁사</span>
-        </footer>
+        )}
+        <span className="ml-auto text-[11px] text-gray-400 dark:text-gray-500"><b className="text-gray-600 dark:text-gray-300">{count}</b> 리스팅 · 5개 유통 평균</span>
       </div>
-      <p className="mx-auto mt-2 max-w-[1040px] text-[10px] text-gray-400 dark:text-gray-500">가격·세그먼트·New DOE ★등급은 내부 SRAC vs Competitor 데크(1.0HP 현금가) 기준 · 가격지수 = NET ÷ 최저가 × 100</p>
+
+      <div className="overflow-x-auto">
+        <div className="min-w-[980px] overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+          <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+            <span className="h-4 w-1 rounded bg-indigo-500" />
+            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가격 포지셔닝 · {cat}{effSpec !== "전체" ? " · " + effSpec : ""}</h2>
+            <span className="ml-auto rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">내부용</span>
+          </header>
+          <p className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 px-4 py-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400">
+            세로축 = <b className="text-gray-700 dark:text-gray-200">5개 유통 평균 단가</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 고가) · 카드 = 가격대 세그먼트별 평균가 · <span className="tabular-nums">( )</span> = 가격지수(최저 평균=100) · <span className="tabular-nums">n곳</span> = 취급 유통 수
+          </p>
+
+          {/* 브랜드 컬럼 헤더(플롯과 정렬: 좌측 축 게이지 폭만큼 들여쓰기) */}
+          <div className="flex border-b border-gray-100 dark:border-gray-800 py-2 pr-3" style={{ paddingLeft: GUT + 12 }}>
+            {brands.map((b) => { const lg = b === "LG"; return (
+              <div key={b} className={"flex-1 border-b-2 pb-1 text-center " + (lg ? "border-indigo-500" : "border-transparent")}>
+                <div className={"text-[11px] font-bold " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-700 dark:text-gray-300")}>{b}</div>
+                <div className="text-[9.5px] tabular-nums text-gray-400 dark:text-gray-500">{brandN(b)}개</div>
+              </div>
+            ) })}
+          </div>
+
+          {/* 플롯 — 좌 축 게이지 + 산점 */}
+          <div key={cat + effSpec} className="flex px-3 pb-2 pt-2" style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
+            {cards.length === 0 ? (
+              <div className="flex h-40 w-full items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">해당 조건의 데이터가 부족합니다</div>
+            ) : (
+              <>
+                {/* 세로축 라벨(₱) */}
+                <div className="relative shrink-0" style={{ width: GUT, height: H }}>
+                  {ticks.map((v) => (
+                    <span key={v} className="absolute right-1 -translate-y-1/2 text-[9.5px] font-medium tabular-nums text-gray-400 dark:text-gray-500" style={{ top: topFor(v) }}>{pmShort(v)}</span>
+                  ))}
+                  <span className="absolute -left-1 top-1 text-[9px] font-bold uppercase tracking-wide text-gray-300 dark:text-gray-600">고가</span>
+                  <span className="absolute -left-1 text-[9px] font-bold uppercase tracking-wide text-gray-300 dark:text-gray-600" style={{ bottom: 2 }}>저가</span>
+                </div>
+                {/* 산점 영역 */}
+                <div className="relative flex-1" style={{ height: H }}>
+                  {ticks.map((v) => (
+                    <div key={v} className="pointer-events-none absolute inset-x-0 border-t border-dashed border-gray-100 dark:border-gray-800/70" style={{ top: topFor(v) }} />
+                  ))}
+                  {cards.map((c, i) => { const lg = c.b === "LG"; return (
+                    <div key={c.b + c.tier} title={`${c.b} · ${c.tier} · 평균 ${peso(c.avg)} · ${c.shops}개 유통 · ${c.n}개 리스팅`}
+                      className={"absolute -translate-x-1/2 overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:-translate-y-0.5 hover:shadow-md " + (lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
+                      style={{ left: c.left + "%", top: c.top, width: CARD_W, animation: "rowIn .4s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 20) * 0.025 + "s" }}>
+                      <span className={"absolute inset-y-0 left-0 w-1 " + (lg ? "bg-indigo-300" : "bg-gray-400 dark:bg-gray-600")} />
+                      <div className="py-1.5 pl-3 pr-2">
+                        <div className="flex items-center gap-1">
+                          <span className={"text-[10px] font-medium " + (lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.tier}</span>
+                          <span className={"ml-auto rounded px-1 text-[9px] font-bold leading-4 tabular-nums " + (lg ? "bg-indigo-500/60 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400")}>{c.shops}곳</span>
+                        </div>
+                        <div className="mt-0.5 text-[13.5px] font-bold leading-tight tabular-nums">{peso(c.avg)} <span className={"text-[10px] font-medium " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>({c.idx})</span></div>
+                      </div>
+                    </div>
+                  ) })}
+                </div>
+              </>
+            )}
+          </div>
+
+          <footer className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-gray-100 dark:border-gray-800 px-4 py-2.5 text-[11px] text-gray-500 dark:text-gray-400">
+            <span className="font-semibold text-gray-600 dark:text-gray-300">가격 세그먼트</span>
+            <span className="inline-flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-gray-300 dark:bg-gray-600" />엔트리 · 미드 · 프리미엄 (해당 조건 가격 3분위 자동)</span>
+            <span className="ml-auto inline-flex items-center gap-1.5"><span className="inline-block h-3 w-4 rounded bg-indigo-600" />자사(LG) · <span className="inline-block h-3 w-4 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />경쟁사</span>
+          </footer>
+        </div>
+        <p className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">데이터 = v_competitor_3d 5개 유통 최신 현금가 평균(브랜드×가격 세그먼트) · 가격지수 = 평균 ÷ 최저 세그먼트 평균 × 100 · New DOE ★등급은 별도 내부 데이터(미연동)</p>
+      </div>
     </div>
   )
 }
@@ -786,7 +841,7 @@ export default function Competitors() {
           {view === "board" ? (
             <BoardView rows={rows} stamp={stamp} asOf={asOf} />
           ) : view === "asp" ? (
-            <PositioningMatrix />
+            <PositioningMatrix rows={rows} />
           ) : view === "promo" ? (
             <PromoView rows={promo} camps={camps} />
           ) : active?.status !== "live" ? (
