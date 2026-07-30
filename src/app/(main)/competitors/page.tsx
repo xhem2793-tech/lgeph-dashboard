@@ -908,7 +908,7 @@ export default function Competitors() {
   const active = ALL.find((v) => v.key === view)
 
   return (
-    <div className="mx-auto max-w-[1536px] px-4 pb-6 pt-4 sm:px-6 sm:pb-8">
+    <div className="mx-auto max-w-[1536px] px-4 pb-10 pt-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}"}</style>
 
       <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
@@ -965,7 +965,7 @@ export default function Competitors() {
           </div>
         </aside>
 
-        <div style={{ animation: "fadeUp .5s ease both" }} className="flex min-w-0 flex-col gap-4">
+        <div style={{ animation: "fadeUp .5s ease both" }} className="flex min-h-[calc(100vh-96px)] min-w-0 flex-col gap-4">
         {view === "movers" ? (() => {
           const R = rows || []
           const cu = R.filter((r) => (r.deltaPct ?? 0) < 0).length
