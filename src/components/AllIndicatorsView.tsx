@@ -45,6 +45,23 @@ function inferUnit(indicator: string, label: string): { prefix?: string; suffix?
   return { suffix: "", unit: "값", note: "값" }
 }
 
+// 카테고리별 의미·LG 인사이트(페이지 차트카드처럼 차트 하단에 표기)
+const CAT_MI: Record<string, { mean: string; ai: string }> = {
+  prices: { mean: "소비자물가(CPI)·품목별 물가 — 생활비·구매력의 직접 지표", ai: "물가 상승은 재량소비 위축·가격민감도 확대로 대형·프리미엄 가전 수요에 부담. 안정 시 교체·프리미엄 소구 여지." },
+  growth: { mean: "국민계정·성장·투자·생산 — 경기 사이클과 시장 규모의 배경", ai: "성장·투자 확대는 소득·고용을 통해 가전 수요 저변 확장. 둔화 시 내구재 지출 이연 경계." },
+  labor: { mean: "고용·임금·소득·해외송금 — 가처분소득·구매력의 원천", ai: "고용·임금·송금 개선은 볼륨존~프리미엄 수요 견인. 실업·송금 둔화는 수요 하방 신호." },
+  sentiment: { mean: "소비·기업 심리(CCI·BCI·BES) — 수요의 선행 신호", ai: "심리 개선은 내구재 구매의향 선행. 악화 시 할부·프로모션 강화로 방어." },
+  housing: { mean: "부동산·주택·건축허가·공실 — 빌트인·초도 가전 수요 선행", ai: "주택 공급·가격 상승은 초도·빌트인 가전 수요에 우호. 상업 부동산은 B2B 공조 수요와 연동." },
+  fx: { mean: "환율·실효환율·외환보유 — 수입 조달원가의 배경", ai: "페소 약세는 수입 가전 원가·판가 상승 압력. 현지 조달·헤지, 프리미엄 정당화가 대응 축." },
+  rates: { mean: "금리·통화·신용 — 가전 할부·소비 금융 여건", ai: "금리 인하·신용 확대는 할부·카드 기반 내구재 구매력 개선. 긴축 시 수요 둔화 경계." },
+  appliance: { mean: "가전 물가·PPI·수입액·보급 — 가전시장 직접 선행지표", ai: "가전 물가·조달·보급 흐름은 판가·수요·침투 전략의 1차 신호." },
+  energy: { mean: "에너지효율 라벨(DOE) — 고효율 제품 경쟁 구도", ai: "전기료 부담 국면에서 고효율(별점) 소구가 차별화. 5성 비중 확대가 프리미엄 근거." },
+  importprice: { mean: "수입 단가($/kg)·원산지 — 조달원가·수입 경쟁 구도", ai: "단가 상승은 COGS·소매가 압력, 현지화 이점 확대. 원산지 믹스는 경쟁 강도 신호." },
+  online: { mean: "이커머스·디지털·통신 침투 — 온라인 판매 채널 성장", ai: "온라인 침투 확대는 D2C·이커머스 채널 강화 근거. 물류·디지털 마케팅 투자 연동." },
+  weather: { mean: "냉방도일(CDD)·기온·태풍·지진 — 냉방 수요·재해 리스크", ai: "CDD·폭염은 에어컨 수요 선행, 태풍·지진은 공급망·재해복구 가전 교체 변수." },
+  etc: { mean: "참고 지표 — 인구·디지털·재정 등 구조적 배경", ai: "직접 수요 지표는 아니나 시장 규모·구매력·인프라의 배경 맥락으로 활용." },
+}
+
 /** 검색어 하이라이트 — 뉴스 검색과 동일(노란 mark) */
 function Hi({ text, q }: { text: string; q: string }) {
   const k = q.trim()
@@ -394,7 +411,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
           ) : (
             <div className="flex flex-col gap-4">
               {/* 차트 카드 — 경제지표 페이지와 동일한 LineChart */}
-              <div key={gran} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) both" }}>
+              <div key={win} className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "detFade .32s cubic-bezier(.16,1,.3,1) both" }}>
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
                   <h4 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h4>
                   <span className="shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
@@ -409,9 +426,14 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                 <div className="detchart mx-auto" style={{ maxWidth: 560 }}>
                   <LineChart series={chSeries} labels={chLabels} decimals={chDec} unit={chUnit} />
                 </div>
+                {/* 의미 + LG 인사이트 — 페이지 차트카드와 동일 위치 */}
+                <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {(CAT_MI[row.cat] || CAT_MI.etc).mean}</p>
+                <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
+                  <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> {(CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
+                </div>
               </div>
               {/* 엑셀형 표 카드 */}
-              <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) .06s both" }}>
+              <div key={win} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "detFade .35s cubic-bezier(.16,1,.3,1) .06s both" }}>
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
                   <span className="h-[15px] w-1 rounded bg-emerald-500" />
                   <h4 className="text-[13px] font-bold text-gray-900 dark:text-gray-50">시계열 표 <span className="text-[11px] font-semibold text-gray-400">· 전기·전년 대비</span></h4>
