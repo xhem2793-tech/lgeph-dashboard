@@ -134,11 +134,18 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
 
 const deltaCol = (d: number | null) => (d == null || d === 0 ? "text-gray-400 dark:text-gray-500" : d < 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")
 
-// LG 에어컨 마력(HP) 추론 — ①명시 "X HP" 텍스트 ②윈도우 LA코드=번호/100(LA150=1.5) ③스플릿 HS/HSN코드=BTU천→HP(HS12=1.5)
+// 에어컨 마력(HP) 추론 — 명시 "X HP" 텍스트 + 브랜드별 모델코드 BTU 환산.
+//   LG LA코드=번호/100·HS코드=BTU천 · Carrier WCAR*/CAC/CEP/CTD=BTU백 · TCL TAC##CW/CS · Samsung AR##.
+const _btu2hp = (b: number) => (b <= 8 ? 0.75 : b <= 10 ? 1.0 : b <= 15 ? 1.5 : b <= 20 ? 2.0 : b <= 26 ? 2.5 : 3.0)
 const acHpNum = (m: string): number | null => {
-  const t = m.match(/(\d(?:\.\d)?)\s?HP/i); if (t) return parseFloat(t[1])
-  const la = m.match(/\bLA(\d{3})/i); if (la) { const n = parseInt(la[1], 10) / 100; if (n >= 0.4 && n <= 6) return n }
-  const hs = m.match(/\bHS[NU]?(\d{2})/i); if (hs) { const b = parseInt(hs[1], 10); return b <= 8 ? 0.75 : b <= 10 ? 1.0 : b <= 15 ? 1.5 : b <= 20 ? 2.0 : b <= 26 ? 2.5 : 3.0 }
+  const s = m || ""
+  const t = s.match(/(\d*\.?\d+)\s*HP/i); if (t) { const v = parseFloat(t[1]); if (v >= 0.3 && v <= 6) return v }
+  const la = s.match(/\bLA(\d{3})/i); if (la) { const n = parseInt(la[1], 10) / 100; if (n >= 0.4 && n <= 6) return n }
+  const hs = s.match(/\bHS[NU]?(\d{2})/i); if (hs) return _btu2hp(parseInt(hs[1], 10))
+  const wc = s.match(/WCAR[A-Z](\d{3})/i); if (wc) return _btu2hp(parseInt(wc[1], 10))
+  const cr = s.match(/(?:CAC|CEP|CTD|CAH)(\d{3})/i); if (cr) return _btu2hp(parseInt(cr[1], 10))
+  const tac = s.match(/TAC-?(\d{2})C[WS]/i); if (tac) return _btu2hp(parseInt(tac[1], 10))
+  const ar = s.match(/\bAR(\d{2})/i); if (ar) { const b = parseInt(ar[1], 10); if (b >= 6 && b <= 30) return _btu2hp(b) }
   return null
 }
 const acHpLabel = (m: string): string | null => { const h = acHpNum(m); return h == null ? null : (Number.isInteger(h) ? h.toFixed(1) : String(h)) + "HP" }
@@ -349,14 +356,19 @@ const PM_AC_HP: { t: string; re: RegExp }[] = [
   { t: "3.0HP↑", re: /(3(\.0)?|3\.5|4(\.0)?|5(\.0)?) ?HP/i },
 ]
 const pmSpecsFor = (c: string) => (c === "에어컨" ? PM_AC_HP : (SEGMENTS[c] ?? []))
-// 에어컨 설치형태(유형) — HP(스펙)와 별개 축. 창문형(LA코드/window)·벽걸이형(스플릿, HS코드)·스탠드형(플로어·천장·카세트, Z코드)·포터블
-const AC_FORM: { t: string; re: RegExp }[] = [
-  { t: "창문형", re: /window|\bwdw\b|창문|\bLA\d{3}/i },
-  { t: "벽걸이형", re: /split|wall|벽걸이|\bHS[NU]?\d{2}/i },
-  { t: "스탠드형", re: /floor|ceiling|cassette|천장|스탠드|standing|\bZ[0-9A-Z]{2}Q/i },
-  { t: "포터블", re: /portable/i },
-]
-const acFormHit = (model: string, formT: string) => { if (formT === "전체") return true; const f = AC_FORM.find((x) => x.t === formT); return f ? f.re.test(model || "") : true }
+// 에어컨 설치형태(유형) — HP(스펙)와 별개 축. 우선순위 분류(포터블→스탠드→창문→벽걸이) + 브랜드 코드 인지.
+//   Carrier WCAR*=창문·CAC/CEP/CTD=스플릿, Panasonic CW*=창문·CS/CU=스플릿, Samsung AR##=스플릿,
+//   Midea MS*=스플릿, TCL TAC##CW/CS, LG LA=창문·HS=스플릿, Condura WCON/WRAC=창문, Kolin KAP=포터블·KA##M=스플릿.
+const AC_FORMS = ["창문형", "벽걸이형", "스탠드형", "포터블"]
+const acFormOf = (m: string): string | null => {
+  const s = m || ""
+  if (/portable|\bKAP-?\d/i.test(s)) return "포터블"
+  if (/floor|ceiling|cassette|천장|스탠드|standing|\bFP\d|\bZ[0-9A-Z]{2}Q/i.test(s)) return "스탠드형"
+  if (/window|창문|\bwdw\b|\bLA\d{3}|WCAR[A-Z]|WCON[A-Z]|WRAC|CW[- ]?[A-Z]{0,3}\d|TAC-?\d+CW|\bAW\d|\d+WC[A-Z]*\b/i.test(s)) return "창문형"
+  if (/split|wall[- ]?mount|벽걸이|HS[NU]?\d{2}|\bAR\d{2}|CS[/-]?CU|\bCS-?[A-Z]{0,2}\d|CSCU|MS[A-Z]{1,3}-?\d|FTK[A-Z]|TAC-?\d+CS|(?:CAC|CEP|CTD|CAH)\d|KA-?\d+M/i.test(s)) return "벽걸이형"
+  return null
+}
+const acFormHit = (model: string, formT: string) => formT === "전체" || acFormOf(model) === formT
 
 // 사이즈(용량/화면) 버킷 — 포지셔닝 "스펙(사이즈)" 축. 에어컨은 HP(별도), 나머지는 용량/인치.
 const REF_SIZE = ["7cu.ft↓", "7~14", "14~22", "22cu.ft↑"]
@@ -373,7 +385,7 @@ const pmSizeBucket = (cat: string, model: string, capacity: string | null): stri
 // 두 축 목록·매처 — 유형(form) + 스펙(size). 에어컨만 유형=설치형태·스펙=HP, 나머지는 유형=SEGMENTS·스펙=용량/인치
 const pmSizeList = (c: string) => (c === "에어컨" ? PM_AC_HP.map((x) => x.t) : c === "냉장고" ? REF_SIZE : c === "세탁기" ? WM_SIZE : c === "TV" ? TV_SIZE : [])
 const pmSizeHit = (cat: string, model: string, capacity: string | null, t: string) => { if (t === "전체") return true; if (cat === "에어컨") return acHpBucket(model) === t; return pmSizeBucket(cat, model, capacity) === t }
-const pmFormsFor = (c: string) => (c === "에어컨" ? AC_FORM.map((x) => x.t) : (SEGMENTS[c] ?? []).map((x) => x.t))
+const pmFormsFor = (c: string) => (c === "에어컨" ? AC_FORMS : (SEGMENTS[c] ?? []).map((x) => x.t))
 const pmFormHit = (cat: string, model: string, t: string) => { if (t === "전체") return true; if (cat === "에어컨") return acFormHit(model, t); const s = (SEGMENTS[cat] ?? []).find((x) => x.t === t); return s ? s.re.test(model || "") : true }
 const pmMean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0)
 const pmTicks = (min: number, max: number, count = 5): number[] => {
@@ -450,7 +462,8 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     // 브랜드 선정: 리스팅 수 상위 6~8개(제일 큰 브랜드) · null/빈 브랜드 제외 · LG는 항상 맨 오른쪽
     const byB0: Record<string, PriceRow[]> = {}
     f0.forEach((r) => { (byB0[r.brand] = byB0[r.brand] || []).push(r) })
-    const bl = Object.entries(byB0).map(([b, list]) => ({ b, n: list.length, avg: pmMean(list.map((x) => x.p0 as number)) })).filter((x) => x.n >= 2 && x.b && x.b.trim() && x.b.toLowerCase() !== "null")
+    // n>=1 — 좁은 필터(특정 유형·거래선)에서 리스팅 1개뿐인 브랜드(예: Emcor 벽걸이 Carrier)가 통째로 사라지지 않게
+    const bl = Object.entries(byB0).map(([b, list]) => ({ b, n: list.length, avg: pmMean(list.map((x) => x.p0 as number)) })).filter((x) => x.n >= 1 && x.b && x.b.trim() && x.b.toLowerCase() !== "null")
     // 포지셔닝에는 8개만 노출 — 규모(리스팅 수) 상위로 뽑고 LG는 항상 포함
     const cap = 8
     let top = bl.slice().sort((a, b) => b.n - a.n).slice(0, cap)
