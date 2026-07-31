@@ -471,6 +471,7 @@ export type PriceRow = {
   discountPct: number | null
   url: string | null
   availability: string | null
+  image: string | null
 }
 
 /** HTML 엔티티 정리 — 스크래핑 원문에 &#8211; &amp; 등이 섞여 들어온다 */
@@ -600,6 +601,7 @@ export async function competitorTable(max = 6000): Promise<PriceRow[]> {
       discountPct: num(r.discount_pct),
       url: r.url ?? null,
       availability: r.availability ?? null,
+      image: r.image_url ?? null,
     }
   })
 }

@@ -1035,7 +1035,7 @@ const promoTypes = (txt: string | null): Partial<Record<string, string>> => {
   if (/bundle|번들|combo ?deal/i.test(s)) o.b = "번들"
   return o
 }
-type SCOffer = { cc: string; brand: string; own: boolean; model: string; at: string | null; list: number | null; net: number; url: string | null; promoByRet: Record<string, Partial<Record<string, string>>>; sizeB: string | null }
+type SCOffer = { cc: string; brand: string; own: boolean; model: string; at: string | null; list: number | null; net: number; url: string | null; image: string | null; promoByRet: Record<string, Partial<Record<string, string>>>; sizeB: string | null }
 /** 동일 스펙 경쟁사 비교 — 유형(+용량) 고정, 브랜드=행·프로모 종류별 컬럼(쿠폰·번들·할부·배송·사은품).
  *  제품사진·유형/용량/브랜드 필터·가격대 세그먼트 토글·검색·vs 자사·시사점. 레이아웃: Claude Design `spec-compare-photo.reference.html`. */
 function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: DealRow[] | null }) {
@@ -1063,7 +1063,8 @@ function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: DealRow[] 
       const promoByRet: Record<string, Partial<Record<string, string>>> = {}
       Array.from(new Set(list.map((x) => x.retailer))).forEach((ret) => { const p = promoLU[cc + "|" + ret]; if (p) promoByRet[ret] = promoTypes(p) })
       const label = best.code && best.code.length >= 4 && best.code !== "N/A" && !/^[≈]/.test(best.code) ? best.code : cc
-      return { cc, brand: best.brand, own: best.brand === "LG", model: label, at: best.retailer ?? null, list: srps.length ? Math.max(...srps) : null, net: best.p0 as number, url: best.url ?? null, promoByRet, sizeB: pmSizeBucket(cat, best.model, best.capacity) } as SCOffer
+      const img = list.map((x) => x.image).find((v) => v && /^https?:/.test(v)) ?? null
+      return { cc, brand: best.brand, own: best.brand === "LG", model: label, at: best.retailer ?? null, list: srps.length ? Math.max(...srps) : null, net: best.p0 as number, url: best.url ?? null, image: img, promoByRet, sizeB: pmSizeBucket(cat, best.model, best.capacity) } as SCOffer
     })
   }, [R, cat, effForm, promoLU])
 
@@ -1144,7 +1145,7 @@ function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: DealRow[] 
               const isBest = o.net === best, disc = o.list != null && o.list > o.net ? Math.round((o.list - o.net) / o.list * 100) : 0
               return (
                 <tr key={o.cc + ri} className={"border-b border-gray-100 dark:border-gray-800/60 last:border-0 " + (o.own ? "bg-indigo-50/40 dark:bg-indigo-500/5" : "hover:bg-gray-50 dark:hover:bg-gray-800/40")}>
-                  <td className="px-3 py-3"><div className={"flex h-14 w-14 items-center justify-center rounded-lg border text-[15px] font-bold " + (o.own ? "border-indigo-200 dark:border-indigo-500/40 text-indigo-500" : "border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500") + " bg-white dark:bg-gray-900"}>{o.brand.slice(0, 2)}</div></td>
+                  <td className="px-3 py-3"><div className={"flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border bg-white dark:bg-gray-900 " + (o.own ? "border-indigo-200 dark:border-indigo-500/40" : "border-gray-200 dark:border-gray-700")}>{o.image ? <img src={o.image} alt={o.model} loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; const s = e.currentTarget.nextElementSibling as HTMLElement | null; if (s) s.style.display = "flex" }} /> : null}<span className={"h-full w-full items-center justify-center text-[15px] font-bold " + (o.image ? "hidden " : "flex ") + (o.own ? "text-indigo-500" : "text-gray-400 dark:text-gray-500")}>{o.brand.slice(0, 2)}</span></div></td>
                   <td className={"px-3 py-3 " + (o.own ? "border-r border-indigo-100 dark:border-indigo-500/20" : "")}>
                     <span className="flex flex-wrap items-center gap-1.5">{o.own ? <span className="h-3.5 w-1 rounded bg-indigo-500" /> : null}<span className={"text-[13px] font-bold " + (o.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{o.brand}</span>{o.own ? <span className="rounded bg-indigo-100 dark:bg-indigo-500/20 px-1 py-px text-[10px] font-bold text-indigo-600 dark:text-indigo-300">자사</span> : isBest ? <span className="rounded bg-emerald-500 px-1 py-px text-[10px] font-bold text-white">최저가</span> : null}</span>
                     <span className={"mt-0.5 block " + (o.own ? "pl-2.5" : "")}>{o.url ? <a href={o.url} target="_blank" rel="noopener noreferrer" className="text-[11px] tabular-nums text-indigo-600 hover:underline dark:text-indigo-400">{o.model}</a> : <span className="text-[11px] tabular-nums text-gray-400">{o.model}</span>}</span>
