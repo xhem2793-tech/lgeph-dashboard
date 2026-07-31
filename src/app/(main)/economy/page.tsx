@@ -38,8 +38,8 @@ const NAV: NavItem[] = [
 function Soon({ label }: { label: string }) {
   return (
     <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-center">
-      <div className="text-[16px] font-bold text-gray-500 dark:text-gray-400">{label}</div>
-      <div className="text-[14px] text-gray-400 dark:text-gray-500">물가·생활비 템플릿을 이 도메인에도 적용 예정</div>
+      <div className="text-[15px] font-bold text-gray-500 dark:text-gray-400">{label}</div>
+      <div className="text-[13px] text-gray-400 dark:text-gray-500">물가·생활비 템플릿을 이 도메인에도 적용 예정</div>
     </div>
   )
 }
@@ -87,11 +87,11 @@ export default function Page() {
   return (
     <main className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}"}</style>
-      <div className="grid items-start gap-6 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-10">
-        <aside className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[61px]" style={{ animation: "fadeUp .5s ease both" }}>
+      <div className="grid items-start gap-6 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-20">
+        <aside className="h-fit lg:sticky lg:top-[61px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
-            <p className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{en ? "View" : "보기"}</p>
+            <p className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{en ? "View" : "보기"}</p>
             <span className="ml-auto"><Segmented size="sm" value={active === "all" ? "list" : "card"} onChange={(k) => setActive(k === "list" ? "all" : (active === "all" ? "prices" : active))} options={[{ k: "card", label: "카드" }, { k: "list", label: "리스트" }]} /></span>
           </div>
           <div className="px-3 py-3">
@@ -99,7 +99,7 @@ export default function Page() {
               {NAV.map((n, i) => (
                 <div key={n.id}>
                   {n.group !== NAV[i - 1]?.group && (
-                    <p className={"px-1.5 text-[12.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 " + (i === 0 ? "mb-1" : "mb-1 mt-2.5")}>{n.group}</p>
+                    <p className={"px-1.5 text-[11.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 " + (i === 0 ? "mb-1" : "mb-1 mt-2.5")}>{n.group}</p>
                   )}
                   <button
                     onPointerDown={() => setActive(n.id)}
@@ -109,10 +109,10 @@ export default function Page() {
                       (active === n.id ? "bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/25" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
                     }
                   >
-                    <span className={"flex-1 text-[15px] " + (active === n.id ? "font-bold text-indigo-700 dark:text-indigo-300" : "font-semibold text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
+                    <span className={"flex-1 text-[14px] " + (active === n.id ? "font-bold text-indigo-700 dark:text-indigo-300" : "font-semibold text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
                       {n.ko}
                     </span>
-                    <span className="num shrink-0 text-[12px] tabular-nums text-gray-400 dark:text-gray-500">{navCount(n)}</span>
+                    <span className="num shrink-0 text-[11px] tabular-nums text-gray-400 dark:text-gray-500">{navCount(n)}</span>
                   </button>
                 </div>
               ))}

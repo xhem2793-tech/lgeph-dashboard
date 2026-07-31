@@ -40,10 +40,10 @@ function OwnVisual({ tags, compact }: { tags: string[]; compact?: boolean }) {
         (compact ? "h-[76px]" : "h-full min-h-[180px]")
       }
     >
-      <span className="text-[12px] font-bold uppercase tracking-wider text-indigo-200">AX 자체 분석</span>
+      <span className="text-[11px] font-bold uppercase tracking-wider text-indigo-200">AX 자체 분석</span>
       <div className="flex gap-1">
         {tags.slice(0, 3).map((t) => (
-          <span key={t} className="rounded bg-white/15 dark:bg-gray-900/15 px-1.5 py-px text-[12px] text-white">
+          <span key={t} className="rounded bg-white/15 dark:bg-gray-900/15 px-1.5 py-px text-[11px] text-white">
             {t}
           </span>
         ))}
@@ -68,10 +68,10 @@ function MdBody({ text }: { text: string }) {
       {blocks.map((b, i) => {
         const h = b.match(/^(#{2,4})\s+(.*)$/)
         if (h) {
-          return <h4 key={i} className="mt-4 text-[18px] font-semibold text-gray-900 dark:text-gray-50">{inline(h[2])}</h4>
+          return <h4 key={i} className="mt-4 text-[16px] font-semibold text-gray-900 dark:text-gray-50">{inline(h[2])}</h4>
         }
         return (
-          <p key={i} className="whitespace-pre-wrap text-[16px] leading-relaxed text-gray-700 dark:text-gray-200">{inline(b)}</p>
+          <p key={i} className="whitespace-pre-wrap text-[15px] leading-relaxed text-gray-700 dark:text-gray-200">{inline(b)}</p>
         )
       })}
     </div>
@@ -111,22 +111,22 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
       <div className={CARD} style={ANIM} onClick={(e) => e.stopPropagation()}>
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-px text-[12px] font-bold text-indigo-700 dark:text-indigo-300">{r.agency}</span>
-            <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[12px] font-bold text-gray-600 dark:text-gray-300">{r.category}</span>
-            <span className={"rounded px-1.5 py-px text-[12px] font-bold " + (SEV[r.severity] ?? SEV.Medium)}>
+            <span className="rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-px text-[11px] font-bold text-indigo-700 dark:text-indigo-300">{r.agency}</span>
+            <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[11px] font-bold text-gray-600 dark:text-gray-300">{r.category}</span>
+            <span className={"rounded px-1.5 py-px text-[11px] font-bold " + (SEV[r.severity] ?? SEV.Medium)}>
               {r.severity}
             </span>
             {dd ? (
               <span
                 className={
-                  "rounded px-1.5 py-px text-[12px] font-bold " +
+                  "rounded px-1.5 py-px text-[11px] font-bold " +
                   (dd.urgent ? "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300")
                 }
               >
                 {dd.text}
               </span>
             ) : null}
-            <span className="text-[13px] text-gray-500 dark:text-gray-400">
+            <span className="text-[12px] text-gray-500 dark:text-gray-400">
               {fmt(r.date)} · {r.source}
               {r.docNo ? " · " + r.docNo : ""}
             </span>
@@ -141,7 +141,7 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
           </button>
         </div>
 
-        <h2 className="text-[28px] font-bold leading-tight text-gray-900 dark:text-gray-50">{pick(r.title, r.titleEn)}</h2>
+        <h2 className="text-[26px] font-bold leading-tight text-gray-900 dark:text-gray-50">{pick(r.title, r.titleEn)}</h2>
 
         <div className="mt-4">
           <MdBody text={(pick(r.summary, r.summaryEn) as string) ?? ""} />
@@ -149,7 +149,7 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
 
         {r.implication ? (
           <div className="mt-4 rounded-lg border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/50 dark:bg-indigo-500/10 p-3">
-            <p className="text-[16px] leading-relaxed text-gray-700 dark:text-gray-200">
+            <p className="text-[15px] leading-relaxed text-gray-700 dark:text-gray-200">
               <b className="font-semibold text-gray-900 dark:text-gray-50">우리 영향 · </b>
               {r.implication}
             </p>
@@ -158,7 +158,7 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
 
         {r.actions ? (
           <div className="mt-2 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-3">
-            <p className="text-[16px] leading-relaxed text-gray-700 dark:text-gray-200">
+            <p className="text-[15px] leading-relaxed text-gray-700 dark:text-gray-200">
               <b className="font-semibold text-gray-900 dark:text-gray-50">액션 · </b>
               {r.actions}
             </p>
@@ -170,7 +170,7 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
             href={r.url}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 inline-block text-[14px] text-indigo-600 dark:text-indigo-400 transition-colors duration-200 hover:underline"
+            className="mt-3 inline-block text-[13px] text-indigo-600 dark:text-indigo-400 transition-colors duration-200 hover:underline"
           >
             원문 전체 보기 · {r.source} ↗
           </a>
@@ -194,17 +194,17 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
           <div className="flex items-center gap-1.5">
             <span
               className={
-                "rounded px-1.5 py-px text-[12px] font-bold " +
+                "rounded px-1.5 py-px text-[11px] font-bold " +
                 (p.kind === "own" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300")
               }
             >
               {p.kind === "own" ? "자체 칼럼" : "외부 큐레이션"}
             </span>
-            <span className="text-[13px] text-gray-500 dark:text-gray-400">
+            <span className="text-[12px] text-gray-500 dark:text-gray-400">
               {fmt(p.publishedAt)} · {p.kind === "own" ? p.author ?? "경영기획" : p.source}
             </span>
             {p.confidence ? (
-              <span className="rounded bg-gray-50 dark:bg-gray-900 px-1.5 py-px text-[12px] text-gray-500 dark:text-gray-400">{p.confidence}</span>
+              <span className="rounded bg-gray-50 dark:bg-gray-900 px-1.5 py-px text-[11px] text-gray-500 dark:text-gray-400">{p.confidence}</span>
             ) : null}
           </div>
           <button
@@ -217,8 +217,8 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
           </button>
         </div>
 
-        <h2 className="text-[28px] font-bold leading-tight text-gray-900 dark:text-gray-50">{pick(p.title, p.titleEn)}</h2>
-        {p.dek ? <p className="mt-1.5 text-[16px] leading-relaxed text-gray-500 dark:text-gray-400">{pick(p.dek, p.dekEn)}</p> : null}
+        <h2 className="text-[26px] font-bold leading-tight text-gray-900 dark:text-gray-50">{pick(p.title, p.titleEn)}</h2>
+        {p.dek ? <p className="mt-1.5 text-[15px] leading-relaxed text-gray-500 dark:text-gray-400">{pick(p.dek, p.dekEn)}</p> : null}
 
         <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-[1fr_2fr]">
           <div>
@@ -233,11 +233,11 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
 
           <div>
             {p.summary ? (
-              <p className="text-[16px] leading-relaxed text-gray-700 dark:text-gray-200">{pick(p.summary, p.summaryEn)}</p>
+              <p className="text-[15px] leading-relaxed text-gray-700 dark:text-gray-200">{pick(p.summary, p.summaryEn)}</p>
             ) : null}
 
             <div className="mt-3 rounded-lg border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/50 dark:bg-indigo-500/10 p-3">
-              <p className="text-[16px] leading-relaxed text-gray-700 dark:text-gray-200">
+              <p className="text-[15px] leading-relaxed text-gray-700 dark:text-gray-200">
                 <b className="font-semibold text-gray-900 dark:text-gray-50">{t("why_matters")} · </b>
                 {pick(p.whyMatters, p.whyMattersEn)}
               </p>
@@ -248,7 +248,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
                 href={p.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-3 inline-block text-[14px] text-indigo-600 dark:text-indigo-400 transition-colors duration-200 hover:underline"
+                className="mt-3 inline-block text-[13px] text-indigo-600 dark:text-indigo-400 transition-colors duration-200 hover:underline"
               >
                 {p.kind === "own" ? "근거 원문" : "원문 전체 보기"} · {p.source} ↗
               </a>
@@ -288,7 +288,7 @@ export default function AnalysisColumn() {
     <div className="flex flex-col gap-4 lg:px-3">
       <section>
         <a href="/news?cat=분석" className="group mb-2 flex items-baseline gap-1">
-          <span className="text-[19px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+          <span className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
             {t("analysis_title")}
           </span>
           <span className="text-gray-400 dark:text-gray-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
@@ -297,7 +297,7 @@ export default function AnalysisColumn() {
         </a>
 
         {err ? (
-          <p className="py-6 text-[14px] text-gray-500 dark:text-gray-400">분석 글을 불러오지 못함 · 확인 필요</p>
+          <p className="py-6 text-[13px] text-gray-500 dark:text-gray-400">분석 글을 불러오지 못함 · 확인 필요</p>
         ) : !post ? (
           <div className="h-[150px] rounded-lg bg-gray-50 dark:bg-gray-900" />
         ) : (
@@ -321,14 +321,14 @@ export default function AnalysisColumn() {
               </div>
             ) : null}
 
-            <p className="line-clamp-2 text-[16px] font-semibold leading-snug text-gray-800 dark:text-gray-100 transition-colors duration-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+            <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-gray-800 dark:text-gray-100 transition-colors duration-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
               {pick(post.title, post.titleEn)}
             </p>
 
-            <p className="mt-1.5 flex items-center gap-1 text-[13px] leading-4 text-gray-500 dark:text-gray-400">
+            <p className="mt-1.5 flex items-center gap-1 text-[12px] leading-4 text-gray-500 dark:text-gray-400">
               <span
                 className={
-                  "shrink-0 rounded px-1 py-px text-[12px] font-bold leading-4 " +
+                  "shrink-0 rounded px-1 py-px text-[11px] font-bold leading-4 " +
                   (post.kind === "own" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300")
                 }
               >
@@ -344,7 +344,7 @@ export default function AnalysisColumn() {
 
       <section className="border-t border-gray-100 dark:border-gray-800 pt-3">
         <a href="/news?cat=규제" className="group mb-2 flex items-baseline gap-1">
-          <span className="text-[19px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+          <span className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
             규제 동향
           </span>
           <span className="text-gray-400 dark:text-gray-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
@@ -355,23 +355,23 @@ export default function AnalysisColumn() {
         {!regs ? (
           <div className="h-[150px] rounded-lg bg-gray-50 dark:bg-gray-900" />
         ) : !reg ? (
-          <p className="py-6 text-[14px] text-gray-500 dark:text-gray-400">등재된 규제 동향 없음</p>
+          <p className="py-6 text-[13px] text-gray-500 dark:text-gray-400">등재된 규제 동향 없음</p>
         ) : (
           <button type="button" onClick={() => setOpenReg(reg)} className={CARD_BTN}>
             <span className="mb-1 flex flex-wrap items-center gap-1">
-              <span className="rounded bg-indigo-50 dark:bg-indigo-500/10 px-1 py-px text-[12px] font-bold leading-4 text-indigo-700 dark:text-indigo-300">
+              <span className="rounded bg-indigo-50 dark:bg-indigo-500/10 px-1 py-px text-[11px] font-bold leading-4 text-indigo-700 dark:text-indigo-300">
                 {reg.agency}
               </span>
-              <span className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-px text-[12px] font-bold leading-4 text-gray-600 dark:text-gray-300">
+              <span className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-px text-[11px] font-bold leading-4 text-gray-600 dark:text-gray-300">
                 {reg.category}
               </span>
-              <span className={"rounded px-1 py-px text-[12px] font-bold leading-4 " + (SEV[reg.severity] ?? SEV.Medium)}>
+              <span className={"rounded px-1 py-px text-[11px] font-bold leading-4 " + (SEV[reg.severity] ?? SEV.Medium)}>
                 {reg.severity}
               </span>
               {dd ? (
                 <span
                   className={
-                    "rounded px-1 py-px text-[12px] font-bold leading-4 " +
+                    "rounded px-1 py-px text-[11px] font-bold leading-4 " +
                     (dd.urgent ? "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300")
                   }
                 >
@@ -380,11 +380,11 @@ export default function AnalysisColumn() {
               ) : null}
             </span>
 
-            <p className="line-clamp-2 text-[16px] font-semibold leading-snug text-gray-800 dark:text-gray-100 transition-colors duration-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
+            <p className="line-clamp-2 text-[15px] font-semibold leading-snug text-gray-800 dark:text-gray-100 transition-colors duration-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
               {pick(reg.title, reg.titleEn)}
             </p>
 
-            <p className="mt-1 text-[13px] leading-4 text-gray-500 dark:text-gray-400">
+            <p className="mt-1 text-[12px] leading-4 text-gray-500 dark:text-gray-400">
               {reg.source} · {fmt(reg.date)}
             </p>
           </button>

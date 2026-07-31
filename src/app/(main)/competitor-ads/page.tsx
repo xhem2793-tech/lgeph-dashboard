@@ -46,18 +46,18 @@ function Facet({ title, options, selected, onToggle }: { title: string; options:
   if (options.length === 0) return null
   return (
     <div className="py-2">
-      <div className="mb-1 px-1.5 text-[13px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{title}</div>
+      <div className="mb-1 px-1.5 text-[12px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{title}</div>
       <div className="flex flex-col">
         {options.map((o, i) => {
           const ck = selected.includes(o.value)
           return (
-            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[6px] text-left text-[15px] font-medium transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
+            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[6px] text-left text-[14px] font-medium transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
               <span className={"flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors " + (ck ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 dark:border-gray-700 group-hover:border-gray-400")}>
                 {ck && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><path d="M5 13l4 4L19 7" /></svg>}
               </span>
               {o.dot && <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + o.dot} />}
               <span className={"flex-1 truncate " + (ck ? "font-semibold text-indigo-700 dark:text-indigo-300" : "text-gray-700 dark:text-gray-200")}>{o.label}</span>
-              <span className="text-[12px] tabular-nums text-gray-400 dark:text-gray-500">{o.count}</span>
+              <span className="text-[11px] tabular-nums text-gray-400 dark:text-gray-500">{o.count}</span>
             </button>
           )
         })}
@@ -74,14 +74,14 @@ function Thumb({ a }: { a: CompAd }) {
     <div className="relative aspect-[16/9] w-full overflow-hidden bg-indigo-50 dark:bg-indigo-500/10">
       {showImg
         ? <img src={a.image_url || ""} alt="" onError={() => setErr(true)} className="h-full w-full object-cover" />
-        : <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 bg-gradient-to-br from-indigo-500 to-violet-600"><span className="text-[23px] font-bold tracking-tight text-white">{a.brand}</span><span className="text-[11px] font-medium text-white/70">광고 이미지 없음</span></div>}
+        : <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 bg-gradient-to-br from-indigo-500 to-violet-600"><span className="text-[21px] font-bold tracking-tight text-white">{a.brand}</span><span className="text-[10px] font-medium text-white/70">광고 이미지 없음</span></div>}
       {st && st.key !== "진행중" && (
-        <span className={"absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/85 dark:bg-gray-900/85 px-2 py-0.5 text-[11px] font-bold " + st.text}>
+        <span className={"absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/85 dark:bg-gray-900/85 px-2 py-0.5 text-[10px] font-bold " + st.text}>
           <span className={"h-1.5 w-1.5 rounded-full " + st.dot} />
           {a.days_to_end != null && a.days_to_end >= 0 ? "D-" + a.days_to_end : st.label}
         </span>
       )}
-      <span className="absolute bottom-0 left-0 bg-white/60 dark:bg-gray-900/60 px-1.5 py-0.5 text-[10px] font-medium text-gray-600 dark:text-gray-300">{prodLabel(a.category || "기타")}</span>
+      <span className="absolute bottom-0 left-0 bg-white/60 dark:bg-gray-900/60 px-1.5 py-0.5 text-[9px] font-medium text-gray-600 dark:text-gray-300">{prodLabel(a.category || "기타")}</span>
     </div>
   )
 }
@@ -124,13 +124,13 @@ function Card({ a, onOpen, q = "" }: { a: CompAd; onOpen: () => void; q?: string
       <Thumb a={a} />
       <div className="flex flex-1 flex-col p-2.5">
         <div className="flex items-center gap-1.5">
-          <span className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50"><Hi text={a.brand} q={q} /></span>
-          <span className="rounded border border-gray-200 dark:border-gray-800 px-1.5 py-0.5 text-[11.5px] font-medium text-gray-500 dark:text-gray-400">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+          <span className="text-[13px] font-bold tracking-tight text-gray-900 dark:text-gray-50"><Hi text={a.brand} q={q} /></span>
+          <span className="rounded border border-gray-200 dark:border-gray-800 px-1.5 py-0.5 text-[10.5px] font-medium text-gray-500 dark:text-gray-400">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
         </div>
-        <p className="mt-1.5 line-clamp-2 text-[14px] font-medium leading-snug text-gray-800 dark:text-gray-100"><Hi text={clean(a.headline)} q={q} /></p>
-        {a.offer && <span className="mt-1.5 max-w-full self-start truncate rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 text-[12.5px] font-semibold text-emerald-700 dark:text-emerald-300"><Hi text={offerShort(a.offer)} q={q} /></span>}
-        {brief && <p className="mt-2 line-clamp-2 text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400"><Hi text={brief} q={q} /></p>}
-        <div className="mt-auto flex items-center gap-1.5 border-t border-gray-100 dark:border-gray-800 pt-2 text-[12px] text-gray-400 dark:text-gray-500">
+        <p className="mt-1.5 line-clamp-2 text-[13px] font-medium leading-snug text-gray-800 dark:text-gray-100"><Hi text={clean(a.headline)} q={q} /></p>
+        {a.offer && <span className="mt-1.5 max-w-full self-start truncate rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 text-[11.5px] font-semibold text-emerald-700 dark:text-emerald-300"><Hi text={offerShort(a.offer)} q={q} /></span>}
+        {brief && <p className="mt-2 line-clamp-2 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400"><Hi text={brief} q={q} /></p>}
+        <div className="mt-auto flex items-center gap-1.5 border-t border-gray-100 dark:border-gray-800 pt-2 text-[11px] text-gray-400 dark:text-gray-500">
           {a.venue ? (
             <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z" /><circle cx="12" cy="11" r="2" /></svg><span className="truncate"><Hi text={a.venue} q={q} /></span></>
           ) : (
@@ -195,11 +195,11 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-indigo-500 to-violet-600">
               <span className="text-[30px] font-bold tracking-tight text-white">{a.brand}</span>
-              <span className="text-[12px] font-medium text-white/70">광고 이미지 없음</span>
+              <span className="text-[11px] font-medium text-white/70">광고 이미지 없음</span>
             </div>
           )}
           {st && (
-            <span className={"absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 dark:bg-gray-900/90 px-2.5 py-1 text-[13px] font-bold shadow-sm backdrop-blur " + st.text}>
+            <span className={"absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 dark:bg-gray-900/90 px-2.5 py-1 text-[12px] font-bold shadow-sm backdrop-blur " + st.text}>
               <span className={"h-1.5 w-1.5 rounded-full " + st.dot} />
               {st.label}{a.days_to_end != null && a.days_to_end >= 0 ? " D-" + a.days_to_end : ""}
             </span>
@@ -207,7 +207,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
         </div>
 
         <div className="overflow-y-auto px-7 pb-7 pt-5">
-          <div className="flex flex-wrap items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400">
+          <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
             <span className="font-semibold text-indigo-600 dark:text-indigo-400">{a.brand}</span>
             <span className="text-gray-300 dark:text-gray-600">·</span>
             <span>{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
@@ -215,33 +215,33 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
             <span className="num">{a.ad_started_on || "상시"}</span>
           </div>
 
-          <h3 className="mt-2 text-[23px] font-semibold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{clean(a.headline)}</h3>
+          <h3 className="mt-2 text-[21px] font-semibold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{clean(a.headline)}</h3>
 
           {a.offer && (
-            <span className="mt-3 inline-block rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[14.5px] font-semibold text-emerald-700 dark:text-emerald-300">{clean(a.offer)}</span>
+            <span className="mt-3 inline-block rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[13.5px] font-semibold text-emerald-700 dark:text-emerald-300">{clean(a.offer)}</span>
           )}
 
           {bodyImpl && (
             <div className="mt-4 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-3">
-              <p className="text-[12.5px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-400">시사점</p>
-              <p className="mt-1 text-[16px] leading-[1.7] text-gray-800 dark:text-gray-100">{bodyImpl}</p>
+              <p className="text-[11.5px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-400">시사점</p>
+              <p className="mt-1 text-[15px] leading-[1.7] text-gray-800 dark:text-gray-100">{bodyImpl}</p>
             </div>
           )}
 
           {bodyMain && (
             <div className="mt-5">
-              <p className="text-[12.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
+              <p className="text-[11.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
               <div className="mt-1 space-y-2">
                 {para(bodyMain).map((p, i) => (
-                  <p key={i} className="text-[15px] leading-[1.7] text-gray-600 dark:text-gray-300">{p}</p>
+                  <p key={i} className="text-[14px] leading-[1.7] text-gray-600 dark:text-gray-300">{p}</p>
                 ))}
               </div>
             </div>
           )}
 
           <div className="mt-5 border-t border-gray-100 dark:border-gray-800 pt-3">
-            <p className="text-[13.5px] leading-relaxed text-gray-500 dark:text-gray-400">{meta.join(" · ")}</p>
-            <p className="mt-1 text-[12.5px] text-gray-400 dark:text-gray-500">Meta 광고 라이브러리(자체 수집) · {a.confidence || "—"}</p>
+            <p className="text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400">{meta.join(" · ")}</p>
+            <p className="mt-1 text-[11.5px] text-gray-400 dark:text-gray-500">Meta 광고 라이브러리(자체 수집) · {a.confidence || "—"}</p>
           </div>
 
           {a.ad_url && (
@@ -249,7 +249,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
               href={a.ad_url}
               target="_blank"
               rel="noreferrer"
-              className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-[15px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95"
+              className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-[14px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95"
             >
               원문 광고 보기 · {a.brand}
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M7 17L17 7M17 7H8M17 7v9" /></svg>
@@ -326,11 +326,11 @@ export default function Page() {
     <main className="w-full px-4 pb-12 pt-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
-      <div className="grid gap-6 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-10">
-        <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2 py-2 shadow-sm lg:sticky lg:top-[80px]">
+      <div className="grid gap-6 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-20">
+        <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit py-2 lg:sticky lg:top-[80px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
           <div className="mb-1.5 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-1.5 pb-2.5">
-            <span className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">필터</span>
-            {anyFilter && <button onClick={clearAll} className="text-[12.5px] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">초기화</button>}
+            <span className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">필터</span>
+            {anyFilter && <button onClick={clearAll} className="text-[11.5px] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">초기화</button>}
           </div>
           <Facet title="브랜드" options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} />
           <div className="mx-1.5 h-px bg-gray-100 dark:bg-gray-800" />
@@ -344,13 +344,13 @@ export default function Page() {
         <div className="min-w-0" style={{animation:"fadeUp .5s ease both"}}>
           <div className="mb-4"><InsightBanner banner={banner} open={sitOpen} onToggle={() => setSitOpen((v) => !v)} /></div>
 
-        <div className="relative mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5"><div className="flex shrink-0 items-center gap-3"><Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: "최신순" }, { k: "ending", label: "종료임박순" }]} size="sm" /><div className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 p-0.5"><button onClick={() => setMonthIdx(-1)} className={"h-7 rounded-full px-3 text-[14px] font-semibold transition-colors " + (monthSel === null ? "bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")}>전체</button><button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label="이전 달" disabled={months.length === 0 || monthIdx >= months.length - 1} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg></button><span className={"min-w-[92px] px-1 text-center text-[14px] font-semibold " + (monthSel ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500")}>{monthSel ? ymLabel(monthSel) : "전체 기간"}</span><button onClick={() => setMonthIdx((i) => (i <= 0 ? 0 : i - 1))} aria-label="다음 달" disabled={monthIdx <= 0} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg></button></div></div><div className="flex shrink-0 items-center gap-3"><div className={"group relative hidden lg:block transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[416px]" : "w-[320px]")}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg><input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="브랜드 · 제목 · 프로모 · 장소 검색" className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[14px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />{q ? (<button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>) : null}</div><span className="text-[13px] text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-700 dark:text-gray-200">{shown.length}건</b>{qq ? " · " + hits + "곳 일치" : ""}{_maxDate ? " · 최종 " + _fresh : ""}</span></div></div>
+        <div className="relative mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5"><div className="flex shrink-0 items-center gap-3"><Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: "최신순" }, { k: "ending", label: "종료임박순" }]} size="sm" /><div className="inline-flex items-center gap-1 rounded-full bg-gray-100 dark:bg-gray-800 p-0.5"><button onClick={() => setMonthIdx(-1)} className={"h-7 rounded-full px-3 text-[13px] font-semibold transition-colors " + (monthSel === null ? "bg-white dark:bg-gray-900 text-indigo-700 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")}>전체</button><button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label="이전 달" disabled={months.length === 0 || monthIdx >= months.length - 1} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M15 6l-6 6 6 6" /></svg></button><span className={"min-w-[92px] px-1 text-center text-[13px] font-semibold " + (monthSel ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500")}>{monthSel ? ymLabel(monthSel) : "전체 기간"}</span><button onClick={() => setMonthIdx((i) => (i <= 0 ? 0 : i - 1))} aria-label="다음 달" disabled={monthIdx <= 0} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"><path d="M9 6l6 6-6 6" /></svg></button></div></div><div className="flex shrink-0 items-center gap-3"><div className={"group relative hidden lg:block transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[416px]" : "w-[320px]")}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg><input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="브랜드 · 제목 · 프로모 · 장소 검색" className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[13px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />{q ? (<button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>) : null}</div><span className="text-[12px] text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-700 dark:text-gray-200">{shown.length}건</b>{qq ? " · " + hits + "곳 일치" : ""}{_maxDate ? " · 최종 " + _fresh : ""}</span></div></div>
 
           <div key={(ads === null ? "L" : "R") + fBrand.join() + fType.join() + fProd.join() + fStat.join() + String(monthSel) + sort + q} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
           {ads === null ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}</div>
           ) : shown.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[14px] text-gray-400 dark:text-gray-500">{qq ? "검색 결과 없음" : "해당 조건의 광고 없음"}</div>
+            <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[13px] text-gray-400 dark:text-gray-500">{qq ? "검색 결과 없음" : "해당 조건의 광고 없음"}</div>
           ) : (
             <>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -360,12 +360,12 @@ export default function Page() {
                 </div>
               ))}
             </div>
-            {totalPages > 1 ? (<div className="mt-4 flex items-center justify-center gap-1 border-t border-gray-100 dark:border-gray-800 pt-3"><button type="button" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)} className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[13px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">이전</button>{Array.from({ length: totalPages }, (_, k) => k + 1).map((p) => (<button key={p} type="button" onClick={() => setPage(p)} className={"min-w-[26px] rounded-md px-1.5 py-1 text-[13px] font-medium transition-all duration-300 ease-out active:scale-95 " + (p === curPage ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 dark:text-gray-300 hover:-translate-y-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400")}>{p}</button>))}<button type="button" disabled={curPage >= totalPages} onClick={() => setPage(curPage + 1)} className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[13px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">다음</button></div>) : null}
+            {totalPages > 1 ? (<div className="mt-4 flex items-center justify-center gap-1 border-t border-gray-100 dark:border-gray-800 pt-3"><button type="button" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)} className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[12px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">이전</button>{Array.from({ length: totalPages }, (_, k) => k + 1).map((p) => (<button key={p} type="button" onClick={() => setPage(p)} className={"min-w-[26px] rounded-md px-1.5 py-1 text-[12px] font-medium transition-all duration-300 ease-out active:scale-95 " + (p === curPage ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 dark:text-gray-300 hover:-translate-y-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400")}>{p}</button>))}<button type="button" disabled={curPage >= totalPages} onClick={() => setPage(curPage + 1)} className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[12px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">다음</button></div>) : null}
             </>
           )}
           </div>
 
-          <p className="mt-5 text-[12.5px] leading-relaxed text-gray-400 dark:text-gray-500">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 썸네일 없으면 브랜드 이니셜 · 제목 한글 번역 · 클릭 시 상세</p>
+          <p className="mt-5 text-[11.5px] leading-relaxed text-gray-400 dark:text-gray-500">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 썸네일 없으면 브랜드 이니셜 · 제목 한글 번역 · 클릭 시 상세</p>
         </div>
       </div>
 

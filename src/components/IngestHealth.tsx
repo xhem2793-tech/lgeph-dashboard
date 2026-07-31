@@ -40,16 +40,16 @@ export default function IngestHealth() {
   return (
     <section className="h-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3">
       <header className="mb-2 flex items-baseline justify-between">
-        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">데이터 신뢰</h3>
-        <span className="text-[12px] text-gray-300 dark:text-gray-600">
+        <h3 className="text-[13px] font-bold tracking-tight text-gray-900 dark:text-gray-50">데이터 신뢰</h3>
+        <span className="text-[11px] text-gray-300 dark:text-gray-600">
           {rows ? (bad ? `${bad}건 주의` : "전부 정상") : "수집 상태"}
         </span>
       </header>
 
       {err ? (
-        <p className="py-4 text-center text-[12px] text-gray-400 dark:text-gray-500">불러오지 못함</p>
+        <p className="py-4 text-center text-[11px] text-gray-400 dark:text-gray-500">불러오지 못함</p>
       ) : (
-        <table className="w-full border-collapse text-[12px]">
+        <table className="w-full border-collapse text-[11px]">
           <tbody>
             {(rows ?? Array.from({ length: 8 })).map((r, i) =>
               !r ? (
@@ -77,7 +77,7 @@ export default function IngestHealth() {
         </table>
       )}
 
-      <p className="mt-2 border-t border-gray-100 dark:border-gray-800 pt-1.5 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">
+      <p className="mt-2 border-t border-gray-100 dark:border-gray-800 pt-1.5 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
         정상 발표 지연을 반영 — BSP 송금은 원래 2~3개월 늦음
         <br />
         <b className="font-semibold text-gray-500 dark:text-gray-400">약점을 우리가 먼저 공개한다</b>

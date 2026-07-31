@@ -154,7 +154,7 @@ function FacetMenu({ label, value, active, children }: { label: string; value: s
     <details className="group relative">
       <summary
         className={
-          "flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[14px] transition-colors [&::-webkit-details-marker]:hidden " +
+          "flex cursor-pointer list-none items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[13px] transition-colors [&::-webkit-details-marker]:hidden " +
           (active ? "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 hover:border-indigo-300 dark:hover:border-indigo-500/40")
         }
       >
@@ -175,7 +175,7 @@ function Opt({ on, count, multi, onClick, children }: { on: boolean; count?: num
       type="button"
       onClick={onClick}
       className={
-        "flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-[14.5px] transition-colors " +
+        "flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-1.5 text-left text-[13.5px] transition-colors " +
         (on && !multi ? "bg-indigo-50 dark:bg-indigo-500/10 font-semibold text-indigo-700 dark:text-indigo-300" : "text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-900")
       }
     >
@@ -187,7 +187,7 @@ function Opt({ on, count, multi, onClick, children }: { on: boolean; count?: num
         ) : null}
         {children}
       </span>
-      {count != null ? <span className="num text-[12px] text-gray-400 dark:text-gray-500">{count}</span> : null}
+      {count != null ? <span className="num text-[11px] text-gray-400 dark:text-gray-500">{count}</span> : null}
     </button>
   )
 }
@@ -301,18 +301,18 @@ export default function Competitors() {
     <div className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes sparkDraw{to{stroke-dashoffset:0}}"}</style>
 
-      <div className="grid gap-6 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-10">
-        <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[61px]">
+      <div className="grid gap-6 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-20">
+        <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit lg:sticky lg:top-[61px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
           {/* 좌 메뉴 — 뉴스·경쟁사 광고 사이드바와 동일한 구조(아이콘 헤더·그룹 라벨·우측 상태 메타) */}
           <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
-            <p className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분석</p>
+            <p className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분석</p>
           </div>
           <div className="px-3 py-3">
             <div className="flex flex-col gap-0.5">
               {GROUPS.map((g) => (
                 <React.Fragment key={g.group}>
-                  <p className="mb-1 mt-2.5 px-1.5 text-[12.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 first:mt-0">{g.group}</p>
+                  <p className="mb-1 mt-2.5 px-1.5 text-[11.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 first:mt-0">{g.group}</p>
                   {g.items.map((it) => (
                     <button
                       key={it.key}
@@ -324,10 +324,10 @@ export default function Competitors() {
                       }
                     >
                       <span className="flex items-center gap-1.5">
-                        <span className={"flex-1 truncate text-[15px] transition-colors duration-300 " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>{it.label}</span>
+                        <span className={"flex-1 truncate text-[14px] transition-colors duration-300 " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>{it.label}</span>
                         {it.status === "live"
-                          ? <span className="shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[11px] font-bold text-emerald-600 dark:text-emerald-400">LIVE</span>
-                          : <span className="shrink-0 text-[11.5px] font-medium text-gray-400 dark:text-gray-500">예정</span>}
+                          ? <span className="shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[10px] font-bold text-emerald-600 dark:text-emerald-400">LIVE</span>
+                          : <span className="shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">예정</span>}
                       </span>
                     </button>
                   ))}
@@ -348,7 +348,7 @@ export default function Competitors() {
                 setOnlyMoved(false)
                 setQ("")
               }}
-              className="w-full rounded-md border border-gray-200 dark:border-gray-800 py-1.5 text-[14px] text-gray-600 dark:text-gray-300 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-[.98]"
+              className="w-full rounded-md border border-gray-200 dark:border-gray-800 py-1.5 text-[13px] text-gray-600 dark:text-gray-300 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-[.98]"
             >
               필터 초기화
             </button>
@@ -358,19 +358,19 @@ export default function Competitors() {
         <div style={{ animation: "fadeUp .5s ease both" }} className="flex min-h-[1200px] min-w-0 flex-col gap-4">
         <section
           key={view}
-          className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm"
+          className="min-w-0"
           style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}
         >
           {view !== "movers" && view !== "asp" && view !== "board" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
-            <h2 className="flex items-baseline gap-2 text-[19px] font-bold tracking-tight text-gray-900 dark:text-gray-50">
+            <h2 className="flex items-baseline gap-2 text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">
               {active?.label}
-              <span className={"rounded border px-1 py-px text-[11px] font-semibold " + BADGE[active?.status ?? "plan"].c}>
+              <span className={"rounded border px-1 py-px text-[10px] font-semibold " + BADGE[active?.status ?? "plan"].c}>
                 {BADGE[active?.status ?? "plan"].t}
               </span>
             </h2>
-            <span className="flex items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400">
+            <span className="flex items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
               최종 갱신 {stamp ? fmtStamp(stamp) : md(asOf)}
-              <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[12px] font-semibold text-emerald-700 dark:text-emerald-300">
+              <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
                 CONFIRMED
               </span>
             </span>
@@ -390,8 +390,8 @@ export default function Competitors() {
             <MoversView rows={rows} elabels={elabels} stamp={stamp} />
           ) : active?.status !== "live" ? (
             <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
-              <p className="text-[15px] font-medium text-gray-600 dark:text-gray-300">{active?.desc}</p>
-              <p className="text-[14px] text-gray-400 dark:text-gray-500">데이터 연결 예정 — 뷰 확정 후 구현</p>
+              <p className="text-[14px] font-medium text-gray-600 dark:text-gray-300">{active?.desc}</p>
+              <p className="text-[13px] text-gray-400 dark:text-gray-500">데이터 연결 예정 — 뷰 확정 후 구현</p>
             </div>
           ) : (
             <>
@@ -429,22 +429,22 @@ export default function Competitors() {
                     <Opt key={s} multi on={shops.includes(s)} count={rows ? rows.filter((r) => r.retailer === s).length : null} onClick={() => toggle(shops, s, setShops)}>{s === "SM Appliance" ? "SM" : s}</Opt>
                   ))}
                 </FacetMenu>
-                <button type="button" onClick={() => setOnlyMoved(!onlyMoved)} className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[14px] font-medium transition-colors " + (onlyMoved ? "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "border-transparent bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700")}>
+                <button type="button" onClick={() => setOnlyMoved(!onlyMoved)} className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[13px] font-medium transition-colors " + (onlyMoved ? "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "border-transparent bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700")}>
                   <span className={"flex h-4 w-7 items-center rounded-full px-0.5 transition-colors " + (onlyMoved ? "bg-indigo-600" : "bg-gray-300")}><span className={"h-3 w-3 rounded-full bg-white dark:bg-gray-900 transition-transform " + (onlyMoved ? "translate-x-3" : "")} /></span>
                   변동분만
                 </button>
                 <div className="ml-auto flex items-center gap-2.5">
                   <div className="relative">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" /></svg>
-                    <input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델코드·모델명 검색" className={"rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-3 text-[14px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)] " + (focused || q ? "w-[360px]" : "w-[260px]")} />
+                    <input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델코드·모델명 검색" className={"rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-3 text-[13px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)] " + (focused || q ? "w-[360px]" : "w-[260px]")} />
                   </div>
-                  <span className="whitespace-nowrap text-[13px] text-gray-400 dark:text-gray-500"><b className="text-gray-700 dark:text-gray-200">{data.length}</b>행{stamp ? " · 최종 " + fmtStamp(stamp) : ""} <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[12px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
-                  <button type="button" onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[13px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-300">엑셀</button>
+                  <span className="whitespace-nowrap text-[12px] text-gray-400 dark:text-gray-500"><b className="text-gray-700 dark:text-gray-200">{data.length}</b>행{stamp ? " · 최종 " + fmtStamp(stamp) : ""} <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
+                  <button type="button" onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[12px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-300">엑셀</button>
                 </div>
               </div>
 
               <div className="mt-2 max-h-[600px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
-                <table className="w-full border-collapse text-[13px]">
+                <table className="w-full border-collapse text-[12px]">
                   <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
                     <tr>
                       {activeCols.map((c) => (
@@ -465,13 +465,13 @@ export default function Competitors() {
                   <tbody key={cat + brands.join() + shops.join() + band + seg + sort.k + String(sort.asc) + q + String(onlyMoved)}>
                     {rows === null ? (
                       <tr>
-                        <td colSpan={activeCols.length} className="px-2 py-10 text-center text-[14px] text-gray-400 dark:text-gray-500">
+                        <td colSpan={activeCols.length} className="px-2 py-10 text-center text-[13px] text-gray-400 dark:text-gray-500">
                           불러오는 중…
                         </td>
                       </tr>
                     ) : data.length === 0 ? (
                       <tr>
-                        <td colSpan={activeCols.length} className="px-2 py-10 text-center text-[14px] text-gray-400 dark:text-gray-500">
+                        <td colSpan={activeCols.length} className="px-2 py-10 text-center text-[13px] text-gray-400 dark:text-gray-500">
                           조건에 맞는 행 없음
                         </td>
                       </tr>
@@ -516,7 +516,7 @@ export default function Competitors() {
                   </tbody>
                 </table>
               </div>
-              <p className="mt-1 text-[12px] text-gray-400 dark:text-gray-500">
+              <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">
                 표는 상위 100행만 표시(정렬 기준) · 엑셀(CSV)에는 필터된 전체 {data.length}행 전부 · 모델코드에 마우스를 올리면 원문 모델명
               </p>
             </>

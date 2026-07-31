@@ -189,7 +189,7 @@ export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?
       {/* 정렬(주요뉴스와 동일 Segmented) + 검색(우측) + 최종 갱신(뉴스와 동일 위치·포맷) */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
         <Segmented value={sort} onChange={(k) => setSort(k as "cat" | "recent")} options={[{ k: "cat", label: "분류순" }, { k: "recent", label: "최신순" }]} size="sm" />
-        <div className="flex flex-wrap items-center gap-2.5 text-[13.5px]">
+        <div className="flex flex-wrap items-center gap-2.5 text-[12.5px]">
           <span className="text-gray-500 dark:text-gray-400">총 지표 <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
           <span className="text-gray-300 dark:text-gray-600">·</span>
           <span className="text-gray-500 dark:text-gray-400">검색 결과 <b className="text-indigo-600 dark:text-indigo-400">{filtered.length}</b></span>
@@ -205,7 +205,7 @@ export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?
           </svg>
           <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
             placeholder="지표 · 원본코드 · 출처 · 분류 검색"
-            className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[14px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+            className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[13px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
           {q && (
             <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기"
               className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90">
@@ -213,9 +213,9 @@ export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?
             </button>
           )}
         </div>
-        <span className="flex shrink-0 items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400">
+        <span className="flex shrink-0 items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
           최종 갱신 {loadedAt ? fmtStamp(loadedAt.toISOString()) : "—"}
-          <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[12px] font-bold text-emerald-700 dark:text-emerald-300">C</span>
+          <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[11px] font-bold text-emerald-700 dark:text-emerald-300">C</span>
         </span>
       </div>
 
@@ -232,9 +232,9 @@ export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?
         <section key={k} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
           <header className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-[16px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[16px] font-bold text-gray-900 dark:text-gray-50">{catKo(k)}</h2>
-            <span className="text-[13px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
-            {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="ml-auto text-[13px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">차트 전체 보기 →</button>}
+            <h2 className="text-[15px] font-bold text-gray-900 dark:text-gray-50">{catKo(k)}</h2>
+            <span className="text-[12px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
+            {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="ml-auto text-[12px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">차트 전체 보기 →</button>}
           </header>
           {layout === "card" ? <IndCards items={items} q={q} showCat={false} onDetail={setDetail} onExcel={downloadExcel} /> : <IndTable items={items} q={q} showCat={false} onDetail={setDetail} onExcel={downloadExcel} />}
         </section>
@@ -245,18 +245,18 @@ export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?
         <section className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
           <header className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-[16px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[16px] font-bold text-gray-900 dark:text-gray-50">최신 업데이트순</h2>
-            <span className="text-[13px] text-gray-400 dark:text-gray-500">{flat.length}개 지표 · 최근 관측 우선</span>
+            <h2 className="text-[15px] font-bold text-gray-900 dark:text-gray-50">최신 업데이트순</h2>
+            <span className="text-[12px] text-gray-400 dark:text-gray-500">{flat.length}개 지표 · 최근 관측 우선</span>
           </header>
           {layout === "card" ? <IndCards items={flat} q={q} showCat onDetail={setDetail} onExcel={downloadExcel} /> : <IndTable items={flat} q={q} showCat onDetail={setDetail} onExcel={downloadExcel} />}
         </section>
       )}
 
       {prov.length > 0 && filtered.length === 0 && (
-        <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 text-[15px] text-gray-400">검색 결과 없음</div>
+        <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 text-[14px] text-gray-400">검색 결과 없음</div>
       )}
 
-      <p className="text-[13px] leading-relaxed text-gray-400 dark:text-gray-500">
+      <p className="text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">
         최신값=국가지표(PHILIPPINES) 최신 관측 · 직전 대비=직전 관측 대비 증감 · 기간=데이터 보유 범위(관측수) · <b className="font-semibold text-gray-500 dark:text-gray-400">자세히보기=시계열(연·분기·월)+전년비·전월비, 엑셀=CSV 다운로드</b> · 「전망」은 ADB·IMF·BSP 예측치.
       </p>
 
@@ -270,9 +270,9 @@ function IndTable({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: s
   const cols = showCat ? ["20%", "9%", "9%", "7%", "9%", "8%", "12%", "9%", "17%"] : ["24%", "10%", "7%", "10%", "9%", "13%", "10%", "17%"]
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[880px] table-fixed text-[14px]">
+      <table className="w-full min-w-[880px] table-fixed text-[13px]">
         <colgroup>{cols.map((w, i) => <col key={i} style={{ width: w }} />)}</colgroup>
-        <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[12.5px] font-semibold uppercase text-gray-400 dark:text-gray-500">
+        <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[11.5px] font-semibold uppercase text-gray-400 dark:text-gray-500">
           <th className="px-4 py-1.5">지표</th>
           {showCat && <th className="px-2 py-1.5">분류</th>}
           <th className="px-2 py-1.5 text-right">최신값</th><th className="px-2 py-1.5 text-center">단위</th><th className="px-2 py-1.5 text-right">직전 대비</th><th className="px-2 py-1.5">기준</th><th className="px-2 py-1.5">기간</th><th className="px-2 py-1.5">출처</th><th className="px-2 py-1.5 text-center">액션</th>
@@ -289,20 +289,20 @@ function IndTable({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: s
                 <td className="px-4 py-1.5">
                   <div className="flex items-center gap-1.5">
                     <span className="truncate font-medium text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></span>
-                    <span className="shrink-0 text-[12px] font-semibold text-indigo-500 opacity-0 transition-opacity group-hover:opacity-100">자세히 →</span>
+                    <span className="shrink-0 text-[11px] font-semibold text-indigo-500 opacity-0 transition-opacity group-hover:opacity-100">자세히 →</span>
                   </div>
                 </td>
                 {showCat && <td className="truncate px-2 py-1.5 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
                 <td className="px-2 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
-                <td className="px-2 py-1.5 text-center"><span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[12px] font-semibold text-gray-500 dark:text-gray-400">{u.unit}</span></td>
+                <td className="px-2 py-1.5 text-center"><span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[11px] font-semibold text-gray-500 dark:text-gray-400">{u.unit}</span></td>
                 <td className={"px-2 py-1.5 text-right tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "—" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.period)}</td>
                 <td className="px-2 py-1.5 tabular-nums text-gray-400 dark:text-gray-500">{ymc(r.mn)}~{ymc(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>
                 <td className="truncate px-2 py-1.5" title={r.source}>{link ? <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"><Hi text={r.source} q={q} /> ↗</a> : <span className="text-gray-500 dark:text-gray-400"><Hi text={r.source} q={q} /></span>}</td>
                 <td className="px-2 py-1.5">
                   <div className="flex items-center justify-center gap-1">
-                    <button type="button" onClick={(e) => { e.stopPropagation(); onDetail(r) }} className="rounded-md border border-gray-200 dark:border-gray-700 px-2 py-0.5 text-[12.5px] font-semibold text-gray-600 dark:text-gray-300 transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-400 active:scale-95">자세히</button>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); onExcel(r) }} title="엑셀(CSV) 다운로드" className="rounded-md border border-gray-200 dark:border-gray-700 px-2 py-0.5 text-[12.5px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 active:scale-95">엑셀</button>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onDetail(r) }} className="rounded-md border border-gray-200 dark:border-gray-700 px-2 py-0.5 text-[11.5px] font-semibold text-gray-600 dark:text-gray-300 transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-400 active:scale-95">자세히</button>
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onExcel(r) }} title="엑셀(CSV) 다운로드" className="rounded-md border border-gray-200 dark:border-gray-700 px-2 py-0.5 text-[11.5px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 active:scale-95">엑셀</button>
                   </div>
                 </td>
               </tr>
@@ -330,26 +330,26 @@ function IndCards({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: s
             <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {showCat && <span className="rounded-full bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[11.5px] font-semibold text-indigo-600 dark:text-indigo-400">{r.catKo}</span>}
-                  {r.confidence === "FORECAST" && <span className="rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[11.5px] font-bold text-amber-700 dark:text-amber-300">전망</span>}
+                  {showCat && <span className="rounded-full bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[10.5px] font-semibold text-indigo-600 dark:text-indigo-400">{r.catKo}</span>}
+                  {r.confidence === "FORECAST" && <span className="rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[10.5px] font-bold text-amber-700 dark:text-amber-300">전망</span>}
                 </div>
-                <h3 className="mt-1 truncate text-[15px] font-bold text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></h3>
+                <h3 className="mt-1 truncate text-[14px] font-bold text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></h3>
               </div>
-              <span className="shrink-0 rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[11.5px] font-semibold text-gray-500 dark:text-gray-400">{u.unit}</span>
+              <span className="shrink-0 rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[10.5px] font-semibold text-gray-500 dark:text-gray-400">{u.unit}</span>
             </div>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-[23px] font-extrabold leading-none tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</span>
-              <span className={"text-[13.5px] font-semibold tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</span>
+              <span className="text-[21px] font-extrabold leading-none tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</span>
+              <span className={"text-[12.5px] font-semibold tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</span>
             </div>
-            <div className="mt-2 flex items-center gap-x-2 gap-y-0.5 text-[12.5px] text-gray-400 dark:text-gray-500">
+            <div className="mt-2 flex items-center gap-x-2 gap-y-0.5 text-[11.5px] text-gray-400 dark:text-gray-500">
               <span className="tabular-nums">{ym(r.period)}</span>
               <span className="text-gray-300 dark:text-gray-600">·</span>
               <span className="tabular-nums">{ymc(r.mn)}~{ymc(r.mx)}</span>
               {link ? <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="ml-auto shrink-0 font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">{r.source} ↗</a> : <span className="ml-auto shrink-0 truncate">{r.source}</span>}
             </div>
             <div className="mt-2.5 flex items-center gap-1.5 border-t border-gray-50 dark:border-gray-800/50 pt-2">
-              <button type="button" onClick={(e) => { e.stopPropagation(); onDetail(r) }} className="flex-1 rounded-md border border-gray-200 dark:border-gray-700 py-1 text-[13px] font-semibold text-gray-600 dark:text-gray-300 transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-400 active:scale-95">자세히</button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); onExcel(r) }} title="엑셀(CSV) 다운로드" className="flex-1 rounded-md border border-gray-200 dark:border-gray-700 py-1 text-[13px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 active:scale-95">엑셀</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); onDetail(r) }} className="flex-1 rounded-md border border-gray-200 dark:border-gray-700 py-1 text-[12px] font-semibold text-gray-600 dark:text-gray-300 transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-400 active:scale-95">자세히</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); onExcel(r) }} title="엑셀(CSV) 다운로드" className="flex-1 rounded-md border border-gray-200 dark:border-gray-700 py-1 text-[12px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 active:scale-95">엑셀</button>
             </div>
           </div>
         )
@@ -437,41 +437,41 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
         <span className={"absolute inset-y-0 left-0 z-10 w-1 " + (row.confidence === "FORECAST" ? "bg-amber-500" : "bg-indigo-500")} />
         <button type="button" onClick={onClose} aria-label="닫기" className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
         <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-6">
-          <div className="flex flex-wrap items-center gap-1.5 text-[13px] text-gray-500 dark:text-gray-400">
+          <div className="flex flex-wrap items-center gap-1.5 text-[12px] text-gray-500 dark:text-gray-400">
             <span className="font-semibold text-indigo-600 dark:text-indigo-400">{row.catKo}</span>
             <span className="text-gray-300 dark:text-gray-600">·</span>
             <span>{row.source}</span>
             <span className="text-gray-300 dark:text-gray-600">·</span>
             <span className="num">{ym(row.mn)}~{ym(row.mx)} ({row.n}관측)</span>
-            {row.confidence === "FORECAST" && <span className="ml-1 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[12px] font-bold text-amber-700 dark:text-amber-300">전망</span>}
+            {row.confidence === "FORECAST" && <span className="ml-1 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[11px] font-bold text-amber-700 dark:text-amber-300">전망</span>}
           </div>
-          <h3 className="mt-2 text-[23px] font-semibold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h3>
+          <h3 className="mt-2 text-[21px] font-semibold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h3>
           <div className="mt-3 flex flex-wrap items-center gap-2">
-            {canOpen && <button type="button" onClick={() => { onOpenChart(row.cat); onClose() }} className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-[14px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95">경제지표에서 보기 →</button>}
-            <button type="button" onClick={() => onExcel(row)} className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 text-[14px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95">
+            {canOpen && <button type="button" onClick={() => { onOpenChart(row.cat); onClose() }} className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-[13px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95">경제지표에서 보기 →</button>}
+            <button type="button" onClick={() => onExcel(row)} className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 text-[13px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
               엑셀 다운로드
             </button>
           </div>
           <div className="mt-5">
           {series == null ? (
-            <div className="flex h-56 items-center justify-center text-[15px] text-gray-400">불러오는 중…</div>
+            <div className="flex h-56 items-center justify-center text-[14px] text-gray-400">불러오는 중…</div>
           ) : table.length === 0 ? (
-            <div className="flex h-56 items-center justify-center text-[15px] text-gray-400">시계열 데이터 없음</div>
+            <div className="flex h-56 items-center justify-center text-[14px] text-gray-400">시계열 데이터 없음</div>
           ) : (
             <div className="flex flex-col gap-4">
               {/* 차트 카드 — 경제지표 페이지와 동일한 LineChart. 토글(Segmented)은 카드에 상주(리마운트 X)해 슬라이드 애니메이션 유지 */}
               <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm">
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-                  <h4 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h4>
-                  <span className="shrink-0 text-[12.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
+                  <h4 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h4>
+                  <span className="shrink-0 text-[11.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
                   <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: "전체" }]} /></span>
                 </div>
                 {/* 축 글씨가 넓은 모달에서 과대해지지 않도록 폭 제한 + SVG 텍스트 축소 */}
                 <style>{".detchart svg text{font-size:6.8px}"}</style>
                 {/* 기간 토글에 맞춰 차트/최신값만 부드럽게 리렌더(카드·토글은 유지) */}
                 <div key={"ch-" + win} style={{ animation: "bkFade .4s ease both" }}>
-                  <div className="mt-1.5 flex min-h-[26px] flex-wrap items-start gap-x-3 gap-y-1 text-[12.5px]">
+                  <div className="mt-1.5 flex min-h-[26px] flex-wrap items-start gap-x-3 gap-y-1 text-[11.5px]">
                     <Lg c="#4f46e5" t={row.label || row.indicator} b />
                     <span className="ml-auto tabular-nums text-gray-500 dark:text-gray-400">최신 <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
                   </div>
@@ -480,21 +480,21 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                   </div>
                 </div>
                 {/* 의미 + LG 인사이트 — 페이지 차트카드와 동일 위치 */}
-                <p className="mt-2.5 text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {(CAT_MI[row.cat] || CAT_MI.etc).mean}</p>
+                <p className="mt-2.5 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {(CAT_MI[row.cat] || CAT_MI.etc).mean}</p>
                 <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
-                  <p className="text-[13px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> {(CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
+                  <p className="text-[12px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> {(CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
                 </div>
               </div>
               {/* 엑셀형 표 카드 */}
               <div key={"tb-" + win} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "bkFade .45s ease .06s both" }}>
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
                   <span className="h-[15px] w-1 rounded bg-emerald-500" />
-                  <h4 className="text-[15px] font-bold text-gray-900 dark:text-gray-50">시계열 표 <span className="text-[13px] font-semibold text-gray-400">· 전기·전년 대비</span></h4>
-                  <button type="button" onClick={() => onExcel(row)} className="ml-auto inline-flex items-center gap-1 rounded-md border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[12.5px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all hover:-translate-y-0.5 active:scale-95">엑셀 ↓</button>
+                  <h4 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">시계열 표 <span className="text-[12px] font-semibold text-gray-400">· 전기·전년 대비</span></h4>
+                  <button type="button" onClick={() => onExcel(row)} className="ml-auto inline-flex items-center gap-1 rounded-md border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[11.5px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all hover:-translate-y-0.5 active:scale-95">엑셀 ↓</button>
                 </div>
                 <div className="max-h-[320px] overflow-auto">
-                  <table className="w-full text-[14.5px]">
-                    <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/90 backdrop-blur"><tr className="text-left text-[12.5px] font-semibold uppercase text-gray-500 dark:text-gray-400">
+                  <table className="w-full text-[13.5px]">
+                    <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/90 backdrop-blur"><tr className="text-left text-[11.5px] font-semibold uppercase text-gray-500 dark:text-gray-400">
                       <th className="px-4 py-2">기간</th><th className="px-3 py-2 text-right">값</th><th className="px-3 py-2 text-right">{gran === "year" ? "전년대비" : gran === "quarter" ? "전분기대비" : "전월대비"}</th>{gran !== "year" && <th className="px-4 py-2 text-right">전년동기대비</th>}
                     </tr></thead>
                     <tbody>
@@ -513,7 +513,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
             </div>
           )}
           </div>
-          <p className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">{gname[gran]} 시계열 · 값=기간 말 관측 · 상승 <span className="text-rose-500">적색</span>/하락 <span className="text-emerald-500">녹색</span> · 출처 {row.source}</p>
+          <p className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">{gname[gran]} 시계열 · 값=기간 말 관측 · 상승 <span className="text-rose-500">적색</span>/하락 <span className="text-emerald-500">녹색</span> · 출처 {row.source}</p>
         </div>
       </div>
     </div>,
@@ -526,8 +526,8 @@ function FCat({ k, ko, n, cat, setCat }: { k: string; ko: string; n: number; cat
   // 주요뉴스 제품별 레터박스와 동일 사이즈·디자인·애니메이션(알약 border pill)
   return (
     <button type="button" onClick={() => setCat(k)}
-      className={"rounded-full border px-2 py-0.5 text-[13px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (on ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")}>
-      {ko} <span className={"ml-0.5 text-[12px] tabular-nums " + (on ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{n}</span>
+      className={"rounded-full border px-2 py-0.5 text-[12px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (on ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")}>
+      {ko} <span className={"ml-0.5 text-[11px] tabular-nums " + (on ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")}>{n}</span>
     </button>
   )
 }

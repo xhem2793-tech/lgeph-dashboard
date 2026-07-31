@@ -38,7 +38,7 @@ function PillToggle<T extends string>({ options, value, onChange, ariaLabel }: {
           onClick={() => onChange(o.value)}
           aria-pressed={value === o.value}
           className={
-            "relative z-10 flex h-6 min-w-8 flex-1 items-center justify-center rounded-full px-2 text-[13px] font-semibold transition-colors duration-200 " +
+            "relative z-10 flex h-6 min-w-8 flex-1 items-center justify-center rounded-full px-2 text-[12px] font-semibold transition-colors duration-200 " +
             (value === o.value ? "text-indigo-600 dark:text-indigo-300" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")
           }
         >
@@ -70,7 +70,7 @@ export function TopNav() {
       <style>{"@keyframes axfade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}"}</style>
       <div className="mx-auto flex items-center gap-5 px-6 py-2.5 sm:px-8 lg:px-10" style={{ animation: "axfade .5s ease both" }}>
         <Link href="/overview" className="flex shrink-0 items-center leading-none">
-          <span className="text-[26px] font-extrabold tracking-tight leading-none">
+          <span className="text-[24px] font-extrabold tracking-tight leading-none">
             <span className="text-gray-900 dark:text-gray-50">axlgeph</span>
             <span className="text-indigo-600 dark:text-indigo-400">.report</span>
           </span>

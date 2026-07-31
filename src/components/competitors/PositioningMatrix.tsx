@@ -150,10 +150,10 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
         <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[300px]" : "w-[200px]")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델·브랜드 검색"
-            className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[14px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+            className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[13px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
           {q && <button type="button" onClick={() => setQ("")} aria-label="지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
         </div>
-        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[13px] text-gray-400 dark:text-gray-500 lg:flex">최종 {stamp ? fmtStamp(stamp) : "—"}<span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[12px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
+        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[12px] text-gray-400 dark:text-gray-500 lg:flex">최종 {stamp ? fmtStamp(stamp) : "—"}<span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
       </div>
 
       {/* 매트릭스 */}
@@ -166,11 +166,11 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
             ) })()}
             <div className="ml-auto flex items-center gap-1.5">
               {/* 세로축 스케일: Auto(선형) / 로그 */}
-              <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-0.5 text-[12.5px] font-semibold" title="세로축 가격 스케일 — 로그는 가격대가 넓을 때 저가 구간을 펼쳐 봄">
+              <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-0.5 text-[11.5px] font-semibold" title="세로축 가격 스케일 — 로그는 가격대가 넓을 때 저가 구간을 펼쳐 봄">
                 <button type="button" onClick={() => setLogY(false)} className={"rounded-md px-2 py-0.5 transition " + (!logY ? "bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400")}>Auto</button>
                 <button type="button" onClick={() => setLogY(true)} className={"rounded-md px-2 py-0.5 transition " + (logY ? "bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400")}>로그</button>
               </div>
-              <button type="button" onClick={dlPng} disabled={dling} data-noexport="1" title="카드 전체를 PPT 슬라이드 크기 이미지로 저장" className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[12.5px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-50">
+              <button type="button" onClick={dlPng} disabled={dling} data-noexport="1" title="카드 전체를 PPT 슬라이드 크기 이미지로 저장" className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[11.5px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-50">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
                 {dling ? "생성중…" : "이미지"}
               </button>
@@ -183,8 +183,8 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
             <div className="flex flex-1">
               {brands.map((b) => { const lg = b === "LG"; return (
                 <div key={b} className="min-w-0 flex-1 px-1 text-center">
-                  <div className={"truncate text-[15px] font-extrabold tracking-tight " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{b}</div>
-                  <div className="text-[12px] tabular-nums text-gray-400 dark:text-gray-500">{brandN(b)}개</div>
+                  <div className={"truncate text-[14px] font-extrabold tracking-tight " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{b}</div>
+                  <div className="text-[11px] tabular-nums text-gray-400 dark:text-gray-500">{brandN(b)}개</div>
                 </div>
               ) })}
             </div>
@@ -193,15 +193,15 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
           {/* 플롯 — 좌 축 게이지 + 브랜드별 세로 레인(카드는 레인 내부에 가격순 배치) */}
           <div key={cat + effSpec + effShop + stockF} className="flex px-4 pb-3 pt-3">
             {cards.length === 0 ? (
-              <div className="flex h-44 w-full items-center justify-center text-[14.5px] text-gray-400 dark:text-gray-500">해당 조건의 데이터가 부족합니다</div>
+              <div className="flex h-44 w-full items-center justify-center text-[13.5px] text-gray-400 dark:text-gray-500">해당 조건의 데이터가 부족합니다</div>
             ) : (
               <>
                 <div className="relative shrink-0" style={{ width: GUT, height: plotH }}>
                   {ticks.map((v) => (
-                    <span key={v} className="absolute right-2 -translate-y-1/2 text-[13px] font-semibold tabular-nums text-gray-500 dark:text-gray-400" style={{ top: topFor(v) }}>{pmShort(v)}</span>
+                    <span key={v} className="absolute right-2 -translate-y-1/2 text-[12px] font-semibold tabular-nums text-gray-500 dark:text-gray-400" style={{ top: topFor(v) }}>{pmShort(v)}</span>
                   ))}
-                  <span className="absolute right-2 top-0 text-[12px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">고가</span>
-                  <span className="absolute right-2 text-[12px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500" style={{ bottom: 2 }}>저가</span>
+                  <span className="absolute right-2 top-0 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">고가</span>
+                  <span className="absolute right-2 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500" style={{ bottom: 2 }}>저가</span>
                 </div>
                 <div className="relative flex-1" style={{ height: plotH }}>
                   {/* 좌측 세로축(absolute → 컬럼 폭에 영향 없음, 정렬 유지) */}
@@ -227,16 +227,16 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
                             <div className="pl-2.5 pr-2">
                               {/* 1행 — 모델 서픽스 + 에너지등급(★) */}
                               <div className="flex items-center gap-1 py-0.5">
-                                <span className={"truncate text-[11.5px] font-medium " + (c.oos ? "text-gray-400 dark:text-gray-500" : lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
-                                {c.oos ? <span className="ml-auto shrink-0 rounded bg-gray-300 dark:bg-gray-600 px-1 text-[10px] font-bold leading-4 text-gray-600 dark:text-gray-200">품절</span> : c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[10.5px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
+                                <span className={"truncate text-[10.5px] font-medium " + (c.oos ? "text-gray-400 dark:text-gray-500" : lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
+                                {c.oos ? <span className="ml-auto shrink-0 rounded bg-gray-300 dark:bg-gray-600 px-1 text-[9px] font-bold leading-4 text-gray-600 dark:text-gray-200">품절</span> : c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[10px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
                               </div>
                               {/* 2행 — 가격 + 지수(최저가=100). 가격대는 왼쪽 색 스트립으로 표시 */}
                               <div className={"flex items-center gap-1 border-t py-0.5 " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
-                                <span className="text-[15px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
-                                <span className={"ml-auto tabular-nums text-[11px] font-semibold leading-none " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")} title="최저가=100 기준 지수">{c.idx}</span>
+                                <span className="text-[14px] font-bold leading-tight tabular-nums">{peso(c.avg)}</span>
+                                <span className={"ml-auto tabular-nums text-[10px] font-semibold leading-none " + (lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500")} title="최저가=100 기준 지수">{c.idx}</span>
                               </div>
                               {/* 3행 — 전력효율(월 소비전력) */}
-                              <div className={"flex items-center justify-between gap-1 border-t py-0.5 text-[11px] " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
+                              <div className={"flex items-center justify-between gap-1 border-t py-0.5 text-[10px] " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
                                 <span className={lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500"}>전력</span>
                                 <span className={"tabular-nums font-semibold " + (lg ? "text-white" : "text-gray-600 dark:text-gray-300")}>{c.kwh != null ? Math.round(c.kwh) + " kWh" : "—"}</span>
                               </div>
@@ -251,11 +251,11 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
             )}
           </div>
 
-          <footer className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-gray-100 dark:border-gray-800 px-4 py-2.5 text-[13px] text-gray-500 dark:text-gray-400">
+          <footer className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-gray-100 dark:border-gray-800 px-4 py-2.5 text-[12px] text-gray-500 dark:text-gray-400">
             <span className="font-semibold text-gray-600 dark:text-gray-300">New DOE ★</span>
-            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[11px] font-bold " + pmStarCls(5)}>★5·4</span>고효율</span>
-            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[11px] font-bold " + pmStarCls(3)}>★3·2</span></span>
-            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[11px] font-bold " + pmStarCls(1)}>★1</span>저효율</span>
+            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[10px] font-bold " + pmStarCls(5)}>★5·4</span>고효율</span>
+            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[10px] font-bold " + pmStarCls(3)}>★3·2</span></span>
+            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[10px] font-bold " + pmStarCls(1)}>★1</span>저효율</span>
             <span className="mx-0.5 h-3 w-px bg-gray-200 dark:bg-gray-700" />
             <span className="font-semibold text-gray-600 dark:text-gray-300">가격대</span>
             <span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-1.5 rounded-sm bg-emerald-400 dark:bg-emerald-500" />LOW 〈₱{Math.round((PM_TIER_BANDS[cat]?.[0] ?? 25000) / 10000)}만</span>
@@ -264,11 +264,11 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
             <span className="ml-auto inline-flex items-center gap-1.5"><span className="inline-block h-3 w-4 rounded bg-indigo-600" />자사(LG) · <span className="inline-block h-3 w-4 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />경쟁사</span>
           </footer>
         </div>
-        <p className="mt-2 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">
+        <p className="mt-2 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
           세로축 = <b className="text-gray-500 dark:text-gray-300">{exact ? pmShopLabel(effShop) + " 현금가" : "거래선 최저 현금가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-500 dark:text-indigo-400">LG</b>) · 카드 = 모델별(동일모델 거래선 병합, 우상단 ★=New DOE) · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 원문
         </p>
-        <p className="mt-1 text-[12px] text-gray-400 dark:text-gray-500">New DOE ★ = <b className="text-gray-500 dark:text-gray-400">2026 개정 에너지효율등급</b>(energy_labels 모델코드 {DOE_CODE[cat] || "-"} 매칭) · 가격 데이터 <b className="tabular-nums">{stamp ? fmtStamp(stamp) : "—"}</b> 기준 조인</p>
-        <p className="mt-1 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">
+        <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">New DOE ★ = <b className="text-gray-500 dark:text-gray-400">2026 개정 에너지효율등급</b>(energy_labels 모델코드 {DOE_CODE[cat] || "-"} 매칭) · 가격 데이터 <b className="tabular-nums">{stamp ? fmtStamp(stamp) : "—"}</b> 기준 조인</p>
+        <p className="mt-1 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
           ※ 유형·스펙 분류는 유통 상품속성·모델명에서 추출(모델 단위로 전 거래선 공유). <b className="font-semibold text-gray-500 dark:text-gray-400">정확도 전브랜드 유형 96%·스펙 93%(자사 LG 96%·91%)</b> · 분류 안 되는 잔여는 <b className="font-semibold">기타</b>로 노출돼 필터에서 사라지지 않음 · 가격·스펙·프로모는 수집 가능하나 판매량·점유율은 GfK 패널(비공개) 필요
         </p>
       </div>

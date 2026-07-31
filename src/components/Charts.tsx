@@ -89,11 +89,11 @@ export function HBars({
         const on = highlight && d.label === highlight
         return (
           <div key={i} className="flex items-center gap-2">
-            <span className={"w-20 shrink-0 truncate text-[13px] " + (on ? "font-bold text-indigo-700 dark:text-indigo-300" : "text-gray-600 dark:text-gray-300")}>{d.label}</span>
+            <span className={"w-20 shrink-0 truncate text-[12px] " + (on ? "font-bold text-indigo-700 dark:text-indigo-300" : "text-gray-600 dark:text-gray-300")}>{d.label}</span>
             <div className="relative h-4 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
               <div className="h-full rounded" style={{ width: `${(Math.abs(d.value) / max) * 100}%`, background: on ? color : IND_SOFT, transition: `width .5s ${swap}` }} />
             </div>
-            <span className={"w-16 shrink-0 text-right text-[13px] tabular-nums " + (on ? "font-bold text-gray-900 dark:text-gray-50" : "text-gray-500 dark:text-gray-400")}>
+            <span className={"w-16 shrink-0 text-right text-[12px] tabular-nums " + (on ? "font-bold text-gray-900 dark:text-gray-50" : "text-gray-500 dark:text-gray-400")}>
               {fmt(d.value, decimals)}
               {unit}
             </span>
@@ -143,19 +143,19 @@ export function StackedBars({
       </svg>
       <div className="mt-1 flex">
         {rows.map((r, i) => (
-          <span key={i} className="flex-1 text-center text-[11px] text-gray-400 dark:text-gray-500">
+          <span key={i} className="flex-1 text-center text-[10px] text-gray-400 dark:text-gray-500">
             {r.label}
           </span>
         ))}
       </div>
       <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-1">
         {keys.map((k, i) => (
-          <span key={i} className="flex items-center gap-1 text-[11.5px] text-gray-500 dark:text-gray-400">
+          <span key={i} className="flex items-center gap-1 text-[10.5px] text-gray-500 dark:text-gray-400">
             <span className="inline-block h-2 w-2 rounded-sm" style={{ background: colors[i] }} />
             {k}
           </span>
         ))}
-        {unit && <span className="text-[11px] text-gray-400 dark:text-gray-500">({unit})</span>}
+        {unit && <span className="text-[10px] text-gray-400 dark:text-gray-500">({unit})</span>}
       </div>
     </div>
   )
@@ -177,7 +177,7 @@ export function Donut({ value, color = IND, sub }: { value: number; color?: stri
           %
         </text>
       </svg>
-      {sub && <span className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">{sub}</span>}
+      {sub && <span className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">{sub}</span>}
     </div>
   )
 }
@@ -217,7 +217,7 @@ export function Gauge({
           </tspan>
         </text>
       </svg>
-      {sub && <span className="-mt-1 text-[12px] text-gray-500 dark:text-gray-400">{sub}</span>}
+      {sub && <span className="-mt-1 text-[11px] text-gray-500 dark:text-gray-400">{sub}</span>}
     </div>
   )
 }
@@ -263,7 +263,7 @@ export function Scatter({
           )
         })}
       </svg>
-      <div className="flex justify-between px-1 text-[11px] text-gray-400 dark:text-gray-500">
+      <div className="flex justify-between px-1 text-[10px] text-gray-400 dark:text-gray-500">
         <span>{xlab}</span>
         <span>{ylab}</span>
       </div>
@@ -299,7 +299,7 @@ export function Heatmap({
           <tr>
             <th className="sticky left-0 bg-white dark:bg-gray-900" />
             {cols.map((c, i) => (
-              <th key={i} className="px-1 pb-1 text-[11px] font-medium text-gray-400 dark:text-gray-500">
+              <th key={i} className="px-1 pb-1 text-[10px] font-medium text-gray-400 dark:text-gray-500">
                 {c}
               </th>
             ))}
@@ -308,13 +308,13 @@ export function Heatmap({
         <tbody>
           {rows.map((r, ri) => (
             <tr key={ri}>
-              <td className="sticky left-0 whitespace-nowrap bg-white dark:bg-gray-900 pr-2 text-[12px] text-gray-600 dark:text-gray-300">{r}</td>
+              <td className="sticky left-0 whitespace-nowrap bg-white dark:bg-gray-900 pr-2 text-[11px] text-gray-600 dark:text-gray-300">{r}</td>
               {cols.map((_, ci) => {
                 const v = matrix[ri]?.[ci]
                 const tt = Number.isFinite(v) ? (v - lo) / (hi - lo || 1) : 0
                 return (
                   <td key={ci} className="text-center">
-                    <div className="flex h-6 min-w-[26px] items-center justify-center rounded text-[11px] tabular-nums" style={{ background: shade(v), color: tt > 0.55 ? "#fff" : "#334155" }}>
+                    <div className="flex h-6 min-w-[26px] items-center justify-center rounded text-[10px] tabular-nums" style={{ background: shade(v), color: tt > 0.55 ? "#fff" : "#334155" }}>
                       {Number.isFinite(v) ? fmt(v, 1) : ""}
                     </div>
                   </td>

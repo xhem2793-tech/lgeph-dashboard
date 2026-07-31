@@ -33,15 +33,15 @@ export default function Watchlist() {
   return (
     <section className="animate-[fadeUp_.5s_ease]">
       <header className="mb-1.5 flex items-baseline justify-between">
-        <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">우리 위치</h2>
-        <span className="text-[12px] text-gray-300 dark:text-gray-600">{fmtDate(asOf)} · 주간 성격</span>
+        <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">우리 위치</h2>
+        <span className="text-[11px] text-gray-300 dark:text-gray-600">{fmtDate(asOf)} · 주간 성격</span>
       </header>
 
       <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2">
         {err ? (
-          <p className="py-4 text-center text-[12px] text-gray-400 dark:text-gray-500">불러오지 못함</p>
+          <p className="py-4 text-center text-[11px] text-gray-400 dark:text-gray-500">불러오지 못함</p>
         ) : rows && rows.length === 0 ? (
-          <p className="py-4 text-center text-[12px] text-gray-400 dark:text-gray-500">열위 셀 없음</p>
+          <p className="py-4 text-center text-[11px] text-gray-400 dark:text-gray-500">열위 셀 없음</p>
         ) : (
           (rows ?? Array.from({ length: 3 })).map((r, i) =>
             !r ? (
@@ -59,13 +59,13 @@ export default function Watchlist() {
                       : "border-l-gray-200")
                 }
               >
-                <p className="flex items-baseline justify-between text-[13px] font-bold text-gray-900 dark:text-gray-50">
+                <p className="flex items-baseline justify-between text-[12px] font-bold text-gray-900 dark:text-gray-50">
                   <span>
                     {r.retailer} · {r.category}
                   </span>
                   <span
                     className={
-                      "text-[13px] " +
+                      "text-[12px] " +
                       (r.verdict === "risk"
                         ? "text-rose-600 dark:text-rose-400"
                         : r.verdict === "chance"
@@ -78,7 +78,7 @@ export default function Watchlist() {
                       : pp(r.discGap)}
                   </span>
                 </p>
-                <p className="mt-0.5 text-[12px] leading-snug text-gray-500 dark:text-gray-400">
+                <p className="mt-0.5 text-[11px] leading-snug text-gray-500 dark:text-gray-400">
                   {r.oosGap != null && r.oosGap >= 3
                     ? `품절 LG ${r.lgOos?.toFixed(0)}% vs 시장 ${r.mktOos?.toFixed(0)}% — 우리가 비움`
                     : r.oosGap != null && r.oosGap <= -8
@@ -87,7 +87,7 @@ export default function Watchlist() {
                         ? `할인 LG ${r.lgDisc?.toFixed(0)}% vs 중국계 ${r.cnDisc?.toFixed(0)}%`
                         : `선반 ${r.shelf.toFixed(1)}% — 취급 확대 여지`}
                 </p>
-                <p className="mt-0.5 text-[12px] text-gray-300 dark:text-gray-600">
+                <p className="mt-0.5 text-[11px] text-gray-300 dark:text-gray-600">
                   표본 LG {r.lgN} / 전체 {r.totalN} SKU
                 </p>
               </div>
@@ -96,7 +96,7 @@ export default function Watchlist() {
         )}
       </div>
 
-      <p className="mt-1.5 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">
+      <p className="mt-1.5 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
         선반 점유는 <b className="font-semibold text-gray-500 dark:text-gray-400">SKU 개수 기준</b> — 매출 점유율 아님
         <br />
         웹 리스팅 기준(실매장 진열 아님) · 판매량 데이터 없음

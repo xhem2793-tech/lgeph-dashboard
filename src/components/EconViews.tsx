@@ -75,16 +75,16 @@ function Banner({ headline, lg, summary, d, kpiDefs }: BannerDef & { d: Mon; kpi
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg>
         </div>
-        <div className="min-w-0 flex-1 text-[15px] leading-snug text-gray-700 dark:text-gray-200">{line}</div>
-        <span className="shrink-0 text-[12px] text-gray-400 dark:text-gray-500">{nowLbl} 기준</span>
+        <div className="min-w-0 flex-1 text-[14px] leading-snug text-gray-700 dark:text-gray-200">{line}</div>
+        <span className="shrink-0 text-[11px] text-gray-400 dark:text-gray-500">{nowLbl} 기준</span>
         {lg && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 dark:text-indigo-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}
       </div>
       {lg && (
         <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
           <div className="overflow-hidden">
             <div className="border-t border-indigo-100/70 dark:border-indigo-500/25 px-4 pb-3.5 pt-3">
-              <p className="flex items-start gap-1.5 text-[14.5px] leading-relaxed text-indigo-700 dark:text-indigo-300">
-                <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[11.5px] font-bold text-white">LG 관점</span>
+              <p className="flex items-start gap-1.5 text-[13.5px] leading-relaxed text-indigo-700 dark:text-indigo-300">
+                <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[10.5px] font-bold text-white">LG 관점</span>
                 <span>{lg}</span>
               </p>
             </div>
@@ -108,8 +108,8 @@ export function AgendaCard() {
   return (
     <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: "80ms" }}>
       <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
-        <h2 className="text-[18px] font-bold tracking-tight text-gray-900 dark:text-gray-50">예정 일정</h2>
-        <span className="text-[13px] text-gray-400 dark:text-gray-500">2주간</span>
+        <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">예정 일정</h2>
+        <span className="text-[12px] text-gray-400 dark:text-gray-500">2주간</span>
       </header>
       <div className="mt-2 flex flex-col">
         {ev.map((x, i) => {
@@ -118,10 +118,10 @@ export function AgendaCard() {
             <div key={x.label + x.date} onClick={() => x.ev && setSel(x.ev)} style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: 40 + i * 24 + "ms" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
               <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-[14.5px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
-                <span className="block text-[12.5px] text-gray-500 dark:text-gray-400">{x.note}</span>
+                <span className="block truncate text-[13.5px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
+                <span className="block text-[11.5px] text-gray-500 dark:text-gray-400">{x.note}</span>
               </span>
-              <span className="shrink-0 tabular-nums text-[13px] font-semibold text-gray-500 dark:text-gray-400">{dd === 0 ? "오늘" : dd > 0 ? "D-" + dd : "D+" + -dd}</span>
+              <span className="shrink-0 tabular-nums text-[12px] font-semibold text-gray-500 dark:text-gray-400">{dd === 0 ? "오늘" : dd > 0 ? "D-" + dd : "D+" + -dd}</span>
             </div>
           )
         })}
@@ -149,8 +149,8 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
         <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className={"h-[18px] w-1 rounded " + (BARCLS[accent] || BARCLS.indigo)} />
-            <h2 className="text-[19px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h2>
-            <span className="text-[13px] font-semibold text-gray-400 dark:text-gray-500">{sub}</span>
+            <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h2>
+            <span className="text-[12px] font-semibold text-gray-400 dark:text-gray-500">{sub}</span>
             <span className="ml-auto">
               <Segmented size="sm" value={win} onChange={setWin} options={winOpts.map((w) => ({ k: w.k, label: w.k }))} />
             </span>
@@ -159,7 +159,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
             <nav className="mb-3.5 flex flex-wrap gap-1.5">
               {sections.map((s) => (
                 <button key={s.key} type="button" onClick={() => setActiveSub(s.key)}
-                  className={"rounded-full border px-2 py-0.5 text-[13px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (activeSub === s.key ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")}>
+                  className={"rounded-full border px-2 py-0.5 text-[12px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (activeSub === s.key ? "border-indigo-600 bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")}>
                   {s.label}
                 </button>
               ))}
@@ -171,8 +171,8 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
             </div>
           ) : empty ? (
             <div className="flex h-52 flex-col items-center justify-center gap-1 rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-center">
-              <div className="text-[16px] font-bold text-gray-500 dark:text-gray-400">데이터 적재 대기</div>
-              <div className="text-[14px] text-gray-400 dark:text-gray-500">해당 지표가 아직 Supabase에 없음 · 수집 후 자동 표시</div>
+              <div className="text-[15px] font-bold text-gray-500 dark:text-gray-400">데이터 적재 대기</div>
+              <div className="text-[13px] text-gray-400 dark:text-gray-500">해당 지표가 아직 Supabase에 없음 · 수집 후 자동 표시</div>
             </div>
           ) : (
             <div key={activeSub} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s cubic-bezier(.16,1,.3,1) both" }}>{sections ? curSub?.node : children}</div>
@@ -182,7 +182,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
           <AgendaCard />
         </aside>
       </div>
-      <p className="text-[13px] leading-relaxed text-gray-400 dark:text-gray-500">출처 PSA·BSP 공식통계(Supabase macro_indicators) · 색=사업영향(원가·부담↑ rose, 수요·구매력↑ emerald)</p>
+      <p className="text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">출처 PSA·BSP 공식통계(Supabase macro_indicators) · 색=사업영향(원가·부담↑ rose, 수요·구매력↑ emerald)</p>
     </div>
   )
 }
@@ -217,30 +217,30 @@ function MarketCard() {
   return (
     <div className="relative z-0 col-span-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전시장·이커머스 규모 (다중기관 추정)</h3>
-        <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300">추정·민간자료</span>
-        <button type="button" onClick={() => setOpen((v) => !v)} className="ml-auto text-[13px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">{open ? "근거 접기" : `근거 ${appl.length + ec.length}건 ▾`}</button>
+        <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전시장·이커머스 규모 (다중기관 추정)</h3>
+        <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">추정·민간자료</span>
+        <button type="button" onClick={() => setOpen((v) => !v)} className="ml-auto text-[12px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">{open ? "근거 접기" : `근거 ${appl.length + ec.length}건 ▾`}</button>
       </div>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         {ra && (
           <div className="rounded-lg border border-gray-100 dark:border-gray-800 p-3">
-            <p className="text-[13px] text-gray-400 dark:text-gray-500">가전시장 규모(추정 범위, {ra.n}개 기관)</p>
-            <p className="text-[26px] font-extrabold tabular-nums text-gray-900 dark:text-gray-50">${ra.lo.toFixed(1)}~{ra.hi.toFixed(1)}<span className="text-[14px] font-semibold text-gray-400">B</span> <span className="text-[14px] font-medium text-gray-400">중앙값 ${ra.med.toFixed(1)}B</span></p>
-            <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">주요 3사 Panasonic·Samsung·LG · 전자매장 47% · <b className="text-indigo-600 dark:text-indigo-400">LG ThinQ 프리미엄 50%</b></p>
+            <p className="text-[12px] text-gray-400 dark:text-gray-500">가전시장 규모(추정 범위, {ra.n}개 기관)</p>
+            <p className="text-[24px] font-extrabold tabular-nums text-gray-900 dark:text-gray-50">${ra.lo.toFixed(1)}~{ra.hi.toFixed(1)}<span className="text-[13px] font-semibold text-gray-400">B</span> <span className="text-[13px] font-medium text-gray-400">중앙값 ${ra.med.toFixed(1)}B</span></p>
+            <p className="mt-1 text-[12px] text-gray-500 dark:text-gray-400">주요 3사 Panasonic·Samsung·LG · 전자매장 47% · <b className="text-indigo-600 dark:text-indigo-400">LG ThinQ 프리미엄 50%</b></p>
           </div>
         )}
         {re && (
           <div className="rounded-lg border border-gray-100 dark:border-gray-800 p-3">
-            <p className="text-[13px] text-gray-400 dark:text-gray-500">이커머스 규모(추정 범위, {re.n}개 기관)</p>
-            <p className="text-[26px] font-extrabold tabular-nums text-gray-900 dark:text-gray-50">${re.lo.toFixed(1)}~{re.hi.toFixed(1)}<span className="text-[14px] font-semibold text-gray-400">B</span> <span className="text-[14px] font-medium text-gray-400">중앙값 ${re.med.toFixed(1)}B</span></p>
-            <p className="mt-1 text-[13px] text-gray-500 dark:text-gray-400">주간 온라인구매 57% · Shopee·Lazada 양강 · 가전 온라인 침투 확대</p>
+            <p className="text-[12px] text-gray-400 dark:text-gray-500">이커머스 규모(추정 범위, {re.n}개 기관)</p>
+            <p className="text-[24px] font-extrabold tabular-nums text-gray-900 dark:text-gray-50">${re.lo.toFixed(1)}~{re.hi.toFixed(1)}<span className="text-[13px] font-semibold text-gray-400">B</span> <span className="text-[13px] font-medium text-gray-400">중앙값 ${re.med.toFixed(1)}B</span></p>
+            <p className="mt-1 text-[12px] text-gray-500 dark:text-gray-400">주간 온라인구매 57% · Shopee·Lazada 양강 · 가전 온라인 침투 확대</p>
           </div>
         )}
       </div>
       {open && (
         <div className="mt-3 overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-800">
-          <table className="w-full min-w-[520px] text-[13px]">
-            <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[12px] uppercase text-gray-400 dark:text-gray-500"><th className="px-3 py-1.5">지표</th><th className="px-2 py-1.5">기관</th><th className="px-2 py-1.5 text-right">추정값</th><th className="px-2 py-1.5">범위/비고</th><th className="px-2 py-1.5 text-right">원본</th></tr></thead>
+          <table className="w-full min-w-[520px] text-[12px]">
+            <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[11px] uppercase text-gray-400 dark:text-gray-500"><th className="px-3 py-1.5">지표</th><th className="px-2 py-1.5">기관</th><th className="px-2 py-1.5 text-right">추정값</th><th className="px-2 py-1.5">범위/비고</th><th className="px-2 py-1.5 text-right">원본</th></tr></thead>
             <tbody>
               {[...appl, ...ec].map((e, i) => (
                 <tr key={i} className="border-b border-gray-50 dark:border-gray-800/50">
@@ -255,8 +255,8 @@ function MarketCard() {
           </table>
         </div>
       )}
-      <p className="mt-2.5 text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 민간 리서치는 기관별 편차가 커 <b className="text-amber-600 dark:text-amber-400">단일 숫자보다 범위·중앙값</b>으로 판단 — 방향성(연 7%대 성장·프리미엄/온라인 확대)은 일치. 정밀 규모는 내부 셀아웃·GfK 실측 연동 시 확정.</p>
-      <div className="mt-2 pt-1 text-[12px] text-gray-400 dark:text-gray-500">{src("Grand View Research·Statista·IMARC·Mordor·GII 등 다중기관 · 민간자료(추정)")}</div>
+      <p className="mt-2.5 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 민간 리서치는 기관별 편차가 커 <b className="text-amber-600 dark:text-amber-400">단일 숫자보다 범위·중앙값</b>으로 판단 — 방향성(연 7%대 성장·프리미엄/온라인 확대)은 일치. 정밀 규모는 내부 셀아웃·GfK 실측 연동 시 확정.</p>
+      <div className="mt-2 pt-1 text-[11px] text-gray-400 dark:text-gray-500">{src("Grand View Research·Statista·IMARC·Mordor·GII 등 다중기관 · 민간자료(추정)")}</div>
     </div>
   )
 }
@@ -268,24 +268,24 @@ function CrossBarCard({ d, items, title, seg, unit, meaning, ai, source, sort = 
   return (
     <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
-        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>
-        <span className="ml-auto shrink-0 text-[12.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>
+        <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
+        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>
+        <span className="ml-auto shrink-0 text-[11.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>
       </div>
       <div className="mt-3 flex flex-1 flex-col justify-center gap-2.5">
         {rows.map((r, i) => (
           <div key={r.key} className="flex items-center gap-2">
-            <span className="w-20 shrink-0 text-[13px] text-gray-600 dark:text-gray-300">{r.name}</span>
+            <span className="w-20 shrink-0 text-[12px] text-gray-600 dark:text-gray-300">{r.name}</span>
             <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
               <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.16,1,.3,1) " + (i * 0.06) + "s" }} />
             </div>
-            <span className="w-11 shrink-0 text-right text-[14px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{r.v.toFixed(0)}%</span>
+            <span className="w-11 shrink-0 text-right text-[13px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{r.v.toFixed(0)}%</span>
           </div>
         ))}
       </div>
-      <p className="mt-2.5 min-h-[34px] text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
-      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[13px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> {ai}</p></div>
-      <div className="mt-auto pt-2.5 text-[12px] text-gray-400 dark:text-gray-500">{src(source)}</div>
+      <p className="mt-2.5 min-h-[34px] text-[12px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
+      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[12px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> {ai}</p></div>
+      <div className="mt-auto pt-2.5 text-[11px] text-gray-400 dark:text-gray-500">{src(source)}</div>
     </div>
   )
 }
@@ -300,24 +300,24 @@ function OwnershipCard({ d }: { d: Mon }) {
   return (
     <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전 보유율 (침투율)</h3>
-        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">CE</span>
-        <span className="ml-auto shrink-0 text-[12.5px] font-medium text-gray-400 dark:text-gray-500">가구 % · 2020</span>
+        <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전 보유율 (침투율)</h3>
+        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">CE</span>
+        <span className="ml-auto shrink-0 text-[11.5px] font-medium text-gray-400 dark:text-gray-500">가구 % · 2020</span>
       </div>
       <div className="mt-3 flex flex-1 flex-col justify-center gap-2.5">
         {rows.map((r, i) => (
           <div key={r.key} className="flex items-center gap-2">
-            <span className="w-20 shrink-0 text-[13px] text-gray-600 dark:text-gray-300">{r.name}</span>
+            <span className="w-20 shrink-0 text-[12px] text-gray-600 dark:text-gray-300">{r.name}</span>
             <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
               <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.16,1,.3,1) " + (i * 0.06) + "s" }} />
             </div>
-            <span className="w-11 shrink-0 text-right text-[14px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{r.v.toFixed(0)}%</span>
+            <span className="w-11 shrink-0 text-right text-[13px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{r.v.toFixed(0)}%</span>
           </div>
         ))}
       </div>
-      <p className="mt-2.5 min-h-[34px] text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 가구 보유율 = 시장 침투율. <b className="font-semibold text-emerald-600 dark:text-emerald-400">냉장고 46%·세탁기 43% = 성장여력 최대</b> (미보유 과반)</p>
-      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[13px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> 저침투(냉장고·세탁기)는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">초도수요 헤드룸 = 보급형 볼륨존</b>, 고침투(TV·냉방)는 교체·프리미엄 업그레이드 시장</p></div>
-      <div className="mt-auto pt-2.5 text-[12px] text-gray-400 dark:text-gray-500">{src("PSA 2020 인구주택총조사 · 가구편의")}</div>
+      <p className="mt-2.5 min-h-[34px] text-[12px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 가구 보유율 = 시장 침투율. <b className="font-semibold text-emerald-600 dark:text-emerald-400">냉장고 46%·세탁기 43% = 성장여력 최대</b> (미보유 과반)</p>
+      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[12px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> 저침투(냉장고·세탁기)는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">초도수요 헤드룸 = 보급형 볼륨존</b>, 고침투(TV·냉방)는 교체·프리미엄 업그레이드 시장</p></div>
+      <div className="mt-auto pt-2.5 text-[11px] text-gray-400 dark:text-gray-500">{src("PSA 2020 인구주택총조사 · 가구편의")}</div>
     </div>
   )
 }
@@ -341,30 +341,30 @@ function RegionOwnCard() {
   return (
     <div className="col-span-full flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex flex-wrap items-center gap-1.5">
-        <h3 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 보유율 (침투 격차)</h3>
-        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">CE</span>
-        <span className="ml-1 inline-flex overflow-hidden rounded-md border border-gray-200 dark:border-gray-700 text-[13px] font-semibold">
+        <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 보유율 (침투 격차)</h3>
+        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">CE</span>
+        <span className="ml-1 inline-flex overflow-hidden rounded-md border border-gray-200 dark:border-gray-700 text-[12px] font-semibold">
           {([["ref", "냉장고"], ["tv", "TV"]] as const).map(([k, lbl]) => <button key={k} type="button" onClick={() => setAp(k)} className={"px-2.5 py-1 transition-colors " + (ap === k ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/15")}>{lbl}</button>)}
         </span>
-        <span className="ml-auto shrink-0 text-[12.5px] font-medium text-gray-400 dark:text-gray-500">가구 % · 2022 · 전국 {nat}%</span>
+        <span className="ml-auto shrink-0 text-[11.5px] font-medium text-gray-400 dark:text-gray-500">가구 % · 2022 · 전국 {nat}%</span>
       </div>
       <div className="mt-3 grid gap-x-5 gap-y-1.5 sm:grid-cols-2">
         {rows.map((r, i) => { const below = r.v < nat
           return (
             <div key={r.g} className="flex items-center gap-2" title={`${r.g} · ${r.v}%`}>
-              <span className="w-12 shrink-0 truncate text-right text-[12.5px] font-medium text-gray-500 dark:text-gray-400">{r.s}</span>
+              <span className="w-12 shrink-0 truncate text-right text-[11.5px] font-medium text-gray-500 dark:text-gray-400">{r.s}</span>
               <span className="relative h-4 min-w-0 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
                 <span className="block h-full rounded" style={{ width: (r.v / max * 100) + "%", background: below ? C.amber : C.ind, animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.05 + i * 0.02) + "s", transformOrigin: "left center" }} />
                 <span className="absolute inset-y-0" style={{ left: (nat / max * 100) + "%", width: "1px", background: "rgba(120,120,140,.55)" }} />
               </span>
-              <span className={"w-8 shrink-0 text-right text-[12.5px] font-semibold tabular-nums " + (below ? "text-amber-600 dark:text-amber-400" : "text-gray-700 dark:text-gray-200")}>{r.v}%</span>
+              <span className={"w-8 shrink-0 text-right text-[11.5px] font-semibold tabular-nums " + (below ? "text-amber-600 dark:text-amber-400" : "text-gray-700 dark:text-gray-200")}>{r.v}%</span>
             </div>
           )
         })}
       </div>
-      <p className="mt-3 text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 지역별 가구 보유율 — <b className="text-amber-600 dark:text-amber-400">전국({nat}%) 하회(주황) = 침투 여력</b>, 세로선=전국 평균</p>
-      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[13px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> {ap === "ref" ? "냉장고" : "TV"} 최저 <b className="font-semibold text-amber-600 dark:text-amber-400">{low.s}({low.v}%)</b> vs 최고 {high.s}({high.v}%) — <b className="font-semibold text-emerald-600 dark:text-emerald-400">저침투 지역(민다나오·MIMAROPA·비콜)은 보급형 볼륨존·유통망 확대 기회</b>, 고침투 지역(NCR·루손)은 교체·프리미엄 중심. 전기보급·소득과 함께 저침투 지역이 다음 성장축.</p></div>
-      <p className="mt-2.5 border-t border-gray-100 dark:border-gray-800 pt-2 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> PSA 2022 가구 가전 보유(지역별) · 전국=2020 인구주택총조사</p>
+      <p className="mt-3 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 지역별 가구 보유율 — <b className="text-amber-600 dark:text-amber-400">전국({nat}%) 하회(주황) = 침투 여력</b>, 세로선=전국 평균</p>
+      <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[12px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> {ap === "ref" ? "냉장고" : "TV"} 최저 <b className="font-semibold text-amber-600 dark:text-amber-400">{low.s}({low.v}%)</b> vs 최고 {high.s}({high.v}%) — <b className="font-semibold text-emerald-600 dark:text-emerald-400">저침투 지역(민다나오·MIMAROPA·비콜)은 보급형 볼륨존·유통망 확대 기회</b>, 고침투 지역(NCR·루손)은 교체·프리미엄 중심. 전기보급·소득과 함께 저침투 지역이 다음 성장축.</p></div>
+      <p className="mt-2.5 border-t border-gray-100 dark:border-gray-800 pt-2 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> PSA 2022 가구 가전 보유(지역별) · 전국=2020 인구주택총조사</p>
     </div>
   )
 }
@@ -395,8 +395,8 @@ export function ApplianceView() {
       ]}>
       {false && <MarketCard />}
       <div className="col-span-full -mt-1 flex flex-wrap items-center gap-1.5">
-        <span className="mr-0.5 text-[12.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
-        {PRODS.map((p) => <button key={p} type="button" onClick={() => setProd(p)} className={"rounded-lg px-2.5 py-1 text-[14px] font-semibold transition-all " + (prod === p ? "bg-teal-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-teal-500/15")}>{p}</button>)}
+        <span className="mr-0.5 text-[11.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
+        {PRODS.map((p) => <button key={p} type="button" onClick={() => setProd(p)} className={"rounded-lg px-2.5 py-1 text-[13px] font-semibold transition-all " + (prod === p ? "bg-teal-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-teal-500/15")}>{p}</button>)}
       </div>
       {show(["전 제품"]) && <OwnershipCard d={d} />}
       {false && <RegionOwnCard />}{/* 지역별 보유율 — 지도(RegionMap)에 반영 예정, 잠시 숨김 */}
@@ -1019,30 +1019,30 @@ function ConstraintsCard() {
   return (
     <div className="flex h-full min-w-0 flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">기업 사업 제약요인</h3>
-        <span className="shrink-0 rounded bg-violet-50 dark:bg-violet-500/10 px-1.5 py-0.5 text-[11px] font-bold text-violet-700 dark:text-violet-300">B2B</span>
-        <span className="ml-auto shrink-0 text-[12.5px] font-medium text-gray-400 dark:text-gray-500">%응답 · 25Q4 · 복수</span>
+        <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">기업 사업 제약요인</h3>
+        <span className="shrink-0 rounded bg-violet-50 dark:bg-violet-500/10 px-1.5 py-0.5 text-[10px] font-bold text-violet-700 dark:text-violet-300">B2B</span>
+        <span className="ml-auto shrink-0 text-[11.5px] font-medium text-gray-400 dark:text-gray-500">%응답 · 25Q4 · 복수</span>
       </div>
       <div className="mt-2 flex flex-col gap-1.5">
         {shown.map((c, i) => (
           <div key={c[0]} className="flex items-center gap-2" title={`${c[0]} ${c[1]}%`}>
-            <span className="w-[68px] shrink-0 truncate text-right text-[12.5px] text-gray-500 dark:text-gray-400">{c[0]}</span>
+            <span className="w-[68px] shrink-0 truncate text-right text-[11.5px] text-gray-500 dark:text-gray-400">{c[0]}</span>
             <span className="h-3.5 min-w-0 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800"><span className="block h-full rounded" style={{ width: (c[1] / cmax * 100) + "%", background: i === 0 && !more ? C.rose : c[0] === "경쟁 심화" ? C.rose : i < 4 ? C.ind : "#94a3b8", animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: "left center" }} /></span>
-            <span className="w-9 shrink-0 text-right text-[12.5px] font-semibold tabular-nums text-gray-700 dark:text-gray-200">{c[1]}%</span>
+            <span className="w-9 shrink-0 text-right text-[11.5px] font-semibold tabular-nums text-gray-700 dark:text-gray-200">{c[1]}%</span>
           </div>
         ))}
       </div>
-      <button type="button" onClick={() => setMore((v) => !v)} className="mt-1.5 self-start text-[12.5px] font-semibold text-violet-600 dark:text-violet-400 transition-colors hover:text-violet-700 dark:hover:text-violet-300">{more ? "접기 ▲" : `더보기 (+${BES_CONSTRAINTS.length - 6}) ▼`}</button>
-      <p className="mt-2.5 text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 기업이 꼽은 경영 애로 — 수요·금리·경쟁 압력 구조</p>
-      <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[12.5px] font-bold text-violet-600 dark:text-violet-400 transition-colors hover:text-violet-700 dark:hover:text-violet-300">
+      <button type="button" onClick={() => setMore((v) => !v)} className="mt-1.5 self-start text-[11.5px] font-semibold text-violet-600 dark:text-violet-400 transition-colors hover:text-violet-700 dark:hover:text-violet-300">{more ? "접기 ▲" : `더보기 (+${BES_CONSTRAINTS.length - 6}) ▼`}</button>
+      <p className="mt-2.5 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 기업이 꼽은 경영 애로 — 수요·금리·경쟁 압력 구조</p>
+      <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[11.5px] font-bold text-violet-600 dark:text-violet-400 transition-colors hover:text-violet-700 dark:hover:text-violet-300">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
         LG 인사이트
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
       </button>
       <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}>
-        <div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-violet-300 dark:border-violet-500/40 pl-2.5"><p className="text-[13px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold">경쟁 심화(64%)·수요 부족(35%)</b>이 최대 애로 — 가전도 가격·프로모 경쟁 격화 예상. 고금리(22%)는 할부 설계·B2B 발주에 부담 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">무이자 할부·TCO 절감 소구로 방어</b>.</p></div></div>
+        <div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-violet-300 dark:border-violet-500/40 pl-2.5"><p className="text-[12px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold">경쟁 심화(64%)·수요 부족(35%)</b>이 최대 애로 — 가전도 가격·프로모 경쟁 격화 예상. 고금리(22%)는 할부 설계·B2B 발주에 부담 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">무이자 할부·TCO 절감 소구로 방어</b>.</p></div></div>
       </div>
-      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> BSP Business Expectations Survey 제약요인 · 최신분기</p>
+      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> BSP Business Expectations Survey 제약요인 · 최신분기</p>
     </div>
   )
 }

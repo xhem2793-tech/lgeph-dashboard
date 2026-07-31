@@ -73,7 +73,7 @@ export default function HousingView() {
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" /></svg>
           </div>
-          <div className="min-w-0 flex-1 text-[15px] leading-snug text-gray-700 dark:text-gray-200">
+          <div className="min-w-0 flex-1 text-[14px] leading-snug text-gray-700 dark:text-gray-200">
             <b className="font-semibold text-gray-900 dark:text-gray-50">주택·부동산</b> — RPPI(2019=100) <b className="text-indigo-700 dark:text-indigo-300">{f1(rppiLast)}</b>{yoyLast != null ? <> · 전년비 <b className={yoyLast >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoyLast >= 0 ? "+" : ""}{f1(yoyLast)}%</b></> : null}{rppiDate ? " (" + rppiDate.slice(0, 4) + "Q" + (Math.floor(Number(rppiDate.slice(5, 7)) / 3) + 1) + ")" : ""} — 주택 공급·가격은 <b className="text-gray-700 dark:text-gray-200">빌트인·초도 가전 수요</b> 선행
           </div>
         </div>
@@ -84,8 +84,8 @@ export default function HousingView() {
         {/* 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
-          <h2 className="text-[19px] font-bold tracking-tight text-gray-900 dark:text-gray-50">부동산·주택</h2>
-          <span className="text-[13px] font-semibold text-gray-400 dark:text-gray-500">RPPI·건축허가·공실·인프라</span>
+          <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">부동산·주택</h2>
+          <span className="text-[12px] font-semibold text-gray-400 dark:text-gray-500">RPPI·건축허가·공실·인프라</span>
           <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k }))} /></span>
         </header>
         <div className="grid items-stretch gap-4 sm:grid-cols-2">
@@ -129,24 +129,24 @@ export default function HousingView() {
         {infra.length > 0 && (
           <div className="flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm sm:col-span-2" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
             <div className="flex items-center gap-1.5">
-              <h3 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 인프라 투자 (DPWH)</h3>
-              <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[11px] font-bold text-amber-700 dark:text-amber-300">B2B</span>
-              <span className="ml-auto text-[12.5px] text-gray-400 dark:text-gray-500">총 ₱{Math.round(infraTot).toLocaleString()}B · {infra.length}개 지역</span>
+              <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 인프라 투자 (DPWH)</h3>
+              <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">B2B</span>
+              <span className="ml-auto text-[11.5px] text-gray-400 dark:text-gray-500">총 ₱{Math.round(infraTot).toLocaleString()}B · {infra.length}개 지역</span>
             </div>
             <div className="mt-2.5 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
               {infra.map((r) => (
                 <div key={r.region} className="flex items-center gap-2">
-                  <span className="w-[92px] shrink-0 truncate text-[13.5px] font-semibold text-gray-700 dark:text-gray-200" title={r.region}>{REGSHORT[r.region] || r.region}</span>
+                  <span className="w-[92px] shrink-0 truncate text-[12.5px] font-semibold text-gray-700 dark:text-gray-200" title={r.region}>{REGSHORT[r.region] || r.region}</span>
                   <div className="relative h-4 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
                     <div className="absolute inset-y-0 left-0 rounded bg-amber-500/85" style={{ width: Math.max(3, (r.budgetB / infraMax) * 100) + "%" }} />
                   </div>
-                  <span className="w-[52px] shrink-0 text-right text-[13px] font-bold tabular-nums text-gray-800 dark:text-gray-100">₱{r.budgetB.toFixed(0)}B</span>
-                  <span className="hidden w-[64px] shrink-0 text-right text-[12px] tabular-nums text-gray-400 dark:text-gray-500 sm:inline">{(r.projects / 1000).toFixed(1)}k건</span>
+                  <span className="w-[52px] shrink-0 text-right text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">₱{r.budgetB.toFixed(0)}B</span>
+                  <span className="hidden w-[64px] shrink-0 text-right text-[11px] tabular-nums text-gray-400 dark:text-gray-500 sm:inline">{(r.projects / 1000).toFixed(1)}k건</span>
                 </div>
               ))}
             </div>
-            <p className="mt-2.5 text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 지역별 공공 인프라 예산·프로젝트 — <b className="text-gray-700 dark:text-gray-200">신규 청사·병원·상업복합의 시스템에어컨·칠러 발주 환경</b> 대리(Build Better More 연계)</p>
-            <p className="mt-1 text-[12px] text-gray-400 dark:text-gray-500">DPWH Transparency(공개) · 지역별 예산·건수·집행상태 집계</p>
+            <p className="mt-2.5 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 지역별 공공 인프라 예산·프로젝트 — <b className="text-gray-700 dark:text-gray-200">신규 청사·병원·상업복합의 시스템에어컨·칠러 발주 환경</b> 대리(Build Better More 연계)</p>
+            <p className="mt-1 text-[11px] text-gray-400 dark:text-gray-500">DPWH Transparency(공개) · 지역별 예산·건수·집행상태 집계</p>
           </div>
         )}
         </div>
@@ -154,11 +154,11 @@ export default function HousingView() {
         <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
 
-      <p className="text-[13px] leading-relaxed text-gray-400 dark:text-gray-500">BSP 주택가격지수(RPPI, 2019=100, 분기·전국) · PSA 건축허가 · 공실률(Colliers)·건설 GVA(PSA) · NCR/지역별 세부·프리셀링·모기지는 분기 리포트 수동 취합 예정</p>
+      <p className="text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">BSP 주택가격지수(RPPI, 2019=100, 분기·전국) · PSA 건축허가 · 공실률(Colliers)·건설 GVA(PSA) · NCR/지역별 세부·프리셀링·모기지는 분기 리포트 수동 취합 예정</p>
     </div>
   )
 }
 
 function Soon({ label }: { label: string }) {
-  return <div className="flex h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-[14px] text-gray-400"><b className="text-[15px] text-gray-500 dark:text-gray-400">{label}</b><span className="mt-1">데이터 준비 중</span></div>
+  return <div className="flex h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-[13px] text-gray-400"><b className="text-[14px] text-gray-500 dark:text-gray-400">{label}</b><span className="mt-1">데이터 준비 중</span></div>
 }

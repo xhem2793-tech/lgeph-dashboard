@@ -59,13 +59,13 @@ export default function KeyScorecards() {
     <section className="mt-3 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
         <span className="h-[18px] w-1 rounded bg-indigo-500" />
-        <h2 className="text-[19px] font-bold tracking-tight text-gray-900 dark:text-gray-50">대표 지표 요약</h2>
-        <span className="text-[13px] font-semibold text-gray-400 dark:text-gray-500">거시 핵심지표 최신값 한 화면 — 상세는 좌측 각 도메인 뷰</span>
+        <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">대표 지표 요약</h2>
+        <span className="text-[12px] font-semibold text-gray-400 dark:text-gray-500">거시 핵심지표 최신값 한 화면 — 상세는 좌측 각 도메인 뷰</span>
       </header>
       <div className="flex flex-col gap-3.5">
         {GROUPS.map((g, gi) => (
           <div key={g.title}>
-            <p className="mb-1.5 text-[12.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{g.title}</p>
+            <p className="mb-1.5 text-[11.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{g.title}</p>
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
               {g.cards.map((c, i) => {
                 const d = data[c.key]
@@ -74,13 +74,13 @@ export default function KeyScorecards() {
                   <div key={c.key} className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: (gi * 4 + i) * 0.02 + "s" }}>
                     <div className="flex items-center gap-1.5">
                       <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (DOT[c.accent] || DOT.indigo)} />
-                      <span className="truncate text-[13px] font-medium text-gray-500 dark:text-gray-400">{c.label}</span>
+                      <span className="truncate text-[12px] font-medium text-gray-500 dark:text-gray-400">{c.label}</span>
                     </div>
                     <div className="mt-1 flex items-baseline gap-1 tabular-nums">
-                      <span className="text-[22px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">
+                      <span className="text-[20px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">
                         {!loaded ? "—" : v == null ? "—" : (c.pre ?? "") + v.toLocaleString(undefined, { maximumFractionDigits: c.dec ?? 1, minimumFractionDigits: c.dec ?? 0 }) + (c.unit ?? "")}
                       </span>
-                      {d && <span className="text-[12px] font-medium text-gray-400 dark:text-gray-500">{ym(d.date)}</span>}
+                      {d && <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">{ym(d.date)}</span>}
                     </div>
                   </div>
                 )
@@ -89,7 +89,7 @@ export default function KeyScorecards() {
           </div>
         ))}
       </div>
-      <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">
+      <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
         출처 PSA·BSP·World Bank·IMF·BIS 공식통계 · 최신 발표값 기준 · 각 지표 상세·시계열은 좌측 도메인 뷰에서
       </p>
     </section>
