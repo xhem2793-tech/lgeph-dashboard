@@ -61,12 +61,12 @@ export function AnomalyView({ rows, stamp }: { rows: PriceRow[] | null; stamp: s
 
   const counts = React.useMemo(() => { const c: Record<string, number> = { alert: 0, warn: 0, opp: 0, info: 0 }; alerts.forEach((a) => c[a.sev]++); return c }, [alerts])
 
-  if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
+  if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[15px] text-gray-400 dark:text-gray-500">불러오는 중</div>
 
   const deltaChip = (a: AnomalyRow) => {
     if (a.before == null || a.after == null || a.before <= 0) return null
     const down = a.after < a.before, pct = Math.round((a.after - a.before) / a.before * 100)
-    return <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-gray-600 dark:text-gray-300"><span className="text-gray-400 line-through dark:text-gray-500">{peso(a.before)}</span>→<span className="font-bold text-gray-900 dark:text-gray-50">{peso(a.after)}</span><span className={"font-bold " + (down ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct > 0 ? "+" : ""}{pct}%</span></span>
+    return <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[13px] font-semibold tabular-nums text-gray-600 dark:text-gray-300"><span className="text-gray-400 line-through dark:text-gray-500">{peso(a.before)}</span>→<span className="font-bold text-gray-900 dark:text-gray-50">{peso(a.after)}</span><span className={"font-bold " + (down ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct > 0 ? "+" : ""}{pct}%</span></span>
   }
 
   return (
@@ -74,44 +74,44 @@ export function AnomalyView({ rows, stamp }: { rows: PriceRow[] | null; stamp: s
       {/* 요약·필터 */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-2.5">
         <div className="flex flex-wrap gap-1.5">
-          {["전체", "경보", "주의", "기회", "정보"].map((f) => <button key={f} type="button" onClick={() => setSev(f)} className={"whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition " + (f === sev ? "bg-indigo-600 text-white shadow-sm" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800")}>{f}</button>)}
+          {["전체", "경보", "주의", "기회", "정보"].map((f) => <button key={f} type="button" onClick={() => setSev(f)} className={"whitespace-nowrap rounded-full px-3 py-1 text-[14px] font-semibold transition " + (f === sev ? "bg-indigo-600 text-white shadow-sm" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800")}>{f}</button>)}
         </div>
-        <div className="ml-auto flex items-center gap-3.5 text-[12px]">
+        <div className="ml-auto flex items-center gap-3.5 text-[14px]">
           {([["경보", "alert"], ["주의", "warn"], ["기회", "opp"]] as const).map(([l, k]) => <span key={k} className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span className={"h-2 w-2 rounded-full " + SEV_META[k].dot} />{l} <b className="tabular-nums text-gray-800 dark:text-gray-100">{counts[k]}</b></span>)}
           <span className="text-gray-300 dark:text-gray-600">|</span>
           <span className="text-gray-500 dark:text-gray-400">총 <b className="tabular-nums text-indigo-600 dark:text-indigo-400">{alerts.length}</b></span>
-          <span className="hidden text-[11px] text-gray-400 dark:text-gray-500 sm:inline">최종 {stamp ? fmtStamp(stamp) : "—"}</span>
+          <span className="hidden text-[13px] text-gray-400 dark:text-gray-500 sm:inline">최종 {stamp ? fmtStamp(stamp) : "—"}</span>
         </div>
       </div>
       {/* 피드 */}
       {days.length === 0 ? (
-        <p className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-16 text-center text-[13px] text-gray-400 dark:text-gray-500">감지된 이상치가 없습니다.</p>
+        <p className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-16 text-center text-[15px] text-gray-400 dark:text-gray-500">감지된 이상치가 없습니다.</p>
       ) : days.map((g) => (
         <div key={g.dk}>
           <div className="mb-2 mt-1 flex items-center gap-2">
-            <span className="text-[13px] font-bold text-gray-800 dark:text-gray-100">{g.label}</span>
-            {g.label !== g.date && <span className="text-[11px] text-gray-400 dark:text-gray-500">{g.date}</span>}
-            <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[10px] font-bold tabular-nums text-gray-500 dark:text-gray-400">{g.items.length}</span>
+            <span className="text-[15px] font-bold text-gray-800 dark:text-gray-100">{g.label}</span>
+            {g.label !== g.date && <span className="text-[13px] text-gray-400 dark:text-gray-500">{g.date}</span>}
+            <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[12px] font-bold tabular-nums text-gray-500 dark:text-gray-400">{g.items.length}</span>
             <span className="ml-1 h-px flex-1 bg-gray-100 dark:bg-gray-800" />
           </div>
           <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
             {g.items.map((a, i) => { const sv = SEV_META[a.sev]; return (
               <div key={a.id + i} className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 transition-colors last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/40">
                 <span className={"h-2 w-2 shrink-0 rounded-full " + sv.dot} />
-                <span className={"inline-flex w-11 shrink-0 items-center justify-center rounded px-1 py-0.5 text-[10px] font-bold " + sv.chip}>{sv.label}</span>
-                <span className="hidden w-24 shrink-0 truncate rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-center text-[10px] font-semibold text-gray-500 dark:text-gray-400 xl:inline-block">{a.cat}</span>
+                <span className={"inline-flex w-11 shrink-0 items-center justify-center rounded px-1 py-0.5 text-[12px] font-bold " + sv.chip}>{sv.label}</span>
+                <span className="hidden w-24 shrink-0 truncate rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-center text-[12px] font-semibold text-gray-500 dark:text-gray-400 xl:inline-block">{a.cat}</span>
                 <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                  <span className="shrink-0 whitespace-nowrap text-[13px] font-bold text-gray-900 dark:text-gray-50">{a.brand === "LG" ? <span className="text-indigo-700 dark:text-indigo-300">{a.title}</span> : a.title}</span>
-                  <span className="truncate text-[12px] text-gray-400 dark:text-gray-500">{a.detail}</span>
+                  <span className="shrink-0 whitespace-nowrap text-[15px] font-bold text-gray-900 dark:text-gray-50">{a.brand === "LG" ? <span className="text-indigo-700 dark:text-indigo-300">{a.title}</span> : a.title}</span>
+                  <span className="truncate text-[14px] text-gray-400 dark:text-gray-500">{a.detail}</span>
                 </div>
                 <div className="w-[188px] shrink-0 text-right">{deltaChip(a)}</div>
-                {a.url ? <a href={a.url} target="_blank" rel="noopener noreferrer" className="w-24 shrink-0 truncate text-right text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400">{pmShopLabel(a.channel)} ↗</a> : <span className="w-24 shrink-0 text-right text-[11px] text-gray-400">{pmShopLabel(a.channel)}</span>}
+                {a.url ? <a href={a.url} target="_blank" rel="noopener noreferrer" className="w-24 shrink-0 truncate text-right text-[13px] font-medium text-indigo-600 hover:underline dark:text-indigo-400">{pmShopLabel(a.channel)} ↗</a> : <span className="w-24 shrink-0 text-right text-[13px] text-gray-400">{pmShopLabel(a.channel)}</span>}
               </div>
             ) })}
           </div>
         </div>
       ))}
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">감지 룰: 가격 급락/급등(3일 실판매가 ±6~8%↑), 깊은 할인(SRP 대비 ≥30%), 품절(재고) · 시맨틱=유리(기회)/불리(경보·주의) · 데이터 v_competitor_3d</p>
+      <p className="text-[12px] text-gray-400 dark:text-gray-500">감지 룰: 가격 급락/급등(3일 실판매가 ±6~8%↑), 깊은 할인(SRP 대비 ≥30%), 품절(재고) · 시맨틱=유리(기회)/불리(경보·주의) · 데이터 v_competitor_3d</p>
     </div>
   )
 }

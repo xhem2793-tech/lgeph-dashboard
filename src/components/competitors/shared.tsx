@@ -63,12 +63,12 @@ export function PmDrop({ label, sel, options, onSelect }: { label: string; sel: 
   return (
     <div className="group relative shrink-0">
       <button type="button" className="flex w-full items-center gap-1 whitespace-nowrap rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-left transition-colors group-hover:border-indigo-300 dark:group-hover:border-indigo-500/40">
-        <span className="shrink-0 whitespace-nowrap text-[9.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</span>
-        <span className="ml-1.5 whitespace-nowrap text-[12px] font-semibold text-gray-800 dark:text-gray-100">{cur}</span>
+        <span className="shrink-0 whitespace-nowrap text-[11.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</span>
+        <span className="ml-1.5 whitespace-nowrap text-[14px] font-semibold text-gray-800 dark:text-gray-100">{cur}</span>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" className="shrink-0 text-gray-300 transition-transform duration-200 group-hover:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
       </button>
       <div className="invisible absolute left-0 top-[calc(100%-2px)] z-40 max-h-[280px] w-max min-w-full max-w-[280px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-        {options.map((o) => <button key={o.k} type="button" onClick={() => onSelect(o.k)} className={"block w-full whitespace-nowrap rounded-md px-2.5 py-1 text-left text-[12px] transition-colors " + (o.k === sel ? "bg-indigo-600 font-semibold text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")}>{o.t}</button>)}
+        {options.map((o) => <button key={o.k} type="button" onClick={() => onSelect(o.k)} className={"block w-full whitespace-nowrap rounded-md px-2.5 py-1 text-left text-[14px] transition-colors " + (o.k === sel ? "bg-indigo-600 font-semibold text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")}>{o.t}</button>)}
       </div>
     </div>
   )

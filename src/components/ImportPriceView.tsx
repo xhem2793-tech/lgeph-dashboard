@@ -51,7 +51,7 @@ export default function ImportPriceView() {
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
           </div>
-          <div className="min-w-0 flex-1 text-[13px] leading-snug text-gray-700 dark:text-gray-200">
+          <div className="min-w-0 flex-1 text-[15px] leading-snug text-gray-700 dark:text-gray-200">
             <b className="font-semibold text-gray-900 dark:text-gray-50">가전 수입 단가</b> — {cur.label} <b className="text-indigo-700 dark:text-indigo-300">{latest != null ? "$" + latest.toFixed(2) + "/kg" : "–"}</b>{latest != null && prev != null ? <span className={"ml-0.5 " + (latest >= prev ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{latest >= prev ? "▲" : "▼"}{Math.abs(latest - prev).toFixed(2)}</span> : null}{yoy != null ? <> · 전년비 <b className={yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoy >= 0 ? "+" : ""}{yoy.toFixed(1)}%</b></> : null} — 페소 표시 조달원가·경쟁 수입가 신호
           </div>
         </div>
@@ -62,9 +62,9 @@ export default function ImportPriceView() {
         {/* 제품 + 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전 수입 단가</h2>
+          <h2 className="text-[19px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전 수입 단가</h2>
           <Segmented value={hs} onChange={setHs} options={HS.map((h) => ({ k: h.hs, label: h.label }))} size="sm" />
-          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">HS {hs}{lastDate ? " · 최신 확보 " + fmtMonth(lastDate) : ""}</span>
+          <span className="text-[13px] font-semibold text-gray-400 dark:text-gray-500">HS {hs}{lastDate ? " · 최신 확보 " + fmtMonth(lastDate) : ""}</span>
           <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: "전체" }]} /></span>
         </header>
         <div className="grid items-stretch gap-4 sm:grid-cols-2">
@@ -79,41 +79,41 @@ export default function ImportPriceView() {
             src="UN Comtrade(HS 84/85) · CIF÷순중량"
           />
         ) : (
-          <div className="flex h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-[12px] text-gray-400">{Object.keys(ser).length ? "해당 품목 데이터 부족" : "불러오는 중"}</div>
+          <div className="flex h-[300px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-[14px] text-gray-400">{Object.keys(ser).length ? "해당 품목 데이터 부족" : "불러오는 중"}</div>
         )}
 
         {/* 원산지 점유·단가 */}
         <div className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
           <div className="flex items-center gap-1.5">
-            <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{cur.label} 원산지 점유·단가</h3>
-            <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">조달</span>
-            {orig && <span className="ml-auto text-[10.5px] text-gray-400 dark:text-gray-500">{fmtMonth(orig.date)}</span>}
+            <h3 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{cur.label} 원산지 점유·단가</h3>
+            <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">조달</span>
+            {orig && <span className="ml-auto text-[12.5px] text-gray-400 dark:text-gray-500">{fmtMonth(orig.date)}</span>}
           </div>
           <div className="mt-2.5 min-h-0 flex-1">
-            {!orig ? <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">불러오는 중</div> : orig.origins.length === 0 ? <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">원산지 데이터 없음</div> : (
+            {!orig ? <div className="flex h-40 items-center justify-center text-[14px] text-gray-400">불러오는 중</div> : orig.origins.length === 0 ? <div className="flex h-40 items-center justify-center text-[14px] text-gray-400">원산지 데이터 없음</div> : (
               <div className="flex flex-col gap-2">
                 {orig.origins.slice(0, 7).map((o) => (
                   <div key={o.partner} className="flex items-center gap-2">
-                    <span className="w-14 shrink-0 text-[12px] font-semibold text-gray-700 dark:text-gray-200">{o.partner}</span>
+                    <span className="w-14 shrink-0 text-[14px] font-semibold text-gray-700 dark:text-gray-200">{o.partner}</span>
                     <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
                       <div className="absolute inset-y-0 left-0 rounded" style={{ width: Math.max(3, o.share) + "%", background: OCOL[o.partner] || "#94a3b8", opacity: 0.85 }} />
-                      <span className="absolute inset-y-0 left-2 flex items-center text-[10.5px] font-bold text-gray-700 dark:text-gray-100">{o.share.toFixed(0)}%</span>
+                      <span className="absolute inset-y-0 left-2 flex items-center text-[12.5px] font-bold text-gray-700 dark:text-gray-100">{o.share.toFixed(0)}%</span>
                     </div>
-                    <span className="w-16 shrink-0 text-right text-[11px] tabular-nums text-gray-500 dark:text-gray-400">${o.unit.toFixed(2)}/kg</span>
+                    <span className="w-16 shrink-0 text-right text-[13px] tabular-nums text-gray-500 dark:text-gray-400">${o.unit.toFixed(2)}/kg</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 막대=수입액 점유, 우측=원산지별 단가($/kg) — <b className="text-gray-700 dark:text-gray-200">중국 저가 대량·한국 고단가</b> 구도 확인</p>
-          <p className="mt-auto pt-2 text-[10px] text-gray-400 dark:text-gray-500">UN Comtrade · 최신 확보월 원산지별 CIF 점유·단가</p>
+          <p className="mt-2 text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 막대=수입액 점유, 우측=원산지별 단가($/kg) — <b className="text-gray-700 dark:text-gray-200">중국 저가 대량·한국 고단가</b> 구도 확인</p>
+          <p className="mt-auto pt-2 text-[12px] text-gray-400 dark:text-gray-500">UN Comtrade · 최신 확보월 원산지별 CIF 점유·단가</p>
         </div>
       </div>
       </section>
         <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
 
-      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">UN Comtrade 필리핀 수입 통계(HS 8418 냉장고·8415 에어컨·8450 세탁기·8528 TV) · 단가=CIF÷순중량($/kg) · 무역데이터 특성상 발표 지연(최신 확보월 기준) · 연간 수입액은 &lt;가전 선행지표&gt; 참조</p>
+      <p className="text-[13px] leading-relaxed text-gray-400 dark:text-gray-500">UN Comtrade 필리핀 수입 통계(HS 8418 냉장고·8415 에어컨·8450 세탁기·8528 TV) · 단가=CIF÷순중량($/kg) · 무역데이터 특성상 발표 지연(최신 확보월 기준) · 연간 수입액은 &lt;가전 선행지표&gt; 참조</p>
     </div>
   )
 }

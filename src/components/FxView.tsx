@@ -108,10 +108,10 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
     const adots: SVGElement[] = series.map((s) => {
       const c = el("circle", { r: 4.2, fill: s.color, stroke: CO.halo, "stroke-width": 1.6, opacity: 0 }); svg.appendChild(c); return c
     })
-    const head = document.createElement("div"); head.className = "mb-1 text-[11px] font-medium text-gray-400 dark:text-gray-500"; tip.appendChild(head)
+    const head = document.createElement("div"); head.className = "mb-1 text-[13px] font-medium text-gray-400 dark:text-gray-500"; tip.appendChild(head)
     const valNodes: HTMLElement[] = []
     series.forEach((s) => {
-      const row = document.createElement("div"); row.className = "flex items-center gap-2 whitespace-nowrap text-[11px] leading-4"
+      const row = document.createElement("div"); row.className = "flex items-center gap-2 whitespace-nowrap text-[13px] leading-4"
       const dot = document.createElement("span"); dot.className = "inline-block h-2 w-2 shrink-0 rounded-full"; dot.style.background = s.color
       const nm = document.createElement("span"); nm.className = "text-gray-500 dark:text-gray-400"; nm.textContent = s.name
       const v = document.createElement("b"); v.className = "ml-auto tabular-nums font-semibold text-gray-800 dark:text-gray-100"
@@ -169,25 +169,25 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
   return (
     <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-2">
-        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
-        {unit && <span className="text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
+        <h3 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
+        {unit && <span className="text-[12.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
       </div>
-      <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">{legend}</div>
+      <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[12.5px]">{legend}</div>
       <FxChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />
-      <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
+      <p className="mt-2.5 text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
       {ai && (
         <>
-          <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-700 dark:hover:text-indigo-300">
+          <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[12.5px] font-bold text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-700 dark:hover:text-indigo-300">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
             LG 인사이트
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
           </button>
           <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}>
-            <div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p></div></div>
+            <div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[13px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p></div></div>
           </div>
         </>
       )}
-      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{src}</p>
+      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">{src}</p>
     </div>
   )
 }
@@ -263,10 +263,10 @@ export default function FxView() {
         <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율</h2>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">필리핀 페소 · 대달러·역내·조달통화·실효환율</span>
+            <h2 className="text-[19px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율</h2>
+            <span className="text-[13px] font-semibold text-gray-400 dark:text-gray-500">필리핀 페소 · 대달러·역내·조달통화·실효환율</span>
             <span className="ml-auto flex items-center gap-2">
-              <span className="hidden text-[10.5px] text-gray-400 dark:text-gray-500 sm:inline">{labels[0]} → {labels[labels.length - 1]}</span>
+              <span className="hidden text-[12.5px] text-gray-400 dark:text-gray-500 sm:inline">{labels[0]} → {labels[labels.length - 1]}</span>
               <Segmented size="sm" value={win} onChange={setWin} options={WINDOWS.map((w) => ({ k: w.k, label: w.k }))} />
             </span>
           </header>
@@ -308,25 +308,25 @@ export default function FxView() {
         <aside className="flex flex-col gap-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: "80ms" }}>
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
             <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
-              <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율 핵심 KPI</h2>
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">{s?.asOf ? s.asOf.slice(0, 10).replace(/-/g, ".") : "26.06"} 기준</span>
+              <h2 className="text-[18px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율 핵심 KPI</h2>
+              <span className="text-[13px] text-gray-400 dark:text-gray-500">{s?.asOf ? s.asOf.slice(0, 10).replace(/-/g, ".") : "26.06"} 기준</span>
             </header>
             <div className="mt-3 grid grid-cols-2 gap-2">
               {KPI.map((k) => (
                 <div key={k.n} className="rounded-lg bg-gray-50 dark:bg-gray-900 px-3 py-2.5">
-                  <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{k.n}</p>
-                  <p className="mt-0.5 text-[19px] font-bold leading-none tabular-nums text-gray-900 dark:text-gray-50"><CountUp value={k.v} decimals={k.dec} /></p>
-                  <span className={"mt-1 inline-flex items-center gap-0.5 text-[11px] font-bold tabular-nums " + toneTxt[k.tone]}>{k.d.replace(/^[+-]/, "")}<span className="text-[10px]">{k.d.startsWith("-") ? "↓" : "↑"}</span></span>
+                  <p className="text-[13px] font-medium text-gray-500 dark:text-gray-400">{k.n}</p>
+                  <p className="mt-0.5 text-[22px] font-bold leading-none tabular-nums text-gray-900 dark:text-gray-50"><CountUp value={k.v} decimals={k.dec} /></p>
+                  <span className={"mt-1 inline-flex items-center gap-0.5 text-[13px] font-bold tabular-nums " + toneTxt[k.tone]}>{k.d.replace(/^[+-]/, "")}<span className="text-[12px]">{k.d.startsWith("-") ? "↓" : "↑"}</span></span>
                 </div>
               ))}
             </div>
-            <p className="mt-2.5 text-[10.5px] leading-relaxed text-gray-400 dark:text-gray-500">₱/USD·₩/₱ 실측(fx_daily) · NEER·REER 실측(BIS, 전년비 Δ)</p>
+            <p className="mt-2.5 text-[12.5px] leading-relaxed text-gray-400 dark:text-gray-500">₱/USD·₩/₱ 실측(fx_daily) · NEER·REER 실측(BIS, 전년비 Δ)</p>
           </div>
 
           <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
             <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
-              <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">연결 일정</h2>
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">환율 영향</span>
+              <h2 className="text-[18px] font-bold tracking-tight text-gray-900 dark:text-gray-50">연결 일정</h2>
+              <span className="text-[13px] text-gray-400 dark:text-gray-500">환율 영향</span>
             </header>
             <div className="mt-2 flex flex-col">
               {AGENDA.map((x, i) => {
@@ -335,20 +335,20 @@ export default function FxView() {
                   <div key={x.label} style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: 40 + i * 24 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
                     <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
-                      <span className="block text-[10.5px] text-gray-500 dark:text-gray-400">{x.note}</span>
+                      <span className="block truncate text-[14.5px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
+                      <span className="block text-[12.5px] text-gray-500 dark:text-gray-400">{x.note}</span>
                     </span>
-                    <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500 dark:text-gray-400">{dd === 0 ? "오늘" : dd > 0 ? "D-" + dd : "D+" + -dd}</span>
+                    <span className="shrink-0 tabular-nums text-[13px] font-semibold text-gray-500 dark:text-gray-400">{dd === 0 ? "오늘" : dd > 0 ? "D-" + dd : "D+" + -dd}</span>
                   </div>
                 )
               })}
             </div>
             <div className="mt-2 border-t border-gray-100 dark:border-gray-800 pt-2.5">
-              <p className="mb-1 text-[11px] font-bold text-gray-500 dark:text-gray-400">연결 뉴스</p>
+              <p className="mb-1 text-[13px] font-bold text-gray-500 dark:text-gray-400">연결 뉴스</p>
               {NEWS.map((nw) => (
                 <a key={nw.t} href="/news" className="flex items-start gap-2 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
-                  <span className="mt-0.5 shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{nw.tag}</span>
-                  <span><span className="block text-[12px] font-semibold leading-snug text-gray-700 dark:text-gray-200">{nw.t}</span><span className="mt-0.5 block text-[10px] text-gray-400 dark:text-gray-500">{nw.m}</span></span>
+                  <span className="mt-0.5 shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">{nw.tag}</span>
+                  <span><span className="block text-[14px] font-semibold leading-snug text-gray-700 dark:text-gray-200">{nw.t}</span><span className="mt-0.5 block text-[12px] text-gray-400 dark:text-gray-500">{nw.m}</span></span>
                 </a>
               ))}
             </div>

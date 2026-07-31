@@ -104,7 +104,7 @@ export function ProChart(p: Series) {
     const dCur = drawSeries(p.cur, IND, 2, true)
 
     const ttm = document.createElement("div")
-    ttm.className = "mb-1 text-[11px] text-gray-400 dark:text-gray-500"
+    ttm.className = "mb-1 text-[13px] text-gray-400 dark:text-gray-500"
     tip.appendChild(ttm)
     let bPrev: HTMLElement | null = null
     if (hasPrev) {

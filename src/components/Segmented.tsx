@@ -24,7 +24,7 @@ export function Segmented({
     const el = refs.current[idx]
     if (el) setStyle({ left: 0, width: el.offsetWidth, transform: `translateX(${el.offsetLeft}px)`, opacity: 1 })
   }, [idx, options])
-  const pad = size === "sm" ? "px-2.5 py-1 text-[11px]" : "px-3.5 py-1 text-[11.5px]"
+  const pad = size === "sm" ? "px-2.5 py-1 text-[13px]" : "px-3.5 py-1 text-[13.5px]"
   return (
     <div className="relative flex shrink-0 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-0.5">
       <span

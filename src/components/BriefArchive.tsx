@@ -32,18 +32,18 @@ export default function BriefArchive() {
   return (
     <section className="h-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 lg:col-span-2">
       <header className="mb-2 flex items-baseline justify-between">
-        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지난 7일 브리핑</h3>
-        <span className="text-[11px] text-gray-400 dark:text-gray-500">
+        <h3 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지난 7일 브리핑</h3>
+        <span className="text-[13px] text-gray-400 dark:text-gray-500">
           {rows ? `${rows.length}일 · 승인 ${nApproved}` : "…"}
         </span>
       </header>
 
       {err ? (
-        <p className="py-6 text-center text-[12px] text-gray-400 dark:text-gray-500">
+        <p className="py-6 text-center text-[14px] text-gray-400 dark:text-gray-500">
           아카이브를 불러오지 못함 — 확인 필요
         </p>
       ) : rows && rows.length === 0 ? (
-        <p className="py-6 text-center text-[12px] text-gray-400 dark:text-gray-500">
+        <p className="py-6 text-center text-[14px] text-gray-400 dark:text-gray-500">
           아직 누적된 브리핑 없음 — 오늘부터 쌓임
         </p>
       ) : (
@@ -57,12 +57,12 @@ export default function BriefArchive() {
                 className="flex items-baseline gap-2.5 border-b border-gray-50 dark:border-gray-800 py-2 last:border-0"
                 style={{ animation: "fadeUp .5s ease both", animationDelay: `${i * 0.05}s` }}
               >
-                <span className="w-[52px] shrink-0 text-[11px] tabular-nums text-gray-400 dark:text-gray-500">
+                <span className="w-[52px] shrink-0 text-[13px] tabular-nums text-gray-400 dark:text-gray-500">
                   {fmt(r.asOf)}
                 </span>
                 <span
                   className={
-                    "shrink-0 rounded px-1.5 py-px text-[10px] font-bold " +
+                    "shrink-0 rounded px-1.5 py-px text-[12px] font-bold " +
                     (r.status === "approved"
                       ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"
                       : "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300")
@@ -70,17 +70,17 @@ export default function BriefArchive() {
                 >
                   {r.status === "approved" ? "CONFIRMED" : "검토 전"}
                 </span>
-                <p className="min-w-0 flex-1 truncate text-[12px] text-gray-700 dark:text-gray-200" title={r.head}>
+                <p className="min-w-0 flex-1 truncate text-[14px] text-gray-700 dark:text-gray-200" title={r.head}>
                   {r.head || "—"}
                 </p>
-                <span className="shrink-0 text-[10px] text-gray-300 dark:text-gray-600">{r.nLines}줄</span>
+                <span className="shrink-0 text-[12px] text-gray-300 dark:text-gray-600">{r.nLines}줄</span>
               </div>
             ),
           )}
         </div>
       )}
 
-      <p className="mt-2 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-snug text-gray-400 dark:text-gray-500">
+      <p className="mt-2 border-t border-gray-100 dark:border-gray-800 pt-2 text-[12px] leading-snug text-gray-400 dark:text-gray-500">
         검토 전 = AI 초안 · CONFIRMED = 담당자 승인 — 승인 없는 판단은 배포하지 않음
       </p>
     </section>

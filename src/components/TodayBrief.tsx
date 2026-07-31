@@ -58,13 +58,13 @@ export default function TodayBrief() {
     <section className="flex h-full flex-col rounded-xl border-[1.5px] border-indigo-500 bg-indigo-50/40 dark:bg-indigo-500/10 p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-indigo-100">
       <header className="mb-1 flex items-baseline justify-between gap-2">
         <div className="flex items-baseline gap-2">
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{t("brief_title")}</h2>
+          <h2 className="text-[19px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{t("brief_title")}</h2>
         </div>
 
         <div className="flex items-baseline gap-2">
-          <span className="text-[10px] text-gray-400 dark:text-gray-500">{t("news_updated")} {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(b?.asOf)}</span>
+          <span className="text-[12px] text-gray-400 dark:text-gray-500">{t("news_updated")} {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(b?.asOf)}</span>
           {b === undefined ? null : approved ? (
-            <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+            <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[12px] font-bold text-emerald-700 dark:text-emerald-300">
               CONFIRMED · {b?.approvedBy ?? "승인"}
             </span>
           ) : (
@@ -72,7 +72,7 @@ export default function TodayBrief() {
               type="button"
               onClick={onApprove}
               disabled={busy || !b}
-              className="rounded border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[10px] font-bold text-amber-700 dark:text-amber-300 transition-colors duration-200 hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300 disabled:opacity-50"
+              className="rounded border border-amber-300 dark:border-amber-500/40 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[12px] font-bold text-amber-700 dark:text-amber-300 transition-colors duration-200 hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-700 dark:hover:text-emerald-300 disabled:opacity-50"
               title="검토 후 승인하면 CONFIRMED로 전환됩니다"
             >
               {busy ? t("brief_approving") : t("brief_approve")}
@@ -88,7 +88,7 @@ export default function TodayBrief() {
           ))}
         </div>
       ) : !b ? (
-        <p className="py-6 text-center text-[12px] text-gray-400 dark:text-gray-500">
+        <p className="py-6 text-center text-[14px] text-gray-400 dark:text-gray-500">
           {t("brief_empty")}
         </p>
       ) : (
@@ -101,7 +101,7 @@ export default function TodayBrief() {
                 style={{ animation: "fadeUp .5s ease both", animationDelay: `${i * 0.06}s` }}
               >
                 <div className="flex items-start gap-2">
-                  <span className="mt-[2px] flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[9px] font-bold text-white">
+                  <span className="mt-[2px] flex h-[16px] w-[16px] shrink-0 items-center justify-center rounded-full bg-indigo-500 text-[11px] font-bold text-white">
                     {i + 1}
                   </span>
                   <div className="min-w-0">
@@ -109,13 +109,13 @@ export default function TodayBrief() {
                       className={
                         // 레이아웃은 한글 기준 고정 — 영문이 길면 글자를 줄이고 3줄로 잘라 카드 높이를 맞춘다
                         "line-clamp-3 font-semibold leading-snug text-gray-900 dark:text-gray-50 " +
-                        (lang === "en" ? "text-[12px]" : "text-[13px]")
+                        (lang === "en" ? "text-[14px]" : "text-[15px]")
                       }
                     >
                       {l.text}
                     </p>
                     {l.evidence ? (
-                      <p className="mt-0.5 text-[10px] leading-4 text-gray-400 dark:text-gray-500">{t("brief_evidence")} · {l.evidence}</p>
+                      <p className="mt-0.5 text-[12px] leading-4 text-gray-400 dark:text-gray-500">{t("brief_evidence")} · {l.evidence}</p>
                     ) : null}
                   </div>
                 </div>
@@ -123,7 +123,7 @@ export default function TodayBrief() {
             ))}
           </div>
 
-          {err ? <p className="mt-1 text-[10px] text-rose-600 dark:text-rose-400">{t("brief_fail")}</p> : null}
+          {err ? <p className="mt-1 text-[12px] text-rose-600 dark:text-rose-400">{t("brief_fail")}</p> : null}
 
         </>
       )}

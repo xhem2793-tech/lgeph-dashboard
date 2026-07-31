@@ -36,7 +36,7 @@ function MvDelta({ php, pct }: { php: number | null; pct: number | null }) {
   if (pct == null || pct === 0 || php == null) return <span className="text-gray-300 dark:text-gray-600">—</span>
   const dn = pct < 0
   return (
-    <span className={"inline-flex w-[74px] items-center rounded px-1 py-0.5 text-[10.5px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400")}>
+    <span className={"inline-flex w-[74px] items-center rounded px-1 py-0.5 text-[12.5px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400")}>
       <span className="w-[10px] shrink-0 text-left">{dn ? "↓" : "↑"}</span>
       <span key={mode} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
         {mode === 1
@@ -65,7 +65,7 @@ function MvSpark({ series }: { series: number[] | null }) {
         <path d={d} fill="none" stroke={stroke} strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" style={{ strokeDasharray: 220, strokeDashoffset: 220, animation: "sparkDraw 1.1s cubic-bezier(.22,1,.36,1) forwards" }} />
         <circle cx={ex} cy={ey} r="1.8" fill={stroke} style={{ animation: "fadeUp .5s ease .9s both" }} />
       </svg>
-      <span className={"text-[10px] font-semibold tabular-nums " + (dn ? "text-emerald-600 dark:text-emerald-400" : up ? "text-rose-600 dark:text-rose-400" : "text-gray-400 dark:text-gray-500")}>{chg > 0 ? "+" : ""}{chg.toFixed(1)}%</span>
+      <span className={"text-[12px] font-semibold tabular-nums " + (dn ? "text-emerald-600 dark:text-emerald-400" : up ? "text-rose-600 dark:text-rose-400" : "text-gray-400 dark:text-gray-500")}>{chg > 0 ? "+" : ""}{chg.toFixed(1)}%</span>
     </span>
   )
 }
@@ -120,7 +120,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   }, [list])
   const dHead = (d: string | null) => <span className="tabular-nums text-gray-700 dark:text-gray-200">{d ? md(d) : "—"}</span>
 
-  if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
+  if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[15px] text-gray-400 dark:text-gray-500">불러오는 중</div>
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -131,7 +131,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
         <div className="w-fit"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>
         <div className="w-fit"><PmDrop label="거래선" sel={effShop} options={shopsL.map((s) => ({ k: s, t: s === "전체" ? "전체" : pmShopLabel(s) }))} onSelect={setShop} /></div>
         {/* 인하순/인상순 — 슬라이딩 알약 토글(초록↔빨강) */}
-        <div className="relative flex items-center rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-0.5 text-[11px] font-semibold shadow-sm">
+        <div className="relative flex items-center rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-0.5 text-[13px] font-semibold shadow-sm">
           <span aria-hidden className={"absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] rounded-full transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)] " + (sortDir === "down" ? "translate-x-0 bg-emerald-50 dark:bg-emerald-500/15" : "translate-x-full bg-rose-50 dark:bg-rose-500/15")} />
           <button type="button" onClick={() => setSortDir("down")} className={"relative z-10 rounded-full px-3 py-0.5 transition-colors duration-200 active:scale-95 " + (sortDir === "down" ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400")}>인하순</button>
           <button type="button" onClick={() => setSortDir("up")} className={"relative z-10 rounded-full px-3 py-0.5 transition-colors duration-200 active:scale-95 " + (sortDir === "up" ? "text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>인상순</button>
@@ -140,20 +140,20 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
           <div className={"group relative transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[300px]" : "w-[200px]")}>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
             <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델·브랜드 검색"
-              className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+              className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[14px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
             {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
           </div>
-          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최종 {stamp ? fmtStamp(stamp) : repDates.d0 ? md(repDates.d0) : "—"}<span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
+          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[13px] text-gray-400 dark:text-gray-500 sm:flex">최종 {stamp ? fmtStamp(stamp) : repDates.d0 ? md(repDates.d0) : "—"}<span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[12px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
         </div>
       </div>
       {/* 매트릭스 — 브랜드·분류·모델·★·SRP·오늘·할인율·전일비·날짜3열·최근7일변동·유통 */}
       <div className="max-h-[1040px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full min-w-[1290px] table-fixed border-collapse text-[12px]">
+        <table className="w-full min-w-[1290px] table-fixed border-collapse text-[14px]">
           <colgroup>
             <col style={{ width: 138 }} /><col style={{ width: 58 }} /><col style={{ width: 128 }} /><col style={{ width: 32 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 82 }} /><col style={{ width: 92 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 140 }} /><col style={{ width: 120 }} />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
-            <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
+            <tr className="text-[12.5px] font-semibold text-gray-600 dark:text-gray-300">
               <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">브랜드</th>
               <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">분류</th>
               <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">모델</th>
@@ -176,10 +176,10 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
               const star = starFor(r.category, r.model)
               return (
               <tr key={r.retailer + r.model + ri} style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s" }} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
-                <td className={"truncate whitespace-nowrap px-2 py-1.5 text-center text-[11.5px] font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")} title={r.brand}>{r.brand}</td>
-                <td className="px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400">{r.category}</td>
+                <td className={"truncate whitespace-nowrap px-2 py-1.5 text-center text-[13.5px] font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")} title={r.brand}>{r.brand}</td>
+                <td className="px-2 py-1.5 text-center text-[12.5px] text-gray-500 dark:text-gray-400">{r.category}</td>
                 <td className="truncate px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code && r.code.length >= 4 && r.code !== "N/A" ? r.code : canonCode(r.model, r.code)}</td>
-                <td className="px-1 py-1.5 text-center">{star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(star)}>★{star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
+                <td className="px-1 py-1.5 text-center">{star != null ? <span className={"rounded px-1 text-[11px] font-bold " + pmStarCls(star)}>★{star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums">{r.url ? <a href={r.url} target="_blank" rel="noreferrer" className="font-bold text-gray-900 hover:underline dark:text-gray-50">{peso(r.p0)}</a> : <span className="font-bold text-gray-900 dark:text-gray-50">{peso(r.p0)}</span>}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums">{r.discountPct != null && r.discountPct > 0 ? <span className="font-semibold text-emerald-600 dark:text-emerald-400">{r.discountPct.toFixed(0)}%</span> : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
@@ -188,14 +188,14 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.p2 != null ? peso(r.p2) : "—"}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.p3 != null ? peso(r.p3) : "—"}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-center"><MvSpark series={r.prices7} /></td>
-                <td className="whitespace-nowrap border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-center text-[11px] text-gray-500 dark:text-gray-400">{pmShopLabel(r.retailer)}</td>
+                <td className="whitespace-nowrap border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-center text-[13px] text-gray-500 dark:text-gray-400">{pmShopLabel(r.retailer)}</td>
               </tr>
               )
             })}
           </tbody>
         </table>
       </div>
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">★=New DOE 에너지등급 · SRP=권장소비자가 · 할인율=SRP 대비 · 오늘·날짜열=최근 4일(3일전까지) 실판매가 · 전일비=(오늘−어제)/어제, ↓ 인하(초록)·↑ 인상(빨강)·₱↔% 토글 · 최근 7일 변동=7일 추이 스파크라인 · {effCat} · 오늘 변동 {moved}건 · 상위 400건</p>
+      <p className="text-[12px] text-gray-400 dark:text-gray-500">★=New DOE 에너지등급 · SRP=권장소비자가 · 할인율=SRP 대비 · 오늘·날짜열=최근 4일(3일전까지) 실판매가 · 전일비=(오늘−어제)/어제, ↓ 인하(초록)·↑ 인상(빨강)·₱↔% 토글 · 최근 7일 변동=7일 추이 스파크라인 · {effCat} · 오늘 변동 {moved}건 · 상위 400건</p>
     </div>
   )
 }

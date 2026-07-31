@@ -36,15 +36,15 @@ export default function GdpComposition() {
     <div ref={cardRef} className="group/card relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
       <style>{"@keyframes growBar{from{transform:scaleY(0);opacity:.3}to{transform:scaleY(1);opacity:1}}"}</style>
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[14px] font-bold tracking-tight text-gray-900 dark:text-gray-50">GDP 산업구조</h3>
-        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">CE·B2B</span>
-        <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">% · 합계 100%</span>
+        <h3 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">GDP 산업구조</h3>
+        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">CE·B2B</span>
+        <span className="ml-auto shrink-0 text-[12.5px] font-medium text-gray-400 dark:text-gray-500">% · 합계 100%</span>
         <span className="flex shrink-0 items-center gap-0.5 ml-1.5">
           <button type="button" onClick={dlImg} title="이미지(SVG) 다운로드" className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg></button>
           <button type="button" onClick={dlCsv} title="데이터(CSV) 다운로드" className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M4 21h16" /></svg></button>
         </span>
       </div>
-      <div className="mt-1.5 flex min-h-[30px] flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px]">
+      <div className="mt-1.5 flex min-h-[30px] flex-wrap items-center gap-x-3 gap-y-1 text-[12.5px]">
         {MAJ.map((m) => <span key={m.key} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: m.color }} /><span className="text-gray-600 dark:text-gray-300">{m.key}</span></span>)}
       </div>
       {!loaded ? <div className="mt-1 h-[150px] animate-pulse rounded bg-gray-50 dark:bg-gray-800/40" /> : (
@@ -65,15 +65,15 @@ export default function GdpComposition() {
           </svg>
           {hi != null && byYear[hi] && (
             <div className="pointer-events-none absolute -top-1 right-0 z-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2 py-1 shadow-lg">
-              <div className="mb-0.5 text-[10px] font-bold text-gray-900 dark:text-gray-50">{hi}년</div>
-              {MAJ.map((m) => <div key={m.key} className="flex items-center justify-between gap-2.5 text-[10px]"><span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-sm" style={{ background: m.color }} /><span className="text-gray-500 dark:text-gray-400">{m.key}</span></span><span className="font-semibold tabular-nums text-gray-800 dark:text-gray-100">{((byYear[hi][m.key] || 0) * 100).toFixed(1)}%</span></div>)}
+              <div className="mb-0.5 text-[12px] font-bold text-gray-900 dark:text-gray-50">{hi}년</div>
+              {MAJ.map((m) => <div key={m.key} className="flex items-center justify-between gap-2.5 text-[12px]"><span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-sm" style={{ background: m.color }} /><span className="text-gray-500 dark:text-gray-400">{m.key}</span></span><span className="font-semibold tabular-nums text-gray-800 dark:text-gray-100">{((byYear[hi][m.key] || 0) * 100).toFixed(1)}%</span></div>)}
             </div>
           )}
         </div>
       )}
-      <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 서비스업 비중 확대 = 서비스 중심 경제 · 도시 중산층 소비 저변</p>
-      <p className="mt-2 line-clamp-2 min-h-[34px] border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> 서비스화·도시화 심화는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">도시가구·사무공간 냉난방·소형가전 수요 저변</b> → 도시 프리미엄·B2B 채널 우선</p>
-      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> PSA 국민계정 산업별 GDP 비중 · 연간 · 3대 산업 합계 100%</p>
+      <p className="mt-2.5 line-clamp-2 min-h-[34px] text-[13px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> 서비스업 비중 확대 = 서비스 중심 경제 · 도시 중산층 소비 저변</p>
+      <p className="mt-2 line-clamp-2 min-h-[34px] border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5 text-[13px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> 서비스화·도시화 심화는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">도시가구·사무공간 냉난방·소형가전 수요 저변</b> → 도시 프리미엄·B2B 채널 우선</p>
+      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> PSA 국민계정 산업별 GDP 비중 · 연간 · 3대 산업 합계 100%</p>
     </div>
   )
 }

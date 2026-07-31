@@ -58,10 +58,10 @@ export default function DataVerification() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
       <section className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white dark:from-indigo-500/10 dark:via-transparent dark:to-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
         <h1 className="text-[18px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">데이터 출처·검증</h1>
-        <p className="mt-1 text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">
+        <p className="mt-1 text-[14.5px] leading-relaxed text-gray-600 dark:text-gray-300">
           모든 지표는 <b className="font-semibold text-gray-800 dark:text-gray-100">공개 공식통계(PSA·BSP·World Bank·IMF·DOE)</b>에서 원본 코드까지 추적됩니다. 아래 링크로 <b className="font-semibold text-indigo-600 dark:text-indigo-400">누구나 원본을 직접 대조·재현</b>할 수 있습니다. 조작 불가 · 재현 가능.
         </p>
-        <div className="mt-2.5 flex flex-wrap gap-4 text-[12px]">
+        <div className="mt-2.5 flex flex-wrap gap-4 text-[14px]">
           <span className="text-gray-500 dark:text-gray-400">총 지표 <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
           <span className="text-gray-500 dark:text-gray-400">CONFIRMED <b className="text-emerald-600 dark:text-emerald-400">{confN}</b></span>
           <span className="text-gray-500 dark:text-gray-400">출처 기관 <b className="text-gray-900 dark:text-gray-50">{bySource.length}</b></span>
@@ -69,7 +69,7 @@ export default function DataVerification() {
       </section>
 
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="지표·출처 검색 (예: 물가, World Bank, 정책금리)"
-        className="w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3.5 py-2 text-[13px] text-gray-800 dark:text-gray-100 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-500/20" />
+        className="w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3.5 py-2 text-[15px] text-gray-800 dark:text-gray-100 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-500/20" />
 
       {bySource.map(([source, items]) => {
         const t = tier(source)
@@ -77,16 +77,16 @@ export default function DataVerification() {
           <section key={source} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
             <header className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
               <span className="h-[16px] w-1 rounded bg-indigo-500" />
-              <h2 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{source}</h2>
-              <span className={"rounded px-1.5 py-0.5 text-[9.5px] font-bold " + t.cls}>{t.label}</span>
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
+              <h2 className="text-[16px] font-bold text-gray-900 dark:text-gray-50">{source}</h2>
+              <span className={"rounded px-1.5 py-0.5 text-[11.5px] font-bold " + t.cls}>{t.label}</span>
+              <span className="text-[13px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
               {sourceLink(source, items[0].source_ref) && (
-                <a href={sourceLink(source, items[0].source_ref)!} target="_blank" rel="noopener noreferrer" className="ml-auto text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">원본 포털 ↗</a>
+                <a href={sourceLink(source, items[0].source_ref)!} target="_blank" rel="noopener noreferrer" className="ml-auto text-[13px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">원본 포털 ↗</a>
               )}
             </header>
             <div className="overflow-x-auto">
-              <table className="w-full min-w-[560px] text-[12px]">
-                <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[10.5px] font-semibold uppercase text-gray-400 dark:text-gray-500">
+              <table className="w-full min-w-[560px] text-[14px]">
+                <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[12.5px] font-semibold uppercase text-gray-400 dark:text-gray-500">
                   <th className="px-4 py-1.5">지표</th><th className="px-2 py-1.5">원본 코드</th><th className="px-2 py-1.5">기간</th><th className="px-2 py-1.5 text-center">신뢰도</th><th className="px-2 py-1.5 text-right">검증</th>
                 </tr></thead>
                 <tbody>
@@ -95,7 +95,7 @@ export default function DataVerification() {
                     return (
                       <tr key={r.indicator} className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/5">
                         <td className="px-4 py-1.5 font-medium text-gray-800 dark:text-gray-100">{r.label || r.indicator}</td>
-                        <td className="px-2 py-1.5 font-mono text-[10.5px] text-gray-500 dark:text-gray-400">{r.source_ref?.replace(/^https?:\/\/\S+/, "URL") ?? "—"}</td>
+                        <td className="px-2 py-1.5 font-mono text-[12.5px] text-gray-500 dark:text-gray-400">{r.source_ref?.replace(/^https?:\/\/\S+/, "URL") ?? "—"}</td>
                         <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.mn)}~{ym(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>
                         <td className="px-2 py-1.5 text-center">{(r.confidence || "").toUpperCase() === "CONFIRMED" ? <span className="text-emerald-600 dark:text-emerald-400">✓</span> : <span className="text-amber-500">추정</span>}</td>
                         <td className="px-2 py-1.5 text-right">{link ? <a href={link} target="_blank" rel="noopener noreferrer" className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">원본 ↗</a> : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
@@ -108,7 +108,7 @@ export default function DataVerification() {
           </section>
         )
       })}
-      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
+      <p className="text-[13px] leading-relaxed text-gray-400 dark:text-gray-500">
         <b className="font-semibold text-gray-500 dark:text-gray-400">검증 방법</b> · 각 지표의 「원본 ↗」으로 발행기관 데이터에 직접 접근 → 같은 코드·기간으로 대조. PSA는 OpenSTAT 테이블ID, World Bank는 WDI 코드, IMF는 IFS 시리즈로 재현 가능. 민간자료(Colliers·Open-Meteo)는 별도 표기.
       </p>
     </div>
