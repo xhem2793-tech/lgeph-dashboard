@@ -206,7 +206,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
     // 전일(직전 데이터일) 최저가 인덱스 — canonCode|거래선 → 가격(▼▲ 전일 대비)
     const prevIdx: Record<string, number> = {}
     D.filter((r) => r.d === prevDate && r.price != null).forEach((r) => { const cc = canonCode(r.model, r.code); if (!cc) return; const k = cc + "|" + r.retailer; prevIdx[k] = Math.min(prevIdx[k] ?? Infinity, r.price as number) })
-    const f = D.filter((r) => r.d === curDate && r.price != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmFormHit(cat, r.model, effSpec, r.brand) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
+    const f = D.filter((r) => r.d === curDate && r.price != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmFormHit(cat, r.model + " " + (r.capacity || ""), effSpec, r.brand) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
     const g: Record<string, DailyRow[]> = {}
     f.forEach((r) => { const cc = canonCode(r.model, r.code); (g[r.brand + "|" + cc] = g[r.brand + "|" + cc] || []).push(r) })
     const out: PivRow[] = Object.values(g).map((list) => {
@@ -372,21 +372,27 @@ const acFormOf = (m: string): string | null => {
 const REF_FORMS = ["SxS", "F/D", "T/F", "B/F", "1Door", "Freezer"]
 const refFormOf = (m: string): string | null => {
   const s = m || ""
+  // 액세서리(가전받침대·전압기 AVR·거치대)는 냉장고 아님 → 배제(카테고리 오분류 방어)
+  if (/roller stand|appliance stand|support base|voltage reg|\bAVR\b/i.test(s)) return null
   // 명시 타입 텍스트 우선(집계된 마케팅 텍스트/애매한 브랜드코드보다 신뢰) → 그다음 확실한 코드만 폴백
   if (/side by side|\bsxs\b|양문|instaview/i.test(s)) return "SxS"
   if (/french[- ]?door|multi[- ]?door|4[- ]?door|프렌치/i.test(s)) return "F/D"
   if (/top[- ]?mount|two[- ]?door|2[- ]?door|double[- ]?door|top ?freezer|상냉/i.test(s)) return "T/F"
   if (/bottom[- ]?(?:mount|freezer)|하냉|BMF/i.test(s)) return "B/F"
-  if (/single[- ]?door|1[- ]?door|personal|mini ?bar/i.test(s)) return "1Door"
-  if (/chest|showcase|\bfreezer\b|upright|beverage/i.test(s)) return "Freezer"
-  // 코드 폴백(LG RV*·Samsung R*·Condura C* — HRF 등 도어형 불명확 프리픽스는 제외)
-  if (/\bRVS|\bRS\d/i.test(s)) return "SxS"
-  if (/\bRVF|\bRF\d/i.test(s)) return "F/D"
-  if (/\bRVT|\bRUT|\bRT\d|\bCTD|\bCMD/i.test(s)) return "T/F"
-  if (/\bRUB|\bRVB|\bRB\d/i.test(s)) return "B/F"
-  if (/\bCUF|\bCTF|\bCCH|\bGR-?V|\bSC\d|\bHCF/i.test(s)) return "Freezer"
-  if (/\bCPR/i.test(s)) return "1Door"
-  return null
+  if (/single[- ]?door|1[- ]?door|one[- ]?door|personal|mini ?(?:bar|fridge|refrig)/i.test(s)) return "1Door"
+  if (/chest|showcase|\bfreezer\b|upright|beverage|beer|chiller|wine ?cool/i.test(s)) return "Freezer"
+  // ── 브랜드 코드 프리픽스 맵핑 (용량 텍스트가 없는 잔여 대비 — 다층 안전장치) ──
+  //   LG RV*·Samsung R*·Condura C*·Fujidenzo I**·Panasonic NR-*·Haier HRF*·Toshiba GR-R*·Sharp SJ*·TCL TRF·Midea MDR*·Whirlpool WF
+  if (/\bRVS|\bRS\d|\bISR|\bCSS|\bGRRS/i.test(s)) return "SxS"                                          // 양문
+  if (/\bRVF|\bRF\d|\bIFR|\bGRRF/i.test(s)) return "F/D"                                                // 프렌치/멀티도어
+  if (/\bRUB|\bRVB|\bRB\d|\bIBM|\bCBF|\bGRRB/i.test(s)) return "B/F"                                    // 하냉동
+  if (/\bIRB|\bCPR|\bNRAQ|\bNR-?A|\bRBT|\bRUO|\bHR-?\d0\b/i.test(s)) return "1Door"                       // 소형 퍼스널·단문·미니
+  if (/\bCUF|\bCTF|\bCCH|\bGR-?V|\bSC\d|\bHCF|\bHCH|\bIFC|\bISU|\bMDRC|\bCCF|\bIWC|\bEBC/i.test(s)) return "Freezer" // 냉동고·칠러·쇼케이스·쿨러
+  if (/\bRVT|\bRUT|\bRT\d|\bCTD|\bCMD|\bNRB|\bNRT|\bNR-?[BT]|\bHRF[- ]?IV|\bGRRT|\bGRRP|\bGR-?[BY]|\bGRB|\bGRY|\bSJ|\bTRF|\bTCF|\bMDRD|\bWF\d|\bARTM|\bINR|\bIRD|\bRDD|\bITV/i.test(s)) return "T/F" // 2도어 상냉동(기본)
+  // ── 최종 안전장치: 냉장고는 '기타' 없이 사이즈 기준으로 기본 배정(소형=단문, 그 외=최빈 구성인 상냉동) ──
+  const v = refCuft(s)
+  if (v != null && v < 6) return "1Door"
+  return "T/F"
 }
 // 세탁기 로드형(유형)
 // 세탁기 카테고리에 건조기 포함 — 유형으로 구분. 워시타워/트윈/프론트/탑로드 + 건조기(단독)
