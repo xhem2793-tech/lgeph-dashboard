@@ -206,7 +206,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
     ;(elabels || []).forEach((e) => { if (e.model && e.model.length >= 5) (m[e.category] = m[e.category] || []).push({ codeN: doeNorm(e.category, e.model), star: e.star }) })
     return m
   }, [elabels])
-  const starFor = (c: string, model: string) => { const code = DOE_CODE[c]; const idx = code ? starIdx[code] : null; if (!idx) return null; const mm = doeNorm(code, model); for (const e of idx) if (e.codeN.length >= 5 && mm.includes(e.codeN)) return e.star; return null }
+  const starFor = (c: string, model: string) => { const code = DOE_CODE[c]; const idx = code ? starIdx[code] : null; if (!idx) return null; const mm = doeNorm(code, model); const cc = doeNorm(code, canonCode(model, null)); for (const e of idx) { if (e.codeN.length < 5) continue; if (mm.includes(e.codeN)) return e.star; if (cc.length >= 8 && e.codeN.includes(cc)) return e.star } return null }
 
   const data = React.useMemo(() => {
     const kw = q.trim().toLowerCase()
@@ -544,7 +544,8 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     return elabels.filter((e) => e.category === code && e.model && e.model.length >= 5)
       .map((e) => ({ codeN: doeNorm(code, e.model), star: e.star, kwh: e.kwh })).filter((e) => e.codeN.length >= 5)
   }, [elabels, cat])
-  const matchOf = React.useCallback((model: string) => { const m = doeNorm(DOE_CODE[cat] || "", model); for (const e of starIdx) if (m.includes(e.codeN)) return e; return null }, [starIdx, cat])
+  // 매칭: DOE코드 ⊆ 모델(정확) OR 모델canon(≥8자) ⊆ DOE코드(DOE 변형접미어 ZTNQ36GNLE0ZUAC1 등 흡수)
+  const matchOf = React.useCallback((model: string) => { const dc = DOE_CODE[cat] || ""; const m = doeNorm(dc, model); const cc = doeNorm(dc, canonCode(model, null)); for (const e of starIdx) { if (m.includes(e.codeN)) return e; if (cc.length >= 8 && e.codeN.includes(cc)) return e } return null }, [starIdx, cat])
 
   // 스펙은 모델(canon)마다 동일 → 같은 모델의 모든 거래선 리스팅의 이름+capacity(구조화 스펙 포함)를 합쳐
   //   하나의 스펙문자열로 만든다. 어느 한 거래선이 서술적 이름/구조화 스펙을 가지면 그 모델 전체가 정확 분류됨(99% 레버).
