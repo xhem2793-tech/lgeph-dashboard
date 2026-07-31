@@ -323,7 +323,7 @@ export default function Page() {
   const _fresh = _maxDate ? _maxDate.slice(5).replace("-", "/") : ""
 
   return (
-    <main className="mx-auto max-w-[1536px] px-4 pb-12 pt-4 sm:px-6">
+    <main className="mx-auto max-w-[1920px] px-4 pb-12 pt-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
       <div className="grid gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">

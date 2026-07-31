@@ -80,7 +80,7 @@ export default function Page() {
   React.useEffect(() => { publishedReports().then(setReports).catch(() => setReports([])) }, [])
 
   return (
-    <main className="mx-auto max-w-[1536px] px-4 pb-10 pt-4 sm:px-6">
+    <main className="mx-auto max-w-[1920px] px-4 pb-10 pt-4 sm:px-6">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes repIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}"}</style>
 
       <header className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3" style={{ animation: "fadeUp .5s ease both" }}>

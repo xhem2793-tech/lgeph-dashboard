@@ -5,6 +5,24 @@ const config: Config = {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
+      colors: {
+        // gray 스케일을 파란기 없는 중립 near-black으로 리매핑(CryptoQuant 다크 톤).
+        //   body=gray-950(#0b0b0d 딥 플랫블랙) · 패널=gray-900(#151518) · 보더=gray-800(#26272b).
+        //   라이트 명도는 기존과 거의 동일(중립화만) → 라이트모드 영향 최소.
+        gray: {
+          50: "#fafafa",
+          100: "#f3f4f4",
+          200: "#e8e8ea",
+          300: "#d2d3d6",
+          400: "#9a9ba1",
+          500: "#71727a",
+          600: "#53535b",
+          700: "#3e3f45",
+          800: "#26272b",
+          900: "#151518",
+          950: "#0b0b0d",
+        },
+      },
       keyframes: {
         hide: {
           from: { opacity: "1" },

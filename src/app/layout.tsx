@@ -70,7 +70,7 @@ export default function RootLayout({
         className={`${inter.variable} ${publicSans.variable} ${plexNum.variable} overflow-y-scroll scroll-auto antialiased selection:bg-indigo-100 selection:text-indigo-700 dark:bg-gray-950`}
         suppressHydrationWarning
       >
-        <div className="mx-auto max-w-screen-2xl">
+        <div className="w-full">
           <ThemeProvider defaultTheme="system" attribute="class">
             <LangProvider>
               <TopNav />
