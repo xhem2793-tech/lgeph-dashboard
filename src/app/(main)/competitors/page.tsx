@@ -280,9 +280,9 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
       </div>
 
       <div className="max-h-[1040px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full min-w-[1080px] table-fixed border-collapse text-[12px]">
+        <table className="w-full min-w-[1240px] table-fixed border-collapse text-[12px]">
           <colgroup>
-            <col style={{ width: 54 }} /><col style={{ width: 58 }} /><col style={{ width: 132 }} /><col style={{ width: 32 }} /><col style={{ width: 66 }} /><col style={{ width: 80 }} />
+            <col style={{ width: 92 }} /><col style={{ width: 60 }} /><col style={{ width: 132 }} /><col style={{ width: 34 }} /><col style={{ width: 100 }} />
             {BOARD_SHOPS.map((s) => <col key={s.k} style={{ width: 100 }} />)}
             <col style={{ width: 86 }} /><col style={{ width: 70 }} />
           </colgroup>
@@ -292,7 +292,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
               <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">분류</th>
               <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("code")}>모델{arrow("code")}</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title="New DOE 에너지등급">★</th>
-              <th className="whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-center">SRP</th>
+              <th className="whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center">SRP</th>
               {BOARD_SHOPS.map((s) => (
                 <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
               ))}
@@ -311,7 +311,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
                 <td className="px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400">{r.cat}</td>
                 <td className="truncate px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code}</td>
                 <td className="px-1 py-1.5 text-center">{r.star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(r.star)}>★{r.star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
-                <td className="border-r border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
+                <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
                 {r.cells.map((c, i) => (
                   <td key={i} className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums" style={c && r.min != null && c.price === r.min ? { background: "rgba(16,185,129,0.08)" } : undefined}>
                     {!c ? <span className="text-gray-300 dark:text-gray-600">—</span> : (
