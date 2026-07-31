@@ -407,14 +407,17 @@ const wmFormOf = (m: string): string | null => {
   if (/twin ?(?:wash|tub)|twinwash/i.test(s)) return "Twin Tub"
   // 단조(single tub)·스핀드라이 — 보급형 반자동 세탁기 (탑로드 자동과 구분)
   if (/single ?tub|spin ?dry(?:er)?/i.test(s)) return "Single Tub"
-  // 단독 건조기(워셔/세탁/콤보 텍스트 없이 dryer만) → 건조기
-  if (/\bdryer\b|heat ?pump ?dry|drying machine/i.test(s) && !/\bwasher\b|washing|wash.{0,4}dry|combi/i.test(s)) return "Dryer"
+  // 세탁건조 콤보(Combo/Combi · Washer and/& Dryer)는 프론트로드 → F/L (단독 건조기보다 먼저)
+  if (/comb[io]|washer.{0,6}dryer/i.test(s)) return "F/L"
+  // 단독 건조기(워셔/세탁 텍스트 없이) — 콤보는 위에서 이미 F/L 처리
+  if (/\bdryer\b|heat ?pump ?dry|drying machine/i.test(s) && !/\bwasher\b|washing/i.test(s)) return "Dryer"
+  if (/\bDVE?\d|\bDVG\d|\bDLE\d/i.test(s)) return "Dryer"   // Samsung DV·LG DLE 건조기 코드
   // 명시 로드형 텍스트 우선 → 코드 폴백(마케팅 텍스트 노이즈로 탑로드가 프론트로 오분류되던 문제)
-  if (/top[- ]?load|topload/i.test(s)) return "T/L"
-  if (/front[- ]?load|frontload|\bdrum\b|washer ?dryer|combi|wash.{0,4}dry/i.test(s)) return "F/L"   // 세탁건조 콤보 포함
-  if (/\bFV\d|\bWW\d|\bNA-?V|\bTWF|\bWD\d|\bAWD|WWEB|\bESJN/i.test(s)) return "F/L"
-  if (/\bT[0-9]\d{3}|\bWA\d|\bNA-?[FW]|\bTWA|\bTWT|\bCWM|\bHWM|\bVHH|\bAWTM|\bMAW|\bMTW/i.test(s)) return "T/L"
-  if (/\bAHW|\bES-?WP|\bEWM|\bWM-\d|\bBWS|\bHSD|\bJWS/i.test(s)) return "Single Tub"   // 단조 코드 폴백
+  if (/top[- ]?load|topload|fully ?auto(?:matic)? ?washing/i.test(s)) return "T/L"
+  if (/front[- ]?load|frontload|\bdrum\b/i.test(s)) return "F/L"
+  if (/\bFV\d|\bWW\d|\bNA-?V|\bTWF|\bWD\d|\bTWD|\bAWD|WWEB|FWEB|\bESJN|\bHW\d{2}|\bF\d{2}S|\bMF\d/i.test(s)) return "F/L"
+  if (/\bT[0-9]\d{3}|\bWA\d|\bNA-?[FW]|\bTWA|\bTWT|\bCWM|\bHWM|\bVHH|\bAWTM|\bAWFM|\bGWTW|\bMA\d{3}W|\bMT\d{3}W|\bMAW|\bMTW|\bAW[- ]?[A-Z]?\d/i.test(s)) return "T/L"
+  if (/\bAHW|\bES-?WP|\bEWM|\bWM-?\d|\bBWS|\bHSD|\bJWS/i.test(s)) return "Single Tub"   // 단조 코드 폴백
   return null
 }
 // TV 패널을 **등급(계열)**으로 통합 — 개별 패널명이 아니라 시장 등급으로:
