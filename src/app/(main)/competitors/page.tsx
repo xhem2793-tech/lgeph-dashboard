@@ -170,7 +170,8 @@ const canonCode = (model: string, code: string | null) => {
 type PivRow = { cat: string; brand: string; code: string; model: string; form: string | null; size: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
 function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp: string | null; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("전체")
-  const [spec, setSpec] = React.useState("전체")
+  const [form, setForm] = React.useState("전체")
+  const [size, setSize] = React.useState("전체")
   const [q, setQ] = React.useState("")
   const [focused, setFocused] = React.useState(false)
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "min", asc: false })
@@ -188,8 +189,10 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
   const goNewer = () => { if (!isLatest) setSelDate(dates[curIdx - 1]) }
   const pickDate = (v: string) => { if (!v) return; setSelDate(dates.find((d) => d <= v) ?? dates[dates.length - 1] ?? null) }
   const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => D.some((r) => r.category === c))], [D])
-  const segs = cat === "전체" ? [] : pmFormsFor(cat).map((t) => ({ t }))
-  const effSpec = spec === "전체" || segs.some((s) => s.t === spec) ? spec : "전체"
+  const forms = cat === "전체" ? [] : pmFormsFor(cat)
+  const effForm = form === "전체" || forms.includes(form) ? form : "전체"
+  const sizes = cat === "전체" ? [] : pmSizeList(cat)
+  const effSize = size === "전체" || sizes.includes(size) ? size : "전체"
   // DOE ★ 인덱스(카테고리별)
   const starIdx = React.useMemo(() => {
     const m: Record<string, { codeN: string; star: number | null }[]> = {}
@@ -203,7 +206,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
     // 전일(직전 데이터일) 최저가 인덱스 — canonCode|거래선 → 가격(▼▲ 전일 대비)
     const prevIdx: Record<string, number> = {}
     D.filter((r) => r.d === prevDate && r.price != null).forEach((r) => { const cc = canonCode(r.model, r.code); if (!cc) return; const k = cc + "|" + r.retailer; prevIdx[k] = Math.min(prevIdx[k] ?? Infinity, r.price as number) })
-    const f = D.filter((r) => r.d === curDate && r.price != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmFormHit(cat, r.model + " " + (r.capacity || ""), effSpec, r.brand) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
+    const f = D.filter((r) => r.d === curDate && r.price != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmFormHit(cat, r.model + " " + (r.capacity || ""), effForm, r.brand) && pmSizeHit(cat, r.model, r.capacity, effSize) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
     const g: Record<string, DailyRow[]> = {}
     f.forEach((r) => { const cc = canonCode(r.model, r.code); (g[r.brand + "|" + cc] = g[r.brand + "|" + cc] || []).push(r) })
     const out: PivRow[] = Object.values(g).map((list) => {
@@ -234,7 +237,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
       return (typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y))) * dir
     })
     return out
-  }, [D, curDate, prevDate, cat, effSpec, q, sort]) // eslint-disable-line
+  }, [D, curDate, prevDate, cat, effForm, effSize, q, sort]) // eslint-disable-line
   const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
   const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
 
@@ -243,8 +246,9 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
       {/* 검색·필터 — LG 기본 · 제품/스펙 호버 드롭다운 · 뉴스형 검색 · 최종갱신(맨오른쪽) */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10.5px] font-bold text-white shadow-sm">LG</span>
-        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체") }} /></div>
-        {segs.length > 0 && <div className="w-fit"><PmDrop label="스펙" sel={effSpec} options={[{ k: "전체", t: "전체" }, ...segs.map((s) => ({ k: s.t, t: s.t }))]} onSelect={setSpec} /></div>}
+        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm("전체"); setSize("전체") }} /></div>
+        <div className="w-fit"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>
+        <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSize} options={[{ k: "전체", t: "전체" }, ...sizes.map((t) => ({ k: t, t }))]} onSelect={setSize} /></div>
         {/* 날짜 네비게이터 — 과거 특정일 스냅샷(◀ 이전일 · ▶ 다음일 · 📅 달력에서 선택) */}
         {dates.length > 0 && (
           <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-1 py-0.5 shadow-sm">
