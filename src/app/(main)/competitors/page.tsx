@@ -8,12 +8,14 @@ import {
   fmtStamp,
   promoIntensity,
   promoCampaigns,
+  promoDeals,
   energyLabels,
   type EnergyRow,
   type PriceRow,
   type DailyRow,
   type PromoIntensity,
   type PromoCampaign,
+  type DealRow,
 } from "@/lib/supabase"
 
 /** 경쟁사 가격 — 좌 1/4 메뉴판 + 우 3/4 콘텐츠.
@@ -48,6 +50,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
     group: "채널·프로모",
     items: [
       { key: "promo", no: 4, label: "프로모션 트래커", desc: "브랜드별 프로모 강도 · 유통 캠페인", status: "live" },
+      { key: "deals", no: 14, label: "프로모 딜", desc: "실딜 리스트 · 할인율·무료배송·번들·쿠폰 · 유통별", status: "live" },
       { key: "channel", no: 6, label: "채널별 가격 비교", desc: "동일모델 유통 최저가 · 온·오프 격차", status: "plan" },
     ],
   },
@@ -627,7 +630,10 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
       const models = Object.entries(g).map(([code, list]) => {
         const best = list.reduce((a, x) => ((x.p0 ?? Infinity) < (a.p0 ?? Infinity) ? x : a))
         const kwhs = list.map((x) => x.kwh).filter((v): v is number => v != null).sort((a, x) => a - x)
-        return { code, price: best.p0 as number, url: best.url ?? null, retailer: best.retailer ?? null, shops: new Set(list.map((x) => x.retailer)).size, n: list.length, star: modeStar(list.map((x) => x.star)), kwh: kwhs.length ? kwhs[Math.floor(kwhs.length / 2)] : null }
+        // 거래선=전체 → 거래선 평균가(모델당 카드 1개), 특정 거래선 → 그 거래선 가격(list가 이미 해당 거래선만)
+        const prices = list.map((x) => x.p0).filter((v): v is number => v != null)
+        const price = effShop === "전체" && prices.length ? prices.reduce((s, v) => s + v, 0) / prices.length : (best.p0 as number)
+        return { code, price, url: best.url ?? null, retailer: best.retailer ?? null, shops: new Set(list.map((x) => x.retailer)).size, n: list.length, star: modeStar(list.map((x) => x.star)), kwh: kwhs.length ? kwhs[Math.floor(kwhs.length / 2)] : null }
       }).filter((m) => m.price != null)
       // 전체 모델 표시(상위 N 제한 없음) — 취급 거래선↓·가격↑ 순 정렬만 유지
       models.sort((a, b2) => b2.shops - a.shops || a.price - b2.price).forEach((m) => cards.push({ b, tier: tierOf(m.price), label: m.code, avg: m.price, shops: m.shops, n: m.n, star: m.star, kwh: m.kwh, url: m.url, retailer: m.retailer, idx: 0, left: 0, top: 0 }))
@@ -689,7 +695,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
             </div>
           </header>
           <p className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/40 px-4 py-2 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400">
-            세로축 = <b className="text-gray-700 dark:text-gray-200">{exact ? pmShopLabel(effShop) + " 현금가" : "최저 현금가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-600 dark:text-indigo-400">LG</b>) · 카드 = 모델별(우상단 ★=New DOE 등급) · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 그 가격의 원문
+            세로축 = <b className="text-gray-700 dark:text-gray-200">{exact ? pmShopLabel(effShop) + " 현금가" : "거래선 평균가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-600 dark:text-indigo-400">LG</b>) · 카드 = 모델별(우상단 ★=New DOE 등급) · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 그 가격의 원문
           </p>
 
           {/* 브랜드 컬럼 헤더 — 플롯과 동일 구조(px-4 + 게이지 GUT + flex-1)로 1:1 정렬 */}
@@ -779,7 +785,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
             <span className="ml-auto inline-flex items-center gap-1.5"><span className="inline-block h-3 w-4 rounded bg-indigo-600" />자사(LG) · <span className="inline-block h-3 w-4 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />경쟁사</span>
           </footer>
         </div>
-        <p className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">{exact ? pmShopLabel(effShop) + " 현금가" : "브랜드×모델 최저 현금가"} · New DOE ★ = energy_labels 모델코드 매칭({DOE_CODE[cat] || "-"}) · 브랜드당 취급수 상위 5개 모델 · 카드 클릭 시 그 가격의 원문 링크</p>
+        <p className="mt-2 text-[10px] text-gray-400 dark:text-gray-500">{exact ? pmShopLabel(effShop) + " 현금가" : "브랜드×모델 거래선 평균가"} · New DOE ★ = energy_labels 모델코드 매칭({DOE_CODE[cat] || "-"}) · 브랜드별 전체 모델 표시 · 카드 클릭 시 그 가격의 원문 링크</p>
         <p className="mt-1 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">
           ※ 유형·스펙 분류는 유통 상품속성·모델명에서 추출(모델 단위로 전 거래선 공유). <b className="font-semibold text-gray-500 dark:text-gray-400">정확도 전브랜드 유형 96%·스펙 93%(자사 LG 96%·91%)</b> · 분류 안 되는 잔여는 <b className="font-semibold">기타</b>로 노출돼 필터에서 사라지지 않음 · 가격·스펙·프로모는 수집 가능하나 판매량·점유율은 GfK 패널(비공개) 필요
         </p>
@@ -983,6 +989,109 @@ function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camps: Prom
   )
 }
 
+/** 프로모 딜 — v_competitor_promo 실딜 리스트. 유통별 프로모(할인율·무료배송·쿠폰·번들·할부)를
+ *  태그로 분류해 필터·정렬. 브랜드 화이트리스트만. 카드 클릭 → 원문. */
+const DEAL_TAGS: { k: string; re: RegExp; c: string }[] = [
+  { k: "무료배송", re: /free ?(?:ship|deliv)|무료 ?배송/i, c: "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
+  { k: "쿠폰", re: /coupon|voucher|쿠폰|promo ?code/i, c: "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" },
+  { k: "번들", re: /bundle|free ?gift|with ?free|freebie|사은품|gift|번들/i, c: "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" },
+  { k: "할부", re: /installment|무이자|0 ?%|\bmos\b|\/mo\b|months?\b|x\d+mos/i, c: "border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300" },
+]
+const dealTagsOf = (s: string | null) => { const t = s || ""; return DEAL_TAGS.filter((x) => x.re.test(t)).map((x) => x.k) }
+function DealsView({ deals }: { deals: DealRow[] | null }) {
+  const [cat, setCat] = React.useState("전체")
+  const [shop, setShop] = React.useState("전체")
+  const [tag, setTag] = React.useState("전체")
+  const [q, setQ] = React.useState("")
+  const D = deals ?? []
+  const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => D.some((r) => r.category === c))], [D])
+  const shops = React.useMemo(() => ["전체", ...Array.from(new Set(D.map((r) => r.retailer))).filter(Boolean)], [D])
+  const rows = React.useMemo(() => {
+    const kw = q.trim().toLowerCase()
+    return D.filter((r) =>
+      (cat === "전체" || r.category === cat) &&
+      (shop === "전체" || r.retailer === shop) &&
+      (tag === "전체" || (tag === "할인" ? (r.discount ?? 0) > 0 : dealTagsOf(r.promo).includes(tag))) &&
+      (!kw || (r.model + " " + r.brand + " " + r.category).toLowerCase().includes(kw)),
+    ).sort((a, b) => (b.discount ?? -1) - (a.discount ?? -1))
+  }, [D, cat, shop, tag, q])
+  const withDisc = rows.filter((r) => r.discount != null)
+  const avgDisc = withDisc.length ? withDisc.reduce((s, r) => s + (r.discount as number), 0) / withDisc.length : null
+  const nShops = new Set(rows.map((r) => r.retailer)).size
+
+  if (deals === null) return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
+
+  return (
+    <div className="mt-3 flex flex-col gap-3">
+      {/* 요약 지표 */}
+      <div className="flex flex-wrap gap-2">
+        {[
+          { l: "프로모 딜", v: rows.length.toLocaleString(), s: "건" },
+          { l: "평균 할인율", v: avgDisc == null ? "—" : avgDisc.toFixed(1) + "%", s: "" },
+          { l: "유통", v: String(nShops), s: "곳" },
+        ].map((x) => (
+          <div key={x.l} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-1.5">
+            <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{x.l}</div>
+            <div className="text-[15px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{x.v}<span className="ml-0.5 text-[11px] font-medium text-gray-400 dark:text-gray-500">{x.s}</span></div>
+          </div>
+        ))}
+      </div>
+      {/* 필터 */}
+      <div className="relative z-20 flex flex-wrap items-center gap-2">
+        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={setCat} /></div>
+        <div className="w-fit"><PmDrop label="유통" sel={shop} options={shops.map((s) => ({ k: s, t: pmShopLabel(s) }))} onSelect={setShop} /></div>
+        <div className="w-fit"><PmDrop label="프로모" sel={tag} options={["전체", "할인", "무료배송", "쿠폰", "번들", "할부"].map((t) => ({ k: t, t }))} onSelect={setTag} /></div>
+        <div className="relative ml-auto">
+          <svg className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="모델·브랜드 검색" className="w-[200px] rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-8 pr-3 text-[12px] outline-none focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900" />
+        </div>
+      </div>
+      {/* 딜 테이블 */}
+      <div className="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-800">
+        <table className="w-full min-w-[860px] text-[12px]">
+          <thead>
+            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/70 text-[10.5px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+              <th className="px-3 py-2 text-left">유통</th>
+              <th className="px-3 py-2 text-left">브랜드</th>
+              <th className="px-3 py-2 text-left">모델</th>
+              <th className="px-2 py-2 text-left">제품</th>
+              <th className="px-3 py-2 text-right">현재가</th>
+              <th className="px-3 py-2 text-right">SRP</th>
+              <th className="px-3 py-2 text-right">할인율</th>
+              <th className="px-3 py-2 text-left">프로모</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.slice(0, 400).map((r, i) => {
+              const tags = dealTagsOf(r.promo)
+              const disc = r.discount != null && r.discount > 0
+              return (
+                <tr key={r.retailer + r.model + i} className="border-b border-gray-50 dark:border-gray-800/60 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                  <td className="whitespace-nowrap px-3 py-1.5 text-gray-500 dark:text-gray-400">{pmShopLabel(r.retailer)}</td>
+                  <td className={"whitespace-nowrap px-3 py-1.5 font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{r.brand}</td>
+                  <td className="max-w-[300px] truncate px-3 py-1.5 text-gray-700 dark:text-gray-200">{r.url ? <a href={r.url} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 hover:underline dark:hover:text-indigo-400">{r.model}</a> : r.model}</td>
+                  <td className="whitespace-nowrap px-2 py-1.5 text-gray-400 dark:text-gray-500">{r.category}</td>
+                  <td className="whitespace-nowrap px-3 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{peso(r.price)}</td>
+                  <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
+                  <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums">{disc ? <span className="rounded bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 font-bold text-rose-600 dark:text-rose-400">-{Math.round(r.discount as number)}%</span> : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
+                  <td className="px-3 py-1.5">
+                    <div className="flex flex-wrap gap-1">
+                      {tags.length === 0 && !disc ? <span className="text-gray-300 dark:text-gray-600">—</span> : null}
+                      {tags.map((t) => { const d = DEAL_TAGS.find((x) => x.k === t)!; return <span key={t} className={"rounded border px-1.5 py-0.5 text-[10px] font-semibold " + d.c}>{t}</span> })}
+                    </div>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      {rows.length > 400 && <p className="text-center text-[11px] text-gray-400 dark:text-gray-500">상위 400건 표시 · 필터로 좁혀 보세요 (전체 {rows.length.toLocaleString()}건)</p>}
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">데이터: v_competitor_promo(최근 3일 프로모 리스팅) · 프로모 태그는 리스팅 문구에서 자동 분류 · 할인율=SRP 대비 · 모델 클릭 시 원문</p>
+    </div>
+  )
+}
+
 export default function Competitors() {
   const [view, setView] = React.useState("board")
   const [cat, setCat] = React.useState("전체")
@@ -1000,6 +1109,7 @@ export default function Competitors() {
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "deltaPct", asc: true })
   const [promo, setPromo] = React.useState<PromoIntensity[] | null>(null)
   const [camps, setCamps] = React.useState<PromoCampaign[]>([])
+  const [deals, setDeals] = React.useState<DealRow[] | null>(null)
   const [elabels, setElabels] = React.useState<EnergyRow[] | null>(null)
 
   React.useEffect(() => {
@@ -1018,6 +1128,9 @@ export default function Competitors() {
     promoCampaigns()
       .then(setCamps)
       .catch(() => setCamps([]))
+    promoDeals()
+      .then((ds) => setDeals(ds.filter((r) => brandShown(r.brand, r.category))))
+      .catch(() => setDeals([]))
     energyLabels()
       .then(setElabels)
       .catch(() => setElabels([]))
@@ -1193,6 +1306,8 @@ export default function Competitors() {
             <PositioningMatrix rows={rows} elabels={elabels} stamp={stamp} />
           ) : view === "promo" ? (
             <PromoView rows={promo} camps={camps} />
+          ) : view === "deals" ? (
+            <DealsView deals={deals} />
           ) : active?.status !== "live" ? (
             <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
               <p className="text-[13px] font-medium text-gray-600 dark:text-gray-300">{active?.desc}</p>
