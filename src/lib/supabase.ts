@@ -472,6 +472,8 @@ export type PriceRow = {
   url: string | null
   availability: string | null
   image: string | null
+  prices7: number[] | null
+  p7: number | null
 }
 
 /** HTML 엔티티 정리 — 스크래핑 원문에 &#8211; &amp; 등이 섞여 들어온다 */
@@ -602,6 +604,8 @@ export async function competitorTable(max = 6000): Promise<PriceRow[]> {
       url: r.url ?? null,
       availability: r.availability ?? null,
       image: r.image_url ?? null,
+      prices7: Array.isArray(r.prices7) ? r.prices7.map((x: any) => num(x)).filter((x: any): x is number => x != null) : null,
+      p7: num(r.p7),
     }
   })
 }
