@@ -71,7 +71,6 @@ const SHOWN_BRANDS = [
   "LG", "Samsung", "Panasonic", "TCL", "Haier", "Condura", "Midea", "Hisense", "Carrier",
   "Sony", "Devant", "Skyworth", "Sharp", "Toshiba", "Whirlpool", "Fujidenzo", "Koppel", "Kolin", "Daikin", "Prestiz", "Gree",
 ]
-const AC_EXTRA_BRANDS = ["Kolin", "Daikin"]  // (하위호환) 이제 SHOWN_BRANDS에 포함
 const BRANDS = SHOWN_BRANDS
 const brandShown = (brand: string, _category: string) => SHOWN_BRANDS.includes(brand)
 const SHOPS = ["Anson's", "Abenson", "SM Appliance", "Western Appliances", "Robinsons Appliances", "Emcor", "Addessa"]
