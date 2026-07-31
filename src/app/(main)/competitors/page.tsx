@@ -376,12 +376,20 @@ const acFormOf = (m: string): string | null => {
 const REF_FORMS = ["SxS", "프렌치", "상냉동", "하냉동", "단문형", "냉동고"]
 const refFormOf = (m: string): string | null => {
   const s = m || ""
-  if (/side by side|sxs|instaview|\bRVS|\bRS\d|\bRH\d/i.test(s)) return "SxS"
-  if (/french|multi ?door|4 ?door|\bRVF|\bRF\d|\bNR-?[YD]|HRF/i.test(s)) return "프렌치"
-  if (/bottom ?(?:mount|freezer)|BMF|\bRUB|\bRVB|\bRB\d|\bNR-?B[QXW]/i.test(s)) return "하냉동"
-  if (/top ?mount|two ?door|2[- ]?door|double ?door|\bRVT|\bRUT|\bRT\d|TMNF|\bNRB[QY]|\bCTD|\bCMD|\bHR-?\d/i.test(s)) return "상냉동"
-  if (/single ?door|1[- ]?door|personal|mini ?bar|\bCPR|\bGL-?\d/i.test(s)) return "단문형"
-  if (/chest|showcase|\bfreezer\b|\bCUF|\bCTF|\bCCH|\bGR-?V|\bSC\d|\bHCF|upright|beverage/i.test(s)) return "냉동고"
+  // 명시 타입 텍스트 우선(집계된 마케팅 텍스트/애매한 브랜드코드보다 신뢰) → 그다음 확실한 코드만 폴백
+  if (/side by side|\bsxs\b|양문|instaview/i.test(s)) return "SxS"
+  if (/french ?door|multi ?door|4 ?door|프렌치/i.test(s)) return "프렌치"
+  if (/top ?mount|two ?door|2[- ]?door|double ?door|상냉/i.test(s)) return "상냉동"
+  if (/bottom ?(?:mount|freezer)|하냉|BMF/i.test(s)) return "하냉동"
+  if (/single ?door|1[- ]?door|personal|mini ?bar/i.test(s)) return "단문형"
+  if (/chest|showcase|\bfreezer\b|upright|beverage/i.test(s)) return "냉동고"
+  // 코드 폴백(LG RV*·Samsung R*·Condura C* — HRF 등 도어형 불명확 프리픽스는 제외)
+  if (/\bRVS|\bRS\d/i.test(s)) return "SxS"
+  if (/\bRVF|\bRF\d/i.test(s)) return "프렌치"
+  if (/\bRVT|\bRUT|\bRT\d|\bCTD|\bCMD/i.test(s)) return "상냉동"
+  if (/\bRUB|\bRVB|\bRB\d/i.test(s)) return "하냉동"
+  if (/\bCUF|\bCTF|\bCCH|\bGR-?V|\bSC\d|\bHCF/i.test(s)) return "냉동고"
+  if (/\bCPR/i.test(s)) return "단문형"
   return null
 }
 // 세탁기 로드형(유형)
@@ -389,20 +397,24 @@ const WM_FORMS = ["프론트", "탑로드", "트윈", "워시타워"]
 const wmFormOf = (m: string): string | null => {
   const s = m || ""
   if (/wash ?tower|washtower|\bWT\d/i.test(s)) return "워시타워"
-  if (/twin ?(?:wash|tub)|\bTWT|twinwash|jumbo|\bMA\d/i.test(s)) return "트윈"
-  if (/front[- ]?load|frontload|\bFV\d|\bWW\d|\bNA-?[VS]|\bNAW|\bTWF|\bMFC|\bMF\d|drum|\bWD\d/i.test(s)) return "프론트"
-  if (/top[- ]?load|topload|\bT[0-9]\d{3}|\bWA\d|\bNA-?F|\bTWA|\bCWM|\bHWM|fully ?auto/i.test(s)) return "탑로드"
+  if (/twin ?(?:wash|tub)|twinwash/i.test(s)) return "트윈"
+  // 명시 로드형 텍스트 우선 → 코드 폴백(마케팅 텍스트 노이즈로 탑로드가 프론트로 오분류되던 문제)
+  if (/top[- ]?load|topload/i.test(s)) return "탑로드"
+  if (/front[- ]?load|frontload|\bdrum\b/i.test(s)) return "프론트"
+  if (/\bFV\d|\bWW\d|\bNA-?V|\bTWF/i.test(s)) return "프론트"
+  if (/\bT[0-9]\d{3}|\bWA\d|\bNA-?F|\bTWA|\bCWM|\bHWM/i.test(s)) return "탑로드"
   return null
 }
 // TV 패널(유형) — 모든 TV는 최소 LED로 귀결(미상 없음)
 const TV_FORMS = ["OLED", "QNED", "QLED", "ULED", "NanoCell", "MiniLED", "UHD", "FHD", "HD", "LED"]
 const tvFormOf = (m: string): string | null => {
   const s = m || ""
+  // LG 전용 패널(OLED·QNED·NanoCell)을 QLED보다 먼저 — 마케팅 텍스트에 QLED가 섞여도 LG UHD/NanoCell이 QLED로 안 가게
   if (/\boled\b/i.test(s)) return "OLED"
   if (/qned/i.test(s)) return "QNED"
+  if (/nano ?cell|\bnano\b/i.test(s)) return "NanoCell"
   if (/qled/i.test(s)) return "QLED"
   if (/uled/i.test(s)) return "ULED"
-  if (/nano ?cell|\bnano\b/i.test(s)) return "NanoCell"
   if (/mini ?led|miniled/i.test(s)) return "MiniLED"
   if (/uhd|\b4k\b|crystal|\bUA\d|\bNU\d|\bUQ\d|\bUR\d|\bUT\d/i.test(s)) return "UHD"
   if (/full ?hd|\bfhd\b/i.test(s)) return "FHD"
