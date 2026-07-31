@@ -2,7 +2,7 @@
 
 import { siteConfig } from "@/app/siteConfig"
 import Link from "next/link"
-import { usePathname, useRouter } from "next/navigation"
+import { usePathname } from "next/navigation"
 import React from "react"
 import { useTheme } from "next-themes"
 import { useLang } from "@/lib/i18n"
@@ -58,13 +58,6 @@ const MoonIcon = (
 
 export function TopNav() {
   const pathname = usePathname()
-  const router = useRouter()
-  const searchRef = React.useRef<HTMLInputElement | null>(null)
-  const onSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    const q = searchRef.current?.value.trim()
-    if (q) router.push("/news?q=" + encodeURIComponent(q))
-  }
   const { lang, setLang, t } = useLang()
   const { theme, resolvedTheme, setTheme } = useTheme()
   const [mounted, setMounted] = React.useState(false)
@@ -100,18 +93,7 @@ export function TopNav() {
           ))}
         </nav>
 
-        <form onSubmit={onSearch} className="relative ml-auto hidden md:block">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-          <input
-            ref={searchRef}
-            type="search"
-            placeholder="뉴스·지표·경쟁사 검색"
-            aria-label="통합 검색"
-            className="w-[210px] rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-2 pl-9 pr-3.5 text-[13px] outline-none transition-all duration-300 ease-[cubic-bezier(.22,1,.36,1)] placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 focus:w-[300px] focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900"
-          />
-        </form>
-
-        <div className="flex shrink-0 items-center gap-2.5">
+        <div className="ml-auto flex shrink-0 items-center gap-2.5">
           <PillToggle
             ariaLabel="언어 선택"
             value={lang}

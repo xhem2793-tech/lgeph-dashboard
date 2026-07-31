@@ -666,45 +666,55 @@ export default function Page() {
     <div className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(12px) scale(.96)}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}"}</style>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-20">
+      <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
         {/* ── 좌 : 메뉴 ── */}
         <aside
           className="h-fit lg:sticky lg:top-[61px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6"
           style={{ animation: "fadeUp .5s ease both" }}
         >
-          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 4h18M6 12h12M10 20h4" /></svg>
-            <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분류</p>
+          <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 4h18M6 12h12M10 20h4" /></svg>
+            <p className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분류</p>
+          </div>
+
+          {/* 사이드바 검색 — 뉴스 검색을 좌측 메뉴 안으로 */}
+          <div className="px-2 pb-1 pt-3">
+            <div className="relative">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+              <input value={q} onChange={(ev) => setQ(ev.target.value)} placeholder="뉴스 검색" aria-label="뉴스 검색"
+                className="w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-2 pl-9 pr-8 text-[13px] outline-none transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-950" />
+              {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-500"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+            </div>
           </div>
 
           {mode === "topic" ? (
-            <div className="px-3 py-3">
-              <div className="flex flex-col gap-0.5">
+            <div className="px-2 py-3">
+              <div className="flex flex-col gap-1">
                 {MENUS.map((m, i) => (
                   <React.Fragment key={m.key}>
                     {m.group !== MENUS[i - 1]?.group && m.group !== "전체" && (
-                      <p className="mb-1 mt-2.5 px-1.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{m.group}</p>
+                      <p className="mb-1 mt-3.5 px-1.5 text-[11.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{m.group}</p>
                     )}
                     <button
                       type="button"
                       onClick={() => setMenu(m.key)}
                       className={
-                        "group rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
-                        (menu === m.key ? "bg-indigo-50 dark:bg-indigo-500/10" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
+                        "group relative flex items-center rounded-md px-2.5 py-2 text-left transition-colors duration-200 " +
+                        (menu === m.key ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-gray-100/70 dark:hover:bg-gray-800/50")
                       }
                     >
-                      <span className="flex items-center gap-1.5">
+                      {menu === m.key && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
+                      <span className="flex w-full items-center gap-1.5">
                         <span
                           className={
-                            "flex-1 text-[12.5px] transition-colors duration-300 " +
-                            (menu === m.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")
+                            "flex-1 text-[14px] transition-colors " +
+                            (menu === m.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-50")
                           }
                         >
                           {m.label}
                         </span>
-                        <span className="num shrink-0 text-[10px] text-gray-400 dark:text-gray-500">{counts[m.key] ?? 0}</span>
+                        <span className="num shrink-0 text-[11px] text-gray-400 dark:text-gray-500">{counts[m.key] ?? 0}</span>
                       </span>
-                      
                     </button>
                   </React.Fragment>
                 ))}
@@ -790,7 +800,7 @@ export default function Page() {
             {/* 검색 · 우측 */}
             <div
               className={
-                "group relative hidden transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] lg:block " +
+                "group relative hidden transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " +
                 (focused || q ? "w-[416px]" : "w-[320px]")
               }
               
