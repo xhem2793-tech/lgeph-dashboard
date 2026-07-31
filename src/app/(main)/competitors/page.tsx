@@ -170,7 +170,7 @@ const canonCode = (model: string, code: string | null) => {
 type PivRow = { cat: string; brand: string; code: string; model: string; form: string | null; size: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
 function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp: string | null; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("냉장고")
-  const [brand, setBrand] = React.useState("LG")
+  const [brand, setBrand] = React.useState("전체")
   const [form, setForm] = React.useState("전체")
   const [size, setSize] = React.useState("전체")
   const [q, setQ] = React.useState("")
@@ -194,7 +194,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
     const m = new Map<string, number>()
     D.forEach((r) => { if (r.brand) m.set(r.brand, (m.get(r.brand) || 0) + 1) })
     const others = Array.from(m.entries()).filter(([b]) => b !== "LG").sort((a, b) => b[1] - a[1]).map((x) => x[0])
-    return ["LG", ...others, "전체"]
+    return ["전체", "LG", ...others]
   }, [D])
   const forms = cat === "전체" ? [] : pmFormsFor(cat)
   const effForm = form === "전체" || forms.includes(form) ? form : "전체"
@@ -541,8 +541,8 @@ function PmDrop({ label, sel, options, onSelect }: { label: string; sel: string;
         <span className="ml-1.5 whitespace-nowrap text-[12px] font-semibold text-gray-800 dark:text-gray-100">{cur}</span>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" className="shrink-0 text-gray-300 transition-transform duration-200 group-hover:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
       </button>
-      <div className="invisible absolute inset-x-0 top-[calc(100%-2px)] z-40 max-h-[240px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-        {options.map((o) => <button key={o.k} type="button" onClick={() => onSelect(o.k)} className={"block w-full truncate rounded-md px-2 py-1 text-left text-[12px] transition-colors " + (o.k === sel ? "bg-indigo-600 font-semibold text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")}>{o.t}</button>)}
+      <div className="invisible absolute left-0 top-[calc(100%-2px)] z-40 max-h-[280px] w-max min-w-full max-w-[280px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+        {options.map((o) => <button key={o.k} type="button" onClick={() => onSelect(o.k)} className={"block w-full whitespace-nowrap rounded-md px-2.5 py-1 text-left text-[12px] transition-colors " + (o.k === sel ? "bg-indigo-600 font-semibold text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")}>{o.t}</button>)}
       </div>
     </div>
   )
@@ -1013,25 +1013,37 @@ function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camps: Prom
 
 /** 프로모 딜 — v_competitor_promo 실딜 리스트. 유통별 프로모(할인율·무료배송·쿠폰·번들·할부)를
  *  태그로 분류해 필터·정렬. 브랜드 화이트리스트만. 카드 클릭 → 원문. */
-const DEAL_TAGS: { k: string; re: RegExp; c: string }[] = [
-  { k: "무료배송", re: /free ?(?:ship|deliv)|무료 ?배송/i, c: "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
-  { k: "쿠폰", re: /coupon|voucher|쿠폰|promo ?code/i, c: "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" },
-  { k: "번들", re: /bundle|free ?gift|with ?free|freebie|사은품|gift|번들/i, c: "border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" },
-  { k: "할부", re: /installment|무이자|0 ?%|\bmos\b|\/mo\b|months?\b|x\d+mos/i, c: "border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300" },
-]
-const dealTagsOf = (s: string | null) => { const t = s || ""; return DEAL_TAGS.filter((x) => x.re.test(t)).map((x) => x.k) }
-const dmkey = (m: string) => (m || "").toUpperCase().replace(/[^A-Z0-9]/g, "")
-type DealProd = { brand: string; model: string; category: string; price: number; srp: number | null; disc: number | null; tags: Set<string>; retailers: Set<string>; url: string | null }
-/** 프로모 딜 — 경쟁사 프로모 비교. 제품·유형(예: 냉장고×SxS) 선택 시, 같은 가격대(엔트리·미드·프리미엄)에서
- *  각 경쟁사가 어떤 프로모·번들·할부를 하는지 카드로 비교. 필터는 포지셔닝과 동일한 PmDrop.
- *  레이아웃 근거: Claude Design `retail-channel-board.reference.html`. */
+const PROMO_CHIP: Record<string, string> = {
+  "번들": "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300",
+  "쿠폰": "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  "무료배송": "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300",
+  "할부": "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300",
+  "사은품": "bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300",
+}
+// 프로모 문구 → 타입별 칩(상세 포함). 번들·쿠폰·무료배송·할부·사은품.
+const promoChips = (txt: string | null): { k: string; d: string }[] => {
+  const s = txt || ""
+  const out: { k: string; d: string }[] = []
+  if (/free ?ship|free ?deliv|무료 ?배송/i.test(s)) out.push({ k: "무료배송", d: "무료배송" })
+  const inst = s.match(/x\s*(\d+)\s*mos|(\d+)\s*개월/i)
+  if (inst || /installment|무이자|0 ?% ?install/i.test(s)) out.push({ k: "할부", d: inst ? `${inst[1] || inst[2]}개월 무이자` : "무이자" })
+  const gift = s.match(/with\s+(?:a\s+)?free\s+([^·|,]{2,26})/i)
+  if (gift) out.push({ k: "사은품", d: gift[1].replace(/&#\d+;.*/, "").trim().slice(0, 16) })
+  else if (/bundle|번들/i.test(s)) out.push({ k: "번들", d: "번들" })
+  else if (/free ?gift|사은품|freebie/i.test(s)) out.push({ k: "사은품", d: "사은품" })
+  if (/coupon|voucher|쿠폰|promo ?code/i.test(s)) out.push({ k: "쿠폰", d: "쿠폰" })
+  return out.slice(0, 3)
+}
+type PMCell = { net: number; list: number | null; promo: { k: string; d: string }[]; url: string | null; low?: boolean }
+type PMModelRow = { cc: string; brand: string; label: string; own: boolean; cells: (PMCell | null)[]; min: number }
+/** 프로모 딜 — 유통별 경쟁사 가격·프로모 현황(제품=행, 유통=열). 셀 = 정가 취소선 + 실판매가 + 프로모 칩(상세).
+ *  행별 최저 실판매가 강조 · 자사(LG) 하이라이트. 필터는 포지셔닝과 동일. 레이아웃: Claude Design `retail-promo.html`. */
 function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: DealRow[] | null }) {
   const [cat, setCat] = React.useState("냉장고")
   const [form, setForm] = React.useState("SxS")
-  const [band, setBand] = React.useState("전체")
   const [brand, setBrand] = React.useState("전체")
   const R = rows ?? []
-  const cats = React.useMemo(() => PM_CATS.filter((c) => R.some((r) => r.category === c)), [R])
+  const cats = React.useMemo(() => { const av = PM_CATS.filter((c) => R.some((r) => r.category === c)); return av.length ? av : PM_CATS }, [R])
   const formList = pmFormsFor(cat)
   const effForm = formList.includes(form) ? form : (formList[0] ?? "전체")
   const brandsL = React.useMemo(() => {
@@ -1039,118 +1051,107 @@ function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: DealRow[] 
     R.filter((r) => r.category === cat).forEach((r) => { if (r.brand) m.set(r.brand, (m.get(r.brand) || 0) + 1) })
     return ["전체", ...Array.from(m.entries()).sort((a, b) => b[1] - a[1]).map((x) => x[0]).slice(0, 8)]
   }, [R, cat])
-  // 프로모 태그 조회(모델 코드별) — v_competitor_promo 기반, 여러 유통 문구 합집합
-  const promoByModel = React.useMemo(() => {
-    const m: Record<string, Set<string>> = {}
-    ;(deals ?? []).forEach((r) => { const k = canonCode(r.model, null) || dmkey(r.model); if (k.length < 4) return; const s = m[k] ?? new Set<string>(); dealTagsOf(r.promo).forEach((t) => s.add(t)); m[k] = s })
+  // 프로모 문구 조회: canonCode|retailer → promo_text (v_competitor_promo)
+  const promoLU = React.useMemo(() => {
+    const m: Record<string, string> = {}
+    ;(deals ?? []).forEach((d) => { const k = canonCode(d.model, null) + "|" + d.retailer; if (!m[k] && d.promo) m[k] = d.promo })
     return m
   }, [deals])
-
-  // 모델 단위 집계(포지셔닝 base=전체 제품) — 유형 필터 통과분. 최저가·최대할인·취급 유통 + 프로모 태그 조인.
-  const products = React.useMemo(() => {
-    const m: Record<string, DealProd> = {}
+  // 모델(canonCode) × 유통 매트릭스
+  const modelRows = React.useMemo(() => {
+    const g: Record<string, PriceRow[]> = {}
     R.forEach((r) => {
       if (r.category !== cat || r.p0 == null) return
       if (brand !== "전체" && r.brand !== brand) return
       if (!pmFormHit(cat, r.model + " " + (r.capacity || ""), effForm, r.brand)) return
-      const k = canonCode(r.model, r.code) || dmkey(r.model); if (k.length < 4) return
-      const cur = m[k]
-      if (!cur) m[k] = { brand: r.brand, model: r.model, category: r.category, price: r.p0, srp: r.srp, disc: r.discountPct, tags: new Set(), retailers: new Set([r.retailer]), url: r.url }
-      else { cur.retailers.add(r.retailer); if ((r.discountPct ?? 0) > (cur.disc ?? 0)) cur.disc = r.discountPct; if (r.p0 < cur.price) { cur.price = r.p0; cur.srp = r.srp; cur.url = r.url } }
+      const cc = canonCode(r.model, r.code); if (cc.length < 5) return
+      ;(g[cc] = g[cc] || []).push(r)
     })
-    Object.entries(m).forEach(([k, p]) => { const pt = promoByModel[k]; if (pt) pt.forEach((t) => p.tags.add(t)) })
-    let arr = Object.values(m)
-    if (band !== "전체") arr = arr.filter((p) => pmTierOf(cat, p.price) === band)
-    return arr.sort((a, b) => b.price - a.price)
-  }, [R, cat, effForm, brand, band, promoByModel])
+    const out: PMModelRow[] = Object.entries(g).map(([cc, list]) => {
+      const r0 = list.reduce((a, x) => ((x.p0 ?? Infinity) < (a.p0 ?? Infinity) ? x : a))
+      const label = r0.code && r0.code.length >= 4 && r0.code !== "N/A" && !/^[≈]/.test(r0.code) ? r0.code : cc
+      const cells = BOARD_SHOPS.map((s) => {
+        const ms = list.filter((r) => r.retailer === s.k && r.p0 != null)
+        if (!ms.length) return null
+        const best = ms.reduce((a, x) => ((x.p0 as number) < (a.p0 as number) ? x : a))
+        const srps = ms.map((x) => x.srp).filter((v): v is number => v != null)
+        return { net: best.p0 as number, list: srps.length ? Math.max(...srps) : null, promo: promoChips(promoLU[cc + "|" + s.k] || null), url: best.url ?? null } as PMCell
+      })
+      const nets = cells.filter((c): c is PMCell => c != null).map((c) => c.net)
+      const min = nets.length ? Math.min(...nets) : Infinity
+      cells.forEach((c) => { if (c && c.net === min) c.low = true })
+      return { cc, brand: r0.brand, label, own: r0.brand === "LG", cells, min }
+    }).sort((a, b) => (b.own ? 1 : 0) - (a.own ? 1 : 0) || a.min - b.min)
+    return out
+  }, [R, cat, effForm, brand, promoLU])
 
-  // 가격대(엔트리·미드·프리미엄)별 그룹
-  const bandDef = PM_TIER_BANDS[cat] || [25000, 60000]
-  const BANDS = [
-    { k: "프리미엄", range: `₱${Math.round(bandDef[1] / 1000)}k+`, dot: "bg-rose-400" },
-    { k: "미드", range: `₱${Math.round(bandDef[0] / 1000)}~${Math.round(bandDef[1] / 1000)}k`, dot: "bg-amber-400" },
-    { k: "엔트리", range: `<₱${Math.round(bandDef[0] / 1000)}k`, dot: "bg-emerald-400" },
-  ]
-  const bands = BANDS.map((b) => ({ ...b, items: products.filter((p) => pmTierOf(cat, p.price) === b.k) })).filter((b) => b.items.length)
-  const lgN = products.filter((p) => p.brand === "LG").length
+  const lgRows = modelRows.filter((r) => r.own)
+  const promoCount = modelRows.reduce((s, r) => s + r.cells.reduce((a, c) => a + (c && c.promo.length ? 1 : 0), 0), 0)
 
-  if (deals === null) return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
+  if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
 
   return (
-    <div className="mt-3 flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
-      {/* 헤더 + 범례 */}
+    <div className="mt-3 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
       <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
         <span className="h-4 w-1 rounded bg-indigo-500" />
-        <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">프로모 딜 비교</h2>
-        <span className="rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[10px] font-bold text-emerald-600 dark:text-emerald-300">LIVE</span>
-        <span className="text-[11px] text-gray-400 dark:text-gray-500">가격대별 · 경쟁사 <b className="text-indigo-600 dark:text-indigo-400">프로모·번들·할부</b> 비교</span>
-        <div className="ml-auto flex items-center gap-1">
-          <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">Promo</span>
-          {DEAL_TAGS.map((d) => <span key={d.k} className={"rounded border px-1 py-px text-[10px] font-bold " + d.c}>{d.k}</span>)}
-        </div>
+        <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">유통별 경쟁사 가격 · 프로모 현황</h2>
+        <span className="ml-auto flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400"><span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />행별 최저 실판매가</span>
       </header>
-      {/* 필터바 — 포지셔닝과 동일한 PmDrop */}
-      <div className="relative z-20 flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40 px-4 py-2.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40 px-4 py-2.5">
         <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setBrand("전체") }} /></div>
         {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={setForm} /></div>}
-        <div className="w-fit"><PmDrop label="가격대" sel={band} options={["전체", "프리미엄", "미드", "엔트리"].map((t) => ({ k: t, t }))} onSelect={setBand} /></div>
         <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={setBrand} /></div>
-        <p className="ml-auto text-[11px] text-gray-500 dark:text-gray-400"><b className="tabular-nums text-gray-700 dark:text-gray-200">{products.length}</b>개 모델 · 자사 <b className="tabular-nums text-indigo-700 dark:text-indigo-300">{lgN}</b></p>
+        <div className="ml-auto flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">Promo</span>
+          {Object.keys(PROMO_CHIP).map((k) => <span key={k} className={"rounded px-1.5 py-0.5 text-[10px] font-bold " + PROMO_CHIP[k]}>{k}</span>)}
+        </div>
       </div>
-      {/* 가격대별 비교 */}
-      <div className="min-h-0 flex-1 overflow-auto p-4">
-        {bands.length === 0 ? (
-          <p className="py-16 text-center text-[12px] text-gray-400 dark:text-gray-500">해당 조건의 프로모 딜이 없습니다 — 다른 유형·제품을 선택해 보세요</p>
+      <div className="overflow-x-auto">
+        {modelRows.length === 0 ? (
+          <p className="px-4 py-16 text-center text-[12px] text-gray-400 dark:text-gray-500">해당 조건의 제품이 없습니다</p>
         ) : (
-          <div className="flex flex-col gap-5">
-            {bands.map((band) => (
-              <section key={band.k}>
-                <div className="mb-2 flex items-center gap-2">
-                  <span className={"h-2 w-2 rounded-full " + band.dot} />
-                  <h3 className="text-[13px] font-bold text-gray-800 dark:text-gray-100">{band.k}</h3>
-                  <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[10px] font-semibold tabular-nums text-gray-500 dark:text-gray-400">{band.range}</span>
-                  <span className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{band.items.length}개</span>
-                  <span className="ml-2 h-px flex-1 bg-gray-100 dark:bg-gray-800" />
-                </div>
-                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                  {band.items.map((p, i) => {
-                    const own = p.brand === "LG"
-                    const disc = p.disc != null && p.disc > 0
-                    const tags = Array.from(p.tags)
-                    return (
-                      <a key={p.model + i} href={p.url ?? undefined} target={p.url ? "_blank" : undefined} rel="noopener noreferrer" className={"block rounded-lg border p-2.5 transition hover:shadow-sm " + (own ? "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50/40 dark:bg-indigo-500/5" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900")}>
-                        <div className="flex items-center gap-1.5">
-                          <span className={"text-[12px] font-bold " + (own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{p.brand}</span>
-                          {own ? <span className="rounded bg-indigo-100 dark:bg-indigo-500/20 px-1 py-px text-[9px] font-bold text-indigo-600 dark:text-indigo-300">자사</span> : null}
-                          {disc ? <span className="ml-auto rounded bg-rose-50 dark:bg-rose-500/10 px-1 py-px text-[10px] font-bold tabular-nums text-rose-600 dark:text-rose-400">-{Math.round(p.disc as number)}%</span> : null}
+        <table className="w-full min-w-[1000px] border-collapse text-left">
+          <thead>
+            <tr className="border-b border-gray-200 dark:border-gray-700">
+              <th className="sticky left-0 z-10 bg-white dark:bg-gray-900 px-4 py-2 text-[11px] font-bold text-gray-500 dark:text-gray-400">제품 / 유통</th>
+              {BOARD_SHOPS.map((s) => <th key={s.k} className="px-2 py-2 text-center"><div className="text-[12px] font-bold text-gray-700 dark:text-gray-200">{s.label}</div></th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {modelRows.slice(0, 120).map((r, ri) => (
+              <tr key={r.cc + ri} className={"border-b border-gray-100 dark:border-gray-800/60 last:border-0 " + (r.own ? "bg-indigo-50/40 dark:bg-indigo-500/5" : "")}>
+                <td className={"sticky left-0 z-10 px-4 py-2.5 align-top " + (r.own ? "bg-indigo-50 dark:bg-indigo-500/10" : "bg-white dark:bg-gray-900")}>
+                  <div className={"flex items-center gap-1.5 text-[12.5px] font-semibold " + (r.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>
+                    {r.own ? <span className="rounded bg-indigo-600 px-1 py-px text-[9px] font-bold text-white">자사</span> : <span className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-px text-[9px] font-medium text-gray-500 dark:text-gray-400">{r.brand}</span>}
+                    <span className="tabular-nums">{r.label}</span>
+                  </div>
+                </td>
+                {r.cells.map((c, i) => (
+                  <td key={i} className={"px-2 py-2.5 align-top " + (c?.low ? "bg-emerald-50/50 dark:bg-emerald-500/10" : "")}>
+                    {c ? (
+                      <a href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noopener noreferrer" className="flex flex-col items-center gap-1">
+                        <div className={"relative px-1.5 py-0.5 text-center " + (c.low ? "rounded-md ring-1 ring-emerald-300 dark:ring-emerald-500/40" : "")}>
+                          {c.list != null && c.list > c.net ? <div className="text-[10px] text-gray-400 line-through tabular-nums dark:text-gray-500">{peso(c.list)}</div> : null}
+                          <div className={"text-[13.5px] font-bold tabular-nums " + (c.low ? "text-emerald-700 dark:text-emerald-300" : "text-gray-900 dark:text-gray-50")}>{peso(c.net)}</div>
+                          {c.low ? <div className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-emerald-500" /> : null}
                         </div>
-                        <div className="mt-0.5 truncate text-[10px] text-gray-400 dark:text-gray-500" title={p.model}>{p.model}</div>
-                        <div className="mt-1 flex items-baseline gap-1.5">
-                          <span className={"text-[16px] font-bold tabular-nums " + (own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50")}>{peso(p.price)}</span>
-                          {p.srp != null && disc ? <span className="text-[10px] tabular-nums text-gray-400 line-through dark:text-gray-500">{peso(p.srp)}</span> : null}
-                        </div>
-                        <div className="mt-1.5 flex flex-wrap gap-1">
-                          {tags.length ? tags.map((t) => { const d = DEAL_TAGS.find((x) => x.k === t)!; return <span key={t} className={"rounded border px-1 py-px text-[10px] font-semibold " + d.c}>{t}</span> }) : <span className="text-[10px] text-gray-300 dark:text-gray-600">프로모 없음</span>}
-                        </div>
-                        <div className="mt-1.5 flex flex-wrap items-center gap-1 border-t border-gray-100 dark:border-gray-800 pt-1.5">
-                          {Array.from(p.retailers).slice(0, 4).map((r) => <span key={r} className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-px text-[9px] font-medium text-gray-500 dark:text-gray-400">{pmShopLabel(r)}</span>)}
-                          {p.retailers.size > 4 ? <span className="text-[9px] text-gray-400 dark:text-gray-500">+{p.retailers.size - 4}</span> : null}
+                        <div className="flex w-full flex-col items-stretch gap-0.5">
+                          {c.promo.map((p, pi) => <span key={pi} title={p.k + " · " + p.d} className={"flex items-center gap-1 whitespace-nowrap rounded px-1 py-px text-[9px] font-bold " + PROMO_CHIP[p.k]}><span className="shrink-0">{p.k}</span>{p.d !== p.k ? <span className="truncate font-semibold opacity-80">{p.d}</span> : null}</span>)}
                         </div>
                       </a>
-                    )
-                  })}
-                </div>
-              </section>
+                    ) : <div className="py-2 text-center text-[11px] text-gray-300 dark:text-gray-600">—</div>}
+                  </td>
+                ))}
+              </tr>
             ))}
-          </div>
+          </tbody>
+        </table>
         )}
       </div>
-      {/* 시사점 */}
-      <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-2.5">
-        <p className="flex items-start gap-1.5 text-[11px] leading-relaxed">
-          <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white">LG 시사점</span>
-          <span className="text-gray-600 dark:text-gray-300">{cat} <b className="text-gray-800 dark:text-gray-100">{effForm}</b> 세그먼트 <b>{products.length}모델</b>(자사 <b className="text-indigo-700 dark:text-indigo-300">{lgN}</b>) · 같은 가격대 경쟁사의 <b>프로모·번들·할부</b> 조건과 비교해 자사 대응 점검.</span>
-        </p>
+      <div className="grid grid-cols-3 gap-px border-t border-gray-100 dark:border-gray-800 bg-gray-100 dark:bg-gray-800 text-center">
+        <div className="bg-white dark:bg-gray-900 px-3 py-2.5"><p className="text-[11px] text-gray-500 dark:text-gray-400">표시 제품</p><p className="mt-0.5 text-[18px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{modelRows.length}<span className="text-[12px] font-medium text-gray-400"> 모델</span></p></div>
+        <div className="bg-white dark:bg-gray-900 px-3 py-2.5"><p className="text-[11px] text-gray-500 dark:text-gray-400">자사(LG)</p><p className="mt-0.5 text-[18px] font-bold tabular-nums text-indigo-600 dark:text-indigo-400">{lgRows.length}<span className="text-[12px] font-medium text-gray-400"> 모델</span></p></div>
+        <div className="bg-white dark:bg-gray-900 px-3 py-2.5"><p className="text-[11px] text-gray-500 dark:text-gray-400">진행 중 프로모</p><p className="mt-0.5 text-[18px] font-bold tabular-nums text-emerald-600 dark:text-emerald-400">{promoCount}<span className="text-[12px] font-medium text-gray-400"> 셀</span></p></div>
       </div>
     </div>
   )
