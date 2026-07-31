@@ -361,11 +361,13 @@ const RAC_FORMS = ["창문형", "벽걸이형", "포터블"]   // RAC 유형
 const SAC_FORMS = ["스탠드형", "시스템"]              // SAC 유형(스탠드·천장/카세트/멀티)
 const acFormOf = (m: string): string | null => {
   const s = m || ""
+  // 에어컨 아님(공기청정기·산소발생기·에어커튼·제습기 단독) → 배제
+  if (/air ?purifier|oxygen concentrat|air ?curtain|\bhepa\b|nebuli/i.test(s)) return null
   if (/portable|\bKAP-?\d/i.test(s)) return "포터블"
   if (/floor ?mount|floor ?standing|스탠드|\bstanding\b|\bZPNQ|53C[LN]V|53CFV|53KFV/i.test(s)) return "스탠드형"
   if (/cassette|ceiling|천장|\bmulti[- ]?split|multi[- ]?v\b|\bvrf\b|\bvrv\b|ducted|concealed|시스템|\bZTNQ|\bZ\dUQ|\bZVNQ|\bZUAB|AMNQ|\bAC0\d{2}[A-Z]/i.test(s)) return "시스템"
-  if (/window|창문|\bwdw\b|\bLA\d{3}|WCAR[A-Z]|WCON[A-Z]|WRAC|CW[- ]?[A-Z]{0,3}\d|TAC-?\d+CW|\bAW\d|\d+WC[A-Z]*\b/i.test(s)) return "창문형"
-  if (/split|wall[- ]?mount|벽걸이|HS[NU]?\d{2}|\bAR\d{2}|CS[/-]?CU|\bCS-?[A-Z]{0,2}\d|CSCU|MS[A-Z]{1,3}-?\d|FTK[A-Z]|TAC-?\d+CS|(?:CAC|CEP|CTD|CAH)\d|KA-?\d+M/i.test(s)) return "벽걸이형"
+  if (/window|창문|\bwdw\b|\bLA\d{3}|WCAR[A-Z]|WCON[A-Z]|WRAC|CW[- ]?[A-Z]{0,3}\d|TAC-?\d+CW|\bAW\d|\d+WC[A-Z]*\b|\bKAM ?\d|KAM-?\d|FP-?\d+ARA|MWMDP|HWTAC/i.test(s)) return "창문형"
+  if (/split|wall[- ]?mount|벽걸이|HS[NU]?\d{2}|\bAR\d{2}|CS[/-]?CU|\bCS-?[A-Z]{0,2}\d|CSCU|MS[A-Z]{1,3}-?\d|FTK[A-Z]|TAC-?\d+CS|(?:CAC|CEP|CTD|CAH)\d|KA-?\d+M|\bI?WAR[- ]?\d|\bWAM\d|\bHW-?\d\d|KS-?IW|\bKA-?\d+G|53GCV|53KPV|53CXV|FP ?53|FP\d{2}[A-Z]/i.test(s)) return "벽걸이형"
   return null
 }
 // 냉장고 도어형(유형) — 텍스트 + 브랜드 코드프리픽스(LG RV[SFTB]·Samsung R[SFTB]·Condura C**·Haier HR*)
@@ -377,6 +379,8 @@ const refFormOf = (m: string): string | null => {
   // 명시 타입 텍스트 우선(집계된 마케팅 텍스트/애매한 브랜드코드보다 신뢰) → 그다음 확실한 코드만 폴백
   if (/side by side|\bsxs\b|양문|instaview/i.test(s)) return "SxS"
   if (/french[- ]?door|multi[- ]?door|4[- ]?door|프렌치/i.test(s)) return "F/D"
+  // 퍼스널/바 냉장고는 '투도어' 표기가 있어도 소형 단문급 → 1Door 우선(3.5cu.ft급 소형 오분류 방지)
+  if (/personal ?(?:ref|refrig|fridge)|bar ?fridge|mini ?bar/i.test(s)) return "1Door"
   if (/top[- ]?mount|two[- ]?door|2[- ]?door|double[- ]?door|top ?freezer|상냉/i.test(s)) return "T/F"
   if (/bottom[- ]?(?:mount|freezer)|하냉|BMF/i.test(s)) return "B/F"
   if (/single[- ]?door|1[- ]?door|one[- ]?door|personal|mini ?(?:bar|fridge|refrig)/i.test(s)) return "1Door"
@@ -396,18 +400,21 @@ const refFormOf = (m: string): string | null => {
 }
 // 세탁기 로드형(유형)
 // 세탁기 카테고리에 건조기 포함 — 유형으로 구분. 워시타워/트윈/프론트/탑로드 + 건조기(단독)
-const WM_FORMS = ["F/L", "T/L", "Twin Tub", "W/T", "Dryer"]
+const WM_FORMS = ["F/L", "T/L", "Twin Tub", "Single Tub", "W/T", "Dryer"]
 const wmFormOf = (m: string): string | null => {
   const s = m || ""
   if (/wash ?tower|washtower|\bWT\d/i.test(s)) return "W/T"
   if (/twin ?(?:wash|tub)|twinwash/i.test(s)) return "Twin Tub"
-  // 단독 건조기(워셔/세탁 텍스트 없이 dryer만) → 건조기 (콤보·워시타워는 위에서 이미 처리)
-  if (/\bdryer\b|heat ?pump ?dry|drying machine/i.test(s) && !/\bwasher\b|washing/i.test(s)) return "Dryer"
+  // 단조(single tub)·스핀드라이 — 보급형 반자동 세탁기 (탑로드 자동과 구분)
+  if (/single ?tub|spin ?dry(?:er)?/i.test(s)) return "Single Tub"
+  // 단독 건조기(워셔/세탁/콤보 텍스트 없이 dryer만) → 건조기
+  if (/\bdryer\b|heat ?pump ?dry|drying machine/i.test(s) && !/\bwasher\b|washing|wash.{0,4}dry|combi/i.test(s)) return "Dryer"
   // 명시 로드형 텍스트 우선 → 코드 폴백(마케팅 텍스트 노이즈로 탑로드가 프론트로 오분류되던 문제)
   if (/top[- ]?load|topload/i.test(s)) return "T/L"
-  if (/front[- ]?load|frontload|\bdrum\b/i.test(s)) return "F/L"
-  if (/\bFV\d|\bWW\d|\bNA-?V|\bTWF/i.test(s)) return "F/L"
-  if (/\bT[0-9]\d{3}|\bWA\d|\bNA-?F|\bTWA|\bCWM|\bHWM/i.test(s)) return "T/L"
+  if (/front[- ]?load|frontload|\bdrum\b|washer ?dryer|combi|wash.{0,4}dry/i.test(s)) return "F/L"   // 세탁건조 콤보 포함
+  if (/\bFV\d|\bWW\d|\bNA-?V|\bTWF|\bWD\d|\bAWD|WWEB|\bESJN/i.test(s)) return "F/L"
+  if (/\bT[0-9]\d{3}|\bWA\d|\bNA-?[FW]|\bTWA|\bTWT|\bCWM|\bHWM|\bVHH|\bAWTM|\bMAW|\bMTW/i.test(s)) return "T/L"
+  if (/\bAHW|\bES-?WP|\bEWM|\bWM-\d|\bBWS|\bHSD|\bJWS/i.test(s)) return "Single Tub"   // 단조 코드 폴백
   return null
 }
 // TV 패널을 **등급(계열)**으로 통합 — 개별 패널명이 아니라 시장 등급으로:
@@ -483,7 +490,7 @@ const pmSizeBucket = (cat: string, model: string, capacity: string | null): stri
 }
 // 두 축 목록·매처 — 분류 안 되는 잔여는 "기타"로 흡수(필터에서 제품이 사라지지 않게)
 const ETC = "기타"
-const pmFormsFor = (c: string) => { const base = c === "RAC" ? RAC_FORMS : c === "SAC" ? SAC_FORMS : c === "냉장고" ? REF_FORMS : c === "세탁기" ? WM_FORMS : c === "TV" ? TV_FORMS : []; return base.length ? [...base, ETC] : [] }
+const pmFormsFor = (c: string) => { const base = c === "RAC" ? RAC_FORMS : c === "SAC" ? SAC_FORMS : c === "냉장고" ? REF_FORMS : c === "세탁기" ? WM_FORMS : c === "TV" ? TV_FORMS : []; if (!base.length) return []; return c === "냉장고" ? [...base] : [...base, ETC] }
 const pmFormHit = (cat: string, model: string, t: string, brand?: string) => { if (t === "전체") return true; const f = pmFormOf(cat, model, brand); return t === ETC ? f == null : f === t }
 const pmSizeList = (c: string) => { const base = isAC(c) ? PM_AC_HP.map((x) => x.t) : c === "냉장고" ? REF_SIZE : c === "세탁기" ? WM_SIZE : c === "TV" ? TV_SIZE : []; return base.length ? [...base, ETC] : [] }
 const pmSizeHit = (cat: string, model: string, capacity: string | null, t: string) => { if (t === "전체") return true; const b = isAC(cat) ? acHpBucket(model) : pmSizeBucket(cat, model, capacity); return t === ETC ? b == null : b === t }
@@ -636,7 +643,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
       {/* 상단 가로 필터 — 드롭다운 + 뉴스형 검색 + 최종갱신 */}
       <div className="relative z-20 flex flex-wrap items-center gap-2">
-        <div className="w-[140px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm("전체"); setShop("전체") }} /></div>
+        <div className="w-[70px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm("전체"); setShop("전체") }} /></div>
         {formList.length > 0 && <div className="w-[136px]"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...formList.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>}
         {sizeList.length > 0 && <div className="w-[130px]"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSpec} options={[{ k: "전체", t: "전체" }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
         <div className="w-[150px]"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
