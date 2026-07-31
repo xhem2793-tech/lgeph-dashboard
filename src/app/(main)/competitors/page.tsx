@@ -412,24 +412,20 @@ const wmFormOf = (m: string): string | null => {
   if (/\bT[0-9]\d{3}|\bWA\d|\bNA-?F|\bTWA|\bCWM|\bHWM/i.test(s)) return "탑로드"
   return null
 }
-// TV 패널(유형) — 모든 TV는 최소 LED로 귀결(미상 없음)
-const TV_FORMS = ["OLED", "QNED", "QLED", "ULED", "NanoCell", "MiniLED", "UHD", "FHD", "HD", "LED"]
-// 브랜드 인지 — LG는 QLED/ULED를 만들지 않는다(그 반대도). 모델단위 집계 시 어느 리테일의 마케팅
-//   텍스트("vs QLED" 등)가 섞여 LG UHD가 QLED로 오분류되던 문제를 브랜드 제약으로 근본 차단.
+// TV 패널을 **등급(계열)**으로 통합 — 개별 패널명이 아니라 시장 등급으로:
+//   OLED(자발광 최상) > QLED급(퀀텀닷·미니LED 프리미엄 LED: QLED·QNED·NanoCell·MiniLED·ULED·NeoQLED) > UHD(표준 4K) > FHD·HD(엔트리)
+//   근거: QNED/Neo QLED/Hi-QLED 모두 QLED와 동일 퀀텀닷 계열(2026 시장 통용). 브랜드 인지로 LG의 QLED 오분류 방지.
+const TV_FORMS = ["OLED", "QLED급", "UHD", "FHD·HD"]
 const tvFormOf = (m: string, brand?: string): string | null => {
   const s = m || ""
   const isLG = /^lg$/i.test(brand || "")
-  const isSam = /samsung/i.test(brand || "")
   if (/\boled\b/i.test(s)) return "OLED"
-  if (!isSam && /qned/i.test(s)) return "QNED"       // QNED = LG 전용
-  if (!isSam && /nano ?cell|\bnano\b/i.test(s)) return "NanoCell"  // NanoCell = LG 전용
-  if (!isLG && /qled/i.test(s)) return "QLED"        // LG는 QLED 불가 → 스킵
-  if (!isLG && /uled/i.test(s)) return "ULED"        // ULED = Hisense
-  if (/mini ?led|miniled/i.test(s)) return "MiniLED"
+  // QLED급(퀀텀닷/미니LED 프리미엄) — LG 고유(QNED/NanoCell/MiniLED)는 항상, QLED/ULED/NeoQLED는 비LG만
+  if (/qned|nano ?cell|\bnano\b|mini ?led|miniled/i.test(s)) return "QLED급"
+  if (!isLG && /qled|\buled\b|neo ?qled/i.test(s)) return "QLED급"
   if (/uhd|\b4k\b|crystal|\bUA\d|\bNU\d|\bUQ\d|\bUR\d|\bUT\d/i.test(s)) return "UHD"
-  if (/full ?hd|\bfhd\b/i.test(s)) return "FHD"
-  if (/\bhd\b/i.test(s)) return "HD"
-  if (/led ?tv|smart tv|google tv|\btv\b|signage|video ?wall|\d{2}[A-Z]/i.test(s)) return "LED"
+  if (/full ?hd|\bfhd\b|\bhd\b/i.test(s)) return "FHD·HD"
+  if (/led ?tv|smart tv|google tv|\btv\b|signage|video ?wall|\d{2}[A-Z]/i.test(s)) return "UHD"  // 그 외 스마트TV는 표준 4K로
   return null
 }
 const pmFormOf = (cat: string, m: string, brand?: string): string | null =>
