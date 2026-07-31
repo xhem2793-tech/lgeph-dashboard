@@ -1320,6 +1320,92 @@ function AnomalyView({ rows, stamp }: { rows: PriceRow[] | null; stamp: string |
   )
 }
 
+/** 일일 가격 변동 — 채널별 가격 비교와 동일 레이아웃. 유통 대신 날짜 컬럼(오늘/어제/그제) + 전일비 + 유통.
+ *  인하순/인상순 정렬. 데이터 v_competitor_3d(3일 실판매가). */
+function MoversView({ rows }: { rows: PriceRow[] | null }) {
+  const [cat, setCat] = React.useState("전체")
+  const [brand, setBrand] = React.useState("전체")
+  const [sortDir, setSortDir] = React.useState<"down" | "up">("down")
+  const [q, setQ] = React.useState("")
+  const R = rows ?? []
+  const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => R.some((r) => r.category === c))], [R])
+  const brandsL = React.useMemo(() => {
+    const m = new Map<string, number>()
+    R.filter((r) => cat === "전체" || r.category === cat).forEach((r) => { if (r.brand) m.set(r.brand, (m.get(r.brand) || 0) + 1) })
+    return ["전체", "LG", ...Array.from(m.entries()).filter(([b]) => b !== "LG").sort((a, b) => b[1] - a[1]).map((x) => x[0])]
+  }, [R, cat])
+  const kw = q.trim().toLowerCase()
+  const list = React.useMemo(() => {
+    const f = R.filter((r) => r.p0 != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && (brand === "전체" || r.brand === brand) && (!kw || (r.brand + " " + r.model + " " + (r.code || "")).toLowerCase().includes(kw)))
+    // 전일비 있는 것 우선, 방향순
+    return f.slice().sort((a, b) => {
+      const da = a.deltaPct, db = b.deltaPct
+      const va = da == null ? (sortDir === "down" ? 1 : -1) * 9e9 : da
+      const vb = db == null ? (sortDir === "down" ? 1 : -1) * 9e9 : db
+      return sortDir === "down" ? va - vb : vb - va
+    })
+  }, [R, cat, brand, kw, sortDir])
+  const moved = list.filter((r) => r.deltaPct != null && r.deltaPct !== 0).length
+  const dCol = (d: number) => d < 0 ? "text-blue-600 dark:text-blue-400" : "text-rose-600 dark:text-rose-400"
+  const dLabel = (d: number | null) => d == null || d === 0 ? <span className="text-gray-300 dark:text-gray-600">—</span> : <span className={"font-bold " + dCol(d)}>{d < 0 ? "▼" : "▲"}{Math.abs(d).toFixed(1)}%</span>
+
+  if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
+
+  return (
+    <div className="flex flex-col gap-2.5">
+      {/* 필터바 — 채널별 가격 비교와 동일 스타일 */}
+      <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setBrand("전체") }} /></div>
+        <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={setBrand} /></div>
+        <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-0.5 text-[11px] font-semibold">
+          <button type="button" onClick={() => setSortDir("down")} className={"rounded-md px-2.5 py-0.5 transition " + (sortDir === "down" ? "bg-white dark:bg-gray-900 text-blue-600 dark:text-blue-400 shadow-sm" : "text-gray-500 dark:text-gray-400")}>인하순</button>
+          <button type="button" onClick={() => setSortDir("up")} className={"rounded-md px-2.5 py-0.5 transition " + (sortDir === "up" ? "bg-white dark:bg-gray-900 text-rose-600 dark:text-rose-400 shadow-sm" : "text-gray-500 dark:text-gray-400")}>인상순</button>
+        </div>
+        <div className="relative ml-auto">
+          <svg className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="모델·브랜드 검색" className="w-[190px] rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-1.5 pl-8 pr-3 text-[12px] outline-none focus:border-indigo-400 dark:focus:border-indigo-500/50" />
+        </div>
+        <p className="w-full text-[11px] text-gray-500 dark:text-gray-400 sm:w-auto">오늘 변동 <b className="tabular-nums text-gray-700 dark:text-gray-200">{moved}</b>건 · 관측 <b className="tabular-nums text-gray-700 dark:text-gray-200">{list.length}</b></p>
+      </div>
+      {/* 매트릭스 — 유통 대신 날짜 컬럼 */}
+      <div className="overflow-auto rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ maxHeight: "72vh" }}>
+        <table className="w-full min-w-[880px] table-fixed border-collapse text-[12px]">
+          <colgroup>
+            <col style={{ width: 138 }} /><col style={{ width: 130 }} /><col style={{ width: 108 }} /><col style={{ width: 108 }} /><col style={{ width: 108 }} /><col style={{ width: 108 }} /><col style={{ width: 92 }} />
+          </colgroup>
+          <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
+            <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
+              <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">브랜드</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">모델</th>
+              <th className="border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-center">유통</th>
+              <th className="border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center">오늘</th>
+              <th className="border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center">어제</th>
+              <th className="border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center">그제</th>
+              <th className="border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center">전일비</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.length === 0 ? (
+              <tr><td colSpan={7} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">조건에 맞는 모델 없음</td></tr>
+            ) : list.slice(0, 400).map((r, ri) => (
+              <tr key={r.retailer + r.model + ri} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
+                <td className={"truncate whitespace-nowrap px-2 py-1.5 text-center text-[11.5px] font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")} title={r.brand}>{r.brand}</td>
+                <td className="truncate px-2 py-1.5 text-center font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code && r.code.length >= 4 && r.code !== "N/A" ? r.code : canonCode(r.model, r.code)}</td>
+                <td className="whitespace-nowrap border-r border-gray-100 dark:border-gray-800 px-2 py-1.5 text-center text-[11px] text-gray-500 dark:text-gray-400">{pmShopLabel(r.retailer)}</td>
+                <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums">{r.url ? <a href={r.url} target="_blank" rel="noreferrer" className="font-bold text-gray-900 hover:underline dark:text-gray-50">{peso(r.p0)}</a> : <span className="font-bold text-gray-900 dark:text-gray-50">{peso(r.p0)}</span>}</td>
+                <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.p1 != null ? peso(r.p1) : "—"}</td>
+                <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.p2 != null ? peso(r.p2) : "—"}</td>
+                <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-[11.5px]">{dLabel(r.deltaPct)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">오늘/어제/그제 = 최근 3일 실판매가 · 전일비 = (오늘−어제)/어제 · ▼ 인하(파랑)·▲ 인상(빨강) · 유통별 리스팅 · 상위 400건</p>
+    </div>
+  )
+}
+
 export default function Competitors() {
   const [view, setView] = React.useState("board")
   const [cat, setCat] = React.useState("전체")
@@ -1543,6 +1629,8 @@ export default function Competitors() {
             <DealsView rows={rows} deals={deals} />
           ) : view === "outlier" ? (
             <AnomalyView rows={rows} stamp={stamp} />
+          ) : view === "movers" ? (
+            <MoversView rows={rows} />
           ) : active?.status !== "live" ? (
             <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
               <p className="text-[13px] font-medium text-gray-600 dark:text-gray-300">{active?.desc}</p>
