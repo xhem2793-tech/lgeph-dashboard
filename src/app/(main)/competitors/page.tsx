@@ -152,13 +152,6 @@ const acHpNum = (m: string): number | null => {
 const acHpLabel = (m: string): string | null => { const h = acHpNum(m); return h == null ? null : (Number.isInteger(h) ? h.toFixed(1) : String(h)) + "HP" }
 // 포지셔닝/보드 스펙 필터 버킷 — PM_AC_HP 라벨과 일치
 const acHpBucket = (m: string): string | null => { const h = acHpNum(m); return h == null ? null : h <= 0.9 ? "0.75HP↓" : h <= 1.24 ? "1.0HP" : h <= 1.74 ? "1.5HP" : h <= 2.24 ? "2.0HP" : h <= 2.9 ? "2.5HP" : "3.0HP↑" }
-// 스펙 필터 매칭 — 에어컨은 HP 버킷(코드추론 포함), 그 외는 SEGMENTS 진열 세그먼트 정규식
-const pmSpecHit = (cat: string, model: string, specT: string) => {
-  if (specT === "전체") return true
-  if (isAC(cat)) return acHpBucket(model) === specT
-  const s = (SEGMENTS[cat] ?? []).find((x) => x.t === specT)
-  return s ? s.re.test(model) : true
-}
 
 // 스펙 도출 — 타입 기준(AC=HP, TV=패널, 세탁기=F/L·T/L, 냉장고=도어형). 모델명 우선, 없으면 capacity
 const pmSpecOf = (cat: string, model: string, capacity: string | null) => {
@@ -198,7 +191,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
   const goNewer = () => { if (!isLatest) setSelDate(dates[curIdx - 1]) }
   const pickDate = (v: string) => { if (!v) return; setSelDate(dates.find((d) => d <= v) ?? dates[dates.length - 1] ?? null) }
   const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => D.some((r) => r.category === c))], [D])
-  const segs = cat === "전체" ? [] : pmSpecsFor(cat)
+  const segs = cat === "전체" ? [] : pmFormsFor(cat).map((t) => ({ t }))
   const effSpec = spec === "전체" || segs.some((s) => s.t === spec) ? spec : "전체"
   // DOE ★ 인덱스(카테고리별)
   const starIdx = React.useMemo(() => {
@@ -213,7 +206,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
     // 전일(직전 데이터일) 최저가 인덱스 — canonCode|거래선 → 가격(▼▲ 전일 대비)
     const prevIdx: Record<string, number> = {}
     D.filter((r) => r.d === prevDate && r.price != null).forEach((r) => { const cc = canonCode(r.model, r.code); if (!cc) return; const k = cc + "|" + r.retailer; prevIdx[k] = Math.min(prevIdx[k] ?? Infinity, r.price as number) })
-    const f = D.filter((r) => r.d === curDate && r.price != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmSpecHit(cat, r.model, effSpec) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
+    const f = D.filter((r) => r.d === curDate && r.price != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmFormHit(cat, r.model, effSpec, r.brand) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
     const g: Record<string, DailyRow[]> = {}
     f.forEach((r) => { const cc = canonCode(r.model, r.code); (g[r.brand + "|" + cc] = g[r.brand + "|" + cc] || []).push(r) })
     const out: PivRow[] = Object.values(g).map((list) => {
@@ -338,7 +331,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
  *  세그먼트(프리미엄/미드/엔트리) 평균가·가격지수·취급 유통수. 자사(LG) 인디고 강조.
  *  제품(카테고리)·스펙(세그먼트) 선택. New DOE ★는 미수집 → 가격 세그먼트로 대체.   */
 // RAC(창문·벽걸이) / SAC(스탠드·천장·카세트·멀티·시스템) 분리. 건조기는 세탁기 안에 포함(유형으로 구분)
-const PM_CATS = ["RAC", "SAC", "냉장고", "TV", "세탁기"]
+const PM_CATS = ["냉장고", "세탁기", "TV", "RAC", "SAC"]
 const isAC = (c: string) => c === "RAC" || c === "SAC"
 // 가격대(tier) 절대 기준(₱) — 카테고리별 실판매가 분위(p25~p75)에 맞춘 시장 세그먼트. [엔트리상한, 프리미엄하한]
 //   예: 에어컨 ₱3만 미만 LOW · 3~6만 MED · 6만+ 프리미엄 (₱5만=MED). 상대백분위가 아니라 절대금액.
@@ -359,7 +352,6 @@ const PM_AC_HP: { t: string; re: RegExp }[] = [
   { t: "2.5HP", re: /2\.5 ?HP/i },
   { t: "3.0HP↑", re: /(3(\.0)?|3\.5|4(\.0)?|5(\.0)?) ?HP/i },
 ]
-const pmSpecsFor = (c: string) => (isAC(c) ? PM_AC_HP : (SEGMENTS[c] ?? []))
 // 에어컨 설치형태(유형) — HP(스펙)와 별개 축. 우선순위 분류(포터블→스탠드→창문→벽걸이) + 브랜드 코드 인지.
 //   Carrier WCAR*=창문·CAC/CEP/CTD=스플릿, Panasonic CW*=창문·CS/CU=스플릿, Samsung AR##=스플릿,
 //   Midea MS*=스플릿, TCL TAC##CW/CS, LG LA=창문·HS=스플릿, Condura WCON/WRAC=창문, Kolin KAP=포터블·KA##M=스플릿.
@@ -377,22 +369,22 @@ const acFormOf = (m: string): string | null => {
   return null
 }
 // 냉장고 도어형(유형) — 텍스트 + 브랜드 코드프리픽스(LG RV[SFTB]·Samsung R[SFTB]·Condura C**·Haier HR*)
-const REF_FORMS = ["SxS", "F/D", "T/F", "B/F", "1Door", "냉동고"]
+const REF_FORMS = ["SxS", "F/D", "T/F", "B/F", "1Door", "Freezer"]
 const refFormOf = (m: string): string | null => {
   const s = m || ""
   // 명시 타입 텍스트 우선(집계된 마케팅 텍스트/애매한 브랜드코드보다 신뢰) → 그다음 확실한 코드만 폴백
   if (/side by side|\bsxs\b|양문|instaview/i.test(s)) return "SxS"
-  if (/french ?door|multi ?door|4 ?door|프렌치/i.test(s)) return "F/D"
-  if (/top ?mount|two ?door|2[- ]?door|double ?door|상냉/i.test(s)) return "T/F"
-  if (/bottom ?(?:mount|freezer)|하냉|BMF/i.test(s)) return "B/F"
-  if (/single ?door|1[- ]?door|personal|mini ?bar/i.test(s)) return "1Door"
-  if (/chest|showcase|\bfreezer\b|upright|beverage/i.test(s)) return "냉동고"
+  if (/french[- ]?door|multi[- ]?door|4[- ]?door|프렌치/i.test(s)) return "F/D"
+  if (/top[- ]?mount|two[- ]?door|2[- ]?door|double[- ]?door|top ?freezer|상냉/i.test(s)) return "T/F"
+  if (/bottom[- ]?(?:mount|freezer)|하냉|BMF/i.test(s)) return "B/F"
+  if (/single[- ]?door|1[- ]?door|personal|mini ?bar/i.test(s)) return "1Door"
+  if (/chest|showcase|\bfreezer\b|upright|beverage/i.test(s)) return "Freezer"
   // 코드 폴백(LG RV*·Samsung R*·Condura C* — HRF 등 도어형 불명확 프리픽스는 제외)
   if (/\bRVS|\bRS\d/i.test(s)) return "SxS"
   if (/\bRVF|\bRF\d/i.test(s)) return "F/D"
   if (/\bRVT|\bRUT|\bRT\d|\bCTD|\bCMD/i.test(s)) return "T/F"
   if (/\bRUB|\bRVB|\bRB\d/i.test(s)) return "B/F"
-  if (/\bCUF|\bCTF|\bCCH|\bGR-?V|\bSC\d|\bHCF/i.test(s)) return "냉동고"
+  if (/\bCUF|\bCTF|\bCCH|\bGR-?V|\bSC\d|\bHCF/i.test(s)) return "Freezer"
   if (/\bCPR/i.test(s)) return "1Door"
   return null
 }
@@ -419,13 +411,19 @@ const TV_FORMS = ["OLED", "QLED급", "UHD", "FHD·HD"]
 const tvFormOf = (m: string, brand?: string): string | null => {
   const s = m || ""
   const isLG = /^lg$/i.test(brand || "")
+  // 액세서리(벽걸이 마운트·녹음기·셋톱박스)는 TV 아님 → 기타로 배제
+  if (/\bmount|bracket|\bVML|\bVLT|\bVXT|\bVST|affordabox|set-?top|ICD-/i.test(s)) return null
   if (/\boled\b/i.test(s)) return "OLED"
   // QLED급(퀀텀닷/미니LED 프리미엄) — LG 고유(QNED/NanoCell/MiniLED)는 항상, QLED/ULED/NeoQLED는 비LG만
   if (/qned|nano ?cell|\bnano\b|mini ?led|miniled/i.test(s)) return "QLED급"
   if (!isLG && /qled|\buled\b|neo ?qled/i.test(s)) return "QLED급"
-  if (/uhd|\b4k\b|crystal|\bUA\d|\bNU\d|\bUQ\d|\bUR\d|\bUT\d/i.test(s)) return "UHD"
-  if (/full ?hd|\bfhd\b|\bhd\b/i.test(s)) return "FHD·HD"
-  if (/led ?tv|smart tv|google tv|\btv\b|signage|video ?wall|\d{2}[A-Z]/i.test(s)) return "UHD"  // 그 외 스마트TV는 표준 4K로
+  const inch = tvInOf(s)
+  const explicit4k = /uhd|\b4k\b|crystal|\bUA\d|\bNU\d|\bUQ\d|\bUR\d|\bUT\d|WPREU\d/i.test(s)
+  // 소형(≤32˝)은 UHD 패널이 사실상 없음 → 명시 4K/UHD가 아니면 무조건 FHD·HD(2K·HD·720p 포함)
+  if (inch != null && inch <= 32 && !explicit4k) return "FHD·HD"
+  if (explicit4k) return "UHD"
+  if (/full ?hd|\bfhd\b|\b2k\b|\bhd\b/i.test(s)) return "FHD·HD"
+  if (/led ?tv|smart tv|google tv|\btv\b|signage|video ?wall|\d{2}[A-Z]/i.test(s)) return inch != null && inch < 40 ? "FHD·HD" : "UHD"
   return null
 }
 const pmFormOf = (cat: string, m: string, brand?: string): string | null =>
@@ -460,7 +458,9 @@ const wmKgOf = (s: string): number | null => {
 }
 const tvInOf = (s: string): number | null => {
   const v = _mnum(s, /(\d{2,3})\s*(?:inch|in\b|˝|")/i); if (v != null && v >= 20 && v <= 120) return v
-  let c = s.match(/\b(?:QA|UA|QN|QE|UN|KD|XR|TH|LH|OLED)(\d{2,3})/i)
+  let c = s.match(/\bWPREU(\d{2})/i)   // Prestiz WPREU{인치}{일련} — 앞 2자리=인치
+  if (c) { const n = parseInt(c[1], 10); if (n >= 20 && n <= 120) return n }
+  c = s.match(/\b(?:QA|UA|QN|QE|UN|KD|XR|TH|LH|OLED)(\d{2,3})/i)
   if (c) { const n = parseInt(c[1], 10); if (n >= 20 && n <= 120) return n }
   c = s.match(/\bH(\d{2,3})[A-Z]/i)
   if (c) { const n = parseInt(c[1], 10); if (n >= 20 && n <= 120) return n }
@@ -520,7 +520,7 @@ function PmDrop({ label, sel, options, onSelect }: { label: string; sel: string;
 }
 
 function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels: EnergyRow[] | null; stamp: string | null }) {
-  const [cat, setCat] = React.useState("RAC")
+  const [cat, setCat] = React.useState("냉장고")
   const [spec, setSpec] = React.useState("전체")
   const [form, setForm] = React.useState("전체")
   const [starF, setStarF] = React.useState("전체")
