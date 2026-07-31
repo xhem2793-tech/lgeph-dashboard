@@ -120,7 +120,7 @@ function Card({ a, onOpen, q = "" }: { a: CompAd; onOpen: () => void; q?: string
   const brief = briefBody(a.body)
   const ended = a.status === "종료"
   return (
-    <button onClick={onOpen} className={"group flex h-full w-full flex-col overflow-hidden rounded-xl bg-white dark:bg-gray-900 text-left transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99] " + (ended ? "opacity-70 hover:opacity-100" : "")}>
+    <button onClick={onOpen} className={"group flex h-full w-full flex-col overflow-hidden rounded-xl text-left transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99] " + (ended ? "opacity-70 hover:opacity-100" : "")}>
       <Thumb a={a} />
       <div className="flex flex-1 flex-col p-2.5">
         <div className="flex items-center gap-1.5">
@@ -174,7 +174,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
       onClick={close}
     >
       <div
-        className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl"
+        className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl shadow-2xl"
         style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
         onClick={(e) => e.stopPropagation()}
       >

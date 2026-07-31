@@ -123,7 +123,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
   })()
   return (
     <>
-    <div ref={(el) => { cardRef.current = el; (ref as React.MutableRefObject<HTMLDivElement | null>).current = el }} className="flex h-full flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: on ? "fadeUp .5s cubic-bezier(.16,1,.3,1) both" : undefined, animationDelay: Math.min(idx, 6) * 0.06 + "s", opacity: on ? undefined : 0 }}>
+    <div ref={(el) => { cardRef.current = el; (ref as React.MutableRefObject<HTMLDivElement | null>).current = el }} className="flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: on ? "fadeUp .5s cubic-bezier(.16,1,.3,1) both" : undefined, animationDelay: Math.min(idx, 6) * 0.06 + "s", opacity: on ? undefined : 0 }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {seg && <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-bold text-teal-700 dark:text-teal-300">{seg}</span>}
@@ -155,7 +155,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
     </div>
     {big && typeof document !== "undefined" && createPortal(
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 sm:p-8" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setBig(false)}>
-        <div className="flex max-h-[92vh] w-full max-w-[1100px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
+        <div className="flex max-h-[92vh] w-full max-w-[1100px] flex-col overflow-hidden rounded-2xl shadow-2xl" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
           <div className="flex shrink-0 items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
             <span className="h-[16px] w-1 rounded bg-teal-500" />
             <h3 className="text-[16px] font-bold text-gray-900 dark:text-gray-50">{title}</h3>
@@ -716,7 +716,7 @@ export default function EnergyLabelView() {
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-        <section className="min-w-0 rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-teal-500" />
             <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">에너지 효율</h2>
@@ -744,7 +744,7 @@ export default function EnergyLabelView() {
             <>
             {/* LG 커버리지 매트릭스 — 카테고리 전체(필터 무관). 잠시 숨김(false) — 복원 시 true로. */}
             {false && (
-            <div key={"cov-" + cat} className="mb-4 flex flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+            <div key={"cov-" + cat} className="mb-4 flex flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
               <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
                 <h3 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">LG {cur.label} 라인업 커버리지</h3>
                 <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-bold text-teal-700 dark:text-teal-300">전체 {coverage.lgTotal}개 모델</span>
@@ -801,7 +801,7 @@ export default function EnergyLabelView() {
 
       {simOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 sm:p-8" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setSimOpen(false)}>
-          <div className="w-full max-w-[560px] overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-[560px] overflow-hidden rounded-2xl shadow-2xl" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-teal-50/60 dark:bg-teal-500/10 px-4 py-3">
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
               <div className="flex-1"><div className="text-[15px] font-bold text-gray-900 dark:text-gray-50">전기요금 계산기</div><div className="text-[12px] text-gray-500 dark:text-gray-400">{cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k} · DOE 표준 월소비전력 기반</div></div>
@@ -815,7 +815,7 @@ export default function EnergyLabelView() {
 
       {modelOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 sm:p-8" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setModelOpen(false)}>
-          <div className="flex max-h-[92vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
+          <div className="flex max-h-[92vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-2xl shadow-2xl" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
               <span className="h-[16px] w-1 rounded bg-teal-500" />
               <h3 className="text-[16px] font-bold text-gray-900 dark:text-gray-50">모델별 상세 · {cur.label}</h3>

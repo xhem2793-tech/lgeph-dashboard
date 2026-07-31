@@ -111,7 +111,7 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
   if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[14px] text-gray-400 dark:text-gray-500">불러오는 중</div>
 
   return (
-    <div className="mt-3 overflow-hidden rounded-xl bg-white dark:bg-gray-900">
+    <div className="mt-3 overflow-hidden rounded-xl">
       <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
         <span className="h-4 w-1 rounded bg-indigo-500" />
         <h2 className="text-[18px] font-bold tracking-tight text-gray-900 dark:text-gray-50">동일 스펙 경쟁사 비교</h2>

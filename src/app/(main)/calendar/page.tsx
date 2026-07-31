@@ -189,7 +189,7 @@ export default function Calendar() {
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
           <div className="flex min-w-0 flex-col gap-4">
         <div
-          className="rounded-xl bg-white dark:bg-gray-900 p-4"
+          className="rounded-xl p-4"
           style={{ animation: "fadeUp .5s ease both" }}
         >
           <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
@@ -304,7 +304,7 @@ export default function Calendar() {
         </div>
 
       <div
-        className="rounded-xl bg-white dark:bg-gray-900 p-4"
+        className="rounded-xl p-4"
         style={{ animation: "fadeUp .5s ease both", animationDelay: "140ms" }}
       >
         <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
@@ -466,7 +466,7 @@ export default function Calendar() {
       </div>
           </div>
         <div className="flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both", animationDelay: "80ms" }}>
-          <div className="rounded-xl bg-white dark:bg-gray-900 p-4">
+          <div className="rounded-xl p-4">
             <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
               <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{label} 구성</h2>
               <span className="text-[12px] text-gray-400 dark:text-gray-500">최종 갱신 {stamp ? fmtStamp(stamp) : "—"}</span>
@@ -522,7 +522,7 @@ export default function Calendar() {
         >
           {modal ? (
             <div
-              className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl"
+              className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl shadow-2xl"
               style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
               onClick={(ev) => ev.stopPropagation()}
             >
@@ -602,7 +602,7 @@ export default function Calendar() {
             </div>
           ) : dayList ? (
             <div
-              className="relative flex max-h-[84vh] w-full max-w-[540px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl"
+              className="relative flex max-h-[84vh] w-full max-w-[540px] flex-col overflow-hidden rounded-2xl shadow-2xl"
               style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
               onClick={(ev) => ev.stopPropagation()}
             >

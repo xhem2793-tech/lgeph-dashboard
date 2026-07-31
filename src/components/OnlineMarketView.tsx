@@ -99,7 +99,7 @@ export default function OnlineMarketView() {
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-        <section className="min-w-0 rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-violet-500" />
             <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">온라인 시장</h2>

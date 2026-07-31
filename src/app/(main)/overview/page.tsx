@@ -99,7 +99,7 @@ export default function Overview() {
                 <CompetitorMovers />
               </div>
               {/* 주요 뉴스 — 금주 주요 이슈·가격 동향과 같은 카드 어법으로 묶음 */}
-              <section className="mt-6 rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
+              <section className="mt-6 rounded-xl p-3.5 transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
               <div className="mb-2 flex items-baseline justify-between gap-2 px-0.5">
                 <a href="/news" className="group flex items-baseline gap-1">
                   <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("news_title")}</h2>
@@ -205,7 +205,7 @@ export default function Overview() {
               </section>
 
               {/* ③ 일간 지표(환율·유가·날씨) — 뉴스와 같은 카드 어법 */}
-              <section className="mt-6 rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
+              <section className="mt-6 rounded-xl p-3.5 transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
                 <DailyIndicators />
               </section>
             </div>
@@ -214,7 +214,7 @@ export default function Overview() {
               <div className="mb-5">
                 <EconRail />
               </div>
-              <div className="rounded-xl bg-white dark:bg-gray-900 p-3 transition-shadow duration-300 hover:shadow-md">
+              <div className="rounded-xl p-3 transition-shadow duration-300 hover:shadow-md">
               <div className="flex items-center justify-between gap-2">
                 <a href="/calendar" className="group flex items-baseline gap-1">
                   <p className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("cal_title")}</p>
@@ -278,7 +278,7 @@ export default function Overview() {
         >
           {/* 뉴스 페이지(/news)와 동일한 팝업 — 결론(SO WHAT) 먼저, 본문은 문단으로 */}
           <div
-            className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl"
+            className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl shadow-2xl"
             style={{ animation: modalClosing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
             onClick={(e) => e.stopPropagation()}
           >

@@ -44,7 +44,7 @@ function TrendCard({ title, seg, unit, pts, color, dec, meaning, ai, src, delay 
   const last = pts[pts.length - 1]?.value, first = pts[0]?.value
   const chg = last != null && first != null ? last - first : null, up = (chg ?? 0) > 0
   return (
-    <div className="flex h-full flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: delay + "s" }}>
+    <div className="flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: delay + "s" }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>
@@ -116,7 +116,7 @@ export default function DailyTrends() {
       </div>
 
       {/* 마스터 통합 경제 지표 */}
-      <div className="rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".05s" }}>
+      <div className="rounded-xl p-4" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".05s" }}>
         <div className="mb-3 flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
           <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">통합 경제 지표</h2>

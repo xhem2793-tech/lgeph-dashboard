@@ -80,7 +80,7 @@ function MdBody({ text }: { text: string }) {
 
 const SHELL =
   "fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:items-center"
-const CARD = "my-auto w-full max-w-[880px] rounded-2xl bg-white dark:bg-gray-900 p-5 shadow-2xl"
+const CARD = "my-auto w-full max-w-[880px] rounded-2xl p-5 shadow-2xl"
 const ANIM = { animation: "apIn .24s cubic-bezier(.22,1,.36,1) both" }
 const CARD_BTN =
   "group flex w-full flex-col overflow-hidden rounded-lg border border-gray-100 dark:border-gray-800 p-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 hover:shadow-sm"

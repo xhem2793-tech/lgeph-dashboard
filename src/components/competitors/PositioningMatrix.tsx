@@ -158,7 +158,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
 
       {/* 매트릭스 */}
       <div className="overflow-x-auto">
-        <div ref={cardRef} className="overflow-hidden rounded-xl bg-white dark:bg-gray-900" style={{ minWidth: minW }}>
+        <div ref={cardRef} className="overflow-hidden rounded-xl" style={{ minWidth: minW }}>
           <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-4 w-1 rounded bg-indigo-500" />
             {(() => { const sp = effSpec !== "전체" ? effSpec : effForm !== "전체" ? effForm : ""; return (

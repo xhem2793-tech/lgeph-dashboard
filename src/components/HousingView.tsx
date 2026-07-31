@@ -80,7 +80,7 @@ export default function HousingView() {
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-      <section className="min-w-0 rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+      <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
         {/* 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
@@ -127,7 +127,7 @@ export default function HousingView() {
 
         {/* 지역별 인프라 투자 — DPWH (B2B 공조·빌트인 발주 환경) */}
         {infra.length > 0 && (
-          <div className="flex flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5 sm:col-span-2" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+          <div className="flex flex-col rounded-xl p-3.5 sm:col-span-2" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
             <div className="flex items-center gap-1.5">
               <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 인프라 투자 (DPWH)</h3>
               <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">B2B</span>

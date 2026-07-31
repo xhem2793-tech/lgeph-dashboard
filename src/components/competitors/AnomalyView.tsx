@@ -72,7 +72,7 @@ export function AnomalyView({ rows, stamp }: { rows: PriceRow[] | null; stamp: s
   return (
     <div className="mt-3 flex flex-col gap-3">
       {/* 요약·필터 */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl bg-white dark:bg-gray-900 px-4 py-2.5">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl px-4 py-2.5">
         <div className="flex flex-wrap gap-1.5">
           {["전체", "경보", "주의", "기회", "정보"].map((f) => <button key={f} type="button" onClick={() => setSev(f)} className={"whitespace-nowrap rounded-full px-3 py-1 text-[13px] font-semibold transition " + (f === sev ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800")}>{f}</button>)}
         </div>
@@ -85,7 +85,7 @@ export function AnomalyView({ rows, stamp }: { rows: PriceRow[] | null; stamp: s
       </div>
       {/* 피드 */}
       {days.length === 0 ? (
-        <p className="rounded-xl bg-white dark:bg-gray-900 py-16 text-center text-[14px] text-gray-400 dark:text-gray-500">감지된 이상치가 없습니다.</p>
+        <p className="rounded-xl py-16 text-center text-[14px] text-gray-400 dark:text-gray-500">감지된 이상치가 없습니다.</p>
       ) : days.map((g) => (
         <div key={g.dk}>
           <div className="mb-2 mt-1 flex items-center gap-2">
@@ -94,7 +94,7 @@ export function AnomalyView({ rows, stamp }: { rows: PriceRow[] | null; stamp: s
             <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[11px] font-bold tabular-nums text-gray-500 dark:text-gray-400">{g.items.length}</span>
             <span className="ml-1 h-px flex-1 bg-gray-100 dark:bg-gray-800" />
           </div>
-          <div className="overflow-hidden rounded-xl bg-white dark:bg-gray-900">
+          <div className="overflow-hidden rounded-xl">
             {g.items.map((a, i) => { const sv = SEV_META[a.sev]; return (
               <div key={a.id + i} className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 transition-colors last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/40">
                 <span className={"h-2 w-2 shrink-0 rounded-full " + sv.dot} />

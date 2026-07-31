@@ -832,7 +832,7 @@ export default function Page() {
             </span>
           </div>
           </header>
-        <section className="min-w-0 rounded-xl bg-white dark:bg-gray-900 p-4 transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}>
+        <section className="min-w-0 rounded-xl p-4 transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}>
 
           <div className="relative mt-3 lg:hidden">
             <svg
@@ -1047,7 +1047,7 @@ export default function Page() {
           onClick={closeModal}
         >
           <div
-            className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl"
+            className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl shadow-2xl"
             style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
             onClick={(ev) => ev.stopPropagation()}
           >

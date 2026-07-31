@@ -175,7 +175,7 @@ export default function CompetitorMovers() {
   const cell = "flex h-[21px] items-center justify-center overflow-hidden px-0.5"
 
   return (
-    <section className="flex h-full flex-col rounded-xl bg-white dark:bg-gray-900 p-3 transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <section className="flex h-full flex-col rounded-xl p-3 transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">

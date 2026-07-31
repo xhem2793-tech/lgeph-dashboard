@@ -134,7 +134,7 @@ export default function EconRail() {
   }, [])
 
   return (
-    <section className="rounded-xl bg-white dark:bg-gray-900 transition-shadow duration-300 hover:shadow-md">
+    <section className="rounded-xl transition-shadow duration-300 hover:shadow-md">
       <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 px-3.5 py-2.5">
         <a href="/economy" className="group flex items-baseline gap-1">
           <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("rail_title")}</h2>

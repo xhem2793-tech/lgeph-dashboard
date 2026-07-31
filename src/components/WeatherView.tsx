@@ -131,7 +131,7 @@ function QuakeStrip({ quakes }: { quakes: Quake[] }) {
 
 function Panel({ title, seg, children, meaning, src }: { title: string; seg?: string; children: React.ReactNode; meaning: React.ReactNode; src: React.ReactNode }) {
   return (
-    <div className="flex h-full flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {seg && <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>}

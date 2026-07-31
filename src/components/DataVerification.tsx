@@ -74,7 +74,7 @@ export default function DataVerification() {
       {bySource.map(([source, items]) => {
         const t = tier(source)
         return (
-          <section key={source} className="overflow-hidden rounded-xl bg-white dark:bg-gray-900" style={{ animation: "fadeUp .5s ease both" }}>
+          <section key={source} className="overflow-hidden rounded-xl" style={{ animation: "fadeUp .5s ease both" }}>
             <header className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
               <span className="h-[16px] w-1 rounded bg-indigo-500" />
               <h2 className="text-[15px] font-bold text-gray-900 dark:text-gray-50">{source}</h2>
