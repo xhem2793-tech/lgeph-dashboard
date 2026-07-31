@@ -157,14 +157,15 @@ const acHpLabel = (m: string): string | null => { const h = acHpNum(m); return h
 const acHpBucket = (m: string): string | null => { const h = acHpNum(m); return h == null ? null : h <= 0.9 ? "0.75HP↓" : h <= 1.24 ? "1.0HP" : h <= 1.74 ? "1.5HP" : h <= 2.24 ? "2.0HP" : h <= 2.9 ? "2.5HP" : "3.0HP↑" }
 
 // 스펙 도출 — 타입 기준(AC=HP, TV=패널, 세탁기=F/L·T/L, 냉장고=도어형). 모델명 우선, 없으면 capacity
-const pmSpecOf = (cat: string, model: string, capacity: string | null) => {
-  const m = model || ""
-  const cap = (capacity || "").trim()
-  if (cat === "RAC" || cat === "SAC") { const hp = acHpLabel(m); if (hp) return hp; if (/window|창문/i.test(m)) return "창문형"; if (/split|벽걸이/i.test(m)) return "스플릿"; if (/floor|ceiling|cassette|천장|스탠드/i.test(m)) return "스탠드"; return cap }
-  if (cat === "TV") { if (/oled/i.test(m)) return "OLED"; if (/qned/i.test(m)) return "QNED"; if (/nano ?cell/i.test(m)) return "NanoCell"; if (/qled/i.test(m)) return "QLED"; if (/uhd|4k/i.test(m)) return "UHD"; if (/fhd|full ?hd/i.test(m)) return "FHD"; if (/hd\b/i.test(m)) return "HD"; return cap }
-  if (cat === "세탁기") { if (/twin ?wash/i.test(m)) return "TwinWash"; if (/wash ?tower|워시타워/i.test(m)) return "W/T"; if (/front ?load|drum|프론트/i.test(m)) return "F/L"; if (/top ?load|탑로드/i.test(m)) return "T/L"; return cap }
-  if (cat === "냉장고") { if (/side by side|sxs|양문/i.test(m)) return "SxS"; if (/instaview|인스타뷰/i.test(m)) return "InstaView"; if (/french|multi ?door|멀티도어|프렌치/i.test(m)) return "French"; if (/bottom|하냉/i.test(m)) return "BMF"; if (/top ?mount|two ?door|2 ?door|상냉/i.test(m)) return "2-Door"; return cap }
-  return cap
+// 보드 표시 스펙 — 포지셔닝과 동일한 정확 분류기(유형=브랜드코드 맵핑 포함) + 사이즈 버킷. 미매핑 최소화.
+const pmSpecOf = (cat: string, model: string, capacity: string | null, brand?: string) => {
+  const s = (model || "") + " " + (capacity || "")
+  const form = pmFormOf(cat, s, brand)                          // 정확 유형(SxS/F/D/OLED/창문형 등, 브랜드코드 폴백)
+  const size = isAC(cat) ? acHpLabel(model || "") : (() => { const b = pmSizeBucket(cat, model || "", capacity); return b })()
+  if (form && size) return form + " · " + size
+  if (form) return form
+  if (size) return size
+  return (capacity || "").trim().slice(0, 22)
 }
 // 거래선 병합용 정규 코드 — 모델명+코드에서 영문+숫자 혼합 최장 토큰(≥5) 추출(거래선마다 다른 표기 흡수)
 const canonCode = (model: string, code: string | null) => {
@@ -227,7 +228,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
       const max = prices.length ? Math.max(...prices) : null
       const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
       const srps = list.map((x) => x.srp).filter((v): v is number => v != null)
-      return { cat: r0.category, brand: r0.brand, code: cc || r0.code, model: r0.model, capacity: pmSpecOf(r0.category, r0.model, r0.capacity), srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
+      return { cat: r0.category, brand: r0.brand, code: cc || r0.code, model: r0.model, capacity: pmSpecOf(r0.category, r0.model, r0.capacity, r0.brand), srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
     })
     const dir = sort.asc ? 1 : -1
     const shopIdx = BOARD_SHOPS.findIndex((s) => s.k === sort.k)
