@@ -546,7 +546,7 @@ function PmDrop({ label, sel, options, onSelect }: { label: string; sel: string;
 function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels: EnergyRow[] | null; stamp: string | null }) {
   const [cat, setCat] = React.useState("냉장고")
   const [spec, setSpec] = React.useState("전체")
-  const [form, setForm] = React.useState("전체")
+  const [form, setForm] = React.useState("SxS")   // 유형 기본값(전체 없음) — 냉장고×SxS
   const [starF, setStarF] = React.useState("전체")
   const [shop, setShop] = React.useState("전체")
   const [q, setQ] = React.useState("")
@@ -575,7 +575,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const sizeList = pmSizeList(cat)   // 스펙(사이즈) 축: 에어컨=HP · 냉장고=cu.ft · 세탁기=kg · TV=인치
   const formList = pmFormsFor(cat)   // 유형(형태) 축: 에어컨=창문/벽걸이/스탠드 · 그 외=SEGMENTS(도어/패널/로드)
   const effSpec = spec === "전체" || sizeList.includes(spec) ? spec : "전체"
-  const effForm = form === "전체" || formList.includes(form) ? form : "전체"
+  const effForm = formList.includes(form) ? form : (formList[0] ?? form)   // 유형 '전체' 없음 → 미매칭 시 첫 유형
   const effShop = shop === "전체" || shopList.includes(shop) ? shop : "전체"
   const exact = effShop !== "전체" // 거래선 지정 시 평균이 아니라 그 거래선 정확 단가
 
@@ -663,8 +663,8 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
       {/* 상단 가로 필터 — 드롭다운 + 뉴스형 검색 + 최종갱신 */}
       <div className="relative z-20 flex flex-wrap items-center gap-2">
-        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm("전체"); setShop("전체") }} /></div>
-        {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...formList.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>}
+        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm(pmFormsFor(k)[0] ?? "전체"); setShop("전체") }} /></div>
+        {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={setForm} /></div>}
         {sizeList.length > 0 && <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSpec} options={[{ k: "전체", t: "전체" }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
         <div className="w-fit"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
         <div className="w-fit"><PmDrop label="에너지" sel={starF} options={["전체", "★5", "★4", "★3↓"].map((s) => ({ k: s, t: s }))} onSelect={setStarF} /></div>
