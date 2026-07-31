@@ -1,0 +1,22 @@
+name: 분류기 정확도 회귀 테스트
+
+# 분류 로직(canonCode·유형·사이즈)을 바꿀 때 기존 정답이 깨지는지 자동 검사.
+#  · main push + PR에서 실행 → 실패 시 병합 전에 회귀를 잡는다.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm ci
+      - name: 분류기 골든셋 테스트
+        run: npm test
