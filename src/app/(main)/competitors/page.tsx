@@ -33,7 +33,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
   {
     group: "매일 보는 것",
     items: [
-      { key: "board", no: 0, label: "오늘의 가격 비교", desc: "5개 거래선 × 대표 제품 오늘가 매트릭스", status: "live" },
+      { key: "board", no: 0, label: "채널별 가격 비교", desc: "거래선 × 대표 제품 오늘가 매트릭스 · 동일모델 유통 최저가", status: "live" },
       { key: "movers", no: 1, label: "일일 가격 변동", desc: "3일 가격·변동폭·할인율", status: "live" },
       { key: "outlier", no: 12, label: "이상치 알림", desc: "임계 초과 급변 · VALIDATION REQ", status: "next" },
     ],
@@ -51,7 +51,6 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
     items: [
       { key: "promo", no: 4, label: "프로모션 트래커", desc: "브랜드별 프로모 강도 · 유통 캠페인", status: "live" },
       { key: "deals", no: 14, label: "프로모 딜", desc: "실딜 리스트 · 할인율·무료배송·번들·쿠폰 · 유통별", status: "live" },
-      { key: "channel", no: 6, label: "채널별 가격 비교", desc: "동일모델 유통 최저가 · 온·오프 격차", status: "plan" },
     ],
   },
   {
@@ -158,23 +157,17 @@ const acHpBucket = (m: string): string | null => { const h = acHpNum(m); return 
 
 // 스펙 도출 — 타입 기준(AC=HP, TV=패널, 세탁기=F/L·T/L, 냉장고=도어형). 모델명 우선, 없으면 capacity
 // 보드 표시 스펙 — 포지셔닝과 동일한 정확 분류기(유형=브랜드코드 맵핑 포함) + 사이즈 버킷. 미매핑 최소화.
-const pmSpecOf = (cat: string, model: string, capacity: string | null, brand?: string) => {
-  const s = (model || "") + " " + (capacity || "")
-  const form = pmFormOf(cat, s, brand)                          // 정확 유형(SxS/F/D/OLED/창문형 등, 브랜드코드 폴백)
-  const size = isAC(cat) ? acHpLabel(model || "") : (() => { const b = pmSizeBucket(cat, model || "", capacity); return b })()
-  if (form && size) return form + " · " + size
-  if (form) return form
-  if (size) return size
-  return (capacity || "").trim().slice(0, 22)
-}
 // 거래선 병합용 정규 코드 — 모델명+코드에서 영문+숫자 혼합 최장 토큰(≥5) 추출(거래선마다 다른 표기 흡수)
+// 측정단위 토큰(3.5CUFT·8KG·1.5HP·300L 등)은 모델코드가 아님 → canonCode 후보에서 제외.
+const _CANON_NOISE = /^(?:\d*(?:CUFT|CUF|CFT|CU)|\d+(?:KG|HP|LITERS?|LITRES?|WATTS?|INCH|MM|CM)|\d+L)$/
 const canonCode = (model: string, code: string | null) => {
   const pre = code && code.length >= 4 && !/^[≈]/.test(code) && code !== "N/A" ? code + " " : ""
-  const src = (pre + (model || "")).toUpperCase().replace(/[^A-Z0-9 -]/g, " ")
-  const toks = src.split(/[\s-]+/).filter((x) => /[A-Z]/.test(x) && /\d/.test(x) && x.length >= 5)
+  // 하이픈/점으로 끊긴 모델코드 결합(RBT-35SL→RBT35SL·3.5CUFT→35CUFT) 후 나머지 기호는 공백
+  const src = (pre + (model || "")).toUpperCase().replace(/([A-Z0-9])[-.]([A-Z0-9])/g, "$1$2").replace(/[^A-Z0-9 ]/g, " ")
+  const toks = src.split(/\s+/).filter((x) => /[A-Z]/.test(x) && /\d/.test(x) && x.length >= 5 && !_CANON_NOISE.test(x))
   return toks.sort((a, b) => b.length - a.length)[0] || ""
 }
-type PivRow = { cat: string; brand: string; code: string; model: string; capacity: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
+type PivRow = { cat: string; brand: string; code: string; model: string; form: string | null; size: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
 function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp: string | null; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("전체")
   const [spec, setSpec] = React.useState("전체")
@@ -228,7 +221,9 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
       const max = prices.length ? Math.max(...prices) : null
       const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
       const srps = list.map((x) => x.srp).filter((v): v is number => v != null)
-      return { cat: r0.category, brand: r0.brand, code: cc || r0.code, model: r0.model, capacity: pmSpecOf(r0.category, r0.model, r0.capacity, r0.brand), srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
+      const _form = pmFormOf(r0.category, r0.model + " " + (r0.capacity || ""), r0.brand)
+      const _size = isAC(r0.category) ? acHpLabel(r0.model || "") : pmSizeBucket(r0.category, r0.model, r0.capacity)
+      return { cat: r0.category, brand: r0.brand, code: cc || r0.code, model: r0.model, form: _form, size: _size, srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
     })
     const dir = sort.asc ? 1 : -1
     const shopIdx = BOARD_SHOPS.findIndex((s) => s.k === sort.k)
@@ -286,7 +281,8 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
               <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">분류</th>
               <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("code")}>모델{arrow("code")}</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title="New DOE 에너지등급">★</th>
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">스펙</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">유형</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">용량</th>
               <th className="whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-center">SRP</th>
               {BOARD_SHOPS.map((s) => (
                 <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
@@ -299,14 +295,15 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
             {loading ? (
               <tr><td colSpan={BOARD_SHOPS.length + 8} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">불러오는 중…</td></tr>
             ) : data.length === 0 ? (
-              <tr><td colSpan={BOARD_SHOPS.length + 8} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">조건에 맞는 모델 없음</td></tr>
+              <tr><td colSpan={BOARD_SHOPS.length + 9} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">조건에 맞는 모델 없음</td></tr>
             ) : data.slice(0, 300).map((r, ri) => (
               <tr key={curDate + r.brand + r.code + ri} style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s" }} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
-                <td className="px-2 py-1.5 font-semibold text-indigo-700 dark:text-indigo-300">{r.brand}</td>
-                <td className="truncate px-2 py-1.5 text-[10.5px] text-gray-500 dark:text-gray-400">{r.cat}</td>
+                <td className="px-2 py-1.5 text-center font-semibold text-indigo-700 dark:text-indigo-300">{r.brand}</td>
+                <td className="px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400">{r.cat}</td>
                 <td className="truncate px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code}</td>
                 <td className="px-1 py-1.5 text-center">{r.star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(r.star)}>★{r.star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
-                <td className="truncate px-2 py-1.5 text-[11px] text-gray-500 dark:text-gray-400">{r.capacity || "—"}</td>
+                <td className="px-2 py-1.5 text-center text-[11px] text-gray-500 dark:text-gray-400">{r.form || "—"}</td>
+                <td className="px-2 py-1.5 text-center text-[11px] tabular-nums text-gray-500 dark:text-gray-400">{r.size || "—"}</td>
                 <td className="border-r border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
                 {r.cells.map((c, i) => (
                   <td key={i} className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums" style={c && r.min != null && c.price === r.min ? { background: "rgba(16,185,129,0.08)" } : undefined}>
@@ -553,9 +550,18 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const [q, setQ] = React.useState("")
   const [focused, setFocused] = React.useState(false)
   const [dling, setDling] = React.useState(false)
-  const [logY, setLogY] = React.useState(false)   // 세로축 스케일: false=기본(선형), true=로그(가격 범위 넓을 때 압축)
+  const [logY, setLogY] = React.useState(true)   // 세로축 스케일 기본=로그(가격 범위 넓어 저가 구간 펼침), Auto=선형
   const cardRef = React.useRef<HTMLDivElement>(null)
   const R = rows ?? []
+  // 모델명 검색 → 그 모델이 속한 분류(제품·유형)로 자동 이동. 현재 화면에 없고 다른 분류에 있으면 전환.
+  React.useEffect(() => {
+    const kw = q.trim().toLowerCase()
+    if (kw.length < 2) return
+    const inCur = R.some((r) => r.category === cat && ((r.model || "") + " " + (r.code || "")).toLowerCase().includes(kw))
+    if (inCur) return
+    const hit = R.find((r) => PM_CATS.includes(r.category) && ((r.model || "") + " " + (r.code || "")).toLowerCase().includes(kw))
+    if (hit) { setCat(hit.category); const f = pmFormOf(hit.category, (hit.model || "") + " " + (hit.capacity || ""), hit.brand); setForm(f ?? pmFormsFor(hit.category)[0] ?? "전체") }
+  }, [q, R]) // eslint-disable-line
   // 화면 플롯 높이 940(뉴스처럼 길게). 이미지 다운로드 시엔 이전 PPT 슬라이드 비율(560)로 압축 캡처
   const [H, setH] = React.useState(940)
   const PAD = 18, BOTTOM = 14, CARD_H = 56, CARD_W = 116, GAP = 50, GUT = 50
@@ -631,9 +637,8 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
       const models = Object.entries(g).map(([code, list]) => {
         const best = list.reduce((a, x) => ((x.p0 ?? Infinity) < (a.p0 ?? Infinity) ? x : a))
         const kwhs = list.map((x) => x.kwh).filter((v): v is number => v != null).sort((a, x) => a - x)
-        // 거래선=전체 → 거래선 평균가(모델당 카드 1개), 특정 거래선 → 그 거래선 가격(list가 이미 해당 거래선만)
-        const prices = list.map((x) => x.p0).filter((v): v is number => v != null)
-        const price = effShop === "전체" && prices.length ? prices.reduce((s, v) => s + v, 0) / prices.length : (best.p0 as number)
+        // 같은 모델(canonCode)로 병합 후 가격 = 최저가 기준(거래선 전체·특정 무관)
+        const price = best.p0 as number
         // 재고: 모든 리스팅이 OutOfStock이면 품절(하나라도 InStock이면 재고있음)
         const oos = list.length > 0 && list.every((x) => x.availability === "OutOfStock")
         return { code, price, url: best.url ?? null, retailer: best.retailer ?? null, shops: new Set(list.map((x) => x.retailer)).size, n: list.length, star: modeStar(list.map((x) => x.star)), kwh: kwhs.length ? kwhs[Math.floor(kwhs.length / 2)] : null, oos }
@@ -700,7 +705,6 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
                 {dling ? "생성중…" : "이미지"}
               </button>
-              <span className="rounded border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-gray-500 dark:text-gray-400">내부용</span>
             </div>
           </header>
 
@@ -733,8 +737,8 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
                 <div className="relative flex-1" style={{ height: plotH }}>
                   {/* 좌측 세로축(absolute → 컬럼 폭에 영향 없음, 정렬 유지) */}
                   <div className="pointer-events-none absolute inset-y-0 left-0 border-l-2 border-gray-200 dark:border-gray-700" />
-                  {/* 중간 가격대(MED) 밴드 — 절대 기준(PM_TIER_BANDS) 구간을 회색 배경으로 */}
-                  {(() => { const b = PM_TIER_BANDS[cat] || [25000, 60000]; const t = topFor(Math.min(b[1], gmax)); const bot = topFor(Math.max(b[0], gmin)); return <div className="pointer-events-none absolute inset-x-0 bg-gray-100/70 dark:bg-gray-800/30" style={{ top: t, height: Math.max(0, bot - t) }} /> })()}
+                  {/* 중간 가격대(MED) 밴드 — 절대 기준(PM_TIER_BANDS) 구간 강조(상·하단 점선 경계 + 옅은 파랑 배경) */}
+                  {(() => { const b = PM_TIER_BANDS[cat] || [25000, 60000]; const t = topFor(Math.min(b[1], gmax)); const bot = topFor(Math.max(b[0], gmin)); return <div className="pointer-events-none absolute inset-x-0 border-y border-dashed border-sky-300/70 dark:border-sky-500/30 bg-sky-50/60 dark:bg-sky-500/10" style={{ top: t, height: Math.max(0, bot - t) }} /> })()}
                   {ticks.map((v) => (
                     <div key={v} className="pointer-events-none absolute inset-x-0 border-t border-gray-200/80 dark:border-gray-700/60" style={{ top: topFor(v) }} />
                   ))}
@@ -792,7 +796,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
           </footer>
         </div>
         <p className="mt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">
-          세로축 = <b className="text-gray-500 dark:text-gray-300">{exact ? pmShopLabel(effShop) + " 현금가" : "거래선 평균가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-500 dark:text-indigo-400">LG</b>) · 카드 = 모델별(우상단 ★=New DOE 등급) · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 브랜드별 전체 모델 · 카드 클릭 → 원문
+          세로축 = <b className="text-gray-500 dark:text-gray-300">{exact ? pmShopLabel(effShop) + " 현금가" : "거래선 최저 현금가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-500 dark:text-indigo-400">LG</b>) · 카드 = 모델별(동일모델 거래선 병합, 우상단 ★=New DOE) · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 원문
         </p>
         <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">New DOE ★ = <b className="text-gray-500 dark:text-gray-400">2026 개정 에너지효율등급</b>(energy_labels 모델코드 {DOE_CODE[cat] || "-"} 매칭) · 가격 데이터 <b className="tabular-nums">{stamp ? fmtStamp(stamp) : "—"}</b> 기준 조인</p>
         <p className="mt-1 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">
