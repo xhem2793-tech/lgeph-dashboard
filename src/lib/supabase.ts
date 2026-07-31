@@ -470,6 +470,7 @@ export type PriceRow = {
   delta3Pct: number | null
   discountPct: number | null
   url: string | null
+  availability: string | null
 }
 
 /** HTML 엔티티 정리 — 스크래핑 원문에 &#8211; &amp; 등이 섞여 들어온다 */
@@ -598,6 +599,7 @@ export async function competitorTable(max = 6000): Promise<PriceRow[]> {
       delta3Pct: p0 != null && p2 != null && p2 !== 0 ? ((p0 - p2) / p2) * 100 : null,
       discountPct: num(r.discount_pct),
       url: r.url ?? null,
+      availability: r.availability ?? null,
     }
   })
 }
