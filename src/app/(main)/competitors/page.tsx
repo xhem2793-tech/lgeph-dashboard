@@ -72,7 +72,7 @@ const AC_EXTRA_BRANDS = ["Kolin", "Daikin"]
 const BRANDS = [...SHOWN_BRANDS, ...AC_EXTRA_BRANDS]
 // 카테고리 기준 노출 여부: 공통 9개는 전 카테고리, Kolin·Daikin은 에어컨만
 const brandShown = (brand: string, category: string) =>
-  SHOWN_BRANDS.includes(brand) || (category === "에어컨" && AC_EXTRA_BRANDS.includes(brand))
+  SHOWN_BRANDS.includes(brand) || (isAC(category) && AC_EXTRA_BRANDS.includes(brand))
 const SHOPS = ["Anson's", "Abenson", "SM Appliance", "Western Appliances", "Robinsons Appliances", "Emcor", "Addessa"]
 
 /** 세그먼트 — 유통 매장이 실제로 진열을 나누는 축(설치형태·도어·급) */
@@ -155,7 +155,7 @@ const acHpBucket = (m: string): string | null => { const h = acHpNum(m); return 
 // 스펙 필터 매칭 — 에어컨은 HP 버킷(코드추론 포함), 그 외는 SEGMENTS 진열 세그먼트 정규식
 const pmSpecHit = (cat: string, model: string, specT: string) => {
   if (specT === "전체") return true
-  if (cat === "에어컨") return acHpBucket(model) === specT
+  if (isAC(cat)) return acHpBucket(model) === specT
   const s = (SEGMENTS[cat] ?? []).find((x) => x.t === specT)
   return s ? s.re.test(model) : true
 }
@@ -164,7 +164,7 @@ const pmSpecHit = (cat: string, model: string, specT: string) => {
 const pmSpecOf = (cat: string, model: string, capacity: string | null) => {
   const m = model || ""
   const cap = (capacity || "").trim()
-  if (cat === "에어컨") { const hp = acHpLabel(m); if (hp) return hp; if (/window|창문/i.test(m)) return "창문형"; if (/split|벽걸이/i.test(m)) return "스플릿"; if (/floor|ceiling|cassette|천장|스탠드/i.test(m)) return "스탠드"; return cap }
+  if (cat === "RAC" || cat === "SAC") { const hp = acHpLabel(m); if (hp) return hp; if (/window|창문/i.test(m)) return "창문형"; if (/split|벽걸이/i.test(m)) return "스플릿"; if (/floor|ceiling|cassette|천장|스탠드/i.test(m)) return "스탠드"; return cap }
   if (cat === "TV") { if (/oled/i.test(m)) return "OLED"; if (/qned/i.test(m)) return "QNED"; if (/nano ?cell/i.test(m)) return "NanoCell"; if (/qled/i.test(m)) return "QLED"; if (/uhd|4k/i.test(m)) return "UHD"; if (/fhd|full ?hd/i.test(m)) return "FHD"; if (/hd\b/i.test(m)) return "HD"; return cap }
   if (cat === "세탁기") { if (/twin ?wash/i.test(m)) return "TwinWash"; if (/wash ?tower|워시타워/i.test(m)) return "워시타워"; if (/front ?load|drum|프론트/i.test(m)) return "F/L"; if (/top ?load|탑로드/i.test(m)) return "T/L"; return cap }
   if (cat === "냉장고") { if (/side by side|sxs|양문/i.test(m)) return "SxS"; if (/instaview|인스타뷰/i.test(m)) return "InstaView"; if (/french|multi ?door|멀티도어|프렌치/i.test(m)) return "French"; if (/bottom|하냉/i.test(m)) return "BMF"; if (/top ?mount|two ?door|2 ?door|상냉/i.test(m)) return "2-Door"; return cap }
@@ -337,11 +337,14 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
  *  세로=5개 유통 평균 단가(위=고가), 가로=브랜드(좌 저가→우 고가). 카드=브랜드×가격
  *  세그먼트(프리미엄/미드/엔트리) 평균가·가격지수·취급 유통수. 자사(LG) 인디고 강조.
  *  제품(카테고리)·스펙(세그먼트) 선택. New DOE ★는 미수집 → 가격 세그먼트로 대체.   */
-const PM_CATS = ["에어컨", "냉장고", "TV", "세탁기"]
+// RAC(창문·벽걸이) / SAC(스탠드·천장·카세트·멀티·시스템) 분리. 건조기는 세탁기 안에 포함(유형으로 구분)
+const PM_CATS = ["RAC", "SAC", "냉장고", "TV", "세탁기"]
+const isAC = (c: string) => c === "RAC" || c === "SAC"
 // 가격대(tier) 절대 기준(₱) — 카테고리별 실판매가 분위(p25~p75)에 맞춘 시장 세그먼트. [엔트리상한, 프리미엄하한]
 //   예: 에어컨 ₱3만 미만 LOW · 3~6만 MED · 6만+ 프리미엄 (₱5만=MED). 상대백분위가 아니라 절대금액.
 const PM_TIER_BANDS: Record<string, [number, number]> = {
-  "에어컨": [30000, 60000],
+  "RAC": [30000, 60000],
+  "SAC": [60000, 120000],
   "TV": [35000, 80000],
   "냉장고": [25000, 55000],
   "세탁기": [22000, 50000],
@@ -356,13 +359,14 @@ const PM_AC_HP: { t: string; re: RegExp }[] = [
   { t: "2.5HP", re: /2\.5 ?HP/i },
   { t: "3.0HP↑", re: /(3(\.0)?|3\.5|4(\.0)?|5(\.0)?) ?HP/i },
 ]
-const pmSpecsFor = (c: string) => (c === "에어컨" ? PM_AC_HP : (SEGMENTS[c] ?? []))
+const pmSpecsFor = (c: string) => (isAC(c) ? PM_AC_HP : (SEGMENTS[c] ?? []))
 // 에어컨 설치형태(유형) — HP(스펙)와 별개 축. 우선순위 분류(포터블→스탠드→창문→벽걸이) + 브랜드 코드 인지.
 //   Carrier WCAR*=창문·CAC/CEP/CTD=스플릿, Panasonic CW*=창문·CS/CU=스플릿, Samsung AR##=스플릿,
 //   Midea MS*=스플릿, TCL TAC##CW/CS, LG LA=창문·HS=스플릿, Condura WCON/WRAC=창문, Kolin KAP=포터블·KA##M=스플릿.
 // 유형 우선순위: 포터블 → 스탠드(플로어) → 시스템(SAC: 카세트·천장·멀티·VRF·덕트) → 창문 → 벽걸이(스플릿)
 //   시스템에어컨(카세트/멀티스플릿/천장형)이 스탠드형으로 뭉뚱그려지던 문제 분리(2026-07-31).
-const AC_FORMS = ["창문형", "벽걸이형", "스탠드형", "시스템", "포터블"]
+const RAC_FORMS = ["창문형", "벽걸이형", "포터블"]   // RAC 유형
+const SAC_FORMS = ["스탠드형", "시스템"]              // SAC 유형(스탠드·천장/카세트/멀티)
 const acFormOf = (m: string): string | null => {
   const s = m || ""
   if (/portable|\bKAP-?\d/i.test(s)) return "포터블"
@@ -393,11 +397,14 @@ const refFormOf = (m: string): string | null => {
   return null
 }
 // 세탁기 로드형(유형)
-const WM_FORMS = ["프론트", "탑로드", "트윈", "워시타워"]
+// 세탁기 카테고리에 건조기 포함 — 유형으로 구분. 워시타워/트윈/프론트/탑로드 + 건조기(단독)
+const WM_FORMS = ["프론트", "탑로드", "트윈", "워시타워", "건조기"]
 const wmFormOf = (m: string): string | null => {
   const s = m || ""
   if (/wash ?tower|washtower|\bWT\d/i.test(s)) return "워시타워"
   if (/twin ?(?:wash|tub)|twinwash/i.test(s)) return "트윈"
+  // 단독 건조기(워셔/세탁 텍스트 없이 dryer만) → 건조기 (콤보·워시타워는 위에서 이미 처리)
+  if (/\bdryer\b|heat ?pump ?dry|drying machine/i.test(s) && !/\bwasher\b|washing/i.test(s)) return "건조기"
   // 명시 로드형 텍스트 우선 → 코드 폴백(마케팅 텍스트 노이즈로 탑로드가 프론트로 오분류되던 문제)
   if (/top[- ]?load|topload/i.test(s)) return "탑로드"
   if (/front[- ]?load|frontload|\bdrum\b/i.test(s)) return "프론트"
@@ -426,7 +433,7 @@ const tvFormOf = (m: string, brand?: string): string | null => {
   return null
 }
 const pmFormOf = (cat: string, m: string, brand?: string): string | null =>
-  cat === "에어컨" ? acFormOf(m) : cat === "냉장고" ? refFormOf(m) : cat === "세탁기" ? wmFormOf(m) : cat === "TV" ? tvFormOf(m, brand) : null
+  isAC(cat) ? acFormOf(m) : cat === "냉장고" ? refFormOf(m) : cat === "세탁기" ? wmFormOf(m) : cat === "TV" ? tvFormOf(m, brand) : null
 
 // ── 스펙(사이즈) 축 — 에어컨=HP, 냉장고=cu.ft, 세탁기=kg, TV=인치. 명시단위 우선, 없으면 브랜드 코드에서 추론 ──
 const REF_SIZE = ["7cu.ft↓", "7~14", "14~22", "22cu.ft↑"]
@@ -474,10 +481,10 @@ const pmSizeBucket = (cat: string, model: string, capacity: string | null): stri
 }
 // 두 축 목록·매처 — 분류 안 되는 잔여는 "기타"로 흡수(필터에서 제품이 사라지지 않게)
 const ETC = "기타"
-const pmFormsFor = (c: string) => { const base = c === "에어컨" ? AC_FORMS : c === "냉장고" ? REF_FORMS : c === "세탁기" ? WM_FORMS : c === "TV" ? TV_FORMS : []; return base.length ? [...base, ETC] : [] }
+const pmFormsFor = (c: string) => { const base = c === "RAC" ? RAC_FORMS : c === "SAC" ? SAC_FORMS : c === "냉장고" ? REF_FORMS : c === "세탁기" ? WM_FORMS : c === "TV" ? TV_FORMS : []; return base.length ? [...base, ETC] : [] }
 const pmFormHit = (cat: string, model: string, t: string, brand?: string) => { if (t === "전체") return true; const f = pmFormOf(cat, model, brand); return t === ETC ? f == null : f === t }
-const pmSizeList = (c: string) => { const base = c === "에어컨" ? PM_AC_HP.map((x) => x.t) : c === "냉장고" ? REF_SIZE : c === "세탁기" ? WM_SIZE : c === "TV" ? TV_SIZE : []; return base.length ? [...base, ETC] : [] }
-const pmSizeHit = (cat: string, model: string, capacity: string | null, t: string) => { if (t === "전체") return true; const b = cat === "에어컨" ? acHpBucket(model) : pmSizeBucket(cat, model, capacity); return t === ETC ? b == null : b === t }
+const pmSizeList = (c: string) => { const base = isAC(c) ? PM_AC_HP.map((x) => x.t) : c === "냉장고" ? REF_SIZE : c === "세탁기" ? WM_SIZE : c === "TV" ? TV_SIZE : []; return base.length ? [...base, ETC] : [] }
+const pmSizeHit = (cat: string, model: string, capacity: string | null, t: string) => { if (t === "전체") return true; const b = isAC(cat) ? acHpBucket(model) : pmSizeBucket(cat, model, capacity); return t === ETC ? b == null : b === t }
 const pmMean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0)
 const pmTicks = (min: number, max: number, count = 5): number[] => {
   const range = (max - min) || 1, raw = range / count, mag = Math.pow(10, Math.floor(Math.log10(raw))), norm = raw / mag
@@ -488,7 +495,7 @@ const pmTicks = (min: number, max: number, count = 5): number[] => {
 }
 const pmShort = (n: number) => (n >= 1000 ? "₱" + (n / 1000).toFixed(n >= 100000 ? 0 : 1).replace(/\.0$/, "") + "k" : "₱" + Math.round(n))
 type PMCard = { b: string; tier: string; label: string; avg: number; shops: number; n: number; star: number | null; kwh: number | null; url: string | null; retailer: string | null; idx: number; left: number; top: number }
-const DOE_CODE: Record<string, string> = { "에어컨": "acu", "TV": "tvl", "냉장고": "ref", "세탁기": "cwm" }
+const DOE_CODE: Record<string, string> = { "RAC": "acu", "SAC": "acu", "TV": "tvl", "냉장고": "ref", "세탁기": "cwm" }
 const pmNorm = (s: string) => (s || "").toUpperCase().replace(/[^A-Z0-9]/g, "")
 // DOE 매칭용 카테고리 인지 정규화 — 에어컨(acu)은 리테일의 실내/실외기 프리픽스(HSN·HSU·HSN/U)를
 //   DOE 등록코드(HS-12IPX3=HS+숫자)에 맞춰 HS로 접는다. 이 한 줄로 스플릿 AC 매칭 67%→91%.
@@ -517,7 +524,7 @@ function PmDrop({ label, sel, options, onSelect }: { label: string; sel: string;
 }
 
 function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels: EnergyRow[] | null; stamp: string | null }) {
-  const [cat, setCat] = React.useState("에어컨")
+  const [cat, setCat] = React.useState("RAC")
   const [spec, setSpec] = React.useState("전체")
   const [form, setForm] = React.useState("전체")
   const [starF, setStarF] = React.useState("전체")
@@ -629,7 +636,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
       <div className="relative z-20 flex flex-wrap items-center gap-2">
         <div className="w-[140px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm("전체"); setShop("전체") }} /></div>
         {formList.length > 0 && <div className="w-[136px]"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...formList.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>}
-        {sizeList.length > 0 && <div className="w-[130px]"><PmDrop label={cat === "에어컨" ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSpec} options={[{ k: "전체", t: "전체" }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
+        {sizeList.length > 0 && <div className="w-[130px]"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSpec} options={[{ k: "전체", t: "전체" }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
         <div className="w-[150px]"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
         <div className="w-[140px]"><PmDrop label="에너지" sel={starF} options={["전체", "★5", "★4", "★3↓"].map((s) => ({ k: s, t: s }))} onSelect={setStarF} /></div>
         <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[300px]" : "w-[200px]")}>

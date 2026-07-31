@@ -548,18 +548,20 @@ const CAT_RULES: { t: string; re: RegExp }[] = [
   { t: "프로젝터", re: /projector|cinebeam/i },
   { t: "전자레인지·오븐", re: /microwave|oven|air fryer/i },
   { t: "냉동고", re: /chest freezer|upright freezer|\bfreezer\b/i },
-  // 세탁기 판정을 건조기보다 먼저 — 워시타워·"Washer & Dryer" 콤보는 이름에 dryer가 있어도 세탁기다.
-  //   (Anson 워시타워·프론트로드 콤보가 건조기로 오분류돼 board 세탁기에서 누락되던 문제) 순수 건조기만 아래로.
-  { t: "세탁기", re: /wash ?tower|washtower|워시타워|washing machine|washer|twin ?wash|laundry/i },
-  { t: "건조기", re: /\bdryer\b|heat pump dry/i },
+  // 건조기는 세탁기 카테고리에 포함(대시보드에서 유형으로 구분). 워시타워·콤보·단독 건조기 모두 세탁기.
+  { t: "세탁기", re: /wash ?tower|washtower|워시타워|washing machine|washer|twin ?wash|laundry|\bdryer\b|heat pump dry/i },
   { t: "냉장고", re: /refrigerator|fridge|side by side|inverter ref\b/i },
-  { t: "에어컨", re: /aircon|air ?condition|split type|window type|cassette|floor mounted|hvac|\bacu\b/i },
+  // 에어컨을 RAC/SAC로 분리. SAC(스탠드·천장·카세트·멀티스플릿·VRF·덕트)를 먼저, 나머지 aircon은 RAC(창문·벽걸이).
+  { t: "SAC", re: /cassette|ceiling|천장|floor ?(?:mount|standing)|스탠드|multi[- ]?split|multi[- ]?v\b|\bvrf\b|\bvrv\b|ducted|concealed|\bZTNQ|\bZPNQ|\bZVNQ|\bZ\dUQ|\bZUAB|AMNQ|\bAC0\d{2}[A-Z]|53C[LNF]V|53KFV/i },
+  { t: "RAC", re: /aircon|air ?condition|split type|window type|hvac|\bacu\b|\bHS[NU]?\d{2}|WCAR[A-Z]|WCON[A-Z]|WRAC|\bLA\d{3}/i },
   { t: "TV", re: /\btv\b|oled|qned|nano ?cell|uhd|4k smart|led tv/i },
 ]
 
 function classify(model: string, fallback: string) {
   const t = clean(model)
   for (const r of CAT_RULES) if (r.re.test(t)) return r.t
+  // 스크래퍼 원본 카테고리가 '에어컨'인데 규칙 미매칭 시 RAC로(창문/벽걸이 기본)
+  if (fallback === "에어컨") return "RAC"
   return fallback ?? "기타"
 }
 
