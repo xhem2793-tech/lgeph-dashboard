@@ -640,7 +640,8 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     const cards: PMCard[] = []
     brands.forEach((b) => {
       const g: Record<string, typeof f> = {}
-      f.filter((r) => r.brand === b && r.code && r.code.length >= 4 && !/^[≈]/.test(r.code) && r.code !== "N/A").forEach((r) => { (g[r.code] = g[r.code] || []).push(r) })
+      // 카드 병합 키 = canonCode(거래선마다 다른 r.code로 쪼개지지 않게). 같은 모델 = 1카드
+      f.filter((r) => r.brand === b && canonCode(r.model, r.code).length >= 5).forEach((r) => { const cc = canonCode(r.model, r.code); (g[cc] = g[cc] || []).push(r) })
       const models = Object.entries(g).map(([code, list]) => {
         const best = list.reduce((a, x) => ((x.p0 ?? Infinity) < (a.p0 ?? Infinity) ? x : a))
         const kwhs = list.map((x) => x.kwh).filter((v): v is number => v != null).sort((a, x) => a - x)
@@ -648,7 +649,8 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
         const price = best.p0 as number
         // 재고: 모든 리스팅이 OutOfStock이면 품절(하나라도 InStock이면 재고있음)
         const oos = list.length > 0 && list.every((x) => x.availability === "OutOfStock")
-        return { code, price, url: best.url ?? null, retailer: best.retailer ?? null, shops: new Set(list.map((x) => x.retailer)).size, n: list.length, star: modeStar(list.map((x) => x.star)), kwh: kwhs.length ? kwhs[Math.floor(kwhs.length / 2)] : null, oos }
+        const label = best.code && best.code.length >= 4 && best.code !== "N/A" && !/^[≈]/.test(best.code) ? best.code : code
+        return { code: label, price, url: best.url ?? null, retailer: best.retailer ?? null, shops: new Set(list.map((x) => x.retailer)).size, n: list.length, star: modeStar(list.map((x) => x.star)), kwh: kwhs.length ? kwhs[Math.floor(kwhs.length / 2)] : null, oos }
       }).filter((m) => m.price != null && (stockF === "전체" || (stockF === "재고있음" ? !m.oos : m.oos)))
       // 전체 모델 표시(상위 N 제한 없음) — 취급 거래선↓·가격↑ 순 정렬만 유지
       models.sort((a, b2) => b2.shops - a.shops || a.price - b2.price).forEach((m) => cards.push({ b, tier: tierOf(m.price), label: m.code, avg: m.price, shops: m.shops, n: m.n, star: m.star, kwh: m.kwh, url: m.url, retailer: m.retailer, oos: m.oos, idx: 0, left: 0, top: 0 }))
