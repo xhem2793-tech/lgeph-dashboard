@@ -501,7 +501,7 @@ const pmSizeBucket = (cat: string, model: string, capacity: string | null): stri
 }
 // 두 축 목록·매처 — 분류 안 되는 잔여는 "기타"로 흡수(필터에서 제품이 사라지지 않게)
 const ETC = "기타"
-const pmFormsFor = (c: string) => { const base = c === "RAC" ? RAC_FORMS : c === "SAC" ? SAC_FORMS : c === "냉장고" ? REF_FORMS : c === "세탁기" ? WM_FORMS : c === "TV" ? TV_FORMS : []; if (!base.length) return []; return c === "냉장고" ? [...base] : [...base, ETC] }
+const pmFormsFor = (c: string) => { const base = c === "RAC" ? RAC_FORMS : c === "SAC" ? SAC_FORMS : c === "냉장고" ? REF_FORMS : c === "세탁기" ? WM_FORMS : c === "TV" ? TV_FORMS : []; return [...base] }   // 유형 '기타' 없음 — 분류기 최종 폴백으로 실물은 항상 유형 배정
 const pmFormHit = (cat: string, model: string, t: string, brand?: string) => { if (t === "전체") return true; const f = pmFormOf(cat, model, brand); return t === ETC ? f == null : f === t }
 const pmSizeList = (c: string) => { const base = isAC(c) ? PM_AC_HP.map((x) => x.t) : c === "냉장고" ? REF_SIZE : c === "세탁기" ? WM_SIZE : c === "TV" ? TV_SIZE : []; return base.length ? [...base, ETC] : [] }
 const pmSizeHit = (cat: string, model: string, capacity: string | null, t: string) => { if (t === "전체") return true; const b = isAC(cat) ? acHpBucket(model) : pmSizeBucket(cat, model, capacity); return t === ETC ? b == null : b === t }
@@ -1159,7 +1159,12 @@ export default function Competitors() {
       .then((f) => setStamp(f.prices ?? null))
       .catch(() => {})
     competitorTable(4000)
-      .then((rs) => setRows(rs.filter((r) => brandShown(r.brand, r.category))))
+      .then((rs) => {
+        const shown = rs.filter((r) => brandShown(r.brand, r.category))
+        // 홈크레딧 = 백업/보강용(제휴점 가격 재판매) → 주요 유통이 이미 가진 모델은 제외, 없는 모델만 채운다(gap-fill·중복 방지)
+        const primary = new Set(shown.filter((r) => r.retailer !== "Home Credit").map((r) => canonCode(r.model, r.code)).filter((c) => c && c.length >= 4))
+        setRows(shown.filter((r) => r.retailer !== "Home Credit" || !primary.has(canonCode(r.model, r.code))))
+      })
       .catch(() => setRows([]))
     competitorDaily()
       .then(setDaily)
