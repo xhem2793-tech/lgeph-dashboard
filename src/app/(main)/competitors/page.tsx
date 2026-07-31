@@ -595,9 +595,9 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   }, [R, cat])
   const specOf = React.useCallback((r: PriceRow) => { const cc = canonCode(r.model, r.code); return (cc && specText[cc]) || (r.model + " " + (r.capacity || "")) }, [specText])
 
-  const { cards, brands, ticks, gmin, gmax } = React.useMemo(() => {
+  const { cards, brands, ticks, gmin, gmax, plotH } = React.useMemo(() => {
     const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSizeHit(cat, specOf(r), null, effSpec) && pmFormHit(cat, specOf(r), effForm, r.brand))
-    const empty = { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, count: f0.length, matched: 0 }
+    const empty = { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, plotH: H, count: f0.length, matched: 0 }
     if (f0.length < 3) return empty
     // 가격대는 카테고리별 절대 기준(PM_TIER_BANDS) — 상대백분위 아님
     const tierOf = (p: number) => pmTierOf(cat, p)
@@ -629,21 +629,27 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
         const kwhs = list.map((x) => x.kwh).filter((v): v is number => v != null).sort((a, x) => a - x)
         return { code, price: best.p0 as number, url: best.url ?? null, retailer: best.retailer ?? null, shops: new Set(list.map((x) => x.retailer)).size, n: list.length, star: modeStar(list.map((x) => x.star)), kwh: kwhs.length ? kwhs[Math.floor(kwhs.length / 2)] : null }
       }).filter((m) => m.price != null)
-      models.sort((a, b2) => b2.shops - a.shops || a.price - b2.price).slice(0, 5).forEach((m) => cards.push({ b, tier: tierOf(m.price), label: m.code, avg: m.price, shops: m.shops, n: m.n, star: m.star, kwh: m.kwh, url: m.url, retailer: m.retailer, idx: 0, left: 0, top: 0 }))
+      // 전체 모델 표시(상위 N 제한 없음) — 취급 거래선↓·가격↑ 순 정렬만 유지
+      models.sort((a, b2) => b2.shops - a.shops || a.price - b2.price).forEach((m) => cards.push({ b, tier: tierOf(m.price), label: m.code, avg: m.price, shops: m.shops, n: m.n, star: m.star, kwh: m.kwh, url: m.url, retailer: m.retailer, idx: 0, left: 0, top: 0 }))
     })
     if (!cards.length) return { ...empty, matched }
     const cmin = Math.min(...cards.map((c) => c.avg)), cmax = Math.max(...cards.map((c) => c.avg))
     const ticks = pmTicks(cmin, cmax, 4)
     const axMin = Math.min(cmin, ticks[0] ?? cmin), axMax = Math.max(cmax, ticks[ticks.length - 1] ?? cmax)
-    const topFor = (p: number) => PAD + ((axMax - p) / ((axMax - axMin) || 1)) * (H - PAD - BOTTOM - CARD_H)
-    const maxTop = H - BOTTOM - CARD_H
+    // 브랜드별 카드 수에 맞춰 플롯 높이 동적 확장 — 전체 모델 표시 시 세로로 겹치지 않게(최소 H 보장)
+    const colN: Record<string, number> = {}
+    cards.forEach((c) => { colN[c.b] = (colN[c.b] || 0) + 1 })
+    const maxCol = Math.max(1, ...Object.values(colN))
+    const plotH = Math.max(H, PAD + BOTTOM + CARD_H + (maxCol - 1) * GAP)
+    const topFor = (p: number) => PAD + ((axMax - p) / ((axMax - axMin) || 1)) * (plotH - PAD - BOTTOM - CARD_H)
+    const maxTop = plotH - BOTTOM - CARD_H
     cards.forEach((c) => { c.idx = Math.round((c.avg / cmin) * 100); c.top = topFor(c.avg) })
     const cols: Record<string, PMCard[]> = {}
     cards.forEach((c) => { (cols[c.b] = cols[c.b] || []).push(c) })
     Object.values(cols).forEach((list) => { list.sort((a, b) => a.top - b.top); for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = Math.min(list[i - 1].top + GAP, maxTop) })
-    return { cards, brands, ticks, gmin: axMin, gmax: axMax, count: f0.length, matched }
+    return { cards, brands, ticks, gmin: axMin, gmax: axMax, plotH, count: f0.length, matched }
   }, [R, cat, effSpec, effForm, effShop, starF, matchOf, specOf, H]) // eslint-disable-line
-  const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (H - PAD - BOTTOM - CARD_H)
+  const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (plotH - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
   const minW = Math.max(1040, GUT + brands.length * 138 + 20)
   const qq = q.trim().toLowerCase()
@@ -705,14 +711,14 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
               <div className="flex h-44 w-full items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">해당 조건의 데이터가 부족합니다</div>
             ) : (
               <>
-                <div className="relative shrink-0" style={{ width: GUT, height: H }}>
+                <div className="relative shrink-0" style={{ width: GUT, height: plotH }}>
                   {ticks.map((v) => (
                     <span key={v} className="absolute right-2 -translate-y-1/2 text-[11px] font-semibold tabular-nums text-gray-500 dark:text-gray-400" style={{ top: topFor(v) }}>{pmShort(v)}</span>
                   ))}
                   <span className="absolute right-2 top-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">고가</span>
                   <span className="absolute right-2 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500" style={{ bottom: 2 }}>저가</span>
                 </div>
-                <div className="relative flex-1" style={{ height: H }}>
+                <div className="relative flex-1" style={{ height: plotH }}>
                   {/* 좌측 세로축(absolute → 컬럼 폭에 영향 없음, 정렬 유지) */}
                   <div className="pointer-events-none absolute inset-y-0 left-0 border-l-2 border-gray-200 dark:border-gray-700" />
                   {/* 중간 가격대(MED) 밴드 — 절대 기준(PM_TIER_BANDS) 구간을 회색 배경으로 */}
