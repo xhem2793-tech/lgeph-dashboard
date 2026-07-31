@@ -439,7 +439,7 @@ const tvFormOf = (m: string, brand?: string): string | null => {
   if (/\bVML\d|\bVLT\d|\bVXT\d|\bVST\d|affordabox|set-?top|\bICD-|voice recorder|\bmicrophone\b|\bDM-?1000/i.test(s)) return null
   if (/\boled\b/i.test(s)) return "OLED"
   // QLED급(퀀텀닷/미니LED 프리미엄) — LG 고유(QNED/NanoCell/MiniLED)는 항상, QLED/ULED/NeoQLED는 비LG만
-  if (/qned|nano ?cell|\bnano\b|mini ?led|miniled/i.test(s)) return "QLED급"
+  if (/qned|nano ?cell|\bnano\b|mini ?led|miniled|mini ?rgb|micro ?rgb|rgb ?evo/i.test(s)) return "QLED급"   // LG Mini/Micro RGB evo(2026 플래그십)=프리미엄 등급
   if (!isLG && /qled|\buled\b|neo ?qled/i.test(s)) return "QLED급"
   const inch = tvInOf(s)
   const explicit4k = /uhd|\b4k\b|crystal|\bUA\d|\bNU\d|\bUQ\d|\bUR\d|\bUT\d|WPREU\d/i.test(s)
@@ -552,6 +552,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const [q, setQ] = React.useState("")
   const [focused, setFocused] = React.useState(false)
   const [dling, setDling] = React.useState(false)
+  const [logY, setLogY] = React.useState(false)   // 세로축 스케일: false=기본(선형), true=로그(가격 범위 넓을 때 압축)
   const cardRef = React.useRef<HTMLDivElement>(null)
   const R = rows ?? []
   // 화면 플롯 높이 940(뉴스처럼 길게). 이미지 다운로드 시엔 이전 PPT 슬라이드 비율(560)로 압축 캡처
@@ -648,15 +649,17 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     cards.forEach((c) => { colN[c.b] = (colN[c.b] || 0) + 1 })
     const maxCol = Math.max(1, ...Object.values(colN))
     const plotH = Math.max(H, PAD + BOTTOM + CARD_H + (maxCol - 1) * GAP)
-    const topFor = (p: number) => PAD + ((axMax - p) / ((axMax - axMin) || 1)) * (plotH - PAD - BOTTOM - CARD_H)
+    const lgv = (v: number) => Math.log(Math.max(1, v))
+    const topFor = (p: number) => PAD + ((logY ? lgv(axMax) - lgv(p) : axMax - p) / ((logY ? lgv(axMax) - lgv(axMin) : axMax - axMin) || 1)) * (plotH - PAD - BOTTOM - CARD_H)
     const maxTop = plotH - BOTTOM - CARD_H
     cards.forEach((c) => { c.idx = Math.round((c.avg / cmin) * 100); c.top = topFor(c.avg) })
     const cols: Record<string, PMCard[]> = {}
     cards.forEach((c) => { (cols[c.b] = cols[c.b] || []).push(c) })
     Object.values(cols).forEach((list) => { list.sort((a, b) => a.top - b.top); for (let i = 1; i < list.length; i++) if (list[i].top - list[i - 1].top < GAP) list[i].top = Math.min(list[i - 1].top + GAP, maxTop) })
     return { cards, brands, ticks, gmin: axMin, gmax: axMax, plotH, count: f0.length, matched }
-  }, [R, cat, effSpec, effForm, effShop, stockF, matchOf, specOf, H]) // eslint-disable-line
-  const topFor = (p: number) => PAD + ((gmax - p) / ((gmax - gmin) || 1)) * (plotH - PAD - BOTTOM - CARD_H)
+  }, [R, cat, effSpec, effForm, effShop, stockF, matchOf, specOf, H, logY]) // eslint-disable-line
+  const lgv = (v: number) => Math.log(Math.max(1, v))
+  const topFor = (p: number) => PAD + ((logY ? lgv(gmax) - lgv(p) : gmax - p) / ((logY ? lgv(gmax) - lgv(gmin) : gmax - gmin) || 1)) * (plotH - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
   const minW = Math.max(1040, GUT + brands.length * 138 + 20)
   const qq = q.trim().toLowerCase()
@@ -687,6 +690,11 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
               <span className="text-[25px] font-bold leading-tight text-gray-800 dark:text-gray-100">{cat} <span className="font-semibold text-gray-400 dark:text-gray-500">vs 경쟁사</span> <span className="text-indigo-600 dark:text-indigo-400">{sp ? sp + " " : ""}가격</span></span>
             ) })()}
             <div className="ml-auto flex items-center gap-1.5">
+              {/* 세로축 스케일: Auto(선형) / 로그 */}
+              <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-0.5 text-[10.5px] font-semibold" title="세로축 가격 스케일 — 로그는 가격대가 넓을 때 저가 구간을 펼쳐 봄">
+                <button type="button" onClick={() => setLogY(false)} className={"rounded-md px-2 py-0.5 transition " + (!logY ? "bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400")}>Auto</button>
+                <button type="button" onClick={() => setLogY(true)} className={"rounded-md px-2 py-0.5 transition " + (logY ? "bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400")}>로그</button>
+              </div>
               <button type="button" onClick={dlPng} disabled={dling} data-noexport="1" title="카드 전체를 PPT 슬라이드 크기 이미지로 저장" className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[10.5px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-50">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
                 {dling ? "생성중…" : "이미지"}
