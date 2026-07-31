@@ -1,7 +1,6 @@
 "use client"
 
 import React from "react"
-import { Segmented } from "@/components/Segmented"
 import {
   competitorTable,
   competitorDaily,
@@ -1026,13 +1025,22 @@ const PTYPES: { k: "c" | "b" | "i" | "f" | "g"; label: string; cls: string }[] =
 // 프로모 문구 → 종류별 상세({c,b,i,f,g})
 const promoTypes = (txt: string | null): Partial<Record<string, string>> => {
   const s = txt || ""; const o: Partial<Record<string, string>> = {}
-  const inst = s.match(/x\s*(\d+)\s*mos|(\d+)\s*개월/i); if (inst || /installment|무이자|0 ?% ?install/i.test(s)) o.i = inst ? `${inst[1] || inst[2]}개월 무이자` : "무이자"
+  // 할부 — 개월수 명시
+  const inst = s.match(/x\s*(\d+)\s*mos|(\d+)\s*개월/i); if (inst || /installment|무이자|0 ?% ?install/i.test(s)) o.i = inst ? `${inst[1] || inst[2]}개월` : "무이자"
+  // 배송
   if (/free ?ship|free ?deliv|무료 ?배송/i.test(s)) o.f = "무료배송"
+  // 사은품 — "with FREE X" 품목 우선
   const gift = s.match(/with\s+(?:a\s+)?free\s+([^·|,]{2,22})/i)
   if (gift) o.g = gift[1].replace(/&#\d+;.*/, "").trim().slice(0, 16)
   else if (/사은품|경품|free ?gift|freebie|gift ?with/i.test(s)) o.g = "사은품"
-  if (/coupon|voucher|쿠폰|promo ?code|₱[\d,]+\s*(off|할인|쿠폰)/i.test(s)) o.c = "쿠폰"
-  if (/bundle|번들|combo ?deal/i.test(s)) o.b = "번들"
+  // 쿠폰 — ₱ 금액 우선
+  const coup = s.match(/₱\s*([\d,]+)\s*(?:off|쿠폰|voucher|coupon|discount|할인)|(?:coupon|voucher|쿠폰)[^₱]{0,10}₱\s*([\d,]+)/i)
+  if (coup) o.c = "₱" + (coup[1] || coup[2])
+  else if (/coupon|voucher|쿠폰|promo ?code/i.test(s)) o.c = "쿠폰"
+  // 번들 — 구성 품목 우선
+  const bund = s.match(/bundle[:\s]+([^·|,]{2,18})|combo[:\s]+([^·|,]{2,18})/i)
+  if (bund) o.b = (bund[1] || bund[2]).trim().slice(0, 14)
+  else if (/bundle|번들|combo ?deal|set ?deal/i.test(s)) o.b = "번들"
   return o
 }
 type SCOffer = { cc: string; brand: string; own: boolean; model: string; at: string | null; list: number | null; net: number; url: string | null; image: string | null; promoByRet: Record<string, Partial<Record<string, string>>>; sizeB: string | null }
@@ -1043,7 +1051,8 @@ function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: DealRow[] 
   const [form, setForm] = React.useState("SxS")
   const [size, setSize] = React.useState("전체")
   const [brand, setBrand] = React.useState("전체")
-  const [band, setBand] = React.useState("전체")
+  const [rmin, setRmin] = React.useState(0)
+  const [rmax, setRmax] = React.useState(0)
   const [q, setQ] = React.useState("")
   const R = rows ?? []
   const cats = React.useMemo(() => { const av = PM_CATS.filter((c) => R.some((r) => r.category === c)); return av.length ? av : PM_CATS }, [R])
@@ -1070,14 +1079,30 @@ function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: DealRow[] 
 
   const brandsL = React.useMemo(() => ["전체", ...Array.from(new Set(segment.map((o) => o.brand))).filter(Boolean)], [segment])
   const lgRef = React.useMemo(() => { const lgs = segment.filter((o) => o.own && (effSize === "전체" || o.sizeB === effSize)); return lgs.length ? lgs.reduce((a, x) => (x.net < a.net ? x : a)) : null }, [segment, effSize])
+  // 가격대 도메인(현재 유형·용량 오퍼의 net 범위, 1,000 단위 여유) — 유형·용량 바뀌면 리셋
+  const sizeOffers = React.useMemo(() => segment.filter((o) => effSize === "전체" || o.sizeB === effSize), [segment, effSize])
+  const dom = React.useMemo(() => { const vals = sizeOffers.map((o) => o.net); if (!vals.length) return [0, 0] as [number, number]; const lo = Math.min(...vals), hi = Math.max(...vals), pad = Math.max(1000, Math.round((hi - lo) * 0.2 / 1000) * 1000); return [Math.floor((lo - pad) / 1000) * 1000, Math.ceil((hi + pad) / 1000) * 1000] as [number, number] }, [sizeOffers])
+  const domKey = cat + "|" + effForm + "|" + effSize + "|" + dom[0] + "|" + dom[1]
+  const domKeyRef = React.useRef("")
+  React.useEffect(() => { if (domKeyRef.current !== domKey) { domKeyRef.current = domKey; setRmin(dom[0]); setRmax(dom[1]) } }, [domKey, dom])
   const kw = q.trim().toLowerCase()
   const list = React.useMemo(() => segment.filter((o) =>
     (effSize === "전체" || o.sizeB === effSize) &&
     (brand === "전체" || o.brand === brand) &&
-    (band === "전체" || pmTierOf(cat, o.net) === band) &&
+    o.net >= rmin && o.net <= rmax &&
     (!kw || (o.brand + " " + o.model).toLowerCase().includes(kw))
-  ).sort((a, b) => a.net - b.net), [segment, effSize, brand, band, kw, cat])
+  ).sort((a, b) => a.net - b.net), [segment, effSize, brand, rmin, rmax, kw])
   const best = list.length ? list[0].net : 0
+  // 이중 드래그 슬라이더(선 위 2핸들 + 브랜드 가격점) — 지도 기간 슬라이더와 동일 인터랙션
+  const trackRef = React.useRef<HTMLDivElement>(null)
+  const rangeRef = React.useRef({ lo: rmin, hi: rmax }); rangeRef.current = { lo: rmin, hi: rmax }
+  const pctOf = (v: number) => (dom[1] === dom[0] ? 0 : ((v - dom[0]) / (dom[1] - dom[0])) * 100)
+  const startDrag = (isLo: boolean) => (e: React.PointerEvent) => {
+    e.preventDefault(); const track = trackRef.current; if (!track) return; const gap = Math.max(1000, (dom[1] - dom[0]) * 0.03)
+    const move = (ev: PointerEvent) => { const r = track.getBoundingClientRect(); let t = (ev.clientX - r.left) / r.width; t = Math.max(0, Math.min(1, t)); const v = Math.round((dom[0] + t * (dom[1] - dom[0])) / 500) * 500; if (isLo) setRmin(Math.max(dom[0], Math.min(v, rangeRef.current.hi - gap))); else setRmax(Math.min(dom[1], Math.max(v, rangeRef.current.lo + gap))) }
+    const up = () => { window.removeEventListener("pointermove", move); window.removeEventListener("pointerup", up) }
+    window.addEventListener("pointermove", move); window.addEventListener("pointerup", up)
+  }
 
   const promoAt = (o: SCOffer, k: string): { val: string; at: string; other: boolean } | null => {
     if (o.at && o.promoByRet[o.at] && o.promoByRet[o.at][k]) return { val: o.promoByRet[o.at][k] as string, at: o.at, other: false }
@@ -1105,7 +1130,7 @@ function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: DealRow[] 
       {/* 필터 */}
       <div className="flex flex-col gap-2.5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40 px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체"); setBand("전체") }} /></div>
+          <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체") }} /></div>
           {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체") }} /></div>}
           <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={setSize} /></div>
           <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={setBrand} /></div>
@@ -1115,8 +1140,17 @@ function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: DealRow[] 
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">가격대</span>
-          <Segmented size="sm" value={band} onChange={setBand} options={[{ k: "전체", label: "전체" }, { k: "엔트리", label: "엔트리" }, { k: "미드", label: "미드" }, { k: "프리미엄", label: "프리미엄" }]} />
+          <span className="w-9 shrink-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">가격대</span>
+          <span className="w-[74px] shrink-0 text-right text-[12px] font-bold tabular-nums text-indigo-700 dark:text-indigo-300">{peso(rmin)}</span>
+          <div ref={trackRef} className="relative h-6 w-[320px] shrink-0 select-none">
+            <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-gray-200 dark:bg-gray-700" />
+            <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-indigo-500" style={{ left: pctOf(rmin) + "%", width: (pctOf(rmax) - pctOf(rmin)) + "%" }} />
+            <div className="pointer-events-none absolute inset-0">{sizeOffers.map((o, i) => { const inR = o.net >= rmin && o.net <= rmax; return <span key={i} className={"absolute top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity " + (o.own ? "bg-indigo-500" : "bg-gray-400") + (inR ? "" : " opacity-25")} style={{ left: pctOf(o.net) + "%" }} /> })}</div>
+            <div onPointerDown={startDrag(true)} className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none rounded-full border-2 border-indigo-500 bg-white dark:bg-gray-900 shadow transition-transform active:scale-110" style={{ left: pctOf(rmin) + "%" }} />
+            <div onPointerDown={startDrag(false)} className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none rounded-full border-2 border-indigo-500 bg-white dark:bg-gray-900 shadow transition-transform active:scale-110" style={{ left: pctOf(rmax) + "%" }} />
+          </div>
+          <span className="w-[74px] shrink-0 text-[12px] font-bold tabular-nums text-indigo-700 dark:text-indigo-300">{peso(rmax)}</span>
+          <button type="button" onClick={() => { setRmin(dom[0]); setRmax(dom[1]) }} className="rounded-md px-2 py-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 transition hover:bg-white dark:hover:bg-gray-800">초기화</button>
           <p className="ml-auto text-[11.5px] text-gray-500 dark:text-gray-400">{lgRef ? <>자사 <b className="text-indigo-700 dark:text-indigo-300">{lgRef.model}</b> 기준</> : "자사(LG) 모델 없음"} · 표시 <b className="tabular-nums">{list.length}</b></p>
         </div>
       </div>
