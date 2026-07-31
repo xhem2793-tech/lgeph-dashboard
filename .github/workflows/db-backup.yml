@@ -1,0 +1,59 @@
+name: DB 백업(무료)
+
+# Supabase Free는 자동 백업이 없다 → 매일 pg_dump를 압축해 GitHub 아티팩트로 보관(90일).
+# 데이터가 이 프로젝트의 핵심 자산이므로 소실 방지용 최소 안전장치(근본 대책은 Supabase Pro PITR).
+#
+# 【활성화 — 시크릿 1개만 등록하면 됨】
+#   1) Supabase 대시보드 → Project Settings → Database → Connection string → "URI"(Direct connection, 포트 5432) 복사
+#      (pgbouncer 풀러(6543)가 아니라 Direct 5432여야 pg_dump가 정상 동작)
+#   2) 대시보드 레포 → Settings → Secrets and variables → Actions → New secret
+#      이름: SUPABASE_DB_URL   값: 위 URI(비밀번호 포함)
+#   → 다음 실행부터 백업 생성. 시크릿 없으면 안내만 출력하고 조용히 통과(실패 알림 스팸 방지).
+#
+# 복구: 아티팩트 다운로드 → gunzip → psql "<대상 DB URI>" -f backup.sql  (RUNBOOK 참조)
+on:
+  schedule:
+    - cron: "0 4 * * *"   # 매일 04:00 UTC(= Asia/Manila 12:00, 수집·검증 이후)
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 시크릿 확인
+        id: chk
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$DB_URL" ]; then
+            echo "::warning::SUPABASE_DB_URL 미설정 — 백업 건너뜀. 활성화 방법은 이 워크플로 상단 주석 참조."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: PostgreSQL 클라이언트 설치
+        if: steps.chk.outputs.ready == 'true'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client
+
+      - name: pg_dump 백업 생성(스탬프는 실행시각)
+        if: steps.chk.outputs.ready == 'true'
+        env:
+          DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          TS=$(date -u +%Y%m%d)
+          echo "백업 시작 $TS"
+          pg_dump "$DB_URL" --no-owner --no-privileges --format=plain \
+            | gzip -9 > "lgeph-backup-$TS.sql.gz"
+          ls -lh lgeph-backup-*.sql.gz
+          echo "TS=$TS" >> "$GITHUB_ENV"
+
+      - name: 아티팩트 업로드(90일 보관)
+        if: steps.chk.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: lgeph-db-backup-${{ env.TS }}
+          path: lgeph-backup-*.sql.gz
+          retention-days: 90

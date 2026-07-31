@@ -1,7 +1,9 @@
-name: 분류기 정확도 회귀 테스트
+name: CI — 품질 게이트(lint·test·build)
 
-# 분류 로직(canonCode·유형·사이즈)을 바꿀 때 기존 정답이 깨지는지 자동 검사.
-#  · main push + PR에서 실행 → 실패 시 병합 전에 회귀를 잡는다.
+# 변경이 병합·배포되기 전에 자동 검증한다. 하나라도 실패하면 잡이 실패 → 배포 전 차단.
+#  · lint  : 코드 스타일·정적 오류
+#  · test  : 분류기 골든셋 회귀(정확도)
+#  · build : 정적 빌드 성공(깨진 배포 방지 — 웹훅이 깨진 번들을 올리는 상황 예방)
 on:
   push:
     branches: [main]
@@ -10,13 +12,18 @@ on:
   workflow_dispatch: {}
 
 jobs:
-  test:
+  quality-gate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
       - run: npm ci
+      - name: Lint
+        run: npm run lint
       - name: 분류기 골든셋 테스트
         run: npm test
+      - name: 정적 빌드 검증
+        run: npm run build
