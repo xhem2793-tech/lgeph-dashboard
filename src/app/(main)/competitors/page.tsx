@@ -407,14 +407,17 @@ const wmFormOf = (m: string): string | null => {
 }
 // TV 패널(유형) — 모든 TV는 최소 LED로 귀결(미상 없음)
 const TV_FORMS = ["OLED", "QNED", "QLED", "ULED", "NanoCell", "MiniLED", "UHD", "FHD", "HD", "LED"]
-const tvFormOf = (m: string): string | null => {
+// 브랜드 인지 — LG는 QLED/ULED를 만들지 않는다(그 반대도). 모델단위 집계 시 어느 리테일의 마케팅
+//   텍스트("vs QLED" 등)가 섞여 LG UHD가 QLED로 오분류되던 문제를 브랜드 제약으로 근본 차단.
+const tvFormOf = (m: string, brand?: string): string | null => {
   const s = m || ""
-  // LG 전용 패널(OLED·QNED·NanoCell)을 QLED보다 먼저 — 마케팅 텍스트에 QLED가 섞여도 LG UHD/NanoCell이 QLED로 안 가게
+  const isLG = /^lg$/i.test(brand || "")
+  const isSam = /samsung/i.test(brand || "")
   if (/\boled\b/i.test(s)) return "OLED"
-  if (/qned/i.test(s)) return "QNED"
-  if (/nano ?cell|\bnano\b/i.test(s)) return "NanoCell"
-  if (/qled/i.test(s)) return "QLED"
-  if (/uled/i.test(s)) return "ULED"
+  if (!isSam && /qned/i.test(s)) return "QNED"       // QNED = LG 전용
+  if (!isSam && /nano ?cell|\bnano\b/i.test(s)) return "NanoCell"  // NanoCell = LG 전용
+  if (!isLG && /qled/i.test(s)) return "QLED"        // LG는 QLED 불가 → 스킵
+  if (!isLG && /uled/i.test(s)) return "ULED"        // ULED = Hisense
   if (/mini ?led|miniled/i.test(s)) return "MiniLED"
   if (/uhd|\b4k\b|crystal|\bUA\d|\bNU\d|\bUQ\d|\bUR\d|\bUT\d/i.test(s)) return "UHD"
   if (/full ?hd|\bfhd\b/i.test(s)) return "FHD"
@@ -422,8 +425,8 @@ const tvFormOf = (m: string): string | null => {
   if (/led ?tv|smart tv|google tv|\btv\b|signage|video ?wall|\d{2}[A-Z]/i.test(s)) return "LED"
   return null
 }
-const pmFormOf = (cat: string, m: string): string | null =>
-  cat === "에어컨" ? acFormOf(m) : cat === "냉장고" ? refFormOf(m) : cat === "세탁기" ? wmFormOf(m) : cat === "TV" ? tvFormOf(m) : null
+const pmFormOf = (cat: string, m: string, brand?: string): string | null =>
+  cat === "에어컨" ? acFormOf(m) : cat === "냉장고" ? refFormOf(m) : cat === "세탁기" ? wmFormOf(m) : cat === "TV" ? tvFormOf(m, brand) : null
 
 // ── 스펙(사이즈) 축 — 에어컨=HP, 냉장고=cu.ft, 세탁기=kg, TV=인치. 명시단위 우선, 없으면 브랜드 코드에서 추론 ──
 const REF_SIZE = ["7cu.ft↓", "7~14", "14~22", "22cu.ft↑"]
@@ -472,7 +475,7 @@ const pmSizeBucket = (cat: string, model: string, capacity: string | null): stri
 // 두 축 목록·매처 — 분류 안 되는 잔여는 "기타"로 흡수(필터에서 제품이 사라지지 않게)
 const ETC = "기타"
 const pmFormsFor = (c: string) => { const base = c === "에어컨" ? AC_FORMS : c === "냉장고" ? REF_FORMS : c === "세탁기" ? WM_FORMS : c === "TV" ? TV_FORMS : []; return base.length ? [...base, ETC] : [] }
-const pmFormHit = (cat: string, model: string, t: string) => { if (t === "전체") return true; const f = pmFormOf(cat, model); return t === ETC ? f == null : f === t }
+const pmFormHit = (cat: string, model: string, t: string, brand?: string) => { if (t === "전체") return true; const f = pmFormOf(cat, model, brand); return t === ETC ? f == null : f === t }
 const pmSizeList = (c: string) => { const base = c === "에어컨" ? PM_AC_HP.map((x) => x.t) : c === "냉장고" ? REF_SIZE : c === "세탁기" ? WM_SIZE : c === "TV" ? TV_SIZE : []; return base.length ? [...base, ETC] : [] }
 const pmSizeHit = (cat: string, model: string, capacity: string | null, t: string) => { if (t === "전체") return true; const b = cat === "에어컨" ? acHpBucket(model) : pmSizeBucket(cat, model, capacity); return t === ETC ? b == null : b === t }
 const pmMean = (a: number[]) => (a.length ? a.reduce((s, x) => s + x, 0) / a.length : 0)
@@ -569,7 +572,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const specOf = React.useCallback((r: PriceRow) => { const cc = canonCode(r.model, r.code); return (cc && specText[cc]) || (r.model + " " + (r.capacity || "")) }, [specText])
 
   const { cards, brands, ticks, gmin, gmax, count, matched } = React.useMemo(() => {
-    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSizeHit(cat, specOf(r), null, effSpec) && pmFormHit(cat, specOf(r), effForm))
+    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSizeHit(cat, specOf(r), null, effSpec) && pmFormHit(cat, specOf(r), effForm, r.brand))
     const empty = { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, count: f0.length, matched: 0 }
     if (f0.length < 3) return empty
     // 가격대는 카테고리별 절대 기준(PM_TIER_BANDS) — 상대백분위 아님
