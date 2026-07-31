@@ -1393,7 +1393,7 @@ function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels
   const [cat, setCat] = React.useState("냉장고")
   const [brand, setBrand] = React.useState("전체")
   const [form, setForm] = React.useState("전체")
-  const [size, setSize] = React.useState("전체")
+  const [shop, setShop] = React.useState("전체")
   const [sortDir, setSortDir] = React.useState<"down" | "up">("down")
   const [q, setQ] = React.useState("")
   const [focused, setFocused] = React.useState(false)
@@ -1405,8 +1405,12 @@ function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels
   }, [R, effCat])
   const forms = pmFormsFor(effCat)
   const effForm = form === "전체" || forms.includes(form) ? form : "전체"
-  const sizes = pmSizeList(effCat)
-  const effSize = size === "전체" || sizes.includes(size) ? size : "전체"
+  const shopsL = React.useMemo(() => {
+    const m = new Map<string, number>()
+    R.filter((r) => r.category === effCat).forEach((r) => { if (r.retailer) m.set(r.retailer, (m.get(r.retailer) || 0) + 1) })
+    return ["전체", ...Array.from(m.entries()).sort((a, b) => b[1] - a[1]).map((x) => x[0])]
+  }, [R, effCat])
+  const effShop = shopsL.includes(shop) ? shop : "전체"
   // DOE ★ 인덱스 — 채널별 가격 비교와 동일 매칭
   const starIdx = React.useMemo(() => {
     const m: Record<string, { codeN: string; star: number | null }[]> = {}
@@ -1416,7 +1420,7 @@ function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels
   const starFor = (c: string, model: string) => { const code = DOE_CODE[c]; const idx = code ? starIdx[code] : null; if (!idx) return null; const mm = doeNorm(code, model); const cc = doeNorm(code, canonCode(model, null)); for (const e of idx) { if (e.codeN.length < 5) continue; if (mm.includes(e.codeN)) return e.star; if (cc.length >= 8 && e.codeN.includes(cc)) return e.star } return null }
   const kw = q.trim().toLowerCase()
   const list = React.useMemo(() => {
-    const f = R.filter((r) => r.p0 != null && r.category === effCat && (brand === "전체" || r.brand === brand) && pmFormHit(effCat, r.model + " " + (r.capacity || ""), effForm, r.brand) && pmSizeHit(effCat, r.model, r.capacity, effSize) && (!kw || (r.brand + " " + r.model + " " + (r.code || "")).toLowerCase().includes(kw)))
+    const f = R.filter((r) => r.p0 != null && r.category === effCat && (brand === "전체" || r.brand === brand) && (effShop === "전체" || r.retailer === effShop) && pmFormHit(effCat, r.model + " " + (r.capacity || ""), effForm, r.brand) && (!kw || (r.brand + " " + r.model + " " + (r.code || "")).toLowerCase().includes(kw)))
     // 전일비 있는 것 우선, 방향순
     return f.slice().sort((a, b) => {
       const da = a.deltaPct, db = b.deltaPct
@@ -1424,19 +1428,14 @@ function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels
       const vb = db == null ? (sortDir === "down" ? 1 : -1) * 9e9 : db
       return sortDir === "down" ? va - vb : vb - va
     })
-  }, [R, effCat, brand, effForm, effSize, kw, sortDir]) // eslint-disable-line
+  }, [R, effCat, brand, effForm, effShop, kw, sortDir]) // eslint-disable-line
   const moved = list.filter((r) => r.deltaPct != null && r.deltaPct !== 0).length
   // 컬럼 헤더용 대표 날짜(최빈값) — 유통별 수집일이 달라도 다수 기준으로 표기
   const repDates = React.useMemo(() => {
     const mode = (key: "d0" | "d1" | "d2" | "d3") => { const m = new Map<string, number>(); list.forEach((r) => { const v = r[key]; if (v) m.set(v, (m.get(v) || 0) + 1) }); let best: string | null = null, bc = 0; m.forEach((c, d) => { if (c > bc) { bc = c; best = d } }); return best }
     return { d0: mode("d0"), d1: mode("d1"), d2: mode("d2"), d3: mode("d3") }
   }, [list])
-  const dHead = (d: string | null, rel: string, badge?: boolean) => (
-    <div className="flex flex-col items-center leading-tight">
-      <span className="tabular-nums text-gray-700 dark:text-gray-200">{d ? md(d) : "—"}{badge && <span className="ml-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[8px] font-semibold text-emerald-700 dark:text-emerald-300">오늘</span>}</span>
-      <span className="text-[8.5px] font-normal text-gray-400 dark:text-gray-500">{rel}</span>
-    </div>
-  )
+  const dHead = (d: string | null) => <span className="tabular-nums text-gray-700 dark:text-gray-200">{d ? md(d) : "—"}</span>
 
   if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
 
@@ -1445,9 +1444,9 @@ function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels
       {/* 필터바 — 채널별 가격 비교와 동일: 브랜드·제품·유형·용량 + 인하/인상 알약토글 + 검색 + 최종갱신 */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={setBrand} /></div>
-        <div className="w-fit"><PmDrop label="제품" sel={effCat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setBrand("전체"); setForm("전체"); setSize("전체") }} /></div>
+        <div className="w-fit"><PmDrop label="제품" sel={effCat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setBrand("전체"); setForm("전체"); setShop("전체") }} /></div>
         <div className="w-fit"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>
-        <div className="w-fit"><PmDrop label={isAC(effCat) ? "마력" : effCat === "TV" ? "화면" : "용량"} sel={effSize} options={[{ k: "전체", t: "전체" }, ...sizes.map((t) => ({ k: t, t }))]} onSelect={setSize} /></div>
+        <div className="w-fit"><PmDrop label="거래선" sel={effShop} options={shopsL.map((s) => ({ k: s, t: s === "전체" ? "전체" : pmShopLabel(s) }))} onSelect={setShop} /></div>
         {/* 인하순/인상순 — 슬라이딩 알약 토글(초록↔빨강) */}
         <div className="relative flex items-center rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-0.5 text-[11px] font-semibold shadow-sm">
           <span aria-hidden className={"absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] rounded-full transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)] " + (sortDir === "down" ? "translate-x-0 bg-emerald-50 dark:bg-emerald-500/15" : "translate-x-full bg-rose-50 dark:bg-rose-500/15")} />
@@ -1466,9 +1465,9 @@ function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels
       </div>
       {/* 매트릭스 — 브랜드·분류·모델·★·SRP·오늘·할인율·전일비·날짜3열·최근7일변동·유통 */}
       <div className="max-h-[1040px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full min-w-[1200px] table-fixed border-collapse text-[12px]">
+        <table className="w-full min-w-[1290px] table-fixed border-collapse text-[12px]">
           <colgroup>
-            <col style={{ width: 122 }} /><col style={{ width: 48 }} /><col style={{ width: 116 }} /><col style={{ width: 32 }} /><col style={{ width: 84 }} /><col style={{ width: 96 }} /><col style={{ width: 64 }} /><col style={{ width: 82 }} /><col style={{ width: 84 }} /><col style={{ width: 84 }} /><col style={{ width: 84 }} /><col style={{ width: 108 }} /><col style={{ width: 96 }} />
+            <col style={{ width: 138 }} /><col style={{ width: 58 }} /><col style={{ width: 128 }} /><col style={{ width: 32 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 82 }} /><col style={{ width: 92 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 140 }} /><col style={{ width: 120 }} />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
             <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
@@ -1477,12 +1476,12 @@ function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels
               <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">모델</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title="New DOE 에너지등급">★</th>
               <th className="whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center">SRP</th>
-              <th className="whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-1 text-center">{dHead(repDates.d0, "오늘", true)}</th>
+              <th className="whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center">{dHead(repDates.d0)}</th>
               <th className="whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center">할인율</th>
               <th className="whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center">전일비</th>
-              <th className="whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-1 text-center">{dHead(repDates.d1, "1일 전")}</th>
-              <th className="whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-1 text-center">{dHead(repDates.d2, "2일 전")}</th>
-              <th className="whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-1 text-center">{dHead(repDates.d3, "3일 전")}</th>
+              <th className="whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center">{dHead(repDates.d1)}</th>
+              <th className="whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center">{dHead(repDates.d2)}</th>
+              <th className="whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center">{dHead(repDates.d3)}</th>
               <th className="whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center">최근 7일 변동</th>
               <th className="whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center">유통</th>
             </tr>
@@ -1500,7 +1499,7 @@ function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; elabels
                 <td className="px-1 py-1.5 text-center">{star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(star)}>★{star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums">{r.url ? <a href={r.url} target="_blank" rel="noreferrer" className="font-bold text-gray-900 hover:underline dark:text-gray-50">{peso(r.p0)}</a> : <span className="font-bold text-gray-900 dark:text-gray-50">{peso(r.p0)}</span>}</td>
-                <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums">{r.discountPct != null && r.discountPct > 0 ? <span className="font-semibold text-emerald-600 dark:text-emerald-400">−{r.discountPct.toFixed(0)}%</span> : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
+                <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums">{r.discountPct != null && r.discountPct > 0 ? <span className="font-semibold text-emerald-600 dark:text-emerald-400">{r.discountPct.toFixed(0)}%</span> : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-center"><MvDelta php={r.deltaPhp} pct={r.deltaPct} /></td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.p1 != null ? peso(r.p1) : "—"}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.p2 != null ? peso(r.p2) : "—"}</td>
