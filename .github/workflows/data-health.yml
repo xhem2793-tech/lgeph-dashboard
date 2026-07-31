@@ -1,0 +1,30 @@
+name: 데이터 헬스 체크
+
+# 매일 수집이 "조용히 실패"하는 것을 감지한다.
+#  · 매일 03:00 UTC(= Asia/Manila 11:00, 오전 수집 완료 후) 실행 + 수동 실행 가능
+#  · Supabase v_data_health 조회 → 신선도·유통별 커버리지 검사
+#  · 이상 시 이 잡이 '실패'로 끝나고 GitHub이 저장소 오너에게 자동 이메일(외부 서비스 불필요)
+#  · 실시간/팀 알림을 원하면 저장소 시크릿만 등록(코드 수정 불필요):
+#      SLACK_WEBHOOK_URL  : 슬랙 인커밍 웹훅 → FAIL/WARN 메시지
+#      HEARTBEAT_URL      : healthchecks.io·Better Stack·Sentry Crons 핑 URL(성공 시 핑, 끊기면 그쪽에서 경보)
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch: {}
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 데이터 품질·신선도 검사
+        env:
+          # 접속정보는 공개 값이라 기본 내장 — override 하려면 시크릿 등록 후 아래 주석 해제
+          # SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          # SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          HEARTBEAT_URL: ${{ secrets.HEARTBEAT_URL }}
+        run: node scripts/data-health.mjs
