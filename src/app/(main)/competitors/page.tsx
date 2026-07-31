@@ -671,7 +671,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
           <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-4 w-1 rounded bg-indigo-500" />
             {(() => { const sp = effSpec !== "전체" ? effSpec : effForm !== "전체" ? effForm : ""; return (
-              <span className="text-[12.5px] font-bold text-gray-800 dark:text-gray-100">{cat} <span className="font-semibold text-gray-400 dark:text-gray-500">vs 경쟁사</span> <span className="text-indigo-600 dark:text-indigo-400">{sp ? sp + " " : ""}가격</span></span>
+              <span className="text-[25px] font-bold leading-tight text-gray-800 dark:text-gray-100">{cat} <span className="font-semibold text-gray-400 dark:text-gray-500">vs 경쟁사</span> <span className="text-indigo-600 dark:text-indigo-400">{sp ? sp + " " : ""}가격</span></span>
             ) })()}
             <span className="hidden text-[9.5px] text-gray-400 dark:text-gray-500 sm:inline">· New DOE ★</span>
             <div className="ml-auto flex items-center gap-1.5">
