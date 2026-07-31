@@ -166,7 +166,7 @@ const pmSpecOf = (cat: string, model: string, capacity: string | null) => {
   const cap = (capacity || "").trim()
   if (cat === "RAC" || cat === "SAC") { const hp = acHpLabel(m); if (hp) return hp; if (/window|창문/i.test(m)) return "창문형"; if (/split|벽걸이/i.test(m)) return "스플릿"; if (/floor|ceiling|cassette|천장|스탠드/i.test(m)) return "스탠드"; return cap }
   if (cat === "TV") { if (/oled/i.test(m)) return "OLED"; if (/qned/i.test(m)) return "QNED"; if (/nano ?cell/i.test(m)) return "NanoCell"; if (/qled/i.test(m)) return "QLED"; if (/uhd|4k/i.test(m)) return "UHD"; if (/fhd|full ?hd/i.test(m)) return "FHD"; if (/hd\b/i.test(m)) return "HD"; return cap }
-  if (cat === "세탁기") { if (/twin ?wash/i.test(m)) return "TwinWash"; if (/wash ?tower|워시타워/i.test(m)) return "워시타워"; if (/front ?load|drum|프론트/i.test(m)) return "F/L"; if (/top ?load|탑로드/i.test(m)) return "T/L"; return cap }
+  if (cat === "세탁기") { if (/twin ?wash/i.test(m)) return "TwinWash"; if (/wash ?tower|워시타워/i.test(m)) return "W/T"; if (/front ?load|drum|프론트/i.test(m)) return "F/L"; if (/top ?load|탑로드/i.test(m)) return "T/L"; return cap }
   if (cat === "냉장고") { if (/side by side|sxs|양문/i.test(m)) return "SxS"; if (/instaview|인스타뷰/i.test(m)) return "InstaView"; if (/french|multi ?door|멀티도어|프렌치/i.test(m)) return "French"; if (/bottom|하냉/i.test(m)) return "BMF"; if (/top ?mount|two ?door|2 ?door|상냉/i.test(m)) return "2-Door"; return cap }
   return cap
 }
@@ -377,39 +377,39 @@ const acFormOf = (m: string): string | null => {
   return null
 }
 // 냉장고 도어형(유형) — 텍스트 + 브랜드 코드프리픽스(LG RV[SFTB]·Samsung R[SFTB]·Condura C**·Haier HR*)
-const REF_FORMS = ["SxS", "프렌치", "상냉동", "하냉동", "단문형", "냉동고"]
+const REF_FORMS = ["SxS", "F/D", "T/F", "B/F", "1Door", "냉동고"]
 const refFormOf = (m: string): string | null => {
   const s = m || ""
   // 명시 타입 텍스트 우선(집계된 마케팅 텍스트/애매한 브랜드코드보다 신뢰) → 그다음 확실한 코드만 폴백
   if (/side by side|\bsxs\b|양문|instaview/i.test(s)) return "SxS"
-  if (/french ?door|multi ?door|4 ?door|프렌치/i.test(s)) return "프렌치"
-  if (/top ?mount|two ?door|2[- ]?door|double ?door|상냉/i.test(s)) return "상냉동"
-  if (/bottom ?(?:mount|freezer)|하냉|BMF/i.test(s)) return "하냉동"
-  if (/single ?door|1[- ]?door|personal|mini ?bar/i.test(s)) return "단문형"
+  if (/french ?door|multi ?door|4 ?door|프렌치/i.test(s)) return "F/D"
+  if (/top ?mount|two ?door|2[- ]?door|double ?door|상냉/i.test(s)) return "T/F"
+  if (/bottom ?(?:mount|freezer)|하냉|BMF/i.test(s)) return "B/F"
+  if (/single ?door|1[- ]?door|personal|mini ?bar/i.test(s)) return "1Door"
   if (/chest|showcase|\bfreezer\b|upright|beverage/i.test(s)) return "냉동고"
   // 코드 폴백(LG RV*·Samsung R*·Condura C* — HRF 등 도어형 불명확 프리픽스는 제외)
   if (/\bRVS|\bRS\d/i.test(s)) return "SxS"
-  if (/\bRVF|\bRF\d/i.test(s)) return "프렌치"
-  if (/\bRVT|\bRUT|\bRT\d|\bCTD|\bCMD/i.test(s)) return "상냉동"
-  if (/\bRUB|\bRVB|\bRB\d/i.test(s)) return "하냉동"
+  if (/\bRVF|\bRF\d/i.test(s)) return "F/D"
+  if (/\bRVT|\bRUT|\bRT\d|\bCTD|\bCMD/i.test(s)) return "T/F"
+  if (/\bRUB|\bRVB|\bRB\d/i.test(s)) return "B/F"
   if (/\bCUF|\bCTF|\bCCH|\bGR-?V|\bSC\d|\bHCF/i.test(s)) return "냉동고"
-  if (/\bCPR/i.test(s)) return "단문형"
+  if (/\bCPR/i.test(s)) return "1Door"
   return null
 }
 // 세탁기 로드형(유형)
 // 세탁기 카테고리에 건조기 포함 — 유형으로 구분. 워시타워/트윈/프론트/탑로드 + 건조기(단독)
-const WM_FORMS = ["프론트", "탑로드", "트윈", "워시타워", "건조기"]
+const WM_FORMS = ["F/L", "T/L", "Twin Tub", "W/T", "Dryer"]
 const wmFormOf = (m: string): string | null => {
   const s = m || ""
-  if (/wash ?tower|washtower|\bWT\d/i.test(s)) return "워시타워"
-  if (/twin ?(?:wash|tub)|twinwash/i.test(s)) return "트윈"
+  if (/wash ?tower|washtower|\bWT\d/i.test(s)) return "W/T"
+  if (/twin ?(?:wash|tub)|twinwash/i.test(s)) return "Twin Tub"
   // 단독 건조기(워셔/세탁 텍스트 없이 dryer만) → 건조기 (콤보·워시타워는 위에서 이미 처리)
-  if (/\bdryer\b|heat ?pump ?dry|drying machine/i.test(s) && !/\bwasher\b|washing/i.test(s)) return "건조기"
+  if (/\bdryer\b|heat ?pump ?dry|drying machine/i.test(s) && !/\bwasher\b|washing/i.test(s)) return "Dryer"
   // 명시 로드형 텍스트 우선 → 코드 폴백(마케팅 텍스트 노이즈로 탑로드가 프론트로 오분류되던 문제)
-  if (/top[- ]?load|topload/i.test(s)) return "탑로드"
-  if (/front[- ]?load|frontload|\bdrum\b/i.test(s)) return "프론트"
-  if (/\bFV\d|\bWW\d|\bNA-?V|\bTWF/i.test(s)) return "프론트"
-  if (/\bT[0-9]\d{3}|\bWA\d|\bNA-?F|\bTWA|\bCWM|\bHWM/i.test(s)) return "탑로드"
+  if (/top[- ]?load|topload/i.test(s)) return "T/L"
+  if (/front[- ]?load|frontload|\bdrum\b/i.test(s)) return "F/L"
+  if (/\bFV\d|\bWW\d|\bNA-?V|\bTWF/i.test(s)) return "F/L"
+  if (/\bT[0-9]\d{3}|\bWA\d|\bNA-?F|\bTWA|\bCWM|\bHWM/i.test(s)) return "T/L"
   return null
 }
 // TV 패널을 **등급(계열)**으로 통합 — 개별 패널명이 아니라 시장 등급으로:

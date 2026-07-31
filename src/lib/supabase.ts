@@ -638,6 +638,44 @@ export async function competitorDaily(max = 12000): Promise<DailyRow[]> {
   }))
 }
 
+/** 경쟁사 프로모 딜 — v_competitor_promo(최근 3일·프로모 있는 리스팅). 프로모 페이지용. */
+export type DealRow = {
+  d: string
+  retailer: string
+  brand: string
+  category: string
+  model: string
+  capacity: string | null
+  price: number | null
+  srp: number | null
+  discount: number | null
+  promo: string
+  url: string | null
+}
+
+export async function promoDeals(max = 6000): Promise<DealRow[]> {
+  const page = 1000
+  const rows: any[] = []
+  for (let off = 0; off < max; off += page) {
+    const chunk = await sb("v_competitor_promo?select=*&order=discount_pct.desc.nullslast&offset=" + off + "&limit=" + page)
+    rows.push(...(chunk ?? []))
+    if (!chunk || chunk.length < page) break
+  }
+  return rows.map((r: any) => ({
+    d: r.d,
+    retailer: r.retailer,
+    brand: r.brand,
+    category: classify(r.model, r.category),
+    model: clean(r.model),
+    capacity: r.capacity ?? null,
+    price: num(r.price_php),
+    srp: num(r.srp_php),
+    discount: num(r.discount_pct),
+    promo: r.promo_text ?? "",
+    url: r.url ?? null,
+  }))
+}
+
 /** 정부 규제 동향 — 통관·물류·세무·관세·표준. Critical 우선, 최신순 */
 export type RegAlert = {
   id: number
