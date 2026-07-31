@@ -998,96 +998,118 @@ const DEAL_TAGS: { k: string; re: RegExp; c: string }[] = [
   { k: "할부", re: /installment|무이자|0 ?%|\bmos\b|\/mo\b|months?\b|x\d+mos/i, c: "border-violet-200 dark:border-violet-500/30 bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300" },
 ]
 const dealTagsOf = (s: string | null) => { const t = s || ""; return DEAL_TAGS.filter((x) => x.re.test(t)).map((x) => x.k) }
+const DealPill = ({ v, sel, onPick }: { v: string; sel: string; onPick: (v: string) => void }) => (
+  <button type="button" onClick={() => onPick(v)} className={"whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition " + (v === sel ? "bg-indigo-600 text-white shadow-sm" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800")}>{v}</button>
+)
+const dmkey = (m: string) => (m || "").toUpperCase().replace(/[^A-Z0-9]/g, "")
+const RET_ON = new Set(["Anson's", "Abenson", "SM Appliance", "Robinsons Appliances"])
+/** 프로모 채널 보드 — 유통사=열, 제품=카드. 프로모 배지(번들·쿠폰·배송·할부·사은품)·최저가/자사 강조.
+ *  레이아웃 근거: Claude Design `retail-channel-board.reference.html`. */
 function DealsView({ deals }: { deals: DealRow[] | null }) {
   const [cat, setCat] = React.useState("전체")
-  const [shop, setShop] = React.useState("전체")
-  const [tag, setTag] = React.useState("전체")
-  const [q, setQ] = React.useState("")
+  const [brand, setBrand] = React.useState("전체")
   const D = deals ?? []
   const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => D.some((r) => r.category === c))], [D])
-  const shops = React.useMemo(() => ["전체", ...Array.from(new Set(D.map((r) => r.retailer))).filter(Boolean)], [D])
-  const rows = React.useMemo(() => {
-    const kw = q.trim().toLowerCase()
-    return D.filter((r) =>
-      (cat === "전체" || r.category === cat) &&
-      (shop === "전체" || r.retailer === shop) &&
-      (tag === "전체" || (tag === "할인" ? (r.discount ?? 0) > 0 : dealTagsOf(r.promo).includes(tag))) &&
-      (!kw || (r.model + " " + r.brand + " " + r.category).toLowerCase().includes(kw)),
-    ).sort((a, b) => (b.discount ?? -1) - (a.discount ?? -1))
-  }, [D, cat, shop, tag, q])
-  const withDisc = rows.filter((r) => r.discount != null)
-  const avgDisc = withDisc.length ? withDisc.reduce((s, r) => s + (r.discount as number), 0) / withDisc.length : null
-  const nShops = new Set(rows.map((r) => r.retailer)).size
+  const brandsL = React.useMemo(() => {
+    const m = new Map<string, number>()
+    D.forEach((r) => { if (r.brand) m.set(r.brand, (m.get(r.brand) || 0) + 1) })
+    return ["전체", ...Array.from(m.entries()).sort((a, b) => b[1] - a[1]).map((x) => x[0]).slice(0, 7)]
+  }, [D])
+  const filtered = React.useMemo(() => D.filter((r) => (cat === "전체" || r.category === cat) && (brand === "전체" || r.brand === brand)), [D, cat, brand])
+  // 모델별 유통 최저가(‘최저’ 배지)
+  const bestByModel = React.useMemo(() => {
+    const m: Record<string, number> = {}
+    filtered.forEach((r) => { if (r.price == null) return; const k = dmkey(r.model); if (k.length < 5) return; m[k] = Math.min(m[k] ?? Infinity, r.price) })
+    return m
+  }, [filtered])
+  // 유통(열) — 딜 있는 유통만, 취급수 순
+  const cols = React.useMemo(() => {
+    const m = new Map<string, DealRow[]>()
+    filtered.forEach((r) => { const a = m.get(r.retailer) ?? []; a.push(r); m.set(r.retailer, a) })
+    return Array.from(m.entries()).map(([r, list]) => ({ r, list: list.slice().sort((a, b) => (b.discount ?? -1) - (a.discount ?? -1)).slice(0, 60) })).sort((a, b) => b.list.length - a.list.length)
+  }, [filtered])
+  const lgN = filtered.filter((r) => r.brand === "LG").length
+  const onlineLowest = React.useMemo(() => {
+    // 자사(LG) 모델 중 최저가 유통이 온라인인 비율
+    const byModel: Record<string, { p: number; on: boolean }> = {}
+    filtered.filter((r) => r.brand === "LG" && r.price != null).forEach((r) => { const k = dmkey(r.model); const cur = byModel[k]; if (!cur || (r.price as number) < cur.p) byModel[k] = { p: r.price as number, on: RET_ON.has(r.retailer) } })
+    const vals = Object.values(byModel); return vals.length ? Math.round((vals.filter((v) => v.on).length / vals.length) * 100) : null
+  }, [filtered])
 
   if (deals === null) return <div className="flex min-h-[440px] items-center justify-center text-[13px] text-gray-400 dark:text-gray-500">불러오는 중</div>
 
   return (
-    <div className="mt-3 flex flex-col gap-3">
-      {/* 요약 지표 */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { l: "프로모 딜", v: rows.length.toLocaleString(), s: "건" },
-          { l: "평균 할인율", v: avgDisc == null ? "—" : avgDisc.toFixed(1) + "%", s: "" },
-          { l: "유통", v: String(nShops), s: "곳" },
-        ].map((x) => (
-          <div key={x.l} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-1.5">
-            <div className="text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{x.l}</div>
-            <div className="text-[15px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{x.v}<span className="ml-0.5 text-[11px] font-medium text-gray-400 dark:text-gray-500">{x.s}</span></div>
-          </div>
-        ))}
-      </div>
-      {/* 필터 */}
-      <div className="relative z-20 flex flex-wrap items-center gap-2">
-        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={setCat} /></div>
-        <div className="w-fit"><PmDrop label="유통" sel={shop} options={shops.map((s) => ({ k: s, t: pmShopLabel(s) }))} onSelect={setShop} /></div>
-        <div className="w-fit"><PmDrop label="프로모" sel={tag} options={["전체", "할인", "무료배송", "쿠폰", "번들", "할부"].map((t) => ({ k: t, t }))} onSelect={setTag} /></div>
-        <div className="relative ml-auto">
-          <svg className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="모델·브랜드 검색" className="w-[200px] rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-8 pr-3 text-[12px] outline-none focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900" />
+    <div className="mt-3 flex min-h-0 flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm">
+      {/* 카드 헤더 + 범례 */}
+      <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+        <span className="h-4 w-1 rounded bg-indigo-500" />
+        <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">프로모 채널 보드</h2>
+        <span className="rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[10px] font-bold text-emerald-600 dark:text-emerald-300">LIVE</span>
+        <span className="text-[11px] text-gray-400 dark:text-gray-500">유통별 · 제품 <b className="text-emerald-600 dark:text-emerald-400">최저가</b> 하이라이트</span>
+        <div className="ml-auto flex items-center gap-1">
+          <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">Promo</span>
+          {DEAL_TAGS.map((d) => <span key={d.k} className={"rounded border px-1 py-px text-[10px] font-bold " + d.c}>{d.k}</span>)}
         </div>
+      </header>
+      {/* 필터바 */}
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40 px-4 py-2.5">
+        <div className="flex items-center gap-1.5"><span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span><div className="flex flex-wrap gap-1">{cats.map((c) => <DealPill key={c} v={c} sel={cat} onPick={setCat} />)}</div></div>
+        <div className="flex items-center gap-1.5"><span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">브랜드</span><div className="flex flex-wrap gap-1">{brandsL.map((b) => <DealPill key={b} v={b} sel={brand} onPick={setBrand} />)}</div></div>
+        <p className="ml-auto text-[11px] text-gray-500 dark:text-gray-400"><b className="tabular-nums text-gray-700 dark:text-gray-200">{filtered.length.toLocaleString()}</b>개 딜 · <b className="tabular-nums text-gray-700 dark:text-gray-200">{cols.length}</b>개 유통</p>
       </div>
-      {/* 딜 테이블 */}
-      <div className="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-800">
-        <table className="w-full min-w-[860px] text-[12px]">
-          <thead>
-            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/70 text-[10.5px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
-              <th className="px-3 py-2 text-left">유통</th>
-              <th className="px-3 py-2 text-left">브랜드</th>
-              <th className="px-3 py-2 text-left">모델</th>
-              <th className="px-2 py-2 text-left">제품</th>
-              <th className="px-3 py-2 text-right">현재가</th>
-              <th className="px-3 py-2 text-right">SRP</th>
-              <th className="px-3 py-2 text-right">할인율</th>
-              <th className="px-3 py-2 text-left">프로모</th>
-            </tr>
-          </thead>
-          <tbody>
-            {rows.slice(0, 400).map((r, i) => {
-              const tags = dealTagsOf(r.promo)
-              const disc = r.discount != null && r.discount > 0
-              return (
-                <tr key={r.retailer + r.model + i} className="border-b border-gray-50 dark:border-gray-800/60 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
-                  <td className="whitespace-nowrap px-3 py-1.5 text-gray-500 dark:text-gray-400">{pmShopLabel(r.retailer)}</td>
-                  <td className={"whitespace-nowrap px-3 py-1.5 font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{r.brand}</td>
-                  <td className="max-w-[300px] truncate px-3 py-1.5 text-gray-700 dark:text-gray-200">{r.url ? <a href={r.url} target="_blank" rel="noopener noreferrer" className="hover:text-indigo-600 hover:underline dark:hover:text-indigo-400">{r.model}</a> : r.model}</td>
-                  <td className="whitespace-nowrap px-2 py-1.5 text-gray-400 dark:text-gray-500">{r.category}</td>
-                  <td className="whitespace-nowrap px-3 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{peso(r.price)}</td>
-                  <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
-                  <td className="whitespace-nowrap px-3 py-1.5 text-right tabular-nums">{disc ? <span className="rounded bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 font-bold text-rose-600 dark:text-rose-400">-{Math.round(r.discount as number)}%</span> : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
-                  <td className="px-3 py-1.5">
-                    <div className="flex flex-wrap gap-1">
-                      {tags.length === 0 && !disc ? <span className="text-gray-300 dark:text-gray-600">—</span> : null}
-                      {tags.map((t) => { const d = DEAL_TAGS.find((x) => x.k === t)!; return <span key={t} className={"rounded border px-1.5 py-0.5 text-[10px] font-semibold " + d.c}>{t}</span> })}
-                    </div>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+      {/* 보드 */}
+      <div className="min-h-0 flex-1 overflow-x-auto">
+        {cols.length === 0 ? (
+          <p className="px-4 py-16 text-center text-[12px] text-gray-400 dark:text-gray-500">해당 조건의 프로모 딜이 없습니다</p>
+        ) : (
+          <div className="flex gap-px bg-gray-100 dark:bg-gray-800">
+            {cols.map(({ r, list }) => (
+              <div key={r} className="min-w-[210px] flex-1 bg-white dark:bg-gray-900 px-2.5 py-3">
+                <div className="mb-2 flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 pb-2">
+                  <span className="truncate text-[13px] font-bold text-gray-800 dark:text-gray-100">{pmShopLabel(r)}</span>
+                  <span className={"whitespace-nowrap rounded px-1 py-px text-[9px] font-medium " + (RET_ON.has(r) ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400")}>{RET_ON.has(r) ? "온라인" : "오프라인"}</span>
+                  <span className="ml-auto text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{list.length}</span>
+                </div>
+                <div className="space-y-2">
+                  {list.map((p, i) => {
+                    const own = p.brand === "LG"
+                    const isBest = p.price != null && bestByModel[dmkey(p.model)] === p.price
+                    const disc = p.discount != null && p.discount > 0
+                    const tags = dealTagsOf(p.promo)
+                    const priceCls = isBest ? "text-emerald-700 dark:text-emerald-300" : own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50"
+                    const cardCls = isBest ? "border-emerald-200 dark:border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-500/5" : own ? "border-indigo-100 dark:border-indigo-500/30 bg-indigo-50/30 dark:bg-indigo-500/5" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900"
+                    return (
+                      <a key={p.model + i} href={p.url ?? undefined} target={p.url ? "_blank" : undefined} rel="noopener noreferrer" className={"block rounded-lg border p-2.5 transition hover:shadow-sm " + cardCls}>
+                        <div className="flex items-center gap-1.5">
+                          <span className={"text-[12px] font-bold " + (own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{p.brand}</span>
+                          <span className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-px text-[9px] font-semibold text-gray-500 dark:text-gray-400">{p.category}</span>
+                          {own ? <span className="rounded bg-indigo-100 dark:bg-indigo-500/20 px-1 py-px text-[9px] font-bold text-indigo-600 dark:text-indigo-300">자사</span> : null}
+                          {isBest ? <span className="ml-auto rounded bg-emerald-500 px-1 py-px text-[9px] font-bold text-white">최저</span> : disc ? <span className="ml-auto rounded text-[10px] font-bold tabular-nums text-rose-500 dark:text-rose-400">-{Math.round(p.discount as number)}%</span> : null}
+                        </div>
+                        <div className="mt-0.5 truncate text-[10px] text-gray-400 dark:text-gray-500" title={p.model}>{p.model}</div>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <span className={"text-[16px] font-bold tabular-nums " + priceCls}>{peso(p.price)}</span>
+                          {p.srp != null && disc ? <span className="text-[10px] tabular-nums text-gray-400 line-through dark:text-gray-500">{peso(p.srp)}</span> : null}
+                        </div>
+                        <div className="mt-1.5 flex flex-wrap gap-1">
+                          {tags.length ? tags.map((t) => { const d = DEAL_TAGS.find((x) => x.k === t)!; return <span key={t} className={"rounded border px-1 py-px text-[10px] font-semibold " + d.c}>{t}</span> }) : <span className="text-[10px] text-gray-300 dark:text-gray-600">—</span>}
+                        </div>
+                      </a>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-      {rows.length > 400 && <p className="text-center text-[11px] text-gray-400 dark:text-gray-500">상위 400건 표시 · 필터로 좁혀 보세요 (전체 {rows.length.toLocaleString()}건)</p>}
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">데이터: v_competitor_promo(최근 3일 프로모 리스팅) · 프로모 태그는 리스팅 문구에서 자동 분류 · 할인율=SRP 대비 · 모델 클릭 시 원문</p>
+      {/* 시사점 */}
+      <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-2.5">
+        <p className="flex items-start gap-1.5 text-[11px] leading-relaxed text-indigo-700 dark:text-indigo-300">
+          <span className="mt-0.5 shrink-0 rounded bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white">LG 시사점</span>
+          <span className="text-gray-600 dark:text-gray-300">표시 프로모 딜 <b>{filtered.length.toLocaleString()}건</b> · 자사(LG) <b className="text-indigo-700 dark:text-indigo-300">{lgN.toLocaleString()}건</b>{onlineLowest != null ? <> · LG 모델 최저가의 <b className="text-indigo-700 dark:text-indigo-300">{onlineLowest}%</b>가 온라인 유통 주도</> : null}. 유통별 프로모 강도·번들/할부 조건 점검 필요.</span>
+        </p>
+      </div>
     </div>
   )
 }
