@@ -44,7 +44,7 @@ function TrendCard({ title, seg, unit, pts, color, dec, meaning, ai, src, delay 
   const last = pts[pts.length - 1]?.value, first = pts[0]?.value
   const chg = last != null && first != null ? last - first : null, up = (chg ?? 0) > 0
   return (
-    <div className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: delay + "s" }}>
+    <div className="flex h-full flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: delay + "s" }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>
@@ -107,16 +107,16 @@ export default function DailyTrends() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes drawL{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}"}</style>
 
       {/* 배너 */}
-      <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 px-4 py-3 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+      <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 px-4 py-3" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg></div>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg></div>
           <div className="min-w-0 flex-1 text-[14px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">일일동향</b> — 통합 경제 대시보드 + 환율·유가 30일 · 조달원가·수요의 초단기 신호</div>
           <div className="hidden shrink-0 flex-wrap gap-1.5 sm:flex">{status.map((s) => <span key={s.t} className={"rounded-full px-2 py-0.5 text-[11.5px] font-bold " + cmap[s.c]}>{s.t}</span>)}</div>
         </div>
       </div>
 
       {/* 마스터 통합 경제 지표 */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".05s" }}>
+      <div className="rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".05s" }}>
         <div className="mb-3 flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
           <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">통합 경제 지표</h2>

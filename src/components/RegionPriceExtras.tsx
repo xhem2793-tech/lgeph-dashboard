@@ -66,7 +66,7 @@ export default function RegionPriceExtras() {
       <nav className="flex flex-wrap gap-1.5">
         {CATS.map((c) => (
           <button key={c.k} type="button" onClick={() => setCat(c.k)}
-            className={"flex flex-col items-start rounded-lg px-3.5 py-1.5 text-left transition-all duration-200 " + (cat === c.k ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300")}>
+            className={"flex flex-col items-start rounded-lg px-3.5 py-1.5 text-left transition-all duration-200 " + (cat === c.k ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300")}>
             <span className="text-[14px] font-bold">{c.label}</span>
             <span className={"text-[11px] " + (cat === c.k ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{c.sub}</span>
           </button>
@@ -75,7 +75,7 @@ export default function RegionPriceExtras() {
 
       {cat === "price" && rows.length > 0 && (
         <div className="grid gap-3 lg:grid-cols-[1.5fr_1fr]">
-          <section className="min-w-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+          <section className="min-w-0 overflow-hidden rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .5s ease both" }}>
             <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
               <span className="h-[18px] w-1 rounded bg-indigo-500" />
               <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역 × 품목 물가</h2>
@@ -100,7 +100,7 @@ export default function RegionPriceExtras() {
             <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[11px] text-gray-400 dark:text-gray-500">자료 PSA 지역별 CPI(v_cost_of_living_regional) · 전년비</p>
           </section>
 
-          <section className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+          <section className="rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .5s ease both" }}>
             <h2 className="text-[16px] font-bold text-gray-900 dark:text-gray-50">지역 물가 분포 <span className="text-[12px] font-normal text-gray-400 dark:text-gray-500">전국 {rows.length}곳</span></h2>
             <div className="mt-3 flex gap-5">
               <div><p className="text-[12px] text-gray-400 dark:text-gray-500">평균</p><p className="text-[24px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rMean.toFixed(1)}<span className="text-[13px] text-gray-400 dark:text-gray-500">%</span></p></div>
@@ -121,7 +121,7 @@ export default function RegionPriceExtras() {
       )}
 
       {cat === "pop" && popRows.length > 0 && (
-        <section className="min-w-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+        <section className="min-w-0 overflow-hidden rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 인구·가구</h2>
@@ -144,7 +144,7 @@ export default function RegionPriceExtras() {
       )}
 
       {cat === "income" && povRows.length > 0 && (
-        <section className="min-w-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+        <section className="min-w-0 overflow-hidden rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 소득·빈곤</h2>

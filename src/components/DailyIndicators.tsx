@@ -304,7 +304,7 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
       {multi ? (
         <div className="mt-1.5 flex flex-nowrap gap-1 overflow-hidden">
           {items.map((it, i) => (
-            <button key={i} onClick={() => setSel(i)} className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-medium transition-all duration-200 active:scale-95 " + (idx === i ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}>{it.label}</button>
+            <button key={i} onClick={() => setSel(i)} className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-medium transition-all duration-200 active:scale-95 " + (idx === i ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}>{it.label}</button>
           ))}
         </div>
       ) : null}
@@ -511,7 +511,7 @@ export default function DailyIndicators() {
                 <div className="flex items-baseline gap-2">
                   
                   <div className="relative flex shrink-0 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-0.5">
-                    <span className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 shadow-sm transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]" style={{ left: ind.left, width: ind.width }} />
+                    <span className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]" style={{ left: ind.left, width: ind.width }} />
                     {RANGES.map((r, i) => (
                       <button key={r.key} ref={(el) => { rangeBtns.current[i] = el }} onClick={() => setRange(r.key)} className={"relative z-10 rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors duration-300 active:scale-95 " + (range === r.key ? "text-white" : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400")}>{t(("r_" + r.key) as "r_7d")}</button>
                     ))}

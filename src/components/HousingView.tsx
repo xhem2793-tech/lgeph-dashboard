@@ -68,9 +68,9 @@ export default function HousingView() {
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"}</style>
 
-      <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+      <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 p-4" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6" /></svg>
           </div>
           <div className="min-w-0 flex-1 text-[14px] leading-snug text-gray-700 dark:text-gray-200">
@@ -80,7 +80,7 @@ export default function HousingView() {
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-      <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+      <section className="min-w-0 rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
         {/* 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
@@ -127,7 +127,7 @@ export default function HousingView() {
 
         {/* 지역별 인프라 투자 — DPWH (B2B 공조·빌트인 발주 환경) */}
         {infra.length > 0 && (
-          <div className="flex flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm sm:col-span-2" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+          <div className="flex flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5 sm:col-span-2" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
             <div className="flex items-center gap-1.5">
               <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 인프라 투자 (DPWH)</h3>
               <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">B2B</span>

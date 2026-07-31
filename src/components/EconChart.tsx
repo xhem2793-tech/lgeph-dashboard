@@ -280,7 +280,7 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
   }
   return (
     <div ref={cardRef}
-      className="group/card relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md"
+      className="group/card relative z-0 flex h-full flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md"
       style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: Math.min(idx, 8) * 0.025 + "s" }}
     >
       <div className="flex items-center gap-1.5">

@@ -175,7 +175,7 @@ export default function CompetitorMovers() {
   const cell = "flex h-[21px] items-center justify-center overflow-hidden px-0.5"
 
   return (
-    <section className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 shadow-sm transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
+    <section className="flex h-full flex-col rounded-xl bg-white dark:bg-gray-900 p-3 transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: "0.6s" }}>
       <style>{"@keyframes calIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}"}</style>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
@@ -202,7 +202,7 @@ export default function CompetitorMovers() {
                 key={c}
                 type="button"
                 onClick={() => pick(c)}
-                className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-medium transition-all duration-200 active:scale-95 " + (cat === c ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}
+                className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-medium transition-all duration-200 active:scale-95 " + (cat === c ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}
               >
                 {CAT_LABEL[c] ?? c}
               </button>
@@ -212,14 +212,14 @@ export default function CompetitorMovers() {
             <button
               type="button"
               onClick={() => setSortDir("down")}
-              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "down" ? "border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:border-emerald-200 dark:hover:border-emerald-500/30 hover:text-emerald-600 dark:hover:text-emerald-400")}
+              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "down" ? "border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:border-emerald-200 dark:hover:border-emerald-500/30 hover:text-emerald-600 dark:hover:text-emerald-400")}
             >
               {t("price_down")}
             </button>
             <button
               type="button"
               onClick={() => setSortDir("up")}
-              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:border-rose-200 dark:hover:border-rose-500/30 hover:text-rose-600 dark:hover:text-rose-400")}
+              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:border-rose-200 dark:hover:border-rose-500/30 hover:text-rose-600 dark:hover:text-rose-400")}
             >
               {t("price_up")}
             </button>

@@ -33,7 +33,7 @@ export default function GdpComposition() {
   const gray = "#94a3b8"
 
   return (
-    <div ref={cardRef} className="group/card relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+    <div ref={cardRef} className="group/card relative z-0 flex h-full flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
       <style>{"@keyframes growBar{from{transform:scaleY(0);opacity:.3}to{transform:scaleY(1);opacity:1}}"}</style>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">GDP 산업구조</h3>

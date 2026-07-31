@@ -36,7 +36,7 @@ export default function EventModal({ event, onClose }: { event: CalEvent; onClos
       <style>{"@keyframes evBackIn{from{opacity:0}to{opacity:1}}@keyframes evBackOut{from{opacity:1}to{opacity:0}}@keyframes evModalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes evModalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
       <div className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-900 shadow-2xl" style={{ animation: closing ? "evModalOut .22s cubic-bezier(.4,0,1,1) both" : "evModalIn .34s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
         <span className={"absolute inset-y-0 left-0 w-1 " + dotOf(m.category)} />
-        <button type="button" onClick={close} aria-label="닫기" className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95">
+        <button type="button" onClick={close} aria-label="닫기" className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
 

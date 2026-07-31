@@ -51,7 +51,7 @@ export default function ChangeFeed() {
   const empty = rows !== null && rows.length === 0
 
   return (
-    <section className="h-full rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
+    <section className="h-full rounded-xl bg-white dark:bg-gray-900 p-4">
       <header className="mb-2 flex items-baseline justify-between">
         <div className="flex items-baseline gap-2">
           <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">금주 핵심</h2>

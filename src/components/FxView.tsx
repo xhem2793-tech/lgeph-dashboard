@@ -167,7 +167,7 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
 }) {
   const [aiOpen, setAiOpen] = React.useState(false)
   return (
-    <div className="relative z-0 flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="relative z-0 flex h-full flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-2">
         <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {unit && <span className="text-[11.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
@@ -260,7 +260,7 @@ export default function FxView() {
 
       {/* 본문: 좌 차트 + 우 상시 위젯(286px) */}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-        <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+        <section className="min-w-0 rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율</h2>
@@ -306,7 +306,7 @@ export default function FxView() {
 
         {/* 우 — 상시 위젯(286px, 캘린더 위젯 어법) */}
         <aside className="flex flex-col gap-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: "80ms" }}>
-          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
+          <div className="rounded-xl bg-white dark:bg-gray-900 p-4">
             <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
               <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율 핵심 KPI</h2>
               <span className="text-[12px] text-gray-400 dark:text-gray-500">{s?.asOf ? s.asOf.slice(0, 10).replace(/-/g, ".") : "26.06"} 기준</span>
@@ -323,7 +323,7 @@ export default function FxView() {
             <p className="mt-2.5 text-[11.5px] leading-relaxed text-gray-400 dark:text-gray-500">₱/USD·₩/₱ 실측(fx_daily) · NEER·REER 실측(BIS, 전년비 Δ)</p>
           </div>
 
-          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
+          <div className="rounded-xl bg-white dark:bg-gray-900 p-4">
             <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
               <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">연결 일정</h2>
               <span className="text-[12px] text-gray-400 dark:text-gray-500">환율 영향</span>

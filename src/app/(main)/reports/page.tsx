@@ -22,7 +22,7 @@ function ReportCard({ r, i }: { r: PubReport; i: number }) {
       type="button"
       onClick={open}
       style={{ animation: "repIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.05 + "s" }}
-      className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-left shadow-sm transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99]"
+      className="group flex h-full w-full flex-col overflow-hidden rounded-xl bg-white dark:bg-gray-900 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99]"
     >
       {/* 썸네일 — 리포트 미리보기(있으면), 없으면 브랜드 그라디언트 */}
       <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950">
@@ -34,7 +34,7 @@ function ReportCard({ r, i }: { r: PubReport; i: number }) {
             <span className="text-[11px] font-medium text-white/70">{r.kind}</span>
           </div>
         )}
-        <span className="absolute left-3 top-3 rounded-full bg-white/90 dark:bg-gray-900/90 px-2 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 shadow-sm backdrop-blur">{r.kind}</span>
+        <span className="absolute left-3 top-3 rounded-full bg-white/90 dark:bg-gray-900/90 px-2 py-0.5 text-[11px] font-bold text-indigo-700 dark:text-indigo-300 backdrop-blur">{r.kind}</span>
         <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
           PDF

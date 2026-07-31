@@ -131,7 +131,7 @@ function QuakeStrip({ quakes }: { quakes: Quake[] }) {
 
 function Panel({ title, seg, children, meaning, src }: { title: string; seg?: string; children: React.ReactNode; meaning: React.ReactNode; src: React.ReactNode }) {
   return (
-    <div className="flex h-full flex-col rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="flex h-full flex-col rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {seg && <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>}
@@ -185,11 +185,11 @@ export default function WeatherView() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"}</style>
 
       {/* 현재 기상 히어로 — 날씨 대시보드 상단 */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-sky-50 via-white to-white dark:from-sky-500/10 dark:via-gray-900 dark:to-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .5s ease both" }}>
+      <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-sky-50 via-white to-white dark:from-sky-500/10 dark:via-gray-900 dark:to-gray-900 p-4" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           {/* 현재 기온 */}
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white shadow-sm">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-sky-500 text-white">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>
             </div>
             <div>
@@ -225,7 +225,7 @@ export default function WeatherView() {
           </div>
           <div className="ml-auto hidden shrink-0 items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 p-0.5 sm:flex">
             {WIN.map((w) => (
-              <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[12px] font-semibold transition-colors " + (win === w.k ? "bg-sky-600 text-white shadow-sm" : "text-gray-500 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400")}>{w.k}</button>
+              <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[12px] font-semibold transition-colors " + (win === w.k ? "bg-sky-600 text-white" : "text-gray-500 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400")}>{w.k}</button>
             ))}
           </div>
         </div>

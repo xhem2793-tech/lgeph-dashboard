@@ -158,7 +158,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
 
       {/* 매트릭스 */}
       <div className="overflow-x-auto">
-        <div ref={cardRef} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ minWidth: minW }}>
+        <div ref={cardRef} className="overflow-hidden rounded-xl bg-white dark:bg-gray-900" style={{ minWidth: minW }}>
           <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-4 w-1 rounded bg-indigo-500" />
             {(() => { const sp = effSpec !== "전체" ? effSpec : effForm !== "전체" ? effForm : ""; return (
@@ -167,8 +167,8 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
             <div className="ml-auto flex items-center gap-1.5">
               {/* 세로축 스케일: Auto(선형) / 로그 */}
               <div className="flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-0.5 text-[11.5px] font-semibold" title="세로축 가격 스케일 — 로그는 가격대가 넓을 때 저가 구간을 펼쳐 봄">
-                <button type="button" onClick={() => setLogY(false)} className={"rounded-md px-2 py-0.5 transition " + (!logY ? "bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400")}>Auto</button>
-                <button type="button" onClick={() => setLogY(true)} className={"rounded-md px-2 py-0.5 transition " + (logY ? "bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-300 shadow-sm" : "text-gray-500 dark:text-gray-400")}>로그</button>
+                <button type="button" onClick={() => setLogY(false)} className={"rounded-md px-2 py-0.5 transition " + (!logY ? "bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-300" : "text-gray-500 dark:text-gray-400")}>Auto</button>
+                <button type="button" onClick={() => setLogY(true)} className={"rounded-md px-2 py-0.5 transition " + (logY ? "bg-white dark:bg-gray-900 text-indigo-600 dark:text-indigo-300" : "text-gray-500 dark:text-gray-400")}>로그</button>
               </div>
               <button type="button" onClick={dlPng} disabled={dling} data-noexport="1" title="카드 전체를 PPT 슬라이드 크기 이미지로 저장" className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[11.5px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-50">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
@@ -220,7 +220,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
                         {cards.filter((c) => c.b === b).map((c, ci) => { const hit = !qq || (c.b + " " + c.label).toLowerCase().includes(qq); return (
                           <a key={c.label + ci} href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer"
                             title={`${c.b} · ${c.label} · ${peso(c.avg)}${c.retailer ? " @ " + pmShopLabel(c.retailer) : ""} · ${c.shops}개 유통 취급${c.star != null ? " · New DOE ★" + c.star : ""}${c.kwh != null ? " · " + Math.round(c.kwh) + "kWh/월" : ""}${c.url ? " · 클릭→원문" : ""}`}
-                            className={"absolute block overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (qq && !hit ? "opacity-20 " : "") + (qq && hit ? "z-20 ring-2 ring-indigo-500 " : "") + (c.oos ? "border-dashed border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 opacity-70 grayscale" : lg ? "z-10 border-transparent bg-indigo-600 text-white shadow-sm" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
+                            className={"absolute block overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (qq && !hit ? "opacity-20 " : "") + (qq && hit ? "z-20 ring-2 ring-indigo-500 " : "") + (c.oos ? "border-dashed border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 opacity-70 grayscale" : lg ? "z-10 border-transparent bg-indigo-600 text-white" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
                             style={{ top: c.top, left: "50%", marginLeft: -(CARD_W / 2), width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "opacity" }}>
                             {/* 왼쪽 세로 스트립 = 가격대 색(LOW 초록·MED 파랑·프리미엄 주황) — 배지 대체 */}
                             <span className={"absolute inset-y-0 left-0 w-1.5 " + pmTierBar(c.tier)} title={"가격대: " + pmTierLabel(c.tier)} />

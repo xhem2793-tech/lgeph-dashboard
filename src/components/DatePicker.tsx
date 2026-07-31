@@ -61,7 +61,7 @@ const TimeSegment = ({ segment, state }: TimeSegmentProps) => {
       ref={ref}
       className={cx(
         // base
-        "relative block w-full appearance-none rounded-md border px-2.5 py-1.5 text-left uppercase tabular-nums shadow-sm outline-none transition sm:text-sm",
+        "relative block w-full appearance-none rounded-md border px-2.5 py-1.5 text-left uppercase tabular-nums outline-none transition sm:text-sm",
         // border color
         "border-gray-300 dark:border-gray-800",
         // text color
@@ -154,7 +154,7 @@ TimeInput.displayName = "TimeInput"
 const triggerStyles = tv({
   base: [
     // base
-    "peer flex w-full cursor-pointer appearance-none items-center gap-x-2 truncate rounded-md border px-3 py-2 shadow-sm outline-none transition-all sm:text-sm",
+    "peer flex w-full cursor-pointer appearance-none items-center gap-x-2 truncate rounded-md border px-3 py-2 outline-none transition-all sm:text-sm",
     // background color
     "bg-white dark:bg-gray-950",
     // border color
@@ -368,7 +368,7 @@ const PresetContainer = <TPreset extends Preset, TValue>({
               title={preset.label}
               className={cx(
                 // base
-                "relative w-full overflow-hidden text-ellipsis whitespace-nowrap rounded border px-2.5 py-1.5 text-left text-base shadow-sm outline-none transition-all sm:border-none sm:py-2 sm:text-sm sm:shadow-none",
+                "relative w-full overflow-hidden text-ellipsis whitespace-nowrap rounded border px-2.5 py-1.5 text-left text-base outline-none transition-all sm:border-none sm:py-2 sm:text-sm sm:shadow-none",
                 // text color
                 "text-gray-700 dark:text-gray-300",
                 // border color

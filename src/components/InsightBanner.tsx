@@ -46,13 +46,13 @@ export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open
   return (
     <div
       onClick={onToggle}
-      className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm transition-shadow hover:shadow-md"
+      className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 transition-shadow hover:shadow-md"
       style={{ animation: "fadeUp .5s ease both" }}
     >
       <div className="flex items-center gap-3 px-4 py-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white shadow-sm">{GlyphInsight}</div>
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">{GlyphInsight}</div>
         {banner.period && (
-          <span className="shrink-0 rounded-md bg-indigo-600 px-2 py-1 text-[12px] font-bold text-white shadow-sm">
+          <span className="shrink-0 rounded-md bg-indigo-600 px-2 py-1 text-[12px] font-bold text-white">
             {fmtPeriod(banner.period)}
           </span>
         )}

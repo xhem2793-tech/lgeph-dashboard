@@ -84,9 +84,9 @@ export default function OnlineMarketView() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}"}</style>
 
       {/* 접이식 배너 */}
-      <div className="overflow-hidden rounded-xl border border-violet-100 dark:border-violet-500/25 bg-gradient-to-r from-violet-50 dark:from-violet-500/10 via-violet-50/40 dark:via-transparent to-white dark:to-gray-900 shadow-sm" style={{ animation: "fadeOnly .5s ease both" }}>
+      <div className="overflow-hidden rounded-xl border border-violet-100 dark:border-violet-500/25 bg-gradient-to-r from-violet-50 dark:from-violet-500/10 via-violet-50/40 dark:via-transparent to-white dark:to-gray-900" style={{ animation: "fadeOnly .5s ease both" }}>
         <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white shadow-sm"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="14" rx="2" /><path d="M8 21h8M12 18v3" /></svg></div>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="14" rx="2" /><path d="M8 21h8M12 18v3" /></svg></div>
           <div className="min-w-0 flex-1 text-[14px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">온라인 시장</b> — 인터넷 {phInternet.length ? <b className="text-violet-700 dark:text-violet-300">{Math.round(phInternet[phInternet.length - 1].value)}%</b> : "—"}·계정 {kv.account_ownership ? Math.round(kv.account_ownership.value) + "%" : "—"}·모바일 {kv.mobile_per100 ? Math.round(kv.mobile_per100.value) + "/100" : "—"} — 신용카드 3%대(역내 최저), 직불·BNPL 중심 온라인 가전 구매 저변</div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-violet-500 dark:text-violet-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
         </div>
@@ -99,7 +99,7 @@ export default function OnlineMarketView() {
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-        <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+        <section className="min-w-0 rounded-xl bg-white dark:bg-gray-900 p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-violet-500" />
             <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">온라인 시장</h2>
@@ -109,7 +109,7 @@ export default function OnlineMarketView() {
           <nav className="mb-3.5 flex flex-wrap gap-1.5">
             {[{ k: "ph", label: "이커머스·디지털(PH)" }, { k: "sea", label: "동남아 6개국 비교" }].map((s) => (
               <button key={s.k} type="button" onClick={() => setTab(s.k as "ph" | "sea")}
-                className={"rounded-lg px-3 py-1.5 text-[13.5px] font-semibold transition-all duration-200 " + (tab === s.k ? "bg-violet-600 text-white shadow-sm" : "bg-gray-100 text-gray-600 hover:bg-violet-50 hover:text-violet-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-violet-500/15 dark:hover:text-violet-300")}>{s.label}</button>
+                className={"rounded-lg px-3 py-1.5 text-[13.5px] font-semibold transition-all duration-200 " + (tab === s.k ? "bg-violet-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-violet-50 hover:text-violet-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-violet-500/15 dark:hover:text-violet-300")}>{s.label}</button>
             ))}
           </nav>
 

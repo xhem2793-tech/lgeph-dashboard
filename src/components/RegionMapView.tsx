@@ -24,7 +24,7 @@ export default function RegionMapView() {
   }, [dark, mounted])
   return (
     // 풀블리드 — 카드 박스·이중 헤더·개발자 푸터 제거. 지도가 페이지 표면과 하나로 읽히게.
-    <div className="min-w-0 overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ animation: "fadeUp .4s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="min-w-0 overflow-hidden rounded-xl bg-white dark:bg-gray-900" style={{ animation: "fadeUp .4s cubic-bezier(.16,1,.3,1) both" }}>
       {cb ? (
         <iframe
           ref={frameRef}

@@ -20,7 +20,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         {error?.digest && <p className="mt-2 font-mono text-[12px] text-gray-400 dark:text-gray-500">오류 코드: {error.digest}</p>}
       </div>
       <div className="flex gap-2">
-        <button type="button" onClick={() => reset()} className="rounded-lg bg-indigo-600 px-4 py-2 text-[14px] font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 active:scale-95">다시 시도</button>
+        <button type="button" onClick={() => reset()} className="rounded-lg bg-indigo-600 px-4 py-2 text-[14px] font-semibold text-white transition-all hover:bg-indigo-700 active:scale-95">다시 시도</button>
         <a href="/overview" className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-2 text-[14px] font-semibold text-gray-700 dark:text-gray-200 transition-colors hover:border-gray-300 dark:hover:border-gray-700">홈으로</a>
       </div>
     </div>

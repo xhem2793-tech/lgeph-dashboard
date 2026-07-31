@@ -759,7 +759,7 @@ export default function Page() {
                       className={
                         "rounded-full border px-2 py-0.5 text-[12px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " +
                         (on
-                          ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
+                          ? "border-indigo-600 bg-indigo-600 text-white"
                           : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")
                       }
                     >
@@ -832,7 +832,7 @@ export default function Page() {
             </span>
           </div>
           </header>
-        <section className="min-w-0 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}>
+        <section className="min-w-0 rounded-xl bg-white dark:bg-gray-900 p-4 transition-shadow duration-300 hover:shadow-md" style={{ animation: "fadeUp .5s ease both" }}>
 
           <div className="relative mt-3 lg:hidden">
             <svg
@@ -1016,7 +1016,7 @@ export default function Page() {
                       onClick={() => go(p)}
                       className={
                         "num min-w-[26px] rounded-md px-1.5 py-1 text-[12px] font-medium transition-all duration-300 ease-out active:scale-95 " +
-                        (p === cur ? "bg-indigo-600 text-white shadow-sm" : "text-gray-600 dark:text-gray-300 hover:-translate-y-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400")
+                        (p === cur ? "bg-indigo-600 text-white" : "text-gray-600 dark:text-gray-300 hover:-translate-y-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400")
                       }
                     >
                       {p}
@@ -1056,7 +1056,7 @@ export default function Page() {
               type="button"
               onClick={closeModal}
               aria-label="닫기"
-              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
+              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <path d="M6 6l12 12M18 6L6 18" />

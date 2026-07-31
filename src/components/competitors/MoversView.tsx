@@ -131,7 +131,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
         <div className="w-fit"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>
         <div className="w-fit"><PmDrop label="거래선" sel={effShop} options={shopsL.map((s) => ({ k: s, t: s === "전체" ? "전체" : pmShopLabel(s) }))} onSelect={setShop} /></div>
         {/* 인하순/인상순 — 슬라이딩 알약 토글(초록↔빨강) */}
-        <div className="relative flex items-center rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-0.5 text-[12px] font-semibold shadow-sm">
+        <div className="relative flex items-center rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-0.5 text-[12px] font-semibold">
           <span aria-hidden className={"absolute inset-y-0.5 left-0.5 w-[calc(50%-2px)] rounded-full transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)] " + (sortDir === "down" ? "translate-x-0 bg-emerald-50 dark:bg-emerald-500/15" : "translate-x-full bg-rose-50 dark:bg-rose-500/15")} />
           <button type="button" onClick={() => setSortDir("down")} className={"relative z-10 rounded-full px-3 py-0.5 transition-colors duration-200 active:scale-95 " + (sortDir === "down" ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400")}>인하순</button>
           <button type="button" onClick={() => setSortDir("up")} className={"relative z-10 rounded-full px-3 py-0.5 transition-colors duration-200 active:scale-95 " + (sortDir === "up" ? "text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>인상순</button>

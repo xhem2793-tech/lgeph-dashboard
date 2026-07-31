@@ -28,7 +28,7 @@ export function Segmented({
   return (
     <div className="relative flex shrink-0 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-0.5">
       <span
-        className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 shadow-sm transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]"
+        className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]"
         style={style}
       />
       {options.map((o, i) => (

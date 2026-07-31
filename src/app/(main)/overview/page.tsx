@@ -99,7 +99,7 @@ export default function Overview() {
                 <CompetitorMovers />
               </div>
               {/* 주요 뉴스 — 금주 주요 이슈·가격 동향과 같은 카드 어법으로 묶음 */}
-              <section className="mt-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
+              <section className="mt-6 rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.45s" }}>
               <div className="mb-2 flex items-baseline justify-between gap-2 px-0.5">
                 <a href="/news" className="group flex items-baseline gap-1">
                   <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("news_title")}</h2>
@@ -205,7 +205,7 @@ export default function Overview() {
               </section>
 
               {/* ③ 일간 지표(환율·유가·날씨) — 뉴스와 같은 카드 어법 */}
-              <section className="mt-6 rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3.5 shadow-sm transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
+              <section className="mt-6 rounded-xl bg-white dark:bg-gray-900 p-3.5 transition-shadow duration-300 hover:shadow-md sm:mt-8" style={{ animation: "fadeUp .5s ease both", animationDelay: "0.5s" }}>
                 <DailyIndicators />
               </section>
             </div>
@@ -214,7 +214,7 @@ export default function Overview() {
               <div className="mb-5">
                 <EconRail />
               </div>
-              <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 shadow-sm transition-shadow duration-300 hover:shadow-md">
+              <div className="rounded-xl bg-white dark:bg-gray-900 p-3 transition-shadow duration-300 hover:shadow-md">
               <div className="flex items-center justify-between gap-2">
                 <a href="/calendar" className="group flex items-baseline gap-1">
                   <p className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("cal_title")}</p>
@@ -227,7 +227,7 @@ export default function Overview() {
                       key={k}
                       type="button"
                       onClick={() => setCalTab(k)}
-                      className={"rounded px-1.5 py-0.5 text-[11px] font-medium transition-all duration-200 active:scale-95 " + (calTab === k ? "bg-indigo-600 text-white shadow-sm" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}
+                      className={"rounded px-1.5 py-0.5 text-[11px] font-medium transition-all duration-200 active:scale-95 " + (calTab === k ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}
                     >
                       {lb}
                     </button>
@@ -286,7 +286,7 @@ export default function Overview() {
               type="button"
               onClick={closeModal}
               aria-label="닫기"
-              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
+              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>

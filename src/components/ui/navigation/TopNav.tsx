@@ -28,7 +28,7 @@ function PillToggle<T extends string>({ options, value, onChange, ariaLabel }: {
     <div role="group" aria-label={ariaLabel} className="relative flex items-center rounded-full border border-gray-200 bg-gray-100 p-0.5 dark:border-gray-700 dark:bg-gray-800">
       <span
         aria-hidden
-        className="absolute bottom-0.5 top-0.5 rounded-full bg-white shadow-sm ring-1 ring-black/5 transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] dark:bg-gray-950 dark:ring-white/10"
+        className="absolute bottom-0.5 top-0.5 rounded-full bg-white ring-1 ring-black/5 transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] dark:bg-gray-950 dark:ring-white/10"
         style={{ width: `calc((100% - 4px) / ${options.length})`, left: 2, transform: `translateX(${idx * 100}%)` }}
       />
       {options.map((o) => (

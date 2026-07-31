@@ -189,7 +189,7 @@ export default function Calendar() {
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
           <div className="flex min-w-0 flex-col gap-4">
         <div
-          className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm"
+          className="rounded-xl bg-white dark:bg-gray-900 p-4"
           style={{ animation: "fadeUp .5s ease both" }}
         >
           <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
@@ -304,7 +304,7 @@ export default function Calendar() {
         </div>
 
       <div
-        className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm"
+        className="rounded-xl bg-white dark:bg-gray-900 p-4"
         style={{ animation: "fadeUp .5s ease both", animationDelay: "140ms" }}
       >
         <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
@@ -371,7 +371,7 @@ export default function Calendar() {
         </div>
 
         {todayEvents.length > 0 && (
-          <div className="mt-3 overflow-hidden rounded-xl border border-indigo-200 dark:border-indigo-500/40 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 to-white dark:to-gray-900 shadow-sm" style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) both" }}>
+          <div className="mt-3 overflow-hidden rounded-xl border border-indigo-200 dark:border-indigo-500/40 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 to-white dark:to-gray-900" style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) both" }}>
             <div className="flex items-center gap-2 border-b border-indigo-100 dark:border-indigo-500/25 px-3.5 py-2">
               <span className="flex h-5 items-center rounded-full bg-indigo-600 px-2 text-[11.5px] font-bold text-white">오늘</span>
               <span className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{todayIso.slice(5).replace("-", "/")} 발표·일정</span>
@@ -466,7 +466,7 @@ export default function Calendar() {
       </div>
           </div>
         <div className="flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both", animationDelay: "80ms" }}>
-          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 shadow-sm">
+          <div className="rounded-xl bg-white dark:bg-gray-900 p-4">
             <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
               <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{label} 구성</h2>
               <span className="text-[12px] text-gray-400 dark:text-gray-500">최종 갱신 {stamp ? fmtStamp(stamp) : "—"}</span>
@@ -531,7 +531,7 @@ export default function Calendar() {
                 type="button"
                 onClick={closeModal}
                 aria-label="닫기"
-                className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 shadow-sm backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
+                className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                   <path d="M6 6l12 12M18 6L6 18" />
