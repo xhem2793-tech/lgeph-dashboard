@@ -1,0 +1,23 @@
+# 의존성 자동 업데이트·취약점 감지 — 주간 PR로 제안(검토 후 병합, CI 게이트가 자동 검증).
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      # 자잘한 패치·마이너는 한 PR로 묶어 노이즈 감소(메이저는 개별 PR)
+      minor-and-patch:
+        update-types: ["minor", "patch"]
+    commit-message:
+      prefix: "deps"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    commit-message:
+      prefix: "ci"

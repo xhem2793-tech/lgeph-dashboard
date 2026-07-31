@@ -25,6 +25,7 @@ import { PromoView } from "@/components/competitors/PromoView"
 import { DealsView } from "@/components/competitors/DealsView"
 import { AnomalyView } from "@/components/competitors/AnomalyView"
 import { MoversView } from "@/components/competitors/MoversView"
+import { ErrorBoundary } from "@/components/ErrorBoundary"
 
 /** 경쟁사 가격 — 좌 1/4 메뉴판 + 우 3/4 콘텐츠.
  *
@@ -375,7 +376,7 @@ export default function Competitors() {
             </span>
           </header>)}
 
-          {view === "board" ? (
+          <ErrorBoundary key={view} label={active?.label}>{view === "board" ? (
             <BoardView daily={daily} stamp={stamp} elabels={elabels} />
           ) : view === "asp" ? (
             <PositioningMatrix rows={rows} elabels={elabels} stamp={stamp} />
@@ -519,7 +520,7 @@ export default function Competitors() {
                 표는 상위 100행만 표시(정렬 기준) · 엑셀(CSV)에는 필터된 전체 {data.length}행 전부 · 모델코드에 마우스를 올리면 원문 모델명
               </p>
             </>
-          )}
+          )}</ErrorBoundary>
         </section>
         </div>
       </div>
