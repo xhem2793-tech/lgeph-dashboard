@@ -65,14 +65,15 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
 ]
 
 const ALL = GROUPS.flatMap((g) => g.items)
-// 대시보드에 노출할 브랜드 화이트리스트 — 수집(스크래핑)은 전 브랜드 하되, 표시는 이 브랜드만
-const SHOWN_BRANDS = ["LG", "Samsung", "Panasonic", "TCL", "Haier", "Condura", "Midea", "Hisense", "Carrier"]
-// 에어컨 카테고리에서만 추가로 노출할 브랜드
-const AC_EXTRA_BRANDS = ["Kolin", "Daikin"]
-const BRANDS = [...SHOWN_BRANDS, ...AC_EXTRA_BRANDS]
-// 카테고리 기준 노출 여부: 공통 9개는 전 카테고리, Kolin·Daikin은 에어컨만
-const brandShown = (brand: string, category: string) =>
-  SHOWN_BRANDS.includes(brand) || (isAC(category) && AC_EXTRA_BRANDS.includes(brand))
+// 대시보드에 노출할 브랜드 화이트리스트 — 각 제품군에서 최소 8개 브랜드가 보이도록 실제 가전/TV 브랜드를 포괄.
+//   (포지셔닝은 카테고리별 취급수 상위 8개만 표시하므로, 후보를 넓혀 TV·냉장고 등도 8개 채워지게)
+const SHOWN_BRANDS = [
+  "LG", "Samsung", "Panasonic", "TCL", "Haier", "Condura", "Midea", "Hisense", "Carrier",
+  "Sony", "Devant", "Skyworth", "Sharp", "Toshiba", "Whirlpool", "Fujidenzo", "Koppel", "Kolin", "Daikin", "Prestiz", "Gree",
+]
+const AC_EXTRA_BRANDS = ["Kolin", "Daikin"]  // (하위호환) 이제 SHOWN_BRANDS에 포함
+const BRANDS = SHOWN_BRANDS
+const brandShown = (brand: string, _category: string) => SHOWN_BRANDS.includes(brand)
 const SHOPS = ["Anson's", "Abenson", "SM Appliance", "Western Appliances", "Robinsons Appliances", "Emcor", "Addessa"]
 
 /** 세그먼트 — 유통 매장이 실제로 진열을 나누는 축(설치형태·도어·급) */
