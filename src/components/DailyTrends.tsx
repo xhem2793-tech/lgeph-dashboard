@@ -46,26 +46,26 @@ function TrendCard({ title, seg, unit, pts, color, dec, meaning, ai, src, delay 
   return (
     <div className="flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: delay + "s" }}>
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
-        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>
-        <span className="ml-auto text-[11.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>
+        <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
+        <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>
+        <span className="ml-auto text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>
       </div>
-      <div className="mt-1.5 flex min-h-[22px] items-center gap-x-3 text-[11.5px]">
+      <div className="mt-1.5 flex min-h-[22px] items-center gap-x-3 text-[10.5px]">
         <span className="inline-flex items-center gap-1.5" style={{ color: "#6b7280" }}><span className="inline-block h-0 w-3" style={{ borderTop: "2.4px solid " + color }} />{title.split(" ")[0]}</span>
         <span className="ml-auto flex items-baseline gap-1.5">
-          <span className="text-[20px] font-extrabold tabular-nums tracking-tight text-gray-900 dark:text-gray-50">{last != null ? last.toFixed(dec) : "—"}</span>
-          {chg != null && <span className={"text-[12px] font-bold tabular-nums " + (up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{up ? "▲" : "▼"}{Math.abs(chg).toFixed(dec)} <span className="font-medium text-gray-400 dark:text-gray-500">30일</span></span>}
+          <span className="text-[18px] font-extrabold tabular-nums tracking-tight text-gray-900 dark:text-gray-50">{last != null ? last.toFixed(dec) : "—"}</span>
+          {chg != null && <span className={"text-[11px] font-bold tabular-nums " + (up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{up ? "▲" : "▼"}{Math.abs(chg).toFixed(dec)} <span className="font-medium text-gray-400 dark:text-gray-500">30일</span></span>}
         </span>
       </div>
       <MiniLine pts={pts} color={color} dec={dec} />
-      <p className="mt-2.5 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
-      <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[11.5px] font-bold text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-700 dark:hover:text-indigo-300">
+      <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
+      <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-700 dark:hover:text-indigo-300">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
         LG 인사이트
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
       </button>
-      <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}><div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[12px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p></div></div></div>
-      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> {src}</p>
+      <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}><div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p></div></div></div>
+      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> {src}</p>
     </div>
   )
 }
@@ -110,8 +110,8 @@ export default function DailyTrends() {
       <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 px-4 py-3" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg></div>
-          <div className="min-w-0 flex-1 text-[14px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">일일동향</b> — 통합 경제 대시보드 + 환율·유가 30일 · 조달원가·수요의 초단기 신호</div>
-          <div className="hidden shrink-0 flex-wrap gap-1.5 sm:flex">{status.map((s) => <span key={s.t} className={"rounded-full px-2 py-0.5 text-[11.5px] font-bold " + cmap[s.c]}>{s.t}</span>)}</div>
+          <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">일일동향</b> — 통합 경제 대시보드 + 환율·유가 30일 · 조달원가·수요의 초단기 신호</div>
+          <div className="hidden shrink-0 flex-wrap gap-1.5 sm:flex">{status.map((s) => <span key={s.t} className={"rounded-full px-2 py-0.5 text-[10.5px] font-bold " + cmap[s.c]}>{s.t}</span>)}</div>
         </div>
       </div>
 
@@ -119,21 +119,21 @@ export default function DailyTrends() {
       <div className="rounded-xl p-4" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".05s" }}>
         <div className="mb-3 flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
-          <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">통합 경제 지표</h2>
-          <span className="text-[12px] font-semibold text-gray-400 dark:text-gray-500">핵심 지표 최신값 · 한눈에 보는 시장 상황</span>
+          <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">통합 경제 지표</h2>
+          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">핵심 지표 최신값 · 한눈에 보는 시장 상황</span>
         </div>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {KPIS.map((k, i) => { const d = kv[k.key]; const t = d ? k.tone(d.value) : "flat"
             return (
               <div key={k.key} className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-2.5" style={{ animation: "fadeUp .4s ease both", animationDelay: (0.08 + i * 0.03) + "s" }}>
-                <div className="text-[11.5px] font-semibold text-gray-400 dark:text-gray-500">{k.label}</div>
-                <div className={"mt-1 text-[20px] font-extrabold tabular-nums tracking-tight " + toneCls[t]}>{d ? (k.dec === 0 ? Math.round(d.value).toLocaleString() : d.value.toFixed(k.dec)) : "—"}<span className="ml-0.5 text-[12px] font-semibold text-gray-400 dark:text-gray-500">{k.unit}</span></div>
-                <div className="mt-0.5 text-[10.5px] text-gray-400 dark:text-gray-500">{d ? d.date.slice(2, 4) + "." + Number(d.date.slice(5, 7)) + (d.date.slice(8) !== "01" ? "." + Number(d.date.slice(8, 10)) : "") : ""}</div>
+                <div className="text-[10.5px] font-semibold text-gray-400 dark:text-gray-500">{k.label}</div>
+                <div className={"mt-1 text-[18px] font-extrabold tabular-nums tracking-tight " + toneCls[t]}>{d ? (k.dec === 0 ? Math.round(d.value).toLocaleString() : d.value.toFixed(k.dec)) : "—"}<span className="ml-0.5 text-[11px] font-semibold text-gray-400 dark:text-gray-500">{k.unit}</span></div>
+                <div className="mt-0.5 text-[9.5px] text-gray-400 dark:text-gray-500">{d ? d.date.slice(2, 4) + "." + Number(d.date.slice(5, 7)) + (d.date.slice(8) !== "01" ? "." + Number(d.date.slice(8, 10)) : "") : ""}</div>
               </div>
             )
           })}
         </div>
-        <p className="mt-3 text-[12px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">시장 상황</b> {status.map((s) => s.t).join(" · ")} — 색: <span className="text-emerald-600 dark:text-emerald-400">우호</span>/<span className="text-amber-600 dark:text-amber-400">중립</span>/<span className="text-rose-600 dark:text-rose-400">부담</span> · 상세는 각 도메인 뷰</p>
+        <p className="mt-3 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">시장 상황</b> {status.map((s) => s.t).join(" · ")} — 색: <span className="text-emerald-600 dark:text-emerald-400">우호</span>/<span className="text-amber-600 dark:text-amber-400">중립</span>/<span className="text-rose-600 dark:text-rose-400">부담</span> · 상세는 각 도메인 뷰</p>
       </div>
 
       {/* 환율·유가 (표준 카드 디자인) */}

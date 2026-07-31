@@ -27,7 +27,7 @@ export default function PesoFxStrip() {
 
   return (
     <div style={{ animation: "fadeUp .8s ease both" }}>
-      <p className="mb-1.5 text-[12px] text-gray-500 dark:text-gray-400">
+      <p className="mb-1.5 text-[11px] text-gray-500 dark:text-gray-400">
         페소 약세 · 수입원가 환경 <span className="text-gray-400 dark:text-gray-500">· {asOf} 기준 · 전년비 절하율</span>
       </p>
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-200 dark:bg-gray-700 sm:grid-cols-3 lg:grid-cols-[repeat(4,1fr)_1.5fr]">
@@ -38,16 +38,16 @@ export default function PesoFxStrip() {
           const col = down ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
           return (
             <div key={k} className={cell}>
-              <div className="text-[11px] text-gray-500 dark:text-gray-400">{p.label}</div>
-              <div className="my-0.5 text-[16px] font-semibold tabular-nums text-gray-900 dark:text-gray-50">{fmt(k, p.rate)}</div>
-              <div className={"text-[11px] font-medium tabular-nums " + col}>
+              <div className="text-[10px] text-gray-500 dark:text-gray-400">{p.label}</div>
+              <div className="my-0.5 text-[14.5px] font-semibold tabular-nums text-gray-900 dark:text-gray-50">{fmt(k, p.rate)}</div>
+              <div className={"text-[10px] font-medium tabular-nums " + col}>
                 {Math.abs(p.yoy).toFixed(1)}%{down ? "↓" : "↑"} {p.biz}
               </div>
             </div>
           )
         })}
         <div className={cell}>
-          <div className="mb-1 text-[11px] text-gray-500 dark:text-gray-400">
+          <div className="mb-1 text-[10px] text-gray-500 dark:text-gray-400">
             역내 절하 비교 <span className="text-gray-400 dark:text-gray-500">전년비 vs USD</span>
           </div>
           {peers.map((p, i) => {
@@ -56,11 +56,11 @@ export default function PesoFxStrip() {
             const dep = (p.yoy || 0) > 0
             return (
               <div key={i} className="my-[3px] flex items-center gap-1.5">
-                <span className={"w-9 shrink-0 text-[10px] " + (hl ? "font-medium text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>{p.label}</span>
+                <span className={"w-9 shrink-0 text-[9px] " + (hl ? "font-medium text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>{p.label}</span>
                 <span className="h-[5px] flex-1 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
                   <span className="block h-full rounded-full" style={{ width: w + "%", background: hl ? "#e11d48" : "#b4b2a9" }} />
                 </span>
-                <span className={"w-8 shrink-0 text-right text-[10px] tabular-nums " + (hl ? "text-rose-600 dark:text-rose-400" : "text-gray-400 dark:text-gray-500")}>
+                <span className={"w-8 shrink-0 text-right text-[9px] tabular-nums " + (hl ? "text-rose-600 dark:text-rose-400" : "text-gray-400 dark:text-gray-500")}>
                   {dep ? "" : "+"}{(-(p.yoy || 0)).toFixed(1)}
                 </span>
               </div>

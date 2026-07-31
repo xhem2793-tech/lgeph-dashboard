@@ -87,13 +87,13 @@ export default function OnlineMarketView() {
       <div className="overflow-hidden rounded-xl border border-violet-100 dark:border-violet-500/25 bg-gradient-to-r from-violet-50 dark:from-violet-500/10 via-violet-50/40 dark:via-transparent to-white dark:to-gray-900" style={{ animation: "fadeOnly .5s ease both" }}>
         <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="14" rx="2" /><path d="M8 21h8M12 18v3" /></svg></div>
-          <div className="min-w-0 flex-1 text-[14px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">온라인 시장</b> — 인터넷 {phInternet.length ? <b className="text-violet-700 dark:text-violet-300">{Math.round(phInternet[phInternet.length - 1].value)}%</b> : "—"}·계정 {kv.account_ownership ? Math.round(kv.account_ownership.value) + "%" : "—"}·모바일 {kv.mobile_per100 ? Math.round(kv.mobile_per100.value) + "/100" : "—"} — 신용카드 3%대(역내 최저), 직불·BNPL 중심 온라인 가전 구매 저변</div>
+          <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">온라인 시장</b> — 인터넷 {phInternet.length ? <b className="text-violet-700 dark:text-violet-300">{Math.round(phInternet[phInternet.length - 1].value)}%</b> : "—"}·계정 {kv.account_ownership ? Math.round(kv.account_ownership.value) + "%" : "—"}·모바일 {kv.mobile_per100 ? Math.round(kv.mobile_per100.value) + "/100" : "—"} — 신용카드 3%대(역내 최저), 직불·BNPL 중심 온라인 가전 구매 저변</div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-violet-500 dark:text-violet-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
         </div>
         <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
-          <div className="overflow-hidden"><div className="border-t border-violet-100/70 dark:border-violet-500/25 px-4 pb-3.5 pt-3 text-[13.5px] leading-relaxed text-gray-700 dark:text-gray-200">
+          <div className="overflow-hidden"><div className="border-t border-violet-100/70 dark:border-violet-500/25 px-4 pb-3.5 pt-3 text-[12px] leading-relaxed text-gray-700 dark:text-gray-200">
             인터넷 이용률·금융계정이 빠르게 오르는 반면 <b className="text-gray-900 dark:text-gray-50">신용카드 보유는 3%대로 낮아</b>, 온라인 가전 판매는 <b className="text-violet-700 dark:text-violet-300">직불·현금·리테일러/핀테크 할부(BNPL)</b> 중심으로 설계해야 시장 특성에 맞습니다.
-            <p className="mt-2 flex items-start gap-1.5 text-[13px] text-violet-700 dark:text-violet-300"><span className="mt-0.5 shrink-0 rounded bg-violet-600 px-1.5 py-0.5 text-[10.5px] font-bold text-white">LG 관점</span><span>온라인 전용 모델·D2C·마켓플레이스 플래그십 + 무이자할부/BNPL 제휴로 전환율 제고. 모바일 포화·브로드밴드 확대는 스마트가전 연결성 마케팅 기반.</span></p>
+            <p className="mt-2 flex items-start gap-1.5 text-[12px] text-violet-700 dark:text-violet-300"><span className="mt-0.5 shrink-0 rounded bg-violet-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 관점</span><span>온라인 전용 모델·D2C·마켓플레이스 플래그십 + 무이자할부/BNPL 제휴로 전환율 제고. 모바일 포화·브로드밴드 확대는 스마트가전 연결성 마케팅 기반.</span></p>
           </div></div>
         </div>
       </div>
@@ -102,14 +102,14 @@ export default function OnlineMarketView() {
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-violet-500" />
-            <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">온라인 시장</h2>
-            <span className="text-[12px] font-semibold text-gray-400 dark:text-gray-500">{tab === "sea" ? "동남아 6개국 비교 · ●필리핀 강조" : "이커머스·디지털·결제 저변"}</span>
+            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">온라인 시장</h2>
+            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{tab === "sea" ? "동남아 6개국 비교 · ●필리핀 강조" : "이커머스·디지털·결제 저변"}</span>
             <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WINS.map((w) => ({ k: w.k, label: w.k }))} /></span>
           </header>
           <nav className="mb-3.5 flex flex-wrap gap-1.5">
             {[{ k: "ph", label: "이커머스·디지털(PH)" }, { k: "sea", label: "동남아 6개국 비교" }].map((s) => (
               <button key={s.k} type="button" onClick={() => setTab(s.k as "ph" | "sea")}
-                className={"rounded-lg px-3 py-1.5 text-[13.5px] font-semibold transition-all duration-200 " + (tab === s.k ? "bg-violet-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-violet-50 hover:text-violet-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-violet-500/15 dark:hover:text-violet-300")}>{s.label}</button>
+                className={"rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-all duration-200 " + (tab === s.k ? "bg-violet-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-violet-50 hover:text-violet-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-violet-500/15 dark:hover:text-violet-300")}>{s.label}</button>
             ))}
           </nav>
 
@@ -187,7 +187,7 @@ export default function OnlineMarketView() {
         <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
 
-      <p className="text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">출처 디지털/결제/인프라·6개국 비교=World Bank(WDI·Global Findex)·ITU 연간 실측 · 신용카드·계정 보유율은 격년 서베이(2011~2024) · 인터넷은 WB·ITU 기준(교차국 비교 일치)</p>
+      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">출처 디지털/결제/인프라·6개국 비교=World Bank(WDI·Global Findex)·ITU 연간 실측 · 신용카드·계정 보유율은 격년 서베이(2011~2024) · 인터넷은 WB·ITU 기준(교차국 비교 일치)</p>
     </div>
   )
 }

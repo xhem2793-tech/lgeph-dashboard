@@ -40,24 +40,24 @@ export default function EventModal({ event, onClose }: { event: CalEvent; onClos
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
 
-        <div className="flex w-full shrink-0 items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-7 pb-3 pt-6 text-[13px] font-semibold">
+        <div className="flex w-full shrink-0 items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-7 pb-3 pt-6 text-[12px] font-semibold">
           <span className="text-gray-800 dark:text-gray-100">{catLabel(m.category)}</span>
           <span className="text-gray-300 dark:text-gray-600">·</span>
           <span className="text-gray-500 dark:text-gray-400">{KIND[m.kind] || ""}</span>
-          {m.importance >= 2 && <span className="text-[13px] text-amber-500 dark:text-amber-400">{"★".repeat(m.importance)}</span>}
+          {m.importance >= 2 && <span className="text-[12px] text-amber-500 dark:text-amber-400">{"★".repeat(m.importance)}</span>}
         </div>
 
         <div className="overflow-y-auto px-7 pb-7 pt-5">
-          <div className="flex flex-wrap items-center gap-1.5 text-[12.5px] text-gray-500 dark:text-gray-400">
+          <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-gray-500 dark:text-gray-400">
             {m.sourceLabel && <span className="font-semibold text-gray-600 dark:text-gray-300">{m.sourceLabel}</span>}
             {m.sourceLabel && <span className="text-gray-300 dark:text-gray-600">·</span>}
             <span className="tabular-nums">{m.date}</span>
           </div>
 
-          <h3 className="mt-2 text-[21px] font-semibold leading-snug tracking-tight text-gray-900 dark:text-gray-50">{m.event}</h3>
+          <h3 className="mt-2 text-[19px] font-semibold leading-snug tracking-tight text-gray-900 dark:text-gray-50">{m.event}</h3>
 
           {m.indicatorKey && (
-            <div className="mt-4 inline-flex flex-wrap gap-4 rounded-lg bg-gray-50 dark:bg-gray-900 px-3.5 py-2 text-[13px] tabular-nums">
+            <div className="mt-4 inline-flex flex-wrap gap-4 rounded-lg bg-gray-50 dark:bg-gray-900 px-3.5 py-2 text-[12px] tabular-nums">
               <span className="text-gray-400 dark:text-gray-500">예측 <span className="font-semibold text-gray-600 dark:text-gray-300">{m.forecast || "—"}</span></span>
               <span className="text-indigo-500 dark:text-indigo-400">실제 <span className="font-semibold">{fmtVal(m.actual, m.unit)}</span></span>
               <span className="text-gray-400 dark:text-gray-500">이전 <span className="font-semibold text-gray-500 dark:text-gray-400">{fmtVal(m.previous, m.unit)}</span></span>
@@ -66,27 +66,27 @@ export default function EventModal({ event, onClose }: { event: CalEvent; onClos
 
           {m.implication && (
             <div className="mt-4 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-3">
-              <p className="text-[11.5px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-400">시사점</p>
-              <p className="mt-1 text-[15px] leading-[1.7] text-gray-800 dark:text-gray-100">{m.implication}</p>
+              <p className="text-[10.5px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-400">시사점</p>
+              <p className="mt-1 text-[13.5px] leading-[1.7] text-gray-800 dark:text-gray-100">{m.implication}</p>
             </div>
           )}
 
           {m.summary && (
             <div className="mt-4 space-y-2">
-              <p className="text-[11.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
-              {para(m.summary).map((p, k) => <p key={k} className="text-[14px] leading-[1.7] text-gray-600 dark:text-gray-300">{p}</p>)}
+              <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
+              {para(m.summary).map((p, k) => <p key={k} className="text-[12.5px] leading-[1.7] text-gray-600 dark:text-gray-300">{p}</p>)}
             </div>
           )}
 
           {m.actions && (
             <div className="mt-4">
-              <p className="text-[11.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">대응 · Owner</p>
-              <p className="mt-1 whitespace-pre-line text-[14px] leading-[1.7] text-gray-600 dark:text-gray-300">{m.actions}</p>
+              <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">대응 · Owner</p>
+              <p className="mt-1 whitespace-pre-line text-[12.5px] leading-[1.7] text-gray-600 dark:text-gray-300">{m.actions}</p>
             </div>
           )}
 
           {m.url && (
-            <a href={m.url} target="_blank" rel="noreferrer" className="mt-5 flex items-center justify-center gap-1 rounded-lg bg-gray-900 py-2.5 text-[14px] font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-800 active:scale-[.99]">원문 보기 ↗</a>
+            <a href={m.url} target="_blank" rel="noreferrer" className="mt-5 flex items-center justify-center gap-1 rounded-lg bg-gray-900 py-2.5 text-[12.5px] font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-800 active:scale-[.99]">원문 보기 ↗</a>
           )}
         </div>
       </div>

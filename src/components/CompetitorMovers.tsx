@@ -99,7 +99,7 @@ function MoverDelta({ delta, pct }: { delta: number; pct: number }) {
     return () => clearInterval(id)
   }, [])
   return (
-    <span className={"inline-flex w-[66px] items-center rounded px-1 py-0.5 text-[11px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400")}>
+    <span className={"inline-flex w-[66px] items-center rounded px-1 py-0.5 text-[10px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400")}>
       <span className="w-[9px] shrink-0 text-left">{dn ? "↓" : "↑"}</span>
       <span key={mode} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
         {mode === 1
@@ -130,7 +130,7 @@ function BrandLogo({ brand }: { brand: string }) {
         />
       ) : null}
       <span
-        className="rounded px-1 py-0.5 text-[11px] font-bold text-white"
+        className="rounded px-1 py-0.5 text-[10px] font-bold text-white"
         style={{ display: logo ? "none" : "inline-block", background: BRAND_COLOR[brand] || "#6b7280" }}
       >
         {brand}
@@ -169,7 +169,7 @@ export default function CompetitorMovers() {
 
   const pick = (c: string) => { setCat(c) }
 
-  const th = "px-1 py-0.5 text-center text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500"
+  const th = "px-1 py-0.5 text-center text-[10px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500"
   const td = "h-[21px] p-0 align-middle"
   // 셀 내용은 26px 박스 안에서만 산다 — 로고·배지 때문에 행이 커지지 않도록 고정
   const cell = "flex h-[21px] items-center justify-center overflow-hidden px-0.5"
@@ -180,17 +180,17 @@ export default function CompetitorMovers() {
       <div className="mb-1 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-0.5">
         <div className="flex items-center gap-2">
           <a href="/competitors" className="group flex items-baseline gap-1">
-            <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("price_title")}</h2>
+            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{t("price_title")}</h2>
             <span className="text-gray-400 dark:text-gray-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">›</span>
           </a>
-          <span className="inline-flex cursor-default items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 transition-all duration-300 ease-out hover:text-emerald-700 dark:hover:text-emerald-300">
+          <span className="inline-flex cursor-default items-center gap-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 transition-all duration-300 ease-out hover:text-emerald-700 dark:hover:text-emerald-300">
             <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
             {t("price_daily")}
           </span>
         </div>
-        <span className={HOVM + " flex items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500"}>
+        <span className={HOVM + " flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500"}>
           {t("news_updated")} {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(asOf, lang === "en")}
-          <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span>
+          <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span>
         </span>
       </div>
 
@@ -202,7 +202,7 @@ export default function CompetitorMovers() {
                 key={c}
                 type="button"
                 onClick={() => pick(c)}
-                className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-medium transition-all duration-200 active:scale-95 " + (cat === c ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}
+                className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-medium transition-all duration-200 active:scale-95 " + (cat === c ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}
               >
                 {CAT_LABEL[c] ?? c}
               </button>
@@ -212,14 +212,14 @@ export default function CompetitorMovers() {
             <button
               type="button"
               onClick={() => setSortDir("down")}
-              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "down" ? "border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:border-emerald-200 dark:hover:border-emerald-500/30 hover:text-emerald-600 dark:hover:text-emerald-400")}
+              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "down" ? "border-emerald-300 dark:border-emerald-500/40 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:border-emerald-200 dark:hover:border-emerald-500/30 hover:text-emerald-600 dark:hover:text-emerald-400")}
             >
               {t("price_down")}
             </button>
             <button
               type="button"
               onClick={() => setSortDir("up")}
-              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:border-rose-200 dark:hover:border-rose-500/30 hover:text-rose-600 dark:hover:text-rose-400")}
+              className={"shrink-0 whitespace-nowrap rounded-full border px-2 py-0.5 text-[10px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (sortDir === "up" ? "border-rose-300 bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" : "border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:border-rose-200 dark:hover:border-rose-500/30 hover:text-rose-600 dark:hover:text-rose-400")}
             >
               {t("price_up")}
             </button>
@@ -232,7 +232,7 @@ export default function CompetitorMovers() {
               className="overflow-hidden"
             >
               <div className="min-h-[167px] w-full max-w-full overflow-hidden">
-                <table className="w-full table-fixed border-collapse text-[12px]">
+                <table className="w-full table-fixed border-collapse text-[11px]">
                   {/* 비율 폭 — 카드가 좁아져도 표가 테두리를 뚫지 않는다(가로 스크롤 금지) */}
                   <colgroup>
                     <col style={{ width: "10%" }} />
@@ -257,7 +257,7 @@ export default function CompetitorMovers() {
                   <tbody>
                     {cardRows.length === 0 ? (
                       <tr className="border-b border-gray-100 dark:border-gray-800">
-                        <td className={td} colSpan={7}><div className={cell + " text-[12px] text-gray-400 dark:text-gray-500"}>{t("price_none")}</div></td>
+                        <td className={td} colSpan={7}><div className={cell + " text-[11px] text-gray-400 dark:text-gray-500"}>{t("price_none")}</div></td>
                       </tr>
                     ) : null}
                     {cardRows.map((r, i) => (
@@ -265,7 +265,7 @@ export default function CompetitorMovers() {
                         <td className={td}><div className={cell}><BrandLogo brand={r.brand} /></div></td>
                         <td className={td}>
                           <div className={cell}>
-                            <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 dark:bg-gray-800 px-1 text-[11px] font-semibold leading-[16px] text-gray-500 dark:text-gray-400"}>{CAT_LABEL[r.category] ?? r.category}</span>
+                            <span className={HOVM + " whitespace-nowrap rounded bg-gray-100 dark:bg-gray-800 px-1 text-[10px] font-semibold leading-[16px] text-gray-500 dark:text-gray-400"}>{CAT_LABEL[r.category] ?? r.category}</span>
                           </div>
                         </td>
                         <td className={td}>
@@ -276,7 +276,7 @@ export default function CompetitorMovers() {
                         <td className={td}><div className={cell}><span className={HOVM + " tabular-nums leading-none text-gray-400 dark:text-gray-500"}>{peso(r.srp)}</span></div></td>
                         <td className={td}><div className={cell}><span className={HOV + " font-bold tabular-nums leading-none text-gray-900 dark:text-gray-50"}>{peso(r.promo)}</span></div></td>
                         <td className={td}><div className={cell}><MoverDelta delta={r.delta} pct={r.pct} /></div></td>
-                        <td className={td}><div className={cell}><span className={HOVM + " whitespace-nowrap text-[11px] leading-none text-gray-500 dark:text-gray-400"}>{shopName(r.retailer)}</span></div></td>
+                        <td className={td}><div className={cell}><span className={HOVM + " whitespace-nowrap text-[10px] leading-none text-gray-500 dark:text-gray-400"}>{shopName(r.retailer)}</span></div></td>
                       </tr>
                     ))}
                     {/* 행 수는 항상 5줄 — 표 높이가 날마다 출렁이면 눈이 위치를 다시 찾는다 */}
@@ -289,7 +289,7 @@ export default function CompetitorMovers() {
                 </table>
 
                 {/* 표 아래 빈 공간 대신 오늘의 요약 — 카드 높이는 고정 유지 */}
-                <p className="mt-2 flex items-center gap-2 border-t border-gray-100 dark:border-gray-800 pt-1.5 text-[12px] text-gray-600 dark:text-gray-300">
+                <p className="mt-2 flex items-center gap-2 border-t border-gray-100 dark:border-gray-800 pt-1.5 text-[11px] text-gray-600 dark:text-gray-300">
                   <span className="font-semibold text-emerald-700 dark:text-emerald-300">
                     {lang === "en" ? "Cuts" : "인하"} {view.filter((r) => r.pct < 0).length}
                   </span>
@@ -313,7 +313,7 @@ export default function CompetitorMovers() {
           </div>
         </div>
 
-        <p className="mt-1 text-[11px] leading-snug text-gray-400 dark:text-gray-500">
+        <p className="mt-1 text-[10px] leading-snug text-gray-400 dark:text-gray-500">
           <span className={HOVM}>{lang === "en" ? "LG · Samsung · Panasonic · TCL · Midea · Hisense · Retail: Anson's · Abenson · SM" : "LG · Samsung · Panasonic · TCL · Midea · Hisense 기준 · 유통: Anson's · Abenson · SM"}</span>
         </p>
       </div>

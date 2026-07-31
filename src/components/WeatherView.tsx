@@ -48,7 +48,7 @@ const MONF = ["1","2","3","4","5","6","7","8","9","10","11","12"]
 
 /** 월별 기후 평년 — 강수(막대) + 열지수(선). 우기(6~10월)·건기 패턴 */
 function ClimateChart({ mon }: { mon: { rain: number; hi: number }[] }) {
-  if (mon.length < 12) return <div className="flex h-full items-center justify-center text-[13px] text-gray-400">데이터 부족</div>
+  if (mon.length < 12) return <div className="flex h-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
   const W = 420, H = 150, padB = 20, padT = 10, padL = 8
   const rMax = Math.max(...mon.map((m) => m.rain), 1)
   const hiMin = Math.min(...mon.map((m) => m.hi)), hiMax = Math.max(...mon.map((m) => m.hi))
@@ -74,7 +74,7 @@ function ClimateChart({ mon }: { mon: { rain: number; hi: number }[] }) {
 /** 일별 기온(최저~최고 밴드+평균선) + 강수 막대 — 최근 N일 */
 function DailyChart({ days }: { days: WxDay[] }) {
   const d = days.slice(-90).filter((x) => x.maxT != null && x.minT != null)
-  if (d.length < 3) return <div className="flex h-full items-center justify-center text-[13px] text-gray-400">데이터 부족</div>
+  if (d.length < 3) return <div className="flex h-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
   const W = 420, H = 150, padB = 18, padT = 8, padL = 6
   const temps = d.flatMap((x) => [x.maxT!, x.minT!])
   const tMin = Math.min(...temps) - 1, tMax = Math.max(...temps) + 1
@@ -99,7 +99,7 @@ function DailyChart({ days }: { days: WxDay[] }) {
 /** 최근 지진 규모 스트립 — 시간축 위 규모 점(색=규모) */
 function QuakeStrip({ quakes }: { quakes: Quake[] }) {
   const [hi, setHi] = useState<number | null>(null)
-  if (!quakes.length) return <div className="flex h-32 items-center justify-center text-[13px] text-gray-400">지진 데이터 없음</div>
+  if (!quakes.length) return <div className="flex h-32 items-center justify-center text-[12px] text-gray-400">지진 데이터 없음</div>
   const pts = [...quakes].reverse() // 오래된→최신
   const t0 = new Date(pts[0].at).getTime(), t1 = new Date(pts[pts.length - 1].at).getTime()
   const span = Math.max(1, t1 - t0)
@@ -133,12 +133,12 @@ function Panel({ title, seg, children, meaning, src }: { title: string; seg?: st
   return (
     <div className="flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
-        {seg && <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>}
+        <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
+        {seg && <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>}
       </div>
       <div className="mt-2 min-h-0 flex-1">{children}</div>
-      <p className="mt-2 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
-      <p className="mt-auto pt-2 text-[11px] text-gray-400 dark:text-gray-500">{src}</p>
+      <p className="mt-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
+      <p className="mt-auto pt-2 text-[10px] text-gray-400 dark:text-gray-500">{src}</p>
     </div>
   )
 }
@@ -194,18 +194,18 @@ export default function WeatherView() {
             </div>
             <div>
               <div className="flex items-baseline gap-1.5">
-                <span className="num text-[30px] font-extrabold leading-none text-gray-900 dark:text-gray-50">{cur?.maxT != null ? Math.round(cur.maxT) : "–"}°</span>
-                <span className="num text-[16px] font-semibold text-gray-400 dark:text-gray-500">/ {cur?.minT != null ? Math.round(cur.minT) : "–"}°</span>
+                <span className="num text-[27px] font-extrabold leading-none text-gray-900 dark:text-gray-50">{cur?.maxT != null ? Math.round(cur.maxT) : "–"}°</span>
+                <span className="num text-[14.5px] font-semibold text-gray-400 dark:text-gray-500">/ {cur?.minT != null ? Math.round(cur.minT) : "–"}°</span>
               </div>
-              <div className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">필리핀(전국 관측) · {cur ? cur.date.slice(5).replace("-", "/") : "—"} · {season}</div>
+              <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">필리핀(전국 관측) · {cur ? cur.date.slice(5).replace("-", "/") : "—"} · {season}</div>
             </div>
           </div>
           {/* 체감(열지수) */}
           <div className="flex flex-col">
-            <span className="text-[11.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">체감(열지수)</span>
+            <span className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">체감(열지수)</span>
             <span className="flex items-center gap-1.5">
-              <span className="num text-[21px] font-bold text-gray-900 dark:text-gray-50">{cur?.heat != null ? cur.heat.toFixed(1) + "°" : "–"}</span>
-              <span className={"rounded px-1.5 py-0.5 text-[11px] font-bold " + hr.bg + " " + hr.c}>{hr.t}</span>
+              <span className="num text-[19px] font-bold text-gray-900 dark:text-gray-50">{cur?.heat != null ? cur.heat.toFixed(1) + "°" : "–"}</span>
+              <span className={"rounded px-1.5 py-0.5 text-[10px] font-bold " + hr.bg + " " + hr.c}>{hr.t}</span>
             </span>
           </div>
           {/* 타일 */}
@@ -218,14 +218,14 @@ export default function WeatherView() {
               { l: "지진 M4+", v: eqs.length + "건", c: "text-orange-700 dark:text-orange-300" },
             ].map((t) => (
               <div key={t.l} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 px-2.5 py-1.5 text-center">
-                <div className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{t.l}</div>
-                <div className={"num text-[14px] font-bold " + t.c}>{t.v}</div>
+                <div className="text-[9.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{t.l}</div>
+                <div className={"num text-[12.5px] font-bold " + t.c}>{t.v}</div>
               </div>
             ))}
           </div>
           <div className="ml-auto hidden shrink-0 items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 p-0.5 sm:flex">
             {WIN.map((w) => (
-              <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[12px] font-semibold transition-colors " + (win === w.k ? "bg-sky-600 text-white" : "text-gray-500 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400")}>{w.k}</button>
+              <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-colors " + (win === w.k ? "bg-sky-600 text-white" : "text-gray-500 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400")}>{w.k}</button>
             ))}
           </div>
         </div>
@@ -236,14 +236,14 @@ export default function WeatherView() {
         <Panel title="일별 기온·강수 (최근 90일)" seg="관측"
           meaning={<>일 최저~최고 기온(음영)·평균(선) + 강수(파랑 막대) — 폭염·우기 강도 추적</>}
           src="PAGASA 일별 관측(자체 수집)">
-          <div className="h-[150px] w-full">{wx.length ? <DailyChart days={wx} /> : <div className="flex h-full items-center justify-center text-[13px] text-gray-400">불러오는 중</div>}</div>
+          <div className="h-[150px] w-full">{wx.length ? <DailyChart days={wx} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}</div>
         </Panel>
 
         {/* 월별 기후 평년 — 우기/건기 */}
         <Panel title="월별 기후 평년 (우기·건기)" seg="기후"
           meaning={<>월별 평균 강수(파랑)·열지수(빨강) — <b className="text-sky-600 dark:text-sky-400">우기 6~10월</b> 다우, <b className="text-rose-600 dark:text-rose-400">건기 3~5월</b> 폭염</>}
           src="PAGASA 관측 월별 집계">
-          <div className="h-[150px] w-full">{monthly.some((m) => m.hi > 0) ? <ClimateChart mon={monthly} /> : <div className="flex h-full items-center justify-center text-[13px] text-gray-400">불러오는 중</div>}</div>
+          <div className="h-[150px] w-full">{monthly.some((m) => m.hi > 0) ? <ClimateChart mon={monthly} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}</div>
         </Panel>
 
         {/* ENSO 현황 — 엘니뇨/라니냐 */}
@@ -255,22 +255,22 @@ export default function WeatherView() {
           {phase ? (
             <div className="flex h-full flex-col">
               <div className="flex items-center gap-3">
-                <span className={"flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[16px] font-extrabold " + phase.bg + " " + phase.c}>
+                <span className={"flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-[14.5px] font-extrabold " + phase.bg + " " + phase.c}>
                   <span className={"h-2.5 w-2.5 rounded-full " + phase.dot} />{phase.t}
                 </span>
                 <span className="flex flex-col leading-tight">
-                  <span className="text-[12px] text-gray-500 dark:text-gray-400">현재 ONI</span>
-                  <span className={"num text-[21px] font-bold " + phase.c}>{oni! > 0 ? "+" : ""}{oni!.toFixed(2)}</span>
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400">현재 ONI</span>
+                  <span className={"num text-[19px] font-bold " + phase.c}>{oni! > 0 ? "+" : ""}{oni!.toFixed(2)}</span>
                 </span>
               </div>
-              <p className="mt-2.5 text-[13px] leading-relaxed text-gray-700 dark:text-gray-200"><b className="font-semibold">가전 함의</b> {phase.d}</p>
-              <div className="mt-2 flex gap-1 text-[10.5px] font-semibold">
+              <p className="mt-2.5 text-[12px] leading-relaxed text-gray-700 dark:text-gray-200"><b className="font-semibold">가전 함의</b> {phase.d}</p>
+              <div className="mt-2 flex gap-1 text-[9.5px] font-semibold">
                 <span className="rounded bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 text-rose-700 dark:text-rose-300">엘니뇨 ≥+0.5</span>
                 <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-gray-500 dark:text-gray-400">중립</span>
                 <span className="rounded bg-sky-50 dark:bg-sky-500/10 px-1.5 py-0.5 text-sky-700 dark:text-sky-300">라니냐 ≤−0.5</span>
               </div>
             </div>
-          ) : <div className="flex h-40 items-center justify-center text-[13px] text-gray-400">불러오는 중</div>}
+          ) : <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}
         </Panel>
 
         {/* ONI 추이 */}
@@ -283,7 +283,7 @@ export default function WeatherView() {
             ai={<>엘니뇨 국면은 <b className="font-semibold text-rose-600 dark:text-rose-400">고온·건조로 냉방(에어컨)·냉장 수요를 밀어올리나</b> 가뭄·전력수급 부담을, 라니냐는 <b className="font-semibold text-sky-600 dark:text-sky-400">다우·태풍으로 홍수·물류 차질과 제습·에어케어 수요</b>를 키움. 전환 시점을 성수기 재고·프로모 계획에 선반영.</>}
             src="NOAA CPC ONI(Niño 3.4)"
           />
-        ) : <Panel title="ONI 지수 추이" meaning="데이터 로딩" src="NOAA"><div className="flex h-40 items-center justify-center text-[13px] text-gray-400">불러오는 중</div></Panel>}
+        ) : <Panel title="ONI 지수 추이" meaning="데이터 로딩" src="NOAA"><div className="flex h-40 items-center justify-center text-[12px] text-gray-400">불러오는 중</div></Panel>}
 
         {/* CDD */}
         {cdd.series.length ? (
@@ -295,7 +295,7 @@ export default function WeatherView() {
             ai={<>CDD는 에어컨·냉장고 가동시간과 직접 연동되는 <b className="font-semibold">냉방 수요 선행지표</b>. 성수기(4~6월) 피크 구간의 전년 대비 상승폭이 클수록 <b className="font-semibold text-rose-600 dark:text-rose-400">교체·신규·대형화 수요</b> 여지. 폭염 국면엔 고효율 인버터 소구가 유효.</>}
             src="PSA/PAGASA 관측 기온 기반 산출(기준 24℃)"
           />
-        ) : <Panel title="냉방도일 (CDD)" meaning="데이터 로딩" src="PAGASA"><div className="flex h-40 items-center justify-center text-[13px] text-gray-400">불러오는 중</div></Panel>}
+        ) : <Panel title="냉방도일 (CDD)" meaning="데이터 로딩" src="PAGASA"><div className="flex h-40 items-center justify-center text-[12px] text-gray-400">불러오는 중</div></Panel>}
 
         {/* 태풍 */}
         <Panel
@@ -304,20 +304,20 @@ export default function WeatherView() {
           src="PAGASA 태풍 공보(자체 수집)"
         >
           <div className="flex flex-col divide-y divide-gray-50 dark:divide-gray-800/60">
-            {tys.length === 0 ? <div className="flex h-32 items-center justify-center text-[13px] text-gray-400">최근 태풍 없음</div> : tys.slice(0, 6).map((t) => {
+            {tys.length === 0 ? <div className="flex h-32 items-center justify-center text-[12px] text-gray-400">최근 태풍 없음</div> : tys.slice(0, 6).map((t) => {
               const sig = SIG[t.maxSignal] ?? SIG[0]
               return (
                 <div key={t.name + t.asOf} className="flex items-start gap-2.5 py-2">
-                  <span className={"mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-bold " + sig.c}>{sig.t}</span>
+                  <span className={"mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[9.5px] font-bold " + sig.c}>{sig.t}</span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline gap-1.5">
-                      <b className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{t.name}</b>
-                      <span className="text-[11.5px] text-gray-500 dark:text-gray-400">{t.category}</span>
-                      {t.inPar && <span className="rounded bg-rose-50 dark:bg-rose-500/10 px-1 text-[10px] font-bold text-rose-600 dark:text-rose-400">PAR</span>}
+                      <b className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{t.name}</b>
+                      <span className="text-[10.5px] text-gray-500 dark:text-gray-400">{t.category}</span>
+                      {t.inPar && <span className="rounded bg-rose-50 dark:bg-rose-500/10 px-1 text-[9px] font-bold text-rose-600 dark:text-rose-400">PAR</span>}
                     </span>
-                    <span className="mt-0.5 line-clamp-1 block text-[12px] leading-snug text-gray-500 dark:text-gray-400">{t.headline}</span>
+                    <span className="mt-0.5 line-clamp-1 block text-[11px] leading-snug text-gray-500 dark:text-gray-400">{t.headline}</span>
                   </span>
-                  <span className="shrink-0 text-[11.5px] text-gray-400 dark:text-gray-500">{relDays(t.asOf)}</span>
+                  <span className="shrink-0 text-[10.5px] text-gray-400 dark:text-gray-500">{relDays(t.asOf)}</span>
                 </div>
               )
             })}
@@ -331,15 +331,15 @@ export default function WeatherView() {
           src="USGS FDSN(실시간) · 최근 1년 M4.0+"
         >
           <div className="flex h-full flex-col">
-            <div className="mb-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[12px] text-gray-500 dark:text-gray-400">
+            <div className="mb-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-gray-500 dark:text-gray-400">
               <span>1년 <b className="text-gray-800 dark:text-gray-100">{eqs.length}</b>건</span>
               <span>M5+ <b className="text-orange-600 dark:text-orange-400">{bigQuakes.length}</b>건</span>
               {maxQuake && <span>최대 <b className="text-red-600 dark:text-red-400">M{maxQuake.toFixed(1)}</b></span>}
             </div>
-            <div className="h-[150px] w-full">{eqs.length ? <QuakeStrip quakes={eqs} /> : <div className="flex h-full items-center justify-center text-[13px] text-gray-400">불러오는 중</div>}</div>
+            <div className="h-[150px] w-full">{eqs.length ? <QuakeStrip quakes={eqs} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}</div>
             <div className="mt-1.5 flex flex-col gap-1 border-t border-gray-100 dark:border-gray-800 pt-1.5">
               {eqs.slice(0, 3).map((q, i) => (
-                <div key={i} className="flex items-center gap-2 text-[12px]">
+                <div key={i} className="flex items-center gap-2 text-[11px]">
                   <span className="w-9 shrink-0 font-bold tabular-nums" style={{ color: magColor(q.mag) }}>M{q.mag.toFixed(1)}</span>
                   <span className="min-w-0 flex-1 truncate text-gray-600 dark:text-gray-300">{q.place}</span>
                   <span className="shrink-0 text-gray-400 dark:text-gray-500">{relDays(q.at)}</span>
@@ -351,7 +351,7 @@ export default function WeatherView() {
 
       </div>
 
-      <p className="text-[12px] leading-relaxed text-gray-400 dark:text-gray-500">냉방도일(CDD)·기온=PAGASA 관측 기반 · 태풍=PAGASA 공보 · 지진=USGS FDSN 실시간(필리핀 4~21°N/116~128°E, M4.0+) · 화산 경보(PHIVOLCS)는 공식 API 부재로 추후 반영</p>
+      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">냉방도일(CDD)·기온=PAGASA 관측 기반 · 태풍=PAGASA 공보 · 지진=USGS FDSN 실시간(필리핀 4~21°N/116~128°E, M4.0+) · 화산 경보(PHIVOLCS)는 공식 API 부재로 추후 반영</p>
     </div>
   )
 }

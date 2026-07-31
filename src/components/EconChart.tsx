@@ -120,10 +120,10 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     const adots: SVGElement[] = series.map((s) => {
       const c = el("circle", { r: 4.2, fill: s.color, stroke: CO.halo, "stroke-width": 1.6, opacity: 0 }); svg.appendChild(c); return c
     })
-    const head = document.createElement("div"); head.className = "mb-1 text-[12px] font-medium text-gray-400 dark:text-gray-500"; tip.appendChild(head)
+    const head = document.createElement("div"); head.className = "mb-1 text-[11px] font-medium text-gray-400 dark:text-gray-500"; tip.appendChild(head)
     const valNodes: HTMLElement[] = []
     series.forEach((s) => {
-      const row = document.createElement("div"); row.className = "flex items-center gap-2 whitespace-nowrap text-[12px] leading-4"
+      const row = document.createElement("div"); row.className = "flex items-center gap-2 whitespace-nowrap text-[11px] leading-4"
       const dot = document.createElement("span"); dot.className = "inline-block h-2 w-2 shrink-0 rounded-full"; dot.style.background = s.color
       const nm = document.createElement("span"); nm.className = "text-gray-500 dark:text-gray-400"; nm.textContent = s.name
       const v = document.createElement("b"); v.className = "ml-auto tabular-nums font-semibold text-gray-800 dark:text-gray-100"
@@ -219,8 +219,8 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
       r.setAttribute("y", top.toFixed(1)); r.setAttribute("height", h.toFixed(1))
       return { r, c }
     })
-    const head = document.createElement("div"); head.className = "mb-0.5 text-[12px] font-medium text-gray-400 dark:text-gray-500"; tip.appendChild(head)
-    const valRow = document.createElement("div"); valRow.className = "text-[14px] font-bold tabular-nums"; tip.appendChild(valRow)
+    const head = document.createElement("div"); head.className = "mb-0.5 text-[11px] font-medium text-gray-400 dark:text-gray-500"; tip.appendChild(head)
+    const valRow = document.createElement("div"); valRow.className = "text-[12.5px] font-bold tabular-nums"; tip.appendChild(valRow)
     let rectW = 300, rectH = 120, active = -1
     const move = (e: PointerEvent) => {
       const rect = svg.getBoundingClientRect(); rectW = rect.width; rectH = rect.height
@@ -284,9 +284,9 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
       style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: Math.min(idx, 8) * 0.025 + "s" }}
     >
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
-        {seg && <span className={"shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold " + (seg === "B2B" ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" : seg === "CE" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-violet-50 dark:bg-violet-500/10 text-violet-700")}>{seg}</span>}
-        {unit && <span className="ml-auto shrink-0 text-[11.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
+        <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
+        {seg && <span className={"shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold " + (seg === "B2B" ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" : seg === "CE" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-violet-50 dark:bg-violet-500/10 text-violet-700")}>{seg}</span>}
+        {unit && <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
         <span data-noexport="1" className={"flex shrink-0 items-center gap-0.5 " + (unit ? "ml-1.5" : "ml-auto")}>
           <button type="button" onClick={dlImg} title="이미지(PNG) 다운로드" className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
@@ -296,14 +296,14 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
           </button>
         </span>
       </div>
-      <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[11.5px]">{legend}</div>
+      <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">{legend}</div>
       {kind === "bar"
         ? <BarChart data={series[0]?.data ?? []} labels={labels} color={series[0]?.color} decimals={decimals} unit={seriesUnit} />
         : <LineChart series={series} labels={labels} decimals={decimals} unit={seriesUnit} />}
-      <p className="mt-2.5 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
+      <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
       {ai && (
         <>
-          <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[11.5px] font-bold text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-700 dark:hover:text-indigo-300">
+          <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-700 dark:hover:text-indigo-300">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
             LG 인사이트
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
@@ -311,13 +311,13 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
           <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}>
             <div className="overflow-hidden">
               <div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
-                <p className="text-[12px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
+                <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
               </div>
             </div>
           </div>
         </>
       )}
-      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">{src}</p>
+      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{src}</p>
     </div>
   )
 }

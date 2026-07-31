@@ -104,7 +104,7 @@ function ProChart(p: Series) {
     const dCur = drawSeries(p.cur, IND, 2, true)
 
     const ttm = document.createElement("div")
-    ttm.className = "mb-1 text-[12px] text-gray-400 dark:text-gray-500"
+    ttm.className = "mb-1 text-[11px] text-gray-400 dark:text-gray-500"
     tip.appendChild(ttm)
     let bPrev: HTMLElement | null = null
     if (hasPrev) {
@@ -296,7 +296,7 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
           <span className="shrink-0 cursor-default text-sm font-medium text-gray-700 dark:text-gray-200">{title}</span>
           <DeltaBadge down={s.dDown} pct={s.dPct} pctSuffix={s.dPctSuffix} absVal={s.dAbs} absPrefix={s.dAbsPrefix} />
         </div>
-        <div className="flex shrink-0 items-center gap-2.5 text-[12px] text-gray-400 dark:text-gray-500">
+        <div className="flex shrink-0 items-center gap-2.5 text-[11px] text-gray-400 dark:text-gray-500">
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: GRY }} />{s.chart.prevName}</span>
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: IND }} />{s.chart.curName}</span>
         </div>
@@ -304,7 +304,7 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
       {multi ? (
         <div className="mt-1.5 flex flex-nowrap gap-1 overflow-hidden">
           {items.map((it, i) => (
-            <button key={i} onClick={() => setSel(i)} className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[11px] font-medium transition-all duration-200 active:scale-95 " + (idx === i ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}>{it.label}</button>
+            <button key={i} onClick={() => setSel(i)} className={"shrink-0 whitespace-nowrap rounded px-1.5 py-0.5 text-[10px] font-medium transition-all duration-200 active:scale-95 " + (idx === i ? "bg-indigo-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:-translate-y-0.5 hover:bg-gray-200 dark:hover:bg-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400")}>{it.label}</button>
           ))}
         </div>
       ) : null}
@@ -312,13 +312,13 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
         <span className="inline-block cursor-default text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-50">
           <CountUp key={`${range}-${idx}`} value={s.vNum} prefix={s.vPrefix} suffix={s.vSuffix} decimals={s.vDec} />
         </span>
-        <span className="cursor-default text-[11px] text-gray-400/90 dark:text-gray-500/90">{s.prevText}</span>
+        <span className="cursor-default text-[10px] text-gray-400/90 dark:text-gray-500/90">{s.prevText}</span>
       </p>
       <div key={`${range}-${idx}`} style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }}>
         <ProChart {...s.chart} />
       </div>
       <div className="mt-auto border-t border-gray-200 dark:border-gray-800 pt-2">
-        <span className="cursor-default text-[11px] text-gray-400 dark:text-gray-500">{t("source")} {s.note}</span>
+        <span className="cursor-default text-[10px] text-gray-400 dark:text-gray-500">{t("source")} {s.note}</span>
       </div>
     </div>
     </div>
@@ -513,13 +513,13 @@ export default function DailyIndicators() {
                   <div className="relative flex shrink-0 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-0.5">
                     <span className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]" style={{ left: ind.left, width: ind.width }} />
                     {RANGES.map((r, i) => (
-                      <button key={r.key} ref={(el) => { rangeBtns.current[i] = el }} onClick={() => setRange(r.key)} className={"relative z-10 rounded-full px-2.5 py-1 text-[12px] font-medium transition-colors duration-300 active:scale-95 " + (range === r.key ? "text-white" : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400")}>{t(("r_" + r.key) as "r_7d")}</button>
+                      <button key={r.key} ref={(el) => { rangeBtns.current[i] = el }} onClick={() => setRange(r.key)} className={"relative z-10 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors duration-300 active:scale-95 " + (range === r.key ? "text-white" : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400")}>{t(("r_" + r.key) as "r_7d")}</button>
                     ))}
                   </div>
                 </div>
-                  <span className="hidden items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500 sm:flex">
+                  <span className="hidden items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500 sm:flex">
                     {t("news_updated")} {stamp ? fmtStamp(stamp) : iso(refDate).slice(5).replace("-", "/")}
-                    <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span>
+                    <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span>
                   </span>
               </div>
               <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">

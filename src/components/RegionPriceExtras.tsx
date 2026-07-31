@@ -67,8 +67,8 @@ export default function RegionPriceExtras() {
         {CATS.map((c) => (
           <button key={c.k} type="button" onClick={() => setCat(c.k)}
             className={"flex flex-col items-start rounded-lg px-3.5 py-1.5 text-left transition-all duration-200 " + (cat === c.k ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300")}>
-            <span className="text-[14px] font-bold">{c.label}</span>
-            <span className={"text-[11px] " + (cat === c.k ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{c.sub}</span>
+            <span className="text-[12.5px] font-bold">{c.label}</span>
+            <span className={"text-[10px] " + (cat === c.k ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{c.sub}</span>
           </button>
         ))}
       </nav>
@@ -78,33 +78,33 @@ export default function RegionPriceExtras() {
           <section className="min-w-0 overflow-hidden rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
             <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
               <span className="h-[18px] w-1 rounded bg-indigo-500" />
-              <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역 × 품목 물가</h2>
-              <span className="text-[12px] font-semibold text-gray-400 dark:text-gray-500">전년비 % · 물가 높은 순</span>
+              <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역 × 품목 물가</h2>
+              <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">전년비 % · 물가 높은 순</span>
             </div>
             <div className="mt-3 overflow-x-auto">
               <div className="grid min-w-[440px] gap-1" style={{ gridTemplateColumns: "auto repeat(6,1fr)" }}>
                 <div />
-                {cols.map(([c]) => <div key={c} className="pb-1 text-center text-[12px] font-medium text-gray-400 dark:text-gray-500">{c}</div>)}
+                {cols.map(([c]) => <div key={c} className="pb-1 text-center text-[11px] font-medium text-gray-400 dark:text-gray-500">{c}</div>)}
                 {rows.map((r, ri) => (
                   <React.Fragment key={ri}>
-                    <div className="flex items-center justify-end pr-2 text-right text-[12px] text-gray-600 dark:text-gray-300">{shortGeo(r.geo)}</div>
+                    <div className="flex items-center justify-end pr-2 text-right text-[11px] text-gray-600 dark:text-gray-300">{shortGeo(r.geo)}</div>
                     {cols.map(([, key], ci) => {
                       const v = num(r[key])
                       const t = Math.max(0, Math.min(1, v / 25))
-                      return <div key={key} className="flex h-7 items-center justify-center rounded text-[12px] font-medium tabular-nums" style={{ background: shade(v), color: t > 0.55 ? "#fff" : "#334155", opacity: mounted ? 1 : 0, transform: mounted ? "none" : "scale(.9)", transition: "all .4s ease " + ((ri * 6 + ci) * 0.015) + "s" }}>{v.toFixed(1)}</div>
+                      return <div key={key} className="flex h-7 items-center justify-center rounded text-[11px] font-medium tabular-nums" style={{ background: shade(v), color: t > 0.55 ? "#fff" : "#334155", opacity: mounted ? 1 : 0, transform: mounted ? "none" : "scale(.9)", transition: "all .4s ease " + ((ri * 6 + ci) * 0.015) + "s" }}>{v.toFixed(1)}</div>
                     })}
                   </React.Fragment>
                 ))}
               </div>
             </div>
-            <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[11px] text-gray-400 dark:text-gray-500">자료 PSA 지역별 CPI(v_cost_of_living_regional) · 전년비</p>
+            <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">자료 PSA 지역별 CPI(v_cost_of_living_regional) · 전년비</p>
           </section>
 
           <section className="rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
-            <h2 className="text-[16px] font-bold text-gray-900 dark:text-gray-50">지역 물가 분포 <span className="text-[12px] font-normal text-gray-400 dark:text-gray-500">전국 {rows.length}곳</span></h2>
+            <h2 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">지역 물가 분포 <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500">전국 {rows.length}곳</span></h2>
             <div className="mt-3 flex gap-5">
-              <div><p className="text-[12px] text-gray-400 dark:text-gray-500">평균</p><p className="text-[24px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rMean.toFixed(1)}<span className="text-[13px] text-gray-400 dark:text-gray-500">%</span></p></div>
-              <div><p className="text-[12px] text-gray-400 dark:text-gray-500">범위</p><p className="text-[24px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rLo.toFixed(1)}–{rHi.toFixed(1)}</p></div>
+              <div><p className="text-[11px] text-gray-400 dark:text-gray-500">평균</p><p className="text-[21.5px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rMean.toFixed(1)}<span className="text-[12px] text-gray-400 dark:text-gray-500">%</span></p></div>
+              <div><p className="text-[11px] text-gray-400 dark:text-gray-500">범위</p><p className="text-[21.5px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rLo.toFixed(1)}–{rHi.toFixed(1)}</p></div>
             </div>
             <div className="relative mt-5 h-12">
               <div className="absolute inset-x-0 bottom-4 border-t border-gray-200 dark:border-gray-800" />
@@ -112,10 +112,10 @@ export default function RegionPriceExtras() {
               {regVals.map((v, i) => (
                 <div key={i} className="absolute h-2 w-2 -translate-x-1/2 rounded-full bg-indigo-400/60" style={{ left: (((v - rLo) / (rHi - rLo || 1)) * 100) + "%", top: 8 + (i % 3) * 8, opacity: mounted ? 1 : 0, transform: mounted ? "none" : "scale(0)", transition: "all .45s cubic-bezier(.22,1,.36,1) " + (i * 0.03) + "s" }} />
               ))}
-              <span className="absolute bottom-0 left-0 text-[11px] text-gray-400 dark:text-gray-500">{rLo.toFixed(1)}%</span>
-              <span className="absolute bottom-0 right-0 text-[11px] text-gray-400 dark:text-gray-500">{rHi.toFixed(1)}%</span>
+              <span className="absolute bottom-0 left-0 text-[10px] text-gray-400 dark:text-gray-500">{rLo.toFixed(1)}%</span>
+              <span className="absolute bottom-0 right-0 text-[10px] text-gray-400 dark:text-gray-500">{rHi.toFixed(1)}%</span>
             </div>
-            <p className="mt-2 text-[12px] text-gray-400 dark:text-gray-500">지역 편차 {(rHi - rLo).toFixed(1)}%p · 점선=전국 평균</p>
+            <p className="mt-2 text-[11px] text-gray-400 dark:text-gray-500">지역 편차 {(rHi - rLo).toFixed(1)}%p · 점선=전국 평균</p>
           </section>
         </div>
       )}
@@ -124,22 +124,22 @@ export default function RegionPriceExtras() {
         <section className="min-w-0 overflow-hidden rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 인구·가구</h2>
-            <span className="text-[12px] font-semibold text-gray-400 dark:text-gray-500">2020 센서스 · 인구 많은 순</span>
-            <span className="ml-auto text-[12px] font-semibold text-gray-500 dark:text-gray-400">전국 {(popTotal / 1e6).toFixed(1)}백만명 · {(hhTotal / 1e6).toFixed(1)}백만가구</span>
+            <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 인구·가구</h2>
+            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">2020 센서스 · 인구 많은 순</span>
+            <span className="ml-auto text-[11px] font-semibold text-gray-500 dark:text-gray-400">전국 {(popTotal / 1e6).toFixed(1)}백만명 · {(hhTotal / 1e6).toFixed(1)}백만가구</span>
           </div>
           <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
             {popRows.map((r, i) => (
               <div key={r.geo} className="flex items-center gap-2" style={{ opacity: mounted ? 1 : 0, transform: mounted ? "none" : "translateX(-6px)", transition: "all .4s ease " + (i * 0.02) + "s" }}>
-                <span className="w-24 shrink-0 truncate text-[12px] text-gray-600 dark:text-gray-300">{shortGeo(r.geo)}</span>
+                <span className="w-24 shrink-0 truncate text-[11px] text-gray-600 dark:text-gray-300">{shortGeo(r.geo)}</span>
                 <div className="relative h-4 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
                   <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: mounted ? (r.pop / popMax * 100) + "%" : "0%", transition: "width .7s cubic-bezier(.16,1,.3,1) " + (i * 0.02) + "s" }} />
                 </div>
-                <span className="w-12 shrink-0 text-right text-[12px] font-semibold tabular-nums text-gray-800 dark:text-gray-100">{(r.pop / 1e6).toFixed(1)}M</span>
+                <span className="w-12 shrink-0 text-right text-[11px] font-semibold tabular-nums text-gray-800 dark:text-gray-100">{(r.pop / 1e6).toFixed(1)}M</span>
               </div>
             ))}
           </div>
-          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[11px] text-gray-400 dark:text-gray-500">자료 PSA 2020 인구주택총조사(CPH) · 지역별 총인구·가구수 · <b className="text-gray-500 dark:text-gray-400">인구 밀집 지역 = 가전 수요 최대 시장</b></p>
+          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">자료 PSA 2020 인구주택총조사(CPH) · 지역별 총인구·가구수 · <b className="text-gray-500 dark:text-gray-400">인구 밀집 지역 = 가전 수요 최대 시장</b></p>
         </section>
       )}
 
@@ -147,26 +147,26 @@ export default function RegionPriceExtras() {
         <section className="min-w-0 overflow-hidden rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 소득·빈곤</h2>
-            <span className="text-[12px] font-semibold text-gray-400 dark:text-gray-500">2023 빈곤율(%) · 낮을수록 소득 상위</span>
-            <span className="ml-auto text-[12px] font-semibold text-gray-500 dark:text-gray-400">전국 평균 {povNat.toFixed(1)}%</span>
+            <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 소득·빈곤</h2>
+            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">2023 빈곤율(%) · 낮을수록 소득 상위</span>
+            <span className="ml-auto text-[11px] font-semibold text-gray-500 dark:text-gray-400">전국 평균 {povNat.toFixed(1)}%</span>
           </div>
           <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
             {povRows.map((r, i) => {
               const t = Math.max(0, Math.min(1, r.pov / povMax))
               return (
                 <div key={r.geo} className="flex items-center gap-2" style={{ opacity: mounted ? 1 : 0, transform: mounted ? "none" : "translateX(-6px)", transition: "all .4s ease " + (i * 0.02) + "s" }}>
-                  <span className="w-24 shrink-0 truncate text-[12px] text-gray-600 dark:text-gray-300">{shortGeo(r.geo)}</span>
+                  <span className="w-24 shrink-0 truncate text-[11px] text-gray-600 dark:text-gray-300">{shortGeo(r.geo)}</span>
                   <div className="relative h-4 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
                     <div className="absolute inset-y-0 left-0 rounded" style={{ width: mounted ? (r.pov / povMax * 100) + "%" : "0%", background: "rgba(225,29,72," + (0.35 + t * 0.5).toFixed(2) + ")", transition: "width .7s cubic-bezier(.16,1,.3,1) " + (i * 0.02) + "s" }} />
                   </div>
-                  {r.inc > 0 && <span className="w-16 shrink-0 text-right text-[11px] tabular-nums text-gray-400 dark:text-gray-500">₱{Math.round(r.inc / 1000)}천</span>}
-                  <span className="w-10 shrink-0 text-right text-[12px] font-semibold tabular-nums text-gray-800 dark:text-gray-100">{r.pov.toFixed(1)}%</span>
+                  {r.inc > 0 && <span className="w-16 shrink-0 text-right text-[10px] tabular-nums text-gray-400 dark:text-gray-500">₱{Math.round(r.inc / 1000)}천</span>}
+                  <span className="w-10 shrink-0 text-right text-[11px] font-semibold tabular-nums text-gray-800 dark:text-gray-100">{r.pov.toFixed(1)}%</span>
                 </div>
               )
             })}
           </div>
-          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[11px] text-gray-400 dark:text-gray-500">자료 PSA FIES 빈곤통계(2023) · 지역별 빈곤율 · <b className="text-gray-500 dark:text-gray-400">저빈곤(고소득) 지역 = 프리미엄 가전 우선 시장</b></p>
+          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">자료 PSA FIES 빈곤통계(2023) · 지역별 빈곤율 · <b className="text-gray-500 dark:text-gray-400">저빈곤(고소득) 지역 = 프리미엄 가전 우선 시장</b></p>
         </section>
       )}
     </div>
