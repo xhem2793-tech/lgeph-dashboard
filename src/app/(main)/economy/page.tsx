@@ -85,7 +85,7 @@ export default function Page() {
   }
 
   return (
-    <main className="mx-auto max-w-[1920px] px-4 pb-10 pt-4 sm:px-6">
+    <main className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}"}</style>
       <div className="grid items-start gap-4 lg:grid-cols-[220px_minmax(0,1fr)]">
         <aside className="h-fit rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm lg:sticky lg:top-[61px]" style={{ animation: "fadeUp .5s ease both" }}>

@@ -5,6 +5,9 @@
 /* ── 전역 본문 폰트 — Pretendard(한글) + Inter(라틴) 통일. 지도와 동일 톤 ── */
 body {
   font-family: "Pretendard Variable", Pretendard, var(--font-inter), Inter, system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  /* 전역 UI 스케일 — 텍스트·간격을 CryptoQuant 수준으로 확대(px 밀집 UI라 zoom으로 통째 스케일).
+     값 조정만으로 전체 크기 튜닝 가능(1.0=기존, 1.18≈캡쳐본 크기). */
+  zoom: 1.18;
 }
 
 /* ── EN 모드 타이포 (2026-07-13) ─────────────────────────────

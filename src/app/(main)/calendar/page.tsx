@@ -175,7 +175,7 @@ export default function Calendar() {
       : `${range.from.getFullYear()}년 ${range.from.getMonth() + 1}월`
 
   return (
-    <div className="mx-auto max-w-[1920px] px-4 pb-6 pt-4 sm:px-6 sm:pb-8">
+    <div className="w-full px-6 pb-6 pt-4 sm:px-8 lg:px-10 sm:pb-8">
       <style>{
         "@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}" +
         "@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}" +
