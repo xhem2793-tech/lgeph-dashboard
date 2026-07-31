@@ -169,7 +169,7 @@ const canonCode = (model: string, code: string | null) => {
 }
 type PivRow = { cat: string; brand: string; code: string; model: string; form: string | null; size: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
 function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp: string | null; elabels: EnergyRow[] | null }) {
-  const [cat, setCat] = React.useState("전체")
+  const [cat, setCat] = React.useState("냉장고")
   const [brand, setBrand] = React.useState("LG")
   const [form, setForm] = React.useState("전체")
   const [size, setSize] = React.useState("전체")
@@ -189,7 +189,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
   const goOlder = () => { if (!isOldest) setSelDate(dates[curIdx + 1]) }
   const goNewer = () => { if (!isLatest) setSelDate(dates[curIdx - 1]) }
   const pickDate = (v: string) => { if (!v) return; setSelDate(dates.find((d) => d <= v) ?? dates[dates.length - 1] ?? null) }
-  const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => D.some((r) => r.category === c))], [D])
+  const cats = React.useMemo(() => { const av = PM_CATS.filter((c) => D.some((r) => r.category === c)); return av.length ? av : PM_CATS }, [D])
   const brandsL = React.useMemo(() => {
     const m = new Map<string, number>()
     D.forEach((r) => { if (r.brand) m.set(r.brand, (m.get(r.brand) || 0) + 1) })
