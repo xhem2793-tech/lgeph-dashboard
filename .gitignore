@@ -1,44 +1,35 @@
+
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
-/node_modules
-/.pnp
-.pnp.js
-.yarn/install-state.gz
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
 # debug
+# dependencies
+# local env files
+# misc
+# next.js
+# production
+# resend key for publish-report script (do NOT commit)
+# testing
+# typescript
+# vercel
+# weekly-insight generator intermediates
+*.pem
+*.tsbuildinfo
+.DS_Store
+.env*.local
+.pnp.js
+.vercel
+.yarn/install-state.gz
+/.next/
+/.pnp
+/build
+/coverage
+/node_modules
+/out/
+next-env.d.ts
 npm-debug.log*
+package-lock.json
+scripts/.bsp_rppi.xlsx
+scripts/.resendkey
+scripts/.sbpat
+scripts/.weekly/
 yarn-debug.log*
 yarn-error.log*
-
-# local env files
-.env*.local
-
-# resend key for publish-report script (do NOT commit)
-scripts/.resendkey
-
-# weekly-insight generator intermediates
-scripts/.weekly/
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-scripts/.sbpat
-scripts/.bsp_rppi.xlsx

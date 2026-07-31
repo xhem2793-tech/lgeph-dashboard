@@ -3,7 +3,8 @@ name: CI — 품질 게이트(lint·test·build)
 # 변경이 병합·배포되기 전에 자동 검증한다. 하나라도 실패하면 잡이 실패 → 배포 전 차단.
 #  · lint  : 코드 스타일·정적 오류
 #  · test  : 분류기 골든셋 회귀(정확도)
-#  · build : 정적 빌드 성공(깨진 배포 방지 — 웹훅이 깨진 번들을 올리는 상황 예방)
+#  · build : 정적 빌드 성공(깨진 배포 방지)
+#  ※ 패키지 매니저는 pnpm(= Cloudflare Pages와 동일). frozen-lockfile로 lockfile 불일치도 여기서 잡는다.
 on:
   push:
     branches: [main]
@@ -16,14 +17,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
-      - run: npm ci
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Lint
-        run: npm run lint
+        run: pnpm lint
       - name: 분류기 골든셋 테스트
-        run: npm test
+        run: pnpm test
       - name: 정적 빌드 검증
-        run: npm run build
+        run: pnpm build
