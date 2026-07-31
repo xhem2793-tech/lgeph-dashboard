@@ -244,8 +244,8 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
       {/* 검색·필터 — LG 기본 · 제품/스펙 호버 드롭다운 · 뉴스형 검색 · 최종갱신(맨오른쪽) */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10.5px] font-bold text-white shadow-sm">LG</span>
-        <div className="w-[150px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체") }} /></div>
-        {segs.length > 0 && <div className="w-[140px]"><PmDrop label="스펙" sel={effSpec} options={[{ k: "전체", t: "전체" }, ...segs.map((s) => ({ k: s.t, t: s.t }))]} onSelect={setSpec} /></div>}
+        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체") }} /></div>
+        {segs.length > 0 && <div className="w-fit"><PmDrop label="스펙" sel={effSpec} options={[{ k: "전체", t: "전체" }, ...segs.map((s) => ({ k: s.t, t: s.t }))]} onSelect={setSpec} /></div>}
         {/* 날짜 네비게이터 — 과거 특정일 스냅샷(◀ 이전일 · ▶ 다음일 · 📅 달력에서 선택) */}
         {dates.length > 0 && (
           <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-1 py-0.5 shadow-sm">
@@ -366,9 +366,10 @@ const acFormOf = (m: string): string | null => {
   if (/portable|\bKAP-?\d/i.test(s)) return "포터블"
   if (/floor ?mount|floor ?standing|스탠드|\bstanding\b|\bZPNQ|53C[LN]V|53CFV|53KFV/i.test(s)) return "스탠드형"
   if (/cassette|ceiling|천장|\bmulti[- ]?split|multi[- ]?v\b|\bvrf\b|\bvrv\b|ducted|concealed|시스템|\bZTNQ|\bZ\dUQ|\bZVNQ|\bZUAB|AMNQ|\bAC0\d{2}[A-Z]/i.test(s)) return "시스템"
-  if (/window|창문|\bwdw\b|\bLA\d{3}|WCAR[A-Z]|WCON[A-Z]|WRAC|CW[- ]?[A-Z]{0,3}\d|TAC-?\d+CW|\bAW\d|\d+WC[A-Z]*\b|\bKAM ?\d|KAM-?\d|FP-?\d+ARA|MWMDP|HWTAC/i.test(s)) return "창문형"
-  if (/split|wall[- ]?mount|벽걸이|HS[NU]?\d{2}|\bAR\d{2}|CS[/-]?CU|\bCS-?[A-Z]{0,2}\d|CSCU|MS[A-Z]{1,3}-?\d|FTK[A-Z]|TAC-?\d+CS|(?:CAC|CEP|CTD|CAH)\d|KA-?\d+M|\bI?WAR[- ]?\d|\bWAM\d|\bHW-?\d\d|KS-?IW|\bKA-?\d+G|53GCV|53KPV|53CXV|FP ?53|FP\d{2}[A-Z]/i.test(s)) return "벽걸이형"
-  return null
+  if (/window|창문|\bwdw\b|\bLA\d{3}|WCAR[A-Z]|\bWCON|WRAC|CW[- ]?[A-Z]{0,3}\d|TAC[- ]?\d+CW|\bAW\d|\d+WC[A-Z]*\b|\bKAM ?\d|KAM-?\d|FP-?\d+ARA|MWMDP|HWTAC/i.test(s)) return "창문형"
+  if (/split|wall[- ]?mount|벽걸이|HS[NU]?\d{2}|\bAR\d{2}|CS[/-]?CU|\bCS-?[A-Z]{0,2}\d|CSCU|MS[A-Z]{1,3}-?\d|\bMWWA|FTK[A-Z]|TAC[- ]?\d+CS|(?:CAC|CEP|CTD|CAH)\d|KA-?\d+M|\bI?WAR[- ]?\d|\bWAM\d|\bHW-?\d\d|KS-?IW|\bKA-?\d+G|53GCV|53KPV|53CXV|FP ?53|FP\d{2}[A-Z]/i.test(s)) return "벽걸이형"
+  // 최종 안전장치(never 기타): 잔여 실물 에어컨은 최빈 구성인 스플릿(벽걸이)로 배정 — 비-에어컨은 위에서 이미 null 배제
+  return "벽걸이형"
 }
 // 냉장고 도어형(유형) — 텍스트 + 브랜드 코드프리픽스(LG RV[SFTB]·Samsung R[SFTB]·Condura C**·Haier HR*)
 const REF_FORMS = ["SxS", "F/D", "T/F", "B/F", "1Door", "Freezer"]
@@ -418,7 +419,10 @@ const wmFormOf = (m: string): string | null => {
   if (/\bFV\d|\bWW\d|\bNA-?V|\bTWF|\bWD\d|\bTWD|\bAWD|WWEB|FWEB|\bESJN|\bHW\d{2}|\bF\d{2}S|\bMF\d/i.test(s)) return "F/L"
   if (/\bT[0-9]\d{3}|\bWA\d|\bNA-?[FW]|\bTWA|\bTWT|\bCWM|\bHWM|\bVHH|\bAWTM|\bAWFM|\bGWTW|\bMA\d{3}W|\bMT\d{3}W|\bMAW|\bMTW|\bAW[- ]?[A-Z]?\d/i.test(s)) return "T/L"
   if (/\bAHW|\bES-?WP|\bEWM|\bWM-?\d|\bBWS|\bHSD|\bJWS/i.test(s)) return "Single Tub"   // 단조 코드 폴백
-  return null
+  // 의류관리기(Styler·AirDresser·Smart Closet)는 세탁기 아님 → 배제
+  if (/styler|air ?dresser|smart closet|clothing care|의류관리/i.test(s)) return null
+  // 최종 안전장치(never 기타): 잔여 실물 세탁기는 최빈 구성인 탑로드로 배정
+  return "T/L"
 }
 // TV 패널을 **등급(계열)**으로 통합 — 개별 패널명이 아니라 시장 등급으로:
 //   OLED(자발광 최상) > QLED급(퀀텀닷·미니LED 프리미엄 LED: QLED·QNED·NanoCell·MiniLED·ULED·NeoQLED) > UHD(표준 4K) > FHD·HD(엔트리)
@@ -427,8 +431,9 @@ const TV_FORMS = ["OLED", "QLED급", "UHD", "FHD·HD"]
 const tvFormOf = (m: string, brand?: string): string | null => {
   const s = m || ""
   const isLG = /^lg$/i.test(brand || "")
-  // 액세서리(벽걸이 마운트·녹음기·셋톱박스)는 TV 아님 → 기타로 배제
-  if (/\bmount|bracket|\bVML|\bVLT|\bVXT|\bVST|affordabox|set-?top|ICD-/i.test(s)) return null
+  // 액세서리(녹음기·마이크·셋톱박스·마운트 '단품')는 TV 아님 → 배제.
+  //   ※ 광의어(bracket/mount) 금지 — 'with FREE 벽걸이 번들' 실제 TV가 잘못 제외되던 문제. 단품 식별코드만.
+  if (/\bVML\d|\bVLT\d|\bVXT\d|\bVST\d|affordabox|set-?top|\bICD-|voice recorder|\bmicrophone\b|\bDM-?1000/i.test(s)) return null
   if (/\boled\b/i.test(s)) return "OLED"
   // QLED급(퀀텀닷/미니LED 프리미엄) — LG 고유(QNED/NanoCell/MiniLED)는 항상, QLED/ULED/NeoQLED는 비LG만
   if (/qned|nano ?cell|\bnano\b|mini ?led|miniled/i.test(s)) return "QLED급"
@@ -439,8 +444,8 @@ const tvFormOf = (m: string, brand?: string): string | null => {
   if (inch != null && inch <= 32 && !explicit4k) return "FHD·HD"
   if (explicit4k) return "UHD"
   if (/full ?hd|\bfhd\b|\b2k\b|\bhd\b/i.test(s)) return "FHD·HD"
-  if (/led ?tv|smart tv|google tv|\btv\b|signage|video ?wall|\d{2}[A-Z]/i.test(s)) return inch != null && inch < 40 ? "FHD·HD" : "UHD"
-  return null
+  // 최종 안전장치(never 기타): 사이즈로 배정 — 40˝↓=FHD·HD, 그 이상=UHD(표준 4K)
+  return inch != null && inch < 40 ? "FHD·HD" : "UHD"
 }
 const pmFormOf = (cat: string, m: string, brand?: string): string | null =>
   isAC(cat) ? acFormOf(m) : cat === "냉장고" ? refFormOf(m) : cat === "세탁기" ? wmFormOf(m) : cat === "TV" ? tvFormOf(m, brand) : null
@@ -525,7 +530,7 @@ function PmDrop({ label, sel, options, onSelect }: { label: string; sel: string;
     <div className="group relative">
       <button type="button" className="flex w-full items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-left transition-colors group-hover:border-indigo-300 dark:group-hover:border-indigo-500/40">
         <span className="text-[9.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</span>
-        <span className="ml-auto max-w-[84px] truncate text-[12px] font-semibold text-gray-800 dark:text-gray-100">{cur}</span>
+        <span className="ml-1.5 whitespace-nowrap text-[12px] font-semibold text-gray-800 dark:text-gray-100">{cur}</span>
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" className="shrink-0 text-gray-300 transition-transform duration-200 group-hover:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
       </button>
       <div className="invisible absolute inset-x-0 top-[calc(100%-2px)] z-40 max-h-[240px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
@@ -590,7 +595,7 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   }, [R, cat])
   const specOf = React.useCallback((r: PriceRow) => { const cc = canonCode(r.model, r.code); return (cc && specText[cc]) || (r.model + " " + (r.capacity || "")) }, [specText])
 
-  const { cards, brands, ticks, gmin, gmax, count, matched } = React.useMemo(() => {
+  const { cards, brands, ticks, gmin, gmax } = React.useMemo(() => {
     const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSizeHit(cat, specOf(r), null, effSpec) && pmFormHit(cat, specOf(r), effForm, r.brand))
     const empty = { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, count: f0.length, matched: 0 }
     if (f0.length < 3) return empty
@@ -646,11 +651,11 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
       {/* 상단 가로 필터 — 드롭다운 + 뉴스형 검색 + 최종갱신 */}
       <div className="relative z-20 flex flex-wrap items-center gap-2">
-        <div className="w-[70px]"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm("전체"); setShop("전체") }} /></div>
-        {formList.length > 0 && <div className="w-[136px]"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...formList.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>}
-        {sizeList.length > 0 && <div className="w-[130px]"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSpec} options={[{ k: "전체", t: "전체" }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
-        <div className="w-[150px]"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
-        <div className="w-[140px]"><PmDrop label="에너지" sel={starF} options={["전체", "★5", "★4", "★3↓"].map((s) => ({ k: s, t: s }))} onSelect={setStarF} /></div>
+        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm("전체"); setShop("전체") }} /></div>
+        {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...formList.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>}
+        {sizeList.length > 0 && <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSpec} options={[{ k: "전체", t: "전체" }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
+        <div className="w-fit"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
+        <div className="w-fit"><PmDrop label="에너지" sel={starF} options={["전체", "★5", "★4", "★3↓"].map((s) => ({ k: s, t: s }))} onSelect={setStarF} /></div>
         <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[300px]" : "w-[200px]")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
           <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델·브랜드 검색"
@@ -665,7 +670,10 @@ function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
         <div ref={cardRef} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 shadow-sm" style={{ minWidth: minW }}>
           <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-4 w-1 rounded bg-indigo-500" />
-            <span className="text-[10.5px] text-gray-400 dark:text-gray-500">{count} 리스팅 · DOE ★매칭 {matched}건</span>
+            {(() => { const sp = effSpec !== "전체" ? effSpec : effForm !== "전체" ? effForm : ""; return (
+              <span className="text-[12.5px] font-bold text-gray-800 dark:text-gray-100">{cat} <span className="font-semibold text-gray-400 dark:text-gray-500">vs 경쟁사</span> <span className="text-indigo-600 dark:text-indigo-400">{sp ? sp + " " : ""}가격</span></span>
+            ) })()}
+            <span className="hidden text-[9.5px] text-gray-400 dark:text-gray-500 sm:inline">· New DOE ★</span>
             <div className="ml-auto flex items-center gap-1.5">
               <button type="button" onClick={dlPng} disabled={dling} data-noexport="1" title="카드 전체를 PPT 슬라이드 크기 이미지로 저장" className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[10.5px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-50">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
