@@ -170,6 +170,7 @@ const canonCode = (model: string, code: string | null) => {
 type PivRow = { cat: string; brand: string; code: string; model: string; form: string | null; size: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
 function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp: string | null; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("전체")
+  const [brand, setBrand] = React.useState("LG")
   const [form, setForm] = React.useState("전체")
   const [size, setSize] = React.useState("전체")
   const [q, setQ] = React.useState("")
@@ -189,6 +190,12 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
   const goNewer = () => { if (!isLatest) setSelDate(dates[curIdx - 1]) }
   const pickDate = (v: string) => { if (!v) return; setSelDate(dates.find((d) => d <= v) ?? dates[dates.length - 1] ?? null) }
   const cats = React.useMemo(() => ["전체", ...PM_CATS.filter((c) => D.some((r) => r.category === c))], [D])
+  const brandsL = React.useMemo(() => {
+    const m = new Map<string, number>()
+    D.forEach((r) => { if (r.brand) m.set(r.brand, (m.get(r.brand) || 0) + 1) })
+    const others = Array.from(m.entries()).filter(([b]) => b !== "LG").sort((a, b) => b[1] - a[1]).map((x) => x[0])
+    return ["LG", ...others, "전체"]
+  }, [D])
   const forms = cat === "전체" ? [] : pmFormsFor(cat)
   const effForm = form === "전체" || forms.includes(form) ? form : "전체"
   const sizes = cat === "전체" ? [] : pmSizeList(cat)
@@ -206,7 +213,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
     // 전일(직전 데이터일) 최저가 인덱스 — canonCode|거래선 → 가격(▼▲ 전일 대비)
     const prevIdx: Record<string, number> = {}
     D.filter((r) => r.d === prevDate && r.price != null).forEach((r) => { const cc = canonCode(r.model, r.code); if (!cc) return; const k = cc + "|" + r.retailer; prevIdx[k] = Math.min(prevIdx[k] ?? Infinity, r.price as number) })
-    const f = D.filter((r) => r.d === curDate && r.price != null && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmFormHit(cat, r.model + " " + (r.capacity || ""), effForm, r.brand) && pmSizeHit(cat, r.model, r.capacity, effSize) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
+    const f = D.filter((r) => r.d === curDate && r.price != null && (brand === "전체" || r.brand === brand) && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmFormHit(cat, r.model + " " + (r.capacity || ""), effForm, r.brand) && pmSizeHit(cat, r.model, r.capacity, effSize) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
     const g: Record<string, DailyRow[]> = {}
     f.forEach((r) => { const cc = canonCode(r.model, r.code); (g[r.brand + "|" + cc] = g[r.brand + "|" + cc] || []).push(r) })
     const out: PivRow[] = Object.values(g).map((list) => {
@@ -237,7 +244,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
       return (typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y))) * dir
     })
     return out
-  }, [D, curDate, prevDate, cat, effForm, effSize, q, sort]) // eslint-disable-line
+  }, [D, curDate, prevDate, cat, brand, effForm, effSize, q, sort]) // eslint-disable-line
   const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
   const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
 
@@ -245,7 +252,7 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
     <div className="flex flex-col gap-2.5">
       {/* 검색·필터 — LG 기본 · 제품/스펙 호버 드롭다운 · 뉴스형 검색 · 최종갱신(맨오른쪽) */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <span className="rounded-full bg-indigo-600 px-2 py-0.5 text-[10.5px] font-bold text-white shadow-sm">LG</span>
+        <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={setBrand} /></div>
         <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm("전체"); setSize("전체") }} /></div>
         <div className="w-fit"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>
         <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSize} options={[{ k: "전체", t: "전체" }, ...sizes.map((t) => ({ k: t, t }))]} onSelect={setSize} /></div>
@@ -285,8 +292,6 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
               <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">분류</th>
               <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("code")}>모델{arrow("code")}</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title="New DOE 에너지등급">★</th>
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">유형</th>
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">용량</th>
               <th className="whitespace-nowrap border-b border-r border-gray-200 dark:border-gray-800 px-2 py-2 text-center">SRP</th>
               {BOARD_SHOPS.map((s) => (
                 <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
@@ -299,15 +304,13 @@ function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp:
             {loading ? (
               <tr><td colSpan={BOARD_SHOPS.length + 8} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">불러오는 중…</td></tr>
             ) : data.length === 0 ? (
-              <tr><td colSpan={BOARD_SHOPS.length + 9} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">조건에 맞는 모델 없음</td></tr>
+              <tr><td colSpan={BOARD_SHOPS.length + 7} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">조건에 맞는 모델 없음</td></tr>
             ) : data.slice(0, 300).map((r, ri) => (
               <tr key={curDate + r.brand + r.code + ri} style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s" }} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
-                <td className="px-2 py-1.5 text-center font-semibold text-indigo-700 dark:text-indigo-300">{r.brand}</td>
+                <td className={"px-2 py-1.5 text-center font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{r.brand}</td>
                 <td className="px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400">{r.cat}</td>
                 <td className="truncate px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code}</td>
                 <td className="px-1 py-1.5 text-center">{r.star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(r.star)}>★{r.star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
-                <td className="px-2 py-1.5 text-center text-[11px] text-gray-500 dark:text-gray-400">{r.form || "—"}</td>
-                <td className="px-2 py-1.5 text-center text-[11px] tabular-nums text-gray-500 dark:text-gray-400">{r.size || "—"}</td>
                 <td className="border-r border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
                 {r.cells.map((c, i) => (
                   <td key={i} className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums" style={c && r.min != null && c.price === r.min ? { background: "rgba(16,185,129,0.08)" } : undefined}>

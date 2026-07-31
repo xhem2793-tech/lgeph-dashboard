@@ -618,7 +618,7 @@ export type DailyRow = {
   url: string | null
 }
 
-export async function competitorDaily(max = 12000): Promise<DailyRow[]> {
+export async function competitorDaily(max = 20000): Promise<DailyRow[]> {
   const page = 1000
   const rows: any[] = []
   for (let off = 0; off < max; off += page) {
