@@ -304,28 +304,28 @@ export default function Competitors() {
       <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
         <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit lg:sticky lg:top-[61px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
           {/* 좌 메뉴 — 뉴스·경쟁사 광고 사이드바와 동일한 구조(아이콘 헤더·그룹 라벨·우측 상태 메타) */}
-          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">
+          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
             <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분석</p>
           </div>
-          <div className="px-3 py-3">
-            <div className="flex flex-col gap-0.5">
+          <div className="px-2 py-3">
+            <div className="flex flex-col gap-1">
               {GROUPS.map((g) => (
                 <React.Fragment key={g.group}>
-                  <p className="mb-1 mt-2.5 px-1.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 first:mt-0">{g.group}</p>
+                  <p className="mb-1 mt-3.5 px-1.5 text-[11.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 first:mt-0">{g.group}</p>
                   {g.items.map((it) => (
                     <button
                       key={it.key}
                       type="button"
                       onClick={() => setView(it.key)}
                       className={
-                        "group relative flex items-center rounded-md px-2.5 py-[7px] text-left transition-colors duration-200 " +
+                        "group relative flex items-center rounded-md px-2.5 py-2 text-left transition-colors duration-200 " +
                         (view === it.key ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-gray-100/70 dark:hover:bg-gray-800/50")
                       }
                     >
-                      {view === it.key && <span className="absolute -left-3 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
+                      {view === it.key && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
                       <span className="flex w-full items-center gap-1.5">
-                        <span className={"flex-1 truncate text-[12.5px] transition-colors " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-50")}>{it.label}</span>
+                        <span className={"flex-1 truncate text-[14px] transition-colors " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-50")}>{it.label}</span>
                         {it.status === "live"
                           ? <span className="shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[9px] font-bold text-emerald-600 dark:text-emerald-400">LIVE</span>
                           : <span className="shrink-0 text-[9.5px] font-medium text-gray-400 dark:text-gray-500">예정</span>}
@@ -337,7 +337,7 @@ export default function Competitors() {
             </div>
           </div>
 
-          <div className="border-t border-gray-100 dark:border-gray-800 px-3 py-2.5">
+          <div className="border-t border-gray-100 dark:border-gray-800 px-2 py-2.5">
             <button
               type="button"
               onClick={() => {

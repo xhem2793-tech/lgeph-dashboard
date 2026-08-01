@@ -89,30 +89,33 @@ export default function Page() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}"}</style>
       <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
         <aside className="h-fit lg:sticky lg:top-[61px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6" style={{ animation: "fadeUp .5s ease both" }}>
-          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-3 py-2.5">
+          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
             <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{en ? "View" : "보기"}</p>
             <span className="ml-auto"><Segmented size="sm" value={active === "all" ? "list" : "card"} onChange={(k) => setActive(k === "list" ? "all" : (active === "all" ? "prices" : active))} options={[{ k: "card", label: "카드" }, { k: "list", label: "리스트" }]} /></span>
           </div>
-          <div className="px-3 py-3">
-            <nav className="flex flex-col gap-0.5">
+          <div className="px-2 py-3">
+            <nav className="flex flex-col gap-1">
               {NAV.map((n, i) => (
                 <div key={n.id}>
                   {n.group !== NAV[i - 1]?.group && (
-                    <p className={"px-1.5 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 " + (i === 0 ? "mb-1" : "mb-1 mt-2.5")}>{n.group}</p>
+                    <p className={"px-1.5 text-[11.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 " + (i === 0 ? "mb-1" : "mb-1 mt-3.5")}>{n.group}</p>
                   )}
                   <button
                     onPointerDown={() => setActive(n.id)}
                     onClick={() => setActive(n.id)}
                     className={
-                      "group flex w-full items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
-                      (active === n.id ? "bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-100 dark:ring-indigo-500/25" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
+                      "group relative flex w-full items-center rounded-md px-2.5 py-2 text-left transition-colors duration-200 " +
+                      (active === n.id ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-gray-100/70 dark:hover:bg-gray-800/50")
                     }
                   >
-                    <span className={"flex-1 text-[12.5px] " + (active === n.id ? "font-bold text-indigo-700 dark:text-indigo-300" : "font-semibold text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
-                      {n.ko}
+                    {active === n.id && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
+                    <span className="flex w-full items-center gap-1.5">
+                      <span className={"flex-1 text-[14px] transition-colors " + (active === n.id ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-50")}>
+                        {n.ko}
+                      </span>
+                      <span className="num shrink-0 text-[11px] tabular-nums text-gray-400 dark:text-gray-500">{navCount(n)}</span>
                     </span>
-                    <span className="num shrink-0 text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{navCount(n)}</span>
                   </button>
                 </div>
               ))}
