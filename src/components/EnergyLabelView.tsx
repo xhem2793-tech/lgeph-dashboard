@@ -123,7 +123,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
   })()
   return (
     <>
-    <div ref={(el) => { cardRef.current = el; (ref as React.MutableRefObject<HTMLDivElement | null>).current = el }} className="flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: on ? "fadeUp .5s cubic-bezier(.16,1,.3,1) both" : undefined, animationDelay: Math.min(idx, 6) * 0.06 + "s", opacity: on ? undefined : 0 }}>
+    <div ref={(el) => { cardRef.current = el; (ref as React.MutableRefObject<HTMLDivElement | null>).current = el }} className="flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: on ? "fadeUp .5s cubic-bezier(.22,1,.36,1) both" : undefined, animationDelay: Math.min(idx, 6) * 0.06 + "s", opacity: on ? undefined : 0 }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[13px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {seg && <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:text-teal-300">{seg}</span>}
@@ -143,7 +143,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
             LG 인사이트
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
           </button>
-          <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}>
+          <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}>
             <div className="overflow-hidden">
               <div className="mt-1.5 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2.5">
                 <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
@@ -155,7 +155,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
     </div>
     {big && typeof document !== "undefined" && createPortal(
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 sm:p-8" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setBig(false)}>
-        <div className="flex max-h-[92vh] w-full max-w-[1100px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
+        <div className="flex max-h-[92vh] w-full max-w-[1100px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10" style={{ animation: "fadeUp .3s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
           <div className="flex shrink-0 items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
             <span className="h-[16px] w-1 rounded bg-teal-500" />
             <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">{title}</h3>
@@ -211,7 +211,7 @@ function HBar({ items, hiName }: { items: { name: string; v: number; n?: number 
           <g key={a.name} onMouseEnter={() => setH(i)} style={{ cursor: "default", opacity: dim ? 0.4 : 1, transition: "opacity .15s" }}>
             <rect x={0} y={y} width={W} height={rowH} fill="transparent" /><title>{a.name} · {a.v.toFixed(2)}{a.n ? ` · ${a.n}개 모델` : ""}</title>
             <text x={padL - 6} y={y + rowH / 2 + 3.5} textAnchor="end" fontSize="10.5" fontWeight={isHi || h === i ? 800 : 500} className={isHi ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{a.name}</text>
-            <rect x={padL} y={y + 4} width={Math.max(2, bx(a.v) - padL)} height={rowH - 9} rx="3" fill={col} className={isHi ? "" : "dark:opacity-30"} style={{ animation: "growX .55s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.04) + "s", transformOrigin: `${padL}px 0` }} />
+            <rect x={padL} y={y + 4} width={Math.max(2, bx(a.v) - padL)} height={rowH - 9} rx="3" fill={col} className={isHi ? "" : "dark:opacity-30"} style={{ animation: "growX .55s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.1 + i * 0.04) + "s", transformOrigin: `${padL}px 0` }} />
             <text x={bx(a.v) + 5} y={y + rowH / 2 + 3.5} fontSize="10.5" fontWeight={isHi || h === i ? 800 : 600} className={isHi ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>{a.v.toFixed(2)}{h === i && a.n ? ` (${a.n})` : ""}</text>
           </g>
         )
@@ -232,8 +232,8 @@ function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { la
           return (
             <g key={g.label} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.45 : 1, transition: "opacity .15s", cursor: "default" }}>
               <rect x={cx - gw / 2} y={0} width={gw} height={H} fill="transparent" /><title>{g.label} · LG {g.lg != null ? fmt(g.lg) : "—"} · 시장 {fmt(g.mkt)}</title>
-              {g.lg != null && <rect x={cx - bw - 1} y={Y(g.lg)} width={bw} height={H - B - Y(g.lg)} rx="2" fill={TEAL} style={{ animation: "growBar .55s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />}
-              <rect x={cx + 1} y={Y(g.mkt)} width={bw} height={H - B - Y(g.mkt)} rx="2" fill={GRAY} className="dark:opacity-40" style={{ animation: "growBar .55s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.12 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />
+              {g.lg != null && <rect x={cx - bw - 1} y={Y(g.lg)} width={bw} height={H - B - Y(g.lg)} rx="2" fill={TEAL} style={{ animation: "growBar .55s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />}
+              <rect x={cx + 1} y={Y(g.mkt)} width={bw} height={H - B - Y(g.mkt)} rx="2" fill={GRAY} className="dark:opacity-40" style={{ animation: "growBar .55s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.12 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />
               {g.lg != null && <text x={cx - bw / 2 - 1} y={Y(g.lg) - 3} textAnchor="middle" fontSize="8" fontWeight="700" className="fill-teal-600 dark:fill-teal-400">{fmt(g.lg)}</text>}
               <text x={cx} y={H - 13} textAnchor="middle" fontSize="8.5" className="fill-gray-500 dark:fill-gray-400">{g.label.replace(/급|\(.*\)/g, "")}</text>
             </g>
@@ -310,8 +310,8 @@ function EffHist({ vals, lgVals, metric }: { vals: number[]; lgVals: number[]; m
           return (
             <g key={i} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.5 : 1, transition: "opacity .15s" }}>
               <rect x={x} y={T} width={bw} height={H - T - B} fill="transparent" /><title>{b.lo.toFixed(2)}~{b.hi.toFixed(2)} · {b.n}모델{b.lg ? ` (LG ${b.lg})` : ""}</title>
-              <rect x={x + 1.5} y={Y(b.n)} width={Math.max(1, bw - 3)} height={H - B - Y(b.n)} rx="2" fill={GRAY} className="dark:opacity-40" style={{ animation: "growBar .55s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.08 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />
-              {b.lg > 0 && <rect x={x + 1.5} y={Y(b.lg)} width={Math.max(1, bw - 3)} height={H - B - Y(b.lg)} rx="2" fill={TEAL} style={{ animation: "growBar .55s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.14 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />}
+              <rect x={x + 1.5} y={Y(b.n)} width={Math.max(1, bw - 3)} height={H - B - Y(b.n)} rx="2" fill={GRAY} className="dark:opacity-40" style={{ animation: "growBar .55s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.08 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />
+              {b.lg > 0 && <rect x={x + 1.5} y={Y(b.lg)} width={Math.max(1, bw - 3)} height={H - B - Y(b.lg)} rx="2" fill={TEAL} style={{ animation: "growBar .55s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.14 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />}
               {b.n > 0 && <text x={x + bw / 2} y={Y(b.n) - 3} textAnchor="middle" fontSize="8" className="fill-gray-500 dark:fill-gray-400">{b.n}</text>}
             </g>
           )
@@ -409,7 +409,7 @@ function CostLollipop({ items }: { items: { label: string; cost: number; isLG: b
             <rect x={0} y={i * rowH} width={W} height={rowH} fill="transparent" /><title>{a.label} · ₱{a.cost.toLocaleString()}/월</title>
             <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#e5e7eb" strokeWidth="0.6" strokeDasharray="2 3" className="dark:stroke-gray-800" />
             <text x={padL - 8} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight={isLG ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{a.label}</text>
-            <rect x={padL} y={y - (isLG ? 1.4 : 0.9)} width={Math.max(1, bx(a.cost) - padL)} height={isLG ? 2.8 : 1.8} rx={1.4} fill={col} className={isLG ? "" : "dark:opacity-60"} style={{ animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.06) + "s", transformOrigin: `${padL}px 0` }} />
+            <rect x={padL} y={y - (isLG ? 1.4 : 0.9)} width={Math.max(1, bx(a.cost) - padL)} height={isLG ? 2.8 : 1.8} rx={1.4} fill={col} className={isLG ? "" : "dark:opacity-60"} style={{ animation: "growX .6s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.1 + i * 0.06) + "s", transformOrigin: `${padL}px 0` }} />
             <circle cx={bx(a.cost)} cy={y} r={isLG ? 5.5 : 4} fill={col} stroke="#fff" strokeWidth={isLG ? 1.5 : 0.8} className={isLG ? "" : "dark:fill-gray-500"} style={{ animation: "fadeIn .4s ease both", animationDelay: (0.36 + i * 0.06) + "s" }} />
             <text x={bx(a.cost) + 9} y={y + 3.5} fontSize="10.5" fontWeight={isLG ? 800 : 600} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>₱{a.cost.toLocaleString()}</text>
           </g>
@@ -435,7 +435,7 @@ function GradeStack({ rows }: { rows: { name: string; s5: number; s4: number; s3
               <rect x={0} y={y} width={W} height={rowH} fill="transparent" /><title>{g.name} · 5성 {g.s5.toFixed(0)}% · 4성 {g.s4.toFixed(0)}% · 3성↓ {g.s3.toFixed(0)}% · {g.n}모델</title>
               <text x={padL - 6} y={y + rowH / 2 + 3} textAnchor="end" fontSize="10.5" fontWeight={isLG ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{g.name}</text>
               {seg.map((s, si) => { const w = barW * (g[s.k] || 0) / 100, x = padL + acc; acc += w; if (w <= 0) return null
-                return <rect key={s.k} x={x} y={y + 4} width={w} height={rowH - 9} fill={s.c} className={s.k === "s3" ? "dark:fill-gray-600" : ""} style={{ animation: "growX .5s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.05 + si * 0.06) + "s", transformOrigin: `${x}px 0` }} /> })}
+                return <rect key={s.k} x={x} y={y + 4} width={w} height={rowH - 9} fill={s.c} className={s.k === "s3" ? "dark:fill-gray-600" : ""} style={{ animation: "growX .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.1 + i * 0.05 + si * 0.06) + "s", transformOrigin: `${x}px 0` }} /> })}
               <text x={padL + barW + 5} y={y + rowH / 2 + 3} fontSize="10" fontWeight={isLG ? 800 : 600} className="fill-emerald-600 dark:fill-emerald-400">{g.s5.toFixed(0)}%</text>
             </g>
           )
@@ -456,7 +456,7 @@ function RefrigDonut({ keys, lg, mkt, colors }: { keys: string[]; lg: { m: Recor
         <svg viewBox="0 0 80 80" style={{ width: 82, height: 82 }}>
           <circle cx={cx} cy={cy} r={R} fill="none" strokeWidth={SW} stroke="currentColor" className="text-gray-100 dark:text-gray-800" />
           {t.tot > 0 && keys.map((k, i) => { const pct = (t.m[k] || 0) / t.tot; if (pct <= 0) return null; const len = C * pct, off = -C * acc; acc += pct
-            return <circle key={k} cx={cx} cy={cy} r={R} fill="none" strokeWidth={SW} stroke={colors[k] || "#94a3b8"} strokeDasharray={`${len} ${C - len}`} strokeDashoffset={off} transform={`rotate(-90 ${cx} ${cy})`} style={{ animation: "dashDraw .8s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.12 + i * 0.1) + "s" }} /> })}
+            return <circle key={k} cx={cx} cy={cy} r={R} fill="none" strokeWidth={SW} stroke={colors[k] || "#94a3b8"} strokeDasharray={`${len} ${C - len}`} strokeDashoffset={off} transform={`rotate(-90 ${cx} ${cy})`} style={{ animation: "dashDraw .8s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.12 + i * 0.1) + "s" }} /> })}
           <text x={cx} y={cy - 2} textAnchor="middle" fontSize="9" fontWeight="800" className={tag === "LG" ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{tag}</text>
           <text x={cx} y={cy + 9} textAnchor="middle" fontSize="7.5" className="fill-gray-400">{t.tot}모델</text>
         </svg>
@@ -491,7 +491,7 @@ function PriceBox({ items }: { items: PriceRange[] }) {
               <line x1={bx(a.p10)} y1={y} x2={bx(a.p90)} y2={y} stroke={col} strokeWidth="1" strokeOpacity="0.5" className={isLG ? "" : "dark:opacity-70"} />
               <line x1={bx(a.p10)} y1={y - 3} x2={bx(a.p10)} y2={y + 3} stroke={col} strokeWidth="1" strokeOpacity="0.5" />
               <line x1={bx(a.p90)} y1={y - 3} x2={bx(a.p90)} y2={y + 3} stroke={col} strokeWidth="1" strokeOpacity="0.5" />
-              <rect x={bx(a.p25)} y={y - 5.5} width={bw} height={11} rx="2.5" fill={col} fillOpacity={isLG ? 0.85 : 0.32} stroke={col} strokeWidth={isLG ? 1.2 : 0.6} style={{ animation: "growX .55s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: `${bx(a.p25)}px 0` }} />
+              <rect x={bx(a.p25)} y={y - 5.5} width={bw} height={11} rx="2.5" fill={col} fillOpacity={isLG ? 0.85 : 0.32} stroke={col} strokeWidth={isLG ? 1.2 : 0.6} style={{ animation: "growX .55s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: `${bx(a.p25)}px 0` }} />
               <line x1={bx(a.med)} y1={y - 6.5} x2={bx(a.med)} y2={y + 6.5} stroke={isLG ? "#fff" : "#475569"} strokeWidth="1.8" className={isLG ? "" : "dark:stroke-gray-200"} style={{ animation: "fadeIn .4s ease both", animationDelay: (0.35 + i * 0.05) + "s" }} />
               <text x={W - padR + 4} y={y + 3.5} fontSize="10" fontWeight={isLG ? 800 : 600} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>{fmt(a.med)}</text>
             </g>
@@ -694,14 +694,14 @@ export default function EnergyLabelView() {
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes growBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}"}</style>
 
-      <div className="overflow-hidden rounded-xl border border-teal-100 dark:border-teal-500/25 bg-gradient-to-r from-teal-50 dark:from-teal-500/10 via-teal-50/40 dark:via-transparent to-white dark:to-gray-900" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+      <div className="overflow-hidden rounded-xl border border-teal-100 dark:border-teal-500/25 bg-gradient-to-r from-teal-50 dark:from-teal-500/10 via-teal-50/40 dark:via-transparent to-white dark:to-gray-900" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
         <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z" /></svg></div>
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200">{loaded && lgR && rank[0] ? <><b className="font-semibold text-gray-900 dark:text-gray-50">에너지 효율 · {cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}</b> — LG {lgRk}위/{brandCount}개사, 리더 {rank[0].name}({rank[0].v.toFixed(2)}) 대비 {gap != null ? gap.toFixed(0) : "—"}% 낮음 · 같은 스펙 비교</> : <><b className="font-semibold text-gray-900 dark:text-gray-50">에너지 효율</b> — DOE 라벨 세그먼트별 브랜드 {cur.metric} 분석</>}</div>
           {loaded && lgR && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500 dark:text-teal-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}
         </div>
         {loaded && lgR && (
-          <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
+          <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.22,1,.36,1)" }}>
             <div className="overflow-hidden"><div className="border-t border-teal-100/70 dark:border-teal-500/25 px-4 pb-3.5 pt-3">
               <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-teal-700 dark:text-teal-300">LG {cur.label} 효율 경쟁력 진단 — {typ !== "전체" ? typ + " · " : ""}{seg?.k}</div>
               <ul className="space-y-1 text-[12px] leading-relaxed text-gray-700 dark:text-gray-200">
@@ -716,7 +716,7 @@ export default function EnergyLabelView() {
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-teal-500" />
             <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">에너지 효율</h2>
@@ -744,7 +744,7 @@ export default function EnergyLabelView() {
             <>
             {/* LG 커버리지 매트릭스 — 카테고리 전체(필터 무관). 잠시 숨김(false) — 복원 시 true로. */}
             {false && (
-            <div key={"cov-" + cat} className="mb-4 flex flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+            <div key={"cov-" + cat} className="mb-4 flex flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
               <div className="mb-2.5 flex flex-wrap items-center gap-1.5">
                 <h3 className="text-[13px] font-bold tracking-tight text-gray-900 dark:text-gray-50">LG {cur.label} 라인업 커버리지</h3>
                 <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:text-teal-300">전체 {coverage.lgTotal}개 모델</span>
@@ -781,12 +781,12 @@ export default function EnergyLabelView() {
               )}
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <button type="button" onClick={() => setModelOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".28s" }}>
+            <button type="button" onClick={() => setModelOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: ".28s" }}>
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg></span>
               <span className="flex-1"><span className="block text-[13px] font-bold text-gray-900 dark:text-gray-50">모델별 상세 (제품코드)</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">개별 모델 스펙·효율·별점·전력·냉매 · CSV</span></span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
             </button>
-            <button type="button" onClick={() => setSimOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both", animationDelay: ".3s" }}>
+            <button type="button" onClick={() => setSimOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: ".3s" }}>
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
               <span className="flex-1"><span className="block text-[13px] font-bold text-gray-900 dark:text-gray-50">전기요금 계산기 열기</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">브랜드·사용강도·요금 조정 → 월/연 전기요금·LG 절감액</span></span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
@@ -801,7 +801,7 @@ export default function EnergyLabelView() {
 
       {simOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 sm:p-8" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setSimOpen(false)}>
-          <div className="w-full max-w-[560px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
+          <div className="w-full max-w-[560px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10" style={{ animation: "fadeUp .3s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-teal-50/60 dark:bg-teal-500/10 px-4 py-3">
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
               <div className="flex-1"><div className="text-[13.5px] font-bold text-gray-900 dark:text-gray-50">전기요금 계산기</div><div className="text-[11px] text-gray-500 dark:text-gray-400">{cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k} · DOE 표준 월소비전력 기반</div></div>
@@ -815,7 +815,7 @@ export default function EnergyLabelView() {
 
       {modelOpen && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 sm:p-8" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setModelOpen(false)}>
-          <div className="flex max-h-[92vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10" style={{ animation: "fadeUp .3s cubic-bezier(.16,1,.3,1) both" }} onClick={(e) => e.stopPropagation()}>
+          <div className="flex max-h-[92vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10" style={{ animation: "fadeUp .3s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
               <span className="h-[16px] w-1 rounded bg-teal-500" />
               <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">모델별 상세 · {cur.label}</h3>

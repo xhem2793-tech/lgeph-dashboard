@@ -213,7 +213,7 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
       const top = Math.min(Y(v), y0), h = Math.abs(Y(v) - y0)
       const c = v >= 0 ? color : "#e11d48"
       const r = el("rect", { x: x.toFixed(1), y: y0.toFixed(1), width: bw.toFixed(1), height: 0, rx: 1.4, fill: c, opacity: 0.9 })
-      r.style.transition = "height .7s cubic-bezier(.16,1,.3,1), y .7s cubic-bezier(.16,1,.3,1)"; r.style.transitionDelay = 0.1 + Math.min(i, 24) * 0.012 + "s"
+      r.style.transition = "height .7s cubic-bezier(.22,1,.36,1), y .7s cubic-bezier(.22,1,.36,1)"; r.style.transitionDelay = 0.1 + Math.min(i, 24) * 0.012 + "s"
       svg.appendChild(r)
       void (r as unknown as SVGGraphicsElement).getBoundingClientRect()
       r.setAttribute("y", top.toFixed(1)); r.setAttribute("height", h.toFixed(1))
@@ -281,7 +281,7 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
   return (
     <div ref={cardRef}
       className="group/card relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md"
-      style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: Math.min(idx, 8) * 0.025 + "s" }}
+      style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(idx, 8) * 0.025 + "s" }}
     >
       <div className="flex items-center gap-1.5">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
@@ -308,7 +308,7 @@ export function ChartCard({ title, unit, legend, series, labels, decimals, serie
             LG 인사이트
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
           </button>
-          <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}>
+          <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}>
             <div className="overflow-hidden">
               <div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
                 <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>

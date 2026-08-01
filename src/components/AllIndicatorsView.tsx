@@ -325,7 +325,7 @@ function IndCards({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: s
         const u = inferUnit(r.indicator, r.label || "")
         return (
           <div key={r.indicator} onClick={() => onDetail(r)}
-            style={{ animation: "fadeUp .4s cubic-bezier(.16,1,.3,1) both", animationDelay: Math.min(i, 12) * 0.02 + "s" }}
+            style={{ animation: "fadeUp .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 12) * 0.02 + "s" }}
             className="group flex cursor-pointer flex-col rounded-xl p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md">
             <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1">

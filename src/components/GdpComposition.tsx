@@ -33,7 +33,7 @@ export default function GdpComposition() {
   const gray = "#94a3b8"
 
   return (
-    <div ref={cardRef} className="group/card relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.16,1,.3,1) both" }}>
+    <div ref={cardRef} className="group/card relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
       <style>{"@keyframes growBar{from{transform:scaleY(0);opacity:.3}to{transform:scaleY(1);opacity:1}}"}</style>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">GDP 산업구조</h3>
@@ -57,7 +57,7 @@ export default function GdpComposition() {
                 <g key={yr} onMouseEnter={() => setHi(yr)} opacity={hi == null || hi === yr ? 1 : 0.45} style={{ transition: "opacity .2s" }}>
                   <rect x={X(i) - bw / 2 - 1.5} y={T} width={bw + 3} height={H - T - B} fill="transparent" />
                   {MAJ.map((m, mi) => { const frac = (d[m.key] || 0) / total, h = (H - T - B) * frac, y = Y(acc + frac); acc += frac
-                    return <rect key={m.key} x={X(i) - bw / 2} y={y} width={bw} height={Math.max(0, h - 0.5)} fill={m.color} rx="0.4" style={{ animation: "growBar .5s cubic-bezier(.16,1,.3,1) both", animationDelay: (i * 0.02 + mi * 0.04) + "s", transformOrigin: `center ${H - B}px` }} /> })}
+                    return <rect key={m.key} x={X(i) - bw / 2} y={y} width={bw} height={Math.max(0, h - 0.5)} fill={m.color} rx="0.4" style={{ animation: "growBar .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (i * 0.02 + mi * 0.04) + "s", transformOrigin: `center ${H - B}px` }} /> })}
                   {(i % 2 === 0 || i === years.length - 1) && <text x={X(i)} y={H - 3.5} textAnchor="middle" fontSize="6" fill={gray}>{String(yr).slice(2)}</text>}
                 </g>
               )

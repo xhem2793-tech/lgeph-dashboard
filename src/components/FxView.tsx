@@ -167,7 +167,7 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
 }) {
   const [aiOpen, setAiOpen] = React.useState(false)
   return (
-    <div className="relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="flex items-center gap-2">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         {unit && <span className="text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
@@ -182,7 +182,7 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
             LG 인사이트
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
           </button>
-          <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}>
+          <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}>
             <div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p></div></div>
           </div>
         </>
@@ -260,7 +260,7 @@ export default function FxView() {
 
       {/* 본문: 좌 차트 + 우 상시 위젯(286px) */}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율</h2>
@@ -305,7 +305,7 @@ export default function FxView() {
         </section>
 
         {/* 우 — 상시 위젯(286px, 캘린더 위젯 어법) */}
-        <aside className="flex flex-col gap-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: "80ms" }}>
+        <aside className="flex flex-col gap-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: "80ms" }}>
           <div className="rounded-xl p-4">
             <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
               <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율 핵심 KPI</h2>
@@ -332,7 +332,7 @@ export default function FxView() {
               {AGENDA.map((x, i) => {
                 const dd = dday(x.date)
                 return (
-                  <div key={x.label} style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: 40 + i * 24 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                  <div key={x.label} style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: 40 + i * 24 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
                     <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[12px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>

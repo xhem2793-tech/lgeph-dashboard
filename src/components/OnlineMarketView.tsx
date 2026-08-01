@@ -90,7 +90,7 @@ export default function OnlineMarketView() {
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">온라인 시장</b> — 인터넷 {phInternet.length ? <b className="text-violet-700 dark:text-violet-300">{Math.round(phInternet[phInternet.length - 1].value)}%</b> : "—"}·계정 {kv.account_ownership ? Math.round(kv.account_ownership.value) + "%" : "—"}·모바일 {kv.mobile_per100 ? Math.round(kv.mobile_per100.value) + "/100" : "—"} — 신용카드 3%대(역내 최저), 직불·BNPL 중심 온라인 가전 구매 저변</div>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-violet-500 dark:text-violet-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
         </div>
-        <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
+        <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.22,1,.36,1)" }}>
           <div className="overflow-hidden"><div className="border-t border-violet-100/70 dark:border-violet-500/25 px-4 pb-3.5 pt-3 text-[12px] leading-relaxed text-gray-700 dark:text-gray-200">
             인터넷 이용률·금융계정이 빠르게 오르는 반면 <b className="text-gray-900 dark:text-gray-50">신용카드 보유는 3%대로 낮아</b>, 온라인 가전 판매는 <b className="text-violet-700 dark:text-violet-300">직불·현금·리테일러/핀테크 할부(BNPL)</b> 중심으로 설계해야 시장 특성에 맞습니다.
             <p className="mt-2 flex items-start gap-1.5 text-[12px] text-violet-700 dark:text-violet-300"><span className="mt-0.5 shrink-0 rounded bg-violet-600 px-1.5 py-0.5 text-[9.5px] font-bold text-white">LG 관점</span><span>온라인 전용 모델·D2C·마켓플레이스 플래그십 + 무이자할부/BNPL 제휴로 전환율 제고. 모바일 포화·브로드밴드 확대는 스마트가전 연결성 마케팅 기반.</span></p>
@@ -99,7 +99,7 @@ export default function OnlineMarketView() {
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-violet-500" />
             <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">온라인 시장</h2>
@@ -114,7 +114,7 @@ export default function OnlineMarketView() {
           </nav>
 
           {tab === "ph" && (
-          <div key={"ph" + win} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s cubic-bezier(.16,1,.3,1) both" }}>
+          <div key={"ph" + win} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
             {cDigital.has && (
               <ChartCard seg="CE" title="디지털 이용 확산" unit="% · 연간" labels={cDigital.labels} series={cDigital.series} decimals={0} seriesUnit="%"
                 legend={<><Lg c={C.ind} t="인터넷 이용률" /><Lg c={C.emer} t="금융계정 보유" /></>}
@@ -154,7 +154,7 @@ export default function OnlineMarketView() {
           )}
 
           {tab === "sea" && (
-          <div key={"sea" + win} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s cubic-bezier(.16,1,.3,1) both" }}>
+          <div key={"sea" + win} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>
             <ChartCard seg="CE" title="인터넷 이용률 — 6개국" unit="% · 연간" labels={cSi.labels} series={cSi.series} decimals={0} seriesUnit="%"
               legend={seaLegend}
               meaning={<>동남아 인터넷 침투 비교 — 필리핀 {rInternet ? <b className="text-gray-700 dark:text-gray-200">{rInternet.of}개국 중 {rInternet.rank}위</b> : ""}</>}

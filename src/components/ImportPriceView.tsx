@@ -58,7 +58,7 @@ export default function ImportPriceView() {
       </div>
 
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-      <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+      <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
         {/* 제품 + 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
@@ -83,7 +83,7 @@ export default function ImportPriceView() {
         )}
 
         {/* 원산지 점유·단가 */}
-        <div className="flex h-full flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+        <div className="flex h-full flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <div className="flex items-center gap-1.5">
             <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{cur.label} 원산지 점유·단가</h3>
             <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">조달</span>

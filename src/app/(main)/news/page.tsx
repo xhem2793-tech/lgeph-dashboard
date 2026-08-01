@@ -829,7 +829,7 @@ export default function Page() {
           </div>
 
 
-          <div key={mode + menu + prod + sort + cur + q} style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
+          <div key={mode + menu + prod + sort + cur + q} style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
             {feed === null ? (
               <div className="mt-3 flex flex-col gap-2">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -860,7 +860,7 @@ export default function Page() {
                         }
                       }}
                       style={{
-                        animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards",
+                        animation: "rowIn .5s cubic-bezier(.22,1,.36,1) backwards",
                         animationDelay: Math.min(i, 10) * 0.035 + "s",
                         willChange: "transform, opacity",
                       }}

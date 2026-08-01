@@ -70,7 +70,7 @@ function Banner({ headline, lg, summary, d, kpiDefs }: BannerDef & { d: Mon; kpi
   const now = new Date(); const nowLbl = String(now.getFullYear()).slice(2) + "." + (now.getMonth() + 1) // 현재 월 기준(지표가 과거여도)
   const line = summary && items.length ? summary(kv, asOf) : headline
   return (
-    <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
       <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg>
@@ -80,7 +80,7 @@ function Banner({ headline, lg, summary, d, kpiDefs }: BannerDef & { d: Mon; kpi
         {lg && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 dark:text-indigo-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}
       </div>
       {lg && (
-        <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.16,1,.3,1)" }}>
+        <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.22,1,.36,1)" }}>
           <div className="overflow-hidden">
             <div className="border-t border-indigo-100/70 dark:border-indigo-500/25 px-4 pb-3.5 pt-3">
               <p className="flex items-start gap-1.5 text-[12px] leading-relaxed text-indigo-700 dark:text-indigo-300">
@@ -106,7 +106,7 @@ export function AgendaCard() {
   const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
   const dday = (iso: string) => Math.round((new Date(iso + "T00:00:00").getTime() - today0) / 86400000)
   return (
-    <div className="rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: "80ms" }}>
+    <div className="rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: "80ms" }}>
       <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
         <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">예정 일정</h2>
         <span className="text-[11px] text-gray-400 dark:text-gray-500">2주간</span>
@@ -115,7 +115,7 @@ export function AgendaCard() {
         {ev.map((x, i) => {
           const dd = dday(x.date)
           return (
-            <div key={x.label + x.date} onClick={() => x.ev && setSel(x.ev)} style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: 40 + i * 24 + "ms" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
+            <div key={x.label + x.date} onClick={() => x.ev && setSel(x.ev)} style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: 40 + i * 24 + "ms" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
               <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-[12px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
@@ -146,7 +146,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
       {banner && <Banner {...banner} d={d} kpiDefs={loaded ? kpiDefs : undefined} />}
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
-        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className={"h-[18px] w-1 rounded " + (BARCLS[accent] || BARCLS.indigo)} />
             <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h2>
@@ -175,7 +175,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
               <div className="text-[12px] text-gray-400 dark:text-gray-500">해당 지표가 아직 Supabase에 없음 · 수집 후 자동 표시</div>
             </div>
           ) : (
-            <div key={activeSub} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s cubic-bezier(.16,1,.3,1) both" }}>{sections ? curSub?.node : children}</div>
+            <div key={activeSub} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>{sections ? curSub?.node : children}</div>
           )}
         </section>
         <aside className="flex flex-col gap-4">
@@ -215,7 +215,7 @@ function MarketCard() {
   const rng = (a: MktEst[]) => { const v = a.map((x) => x.value).sort((x, y) => x - y); return v.length ? { lo: v[0], hi: v[v.length - 1], med: v[Math.floor(v.length / 2)], n: v.length } : null }
   const ra = rng(appl.filter((x) => x.scope !== "주방가전만")), re = rng(ec)
   return (
-    <div className="relative z-0 col-span-full flex flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="relative z-0 col-span-full flex flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전시장·이커머스 규모 (다중기관 추정)</h3>
         <span className="shrink-0 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 text-[9px] font-bold text-amber-700 dark:text-amber-300">추정·민간자료</span>
@@ -266,7 +266,7 @@ function CrossBarCard({ d, items, title, seg, unit, meaning, ai, source, sort = 
   if (sort) rows = rows.sort((a, b) => b.v - a.v)
   if (!rows.length) return null
   return (
-    <div className="relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
         <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>
@@ -277,7 +277,7 @@ function CrossBarCard({ d, items, title, seg, unit, meaning, ai, source, sort = 
           <div key={r.key} className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-[11px] text-gray-600 dark:text-gray-300">{r.name}</span>
             <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
-              <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.16,1,.3,1) " + (i * 0.06) + "s" }} />
+              <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.22,1,.36,1) " + (i * 0.06) + "s" }} />
             </div>
             <span className="w-11 shrink-0 text-right text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{r.v.toFixed(0)}%</span>
           </div>
@@ -298,7 +298,7 @@ function OwnershipCard({ d }: { d: Mon }) {
   const rows = OWN_ITEMS.map((it) => ({ ...it, v: latestOf(d, it.key)?.v ?? 0 })).filter((r) => r.v > 0).sort((a, b) => b.v - a.v)
   if (!rows.length) return null
   return (
-    <div className="relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">가전 보유율 (침투율)</h3>
         <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">CE</span>
@@ -309,7 +309,7 @@ function OwnershipCard({ d }: { d: Mon }) {
           <div key={r.key} className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-[11px] text-gray-600 dark:text-gray-300">{r.name}</span>
             <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
-              <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.16,1,.3,1) " + (i * 0.06) + "s" }} />
+              <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.22,1,.36,1) " + (i * 0.06) + "s" }} />
             </div>
             <span className="w-11 shrink-0 text-right text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{r.v.toFixed(0)}%</span>
           </div>
@@ -339,7 +339,7 @@ function RegionOwnCard() {
   const max = Math.max(...rows.map((r) => r.v), nat, 1)
   const low = rows[0], high = rows[rows.length - 1]
   return (
-    <div className="col-span-full flex flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="col-span-full flex flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="flex flex-wrap items-center gap-1.5">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 보유율 (침투 격차)</h3>
         <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">CE</span>
@@ -354,7 +354,7 @@ function RegionOwnCard() {
             <div key={r.g} className="flex items-center gap-2" title={`${r.g} · ${r.v}%`}>
               <span className="w-12 shrink-0 truncate text-right text-[10.5px] font-medium text-gray-500 dark:text-gray-400">{r.s}</span>
               <span className="relative h-4 min-w-0 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
-                <span className="block h-full rounded" style={{ width: (r.v / max * 100) + "%", background: below ? C.amber : C.ind, animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.05 + i * 0.02) + "s", transformOrigin: "left center" }} />
+                <span className="block h-full rounded" style={{ width: (r.v / max * 100) + "%", background: below ? C.amber : C.ind, animation: "growX .6s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.05 + i * 0.02) + "s", transformOrigin: "left center" }} />
                 <span className="absolute inset-y-0" style={{ left: (nat / max * 100) + "%", width: "1px", background: "rgba(120,120,140,.55)" }} />
               </span>
               <span className={"w-8 shrink-0 text-right text-[10.5px] font-semibold tabular-nums " + (below ? "text-amber-600 dark:text-amber-400" : "text-gray-700 dark:text-gray-200")}>{r.v}%</span>
@@ -1017,7 +1017,7 @@ function ConstraintsCard() {
   const cmax = Math.max(...BES_CONSTRAINTS.map((x) => x[1]), 1)
   const shown = more ? BES_CONSTRAINTS : BES_CONSTRAINTS.slice(0, 6)
   return (
-    <div className="flex h-full min-w-0 flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <div className="flex h-full min-w-0 flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
       <div className="flex items-center gap-1.5">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">기업 사업 제약요인</h3>
         <span className="shrink-0 rounded bg-violet-50 dark:bg-violet-500/10 px-1.5 py-0.5 text-[9px] font-bold text-violet-700 dark:text-violet-300">B2B</span>
@@ -1027,7 +1027,7 @@ function ConstraintsCard() {
         {shown.map((c, i) => (
           <div key={c[0]} className="flex items-center gap-2" title={`${c[0]} ${c[1]}%`}>
             <span className="w-[68px] shrink-0 truncate text-right text-[10.5px] text-gray-500 dark:text-gray-400">{c[0]}</span>
-            <span className="h-3.5 min-w-0 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800"><span className="block h-full rounded" style={{ width: (c[1] / cmax * 100) + "%", background: i === 0 && !more ? C.rose : c[0] === "경쟁 심화" ? C.rose : i < 4 ? C.ind : "#94a3b8", animation: "growX .6s cubic-bezier(.16,1,.3,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: "left center" }} /></span>
+            <span className="h-3.5 min-w-0 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800"><span className="block h-full rounded" style={{ width: (c[1] / cmax * 100) + "%", background: i === 0 && !more ? C.rose : c[0] === "경쟁 심화" ? C.rose : i < 4 ? C.ind : "#94a3b8", animation: "growX .6s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: "left center" }} /></span>
             <span className="w-9 shrink-0 text-right text-[10.5px] font-semibold tabular-nums text-gray-700 dark:text-gray-200">{c[1]}%</span>
           </div>
         ))}
@@ -1039,7 +1039,7 @@ function ConstraintsCard() {
         LG 인사이트
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
       </button>
-      <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.16,1,.3,1)" }}>
+      <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}>
         <div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-violet-300 dark:border-violet-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold">경쟁 심화(64%)·수요 부족(35%)</b>이 최대 애로 — 가전도 가격·프로모 경쟁 격화 예상. 고금리(22%)는 할부 설계·B2B 발주에 부담 → <b className="font-semibold text-emerald-600 dark:text-emerald-400">무이자 할부·TCO 절감 소구로 방어</b>.</p></div></div>
       </div>
       <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> BSP Business Expectations Survey 제약요인 · 최신분기</p>

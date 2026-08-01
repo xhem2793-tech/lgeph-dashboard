@@ -360,7 +360,7 @@ export default function Competitors() {
         <section
           key={view}
           className="min-w-0"
-          style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}
+          style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}
         >
           {view !== "movers" && view !== "asp" && view !== "board" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
             <h2 className="flex items-baseline gap-2 text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">

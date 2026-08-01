@@ -21,7 +21,7 @@ function ReportCard({ r, i }: { r: PubReport; i: number }) {
     <button
       type="button"
       onClick={open}
-      style={{ animation: "repIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.05 + "s" }}
+      style={{ animation: "repIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(i, 10) * 0.05 + "s" }}
       className="group flex h-full w-full flex-col overflow-hidden rounded-xl text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99]"
     >
       {/* 썸네일 — 리포트 미리보기(있으면), 없으면 브랜드 그라디언트 */}
@@ -97,7 +97,7 @@ export default function Page() {
       </header>
 
       {tab === "reports" ? (
-        <div key="reports" style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
+        <div key="reports" style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
           {reports === null ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[320px] animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}
@@ -114,7 +114,7 @@ export default function Page() {
           )}
         </div>
       ) : (
-        <div key="data" style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
+        <div key="data" style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
           <DataVerification />
         </div>
       )}

@@ -239,7 +239,7 @@ export default function Calendar() {
           <div
             key={label}
             className="mt-1.5 grid grid-cols-7 gap-1.5"
-            style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}
+            style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}
           >
             {cells.map((d) => {
               const key = iso(d)
@@ -371,7 +371,7 @@ export default function Calendar() {
         </div>
 
         {todayEvents.length > 0 && (
-          <div className="mt-3 overflow-hidden rounded-xl border border-indigo-200 dark:border-indigo-500/40 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 to-white dark:to-gray-900" style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) both" }}>
+          <div className="mt-3 overflow-hidden rounded-xl border border-indigo-200 dark:border-indigo-500/40 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 to-white dark:to-gray-900" style={{ animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both" }}>
             <div className="flex items-center gap-2 border-b border-indigo-100 dark:border-indigo-500/25 px-3.5 py-2">
               <span className="flex h-5 items-center rounded-full bg-indigo-600 px-2 text-[10.5px] font-bold text-white">오늘</span>
               <span className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{todayIso.slice(5).replace("-", "/")} 발표·일정</span>
@@ -402,7 +402,7 @@ export default function Calendar() {
         ) : list.length === 0 ? (
           <div className="flex min-h-[200px] items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">해당 구간 이벤트 없음</div>
         ) : (
-          <div key={bucket + cat + axis + query} className="mt-2 overflow-x-auto" style={{ animation: "viewIn .42s cubic-bezier(.16,1,.3,1) both" }}>
+          <div key={bucket + cat + axis + query} className="mt-2 overflow-x-auto" style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
             <table className="w-full min-w-[760px] text-[12.5px]">
               <thead>
                 <tr className="border-b border-gray-100 dark:border-gray-800 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
@@ -433,7 +433,7 @@ export default function Calendar() {
                       )}
                       <tr
                         onClick={() => openEvent(e)}
-                        style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.03 + "s" }}
+                        style={{ animation: "rowIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(i, 10) * 0.03 + "s" }}
                         className={
                           "cursor-pointer border-b border-gray-50 dark:border-gray-800 transition-colors duration-300 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 " +
                           (bucket === "past" ? "opacity-70 hover:opacity-100" : "")
@@ -495,7 +495,7 @@ export default function Calendar() {
                   {agenda.map((x, i) => {
                     const dd = dday(x.date, today)
                     return (
-                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} style={{ animation: "rowIn .5s cubic-bezier(.16,1,.3,1) backwards", animationDelay: Math.min(i, 10) * 0.04 + "s" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
+                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} style={{ animation: "rowIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(i, 10) * 0.04 + "s" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
                         <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[12px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>

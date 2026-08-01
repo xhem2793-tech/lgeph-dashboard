@@ -56,7 +56,7 @@ export default function KeyScorecards() {
   useEffect(() => { latestMacro(ALL_KEYS).then((m) => { setData(m); setLoaded(true) }).catch(() => setLoaded(true)) }, [])
 
   return (
-    <section className="mt-3 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both" }}>
+    <section className="mt-3 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
       <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
         <span className="h-[18px] w-1 rounded bg-indigo-500" />
         <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">대표 지표 요약</h2>
@@ -71,7 +71,7 @@ export default function KeyScorecards() {
                 const d = data[c.key]
                 const v = d ? (c.tf ? c.tf(d.value) : d.value) : null
                 return (
-                  <div key={c.key} className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.16,1,.3,1) both", animationDelay: (gi * 4 + i) * 0.02 + "s" }}>
+                  <div key={c.key} className="rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/50 dark:bg-gray-800/30 px-3 py-2.5 transition-all duration-300 hover:-translate-y-0.5 hover:border-gray-200 dark:hover:border-gray-700 hover:shadow-sm" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: (gi * 4 + i) * 0.02 + "s" }}>
                     <div className="flex items-center gap-1.5">
                       <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (DOT[c.accent] || DOT.indigo)} />
                       <span className="truncate text-[11px] font-medium text-gray-500 dark:text-gray-400">{c.label}</span>
