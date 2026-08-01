@@ -157,7 +157,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-8" style={{ animation: "veilIn .24s ease both" }} onClick={() => setBig(false)}>
         <div className="flex max-h-[92vh] w-full max-w-[1100px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" style={{ animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
           <div className="flex shrink-0 items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
-            <span className="h-[16px] w-1 rounded bg-teal-500" />
+            <span className="h-[16px] w-1 rounded bg-indigo-500" />
             <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">{title}</h3>
             {seg && <span className="rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-bold text-teal-700 dark:text-teal-300">{seg}</span>}
             <span className="ml-auto flex items-center gap-0.5">
@@ -718,7 +718,7 @@ export default function EnergyLabelView() {
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-            <span className="h-[18px] w-1 rounded bg-teal-500" />
+            <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">에너지 효율</h2>
             <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">DOE 라벨 · 같은 {cur.specUnit} 세그먼트 내 {cur.metric} 분석</span>
             <span className="ml-auto"><Segmented size="sm" value={cat} onChange={setCat} options={CATS.map((c) => ({ k: c.key, label: c.label }))} /></span>
@@ -817,7 +817,7 @@ export default function EnergyLabelView() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-8" style={{ animation: "veilIn .24s ease both" }} onClick={() => setModelOpen(false)}>
           <div className="flex max-h-[92vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" style={{ animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
-              <span className="h-[16px] w-1 rounded bg-teal-500" />
+              <span className="h-[16px] w-1 rounded bg-indigo-500" />
               <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">모델별 상세 · {cur.label}</h3>
               <span className="rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-bold text-teal-700 dark:text-teal-300">{typ !== "전체" ? typ + " " : ""}{seg?.k} · {modelRows.length}개</span>
               <span className="ml-auto flex items-center gap-1.5">

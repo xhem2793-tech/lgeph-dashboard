@@ -488,7 +488,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
               {/* 엑셀형 표 카드 */}
               <div key={"tb-" + win} className="overflow-hidden rounded-xl" style={{ animation: "bkFade .45s ease .06s both" }}>
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
-                  <span className="h-[15px] w-1 rounded bg-emerald-500" />
+                  <span className="h-[15px] w-1 rounded bg-indigo-500" />
                   <h4 className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">시계열 표 <span className="text-[11px] font-semibold text-gray-400">· 전기·전년 대비</span></h4>
                   <button type="button" onClick={() => onExcel(row)} className="ml-auto inline-flex items-center gap-1 rounded-md border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all hover:-translate-y-0.5 active:scale-95">엑셀 ↓</button>
                 </div>

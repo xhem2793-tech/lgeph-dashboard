@@ -101,7 +101,7 @@ export default function OnlineMarketView() {
       <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-            <span className="h-[18px] w-1 rounded bg-violet-500" />
+            <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">온라인 시장</h2>
             <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{tab === "sea" ? "동남아 6개국 비교 · ●필리핀 강조" : "이커머스·디지털·결제 저변"}</span>
             <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WINS.map((w) => ({ k: w.k, label: w.k }))} /></span>
