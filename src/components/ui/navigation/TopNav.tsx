@@ -25,11 +25,11 @@ function PillToggle<T extends string>({ options, value, onChange, ariaLabel }: {
 }) {
   const idx = Math.max(0, options.findIndex((o) => o.value === value))
   return (
-    <div role="group" aria-label={ariaLabel} className="relative flex items-center rounded-full border border-gray-200 bg-gray-100 p-0.5 dark:border-gray-700 dark:bg-gray-800">
+    <div role="group" aria-label={ariaLabel} className="relative flex items-center rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]">
       <span
         aria-hidden
-        className="absolute bottom-0.5 top-0.5 rounded-full bg-white ring-1 ring-black/5 transition-transform duration-300 ease-[cubic-bezier(.22,1,.36,1)] dark:bg-gray-950 dark:ring-white/10"
-        style={{ width: `calc((100% - 4px) / ${options.length})`, left: 2, transform: `translateX(${idx * 100}%)` }}
+        className="absolute bottom-[3px] top-[3px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] transition-transform duration-[420ms] ease-[cubic-bezier(.34,1.56,.64,1)] dark:bg-gray-950 dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
+        style={{ width: `calc((100% - 6px) / ${options.length})`, left: 3, transform: `translateX(${idx * 100}%)` }}
       />
       {options.map((o) => (
         <button
@@ -38,8 +38,8 @@ function PillToggle<T extends string>({ options, value, onChange, ariaLabel }: {
           onClick={() => onChange(o.value)}
           aria-pressed={value === o.value}
           className={
-            "relative z-10 flex h-6 min-w-8 flex-1 items-center justify-center rounded-full px-2 text-[11px] font-semibold transition-colors duration-200 " +
-            (value === o.value ? "text-indigo-600 dark:text-indigo-300" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")
+            "relative z-10 flex h-7 min-w-9 flex-1 items-center justify-center rounded-full px-2.5 text-[11.5px] font-semibold transition-colors duration-200 active:scale-[.93] " +
+            (value === o.value ? "text-gray-900 dark:text-gray-50" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")
           }
         >
           {o.label}
