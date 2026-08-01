@@ -31,7 +31,7 @@ function OwnVisual({ tags, compact }: { tags: string[]; compact?: boolean }) {
   return (
     <div
       className={
-        "flex w-full flex-col justify-between overflow-hidden rounded-lg bg-gradient-to-br from-indigo-600 to-indigo-800 p-3 " +
+        "flex w-full flex-col justify-between overflow-hidden rounded-lg bg-indigo-600 p-3 " +
         (compact ? "h-[76px]" : "h-full min-h-[180px]")
       }
     >
