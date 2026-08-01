@@ -16,7 +16,7 @@ function MiniLine({ pts, color, dec }: { pts: Pt[]; color: string; dec: number }
   const [W, setW] = useState(560)
   const H = 148, L = 38, R = 12, T = 12, B = 22
   useEffect(() => { const el = ref.current; if (!el) return; const ro = new ResizeObserver(() => setW(el.clientWidth || 560)); ro.observe(el); return () => ro.disconnect() }, [])
-  if (!pts.length) return <div className="h-[148px] animate-pulse rounded bg-gray-50 dark:bg-gray-900" />
+  if (!pts.length) return <div className="h-[148px] animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />
   const vs = pts.map((p) => p.value), mn = Math.min(...vs), mx = Math.max(...vs), pad = (mx - mn) * 0.15 || 1
   const lo = mn - pad, hi = mx + pad
   const X = (i: number) => L + (W - L - R) * (pts.length === 1 ? 0.5 : i / (pts.length - 1))

@@ -47,7 +47,7 @@ export default function GdpComposition() {
       <div className="mt-1.5 flex min-h-[30px] flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px]">
         {MAJ.map((m) => <span key={m.key} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: m.color }} /><span className="text-gray-600 dark:text-gray-300">{m.key}</span></span>)}
       </div>
-      {!loaded ? <div className="mt-1 h-[150px] animate-pulse rounded bg-gray-50 dark:bg-gray-900" /> : (
+      {!loaded ? <div className="mt-1 h-[150px] animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" /> : (
         <div className="relative mt-1">
           <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }} onMouseLeave={() => setHi(null)}>
             {[0, 50, 100].map((p) => { const y = Y(p / 100); return <line key={p} x1={L} y1={y} x2={W - R} y2={y} stroke={dark ? "#1f2937" : "#f1f3f6"} strokeWidth="0.8" /> })}
@@ -64,7 +64,7 @@ export default function GdpComposition() {
             })}
           </svg>
           {hi != null && byYear[hi] && (
-            <div className="pointer-events-none absolute -top-1 right-0 z-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2 py-1 shadow-lg">
+            <div className="pointer-events-none absolute -top-1 right-0 z-10 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 shadow-lg">
               <div className="mb-0.5 text-[10px] font-bold text-gray-900 dark:text-gray-50">{hi}년</div>
               {MAJ.map((m) => <div key={m.key} className="flex items-center justify-between gap-2.5 text-[10px]"><span className="flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-sm" style={{ background: m.color }} /><span className="text-gray-500 dark:text-gray-400">{m.key}</span></span><span className="font-semibold tabular-nums text-gray-800 dark:text-gray-100">{((byYear[hi][m.key] || 0) * 100).toFixed(1)}%</span></div>)}
             </div>
