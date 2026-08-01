@@ -52,7 +52,7 @@ function ProChart(p: Series) {
     const all = [...p.cur, ...(p.prev ?? [])].filter((v) => Number.isFinite(v))
     if (!all.length) return
     const { lo, hi, ticks } = niceScale(all)
-    const L = 36, R = 292, T = 8, B = 80
+    const L = 36, R = 292, T = 6, B = 58
     const X = (i: number) => (slots <= 1 ? (L + R) / 2 : L + (i / (slots - 1)) * (R - L))
     const Y = (v: number) => B - ((v - lo) / (hi - lo)) * (B - T)
     const el = (n: string, a: Record<string, string | number>): SVGElement => {
@@ -174,7 +174,7 @@ function ProChart(p: Series) {
           o.c.setAttribute("fill", act ? (ds === dCur ? IND : GRY) : SURFACE)
         })
       })
-      const sx = rectW / 300, sy = rectH / 100
+      const sx = rectW / 300, sy = rectH / 74
       tip.style.left = (curX * sx).toFixed(1) + "px"
       tip.style.top = (curTop * sy - 14).toFixed(1) + "px"
       tip.style.transform = "translate(-50%,-100%)"
@@ -214,7 +214,7 @@ function ProChart(p: Series) {
 
   return (
     <div className="relative mt-1 mx-auto w-full max-w-[900px]" style={{ touchAction: "none" }}>
-      <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
+      <svg ref={svgRef} viewBox="0 0 300 74" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
       <div
         ref={tipRef}
         className="pointer-events-none absolute left-0 top-0 z-10 min-w-[96px] rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 shadow-lg transition-opacity"

@@ -47,7 +47,7 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
     tip.innerHTML = ""
     const NS = "http://www.w3.org/2000/svg"
     const n = labels.length
-    const L = 36, R = 292, T = 8, B = 80 // 핵심요약 ProChart와 동일 프레임(끝점 라벨은 차트 밖으로 넘김)
+    const L = 36, R = 292, T = 6, B = 58 // 핵심요약 ProChart와 동일 프레임(끝점 라벨은 차트 밖으로 넘김)
     const el = (t: string, a: Record<string, string | number>) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, String(a[k])); return e }
     const all = series.flatMap((s) => s.data).filter((v) => Number.isFinite(v))
     let lo = Math.min(...all), hi = Math.max(...all)
@@ -131,7 +131,7 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
       curX += (tgtX - curX) * 0.3; curTop += (tgtTop - curTop) * 0.3; cOp += (tOp - cOp) * 0.3
       cross.setAttribute("x1", curX.toFixed(1)); cross.setAttribute("x2", curX.toFixed(1)); cross.setAttribute("opacity", cOp.toFixed(2))
       adots.forEach((d) => d.setAttribute("opacity", cOp.toFixed(2)))
-      const sx = rectW / 300, sy = rectH / 100
+      const sx = rectW / 300, sy = rectH / 74
       tip.style.left = (curX * sx).toFixed(1) + "px"; tip.style.top = (curTop * sy - 12).toFixed(1) + "px"; tip.style.transform = "translate(-50%,-100%)"
       raf = requestAnimationFrame(loop)
     }
@@ -148,7 +148,7 @@ function FxChart({ series, labels, decimals = 1, unit = "" }: { series: SLine[];
   }, [series, labels, decimals, unit, dark])
   return (
     <div className="relative mt-1 mx-auto w-full max-w-[900px]" style={{ touchAction: "none" }}>
-      <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair", overflow: "visible" }} />
+      <svg ref={svgRef} viewBox="0 0 300 74" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair", overflow: "visible" }} />
       <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 w-max whitespace-nowrap rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>
   )
