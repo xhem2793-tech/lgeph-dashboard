@@ -252,7 +252,7 @@ export default function Calendar() {
                   key={key}
                   onClick={() => on && evs.length > 0 && setDayList({ date: key, events: evs })}
                   className={
-                    (span === "2주" ? "min-h-[150px] " : "h-[118px] ") + "overflow-hidden rounded-lg border p-2 transition-all duration-300 " +
+                    (span === "2주" ? "min-h-[108px] " : "h-[104px] ") + "overflow-hidden rounded-lg border p-2 transition-all duration-300 " +
                     (on ? "cursor-pointer bg-white dark:bg-gray-900 hover:-translate-y-px hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:shadow-sm " : "border-transparent bg-transparent ") +
                     (isToday ? "border-indigo-400 dark:border-indigo-500/50 bg-indigo-50/40 dark:bg-indigo-500/10 " : holiday && on ? "border-teal-200 dark:border-teal-500/40 bg-teal-50/40 dark:bg-teal-500/10 " : on ? "border-gray-200 dark:border-gray-800 " : "")
                   }
