@@ -96,11 +96,8 @@ export default function Page() {
           </div>
           <div className="px-2 py-3">
             <nav className="flex flex-col gap-1">
-              {NAV.map((n, i) => (
+              {NAV.map((n) => (
                 <div key={n.id}>
-                  {n.group !== NAV[i - 1]?.group && (
-                    <p className={"px-1.5 text-[11.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 " + (i === 0 ? "mb-1" : "mb-1 mt-3.5")}>{n.group}</p>
-                  )}
                   <button
                     onPointerDown={() => setActive(n.id)}
                     onClick={() => setActive(n.id)}

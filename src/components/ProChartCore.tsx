@@ -213,7 +213,7 @@ export function ProChart(p: Series) {
   }, [p])
 
   return (
-    <div className="relative mt-1" style={{ touchAction: "none" }}>
+    <div className="relative mt-1 mx-auto w-full max-w-[900px]" style={{ touchAction: "none" }}>
       <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
       <div
         ref={tipRef}

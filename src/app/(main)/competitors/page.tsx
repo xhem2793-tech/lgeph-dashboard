@@ -312,7 +312,6 @@ export default function Competitors() {
             <div className="flex flex-col gap-1">
               {GROUPS.map((g) => (
                 <React.Fragment key={g.group}>
-                  <p className="mb-1 mt-3.5 px-1.5 text-[11.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500 first:mt-0">{g.group}</p>
                   {g.items.map((it) => (
                     <button
                       key={it.key}
