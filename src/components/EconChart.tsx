@@ -44,7 +44,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     tip.innerHTML = ""
     const NS = "http://www.w3.org/2000/svg"
     const n = labels.length
-    const L = 36, R = 292, T = 8, B = 80 // 끝점 라벨은 차트 밖으로 넘김(overflow visible)
+    const L = 36, R = 292, T = 6, B = 58 // 끝점 라벨은 차트 밖으로 넘김(overflow visible)
     const el = (t: string, a: Record<string, string | number>) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, String(a[k])); return e }
     const all = series.flatMap((s) => s.data).filter((v) => Number.isFinite(v))
     if (!all.length) return
@@ -145,7 +145,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
       curX += (tgtX - curX) * 0.3; curTop += (tgtTop - curTop) * 0.3; cOp += (tOp - cOp) * 0.3
       cross.setAttribute("x1", curX.toFixed(1)); cross.setAttribute("x2", curX.toFixed(1)); cross.setAttribute("opacity", cOp.toFixed(2))
       adots.forEach((d) => d.setAttribute("opacity", (d.dataset.on ? cOp : 0).toFixed(2)))
-      const sx = rectW / 300, sy = rectH / 100
+      const sx = rectW / 300, sy = rectH / 74
       tip.style.left = (curX * sx).toFixed(1) + "px"; tip.style.top = (curTop * sy - 12).toFixed(1) + "px"; tip.style.transform = "translate(-50%,-100%)"
       raf = requestAnimationFrame(loop)
     }
@@ -162,7 +162,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
   }, [series, labels, decimals, unit, dark])
   return (
     <div className="relative mt-1 mx-auto w-full max-w-[900px]" style={{ touchAction: "none" }}>
-      <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair", overflow: "visible" }} />
+      <svg ref={svgRef} viewBox="0 0 300 74" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair", overflow: "visible" }} />
       <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 w-max whitespace-nowrap rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>
   )
@@ -187,7 +187,7 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
     const NS = "http://www.w3.org/2000/svg"
     const n = data.length
     if (!n) return
-    const L = 36, R = 292, T = 8, B = 80
+    const L = 36, R = 292, T = 6, B = 58
     const el = (t: string, a: Record<string, string | number>) => { const e = document.createElementNS(NS, t); for (const k in a) e.setAttribute(k, String(a[k])); return e }
     const vals = data.filter((v) => Number.isFinite(v))
     let lo = Math.min(0, ...vals), hi = Math.max(0, ...vals)
@@ -231,7 +231,7 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
         bars.forEach((b, j) => b.r.setAttribute("opacity", j === i ? "1" : "0.32"))
         head.textContent = labels[i]; valRow.textContent = (Number.isFinite(data[i]) ? data[i].toFixed(decimals) : "–") + unit; valRow.style.color = bars[i].c
       }
-      const sx = rectW / 300, sy = rectH / 100
+      const sx = rectW / 300, sy = rectH / 74
       tip.style.left = (X(i) * sx).toFixed(1) + "px"; tip.style.top = (Math.min(Y(data[i]), y0) * sy - 10).toFixed(1) + "px"; tip.style.transform = "translate(-50%,-100%)"; tip.style.opacity = "1"
     }
     const leave = () => { active = -1; bars.forEach((b) => b.r.setAttribute("opacity", "0.9")); tip.style.opacity = "0" }
@@ -240,7 +240,7 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
   }, [data, labels, color, decimals, unit, dark])
   return (
     <div className="relative mt-1 mx-auto w-full max-w-[900px]" style={{ touchAction: "none" }}>
-      <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
+      <svg ref={svgRef} viewBox="0 0 300 74" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
       <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 min-w-[80px] rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-center shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>
   )
