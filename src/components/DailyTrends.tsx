@@ -109,7 +109,7 @@ export default function DailyTrends() {
       {/* 배너 */}
       <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08] px-4 py-3" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-indigo-600 text-white shadow-sm shadow-indigo-600/25"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg></div>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-indigo-600 text-white shadow-sm shadow-indigo-600/25"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6" /><path d="M10 21h4" /><path d="M12 3a6 6 0 0 0-3.7 10.7c.5.4.7 1 .7 1.6V16h6v-.7c0-.6.2-1.2.7-1.6A6 6 0 0 0 12 3z" /></svg></div>
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">일일동향</b> — 통합 경제 대시보드 + 환율·유가 30일 · 조달원가·수요의 초단기 신호</div>
           <div className="hidden shrink-0 flex-wrap gap-1.5 sm:flex">{status.map((s) => <span key={s.t} className={"rounded-full px-2 py-0.5 text-[10.5px] font-bold " + cmap[s.c]}>{s.t}</span>)}</div>
         </div>
