@@ -161,7 +161,7 @@ export function LineChart({ series, labels, decimals = 1, unit = "" }: { series:
     return () => { cancelAnimationFrame(raf); svg.removeEventListener("pointermove", move); svg.removeEventListener("pointerdown", move); svg.removeEventListener("pointerleave", leave) }
   }, [series, labels, decimals, unit, dark])
   return (
-    <div className="relative mt-1" style={{ touchAction: "none" }}>
+    <div className="relative mt-1 mx-auto w-full max-w-[900px]" style={{ touchAction: "none" }}>
       <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair", overflow: "visible" }} />
       <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 w-max whitespace-nowrap rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>
@@ -239,7 +239,7 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
     return () => { svg.removeEventListener("pointermove", move); svg.removeEventListener("pointerdown", move); svg.removeEventListener("pointerleave", leave) }
   }, [data, labels, color, decimals, unit, dark])
   return (
-    <div className="relative mt-1" style={{ touchAction: "none" }}>
+    <div className="relative mt-1 mx-auto w-full max-w-[900px]" style={{ touchAction: "none" }}>
       <svg ref={svgRef} viewBox="0 0 300 100" width="100%" style={{ height: "auto", display: "block", cursor: "crosshair" }} />
       <div ref={tipRef} className="pointer-events-none absolute left-0 top-0 z-10 min-w-[80px] rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-center shadow-lg transition-opacity" style={{ opacity: 0 }} />
     </div>

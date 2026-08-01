@@ -39,7 +39,7 @@ function fmtPeriod(p?: string | null): string {
 }
 
 const GlyphInsight = (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3a9 9 0 1 0 9 9" /><path d="M12 12l5-3" /><circle cx="12" cy="12" r="1.6" fill="currentColor" /></svg>
+  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6" /><path d="M10 21h4" /><path d="M12 3a6 6 0 0 0-3.7 10.7c.5.4.7 1 .7 1.6V16h6v-.7c0-.6.2-1.2.7-1.6A6 6 0 0 0 12 3z" /></svg>
 )
 
 export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open: boolean; onToggle: () => void }) {
@@ -49,9 +49,9 @@ export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open
       className="group cursor-pointer select-none overflow-hidden rounded-2xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08] transition-all duration-300 hover:shadow-md"
     >
       <div className="flex items-center gap-3 px-4 py-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">{GlyphInsight}</div>
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-indigo-600 text-white shadow-sm shadow-indigo-600/25 transition-transform duration-300 group-hover:-translate-y-0.5">{GlyphInsight}</div>
         {banner.period && (
-          <span className="shrink-0 rounded-md bg-indigo-600 px-2 py-1 text-[11px] font-bold text-white">
+          <span className="shrink-0 rounded-full bg-indigo-600/10 dark:bg-indigo-500/20 px-2.5 py-0.5 text-[10.5px] font-bold tabular-nums text-indigo-700 dark:text-indigo-300">
             {fmtPeriod(banner.period)}
           </span>
         )}
@@ -65,7 +65,7 @@ export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open
           <div className="border-t border-indigo-100/70 dark:border-indigo-500/25 px-4 pb-3.5 pt-3">
             <p className="text-[12.5px] leading-relaxed text-gray-700 dark:text-gray-200">{rich(banner.body)}</p>
             <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-relaxed text-indigo-700 dark:text-indigo-300">
-              <span className="mt-0.5 shrink-0 rounded-md bg-indigo-600 px-1.5 py-0.5 text-[10px] font-bold text-white">{banner.insightLabel || "LG 관점"}</span>
+              <span className="mt-0.5 shrink-0 rounded-md bg-indigo-600/10 dark:bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">{banner.insightLabel || "LG 관점"}</span>
               <span>{rich(banner.insight)}</span>
             </p>
           </div>

@@ -68,15 +68,15 @@ type Menu = { key: string; label: string; desc: string; group: string }
 
 /** 경제지표 메뉴처럼 대분류로 묶는다 — 전체/거시·경제/정책·규제/가전·시장/환경·인사이트 */
 const MENUS: Menu[] = [
-  { key: "전체", label: "전체", desc: "뉴스 · 규제 · 인사이트", group: "전체" },
-  { key: "거시·금융", label: "거시·금융", desc: "물가 · 금리 · 환율", group: "거시·경제" },
-  { key: "에너지·전력", label: "에너지·전력", desc: "유가 · 전기요금 · 전력", group: "거시·경제" },
-  { key: "정치·정책", label: "정치·정책", desc: "예산 · 행정명령 · 정세", group: "정책·규제" },
-  { key: "규제·정책", label: "규제·정책", desc: "통관 · 관세 · 시행일", group: "정책·규제" },
-  { key: "B2B", label: "B2B", desc: "공조 · 인프라 · 데이터센터", group: "가전·시장" },
-  { key: "CE·유통", label: "CE·유통", desc: "가전 수요 · 채널 · 경쟁", group: "가전·시장" },
-  { key: "기상·재난", label: "기상·재난", desc: "태풍 · 폭염 · 냉방 수요", group: "환경·인사이트" },
-  { key: "인사이트", label: "인사이트", desc: "자체 칼럼 · 외부 큐레이션", group: "환경·인사이트" },
+  { key: "전체", label: "전체 동향", desc: "뉴스 · 규제 · 인사이트", group: "전체" },
+  { key: "거시·금융", label: "거시경제·금융", desc: "물가 · 금리 · 환율", group: "거시·경제" },
+  { key: "에너지·전력", label: "에너지·유가·전력", desc: "유가 · 전기요금 · 전력", group: "거시·경제" },
+  { key: "정치·정책", label: "정치·행정·정세", desc: "예산 · 행정명령 · 정세", group: "정책·규제" },
+  { key: "규제·정책", label: "규제·통관·관세", desc: "통관 · 관세 · 시행일", group: "정책·규제" },
+  { key: "B2B", label: "B2B·공조·인프라", desc: "공조 · 인프라 · 데이터센터", group: "가전·시장" },
+  { key: "CE·유통", label: "가전·유통·경쟁", desc: "가전 수요 · 채널 · 경쟁", group: "가전·시장" },
+  { key: "기상·재난", label: "기상·재난·냉방수요", desc: "태풍 · 폭염 · 냉방 수요", group: "환경·인사이트" },
+  { key: "인사이트", label: "인사이트·칼럼", desc: "자체 칼럼 · 외부 큐레이션", group: "환경·인사이트" },
 ]
 
 const W: Record<string, number> = {
@@ -684,11 +684,8 @@ export default function Page() {
           {mode === "topic" ? (
             <div className="px-2 py-3">
               <div className="flex flex-col gap-1">
-                {MENUS.map((m, i) => (
+                {MENUS.map((m) => (
                   <React.Fragment key={m.key}>
-                    {m.group !== MENUS[i - 1]?.group && m.group !== "전체" && (
-                      <p className="mb-1 mt-3.5 px-1.5 text-[11.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{m.group}</p>
-                    )}
                     <button
                       type="button"
                       onClick={() => setMenu(m.key)}
