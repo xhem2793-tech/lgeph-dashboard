@@ -74,7 +74,7 @@ export function AnomalyView({ rows, stamp }: { rows: PriceRow[] | null; stamp: s
       {/* 요약·필터 */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl px-4 py-2.5">
         <div className="flex flex-wrap gap-1.5">
-          {["전체", "경보", "주의", "기회", "정보"].map((f) => <button key={f} type="button" onClick={() => setSev(f)} className={"whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition " + (f === sev ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800")}>{f}</button>)}
+          {["전체", "경보", "주의", "기회", "정보"].map((f) => <button key={f} type="button" onClick={() => setSev(f)} className={"whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (f === sev ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800")}>{f}</button>)}
         </div>
         <div className="ml-auto flex items-center gap-3.5 text-[12px]">
           {([["경보", "alert"], ["주의", "warn"], ["기회", "opp"]] as const).map(([l, k]) => <span key={k} className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span className={"h-2 w-2 rounded-full " + SEV_META[k].dot} />{l} <b className="tabular-nums text-gray-800 dark:text-gray-100">{counts[k]}</b></span>)}

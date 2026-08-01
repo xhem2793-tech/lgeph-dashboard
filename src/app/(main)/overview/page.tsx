@@ -272,21 +272,21 @@ export default function Overview() {
       )}
       {modal ? (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-          style={{ animation: modalClosing ? "backOut .24s ease both" : "backIn .24s ease both" }}
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-md"
+          style={{ animation: modalClosing ? "veilOut .24s ease both" : "veilIn .24s ease both" }}
           onClick={closeModal}
         >
           {/* 뉴스 페이지(/news)와 동일한 팝업 — 결론(SO WHAT) 먼저, 본문은 문단으로 */}
           <div
-            className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
-            style={{ animation: modalClosing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .42s cubic-bezier(.34,1.42,.64,1) both" }}
+            className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10"
+            style={{ animation: modalClosing ? "popOut .22s cubic-bezier(.4,0,1,1) both" : "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }}
             onClick={(e) => e.stopPropagation()}
           >
             <button
               type="button"
               onClick={closeModal}
               aria-label="닫기"
-              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
+              className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50"
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>

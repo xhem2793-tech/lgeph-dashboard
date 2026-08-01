@@ -154,8 +154,8 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
       )}
     </div>
     {big && typeof document !== "undefined" && createPortal(
-      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 sm:p-8" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setBig(false)}>
-        <div className="flex max-h-[92vh] w-full max-w-[1100px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10" style={{ animation: "fadeUp .3s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-8" style={{ animation: "veilIn .24s ease both" }} onClick={() => setBig(false)}>
+        <div className="flex max-h-[92vh] w-full max-w-[1100px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" style={{ animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
           <div className="flex shrink-0 items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
             <span className="h-[16px] w-1 rounded bg-teal-500" />
             <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">{title}</h3>
@@ -163,7 +163,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
             <span className="ml-auto flex items-center gap-0.5">
               <IcoBtn onClick={() => dlImgFrom(document.getElementById("bigchart-" + idx), "에너지_" + title)} title="이미지 다운로드" d={ICO.img} />
               {csv && <IcoBtn onClick={() => dlCsvFrom(csv, "에너지_" + title)} title="CSV 다운로드" d={ICO.csv} />}
-              <button type="button" onClick={() => setBig(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+              <button type="button" onClick={() => setBig(false)} aria-label="닫기" className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
             </span>
           </div>
           {/* 좌: 큰 차트(전체목록)+의미·인사이트 / 우: 정렬 가능한 데이터 표 */}
@@ -800,12 +800,12 @@ export default function EnergyLabelView() {
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">출처 필리핀 DOE 에너지효율 라벨 등록 데이터(공식) · 설치형·용량 세그먼트별 브랜드 평균 {cur.metric}(높을수록 고효율) · TCO=DOE 라벨 월소비전력×Meralco 가정용 요금(₱{rate.toFixed(1)}/kWh{rateAsOf ? " · " + rateAsOf + " 기준" : ""}) 추정 · 전체 평균은 스펙 혼합 왜곡</p>
 
       {simOpen && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 sm:p-8" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setSimOpen(false)}>
-          <div className="w-full max-w-[560px] overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10" style={{ animation: "fadeUp .3s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-8" style={{ animation: "veilIn .24s ease both" }} onClick={() => setSimOpen(false)}>
+          <div className="w-full max-w-[560px] overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" style={{ animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-teal-50/60 dark:bg-teal-500/10 px-4 py-3">
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
               <div className="flex-1"><div className="text-[13.5px] font-bold text-gray-900 dark:text-gray-50">전기요금 계산기</div><div className="text-[11px] text-gray-500 dark:text-gray-400">{cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k} · DOE 표준 월소비전력 기반</div></div>
-              <button type="button" onClick={() => setSimOpen(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+              <button type="button" onClick={() => setSimOpen(false)} aria-label="닫기" className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
             </div>
             <div className="p-4"><EnergySim brands={simBrands} lgKwh={lgKwh} rate0={rate} /></div>
           </div>
@@ -814,8 +814,8 @@ export default function EnergyLabelView() {
       )}
 
       {modelOpen && typeof document !== "undefined" && createPortal(
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4 sm:p-8" style={{ animation: "fadeIn .2s ease both" }} onClick={() => setModelOpen(false)}>
-          <div className="flex max-h-[92vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10" style={{ animation: "fadeUp .3s cubic-bezier(.22,1,.36,1) both" }} onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-8" style={{ animation: "veilIn .24s ease both" }} onClick={() => setModelOpen(false)}>
+          <div className="flex max-h-[92vh] w-full max-w-[1000px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" style={{ animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
               <span className="h-[16px] w-1 rounded bg-teal-500" />
               <h3 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">모델별 상세 · {cur.label}</h3>
@@ -826,7 +826,7 @@ export default function EnergyLabelView() {
                 </span>
                 <button type="button" onClick={() => setMLgOnly((v) => !v)} className={"rounded-md px-2 py-1 text-[11px] font-bold transition-all " + (mLgOnly ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-teal-700 dark:text-teal-300 hover:bg-teal-50")}>LG만</button>
                 <IcoBtn onClick={() => dlCsvFrom({ head: ["브랜드", "모델(제품코드)", cur.specUnit, cur.metric, "별점", "월전력kWh", "냉매"], rows: modelRows.map((r) => [r.brand, r.model, r.spec ?? "—", r.eff ?? "—", r.star ?? "—", r.kwh ?? "—", r.refrigerant || "—"]) }, "에너지_모델별_" + cur.label)} title="CSV 다운로드" d={ICO.csv} />
-                <button type="button" onClick={() => setModelOpen(false)} className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-700 dark:hover:bg-gray-800"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+                <button type="button" onClick={() => setModelOpen(false)} aria-label="닫기" className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
               </span>
             </div>
             <div className="overflow-auto">

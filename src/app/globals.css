@@ -84,6 +84,12 @@ button:focus-visible,
   box-shadow: 0 0 0 3.5px rgba(99, 102, 241, 0.32);
 }
 
+/* 모달 모션 — iOS 팝(스프링). 전 팝업 공통 키프레임. veil=배경 딤 */
+@keyframes popIn  { from { opacity: 0; transform: translateY(8px) scale(0.94); } to { opacity: 1; transform: none; } }
+@keyframes popOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(6px) scale(0.96); } }
+@keyframes veilIn  { from { opacity: 0; } to { opacity: 1; } }
+@keyframes veilOut { from { opacity: 1; } to { opacity: 0; } }
+
 /* 접근성 — '모션 최소화' 선호 시 애니메이션 정지 (Apple HIG 준수) */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

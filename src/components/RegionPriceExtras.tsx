@@ -66,7 +66,7 @@ export default function RegionPriceExtras() {
       <nav className="flex flex-wrap gap-1.5">
         {CATS.map((c) => (
           <button key={c.k} type="button" onClick={() => setCat(c.k)}
-            className={"flex flex-col items-start rounded-lg px-3.5 py-1.5 text-left transition-all duration-200 " + (cat === c.k ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300")}>
+            className={"flex flex-col items-start rounded-lg px-3.5 py-1.5 text-left transition-all duration-200 active:scale-[.98] " + (cat === c.k ? "bg-indigo-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-indigo-500/15 dark:hover:text-indigo-300")}>
             <span className="text-[12.5px] font-bold">{c.label}</span>
             <span className={"text-[10px] " + (cat === c.k ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{c.sub}</span>
           </button>

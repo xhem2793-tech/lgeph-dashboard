@@ -32,11 +32,11 @@ export default function EventModal({ event, onClose }: { event: CalEvent; onClos
   if (typeof document === "undefined") return null
   const m = event
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm" style={{ animation: closing ? "evBackOut .22s ease both" : "evBackIn .22s ease both" }} onClick={close}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-md" style={{ animation: closing ? "veilOut .24s ease both" : "veilIn .24s ease both" }} onClick={close}>
       <style>{"@keyframes evBackIn{from{opacity:0}to{opacity:1}}@keyframes evBackOut{from{opacity:1}to{opacity:0}}@keyframes evModalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes evModalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
-      <div className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10" style={{ animation: closing ? "evModalOut .22s cubic-bezier(.4,0,1,1) both" : "evModalIn .42s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
+      <div className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" style={{ animation: closing ? "popOut .22s cubic-bezier(.4,0,1,1) both" : "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
         <span className={"absolute inset-y-0 left-0 w-1 " + dotOf(m.category)} />
-        <button type="button" onClick={close} aria-label="닫기" className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95">
+        <button type="button" onClick={close} aria-label="닫기" className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
 

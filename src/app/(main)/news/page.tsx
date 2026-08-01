@@ -672,8 +672,8 @@ export default function Page() {
           style={{ animation: "fadeUp .5s ease both" }}
         >
           <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 4h18M6 12h12M10 20h4" /></svg>
-            <p className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분류</p>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 4h18M6 12h12M10 20h4" /></svg>
+            <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분류</p>
           </div>
 
           {/* 사이드바 검색 — 뉴스 검색을 좌측 메뉴 안으로 */}
@@ -1013,13 +1013,13 @@ export default function Page() {
       {/* ── 팝업 : 뉴스·규제·인사이트 공통 ── */}
       {modal ? (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-          style={{ animation: closing ? "backOut .24s ease both" : "backIn .24s ease both" }}
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-md"
+          style={{ animation: closing ? "veilOut .24s ease both" : "veilIn .24s ease both" }}
           onClick={closeModal}
         >
           <div
-            className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
-            style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .42s cubic-bezier(.34,1.42,.64,1) both" }}
+            className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10"
+            style={{ animation: closing ? "popOut .22s cubic-bezier(.4,0,1,1) both" : "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }}
             onClick={(ev) => ev.stopPropagation()}
           >
             <span className={"absolute inset-y-0 left-0 z-10 w-1 " + (/금융|거시/.test(modal.topic) ? "bg-blue-500" : /정치/.test(modal.topic) ? "bg-purple-500" : /규제|정책/.test(modal.topic) ? "bg-red-500" : /에너지|전력/.test(modal.topic) ? "bg-amber-500" : /유통|CE/.test(modal.topic) ? "bg-violet-500" : /B2B/.test(modal.topic) ? "bg-teal-500" : /기상|재난/.test(modal.topic) ? "bg-orange-500" : "bg-indigo-500")} />
@@ -1027,9 +1027,9 @@ export default function Page() {
               type="button"
               onClick={closeModal}
               aria-label="닫기"
-              className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
+              className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50"
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>

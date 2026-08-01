@@ -51,7 +51,7 @@ function Facet({ title, options, selected, onToggle }: { title: string; options:
         {options.map((o, i) => {
           const ck = selected.includes(o.value)
           return (
-            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[6px] text-left text-[12.5px] font-medium transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
+            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[6px] text-left text-[12.5px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
               <span className={"flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors " + (ck ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 dark:border-gray-700 group-hover:border-gray-400")}>
                 {ck && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><path d="M5 13l4 4L19 7" /></svg>}
               </span>
@@ -169,13 +169,13 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
-      style={{ animation: closing ? "backOut .24s ease both" : "backIn .24s ease both" }}
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 p-4 backdrop-blur-md"
+      style={{ animation: closing ? "veilOut .24s ease both" : "veilIn .24s ease both" }}
       onClick={close}
     >
       <div
-        className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
-        style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .42s cubic-bezier(.34,1.42,.64,1) both" }}
+        className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10"
+        style={{ animation: closing ? "popOut .22s cubic-bezier(.4,0,1,1) both" : "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }}
         onClick={(e) => e.stopPropagation()}
       >
         <span className={"absolute inset-y-0 left-0 z-10 w-1 " + accent} />
@@ -183,7 +183,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
           type="button"
           onClick={close}
           aria-label="닫기"
-          className="absolute right-3 top-3 z-10 rounded-full bg-white/90 dark:bg-gray-900/90 p-1.5 text-gray-500 dark:text-gray-400 backdrop-blur transition-all duration-300 hover:-translate-y-0.5 hover:text-gray-900 dark:hover:text-gray-50 active:scale-95"
+          className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
@@ -328,8 +328,11 @@ export default function Page() {
 
       <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
         <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit py-2 lg:sticky lg:top-[61px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
-          <div className="mb-1.5 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-1.5 pb-2.5">
-            <span className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">필터</span>
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
+            <span className="flex items-center gap-1.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M22 3H2l8 9.46V19l4 2v-8.54z" /></svg>
+              <span className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">필터</span>
+            </span>
             {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">초기화</button>}
           </div>
           <Facet title="브랜드" options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} />

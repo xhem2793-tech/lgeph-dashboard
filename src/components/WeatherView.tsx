@@ -223,9 +223,9 @@ export default function WeatherView() {
               </div>
             ))}
           </div>
-          <div className="ml-auto hidden shrink-0 items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 p-0.5 sm:flex">
+          <div className="ml-auto hidden shrink-0 items-center rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)] sm:flex">
             {WIN.map((w) => (
-              <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-colors " + (win === w.k ? "bg-sky-600 text-white" : "text-gray-500 dark:text-gray-400 hover:text-sky-600 dark:hover:text-sky-400")}>{w.k}</button>
+              <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-all duration-200 active:scale-[.93] " + (win === w.k ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{w.k}</button>
             ))}
           </div>
         </div>

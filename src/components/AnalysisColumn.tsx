@@ -79,9 +79,9 @@ function MdBody({ text }: { text: string }) {
 }
 
 const SHELL =
-  "fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/50 p-4 backdrop-blur-sm sm:items-center"
-const CARD = "my-auto w-full max-w-[880px] rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
-const ANIM = { animation: "apIn .24s cubic-bezier(.22,1,.36,1) both" }
+  "fixed inset-0 z-[100] flex items-start justify-center overflow-y-auto bg-black/40 p-4 backdrop-blur-md sm:items-center"
+const CARD = "my-auto w-full max-w-[880px] rounded-[26px] bg-white p-5 ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10"
+const ANIM = { animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }
 const CARD_BTN =
   "group flex w-full flex-col overflow-hidden rounded-lg border border-gray-100 dark:border-gray-800 p-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 hover:shadow-sm"
 
@@ -135,9 +135,9 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="shrink-0 rounded p-1 text-gray-400 dark:text-gray-500 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"
           >
-            ✕
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
 
@@ -211,9 +211,9 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
             type="button"
             onClick={onClose}
             aria-label="닫기"
-            className="shrink-0 rounded p-1 text-gray-400 dark:text-gray-500 transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-200"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"
           >
-            ✕
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
 

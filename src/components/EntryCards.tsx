@@ -68,7 +68,7 @@ export default function EntryCards() {
       <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {(cards ?? Array.from({ length: 4 })).map((c, i) =>
           !c ? (
-            <div key={i} className="h-[76px] rounded-lg border border-gray-100 dark:border-gray-800 bg-[#f9fafb]" />
+            <div key={i} className="h-[76px] rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />
           ) : (
             <a
               key={c.title}

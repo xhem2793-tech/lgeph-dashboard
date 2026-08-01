@@ -510,10 +510,10 @@ export default function DailyIndicators() {
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                 <div className="flex items-baseline gap-2">
                   
-                  <div className="relative flex shrink-0 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-0.5">
-                    <span className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]" style={{ left: ind.left, width: ind.width }} />
+                  <div className="relative flex shrink-0 rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]">
+                    <span className="absolute bottom-[3px] top-[3px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] transition-all duration-[420ms] ease-[cubic-bezier(.34,1.42,.64,1)] dark:bg-gray-950 dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]" style={{ left: ind.left, width: ind.width }} />
                     {RANGES.map((r, i) => (
-                      <button key={r.key} ref={(el) => { rangeBtns.current[i] = el }} onClick={() => setRange(r.key)} className={"relative z-10 rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors duration-300 active:scale-95 " + (range === r.key ? "text-white" : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400")}>{t(("r_" + r.key) as "r_7d")}</button>
+                      <button key={r.key} ref={(el) => { rangeBtns.current[i] = el }} onClick={() => setRange(r.key)} className={"relative z-10 rounded-full px-2.5 py-1 text-[11px] font-semibold transition-colors duration-200 active:scale-[.93] " + (range === r.key ? "text-gray-900 dark:text-gray-50" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{t(("r_" + r.key) as "r_7d")}</button>
                     ))}
                   </div>
                 </div>

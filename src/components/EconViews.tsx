@@ -343,8 +343,8 @@ function RegionOwnCard() {
       <div className="flex flex-wrap items-center gap-1.5">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 보유율 (침투 격차)</h3>
         <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">CE</span>
-        <span className="ml-1 inline-flex overflow-hidden rounded-md border border-gray-200 dark:border-gray-700 text-[11px] font-semibold">
-          {([["ref", "냉장고"], ["tv", "TV"]] as const).map(([k, lbl]) => <button key={k} type="button" onClick={() => setAp(k)} className={"px-2.5 py-1 transition-colors " + (ap === k ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:bg-indigo-50 dark:hover:bg-indigo-500/15")}>{lbl}</button>)}
+        <span className="ml-1 inline-flex items-center rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)] text-[11px] font-semibold">
+          {([["ref", "냉장고"], ["tv", "TV"]] as const).map(([k, lbl]) => <button key={k} type="button" onClick={() => setAp(k)} className={"rounded-full px-2.5 py-0.5 transition-all duration-200 active:scale-[.93] " + (ap === k ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")}>{lbl}</button>)}
         </span>
         <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">가구 % · 2022 · 전국 {nat}%</span>
       </div>
