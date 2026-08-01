@@ -47,7 +47,6 @@ export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open
     <div
       onClick={onToggle}
       className="group cursor-pointer select-none overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 transition-shadow hover:shadow-md"
-      style={{ animation: "fadeUp .5s ease both" }}
     >
       <div className="flex items-center gap-3 px-4 py-3">
         <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white">{GlyphInsight}</div>
