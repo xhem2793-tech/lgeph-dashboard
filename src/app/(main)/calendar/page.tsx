@@ -186,7 +186,7 @@ export default function Calendar() {
         "@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"
       }</style>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_286px] lg:gap-7">
           <div className="flex min-w-0 flex-col gap-4">
         <div
           className="rounded-xl p-4"
@@ -210,7 +210,7 @@ export default function Calendar() {
                   ›
                 </button>
               </div>
-              <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{label}</h2>
+              <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{label}</h2>
               <span className="text-[12px] font-medium text-gray-500 dark:text-gray-400">{inMonth.length}건 · Critical {crit}건</span>
               {month !== 0 && (
                 <button
@@ -309,7 +309,7 @@ export default function Calendar() {
       >
         <header className="relative flex flex-wrap items-center justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <div className="flex items-center gap-3">
-            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">이벤트 목록</h2>
+            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">이벤트 목록</h2>
             <Segmented size="sm"
               options={[
                 { k: "past", label: "지남 " + counts.past },
