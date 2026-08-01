@@ -31,7 +31,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
   }, [q, R]) // eslint-disable-line
   // 화면 플롯 높이 940(뉴스처럼 길게). 이미지 다운로드 시엔 이전 PPT 슬라이드 비율(560)로 압축 캡처
   const [H, setH] = React.useState(940)
-  const PAD = 18, BOTTOM = 14, CARD_H = 56, CARD_W = 116, GAP = 50, GUT = 50
+  const PAD = 18, BOTTOM = 14, CARD_H = 56, CARD_W = 132, GAP = 50, GUT = 50
   const dlPng = React.useCallback(async () => {
     const node = cardRef.current; if (!node) return
     setDling(true); setH(560) // PPT 슬라이드(16:9) 비율로 압축
@@ -136,7 +136,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
   const lgv = (v: number) => Math.log(Math.max(1, v))
   const topFor = (p: number) => PAD + ((logY ? lgv(gmax) - lgv(p) : gmax - p) / ((logY ? lgv(gmax) - lgv(gmin) : gmax - gmin) || 1)) * (plotH - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
-  const minW = Math.max(1040, GUT + brands.length * 138 + 20)
+  const minW = Math.max(1040, GUT + brands.length * 150 + 20)
   const qq = q.trim().toLowerCase()
   return (
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>

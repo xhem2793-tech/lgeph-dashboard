@@ -174,7 +174,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
       onClick={close}
     >
       <div
-        className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl shadow-2xl"
+        className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
         style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -323,11 +323,11 @@ export default function Page() {
   const _fresh = _maxDate ? _maxDate.slice(5).replace("-", "/") : ""
 
   return (
-    <main className="w-full px-4 pb-12 pt-4 sm:px-6">
+    <main className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
-      <div className="grid gap-6 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-20">
-        <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit py-2 lg:sticky lg:top-[80px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
+      <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
+        <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit py-2 lg:sticky lg:top-[61px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
           <div className="mb-1.5 flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-1.5 pb-2.5">
             <span className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">필터</span>
             {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">초기화</button>}

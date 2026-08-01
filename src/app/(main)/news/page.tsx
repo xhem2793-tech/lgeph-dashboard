@@ -383,7 +383,7 @@ function para(s: string): string[] {
 function Hi({ text, q }: { text: string; q: string }) {
   const k = q.trim()
   if (!k || !text) return <>{text}</>
-  const parts = text.split(new RegExp("(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\export default function Page() {") + ")", "gi"))
+  const parts = text.split(new RegExp("(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi"))
   return (
     <>
       {parts.map((p, i) =>
@@ -472,7 +472,6 @@ export default function Page() {
     if (p) setQ(p)
   }, [])
   const [prodKw, setProdKw] = React.useState<string | null>(null)
-  const [focused, setFocused] = React.useState(false)
   const [openDup, setOpenDup] = React.useState<Set<string>>(new Set())
   const [newsOpen, setNewsOpen] = React.useState(false)
 
@@ -797,49 +796,6 @@ export default function Page() {
 
             <div className="flex items-center gap-3">
             {q.trim() ? <span className="hidden text-[11px] tabular-nums text-gray-400 dark:text-gray-500 lg:inline">{shown.length}건 · {hits}곳 일치</span> : null}
-            {/* 검색 · 우측 */}
-            <div
-              className={
-                "group relative hidden transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " +
-                (focused || q ? "w-[416px]" : "w-[320px]")
-              }
-              
-            >
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                aria-hidden
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"
-              >
-                <circle cx="11" cy="11" r="7" />
-                <path d="M20 20l-3.5-3.5" />
-              </svg>
-              <input
-                value={q}
-                onChange={(ev) => setQ(ev.target.value)}
-                onFocus={() => setFocused(true)}
-                onBlur={() => setFocused(false)}
-                placeholder="제목 · 본문 · SO WHAT · 출처 검색"
-                className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]"
-              />
-              {q ? (
-                <button
-                  type="button"
-                  onClick={() => setQ("")}
-                  aria-label="검색어 지우기"
-                  className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"
-                >
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M6 6l12 12M18 6L6 18" />
-                  </svg>
-                </button>
-              ) : null}
-            </div>
 
             <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
               최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
@@ -1062,7 +1018,7 @@ export default function Page() {
           onClick={closeModal}
         >
           <div
-            className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl shadow-2xl"
+            className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
             style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
             onClick={(ev) => ev.stopPropagation()}
           >

@@ -175,7 +175,7 @@ export default function Calendar() {
       : `${range.from.getFullYear()}년 ${range.from.getMonth() + 1}월`
 
   return (
-    <div className="w-full px-6 pb-6 pt-4 sm:px-8 lg:px-10 sm:pb-8">
+    <div className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{
         "@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}" +
         "@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}" +
@@ -522,7 +522,7 @@ export default function Calendar() {
         >
           {modal ? (
             <div
-              className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl shadow-2xl"
+              className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
               style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
               onClick={(ev) => ev.stopPropagation()}
             >
@@ -602,7 +602,7 @@ export default function Calendar() {
             </div>
           ) : dayList ? (
             <div
-              className="relative flex max-h-[84vh] w-full max-w-[540px] flex-col overflow-hidden rounded-2xl shadow-2xl"
+              className="relative flex max-h-[84vh] w-full max-w-[540px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
               style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
               onClick={(ev) => ev.stopPropagation()}
             >
