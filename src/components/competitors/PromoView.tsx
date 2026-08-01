@@ -69,7 +69,7 @@ export function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camp
                 href={c.url ?? "#"}
                 target="_blank"
                 rel="noreferrer"
-                className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3 transition-all duration-200 hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm"
+                className="rounded-xl border border-gray-100 dark:border-gray-800 p-3 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm active:scale-[.99]"
               >
                 <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{c.retailer}</p>
                 <p className="text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{c.title}</p>

@@ -160,7 +160,7 @@ function FacetMenu({ label, value, active, children }: { label: string; value: s
       >
         <span className={"font-semibold " + (active ? "text-indigo-400 dark:text-indigo-300" : "text-gray-400 dark:text-gray-500")}>{label}</span>
         <span className={"font-semibold " + (active ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{value}</span>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" className="text-gray-300 dark:text-gray-600 transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600 transition-transform group-open:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
       </summary>
       <div className="absolute left-0 top-[calc(100%+6px)] z-30 max-h-[280px] w-[190px] overflow-auto rounded-[10px] border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1.5 shadow-[0_8px_24px_rgba(0,0,0,0.10)]">
         {children}
@@ -305,7 +305,7 @@ export default function Competitors() {
         <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit lg:sticky lg:top-[61px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
           {/* 좌 메뉴 — 뉴스·경쟁사 광고 사이드바와 동일한 구조(아이콘 헤더·그룹 라벨·우측 상태 메타) */}
           <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
             <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분석</p>
           </div>
           <div className="px-2 py-3">
@@ -327,7 +327,7 @@ export default function Competitors() {
                       <span className="flex w-full items-center gap-1.5">
                         <span className={"flex-1 truncate text-[14px] transition-colors " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>{it.label}</span>
                         {it.status === "live"
-                          ? <span className="shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[9px] font-bold text-emerald-600 dark:text-emerald-400">LIVE</span>
+                          ? <span className="shrink-0 rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">LIVE</span>
                           : <span className="shrink-0 text-[9.5px] font-medium text-gray-400 dark:text-gray-500">예정</span>}
                       </span>
                     </button>
@@ -436,7 +436,7 @@ export default function Competitors() {
                 </button>
                 <div className="ml-auto flex items-center gap-2.5">
                   <div className="relative">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" /></svg>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
                     <input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델코드·모델명 검색" className={"rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-3 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)] " + (focused || q ? "w-[360px]" : "w-[260px]")} />
                   </div>
                   <span className="whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500"><b className="text-gray-700 dark:text-gray-200">{data.length}</b>행{stamp ? " · 최종 " + fmtStamp(stamp) : ""} <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>

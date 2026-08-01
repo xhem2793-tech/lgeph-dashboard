@@ -36,7 +36,7 @@ function ReportCard({ r, i }: { r: PubReport; i: number }) {
         )}
         <span className="absolute left-3 top-3 rounded-full bg-white/90 dark:bg-gray-900/90 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 backdrop-blur">{r.kind}</span>
         <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
           PDF
         </span>
       </div>
@@ -56,18 +56,18 @@ function ReportCard({ r, i }: { r: PubReport; i: number }) {
         <div className="mt-auto flex items-center gap-2 border-t border-gray-100 dark:border-gray-800 pt-2.5 text-[10.5px] text-gray-400 dark:text-gray-500">
           {r.sentAt ? (
             <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4z" /></svg>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4z" /></svg>
               발송 {r.recipients ?? "—"}명 · {fmtDate(r.sentAt)}
             </span>
           ) : r.review ? (
             <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 font-semibold text-amber-700 dark:text-amber-300">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
               검토용 · 미발송
             </span>
           ) : (
             <span>미발송</span>
           )}
-          <span className="ml-auto inline-flex items-center gap-0.5 font-semibold text-indigo-600 dark:text-indigo-400">원문 열기<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7M7 7h10v10" /></svg></span>
+          <span className="ml-auto inline-flex items-center gap-0.5 font-semibold text-indigo-600 dark:text-indigo-400">원문 열기<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7M7 7h10v10" /></svg></span>
         </div>
       </div>
     </button>

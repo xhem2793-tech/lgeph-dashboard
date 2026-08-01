@@ -73,7 +73,7 @@ export default function EntryCards() {
             <a
               key={c.title}
               href={c.href}
-              className="group rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3 py-2.5 transition-colors duration-200 hover:border-indigo-300 dark:hover:border-indigo-500/40"
+              className="group rounded-xl border border-gray-100 dark:border-gray-800 px-3 py-2.5 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 active:scale-[.99]"
               style={{ animation: "fadeUp .5s ease both", animationDelay: `${i * 0.05}s` }}
             >
               <p className="flex items-baseline justify-between text-[11px] font-bold text-gray-900 dark:text-gray-50">

@@ -50,7 +50,7 @@ const DrawerOverlay = React.forwardRef<
         // base
         "fixed inset-0 z-50 overflow-y-auto",
         // background color
-        "bg-black/30",
+        "bg-black/40 backdrop-blur-md",
         // transition
         "data-[state=closed]:animate-hide data-[state=open]:animate-dialogOverlayShow",
         className,
@@ -77,11 +77,11 @@ const DrawerContent = React.forwardRef<
           ref={forwardedRef}
           className={cx(
             // base
-            "fixed inset-y-2 z-50 mx-auto flex w-[95vw] flex-1 flex-col overflow-y-auto rounded-md border p-4 shadow-lg focus:outline-none max-sm:inset-x-2 sm:inset-y-2 sm:right-2 sm:max-w-lg sm:p-6",
+            "fixed inset-y-2 z-50 mx-auto flex w-[95vw] flex-1 flex-col overflow-y-auto rounded-[22px] p-4 ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] focus:outline-none dark:ring-white/10 max-sm:inset-x-2 sm:inset-y-2 sm:right-2 sm:max-w-lg sm:p-6",
             // border color
             "border-gray-200 dark:border-gray-900",
             // background color
-            "bg-white dark:bg-[#090E1A]",
+            "bg-white dark:bg-gray-900",
             // transition
             "data-[state=closed]:animate-drawerSlideRightAndFade data-[state=open]:animate-drawerSlideLeftAndFade",
             focusRing,

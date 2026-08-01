@@ -169,7 +169,7 @@ export function Donut({ value, color = IND, sub }: { value: number; color?: stri
     <div className="inline-flex flex-col items-center">
       <svg width="92" height="92" viewBox="0 0 92 92">
         <circle cx="46" cy="46" r={r} fill="none" stroke="#eef2ff" strokeWidth="9" />
-        <circle cx="46" cy="46" r={r} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round" strokeDasharray={c} strokeDashoffset={off} transform="rotate(-90 46 46)" style={{ transition: `stroke-dashoffset .6s ${swap}` }} />
+        <circle cx="46" cy="46" r={r} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={c} strokeDashoffset={off} transform="rotate(-90 46 46)" style={{ transition: `stroke-dashoffset .6s ${swap}` }} />
         <text x="46" y="44" textAnchor="middle" fontSize="17" fontWeight="700" fill="#111827" className="tabular-nums">
           {fmt(value, 1)}
         </text>
@@ -208,8 +208,8 @@ export function Gauge({
   return (
     <div className="inline-flex flex-col items-center">
       <svg width="120" height="66" viewBox="0 0 120 66">
-        <path d={`M16,54 A44,44 0 0 1 104,54`} fill="none" stroke="#eef2ff" strokeWidth="9" strokeLinecap="round" />
-        <path d={`M16,54 A44,44 0 0 1 ${x},${y}`} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round" strokeDasharray={arc} style={{ transition: `stroke-dasharray .6s ${swap}` }} />
+        <path d={`M16,54 A44,44 0 0 1 104,54`} fill="none" stroke="#eef2ff" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" />
+        <path d={`M16,54 A44,44 0 0 1 ${x},${y}`} fill="none" stroke={color} strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" strokeDasharray={arc} style={{ transition: `stroke-dasharray .6s ${swap}` }} />
         <text x="60" y="48" textAnchor="middle" fontSize="19" fontWeight="700" fill="#111827" className="tabular-nums">
           {fmt(value, 1)}
           <tspan fontSize="10" fontWeight="500" fill="#6b7280">

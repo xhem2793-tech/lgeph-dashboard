@@ -77,7 +77,7 @@ function Hi({ text, q }: { text: string; q: string }) {
   const k = q.trim()
   if (!k || !text) return <>{text}</>
   const parts = text.split(new RegExp("(" + k.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ")", "gi"))
-  return <>{parts.map((p, i) => (p.toLowerCase() === k.toLowerCase() ? <mark key={i} className="rounded-sm bg-yellow-200 px-0.5 text-gray-900 dark:text-gray-50">{p}</mark> : <React.Fragment key={i}>{p}</React.Fragment>))}</>
+  return <>{parts.map((p, i) => (p.toLowerCase() === k.toLowerCase() ? <mark key={i} className="rounded-sm bg-yellow-200 dark:bg-yellow-500/30 px-0.5 text-gray-900 dark:text-gray-50">{p}</mark> : <React.Fragment key={i}>{p}</React.Fragment>))}</>
 }
 
 type Row = Provenance & { cat: string; catKo: string; value: number | null; period: string; prev: number | null }
@@ -199,7 +199,7 @@ export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?
           <span className="text-gray-500 dark:text-gray-400">분류 <b className="text-gray-900 dark:text-gray-50">{Object.keys(catCounts).length}</b></span>
         </div>
         <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[420px]" : "w-full max-w-[320px]")}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
             <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
           </svg>
@@ -209,13 +209,13 @@ export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?
           {q && (
             <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기"
               className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </button>
           )}
         </div>
         <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
           최종 갱신 {loadedAt ? fmtStamp(loadedAt.toISOString()) : "—"}
-          <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-bold text-emerald-700 dark:text-emerald-300">C</span>
+          <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span>
         </span>
       </div>
 
@@ -435,7 +435,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6" onClick={onClose} style={{ animation: "veilIn .24s ease both" }}>
       <div className="relative flex max-h-[88vh] w-full max-w-[760px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" onClick={(e) => e.stopPropagation()} style={{ animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both", willChange: "transform, opacity" }}>
         <span className={"absolute inset-y-0 left-0 z-10 w-1 " + (row.confidence === "FORECAST" ? "bg-amber-500" : "bg-indigo-500")} />
-        <button type="button" onClick={onClose} aria-label="닫기" className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
+        <button type="button" onClick={onClose} aria-label="닫기" className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
         <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-6">
           <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <span className="font-semibold text-indigo-600 dark:text-indigo-400">{row.catKo}</span>
@@ -449,7 +449,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {canOpen && <button type="button" onClick={() => { onOpenChart(row.cat); onClose() }} className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-[12px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95">경제지표에서 보기 →</button>}
             <button type="button" onClick={() => onExcel(row)} className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 text-[12px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
               엑셀 다운로드
             </button>
           </div>

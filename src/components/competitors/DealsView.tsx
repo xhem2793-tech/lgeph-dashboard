@@ -126,7 +126,7 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
           <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={setSize} /></div>
           <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={setBrand} /></div>
           <div className="relative ml-auto">
-            <svg className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+            <svg className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="모델·브랜드 검색" className="w-[200px] rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-1.5 pl-8 pr-3 text-[12px] outline-none focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
           </div>
         </div>

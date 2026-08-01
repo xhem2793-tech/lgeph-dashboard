@@ -32,7 +32,7 @@ function MiniLine({ pts, color, dec }: { pts: Pt[]; color: string; dec: number }
       ) })}
       {pts.map((p, i) => (i % Math.ceil(pts.length / 6) === 0 || i === pts.length - 1) ? <text key={i} x={X(i)} y={H - 6} textAnchor="middle" fontSize="10" fill={dark ? "#9ca3af" : "#6b7280"}>{md(p.date)}</text> : null)}
       <path d={area} fill={`url(#${gid})`} style={{ animation: "fadeIn .5s ease both" }} />
-      <path d={line} fill="none" stroke={color} strokeWidth="2.2" strokeLinejoin="round" strokeLinecap="round" pathLength={1} style={{ strokeDasharray: 1, strokeDashoffset: 0, animation: "drawL .8s ease both" }} />
+      <path d={line} fill="none" stroke={color} strokeWidth="1.8" strokeLinejoin="round" strokeLinecap="round" pathLength={1} style={{ strokeDasharray: 1, strokeDashoffset: 0, animation: "drawL .8s ease both" }} />
       <circle cx={X(pts.length - 1)} cy={Y(pts[pts.length - 1].value)} r={3.4} fill={color} stroke="#fff" strokeWidth="1.4" style={{ animation: "fadeIn .5s ease .4s both" }} />
     </svg>
   )
@@ -60,9 +60,9 @@ function TrendCard({ title, seg, unit, pts, color, dec, meaning, ai, src, delay 
       <MiniLine pts={pts} color={color} dec={dec} />
       <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
       <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[10.5px] font-bold text-indigo-600 dark:text-indigo-400 transition-colors hover:text-indigo-700 dark:hover:text-indigo-300">
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
         LG 인사이트
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
       </button>
       <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}><div className="overflow-hidden"><div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p></div></div></div>
       <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> {src}</p>
@@ -109,7 +109,7 @@ export default function DailyTrends() {
       {/* 배너 */}
       <div className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 via-indigo-50/40 dark:via-transparent to-white dark:to-gray-900 px-4 py-3" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg></div>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-indigo-600 text-white"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 5-6" /></svg></div>
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">일일동향</b> — 통합 경제 대시보드 + 환율·유가 30일 · 조달원가·수요의 초단기 신호</div>
           <div className="hidden shrink-0 flex-wrap gap-1.5 sm:flex">{status.map((s) => <span key={s.t} className={"rounded-full px-2 py-0.5 text-[10.5px] font-bold " + cmap[s.c]}>{s.t}</span>)}</div>
         </div>

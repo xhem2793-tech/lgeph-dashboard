@@ -137,7 +137,7 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
             aria-label="닫기"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
 
@@ -213,7 +213,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
             aria-label="닫기"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"
           >
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
           </button>
         </div>
 

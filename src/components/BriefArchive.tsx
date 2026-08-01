@@ -30,7 +30,7 @@ export default function BriefArchive() {
   const nApproved = (rows ?? []).filter((r) => r.status === "approved").length
 
   return (
-    <section className="h-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 lg:col-span-2">
+    <section className="h-full rounded-xl border border-gray-100 dark:border-gray-800 p-4 lg:col-span-2">
       <header className="mb-2 flex items-baseline justify-between">
         <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지난 7일 브리핑</h3>
         <span className="text-[11px] text-gray-400 dark:text-gray-500">

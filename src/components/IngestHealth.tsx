@@ -38,7 +38,7 @@ export default function IngestHealth() {
   const bad = (rows ?? []).filter((r) => r.status !== "ok").length
 
   return (
-    <section className="h-full rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-3">
+    <section className="h-full rounded-xl border border-gray-100 dark:border-gray-800 p-3">
       <header className="mb-2 flex items-baseline justify-between">
         <h3 className="text-[12px] font-bold tracking-tight text-gray-900 dark:text-gray-50">데이터 신뢰</h3>
         <span className="text-[10px] text-gray-300 dark:text-gray-600">

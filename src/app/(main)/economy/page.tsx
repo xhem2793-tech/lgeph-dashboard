@@ -90,7 +90,7 @@ export default function Page() {
       <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
         <aside className="h-fit lg:sticky lg:top-[61px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
             <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{en ? "View" : "보기"}</p>
             <span className="ml-auto"><Segmented size="sm" value={active === "all" ? "list" : "card"} onChange={(k) => setActive(k === "list" ? "all" : (active === "all" ? "prices" : active))} options={[{ k: "card", label: "카드" }, { k: "list", label: "리스트" }]} /></span>
           </div>

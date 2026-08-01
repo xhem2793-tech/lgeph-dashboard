@@ -101,7 +101,7 @@ function dlCsvFrom(csv: CsvData, name: string) {
 }
 const IcoBtn = ({ onClick, title, d, fill = false }: { onClick: () => void; title: string; d: string; fill?: boolean }) => (
   <button type="button" onClick={onClick} title={title} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-teal-600 dark:hover:bg-gray-800 dark:hover:text-teal-400">
-    <svg width="13" height="13" viewBox="0 0 24 24" fill={fill ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: d }} />
+    <svg width="13" height="13" viewBox="0 0 24 24" fill={fill ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: d }} />
   </button>
 )
 const ICO = { expand: '<path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/>', img: '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/>', csv: '<path d="M12 3v12"/><path d="M8 11l4 4 4-4"/><path d="M4 21h16"/>' }
@@ -139,9 +139,9 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
       {ai && (
         <>
           <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[10.5px] font-bold text-teal-600 dark:text-teal-400 transition-colors hover:text-teal-700 dark:hover:text-teal-300">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
             LG 인사이트
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
           </button>
           <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}>
             <div className="overflow-hidden">
@@ -163,7 +163,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
             <span className="ml-auto flex items-center gap-0.5">
               <IcoBtn onClick={() => dlImgFrom(document.getElementById("bigchart-" + idx), "에너지_" + title)} title="이미지 다운로드" d={ICO.img} />
               {csv && <IcoBtn onClick={() => dlCsvFrom(csv, "에너지_" + title)} title="CSV 다운로드" d={ICO.csv} />}
-              <button type="button" onClick={() => setBig(false)} aria-label="닫기" className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+              <button type="button" onClick={() => setBig(false)} aria-label="닫기" className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
             </span>
           </div>
           {/* 좌: 큰 차트(전체목록)+의미·인사이트 / 우: 정렬 가능한 데이터 표 */}
@@ -696,9 +696,9 @@ export default function EnergyLabelView() {
 
       <div className="overflow-hidden rounded-xl border border-teal-100 dark:border-teal-500/25 bg-gradient-to-r from-teal-50 dark:from-teal-500/10 via-teal-50/40 dark:via-transparent to-white dark:to-gray-900" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
         <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z" /></svg></div>
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2 3 14h7l-1 8 10-12h-7z" /></svg></div>
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200">{loaded && lgR && rank[0] ? <><b className="font-semibold text-gray-900 dark:text-gray-50">에너지 효율 · {cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}</b> — LG {lgRk}위/{brandCount}개사, 리더 {rank[0].name}({rank[0].v.toFixed(2)}) 대비 {gap != null ? gap.toFixed(0) : "—"}% 낮음 · 같은 스펙 비교</> : <><b className="font-semibold text-gray-900 dark:text-gray-50">에너지 효율</b> — DOE 라벨 세그먼트별 브랜드 {cur.metric} 분석</>}</div>
-          {loaded && lgR && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500 dark:text-teal-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}
+          {loaded && lgR && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500 dark:text-teal-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}
         </div>
         {loaded && lgR && (
           <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.22,1,.36,1)" }}>
@@ -782,14 +782,14 @@ export default function EnergyLabelView() {
             </div>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <button type="button" onClick={() => setModelOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: ".28s" }}>
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg></span>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg></span>
               <span className="flex-1"><span className="block text-[13px] font-bold text-gray-900 dark:text-gray-50">모델별 상세 (제품코드)</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">개별 모델 스펙·효율·별점·전력·냉매 · CSV</span></span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
             </button>
             <button type="button" onClick={() => setSimOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: ".3s" }}>
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
               <span className="flex-1"><span className="block text-[13px] font-bold text-gray-900 dark:text-gray-50">전기요금 계산기 열기</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">브랜드·사용강도·요금 조정 → 월/연 전기요금·LG 절감액</span></span>
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
             </button>
             </div>
             </>
@@ -803,9 +803,9 @@ export default function EnergyLabelView() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-8" style={{ animation: "veilIn .24s ease both" }} onClick={() => setSimOpen(false)}>
           <div className="w-full max-w-[560px] overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" style={{ animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-teal-50/60 dark:bg-teal-500/10 px-4 py-3">
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
               <div className="flex-1"><div className="text-[13.5px] font-bold text-gray-900 dark:text-gray-50">전기요금 계산기</div><div className="text-[11px] text-gray-500 dark:text-gray-400">{cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k} · DOE 표준 월소비전력 기반</div></div>
-              <button type="button" onClick={() => setSimOpen(false)} aria-label="닫기" className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+              <button type="button" onClick={() => setSimOpen(false)} aria-label="닫기" className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
             </div>
             <div className="p-4"><EnergySim brands={simBrands} lgKwh={lgKwh} rate0={rate} /></div>
           </div>
@@ -826,7 +826,7 @@ export default function EnergyLabelView() {
                 </span>
                 <button type="button" onClick={() => setMLgOnly((v) => !v)} className={"rounded-md px-2 py-1 text-[11px] font-bold transition-all " + (mLgOnly ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-teal-700 dark:text-teal-300 hover:bg-teal-50")}>LG만</button>
                 <IcoBtn onClick={() => dlCsvFrom({ head: ["브랜드", "모델(제품코드)", cur.specUnit, cur.metric, "별점", "월전력kWh", "냉매"], rows: modelRows.map((r) => [r.brand, r.model, r.spec ?? "—", r.eff ?? "—", r.star ?? "—", r.kwh ?? "—", r.refrigerant || "—"]) }, "에너지_모델별_" + cur.label)} title="CSV 다운로드" d={ICO.csv} />
-                <button type="button" onClick={() => setModelOpen(false)} aria-label="닫기" className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+                <button type="button" onClick={() => setModelOpen(false)} aria-label="닫기" className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
               </span>
             </div>
             <div className="overflow-auto">

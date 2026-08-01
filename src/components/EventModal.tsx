@@ -37,7 +37,7 @@ export default function EventModal({ event, onClose }: { event: CalEvent; onClos
       <div className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" style={{ animation: closing ? "popOut .22s cubic-bezier(.4,0,1,1) both" : "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
         <span className={"absolute inset-y-0 left-0 w-1 " + dotOf(m.category)} />
         <button type="button" onClick={close} aria-label="닫기" className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
 
         <div className="flex w-full shrink-0 items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-7 pb-3 pt-6 text-[12px] font-semibold">

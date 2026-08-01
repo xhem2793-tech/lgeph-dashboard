@@ -238,7 +238,7 @@ const ART: Record<string, { tint: string; accent: string; tag: string; glyph: Re
     glyph: (
       <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
         <path d="M12 8h20l8 8v32H12z" />
-        <path d="M18 24h16M18 32h16M18 40h10" strokeLinecap="round" />
+        <path d="M18 24h16M18 32h16M18 40h10" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     ),
   },
@@ -249,7 +249,7 @@ const ART: Record<string, { tint: string; accent: string; tag: string; glyph: Re
     glyph: (
       <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
         <path d="M8 48V16h16v32M24 48V24h20v24" />
-        <path d="M14 24h4M14 32h4M14 40h4M30 32h8M30 40h8" strokeLinecap="round" />
+        <path d="M14 24h4M14 32h4M14 40h4M30 32h8M30 40h8" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     ),
   },
@@ -260,7 +260,7 @@ const ART: Record<string, { tint: string; accent: string; tag: string; glyph: Re
     glyph: (
       <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
         <path d="M10 18h32l-3 30H13z" />
-        <path d="M20 18v-4a6 6 0 0 1 12 0v4" strokeLinecap="round" />
+        <path d="M20 18v-4a6 6 0 0 1 12 0v4" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     ),
   },
@@ -269,7 +269,7 @@ const ART: Record<string, { tint: string; accent: string; tag: string; glyph: Re
     accent: "#0d9488",
     tag: "WEATHER",
     glyph: (
-      <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+      <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 22c6-8 14-8 20 0s14 8 20 0" />
         <path d="M6 34c6-8 14-8 20 0s14 8 20 0" />
         <path d="M6 46c6-8 14-8 20 0s14 8 20 0" />
@@ -291,7 +291,7 @@ const ART: Record<string, { tint: string; accent: string; tag: string; glyph: Re
     glyph: (
       <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
         <circle cx="26" cy="26" r="16" />
-        <path d="M26 16v11l7 5" strokeLinecap="round" />
+        <path d="M26 16v11l7 5" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     ),
   },
@@ -302,7 +302,7 @@ const ART: Record<string, { tint: string; accent: string; tag: string; glyph: Re
     glyph: (
       <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
         <path d="M26 6a16 16 0 0 1 10 28v6H16v-6A16 16 0 0 1 26 6z" />
-        <path d="M18 48h16" strokeLinecap="round" />
+        <path d="M18 48h16" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     ),
   },
@@ -388,7 +388,7 @@ function Hi({ text, q }: { text: string; q: string }) {
     <>
       {parts.map((p, i) =>
         p.toLowerCase() === k.toLowerCase() ? (
-          <mark key={i} className="rounded-sm bg-yellow-200 px-0.5 text-gray-900 dark:text-gray-50">
+          <mark key={i} className="rounded-sm bg-yellow-200 dark:bg-yellow-500/30 px-0.5 text-gray-900 dark:text-gray-50">
             {p}
           </mark>
         ) : (
@@ -672,17 +672,17 @@ export default function Page() {
           style={{ animation: "fadeUp .5s ease both" }}
         >
           <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 4h18M6 12h12M10 20h4" /></svg>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 4h18M6 12h12M10 20h4" /></svg>
             <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분류</p>
           </div>
 
           {/* 사이드바 검색 — 뉴스 검색을 좌측 메뉴 안으로 */}
           <div className="px-2 pb-1 pt-3">
             <div className="group relative">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
               <input value={q} onChange={(ev) => setQ(ev.target.value)} placeholder="뉴스 검색" aria-label="뉴스 검색"
                 className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-2 pl-9 pr-8 text-[13px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 hover:bg-white dark:hover:border-gray-700 dark:hover:bg-gray-900 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)] dark:focus:border-indigo-500/50 dark:focus:bg-gray-950" />
-              {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:hover:bg-gray-800 dark:text-gray-500 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+              {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:hover:bg-gray-800 dark:text-gray-500 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
             </div>
           </div>
 
@@ -788,7 +788,7 @@ export default function Page() {
                     aria-label="제품 필터 해제"
                     className="ml-0.5 flex h-5 w-5 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400"
                   >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
                   </button>
                 )}
               </div>
@@ -799,7 +799,7 @@ export default function Page() {
 
             <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
               최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
-              <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-bold text-emerald-700 dark:text-emerald-300">C</span>
+              <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span>
             </span>
           </div>
           </header>
@@ -812,8 +812,8 @@ export default function Page() {
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
+              strokeWidth="1.8"
+              strokeLinecap="round" strokeLinejoin="round"
               aria-hidden
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"
             >
@@ -913,7 +913,7 @@ export default function Page() {
                           
 
                           {q.trim() && hitCount(d, q) > 0 ? (
-                            <span className="num rounded-full bg-yellow-100 px-1.5 py-px text-[10px] font-semibold text-yellow-800">
+                            <span className="num rounded-full bg-yellow-100 dark:bg-yellow-500/15 px-1.5 py-px text-[10px] font-semibold text-yellow-800 dark:text-yellow-300">
                               일치 {hitCount(d, q)}
                             </span>
                           ) : null}
@@ -1018,7 +1018,7 @@ export default function Page() {
           onClick={closeModal}
         >
           <div
-            className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10"
+            className="relative flex h-[660px] max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10"
             style={{ animation: closing ? "popOut .22s cubic-bezier(.4,0,1,1) both" : "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }}
             onClick={(ev) => ev.stopPropagation()}
           >
@@ -1029,7 +1029,7 @@ export default function Page() {
               aria-label="닫기"
               className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50"
             >
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M6 6l12 12M18 6L6 18" />
               </svg>
             </button>
@@ -1046,7 +1046,7 @@ export default function Page() {
               )}
             </div>
 
-            <div className="overflow-y-auto px-7 pb-7 pt-5">
+            <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-5">
               <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
                 <span className="font-semibold text-indigo-600 dark:text-indigo-400">{modal.topic}</span>
                 <span className="text-gray-300 dark:text-gray-600">·</span>
@@ -1124,7 +1124,7 @@ export default function Page() {
                   className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-[12.5px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95"
                 >
                   원문 보기 · {modal.source}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M7 17L17 7M17 7H8M17 7v9" />
                   </svg>
                 </a>

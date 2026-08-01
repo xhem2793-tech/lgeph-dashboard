@@ -37,7 +37,7 @@ export default function Watchlist() {
         <span className="text-[10px] text-gray-300 dark:text-gray-600">{fmtDate(asOf)} · 주간 성격</span>
       </header>
 
-      <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2">
+      <div className="rounded-xl border border-gray-100 dark:border-gray-800 p-2">
         {err ? (
           <p className="py-4 text-center text-[10px] text-gray-400 dark:text-gray-500">불러오지 못함</p>
         ) : rows && rows.length === 0 ? (

@@ -35,7 +35,7 @@ const DialogOverlay = React.forwardRef<
         // base
         "fixed inset-0 z-50 overflow-y-auto",
         // background color
-        "bg-black/70",
+        "bg-black/40 backdrop-blur-md",
         // transition
         "data-[state=open]:animate-dialogOverlayShow",
         className,
@@ -58,11 +58,11 @@ const DialogContent = React.forwardRef<
           ref={forwardedRef}
           className={cx(
             // base
-            "fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-md border p-6 shadow-lg",
+            "fixed left-1/2 top-1/2 z-50 w-[95vw] max-w-lg -translate-x-1/2 -translate-y-1/2 overflow-y-auto rounded-[26px] p-6 ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:ring-white/10",
             // border color
             "border-gray-200 dark:border-gray-900",
             // background color
-            "bg-white dark:bg-[#090E1A]",
+            "bg-white dark:bg-gray-900",
             // transition
             "data-[state=open]:animate-dialogContentShow",
             focusRing,
