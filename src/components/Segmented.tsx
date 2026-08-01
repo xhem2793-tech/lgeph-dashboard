@@ -24,11 +24,11 @@ export function Segmented({
     const el = refs.current[idx]
     if (el) setStyle({ left: 0, width: el.offsetWidth, transform: `translateX(${el.offsetLeft}px)`, opacity: 1 })
   }, [idx, options])
-  const pad = size === "sm" ? "px-2.5 py-1 text-[11px]" : "px-3.5 py-1 text-[11.5px]"
+  const pad = size === "sm" ? "px-2.5 py-1 text-[11px]" : "px-3.5 py-1.5 text-[11.5px]"
   return (
-    <div className="relative flex shrink-0 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-0.5">
+    <div className="relative flex shrink-0 rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]">
       <span
-        className="absolute bottom-0.5 top-0.5 rounded-full bg-indigo-600 transition-all duration-[340ms] ease-[cubic-bezier(.22,1,.36,1)]"
+        className="absolute bottom-[3px] top-[3px] rounded-full bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] transition-all duration-[420ms] ease-[cubic-bezier(.34,1.56,.64,1)] dark:bg-gray-950 dark:shadow-[0_1px_3px_rgba(0,0,0,0.45)]"
         style={style}
       />
       {options.map((o, i) => (
@@ -40,10 +40,10 @@ export function Segmented({
           type="button"
           onClick={() => onChange(o.k)}
           className={
-            "relative z-10 rounded-full font-medium transition-colors duration-300 active:scale-95 " +
+            "relative z-10 rounded-full font-semibold transition-colors duration-200 active:scale-[.93] " +
             pad +
             " " +
-            (value === o.k ? "text-white" : "text-gray-600 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400")
+            (value === o.k ? "text-gray-900 dark:text-gray-50" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")
           }
         >
           {o.label}

@@ -105,13 +105,13 @@ export default function Page() {
                     onPointerDown={() => setActive(n.id)}
                     onClick={() => setActive(n.id)}
                     className={
-                      "group relative flex w-full items-center rounded-md px-2.5 py-2 text-left transition-colors duration-200 " +
-                      (active === n.id ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-gray-100/70 dark:hover:bg-gray-800/50")
+                      "group relative flex w-full items-center rounded-md px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                      (active === n.id ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-indigo-50 dark:hover:bg-indigo-500/10")
                     }
                   >
                     {active === n.id && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
                     <span className="flex w-full items-center gap-1.5">
-                      <span className={"flex-1 text-[14px] transition-colors " + (active === n.id ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-50")}>
+                      <span className={"flex-1 text-[14px] transition-colors " + (active === n.id ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
                         {n.ko}
                       </span>
                       <span className="num shrink-0 text-[11px] tabular-nums text-gray-400 dark:text-gray-500">{navCount(n)}</span>

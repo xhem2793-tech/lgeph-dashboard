@@ -319,13 +319,13 @@ export default function Competitors() {
                       type="button"
                       onClick={() => setView(it.key)}
                       className={
-                        "group relative flex items-center rounded-md px-2.5 py-2 text-left transition-colors duration-200 " +
-                        (view === it.key ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-gray-100/70 dark:hover:bg-gray-800/50")
+                        "group relative flex items-center rounded-md px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                        (view === it.key ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-indigo-50 dark:hover:bg-indigo-500/10")
                       }
                     >
                       {view === it.key && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
                       <span className="flex w-full items-center gap-1.5">
-                        <span className={"flex-1 truncate text-[14px] transition-colors " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-50")}>{it.label}</span>
+                        <span className={"flex-1 truncate text-[14px] transition-colors " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>{it.label}</span>
                         {it.status === "live"
                           ? <span className="shrink-0 rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[9px] font-bold text-emerald-600 dark:text-emerald-400">LIVE</span>
                           : <span className="shrink-0 text-[9.5px] font-medium text-gray-400 dark:text-gray-500">예정</span>}

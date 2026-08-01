@@ -678,11 +678,11 @@ export default function Page() {
 
           {/* 사이드바 검색 — 뉴스 검색을 좌측 메뉴 안으로 */}
           <div className="px-2 pb-1 pt-3">
-            <div className="relative">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+            <div className="group relative">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
               <input value={q} onChange={(ev) => setQ(ev.target.value)} placeholder="뉴스 검색" aria-label="뉴스 검색"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-2 pl-9 pr-8 text-[13px] outline-none transition-colors placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-950" />
-              {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 dark:text-gray-500"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-2 pl-9 pr-8 text-[13px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 hover:bg-white dark:hover:border-gray-700 dark:hover:bg-gray-900 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)] dark:focus:border-indigo-500/50 dark:focus:bg-gray-950" />
+              {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:hover:bg-gray-800 dark:text-gray-500 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
             </div>
           </div>
 
@@ -698,8 +698,8 @@ export default function Page() {
                       type="button"
                       onClick={() => setMenu(m.key)}
                       className={
-                        "group relative flex items-center rounded-md px-2.5 py-2 text-left transition-colors duration-200 " +
-                        (menu === m.key ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-gray-100/70 dark:hover:bg-gray-800/50")
+                        "group relative flex items-center rounded-md px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                        (menu === m.key ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-indigo-50 dark:hover:bg-indigo-500/10")
                       }
                     >
                       {menu === m.key && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
@@ -707,7 +707,7 @@ export default function Page() {
                         <span
                           className={
                             "flex-1 text-[14px] transition-colors " +
-                            (menu === m.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-gray-900 dark:group-hover:text-gray-50")
+                            (menu === m.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")
                           }
                         >
                           {m.label}
@@ -1019,7 +1019,7 @@ export default function Page() {
         >
           <div
             className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
-            style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
+            style={{ animation: closing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .42s cubic-bezier(.34,1.42,.64,1) both" }}
             onClick={(ev) => ev.stopPropagation()}
           >
             <span className={"absolute inset-y-0 left-0 z-10 w-1 " + (/금융|거시/.test(modal.topic) ? "bg-blue-500" : /정치/.test(modal.topic) ? "bg-purple-500" : /규제|정책/.test(modal.topic) ? "bg-red-500" : /에너지|전력/.test(modal.topic) ? "bg-amber-500" : /유통|CE/.test(modal.topic) ? "bg-violet-500" : /B2B/.test(modal.topic) ? "bg-teal-500" : /기상|재난/.test(modal.topic) ? "bg-orange-500" : "bg-indigo-500")} />

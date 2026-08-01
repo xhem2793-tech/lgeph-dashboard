@@ -279,7 +279,7 @@ export default function Overview() {
           {/* 뉴스 페이지(/news)와 동일한 팝업 — 결론(SO WHAT) 먼저, 본문은 문단으로 */}
           <div
             className="relative flex max-h-[88vh] w-full max-w-[720px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
-            style={{ animation: modalClosing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
+            style={{ animation: modalClosing ? "modalOut .24s cubic-bezier(.4,0,1,1) both" : "modalIn .42s cubic-bezier(.34,1.42,.64,1) both" }}
             onClick={(e) => e.stopPropagation()}
           >
             <button

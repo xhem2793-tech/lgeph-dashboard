@@ -523,7 +523,7 @@ export default function Calendar() {
           {modal ? (
             <div
               className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
-              style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
+              style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .42s cubic-bezier(.34,1.42,.64,1) both" }}
               onClick={(ev) => ev.stopPropagation()}
             >
               <span className={"absolute inset-y-0 left-0 w-1 " + tone(modal.category).dot} />
@@ -603,7 +603,7 @@ export default function Calendar() {
           ) : dayList ? (
             <div
               className="relative flex max-h-[84vh] w-full max-w-[540px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl ring-1 ring-black/5 dark:bg-gray-900 dark:ring-white/10"
-              style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .34s cubic-bezier(.22,1,.36,1) both" }}
+              style={{ animation: closing ? "modalOut .22s cubic-bezier(.4,0,1,1) both" : "modalIn .42s cubic-bezier(.34,1.42,.64,1) both" }}
               onClick={(ev) => ev.stopPropagation()}
             >
               <div className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 px-6 pb-3 pt-5">
