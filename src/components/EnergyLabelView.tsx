@@ -145,7 +145,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
           </button>
           <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}>
             <div className="overflow-hidden">
-              <div className="mt-1.5 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2.5">
+              <div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
                 <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
               </div>
             </div>
@@ -171,7 +171,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
             <div className="flex min-w-0 flex-col lg:w-[60%] lg:overflow-y-auto lg:pr-1">
               <div id={"bigchart-" + idx} className="flex h-[46vh] w-full items-center justify-center lg:h-[66vh]">{bigChildren ?? children}</div>
               <p className="mt-2 text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
-              {ai && <div className="mt-2 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2.5"><p className="text-[11.5px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-teal-700 dark:text-teal-300">LG 인사이트</b> {ai}</p></div>}
+              {ai && <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5"><p className="text-[11.5px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">LG 인사이트</b> {ai}</p></div>}
             </div>
             {csv && (
               <div className="flex min-h-0 flex-col lg:w-[40%] lg:border-l lg:border-gray-100 lg:dark:border-gray-800 lg:pl-4">
@@ -751,7 +751,7 @@ export default function EnergyLabelView() {
                 <span className="ml-auto text-[10.5px] text-gray-400 dark:text-gray-500">설치형 × 용량 · 색=효율</span>
               </div>
               <Heatmap rowLabels={coverage.rowLabels} colLabels={coverage.colLabels} cells={coverage.cells} metric={cur.metric} effLo={coverage.effLo} effHi={coverage.effHi} />
-              <p className="mt-2.5 border-l-2 border-teal-300 dark:border-teal-500/40 pl-2 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">LG는 <b>{coverage.lgTotal}개</b> 모델을 {coverage.rowLabels.length}개 설치형·{coverage.colLabels.length}개 용량대에 걸쳐 등록. <b>빈 셀=미출시 공백</b>(진입 기회), 색이 옅은 셀=효율 열세(개선 타깃).</p>
+              <p className="mt-2.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">LG는 <b>{coverage.lgTotal}개</b> 모델을 {coverage.rowLabels.length}개 설치형·{coverage.colLabels.length}개 용량대에 걸쳐 등록. <b>빈 셀=미출시 공백</b>(진입 기회), 색이 옅은 셀=효율 열세(개선 타깃).</p>
             </div>
             )}
             <div key={`seg-${typ}-${segIdx}`} className="grid items-stretch gap-4 sm:grid-cols-2">

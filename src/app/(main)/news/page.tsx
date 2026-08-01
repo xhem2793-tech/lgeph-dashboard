@@ -16,6 +16,7 @@ import {
   type PubReport,
 } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
+import { SEV } from "@/lib/severity"
 import { Segmented } from "@/components/Segmented"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
 
@@ -153,12 +154,6 @@ function rel(s: string) {
 
 
 
-
-const SEV: Record<string, string> = {
-  Critical: "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400",
-  High: "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300",
-  Medium: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300",
-}
 
 /** 우리가 만든 것(가격 트래커·자체 칼럼)에는 표식을 붙인다 — 남의 보도와 섞이면 안 된다 */
 const OURS = "LGEPH AI"

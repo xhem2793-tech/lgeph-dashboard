@@ -277,7 +277,7 @@ function CrossBarCard({ d, items, title, seg, unit, meaning, ai, source, sort = 
           <div key={r.key} className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-[11px] text-gray-600 dark:text-gray-300">{r.name}</span>
             <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
-              <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.22,1,.36,1) " + (i * 0.06) + "s" }} />
+              <div className="absolute inset-y-0 left-0 rounded bg-indigo-500" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.22,1,.36,1) " + (i * 0.06) + "s" }} />
             </div>
             <span className="w-11 shrink-0 text-right text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{r.v.toFixed(0)}%</span>
           </div>
@@ -309,7 +309,7 @@ function OwnershipCard({ d }: { d: Mon }) {
           <div key={r.key} className="flex items-center gap-2">
             <span className="w-20 shrink-0 text-[11px] text-gray-600 dark:text-gray-300">{r.name}</span>
             <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
-              <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.22,1,.36,1) " + (i * 0.06) + "s" }} />
+              <div className="absolute inset-y-0 left-0 rounded bg-indigo-500" style={{ width: r.v + "%", transition: "width .8s cubic-bezier(.22,1,.36,1) " + (i * 0.06) + "s" }} />
             </div>
             <span className="w-11 shrink-0 text-right text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{r.v.toFixed(0)}%</span>
           </div>

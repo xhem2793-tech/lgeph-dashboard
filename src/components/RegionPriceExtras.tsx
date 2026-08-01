@@ -133,7 +133,7 @@ export default function RegionPriceExtras() {
               <div key={r.geo} className="flex items-center gap-2" style={{ opacity: mounted ? 1 : 0, transform: mounted ? "none" : "translateX(-6px)", transition: "all .4s ease " + (i * 0.02) + "s" }}>
                 <span className="w-24 shrink-0 truncate text-[11px] text-gray-600 dark:text-gray-300">{shortGeo(r.geo)}</span>
                 <div className="relative h-4 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
-                  <div className="absolute inset-y-0 left-0 rounded bg-gradient-to-r from-indigo-500 to-indigo-400" style={{ width: mounted ? (r.pop / popMax * 100) + "%" : "0%", transition: "width .7s cubic-bezier(.22,1,.36,1) " + (i * 0.02) + "s" }} />
+                  <div className="absolute inset-y-0 left-0 rounded bg-indigo-500" style={{ width: mounted ? (r.pop / popMax * 100) + "%" : "0%", transition: "width .7s cubic-bezier(.22,1,.36,1) " + (i * 0.02) + "s" }} />
                 </div>
                 <span className="w-12 shrink-0 text-right text-[11px] font-semibold tabular-nums text-gray-800 dark:text-gray-100">{(r.pop / 1e6).toFixed(1)}M</span>
               </div>

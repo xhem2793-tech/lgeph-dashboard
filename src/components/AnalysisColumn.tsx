@@ -4,6 +4,7 @@ import React from "react"
 import { createPortal } from "react-dom"
 import { analysisPosts, regAlerts, type RegAlert } from "@/lib/supabase"
 import { useLang } from "@/lib/i18n"
+import { SEV } from "@/lib/severity"
 
 /** 4번째 열 — 위: 규제 동향 1건 / 아래: 이번 주 분석 1건.
  *  규제(통관·관세·세무·표준)는 즉시 비용·리드타임으로 꽂힌다. 뉴스에 섞이면 묻히므로 상단 고정.
@@ -23,12 +24,6 @@ function dday(eff: string | null): { text: string; urgent: boolean } | null {
   if (diff < 0) return { text: "시행 중", urgent: false }
   if (diff === 0) return { text: "오늘 시행", urgent: true }
   return { text: "시행 D-" + diff, urgent: diff <= 7 }
-}
-
-const SEV: Record<string, string> = {
-  Critical: "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400",
-  High: "bg-amber-100 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300",
-  Medium: "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300",
 }
 
 /** 자체 칼럼 대표 비주얼 — 사진이 아니라 데이터 */
