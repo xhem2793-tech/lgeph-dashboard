@@ -56,7 +56,7 @@ export default function DataVerification() {
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
-      <section className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-gradient-to-r from-indigo-50 via-indigo-50/40 to-white dark:from-indigo-500/10 dark:via-transparent dark:to-gray-900 p-4" style={{ animation: "fadeUp .5s ease both" }}>
+      <section className="rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08] p-4" style={{ animation: "fadeUp .5s ease both" }}>
         <h1 className="text-[14.5px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">데이터 출처·검증</h1>
         <p className="mt-1 text-[12px] leading-relaxed text-gray-600 dark:text-gray-300">
           모든 지표는 <b className="font-semibold text-gray-800 dark:text-gray-100">공개 공식통계(PSA·BSP·World Bank·IMF·DOE)</b>에서 원본 코드까지 추적됩니다. 아래 링크로 <b className="font-semibold text-indigo-600 dark:text-indigo-400">누구나 원본을 직접 대조·재현</b>할 수 있습니다. 조작 불가 · 재현 가능.

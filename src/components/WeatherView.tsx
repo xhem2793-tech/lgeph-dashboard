@@ -185,7 +185,7 @@ export default function WeatherView() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"}</style>
 
       {/* 현재 기상 히어로 — 날씨 대시보드 상단 */}
-      <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-gradient-to-br from-sky-50 via-white to-white dark:from-sky-500/10 dark:via-gray-900 dark:to-gray-900 p-4" style={{ animation: "fadeUp .5s ease both" }}>
+      <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-sky-50/60 dark:bg-sky-500/[0.08] p-4" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex flex-wrap items-center gap-x-6 gap-y-3">
           {/* 현재 기온 */}
           <div className="flex items-center gap-3">

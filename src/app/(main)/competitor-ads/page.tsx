@@ -51,7 +51,7 @@ function Facet({ title, options, selected, onToggle }: { title: string; options:
         {options.map((o, i) => {
           const ck = selected.includes(o.value)
           return (
-            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[6px] text-left text-[12.5px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
+            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[6px] text-left text-[12.5px] font-medium transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 active:scale-[.98] hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
               <span className={"flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors " + (ck ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 dark:border-gray-700 group-hover:border-gray-400")}>
                 {ck && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>}
               </span>
@@ -161,7 +161,6 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
     return () => window.removeEventListener("keydown", onKey)
   }, [])
   const showImg = !!a.image_url && !imgErr
-  const accent = st ? st.dot : "bg-indigo-500"
   const meta: string[] = []
   if (a.ad_started_on) meta.push("게재 " + a.ad_started_on + (a.days_since_start != null ? " (" + a.days_since_start + "일차)" : ""))
   if (a.ends_on) meta.push("종료 " + a.ends_on + (a.days_to_end != null && a.days_to_end >= 0 ? " (D-" + a.days_to_end + ")" : ""))
@@ -178,7 +177,6 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
         style={{ animation: closing ? "popOut .22s cubic-bezier(.4,0,1,1) both" : "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }}
         onClick={(e) => e.stopPropagation()}
       >
-        <span className={"absolute inset-y-0 left-0 z-10 w-1 " + accent} />
         <button
           type="button"
           onClick={close}

@@ -371,7 +371,7 @@ export default function Calendar() {
         </div>
 
         {todayEvents.length > 0 && (
-          <div className="mt-3 overflow-hidden rounded-xl border border-indigo-200 dark:border-indigo-500/40 bg-gradient-to-r from-indigo-50 dark:from-indigo-500/10 to-white dark:to-gray-900" style={{ animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both" }}>
+          <div className="mt-3 overflow-hidden rounded-xl border border-indigo-200 dark:border-indigo-500/40 bg-indigo-50/60 dark:bg-indigo-500/[0.08]" style={{ animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both" }}>
             <div className="flex items-center gap-2 border-b border-indigo-100 dark:border-indigo-500/25 px-3.5 py-2">
               <span className="flex h-5 items-center rounded-full bg-indigo-600 px-2 text-[10.5px] font-bold text-white">오늘</span>
               <span className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{todayIso.slice(5).replace("-", "/")} 발표·일정</span>
@@ -526,7 +526,6 @@ export default function Calendar() {
               style={{ animation: closing ? "popOut .22s cubic-bezier(.4,0,1,1) both" : "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }}
               onClick={(ev) => ev.stopPropagation()}
             >
-              <span className={"absolute inset-y-0 left-0 w-1 " + tone(modal.category).dot} />
               <button
                 type="button"
                 onClick={closeModal}
@@ -539,6 +538,7 @@ export default function Calendar() {
               </button>
 
               <div className="flex w-full shrink-0 items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-7 pb-3 pt-6 text-[12px] font-semibold">
+                <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + tone(modal.category).dot} />
                 <span className="text-gray-800 dark:text-gray-100">{catLabel(modal.category)}</span>
                 <span className="text-gray-300 dark:text-gray-600">·</span>
                 <span className="text-gray-500 dark:text-gray-400">{KIND[modal.kind] || ""}</span>

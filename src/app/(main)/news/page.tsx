@@ -225,7 +225,7 @@ function lead(d: Doc, chips: Record<string, Chip>): Chip | null {
 const ART: Record<string, { tint: string; accent: string; tag: string; glyph: React.ReactNode }> = {
   "거시·금융": {
     tint: "#f5f6ff",
-    accent: "#4f46e5",
+    accent: "#2563eb",
     tag: "MACRO",
     glyph: (
       <path d="M4 44 L18 30 L28 38 L44 16" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
@@ -233,7 +233,7 @@ const ART: Record<string, { tint: string; accent: string; tag: string; glyph: Re
   },
   "정치·정책": {
     tint: "#f6f8fa",
-    accent: "#475569",
+    accent: "#9333ea",
     tag: "POLICY",
     glyph: (
       <g fill="none" stroke="currentColor" strokeWidth="3" strokeLinejoin="round">
@@ -329,7 +329,7 @@ function DocArt({ d, chip, big }: { d: Doc; chip: Chip | null; big?: boolean }) 
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800" style={{ backgroundColor: a.tint }}>
+    <div className="relative h-full w-full overflow-hidden rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/40">
       {/* 상단 액센트 바 */}
       <div className="absolute inset-x-0 top-0 h-[3px]" style={{ backgroundColor: a.accent }} />
 
@@ -698,7 +698,7 @@ export default function Page() {
                       type="button"
                       onClick={() => setMenu(m.key)}
                       className={
-                        "group relative flex items-center rounded-md px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                        "group relative flex items-center rounded-md px-2.5 py-2 text-left transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 active:scale-[.98] " +
                         (menu === m.key ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-indigo-50 dark:hover:bg-indigo-500/10")
                       }
                     >
@@ -731,7 +731,7 @@ export default function Page() {
                         type="button"
                         onClick={() => setProd(it.key)}
                         className={
-                          "group flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                          "group flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 active:scale-[.98] " +
                           (prod === it.key ? "bg-indigo-50 dark:bg-indigo-500/10" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
                         }
                       >
@@ -1022,7 +1022,6 @@ export default function Page() {
             style={{ animation: closing ? "popOut .22s cubic-bezier(.4,0,1,1) both" : "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }}
             onClick={(ev) => ev.stopPropagation()}
           >
-            <span className={"absolute inset-y-0 left-0 z-10 w-1 " + (/금융|거시/.test(modal.topic) ? "bg-blue-500" : /정치/.test(modal.topic) ? "bg-purple-500" : /규제|정책/.test(modal.topic) ? "bg-red-500" : /에너지|전력/.test(modal.topic) ? "bg-amber-500" : /유통|CE/.test(modal.topic) ? "bg-violet-500" : /B2B/.test(modal.topic) ? "bg-teal-500" : /기상|재난/.test(modal.topic) ? "bg-orange-500" : "bg-indigo-500")} />
             <button
               type="button"
               onClick={closeModal}
@@ -1048,7 +1047,10 @@ export default function Page() {
 
             <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-5">
               <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
-                <span className="font-semibold text-indigo-600 dark:text-indigo-400">{modal.topic}</span>
+                <span className="flex items-center gap-1.5 font-semibold" style={{ color: (ART[modal.topic] ?? ART["거시·금융"]).accent }}>
+                  <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: (ART[modal.topic] ?? ART["거시·금융"]).accent }} />
+                  {modal.topic}
+                </span>
                 <span className="text-gray-300 dark:text-gray-600">·</span>
                 <span>{modal.source}</span>
                 {modal.source === OURS || modal.kind === "insight" ? <AiMark /> : null}

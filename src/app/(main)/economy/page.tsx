@@ -105,7 +105,7 @@ export default function Page() {
                     onPointerDown={() => setActive(n.id)}
                     onClick={() => setActive(n.id)}
                     className={
-                      "group relative flex w-full items-center rounded-md px-2.5 py-2 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-[.98] " +
+                      "group relative flex w-full items-center rounded-md px-2.5 py-2 text-left transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 active:scale-[.98] " +
                       (active === n.id ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-indigo-50 dark:hover:bg-indigo-500/10")
                     }
                   >

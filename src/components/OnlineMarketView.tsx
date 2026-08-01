@@ -84,7 +84,7 @@ export default function OnlineMarketView() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}"}</style>
 
       {/* 접이식 배너 */}
-      <div className="overflow-hidden rounded-xl border border-violet-100 dark:border-violet-500/25 bg-gradient-to-r from-violet-50 dark:from-violet-500/10 via-violet-50/40 dark:via-transparent to-white dark:to-gray-900" style={{ animation: "fadeOnly .5s ease both" }}>
+      <div className="overflow-hidden rounded-xl border border-violet-100 dark:border-violet-500/25 bg-violet-50/60 dark:bg-violet-500/[0.08]" style={{ animation: "fadeOnly .5s ease both" }}>
         <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-violet-600 text-white"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="14" rx="2" /><path d="M8 21h8M12 18v3" /></svg></div>
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">온라인 시장</b> — 인터넷 {phInternet.length ? <b className="text-violet-700 dark:text-violet-300">{Math.round(phInternet[phInternet.length - 1].value)}%</b> : "—"}·계정 {kv.account_ownership ? Math.round(kv.account_ownership.value) + "%" : "—"}·모바일 {kv.mobile_per100 ? Math.round(kv.mobile_per100.value) + "/100" : "—"} — 신용카드 3%대(역내 최저), 직불·BNPL 중심 온라인 가전 구매 저변</div>
