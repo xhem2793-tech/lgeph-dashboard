@@ -64,20 +64,44 @@ type Doc = {
   agency?: string | null
 }
 
-type Menu = { key: string; label: string; desc: string; group: string }
+/** 메뉴 = 표시 카테고리. topic(기본 6종/규제/인사이트)로 1차 필터, kw(키워드)로 세분.
+ *  데이터 topic은 6종뿐이라 큰 덩어리(거시·금융·B2B·에너지)는 제목·요약·시사점 키워드로 쪼갠다. */
+type Menu = { key: string; label: string; topic: string; kw?: string[] }
 
-/** 경제지표 메뉴처럼 대분류로 묶는다 — 전체/거시·경제/정책·규제/가전·시장/환경·인사이트 */
 const MENUS: Menu[] = [
-  { key: "전체", label: "전체 동향", desc: "뉴스 · 규제 · 인사이트", group: "전체" },
-  { key: "거시·금융", label: "거시경제·금융", desc: "물가 · 금리 · 환율", group: "거시·경제" },
-  { key: "에너지·전력", label: "에너지·유가·전력", desc: "유가 · 전기요금 · 전력", group: "거시·경제" },
-  { key: "정치·정책", label: "정치·행정·정세", desc: "예산 · 행정명령 · 정세", group: "정책·규제" },
-  { key: "규제·정책", label: "규제·통관·관세", desc: "통관 · 관세 · 시행일", group: "정책·규제" },
-  { key: "B2B", label: "B2B·공조·인프라", desc: "공조 · 인프라 · 데이터센터", group: "가전·시장" },
-  { key: "CE·유통", label: "가전·유통·경쟁", desc: "가전 수요 · 채널 · 경쟁", group: "가전·시장" },
-  { key: "기상·재난", label: "기상·재난·냉방수요", desc: "태풍 · 폭염 · 냉방 수요", group: "환경·인사이트" },
-  { key: "인사이트", label: "인사이트·칼럼", desc: "자체 칼럼 · 외부 큐레이션", group: "환경·인사이트" },
+  { key: "전체", label: "전체 동향", topic: "전체" },
+
+  // 거시·금융 → 4분할
+  { key: "물가·인플레", label: "물가·인플레이션", topic: "거시·금융", kw: ["물가", "인플레", "cpi", "소비자물가", "생활비", "가격"] },
+  { key: "금리·통화", label: "금리·통화정책", topic: "거시·금융", kw: ["금리", "기준금리", "bsp", "통화", "유동성", "대출", "신용", "m3"] },
+  { key: "환율·외환", label: "환율·외환·송금", topic: "거시·금융", kw: ["환율", "페소", "외환", "달러", "송금", "ofw", "fdi", "외국인투자", "외국인 투자"] },
+  { key: "성장·무역", label: "성장·무역·고용", topic: "거시·금융", kw: ["gdp", "성장", "무역", "수출", "수입", "고용", "실업", "임금", "투자", "경상", "gni"] },
+
+  // 에너지·전력 → 2분할
+  { key: "유가·연료", label: "유가·연료", topic: "에너지·전력", kw: ["유가", "석유", "디젤", "휘발유", "경유", "연료", "가스", "brent", "wti", "유류"] },
+  { key: "전력·요금", label: "전기요금·전력", topic: "에너지·전력", kw: ["전기", "전력", "요금", "meralco", "전력망", "정전", "재생에너지", "태양광", "송전", "발전"] },
+
+  { key: "정치·정책", label: "정치·행정·정세", topic: "정치·정책" },
+  { key: "규제·정책", label: "규제·통관·관세", topic: "규제·정책" },
+
+  // B2B → 2분할
+  { key: "B2B·공조", label: "B2B·공조·HVAC", topic: "B2B", kw: ["공조", "hvac", "냉방", "칠러", "vrf", "히트펌프", "에어컨", "냉난방", "시스템에어컨"] },
+  { key: "B2B·인프라", label: "데이터센터·인프라", topic: "B2B", kw: ["데이터센터", "data center", "인프라", "건설", "프로젝트", "발주", "설비", "reit", "부동산", "오피스", "물류"] },
+
+  { key: "CE·유통", label: "가전·유통·경쟁", topic: "CE·유통" },
+  { key: "기상·재난", label: "기상·재난·냉방수요", topic: "기상·재난" },
+  { key: "인사이트", label: "인사이트·칼럼", topic: "인사이트" },
 ]
+
+/** 문서가 메뉴에 속하는지 — topic 일치 + (kw 있으면) 제목·요약·시사점에 키워드 포함 */
+function menuMatch(x: Doc, mi: Menu): boolean {
+  if (mi.topic !== "전체" && x.topic !== mi.topic) return false
+  if (mi.kw && mi.kw.length) {
+    const hay = (x.title + " " + x.summary + " " + x.so).toLowerCase()
+    return mi.kw.some((k) => hay.includes(k))
+  }
+  return true
+}
 
 const W: Record<string, number> = {
   "거시·금융": 1.0,
@@ -594,8 +618,9 @@ export default function Page() {
   const all = React.useMemo(() => [...reportDocs, ...newsDocs, ...regDocs, ...insightDocs], [reportDocs, newsDocs, regDocs, insightDocs])
 
   const counts = React.useMemo(() => {
-    const m: Record<string, number> = { 전체: all.length }
-    for (const d of all) m[d.topic] = (m[d.topic] ?? 0) + 1
+    const m: Record<string, number> = {}
+    for (const mi of MENUS) m[mi.key] = 0
+    for (const d of all) for (const mi of MENUS) if (menuMatch(d, mi)) m[mi.key]++
     return m
   }, [all])
 
@@ -606,12 +631,13 @@ export default function Page() {
   }, [all])
 
   const shown = React.useMemo(() => {
+    const mi = MENUS.find((m) => m.key === menu)
     let d =
       mode === "product"
         ? all.filter((x) => x.product === prod)
-        : menu === "전체"
-          ? all
-          : all.filter((x) => x.topic === menu)
+        : mi
+          ? all.filter((x) => menuMatch(x, mi))
+          : all
     const k = q.trim().toLowerCase()
     if (k) d = d.filter((x) => (x.title + " " + x.summary + " " + x.so + " " + x.source).toLowerCase().includes(k))
     // 제품 키워드 — 유의어 OR 매칭(제목·요약·시사점)
