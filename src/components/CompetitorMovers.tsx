@@ -261,7 +261,7 @@ export default function CompetitorMovers() {
                       </tr>
                     ) : null}
                     {cardRows.map((r, i) => (
-                      <tr key={`${cat}-${sortDir}-${i}`} style={{ animation: "calIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: i * 0.1 + "s" }} className="border-b border-gray-100 dark:border-gray-800 transition-colors duration-200 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                      <tr key={`${cat}-${sortDir}-${i}`} style={{ animation: "calIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: i * 0.1 + "s" }} className="border-b border-gray-100 dark:border-gray-800 transition-colors duration-200 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
                         <td className={td}><div className={cell}><BrandLogo brand={r.brand} /></div></td>
                         <td className={td}>
                           <div className={cell}>

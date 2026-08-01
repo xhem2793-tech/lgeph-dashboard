@@ -495,7 +495,7 @@ export default function Calendar() {
                   {agenda.map((x, i) => {
                     const dd = dday(x.date, today)
                     return (
-                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} style={{ animation: "rowIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(i, 10) * 0.04 + "s" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
+                      <div key={x.label + x.date} onClick={() => x.ev && openEvent(x.ev)} style={{ animation: "rowIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(i, 10) * 0.04 + "s" }} className={"flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-all duration-200 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 " + (x.ev ? "cursor-pointer hover:-translate-y-px active:scale-[.99]" : "")}>
                         <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate text-[12px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
@@ -610,7 +610,7 @@ export default function Calendar() {
                 <h3 className="text-[15px] font-bold text-gray-900 dark:text-gray-50">{dayList.date.slice(5).replace("-", "/")} 일정</h3>
                 <span className="text-[11px] text-gray-400 dark:text-gray-500">{dayList.events.length}건</span>
               </div>
-              <div className="flex flex-col divide-y divide-gray-50 overflow-y-auto px-4 py-2">
+              <div className="flex flex-col divide-y divide-gray-100 overflow-y-auto px-4 py-2">
                 {dayList.events.map((e) => {
                   const t = tone(e.category)
                   return (

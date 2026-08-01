@@ -499,7 +499,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                     </tr></thead>
                     <tbody>
                       {table.map((t) => (
-                        <tr key={t.k} className="border-t border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/30 dark:hover:bg-indigo-500/5">
+                        <tr key={t.k} className="border-t border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
                           <td className="px-4 py-1.5 font-medium text-gray-800 dark:text-gray-100">{label(t.k)}</td>
                           <td className="px-3 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(t.v) + (u.suffix || "")}</td>
                           <td className={"px-3 py-1.5 text-right tabular-nums " + (t.mom == null ? "text-gray-300 dark:text-gray-600" : t.mom >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.mom)}</td>

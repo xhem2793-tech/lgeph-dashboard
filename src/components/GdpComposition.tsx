@@ -47,7 +47,7 @@ export default function GdpComposition() {
       <div className="mt-1.5 flex min-h-[30px] flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px]">
         {MAJ.map((m) => <span key={m.key} className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: m.color }} /><span className="text-gray-600 dark:text-gray-300">{m.key}</span></span>)}
       </div>
-      {!loaded ? <div className="mt-1 h-[150px] animate-pulse rounded bg-gray-50 dark:bg-gray-800/40" /> : (
+      {!loaded ? <div className="mt-1 h-[150px] animate-pulse rounded bg-gray-50 dark:bg-gray-900" /> : (
         <div className="relative mt-1">
           <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ height: "auto", display: "block" }} onMouseLeave={() => setHi(null)}>
             {[0, 50, 100].map((p) => { const y = Y(p / 100); return <line key={p} x1={L} y1={y} x2={W - R} y2={y} stroke={dark ? "#1f2937" : "#f1f3f6"} strokeWidth="0.8" /> })}

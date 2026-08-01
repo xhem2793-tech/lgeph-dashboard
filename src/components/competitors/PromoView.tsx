@@ -20,7 +20,7 @@ export function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camp
       <div className="overflow-x-auto rounded-lg border border-gray-100 dark:border-gray-800">
         <table className="w-full min-w-[720px] text-[12px]">
           <thead>
-            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/70 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
+            <tr className="border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 text-[11px] font-semibold text-gray-500 dark:text-gray-400">
               <th className="px-3 py-2 text-left">브랜드</th>
               <th className="px-3 py-2 text-left">유통</th>
               <th className="px-3 py-2 text-right">프로모 모델</th>
@@ -33,7 +33,7 @@ export function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camp
             {rows.map((r, i) => (
               <tr
                 key={r.brand + r.retailer}
-                className="border-b border-gray-50 dark:border-gray-800 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10"
+                className="border-b border-gray-50 dark:border-gray-800 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10"
                 style={{ animation: "rowIn .3s cubic-bezier(.22,1,.36,1) both", animationDelay: i * 22 + "ms" }}
               >
                 <td className={"px-3 py-2 font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>

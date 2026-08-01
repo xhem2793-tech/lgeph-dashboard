@@ -152,14 +152,14 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
             <col style={{ width: 62 }} /><col style={{ width: 220 }} /><col style={{ width: 92 }} /><col style={{ width: 110 }} /><col style={{ width: 72 }} /><col style={{ width: 96 }} />
             {PTYPES.map((p) => <col key={p.k} style={{ width: 118 }} />)}
           </colgroup>
-          <thead className="bg-gray-50 dark:bg-gray-900/60">
+          <thead className="bg-gray-50 dark:bg-gray-900">
             <tr className="text-[11.5px]">
-              <th className="border-b border-gray-200 dark:border-gray-700 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">제품</th>
-              <th className="border-b border-gray-200 dark:border-gray-700 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">브랜드 · 모델</th>
-              <th className="border-b border-gray-200 dark:border-gray-700 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">최저 채널</th>
-              <th className="border-b border-gray-200 dark:border-gray-700 px-3 py-2.5 text-right font-semibold text-gray-600 dark:text-gray-300">실판매가</th>
-              <th className="border-b border-gray-200 dark:border-gray-700 px-3 py-2.5 text-center font-semibold text-gray-600 dark:text-gray-300">할인율</th>
-              <th className="border-b border-gray-200 dark:border-gray-700 px-3 py-2.5 text-right font-semibold text-gray-600 dark:text-gray-300">vs 자사</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">제품</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">브랜드 · 모델</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">최저 채널</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-right font-semibold text-gray-600 dark:text-gray-300">실판매가</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-center font-semibold text-gray-600 dark:text-gray-300">할인율</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-right font-semibold text-gray-600 dark:text-gray-300">vs 자사</th>
               {PTYPES.map((p) => <th key={p.k} className="border-b border-l border-gray-200 dark:border-gray-700 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">{p.label}</th>)}
             </tr>
           </thead>

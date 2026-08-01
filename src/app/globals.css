@@ -74,6 +74,18 @@ html { scroll-behavior: smooth; }
 * { -webkit-tap-highlight-color: transparent; }
 body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
+/* iOS식 얇은 스크롤바 — 오버레이 톤, 라이트/다크 공통(반투명 회색). 전 스크롤 컨테이너 통일 */
+* { scrollbar-width: thin; scrollbar-color: rgba(120,120,128,0.35) transparent; }
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background-color: rgba(120,120,128,0.35);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover { background-color: rgba(120,120,128,0.55); }
+
 /* 통일된 포커스 링 — 키보드 탐색에만(마우스 클릭엔 안 뜸). iOS식 은은한 인디고 글로우.
    요소 자신의 border-radius를 그대로 따르므로 알약·카드 모두 자연스럽게 감싼다. */
 a:focus-visible,

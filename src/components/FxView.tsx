@@ -332,7 +332,7 @@ export default function FxView() {
               {AGENDA.map((x, i) => {
                 const dd = dday(x.date)
                 return (
-                  <div key={x.label} style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: 40 + i * 24 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                  <div key={x.label} style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: 40 + i * 24 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
                     <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-[12px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
@@ -346,7 +346,7 @@ export default function FxView() {
             <div className="mt-2 border-t border-gray-100 dark:border-gray-800 pt-2.5">
               <p className="mb-1 text-[11px] font-bold text-gray-500 dark:text-gray-400">연결 뉴스</p>
               {NEWS.map((nw) => (
-                <a key={nw.t} href="/news" className="flex items-start gap-2 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                <a key={nw.t} href="/news" className="flex items-start gap-2 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
                   <span className="mt-0.5 shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{nw.tag}</span>
                   <span><span className="block text-[12px] font-semibold leading-snug text-gray-700 dark:text-gray-200">{nw.t}</span><span className="mt-0.5 block text-[10px] text-gray-400 dark:text-gray-500">{nw.m}</span></span>
                 </a>

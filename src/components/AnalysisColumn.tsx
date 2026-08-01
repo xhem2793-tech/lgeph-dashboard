@@ -78,7 +78,7 @@ const SHELL =
 const CARD = "my-auto w-full max-w-[880px] rounded-[26px] bg-white p-5 ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10"
 const ANIM = { animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }
 const CARD_BTN =
-  "group flex w-full flex-col overflow-hidden rounded-lg border border-gray-100 dark:border-gray-800 p-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 hover:shadow-sm"
+  "group flex w-full flex-col overflow-hidden rounded-lg border border-gray-100 dark:border-gray-800 p-2.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-200 dark:hover:border-indigo-500/30 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 hover:shadow-sm"
 
 function useEsc(close: () => void) {
   React.useEffect(() => {

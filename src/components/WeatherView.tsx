@@ -303,7 +303,7 @@ export default function WeatherView() {
           meaning={<>PAGASA 태풍 신호(TCWS) — <b className="text-gray-700 dark:text-gray-200">물류·매장 방문 차질</b> 및 재난 후 <b className="text-gray-700 dark:text-gray-200">가전 침수 교체수요</b> 신호</>}
           src="PAGASA 태풍 공보(자체 수집)"
         >
-          <div className="flex flex-col divide-y divide-gray-50 dark:divide-gray-800/60">
+          <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800/60">
             {tys.length === 0 ? <div className="flex h-32 items-center justify-center text-[12px] text-gray-400">최근 태풍 없음</div> : tys.slice(0, 6).map((t) => {
               const sig = SIG[t.maxSignal] ?? SIG[0]
               return (

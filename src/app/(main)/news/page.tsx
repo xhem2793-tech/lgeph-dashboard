@@ -727,7 +727,7 @@ export default function Page() {
                         onClick={() => setProd(it.key)}
                         className={
                           "group flex items-center justify-between rounded-lg px-2.5 py-1.5 text-left transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 active:scale-[.98] " +
-                          (prod === it.key ? "bg-indigo-50 dark:bg-indigo-500/10" : "hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10")
+                          (prod === it.key ? "bg-indigo-50 dark:bg-indigo-500/10" : "hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10")
                         }
                       >
                         <span
@@ -860,7 +860,7 @@ export default function Page() {
                         willChange: "transform, opacity",
                       }}
                       className={
-                        "group flex items-start cursor-pointer gap-3 rounded-lg px-2 py-4 border-t border-gray-100 dark:border-gray-800 transition-all duration-300 ease-out hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 active:scale-[.997] "
+                        "group flex items-start cursor-pointer gap-3 rounded-lg px-2 py-4 border-t border-gray-100 dark:border-gray-800 transition-all duration-300 ease-out hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 active:scale-[.997] "
                       }
                     >
                       <div className="relative shrink-0 overflow-hidden rounded-lg hidden h-[60px] w-[80px] sm:block">

@@ -351,7 +351,7 @@ export default function Page() {
           {ads === null ? (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}</div>
           ) : shown.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12px] text-gray-400 dark:text-gray-500">{qq ? "검색 결과 없음" : "해당 조건의 광고 없음"}</div>
+            <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12px] text-gray-400 dark:text-gray-500">{qq ? "검색 결과 없음" : "해당 조건의 광고 없음"}</div>
           ) : (
             <>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

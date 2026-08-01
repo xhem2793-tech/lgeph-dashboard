@@ -69,7 +69,7 @@ export default function DataVerification() {
       </section>
 
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="지표·출처 검색 (예: 물가, World Bank, 정책금리)"
-        className="w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-3.5 py-2 text-[12.5px] text-gray-800 dark:text-gray-100 outline-none focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 dark:focus:ring-indigo-500/20" />
+        className="w-full max-w-md rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3.5 py-2 text-[12.5px] text-gray-800 dark:text-gray-100 outline-none transition-all duration-300 hover:bg-white focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
 
       {bySource.map(([source, items]) => {
         const t = tier(source)
@@ -93,7 +93,7 @@ export default function DataVerification() {
                   {items.map((r) => {
                     const link = sourceLink(r.source, r.source_ref)
                     return (
-                      <tr key={r.indicator} className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/5">
+                      <tr key={r.indicator} className="border-b border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
                         <td className="px-4 py-1.5 font-medium text-gray-800 dark:text-gray-100">{r.label || r.indicator}</td>
                         <td className="px-2 py-1.5 font-mono text-[10.5px] text-gray-500 dark:text-gray-400">{r.source_ref?.replace(/^https?:\/\/\S+/, "URL") ?? "—"}</td>
                         <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.mn)}~{ym(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>

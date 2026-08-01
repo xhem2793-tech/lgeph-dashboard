@@ -103,7 +103,7 @@ export default function Page() {
               {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[320px] animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}
             </div>
           ) : reports.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-gray-200 dark:border-gray-800 py-20 text-center text-[12.5px] text-gray-400 dark:text-gray-500">아직 발간된 리포트가 없습니다 · <code className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[11px]">npm run publish-report</code> 로 발행</div>
+            <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-20 text-center text-[12.5px] text-gray-400 dark:text-gray-500">아직 발간된 리포트가 없습니다 · <code className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[11px]">npm run publish-report</code> 로 발행</div>
           ) : (
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

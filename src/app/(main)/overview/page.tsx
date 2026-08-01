@@ -165,7 +165,7 @@ export default function Overview() {
                               if (li > 0) rows.unshift(rows.splice(li, 1)[0])
                               return rows
                             })().map((n, i) => (
-                              <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className={"group -mx-2 flex w-full flex-col overflow-hidden rounded-lg px-2 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10 " + (i === 0 ? "h-[240px]" : "h-[86px]")}>
+                              <button key={i} type="button" onClick={() => setModal({ ...n, category: col.sub })} className={"group -mx-2 flex w-full flex-col overflow-hidden rounded-lg px-2 py-3 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10 " + (i === 0 ? "h-[240px]" : "h-[86px]")}>
                                 {i === 0 && n.image ? (
                                   <div className="mb-2 h-[150px] w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
                                     <img src={n.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { const el = ev.currentTarget.parentElement; if (el) el.style.display = "none" }} />
@@ -193,7 +193,7 @@ export default function Overview() {
                     </a>
                     <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800">
                       {nMain.slice(1, 9).map((n, i) => (
-                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group -mx-2 rounded-lg px-2 py-3.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                        <button key={i} type="button" onClick={() => setModal({ ...n, category: "경제·정치·사회" })} className="group -mx-2 rounded-lg px-2 py-3.5 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
                           <p className="line-clamp-2 text-[13.5px] font-semibold leading-snug text-gray-800 dark:text-gray-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{pick(n.title, (n as any).titleEn)}</p>
                           <p className="mt-0.5 flex items-center gap-1 text-[11px] leading-4 text-gray-400 dark:text-gray-500"><span className="min-w-0 truncate">{n.source}</span><span className="shrink-0">·</span><span className="shrink-0">{n.date}</span></p>
                         </button>
@@ -325,7 +325,7 @@ export default function Overview() {
               <h3 className="mt-2 text-[23.5px] font-bold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{modal.title}</h3>
 
               {modal.ai ? (
-                <div className="mt-4 rounded-xl border-l-[3px] border-indigo-500 bg-indigo-50/60 dark:bg-indigo-500/10 px-4 py-3">
+                <div className="mt-4 rounded-xl border-l-2 border-indigo-300 dark:border-indigo-500/40 bg-indigo-50/60 dark:bg-indigo-500/10 px-4 py-3">
                   <p className="text-[10px] font-bold tracking-widest text-indigo-600 dark:text-indigo-400">SO WHAT</p>
                   <p className="mt-1 text-[14.5px] leading-[1.75] text-gray-800 dark:text-gray-100">{modal.ai}</p>
                 </div>

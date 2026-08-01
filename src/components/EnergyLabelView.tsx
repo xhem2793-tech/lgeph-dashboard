@@ -184,7 +184,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
                 </div>
                 <div className="min-h-0 flex-1 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
                   <table className="w-full border-collapse text-[12px]">
-                    <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900/95"><tr className="border-b border-gray-200 dark:border-gray-700">{csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-1.5 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</th>)}</tr></thead>
+                    <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="border-b border-gray-200 dark:border-gray-800">{csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-1.5 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</th>)}</tr></thead>
                     <tbody>{sortedRows.map((r, ri) => <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (/^lg$/i.test(String(r[0])) ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>{r.map((c, ci) => <td key={ci} className={"py-1.5 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}</tr>)}</tbody>
                   </table>
                 </div>
@@ -832,7 +832,7 @@ export default function EnergyLabelView() {
             <div className="overflow-auto">
               {modelRows.length === 0 ? <div className="flex h-40 items-center justify-center text-[12.5px] text-gray-400">해당 세그먼트 모델 없음</div> : (
                 <table className="w-full border-collapse text-[12px]">
-                  <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900/95"><tr className="border-b border-gray-200 dark:border-gray-700 text-[11px] text-gray-500 dark:text-gray-400">
+                  <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="border-b border-gray-200 dark:border-gray-800 text-[11px] text-gray-500 dark:text-gray-400">
                     <th className="px-3 py-2 text-left font-semibold">브랜드</th><th className="px-3 py-2 text-left font-semibold">모델 (제품코드)</th>
                     <th className="px-3 py-2 text-right font-semibold">{cur.specUnit}</th><th className="px-3 py-2 text-right font-semibold">{cur.metric}</th>
                     <th className="px-3 py-2 text-right font-semibold">별점</th><th className="px-3 py-2 text-right font-semibold">월 kWh</th><th className="px-3 py-2 text-left font-semibold">냉매</th>
