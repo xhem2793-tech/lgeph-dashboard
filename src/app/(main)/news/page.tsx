@@ -671,7 +671,6 @@ export default function Page() {
 
   /** 같은 사건은 한 줄로 접는다 — 매체가 셋이면 세 줄이 아니라 "관련 2건" */
   const groups = React.useMemo(() => groupDocs(shown), [shown])
-  const hits = React.useMemo(() => (q.trim() ? shown.reduce((s, x) => s + hitCount(x, q), 0) : 0), [shown, q])
   const pages = Math.max(1, Math.ceil(groups.length / PAGE))
   const cur = Math.min(page, pages)
   const slice = groups.slice((cur - 1) * PAGE, cur * PAGE)
@@ -821,8 +820,6 @@ export default function Page() {
               />
               {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:hover:bg-gray-800 dark:text-gray-500 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
             </div>
-            {q.trim() ? <span className="hidden text-[11px] tabular-nums text-gray-400 dark:text-gray-500 lg:inline">{shown.length}건 · {hits}곳 일치</span> : null}
-
             <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
               최종 갱신 {stamp ? fmtStamp(stamp) : "—"}
               <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span>

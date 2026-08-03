@@ -190,7 +190,7 @@ export default function CompetitorMovers() {
         </div>
         <span className={HOVM + " flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500"}>
           {t("news_updated")} {stamp ? fmtStamp(stamp, lang === "en") : fmtDate(asOf, lang === "en")}
-          <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span>
+          <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span>
         </span>
       </div>
 

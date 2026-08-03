@@ -108,7 +108,7 @@ export default function Overview() {
                 {nMain[0]?.date ? (
                   <span className="flex items-center gap-1.5 text-[10px] text-gray-400 dark:text-gray-500">
                     {t("news_updated")} {newsStamp ? fmtStamp(newsStamp, lang === "en") : String(nMain[0].date).slice(5).replace("-", "/")}
-                    <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span>
+                    <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span>
                     {/* 없는 기사를 지어내지 않는다 — 신규가 없으면 없다고 쓴다 */}
                     {String(nMain[0].date) !== new Date().toISOString().slice(0, 10) ? (
                       <span className="rounded border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-1 py-px text-[10px] font-semibold text-amber-700 dark:text-amber-300">
