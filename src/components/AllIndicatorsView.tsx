@@ -1,9 +1,8 @@
 "use client"
 
-import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useId, useMemo, useState } from "react"
 import { createPortal } from "react-dom"
-import { dataProvenance, allIndicatorLatest, indicatorSeries, fmtStamp, type Provenance } from "@/lib/supabase"
-import { sourceLink } from "@/components/DataVerification"
+import { dataProvenance, allIndicatorLatest, indicatorSeries, econSpark, fmtStamp, type Provenance } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 import { LineChart, Lg } from "@/components/EconChart"
 import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
@@ -21,7 +20,6 @@ const ALL_BANNER: Banner = {
  *  각 지표의 최신값·직전 대비·데이터 기간·원본 코드·출처 링크·신뢰도를 한 줄로. 행 클릭 시 해당 분류 차트로 이동. */
 
 const ym = (d: string) => (d ? d.slice(0, 4) + "." + Number(d.slice(5, 7)) + "월" : "—")
-const ymc = (d: string) => (d ? "’" + d.slice(2, 4) + "." + Number(d.slice(5, 7)) : "—") // 축약: '25.4
 
 // 전망(forecast) 지표 — provenance(실측 검증 뷰)에 없으므로 별도 메타로 목록에 포함. 값은 v_latest_indicator에서.
 const FORECAST_META: Record<string, { label: string; source: string; cat: string }> = {
@@ -82,7 +80,7 @@ function Hi({ text, q }: { text: string; q: string }) {
 
 type Row = Provenance & { cat: string; catKo: string; value: number | null; period: string; prev: number | null }
 
-export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?: (catKey: string) => void; layout?: "list" | "card" }) {
+export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string) => void; layout?: "list" | "card" }) {
   const [prov, setProv] = useState<Provenance[]>([])
   const [latest, setLatest] = useState<Record<string, { value: number; period: string; prev: number | null }>>({})
   const [q, setQ] = useState("")
@@ -92,11 +90,15 @@ export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?
   const [loadedAt, setLoadedAt] = useState<Date | null>(null)
   const [detail, setDetail] = useState<Row | null>(null)
   const [bnOpen, setBnOpen] = useState(false)
+  const [spark, setSpark] = useState<Record<string, number[]>>({})
+  const [fav, setFav] = useState<Set<string>>(new Set())
+  const toggleFav = (id: string) => setFav((prev) => { const s = new Set(prev); s.has(id) ? s.delete(id) : s.add(id); try { localStorage.setItem("ind_fav", JSON.stringify(Array.from(s))) } catch {} return s })
 
   useEffect(() => {
-    Promise.all([dataProvenance().catch(() => []), allIndicatorLatest().catch(() => ({}))]).then(([p, l]) => {
-      setProv(p as Provenance[]); setLatest(l as Record<string, { value: number; period: string; prev: number | null }>); setLoadedAt(new Date())
+    Promise.all([dataProvenance().catch(() => []), allIndicatorLatest().catch(() => ({})), econSpark().catch(() => ({}))]).then(([p, l, s]) => {
+      setProv(p as Provenance[]); setLatest(l as Record<string, { value: number; period: string; prev: number | null }>); setSpark(s as Record<string, number[]>); setLoadedAt(new Date())
     })
+    try { const f = localStorage.getItem("ind_fav"); if (f) setFav(new Set(JSON.parse(f))) } catch {}
   }, [])
 
   // 엑셀(CSV) 다운로드 — 해당 지표 전체 시계열 + 전기/전년 대비
@@ -227,28 +229,34 @@ export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?
         ))}
       </div>
 
-      {/* 분류순: 카테고리별 섹션 */}
+      {/* 분류순: 카테고리별 섹션 — 카테고리 제목·설명 + 지표 리스트(설명·최신값·24H·7일) */}
       {grouped && grouped.map(([k, items]) => (
-        <section key={k} className="overflow-hidden rounded-xl" style={{ animation: "fadeUp .5s ease both" }}>
-          <header className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
-            <span className="h-[16px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[13.5px] font-bold text-gray-900 dark:text-gray-50">{catKo(k)}</h2>
-            <span className="text-[11px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
-            {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="ml-auto text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">차트 전체 보기 →</button>}
+        <section key={k} style={{ animation: "fadeUp .5s ease both" }}>
+          <header className="mb-1 flex items-start gap-2 px-1">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{catKo(k)}</h2>
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
+              </div>
+              <p className="mt-0.5 line-clamp-1 text-[12px] text-gray-500 dark:text-gray-400">{CAT_MI[k]?.mean ?? "국가 공식통계 기반 최신 관측 지표"}</p>
+            </div>
+            {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="mt-0.5 shrink-0 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">차트 전체 보기 →</button>}
           </header>
-          {layout === "card" ? <IndCards items={items} q={q} showCat={false} onDetail={setDetail} onExcel={downloadExcel} /> : <IndTable items={items} q={q} showCat={false} onDetail={setDetail} onExcel={downloadExcel} />}
+          <IndListTable items={items} q={q} spark={spark} fav={fav} onFav={toggleFav} onDetail={setDetail} />
         </section>
       ))}
 
-      {/* 최신순: 단일 플랫 테이블 */}
+      {/* 최신순: 단일 플랫 리스트 */}
       {flat && (
-        <section className="overflow-hidden rounded-xl" style={{ animation: "fadeUp .5s ease both" }}>
-          <header className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
-            <span className="h-[16px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[13.5px] font-bold text-gray-900 dark:text-gray-50">최신 업데이트순</h2>
-            <span className="text-[11px] text-gray-400 dark:text-gray-500">{flat.length}개 지표 · 최근 관측 우선</span>
+        <section style={{ animation: "fadeUp .5s ease both" }}>
+          <header className="mb-1 px-1">
+            <div className="flex items-baseline gap-2">
+              <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">최신 업데이트순</h2>
+              <span className="text-[11px] text-gray-400 dark:text-gray-500">{flat.length}개 지표</span>
+            </div>
+            <p className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">최근 관측이 갱신된 지표를 우선 정렬 — 최신값·직전 대비·최근 추세</p>
           </header>
-          {layout === "card" ? <IndCards items={flat} q={q} showCat onDetail={setDetail} onExcel={downloadExcel} /> : <IndTable items={flat} q={q} showCat onDetail={setDetail} onExcel={downloadExcel} />}
+          <IndListTable items={flat} q={q} spark={spark} fav={fav} onFav={toggleFav} onDetail={setDetail} showCat />
         </section>
       )}
 
@@ -265,95 +273,76 @@ export default function AllIndicatorsView({ onPick, layout = "list" }: { onPick?
   )
 }
 
-function IndTable({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: string; showCat: boolean; onDetail: (r: Row) => void; onExcel: (r: Row) => void }) {
-  // 고정 컬럼폭 — 카테고리별 표가 동일 위치에 정렬되도록(table-layout:fixed)
-  const cols = showCat ? ["20%", "9%", "9%", "7%", "9%", "8%", "12%", "9%", "17%"] : ["24%", "10%", "7%", "10%", "9%", "13%", "10%", "17%"]
+// ── 지표별 미니 스파크라인(최근 12관측) — 상승 emerald / 하락 rose ──
+function Spark({ pts }: { pts: number[] }) {
+  const uid = useId()
+  const p = pts.slice(-12)
+  const w = 118, h = 34, pad = 3
+  const min = Math.min(...p), max = Math.max(...p), rng = max - min || 1
+  const X = (i: number) => pad + (i / (p.length - 1)) * (w - 2 * pad)
+  const Y = (v: number) => pad + (1 - (v - min) / rng) * (h - 2 * pad)
+  const line = p.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join(" ")
+  const area = line + " L" + X(p.length - 1).toFixed(1) + " " + (h - pad) + " L" + X(0).toFixed(1) + " " + (h - pad) + " Z"
+  const up = p[p.length - 1] >= p[0]
+  const col = up ? "#10b981" : "#f43f5e"
+  return (
+    <svg width={w} height={h} viewBox={"0 0 " + w + " " + h}>
+      <defs><linearGradient id={uid} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={col} stopOpacity="0.22" /><stop offset="1" stopColor={col} stopOpacity="0" /></linearGradient></defs>
+      <path d={area} fill={"url(#" + uid + ")"} />
+      <path d={line} fill="none" stroke={col} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  )
+}
+
+// 지표별 설명 — 지표별 prose 데이터가 없어 단위·출처·보유기간으로 합성(카테고리 설명은 CAT_MI 헤더에서)
+function descOf(r: Row): string {
+  const u = inferUnit(r.indicator, r.label || "")
+  const kind = u.unit === "%" ? "전기 대비 증감률·비율" : u.unit === "지수" ? "지수(기준계열)" : u.prefix === "₱" ? "가격·금액(₱ 페소)" : u.prefix === "$" ? "금액($ 미달러)" : u.unit === "℃" ? "월평균 기온" : u.unit === "CDD" ? "냉방도일(에어컨 수요 선행)" : u.unit.indexOf("명") >= 0 ? "규모·수량" : "국가지표 관측값"
+  return kind + " · 출처 " + r.source + (r.n ? " · " + ym(r.mn) + "~" + ym(r.mx) : "")
+}
+
+// ── 이미지형 리스트 테이블 — 지표(☆) | 설명 | 최신값 | 24H(%) | 최근 7일 ──
+function IndListTable({ items, q, spark, fav, onFav, onDetail, showCat }: { items: Row[]; q: string; spark: Record<string, number[]>; fav: Set<string>; onFav: (id: string) => void; onDetail: (r: Row) => void; showCat?: boolean }) {
+  const cols = showCat ? ["23%", "9%", "25%", "12%", "11%", "20%"] : ["28%", "33%", "12%", "10%", "17%"]
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[880px] table-fixed text-[12px]">
+      <table className="w-full min-w-[760px] table-fixed text-[12px]">
         <colgroup>{cols.map((w, i) => <col key={i} style={{ width: w }} />)}</colgroup>
-        <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[10.5px] font-semibold uppercase text-gray-400 dark:text-gray-500">
-          <th className="px-4 py-1.5">지표</th>
-          {showCat && <th className="px-2 py-1.5">분류</th>}
-          <th className="px-2 py-1.5 text-right">최신값</th><th className="px-2 py-1.5 text-center">단위</th><th className="px-2 py-1.5 text-right">직전 대비</th><th className="px-2 py-1.5">기준</th><th className="px-2 py-1.5">기간</th><th className="px-2 py-1.5">출처</th><th className="px-2 py-1.5 text-center">액션</th>
+        <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
+          <th className="px-3 py-2">지표</th>
+          {showCat && <th className="px-2 py-2">분류</th>}
+          <th className="px-2 py-2">설명</th>
+          <th className="px-2 py-2 text-right">최신 값</th>
+          <th className="px-2 py-2 text-right">24H (%)</th>
+          <th className="px-3 py-2 text-right">최근 7일</th>
         </tr></thead>
         <tbody>
           {items.map((r) => {
-            const chg = r.value != null && r.prev != null && r.prev !== 0 ? r.value - r.prev : null
-            const up = chg != null && chg >= 0
-            const link = sourceLink(r.source, r.source_ref)
             const u = inferUnit(r.indicator, r.label || "")
+            const pc = r.value != null && r.prev != null && r.prev !== 0 ? ((r.value - r.prev) / Math.abs(r.prev)) * 100 : null
+            const up = pc != null && pc >= 0
+            const isFav = fav.has(r.indicator)
+            const sp = spark[r.indicator]
             return (
-              <tr key={r.indicator} onClick={() => onDetail(r)}
-                className="group cursor-pointer border-b border-gray-50 dark:border-gray-800/50 transition-all duration-200 hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
-                <td className="px-4 py-1.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="truncate font-medium text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></span>
-                    <span className="shrink-0 text-[10px] font-semibold text-indigo-500 opacity-0 transition-opacity group-hover:opacity-100">자세히 →</span>
+              <tr key={r.indicator} onClick={() => onDetail(r)} className="group cursor-pointer border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                <td className="px-3 py-3">
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={(e) => { e.stopPropagation(); onFav(r.indicator) }} aria-label="즐겨찾기" className={"shrink-0 transition-colors active:scale-90 " + (isFav ? "text-amber-400" : "text-gray-300 hover:text-amber-400 dark:text-gray-600")}>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill={isFav ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"><path d="M12 3.5l2.6 5.27 5.82.85-4.21 4.1.99 5.8L12 16.77 6.79 19.5l.99-5.8-4.21-4.1 5.82-.85z" /></svg>
+                    </button>
+                    <span className="truncate font-semibold text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></span>
                   </div>
                 </td>
-                {showCat && <td className="truncate px-2 py-1.5 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
-                <td className="px-2 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
-                <td className="px-2 py-1.5 text-center"><span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[10px] font-semibold text-gray-500 dark:text-gray-400">{u.unit}</span></td>
-                <td className={"px-2 py-1.5 text-right tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "—" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</td>
-                <td className="px-2 py-1.5 tabular-nums text-gray-500 dark:text-gray-400">{ym(r.period)}</td>
-                <td className="px-2 py-1.5 tabular-nums text-gray-400 dark:text-gray-500">{ymc(r.mn)}~{ymc(r.mx)} <span className="text-gray-300 dark:text-gray-600">({r.n})</span></td>
-                <td className="truncate px-2 py-1.5" title={r.source}>{link ? <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="font-semibold text-indigo-600 dark:text-indigo-400 hover:underline"><Hi text={r.source} q={q} /> ↗</a> : <span className="text-gray-500 dark:text-gray-400"><Hi text={r.source} q={q} /></span>}</td>
-                <td className="px-2 py-1.5">
-                  <div className="flex items-center justify-center gap-1">
-                    <button type="button" onClick={(e) => { e.stopPropagation(); onDetail(r) }} className="rounded-md border border-gray-200 dark:border-gray-700 px-2 py-0.5 text-[10.5px] font-semibold text-gray-600 dark:text-gray-300 transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-400 active:scale-95">자세히</button>
-                    <button type="button" onClick={(e) => { e.stopPropagation(); onExcel(r) }} title="엑셀(CSV) 다운로드" className="rounded-md border border-gray-200 dark:border-gray-700 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 active:scale-95">엑셀</button>
-                  </div>
-                </td>
+                {showCat && <td className="truncate px-2 py-3 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
+                <td className="px-2 py-3"><p className="line-clamp-2 text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></td>
+                <td className="px-2 py-3 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
+                <td className={"px-2 py-3 text-right font-semibold tabular-nums " + (pc == null ? "text-gray-300 dark:text-gray-600" : up ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>{pc == null ? "—" : (up ? "+" : "") + pc.toFixed(2) + "%"}</td>
+                <td className="px-3 py-3"><div className="flex justify-end">{sp && sp.length >= 2 ? <Spark pts={sp} /> : <span className="text-[12px] text-gray-300 dark:text-gray-600">—</span>}</div></td>
               </tr>
             )
           })}
         </tbody>
       </table>
-    </div>
-  )
-}
-
-// 카드형 — 리스트(테이블)와 동일 데이터·동일 액션, 카드 그리드 레이아웃
-function IndCards({ items, q, showCat, onDetail, onExcel }: { items: Row[]; q: string; showCat: boolean; onDetail: (r: Row) => void; onExcel: (r: Row) => void }) {
-  return (
-    <div className="grid grid-cols-1 gap-2.5 p-3 sm:grid-cols-2 xl:grid-cols-3">
-      {items.map((r, i) => {
-        const chg = r.value != null && r.prev != null && r.prev !== 0 ? r.value - r.prev : null
-        const up = chg != null && chg >= 0
-        const link = sourceLink(r.source, r.source_ref)
-        const u = inferUnit(r.indicator, r.label || "")
-        return (
-          <div key={r.indicator} onClick={() => onDetail(r)}
-            style={{ animation: "fadeUp .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 12) * 0.02 + "s" }}
-            className="group flex cursor-pointer flex-col rounded-xl p-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md">
-            <div className="flex items-start gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {showCat && <span className="rounded-full bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9.5px] font-semibold text-indigo-600 dark:text-indigo-400">{r.catKo}</span>}
-                  {r.confidence === "FORECAST" && <span className="rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[9.5px] font-bold text-amber-700 dark:text-amber-300">전망</span>}
-                </div>
-                <h3 className="mt-1 truncate text-[12.5px] font-bold text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></h3>
-              </div>
-              <span className="shrink-0 rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[9.5px] font-semibold text-gray-500 dark:text-gray-400">{u.unit}</span>
-            </div>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-[19px] font-extrabold leading-none tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</span>
-              <span className={"text-[11.5px] font-semibold tabular-nums " + (chg == null ? "text-gray-300 dark:text-gray-600" : up ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{chg == null ? "" : (up ? "▲" : "▼") + fmtVal(Math.abs(chg))}</span>
-            </div>
-            <div className="mt-2 flex items-center gap-x-2 gap-y-0.5 text-[10.5px] text-gray-400 dark:text-gray-500">
-              <span className="tabular-nums">{ym(r.period)}</span>
-              <span className="text-gray-300 dark:text-gray-600">·</span>
-              <span className="tabular-nums">{ymc(r.mn)}~{ymc(r.mx)}</span>
-              {link ? <a href={link} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="ml-auto shrink-0 font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">{r.source} ↗</a> : <span className="ml-auto shrink-0 truncate">{r.source}</span>}
-            </div>
-            <div className="mt-2.5 flex items-center gap-1.5 border-t border-gray-50 dark:border-gray-800/50 pt-2">
-              <button type="button" onClick={(e) => { e.stopPropagation(); onDetail(r) }} className="flex-1 rounded-md border border-gray-200 dark:border-gray-700 py-1 text-[11px] font-semibold text-gray-600 dark:text-gray-300 transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-400 active:scale-95">자세히</button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); onExcel(r) }} title="엑셀(CSV) 다운로드" className="flex-1 rounded-md border border-gray-200 dark:border-gray-700 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 transition-all hover:-translate-y-0.5 hover:border-emerald-300 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 active:scale-95">엑셀</button>
-            </div>
-          </div>
-        )
-      })}
     </div>
   )
 }
