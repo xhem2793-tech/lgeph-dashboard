@@ -62,6 +62,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        {/* Supabase — 데이터 fetch 전에 TLS 미리 수립(채널별 가격비교 등 초기 로딩 cold 비용 제거) */}
+        <link rel="preconnect" href="https://ozvbyigntwhwzzagwojr.supabase.co" crossOrigin="" />
+        <link rel="dns-prefetch" href="https://ozvbyigntwhwzzagwojr.supabase.co" />
         {/* 한글 본문 폰트 — 지도와 통일(Pretendard). 동적 서브셋으로 필요한 글자만 로드 */}
         <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="" />
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css" />

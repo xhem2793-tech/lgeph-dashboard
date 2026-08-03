@@ -4,6 +4,7 @@ import React from "react"
 import {
   competitorTable,
   competitorDaily,
+  competitorDailyLatest,
   freshness,
   fmtStamp,
   promoIntensity,
@@ -241,9 +242,17 @@ export default function Competitors() {
         setRows(shown.filter((r) => r.retailer !== "Home Credit" || !primary.has(canonCode(r.model, r.code))))
       })
       .catch(() => setRows([]))
-    competitorDaily()
-      .then(setDaily)
-      .catch(() => setDaily([]))
+    // 2단계 로딩 — 최신일 우선(board 즉시 렌더, <1s). 전체 이력(20p)은 최신일 완료 후 백그라운드로
+    // 이어받아 달력 네비게이터를 채움(초기 웨이브에서 대역폭 경쟁 방지).
+    let full = false
+    competitorDailyLatest()
+      .then((d) => { if (!full) setDaily((prev) => (prev && prev.length > d.length ? prev : d)) })
+      .catch(() => {})
+      .finally(() => {
+        competitorDaily()
+          .then((d) => { full = true; setDaily(d) })
+          .catch(() => setDaily((prev) => prev ?? []))
+      })
     promoIntensity(14)
       .then(setPromo)
       .catch(() => setPromo([]))
