@@ -10,6 +10,7 @@ import {
   promoIntensity,
   promoCampaigns,
   promoDeals,
+  competitorAds,
   energyLabels,
   type EnergyRow,
   type PriceRow,
@@ -17,6 +18,7 @@ import {
   type PromoIntensity,
   type PromoCampaign,
   type DealRow,
+  type CompAd,
 } from "@/lib/supabase"
 import { canonCode } from "@/lib/classify"
 import { peso, pct, md, SEGMENTS, ListSearch } from "@/components/competitors/shared"
@@ -227,6 +229,7 @@ export default function Competitors() {
   const [promo, setPromo] = React.useState<PromoIntensity[] | null>(null)
   const [camps, setCamps] = React.useState<PromoCampaign[]>([])
   const [deals, setDeals] = React.useState<DealRow[] | null>(null)
+  const [ads, setAds] = React.useState<CompAd[] | null>(null)
   const [elabels, setElabels] = React.useState<EnergyRow[] | null>(null)
 
   React.useEffect(() => {
@@ -261,6 +264,9 @@ export default function Competitors() {
     promoDeals()
       .then((ds) => setDeals(ds.filter((r) => brandShown(r.brand, r.category))))
       .catch(() => setDeals([]))
+    competitorAds()
+      .then(setAds)
+      .catch(() => setAds([]))
     energyLabels()
       .then(setElabels)
       .catch(() => setElabels([]))
@@ -394,7 +400,7 @@ export default function Competitors() {
           ) : view === "deals" ? (
             <DealsView rows={rows} deals={deals} />
           ) : view === "outlier" ? (
-            <AnomalyView rows={rows} stamp={stamp} />
+            <AnomalyView rows={rows} ads={ads} stamp={stamp} />
           ) : view === "movers" ? (
             <MoversView rows={rows} elabels={elabels} stamp={stamp} />
           ) : active?.status !== "live" ? (
