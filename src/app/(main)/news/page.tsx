@@ -807,7 +807,7 @@ export default function Page() {
             {/* 확장형 검색 — 포커스/입력 시 부드럽게 넓어짐(우리 원래 디자인+애니메이션) */}
             <div
               className="group relative hidden lg:block"
-              style={{ width: searchFocused || q ? 354 : 272, transition: "width .42s cubic-bezier(.22,1,.36,1)" }}
+              style={{ width: searchFocused || q ? 319 : 245, transition: "width .42s cubic-bezier(.22,1,.36,1)" }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
               <input

@@ -47,6 +47,7 @@ type Signal = {
 
 export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads: CompAd[] | null; stamp: string | null }) {
   const [kind, setKind] = React.useState("전체")
+  const [catF, setCatF] = React.useState("전체")
   const R = rows ?? []
   const A = ads ?? []
 
@@ -106,14 +107,15 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
   // 카테고리별 큐레이션 — 심각도·점수 순 상위만(중구난방 해소)
   const groups = React.useMemo(() => {
     const byCat: Record<string, Signal[]> = {}
-    signals.filter((s) => kind === "전체" || s.kind === kind).forEach((s) => { (byCat[s.cat] = byCat[s.cat] || []).push(s) })
-    return CATS.map((cat) => ({
+    signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF)).forEach((s) => { (byCat[s.cat] = byCat[s.cat] || []).push(s) })
+    return CATS.filter((c) => catF === "전체" || c === catF).map((cat) => ({
       cat,
-      items: (byCat[cat] || []).sort((a, b) => SEV_META[a.sev].order - SEV_META[b.sev].order || b.score - a.score).slice(0, 8),
+      items: (byCat[cat] || []).sort((a, b) => SEV_META[a.sev].order - SEV_META[b.sev].order || b.score - a.score).slice(0, catF === "전체" ? 8 : 40),
     })).filter((g) => g.items.length)
-  }, [signals, kind])
+  }, [signals, kind, catF])
 
   const counts = React.useMemo(() => { const c: Record<string, number> = { price: 0, promo: 0, ad: 0, stock: 0 }; signals.forEach((s) => c[s.kind]++); return c }, [signals])
+  const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
 
   if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">불러오는 중</div>
 
@@ -128,17 +130,25 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
 
   return (
     <div className="mt-3 flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both" }}>
-      {/* 필터(신호 계열) + 카운트 */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <div className="flex flex-wrap gap-1.5">
+      {/* 필터 — 제품(카테고리) + 신호 계열 배지 */}
+      <div className="flex flex-col gap-2">
+        {/* 제품별 */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-0.5 w-8 shrink-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
+          {["전체", ...CATS].map((c) => {
+            const n = c === "전체" ? signals.length : (catCounts[c] ?? 0)
+            if (c !== "전체" && n === 0) return null
+            return <button key={c} type="button" onClick={() => setCatF(c)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (c === catF ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{c === "전체" ? "전체" : <><span className={"h-1.5 w-1.5 rounded-full " + (CAT_DOT[c] ?? "bg-gray-400")} />{c}</>}<span className={"tabular-nums text-[10.5px] " + (c === catF ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+          })}
+        </div>
+        {/* 신호 계열 */}
+        <div className="flex flex-wrap items-center gap-1.5">
+          <span className="mr-0.5 w-8 shrink-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">신호</span>
           {KIND_FILTERS.map((f) => {
             const n = f.k === "전체" ? signals.length : counts[f.k]
             return <button key={f.k} type="button" onClick={() => setKind(f.k)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (f.k === kind ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{f.label}<span className={"tabular-nums text-[10.5px] " + (f.k === kind ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
           })}
-        </div>
-        <div className="ml-auto flex items-center gap-3.5 text-[12px]">
-          {([["경보", "alert"], ["주의", "warn"], ["기회", "opp"]] as const).map(([l, k]) => <span key={k} className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span className={"h-2 w-2 rounded-full " + SEV_META[k].dot} />{l}</span>)}
-          <span className="hidden text-[11px] text-gray-400 dark:text-gray-500 sm:inline">최종 {stamp ? fmtStamp(stamp) : "—"}</span>
+          <span className="ml-auto hidden text-[11px] text-gray-400 dark:text-gray-500 sm:inline">최종 {stamp ? fmtStamp(stamp) : "—"}</span>
         </div>
       </div>
 
@@ -155,11 +165,9 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
             <span className="ml-1 h-px flex-1 bg-gray-100 dark:bg-gray-800" />
           </div>
           <div className="overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800">
-            {g.items.map((s, i) => { const sv = SEV_META[s.sev], km = KIND_META[s.kind]; return (
+            {g.items.map((s, i) => { const km = KIND_META[s.kind]; return (
               <div key={s.id + i} className="flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 transition-colors last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/40" style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 8) * 0.03 + "s" }}>
-                <span className={"h-2 w-2 shrink-0 rounded-full " + sv.dot} />
-                <span className={"inline-flex w-10 shrink-0 items-center justify-center rounded px-1 py-0.5 text-[10px] font-bold " + sv.chip}>{sv.label}</span>
-                <span className={"hidden w-12 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold sm:inline-flex " + km.cls}>{km.label}</span>
+                <span className={"inline-flex w-12 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + km.cls}>{km.label}</span>
                 <div className="flex min-w-0 flex-1 items-baseline gap-2">
                   <span className="shrink-0 whitespace-nowrap text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{s.own ? <span className="text-indigo-700 dark:text-indigo-300">{s.title}</span> : s.title}</span>
                   <span className="truncate text-[12px] text-gray-400 dark:text-gray-500">{s.detail}</span>
