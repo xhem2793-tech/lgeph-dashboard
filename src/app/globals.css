@@ -9,15 +9,18 @@ body {
   zoom: 1.18;
 }
 
-/* ── 화면 크기(인치)별 대시보드 비율 — 큰 모니터 기준(1.18)이 작은 노트북에선 과대해져
-   테이블·그리드가 잘리므로 뷰포트 폭에 따라 zoom을 낮춰 전체 비율을 맞춘다.
-   대략: 24"+≈1.18 · 16~17"≈1.08 · 15~16"≈0.98 · 14~15"≈0.9 · 14"≈0.84 ── */
-@media (max-width: 1599px) { body { zoom: 1.08; } }
-@media (max-width: 1519px) { body { zoom: 0.98; } }
-@media (max-width: 1439px) { body { zoom: 0.9; } }
-@media (max-width: 1359px) { body { zoom: 0.84; } }
-@media (max-width: 1279px) { body { zoom: 0.8; } }
-@media (max-width: 899px)  { body { zoom: 1; } }   /* 모바일: 스택 레이아웃은 축소 안 함 */
+/* ── 화면 크기(인치)별 대시보드 비율 — 뷰포트 폭에 맞춰 zoom을 조정해 전 화면에서 비율을 맞춘다.
+   작은 노트북: 1.18이 과대해 테이블·그리드가 잘림 → 낮춤. 큰 모니터(27~32"): 콘텐츠가 퍼짐 → 높임.
+   (CSS px 기준. 4K는 OS 배율로 대개 ~2560px로 보고됨) ── */
+@media (min-width: 2560px)                            { body { zoom: 1.36; } }  /* 27~32" QHD/4K */
+@media (min-width: 1920px) and (max-width: 2559px)    { body { zoom: 1.24; } }  /* 24" FHD ~ 27" */
+@media (min-width: 1600px) and (max-width: 1919px)    { body { zoom: 1.18; } }  /* 16~17" · 대형 노트북 */
+@media (min-width: 1520px) and (max-width: 1599px)    { body { zoom: 1.08; } }  /* 15~16" */
+@media (min-width: 1440px) and (max-width: 1519px)    { body { zoom: 0.98; } }  /* 15" */
+@media (min-width: 1360px) and (max-width: 1439px)    { body { zoom: 0.9; } }   /* 14~15" */
+@media (min-width: 1280px) and (max-width: 1359px)    { body { zoom: 0.84; } }  /* 14" */
+@media (min-width: 900px)  and (max-width: 1279px)    { body { zoom: 0.8; } }   /* 13" · 소형 */
+@media (max-width: 899px)                             { body { zoom: 1; } }     /* 모바일: 스택 레이아웃 축소 안 함 */
 
 /* ── EN 모드 타이포 (2026-07-13) ─────────────────────────────
    Yahoo Finance는 "GT America"(상용) + Tabular 숫자를 쓴다.
