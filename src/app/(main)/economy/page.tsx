@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 import FxView from "@/components/FxView"
 import RegionMapView from "@/components/RegionMapView"
 import RegionPriceExtras from "@/components/RegionPriceExtras"
@@ -44,55 +44,96 @@ function Soon({ label }: { label: string }) {
   )
 }
 
+function viewFor(id: string) {
+  if (id === "regions") return <div className="flex flex-col gap-3"><RegionMapView /><RegionPriceExtras /></div>
+  if (id === "fx") return <FxView />
+  if (id === "energy") return <EnergyLabelView />
+  if (id === "online") return <OnlineMarketView />
+  if (id === "weather") return <WeatherView />
+  if (id === "importprice") return <ImportPriceView />
+  if (id === "housing") return <HousingView />
+  if (id === "prices") return <PricesView />
+  if (id === "growth") return <GrowthView />
+  if (id === "labor") return <LaborView />
+  if (id === "sentiment") return <SentimentView />
+  if (id === "rates") return <RatesView />
+  if (id === "appliance") return <ApplianceView />
+  return <Soon label={NAV.find((n) => n.id === id)?.ko ?? ""} />
+}
+
 export default function Page() {
   const { lang } = useLang()
   const en = lang === "en"
-  const [active, setActive] = useState("prices")
+  const [mode, setMode] = useState<"card" | "list">("card")
+  const [active, setActive] = useState("regions")   // 스크롤스파이 현재 섹션
   const [counts, setCounts] = useState<Record<string, number>>({})
-  const [total, setTotal] = useState(0)
+  const [mounted, setMounted] = useState<Set<string>>(() => new Set(["regions", "prices"]))
+  const secRefs = useRef<Record<string, HTMLElement | null>>({})
+  const clickLock = useRef(false)
 
   // 사이드바 카테고리 카운트를 실데이터(provenance)에서 실시간 집계
   useEffect(() => {
-    dataProvenance().then((rows) => { setCounts(countByCat(rows)); setTotal(rows.length) }).catch(() => {})
+    dataProvenance().then((rows) => setCounts(countByCat(rows))).catch(() => {})
   }, [])
 
-  // 딥링크: /economy/?v=<카테고리> 로 진입 시 해당 뷰 활성화
+  // 근접 섹션 지연 마운트 — 뷰포트 ±600px 진입 시 실제 뷰 렌더(초기 부하↓)
+  useEffect(() => {
+    if (mode !== "card") return
+    const obs = new IntersectionObserver((ents) => {
+      let changed = false; const next = new Set<string>()
+      ents.forEach((e) => { if (e.isIntersecting) { const id = (e.target as HTMLElement).dataset.sec; if (id) { next.add(id); changed = true } } })
+      if (changed) setMounted((prev) => { const s = new Set(prev); next.forEach((id) => s.add(id)); return s })
+    }, { rootMargin: "600px 0px 600px 0px" })
+    Object.values(secRefs.current).forEach((el) => el && obs.observe(el))
+    return () => obs.disconnect()
+  }, [mode])
+
+  // 스크롤스파이 — 뷰포트 상단 45% 밴드에 걸린 섹션을 활성으로(좌측 메뉴 동기화)
+  useEffect(() => {
+    if (mode !== "card") return
+    const obs = new IntersectionObserver((ents) => {
+      if (clickLock.current) return
+      const vis = ents.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+      const id = (vis[0]?.target as HTMLElement | undefined)?.dataset.sec
+      if (id) setActive(id)
+    }, { rootMargin: "-42% 0px -52% 0px", threshold: 0 })
+    Object.values(secRefs.current).forEach((el) => el && obs.observe(el))
+    return () => obs.disconnect()
+  }, [mode])
+
+  // 딥링크: /economy/?v=<카테고리> → 해당 섹션으로 스크롤
   useEffect(() => {
     if (typeof window === "undefined") return
     const v = new URLSearchParams(window.location.search).get("v")
-    if (v && NAV.some((n) => n.id === v)) setActive(v)
+    if (v && NAV.some((n) => n.id === v)) { setMode("card"); requestAnimationFrame(() => go(v)) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // 지표 기반 카테고리는 실시간 카운트, 구조적 항목(지도·일일동향·온라인)은 고정
-  const navCount = (n: NavItem) => (n.id === "all" ? (total ? String(total) : n.count) : counts[n.id] != null ? String(counts[n.id]) : n.count)
+  // 지표 기반 카테고리는 실시간 카운트, 구조적 항목은 고정
+  const navCount = (n: NavItem) => (counts[n.id] != null ? String(counts[n.id]) : n.count)
 
-  function view() {
-    if (active === "all") return <AllIndicatorsView onPick={setActive} />
-    if (active === "regions") return <div className="flex flex-col gap-3"><RegionMapView /><RegionPriceExtras /></div>
-    if (active === "fx") return <FxView />
-    if (active === "energy") return <EnergyLabelView />
-    if (active === "online") return <OnlineMarketView />
-    if (active === "weather") return <WeatherView />
-    if (active === "importprice") return <ImportPriceView />
-    if (active === "housing") return <HousingView />
-    if (active === "prices") return <PricesView />
-    if (active === "growth") return <GrowthView />
-    if (active === "labor") return <LaborView />
-    if (active === "sentiment") return <SentimentView />
-    if (active === "rates") return <RatesView />
-    if (active === "appliance") return <ApplianceView />
-    return <Soon label={NAV.find((n) => n.id === active)?.ko ?? ""} />
+  // 좌측 메뉴 클릭 → 섹션으로 스무스 스크롤(마운트 후 재보정)
+  function go(id: string) {
+    if (mode !== "card") setMode("card")
+    setActive(id)
+    setMounted((prev) => { const s = new Set(prev); s.add(id); return s })
+    clickLock.current = true
+    const scroll = () => secRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" })
+    requestAnimationFrame(scroll)
+    // 상위 섹션이 뒤늦게 마운트되며 위치가 밀릴 수 있어 두 차례 재보정
+    setTimeout(scroll, 260)
+    setTimeout(() => { scroll(); clickLock.current = false }, 620)
   }
 
   return (
     <main className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}"}</style>
       <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
-        <aside className="h-fit lg:sticky lg:top-[61px] lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6" style={{ animation: "fadeUp .5s ease both" }}>
-          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
+        <aside className="h-fit lg:sticky lg:top-[61px] lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6" style={{ animation: "fadeUp .5s ease both" }}>
+          <div className="sticky top-0 z-10 flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 bg-white/95 px-2 py-2.5 backdrop-blur dark:bg-gray-950/90">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
             <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{en ? "View" : "보기"}</p>
-            <span className="ml-auto"><Segmented size="sm" value={active === "all" ? "list" : "card"} onChange={(k) => setActive(k === "list" ? "all" : (active === "all" ? "prices" : active))} options={[{ k: "card", label: "카드" }, { k: "list", label: "리스트" }]} /></span>
+            <span className="ml-auto"><Segmented size="sm" value={mode} onChange={(k) => setMode(k as "card" | "list")} options={[{ k: "card", label: "카드" }, { k: "list", label: "리스트" }]} /></span>
           </div>
           <div className="px-2 py-3">
             <nav className="flex flex-col gap-1">
@@ -100,16 +141,15 @@ export default function Page() {
                 <React.Fragment key={n.id}>
                   {n.group !== NAV[i - 1]?.group && <p className="px-2.5 pb-1 pt-3.5 text-[11px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 first:pt-1">{n.group}</p>}
                   <button
-                    onPointerDown={() => setActive(n.id)}
-                    onClick={() => setActive(n.id)}
+                    onClick={() => go(n.id)}
                     className={
                       "group relative flex w-full items-center rounded-md px-2.5 py-2 text-left transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 active:scale-[.98] " +
-                      (active === n.id ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-indigo-50 dark:hover:bg-indigo-500/10")
+                      (mode === "card" && active === n.id ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-indigo-50 dark:hover:bg-indigo-500/10")
                     }
                   >
-                    {active === n.id && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
+                    {mode === "card" && active === n.id && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
                     <span className="flex w-full items-center gap-1.5">
-                      <span className={"flex-1 text-[14px] transition-colors " + (active === n.id ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
+                      <span className={"flex-1 text-[14px] transition-colors " + (mode === "card" && active === n.id ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>
                         {n.ko}
                       </span>
                       <span className="num shrink-0 text-[11px] tabular-nums text-gray-400 dark:text-gray-500">{navCount(n)}</span>
@@ -121,8 +161,29 @@ export default function Page() {
           </div>
         </aside>
         <div className="min-h-[1200px] min-w-0" style={{ animation: "fadeUp .5s ease both" }}>
-          {/* 경쟁사 광고 페이지와 동일: 뷰 전환 시 viewIn */}
-          <div key={active} style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>{view()}</div>
+          {mode === "list" ? (
+            <div style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}><AllIndicatorsView onPick={(id) => go(id)} /></div>
+          ) : (
+            <div className="flex flex-col gap-12">
+              {NAV.map((n) => (
+                <section
+                  key={n.id}
+                  id={"sec-" + n.id}
+                  data-sec={n.id}
+                  ref={(el) => { secRefs.current[n.id] = el }}
+                  className="scroll-mt-[76px]"
+                >
+                  <div className="mb-3 flex items-baseline gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                    <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{n.ko}</h2>
+                    <span className="truncate text-[12px] text-gray-400 dark:text-gray-500">{n.sub}</span>
+                  </div>
+                  {mounted.has(n.id)
+                    ? <div style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>{viewFor(n.id)}</div>
+                    : <div className="min-h-[420px] rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40" />}
+                </section>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </main>

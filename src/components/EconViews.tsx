@@ -142,7 +142,7 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
       {banner && <Banner {...banner} d={d} kpiDefs={loaded ? kpiDefs : undefined} />}
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+      <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className={"h-[18px] w-1 rounded " + (BARCLS[accent] || BARCLS.indigo)} />
@@ -175,9 +175,6 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
             <div key={activeSub} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>{sections ? curSub?.node : children}</div>
           )}
         </section>
-        <aside className="flex flex-col gap-4">
-          <AgendaCard />
-        </aside>
       </div>
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">출처 PSA·BSP 공식통계(Supabase macro_indicators) · 색=사업영향(원가·부담↑ rose, 수요·구매력↑ emerald)</p>
     </div>
