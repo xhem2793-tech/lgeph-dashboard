@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 import FxView from "@/components/FxView"
 import RegionMapView from "@/components/RegionMapView"
 import RegionPriceExtras from "@/components/RegionPriceExtras"
@@ -96,8 +96,9 @@ export default function Page() {
           </div>
           <div className="px-2 py-3">
             <nav className="flex flex-col gap-1">
-              {NAV.map((n) => (
-                <div key={n.id}>
+              {NAV.map((n, i) => (
+                <React.Fragment key={n.id}>
+                  {n.group !== NAV[i - 1]?.group && <p className="px-2.5 pb-1 pt-3.5 text-[11px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 first:pt-1">{n.group}</p>}
                   <button
                     onPointerDown={() => setActive(n.id)}
                     onClick={() => setActive(n.id)}
@@ -114,7 +115,7 @@ export default function Page() {
                       <span className="num shrink-0 text-[11px] tabular-nums text-gray-400 dark:text-gray-500">{navCount(n)}</span>
                     </span>
                   </button>
-                </div>
+                </React.Fragment>
               ))}
             </nav>
           </div>

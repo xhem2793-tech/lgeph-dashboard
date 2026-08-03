@@ -98,7 +98,7 @@ iOS 톤으로 통일된 대시보드의 **구조적 설계 단일 소스**. 새 
 ## 12. 인풋 · 검색
 
 - 표준: `rounded-full border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)]`. `focus:ring-2` idiom 금지. 사이드바 검색만 `rounded-xl` 허용.
-- **리스트 검색 = 단일 컴포넌트 `ListSearch`(`components/competitors/shared.tsx`)**. 뉴스 검색과 폭·스타일 단일 소스 — 기본 **320px**, 포커스·입력 시 **416px**로 `.42s cubic-bezier(.22,1,.36,1)` 확장. 아이콘 15·글자 13px·`pl-9 pr-8`·클리어버튼 `h-5 w-5`·focus 그림자 `3.5px`. **뷰마다 폭(`w-[…px]`)을 다르게 주지 말 것** — 경쟁사 board·movers·positioning·원자료 테이블·competitors 페이지가 모두 이 컴포넌트 사용. 예외: DealsView 히어로 검색(구글식 중앙 대형, 활성 시 컴팩트)만 자체 폭.
+- **리스트 검색 = 단일 컴포넌트 `ListSearch`(`components/competitors/shared.tsx`)**. 뉴스 검색과 폭·스타일 단일 소스 — 기본 **272px**, 포커스·입력 시 **354px**로 `.42s cubic-bezier(.22,1,.36,1)` 확장. 아이콘 15·글자 13px·`pl-9 pr-8`·클리어버튼 `h-5 w-5`·focus 그림자 `3.5px`. **뷰마다 폭(`w-[…px]`)을 다르게 주지 말 것** — 경쟁사 board·movers·positioning·원자료 테이블·competitors 페이지가 모두 이 컴포넌트 사용. 예외: DealsView 히어로 검색(구글식 중앙 대형, 활성 시 컴팩트)만 자체 폭.
 - 차트 툴팁: `rounded-lg border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 shadow-lg`.
 
 ## 13. 빈 상태 · 스켈레톤

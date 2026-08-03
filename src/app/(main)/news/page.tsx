@@ -66,31 +66,31 @@ type Doc = {
 
 /** 메뉴 = 표시 카테고리. topic(기본 6종/규제/인사이트)로 1차 필터, kw(키워드)로 세분.
  *  데이터 topic은 6종뿐이라 큰 덩어리(거시·금융·B2B·에너지)는 제목·요약·시사점 키워드로 쪼갠다. */
-type Menu = { key: string; label: string; topic: string; kw?: string[] }
+type Menu = { key: string; label: string; topic: string; kw?: string[]; group?: string }
 
 const MENUS: Menu[] = [
   { key: "전체", label: "전체 동향", topic: "전체" },
 
   // 거시·금융 → 4분할
-  { key: "물가·인플레", label: "물가·인플레이션", topic: "거시·금융", kw: ["물가", "인플레", "cpi", "소비자물가", "생활비", "가격"] },
-  { key: "금리·통화", label: "금리·통화정책", topic: "거시·금융", kw: ["금리", "기준금리", "bsp", "통화", "유동성", "대출", "신용", "m3"] },
-  { key: "환율·외환", label: "환율·외환·송금", topic: "거시·금융", kw: ["환율", "페소", "외환", "달러", "송금", "ofw", "fdi", "외국인투자", "외국인 투자"] },
-  { key: "성장·무역", label: "성장·무역·고용", topic: "거시·금융", kw: ["gdp", "성장", "무역", "수출", "수입", "고용", "실업", "임금", "투자", "경상", "gni"] },
+  { key: "물가·인플레", label: "물가·인플레이션", topic: "거시·금융", group: "거시·금융", kw: ["물가", "인플레", "cpi", "소비자물가", "생활비", "가격"] },
+  { key: "금리·통화", label: "금리·통화정책", topic: "거시·금융", group: "거시·금융", kw: ["금리", "기준금리", "bsp", "통화", "유동성", "대출", "신용", "m3"] },
+  { key: "환율·외환", label: "환율·외환·송금", topic: "거시·금융", group: "거시·금융", kw: ["환율", "페소", "외환", "달러", "송금", "ofw", "fdi", "외국인투자", "외국인 투자"] },
+  { key: "성장·무역", label: "성장·무역·고용", topic: "거시·금융", group: "거시·금융", kw: ["gdp", "성장", "무역", "수출", "수입", "고용", "실업", "임금", "투자", "경상", "gni"] },
 
   // 에너지·전력 → 2분할
-  { key: "유가·연료", label: "유가·연료", topic: "에너지·전력", kw: ["유가", "석유", "디젤", "휘발유", "경유", "연료", "가스", "brent", "wti", "유류"] },
-  { key: "전력·요금", label: "전기요금·전력", topic: "에너지·전력", kw: ["전기", "전력", "요금", "meralco", "전력망", "정전", "재생에너지", "태양광", "송전", "발전"] },
+  { key: "유가·연료", label: "유가·연료", topic: "에너지·전력", group: "에너지·전력", kw: ["유가", "석유", "디젤", "휘발유", "경유", "연료", "가스", "brent", "wti", "유류"] },
+  { key: "전력·요금", label: "전기요금·전력", topic: "에너지·전력", group: "에너지·전력", kw: ["전기", "전력", "요금", "meralco", "전력망", "정전", "재생에너지", "태양광", "송전", "발전"] },
 
-  { key: "정치·정책", label: "정치·행정·정세", topic: "정치·정책" },
-  { key: "규제·정책", label: "규제·통관·관세", topic: "규제·정책" },
+  { key: "정치·정책", label: "정치·행정·정세", topic: "정치·정책", group: "정책·규제" },
+  { key: "규제·정책", label: "규제·통관·관세", topic: "규제·정책", group: "정책·규제" },
 
-  // B2B → 2분할
-  { key: "B2B·공조", label: "B2B·공조·HVAC", topic: "B2B", kw: ["공조", "hvac", "냉방", "칠러", "vrf", "히트펌프", "에어컨", "냉난방", "시스템에어컨"] },
-  { key: "B2B·인프라", label: "데이터센터·인프라", topic: "B2B", kw: ["데이터센터", "data center", "인프라", "건설", "프로젝트", "발주", "설비", "reit", "부동산", "오피스", "물류"] },
+  // 산업·유통(B2B + 가전유통)
+  { key: "B2B·공조", label: "B2B·공조·HVAC", topic: "B2B", group: "산업·유통", kw: ["공조", "hvac", "냉방", "칠러", "vrf", "히트펌프", "에어컨", "냉난방", "시스템에어컨"] },
+  { key: "B2B·인프라", label: "데이터센터·인프라", topic: "B2B", group: "산업·유통", kw: ["데이터센터", "data center", "인프라", "건설", "프로젝트", "발주", "설비", "reit", "부동산", "오피스", "물류"] },
+  { key: "CE·유통", label: "가전·유통·경쟁", topic: "CE·유통", group: "산업·유통" },
 
-  { key: "CE·유통", label: "가전·유통·경쟁", topic: "CE·유통" },
-  { key: "기상·재난", label: "기상·재난·냉방수요", topic: "기상·재난" },
-  { key: "인사이트", label: "인사이트·칼럼", topic: "인사이트" },
+  { key: "기상·재난", label: "기상·재난·냉방수요", topic: "기상·재난", group: "환경·리스크" },
+  { key: "인사이트", label: "인사이트·칼럼", topic: "인사이트", group: "관점" },
 ]
 
 /** 문서가 메뉴에 속하는지 — topic 일치 + (kw 있으면) 제목·요약·시사점에 키워드 포함 */
@@ -700,8 +700,9 @@ export default function Page() {
           {mode === "topic" ? (
             <div className="px-2 py-3">
               <div className="flex flex-col gap-1">
-                {MENUS.map((m) => (
+                {MENUS.map((m, i) => (
                   <React.Fragment key={m.key}>
+                    {m.group && m.group !== MENUS[i - 1]?.group && <p className="px-2.5 pb-1 pt-3.5 text-[11px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">{m.group}</p>}
                     <button
                       type="button"
                       onClick={() => setMenu(m.key)}
@@ -806,7 +807,7 @@ export default function Page() {
             {/* 확장형 검색 — 포커스/입력 시 부드럽게 넓어짐(우리 원래 디자인+애니메이션) */}
             <div
               className="group relative hidden lg:block"
-              style={{ width: searchFocused || q ? 416 : 320, transition: "width .42s cubic-bezier(.22,1,.36,1)" }}
+              style={{ width: searchFocused || q ? 354 : 272, transition: "width .42s cubic-bezier(.22,1,.36,1)" }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
               <input

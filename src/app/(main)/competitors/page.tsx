@@ -41,7 +41,7 @@ type Status = "live" | "next" | "plan"
 
 const GROUPS: { group: string; items: { key: string; no: number; label: string; desc: string; status: Status }[] }[] = [
   {
-    group: "매일 보는 것",
+    group: "가격 모니터링",
     items: [
       { key: "board", no: 0, label: "채널별 가격 비교", desc: "거래선 × 대표 제품 오늘가 매트릭스 · 동일모델 유통 최저가", status: "live" },
       { key: "movers", no: 1, label: "일일 가격 변동", desc: "3일 가격·변동폭·할인율", status: "live" },
@@ -49,7 +49,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
     ],
   },
   {
-    group: "포지션",
+    group: "포지셔닝·비교",
     items: [
       { key: "asp", no: 2, label: "가격 포지셔닝", desc: "브랜드 × 가격대 산점도 · New DOE ★ · LG 위치", status: "live" },
       { key: "gap", no: 3, label: "LG vs 경쟁 갭", desc: "동급 스펙 가격차(%) · 프리미엄/디스카운트", status: "next" },
@@ -57,14 +57,14 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
     ],
   },
   {
-    group: "채널·프로모",
+    group: "채널·프로모션",
     items: [
       { key: "promo", no: 4, label: "프로모션 트래커", desc: "브랜드별 프로모 강도 · 유통 캠페인", status: "live" },
       { key: "deals", no: 14, label: "프로모 딜", desc: "실딜 리스트 · 할인율·무료배송·번들·쿠폰 · 유통별", status: "live" },
     ],
   },
   {
-    group: "시장 신호",
+    group: "시장 신호·인사이트",
     items: [
       { key: "lifecycle", no: 7, label: "신제품·EOL 감지", desc: "신규 리스팅 등장 / 구모델 소멸", status: "plan" },
       { key: "volatility", no: 8, label: "가격 변동성", desc: "모델별 변경 빈도·표준편차 랭킹", status: "plan" },
@@ -320,6 +320,7 @@ export default function Competitors() {
             <div className="flex flex-col gap-1">
               {GROUPS.map((g) => (
                 <React.Fragment key={g.group}>
+                  <p className="px-2.5 pb-1 pt-3.5 text-[11px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 first:pt-1">{g.group}</p>
                   {g.items.map((it) => (
                     <button
                       key={it.key}
