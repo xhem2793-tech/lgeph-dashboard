@@ -168,9 +168,9 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
         <svg aria-hidden className={"pointer-events-none absolute top-1/2 -translate-y-1/2 text-gray-400 transition-all duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400 " + (activated ? "left-3.5" : "left-4")} width={activated ? "15" : "18"} height={activated ? "15" : "18"} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
         <input
           value={q}
-          onChange={(e) => { setQ(e.target.value); act() }}
-          onFocus={act}
-          placeholder="모델·브랜드 검색"
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") act() }}
+          placeholder="모델·브랜드 검색 · Enter"
           aria-label="모델·브랜드 검색"
           className={"w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 outline-none transition-[background,border,box-shadow,padding,font-size] duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 hover:bg-white dark:hover:border-gray-700 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)] dark:focus:border-indigo-500/50 dark:focus:bg-gray-950 " + (activated ? "py-1.5 pl-9 pr-8 text-[12.5px]" : "py-3 pl-11 pr-10 text-[15px] shadow-sm")}
         />
@@ -180,17 +180,17 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
       {/* 조건 선택 — 카테고리 드롭다운 + 가격대 프리셋. 활성 전 중앙정렬 */}
       <div className={"mt-3 flex flex-col gap-2.5 " + (activated ? "items-stretch" : "items-center")}>
         <div className={"flex flex-wrap items-center gap-x-2.5 gap-y-2 " + (activated ? "" : "justify-center")}>
-          <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체"); act() }} /></div>
-          {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체"); act() }} /></div>}
-          <div className="w-fit"><PmDrop label={sizeLabel} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={(k) => { setSize(k); act() }} /></div>
-          <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={(k) => { setBrand(k); act() }} /></div>
+          <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체") }} /></div>
+          {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체") }} /></div>}
+          <div className="w-fit"><PmDrop label={sizeLabel} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={(k) => setSize(k)} /></div>
+          <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={(k) => setBrand(k)} /></div>
         </div>
         {/* 가격대 프리셋 버튼 — 슬라이더 대체 */}
         <div className={"flex flex-wrap items-center gap-1.5 " + (activated ? "" : "justify-center")}>
           <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">가격대</span>
           <button type="button" onClick={() => setPriceBand(null)} className={"rounded-full px-3 py-1 text-[11.5px] font-semibold transition-all duration-200 ease-out active:scale-95 " + (priceBand == null ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300")}>전체</button>
           {bands.map((b, i) => (
-            <button key={i} type="button" onClick={() => { setPriceBand(i); act() }} className={"rounded-full px-3 py-1 text-[11.5px] font-semibold tabular-nums transition-all duration-200 ease-out active:scale-95 " + (priceBand === i ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300")}>{b.label}</button>
+            <button key={i} type="button" onClick={() => setPriceBand(i)} className={"rounded-full px-3 py-1 text-[11.5px] font-semibold tabular-nums transition-all duration-200 ease-out active:scale-95 " + (priceBand === i ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300")}>{b.label}</button>
           ))}
         </div>
         {/* CTA(활성 전) / 요약(활성 후) */}

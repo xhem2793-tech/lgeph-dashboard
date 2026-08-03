@@ -4,7 +4,7 @@
 import React from "react"
 import { fmtStamp, type DailyRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormOf, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit, pmSizeBucket, acHpLabel } from "@/lib/classify"
-import { peso, md, deltaCol, pmStarCls, DOE_CODE, doeNorm, PmDrop } from "@/components/competitors/shared"
+import { peso, md, deltaCol, pmStarCls, DOE_CODE, doeNorm, PmDrop, ListSearch } from "@/components/competitors/shared"
 
 const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
   { k: "Abenson", label: "Abenson", live: true },
@@ -23,7 +23,6 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
   const [form, setForm] = React.useState("전체")
   const [size, setSize] = React.useState("전체")
   const [q, setQ] = React.useState("")
-  const [focused, setFocused] = React.useState(false)
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "min", asc: false })
   const [selDate, setSelDate] = React.useState<string | null>(null)
   const D = daily ?? []
@@ -118,12 +117,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
           </div>
         )}
         <div className="ml-auto flex items-center gap-3">
-          <div className={"group relative transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[320px]" : "w-[220px]")}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-            <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델·코드 검색"
-              className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
-            {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
-          </div>
+          <ListSearch value={q} onChange={setQ} placeholder="모델·코드 검색" />
           <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최종 {stamp ? fmtStamp(stamp) : curDate ? md(curDate) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
         </div>
       </div>

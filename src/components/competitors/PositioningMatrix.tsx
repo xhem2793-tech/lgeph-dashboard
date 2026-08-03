@@ -4,7 +4,7 @@
 import React from "react"
 import { fmtStamp, type PriceRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormOf, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit, pmTierOf, PM_TIER_BANDS } from "@/lib/classify"
-import { peso, pmShopLabel, pmStarCls, pmTierLabel, pmTierBar, DOE_CODE, doeNorm, pmMean, pmTicks, pmShort, PmDrop } from "@/components/competitors/shared"
+import { peso, pmShopLabel, pmStarCls, pmTierLabel, pmTierBar, DOE_CODE, doeNorm, pmMean, pmTicks, pmShort, PmDrop, ListSearch } from "@/components/competitors/shared"
 
 type PMCard = { b: string; tier: string; label: string; avg: number; shops: number; n: number; star: number | null; kwh: number | null; url: string | null; retailer: string | null; oos: boolean; idx: number; left: number; top: number }
 
@@ -15,7 +15,6 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
   const [stockF, setStockF] = React.useState("전체")
   const [shop, setShop] = React.useState("전체")
   const [q, setQ] = React.useState("")
-  const [focused, setFocused] = React.useState(false)
   const [dling, setDling] = React.useState(false)
   const [logY, setLogY] = React.useState(true)   // 세로축 스케일 기본=로그(가격 범위 넓어 저가 구간 펼침), Auto=선형
   const cardRef = React.useRef<HTMLDivElement>(null)
@@ -162,12 +161,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
         {sizeList.length > 0 && <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSpec} options={[{ k: "전체", t: "전체" }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
         <div className="w-fit"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
         <div className="w-fit"><PmDrop label="재고" sel={stockF} options={["전체", "재고있음", "재고없음"].map((s) => ({ k: s, t: s }))} onSelect={setStockF} /></div>
-        <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[300px]" : "w-[200px]")}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-          <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델·브랜드 검색"
-            className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
-          {q && <button type="button" onClick={() => setQ("")} aria-label="지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
-        </div>
+        <ListSearch value={q} onChange={setQ} placeholder="모델·브랜드 검색" className="ml-auto" />
         <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 lg:flex">최종 {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
 

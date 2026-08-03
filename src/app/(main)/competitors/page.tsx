@@ -19,7 +19,7 @@ import {
   type DealRow,
 } from "@/lib/supabase"
 import { canonCode } from "@/lib/classify"
-import { peso, pct, md, SEGMENTS } from "@/components/competitors/shared"
+import { peso, pct, md, SEGMENTS, ListSearch } from "@/components/competitors/shared"
 import { BoardView } from "@/components/competitors/BoardView"
 import { PositioningMatrix } from "@/components/competitors/PositioningMatrix"
 import { PromoView } from "@/components/competitors/PromoView"
@@ -223,7 +223,6 @@ export default function Competitors() {
   const [daily, setDaily] = React.useState<DailyRow[] | null>(null)
   const [stamp, setStamp] = React.useState<string | null>(null)
   const [q, setQ] = React.useState("")
-  const [focused, setFocused] = React.useState(false)
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "deltaPct", asc: true })
   const [promo, setPromo] = React.useState<PromoIntensity[] | null>(null)
   const [camps, setCamps] = React.useState<PromoCampaign[]>([])
@@ -370,7 +369,7 @@ export default function Competitors() {
           className="min-w-0"
           style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}
         >
-          {view !== "movers" && view !== "asp" && view !== "board" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+          {view !== "movers" && view !== "asp" && view !== "board" && view !== "deals" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
             <h2 className="flex items-baseline gap-2 text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">
               {active?.label}
               <span className={"rounded border px-1 py-px text-[9px] font-semibold " + BADGE[active?.status ?? "plan"].c}>
@@ -379,8 +378,8 @@ export default function Competitors() {
             </h2>
             <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
               최종 갱신 {stamp ? fmtStamp(stamp) : md(asOf)}
-              <span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
-                CONFIRMED
+              <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+                C
               </span>
             </span>
           </header>)}
@@ -443,10 +442,7 @@ export default function Competitors() {
                   변동분만
                 </button>
                 <div className="ml-auto flex items-center gap-2.5">
-                  <div className="relative">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                    <input value={q} onChange={(ev) => setQ(ev.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델코드·모델명 검색" className={"rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-3 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)] " + (focused || q ? "w-[360px]" : "w-[260px]")} />
-                  </div>
+                  <ListSearch value={q} onChange={setQ} placeholder="모델코드·모델명 검색" />
                   <span className="whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500"><b className="text-gray-700 dark:text-gray-200">{data.length}</b>행{stamp ? " · 최종 " + fmtStamp(stamp) : ""} <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
                   <button type="button" onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-300">엑셀</button>
                 </div>

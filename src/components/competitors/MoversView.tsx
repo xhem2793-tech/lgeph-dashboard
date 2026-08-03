@@ -4,7 +4,7 @@
 import React from "react"
 import { fmtStamp, type PriceRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, PM_CATS, pmFormsFor, pmFormHit } from "@/lib/classify"
-import { peso, md, pmShopLabel, pmStarCls, DOE_CODE, doeNorm, PmDrop } from "@/components/competitors/shared"
+import { peso, md, pmShopLabel, pmStarCls, DOE_CODE, doeNorm, PmDrop, ListSearch } from "@/components/competitors/shared"
 
 function MvCountUp({ value, decimals = 1, suffix = "", fmt }: { value: number; decimals?: number; suffix?: string; fmt?: (n: number) => string }) {
   const ref = React.useRef<HTMLSpanElement | null>(null)
@@ -79,7 +79,6 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const [shop, setShop] = React.useState("전체")
   const [sortDir, setSortDir] = React.useState<"down" | "up">("down")
   const [q, setQ] = React.useState("")
-  const [focused, setFocused] = React.useState(false)
   const effCat = cats.includes(cat) ? cat : cats[0]
   const brandsL = React.useMemo(() => {
     const m = new Map<string, number>()
@@ -137,12 +136,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
           <button type="button" onClick={() => setSortDir("up")} className={"relative z-10 rounded-full px-3 py-0.5 transition-colors duration-200 active:scale-95 " + (sortDir === "up" ? "text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>인상순</button>
         </div>
         <div className="ml-auto flex items-center gap-3">
-          <div className={"group relative transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-[300px]" : "w-[200px]")}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-            <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder="모델·브랜드 검색"
-              className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
-            {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
-          </div>
+          <ListSearch value={q} onChange={setQ} placeholder="모델·브랜드 검색" />
           <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최종 {stamp ? fmtStamp(stamp) : repDates.d0 ? md(repDates.d0) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
         </div>
       </div>

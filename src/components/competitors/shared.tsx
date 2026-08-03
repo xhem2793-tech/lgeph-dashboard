@@ -1,5 +1,7 @@
 "use client"
 
+import React from "react"
+
 // 경쟁사 뷰 공용 프리미티브 — 포맷·라벨·DOE정규화·진열 세그먼트 + 드롭다운 컴포넌트.
 // 여러 뷰(BoardView·PositioningMatrix·DealsView·AnomalyView·MoversView)에서 공유.
 
@@ -70,6 +72,22 @@ export function PmDrop({ label, sel, options, onSelect }: { label: string; sel: 
       <div className="invisible absolute left-0 top-[calc(100%-2px)] z-40 max-h-[280px] w-max min-w-full max-w-[280px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
         {options.map((o) => <button key={o.k} type="button" onClick={() => onSelect(o.k)} className={"block w-full whitespace-nowrap rounded-md px-2.5 py-1 text-left text-[12px] transition-colors " + (o.k === sel ? "bg-indigo-600 font-semibold text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")}>{o.t}</button>)}
       </div>
+    </div>
+  )
+}
+
+/** 표준 리스트 검색 인풋 — 전 리스트(경쟁사 가격·이동·포지셔닝 등) 공용. 뉴스 검색과 폭·스타일 단일 소스.
+ *  기본 320px, 포커스·입력 시 416px로 부드럽게 확장(뉴스와 동일). 폭을 개별 뷰에서 다르게 주지 말 것. */
+export function ListSearch({ value, onChange, placeholder, className = "" }: {
+  value: string; onChange: (v: string) => void; placeholder: string; className?: string
+}) {
+  const [focused, setFocused] = React.useState(false)
+  return (
+    <div className={"group relative " + className} style={{ width: focused || value ? 416 : 320, transition: "width .42s cubic-bezier(.22,1,.36,1)" }}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+      <input value={value} onChange={(e) => onChange(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder={placeholder} aria-label={placeholder}
+        className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-8 text-[13px] outline-none transition-[background,border,box-shadow] duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 hover:bg-white dark:hover:border-gray-700 dark:hover:bg-gray-900 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)] dark:focus:border-indigo-500/50 dark:focus:bg-gray-950" />
+      {value && <button type="button" onClick={() => onChange("")} aria-label="검색어 지우기" className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
     </div>
   )
 }
