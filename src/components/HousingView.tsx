@@ -70,9 +70,6 @@ export default function HousingView() {
 
       <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08] p-4" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex flex-wrap items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-indigo-600 text-white shadow-sm shadow-indigo-600/25">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6" /><path d="M10 21h4" /><path d="M12 3a6 6 0 0 0-3.7 10.7c.5.4.7 1 .7 1.6V16h6v-.7c0-.6.2-1.2.7-1.6A6 6 0 0 0 12 3z" /></svg>
-          </div>
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200">
             <b className="font-semibold text-gray-900 dark:text-gray-50">주택·부동산</b> — RPPI(2019=100) <b className="text-indigo-700 dark:text-indigo-300">{f1(rppiLast)}</b>{yoyLast != null ? <> · 전년비 <b className={yoyLast >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoyLast >= 0 ? "+" : ""}{f1(yoyLast)}%</b></> : null}{rppiDate ? " (" + rppiDate.slice(0, 4) + "Q" + (Math.floor(Number(rppiDate.slice(5, 7)) / 3) + 1) + ")" : ""} — 주택 공급·가격은 <b className="text-gray-700 dark:text-gray-200">빌트인·초도 가전 수요</b> 선행
           </div>

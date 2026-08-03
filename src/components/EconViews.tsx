@@ -72,9 +72,6 @@ function Banner({ headline, lg, summary, d, kpiDefs }: BannerDef & { d: Mon; kpi
   return (
     <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08]" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
       <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-indigo-600 text-white shadow-sm shadow-indigo-600/25">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6" /><path d="M10 21h4" /><path d="M12 3a6 6 0 0 0-3.7 10.7c.5.4.7 1 .7 1.6V16h6v-.7c0-.6.2-1.2.7-1.6A6 6 0 0 0 12 3z" /></svg>
-        </div>
         <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200">{line}</div>
         <span className="shrink-0 text-[10px] text-gray-400 dark:text-gray-500">{nowLbl} 기준</span>
         {lg && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 dark:text-indigo-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}

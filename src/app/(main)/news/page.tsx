@@ -485,6 +485,7 @@ export default function Page() {
   const [prod, setProd] = React.useState("에어컨·RAC")
   const [sort, setSort] = React.useState<"new" | "impact">("new")
   const [q, setQ] = React.useState("")
+  const [searchFocused, setSearchFocused] = React.useState(false)
   // 상단 메뉴바 통합 검색(/news?q=) → 뉴스 검색에 반영. 정적 export 안전을 위해 window.location으로 읽음
   React.useEffect(() => {
     const p = new URLSearchParams(window.location.search).get("q")
@@ -697,16 +698,6 @@ export default function Page() {
             <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분류</p>
           </div>
 
-          {/* 사이드바 검색 — 뉴스 검색을 좌측 메뉴 안으로 */}
-          <div className="px-2 pb-1 pt-3">
-            <div className="group relative">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-              <input value={q} onChange={(ev) => setQ(ev.target.value)} placeholder="뉴스 검색" aria-label="뉴스 검색"
-                className="w-full rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-2 pl-9 pr-8 text-[13px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 hover:bg-white dark:hover:border-gray-700 dark:hover:bg-gray-900 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)] dark:focus:border-indigo-500/50 dark:focus:bg-gray-950" />
-              {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:hover:bg-gray-800 dark:text-gray-500 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
-            </div>
-          </div>
-
           {mode === "topic" ? (
             <div className="px-2 py-3">
               <div className="flex flex-col gap-1">
@@ -813,6 +804,23 @@ export default function Page() {
             </div>
 
             <div className="flex items-center gap-3">
+            {/* 확장형 검색 — 포커스/입력 시 부드럽게 넓어짐(우리 원래 디자인+애니메이션) */}
+            <div
+              className="group relative hidden lg:block"
+              style={{ width: searchFocused || q ? 416 : 320, transition: "width .42s cubic-bezier(.22,1,.36,1)" }}
+            >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+              <input
+                value={q}
+                onChange={(ev) => setQ(ev.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                placeholder="제목 · 본문 · SO WHAT · 출처 검색"
+                aria-label="뉴스 검색"
+                className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-8 text-[13px] outline-none transition-[background,border,box-shadow] duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 hover:bg-white dark:hover:border-gray-700 dark:hover:bg-gray-900 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)] dark:focus:border-indigo-500/50 dark:focus:bg-gray-950"
+              />
+              {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:hover:bg-gray-800 dark:text-gray-500 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+            </div>
             {q.trim() ? <span className="hidden text-[11px] tabular-nums text-gray-400 dark:text-gray-500 lg:inline">{shown.length}건 · {hits}곳 일치</span> : null}
 
             <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">

@@ -38,10 +38,6 @@ function fmtPeriod(p?: string | null): string {
   return p
 }
 
-const GlyphInsight = (
-  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6" /><path d="M10 21h4" /><path d="M12 3a6 6 0 0 0-3.7 10.7c.5.4.7 1 .7 1.6V16h6v-.7c0-.6.2-1.2.7-1.6A6 6 0 0 0 12 3z" /></svg>
-)
-
 export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open: boolean; onToggle: () => void }) {
   return (
     <div
@@ -49,7 +45,6 @@ export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open
       className="group cursor-pointer select-none overflow-hidden rounded-2xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08] transition-all duration-300 hover:shadow-md"
     >
       <div className="flex items-center gap-3 px-4 py-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-indigo-600 text-white shadow-sm shadow-indigo-600/25 transition-transform duration-300 group-hover:-translate-y-0.5">{GlyphInsight}</div>
         {banner.period && (
           <span className="shrink-0 rounded-full bg-indigo-600/10 dark:bg-indigo-500/20 px-2.5 py-0.5 text-[10.5px] font-bold tabular-nums text-indigo-700 dark:text-indigo-300">
             {fmtPeriod(banner.period)}

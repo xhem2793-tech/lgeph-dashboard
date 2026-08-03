@@ -11,6 +11,20 @@ async function sb(path: string): Promise<any[]> {
   return r.json()
 }
 
+/** 페이지네이션 병렬 로딩 — 1000행씩, batch개씩 동시 요청(직렬 왕복 대비 대폭 단축).
+ *  build(off)=오프셋별 경로. 어느 페이지가 1000행 미만이면 끝에 도달한 것으로 보고 종료. */
+async function sbPaged(build: (off: number) => string, max: number, page = 1000, batch = 6): Promise<any[]> {
+  const rows: any[] = []
+  let done = false
+  for (let start = 0; start < max && !done; start += page * batch) {
+    const offs: number[] = []
+    for (let i = 0; i < batch && start + i * page < max; i++) offs.push(start + i * page)
+    const chunks = await Promise.all(offs.map((off) => sb(build(off)).catch(() => [] as any[])))
+    for (const c of chunks) { rows.push(...(c ?? [])); if (!c || c.length < page) done = true }
+  }
+  return rows
+}
+
 const num = (v: any) => (v == null ? null : Number(v))
 
 export async function latestMacro(indicators: string[]) {
@@ -572,15 +586,10 @@ function classify(model: string, fallback: string) {
 }
 
 export async function competitorTable(max = 6000): Promise<PriceRow[]> {
-  const page = 1000
-  const rows: any[] = []
-  for (let off = 0; off < max; off += page) {
-    const chunk = await sb(
-      "v_competitor_3d?select=*&order=brand.asc,category.asc,model.asc&offset=" + off + "&limit=" + page,
-    )
-    rows.push(...(chunk ?? []))
-    if (!chunk || chunk.length < page) break
-  }
+  const rows = await sbPaged(
+    (off) => "v_competitor_3d?select=*&order=brand.asc,category.asc,model.asc&offset=" + off + "&limit=1000",
+    max,
+  )
   return rows.map((r: any) => {
     const p0 = num(r.p0)
     const p1 = num(r.p1)
@@ -629,13 +638,11 @@ export type DailyRow = {
 }
 
 export async function competitorDaily(max = 20000): Promise<DailyRow[]> {
-  const page = 1000
-  const rows: any[] = []
-  for (let off = 0; off < max; off += page) {
-    const chunk = await sb("v_competitor_daily?select=*&order=d.desc&offset=" + off + "&limit=" + page)
-    rows.push(...(chunk ?? []))
-    if (!chunk || chunk.length < page) break
-  }
+  // 필요한 컬럼만 선택(payload↓) + 병렬 페이징(직렬 대비 대폭 단축). board 로딩 지연 해소.
+  const rows = await sbPaged(
+    (off) => "v_competitor_daily?select=d,retailer,brand,category,model,capacity,price,srp,url&order=d.desc&offset=" + off + "&limit=1000",
+    max,
+  )
   return rows.map((r: any) => ({
     d: r.d,
     retailer: r.retailer,
@@ -666,13 +673,10 @@ export type DealRow = {
 }
 
 export async function promoDeals(max = 6000): Promise<DealRow[]> {
-  const page = 1000
-  const rows: any[] = []
-  for (let off = 0; off < max; off += page) {
-    const chunk = await sb("v_competitor_promo?select=*&order=discount_pct.desc.nullslast&offset=" + off + "&limit=" + page)
-    rows.push(...(chunk ?? []))
-    if (!chunk || chunk.length < page) break
-  }
+  const rows = await sbPaged(
+    (off) => "v_competitor_promo?select=*&order=discount_pct.desc.nullslast&offset=" + off + "&limit=1000",
+    max,
+  )
   return rows.map((r: any) => ({
     d: r.d,
     retailer: r.retailer,
