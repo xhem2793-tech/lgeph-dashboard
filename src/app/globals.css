@@ -5,10 +5,19 @@
 /* ── 전역 본문 폰트 — Pretendard(한글) + Inter(라틴) 통일. 지도와 동일 톤 ── */
 body {
   font-family: "Pretendard Variable", Pretendard, var(--font-inter), Inter, system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
-  /* 전역 UI 스케일 — 텍스트·간격을 CryptoQuant 수준으로 확대(px 밀집 UI라 zoom으로 통째 스케일).
-     값 조정만으로 전체 크기 튜닝 가능(1.0=기존, 1.18≈캡쳐본 크기). */
+  /* 전역 UI 스케일 — zoom으로 대시보드 전체 비율을 통째 조정. 아래 미디어쿼리로 화면(인치)별 튜닝. */
   zoom: 1.18;
 }
+
+/* ── 화면 크기(인치)별 대시보드 비율 — 큰 모니터 기준(1.18)이 작은 노트북에선 과대해져
+   테이블·그리드가 잘리므로 뷰포트 폭에 따라 zoom을 낮춰 전체 비율을 맞춘다.
+   대략: 24"+≈1.18 · 16~17"≈1.08 · 15~16"≈0.98 · 14~15"≈0.9 · 14"≈0.84 ── */
+@media (max-width: 1599px) { body { zoom: 1.08; } }
+@media (max-width: 1519px) { body { zoom: 0.98; } }
+@media (max-width: 1439px) { body { zoom: 0.9; } }
+@media (max-width: 1359px) { body { zoom: 0.84; } }
+@media (max-width: 1279px) { body { zoom: 0.8; } }
+@media (max-width: 899px)  { body { zoom: 1; } }   /* 모바일: 스택 레이아웃은 축소 안 함 */
 
 /* ── EN 모드 타이포 (2026-07-13) ─────────────────────────────
    Yahoo Finance는 "GT America"(상용) + Tabular 숫자를 쓴다.
