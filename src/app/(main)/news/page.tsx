@@ -1071,8 +1071,9 @@ export default function Page() {
               )}
             </div>
 
-            <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-5">
-              <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-6 pt-5">
+              {/* 메타 — iOS 캡션(토픽 컬러 닷 + 출처·날짜) */}
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-gray-500 dark:text-gray-400">
                 <span className="flex items-center gap-1.5 font-semibold" style={{ color: (ART[modal.topic] ?? ART["거시·금융"]).accent }}>
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: (ART[modal.topic] ?? ART["거시·금융"]).accent }} />
                   {modal.topic}
@@ -1084,13 +1085,13 @@ export default function Page() {
                 <span className="num">{modal.date}</span>
                 {modal.kind === "reg" ? (
                   <>
-                    <span className={"ml-1 rounded px-1 py-px text-[10px] font-bold " + (SEV[modal.severity ?? ""] ?? SEV.Medium)}>
+                    <span className={"ml-1 rounded-md px-1.5 py-px text-[10px] font-bold " + (SEV[modal.severity ?? ""] ?? SEV.Medium)}>
                       {modal.severity}
                     </span>
                     {modal.dDay != null ? (
                       <span
                         className={
-                          "num rounded px-1 py-px text-[10px] font-bold " +
+                          "num rounded-md px-1.5 py-px text-[10px] font-bold " +
                           (modal.dDay >= 0 && modal.dDay <= 7 ? "bg-red-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300")
                         }
                       >
@@ -1101,38 +1102,43 @@ export default function Page() {
                 ) : null}
               </div>
 
-              <h3 className="mt-2 text-[19px] font-semibold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">
+              {/* 제목 — iOS large title */}
+              <h3 className="mt-2.5 text-[22px] font-bold leading-[1.3] tracking-[-0.01em] text-gray-900 dark:text-gray-50">
                 <Hi text={modal.title} q={q} />
               </h3>
 
+              {/* 시사점 — iOS 틴티드 콜아웃 카드 */}
               {modal.so ? (
-                <div className="mt-4 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-3">
-                  <p className="text-[10.5px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-400">시사점</p>
-                  <p className="mt-1 text-[13.5px] leading-[1.7] text-gray-800 dark:text-gray-100"><Hi text={modal.so} q={q} /></p>
+                <div className="mt-4 rounded-2xl bg-indigo-50/80 p-4 ring-1 ring-inset ring-indigo-100 dark:bg-indigo-500/10 dark:ring-indigo-500/20">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">시사점</p>
+                  <p className="mt-1.5 text-[14px] font-medium leading-[1.7] text-gray-800 dark:text-gray-100"><Hi text={modal.so} q={q} /></p>
                 </div>
               ) : null}
 
-              <div className="mt-5">
-                <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
-                <div className="mt-1 space-y-2">
+              {/* 본문 요약 — iOS 그룹 카드 */}
+              <div className="mt-3.5 rounded-2xl bg-gray-50 p-4 dark:bg-gray-800/40">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
+                <div className="mt-2 space-y-2.5">
                   {para(modal.summary).map((p, i) => (
-                    <p key={i} className="text-[12.5px] leading-[1.7] text-gray-600 dark:text-gray-300">
+                    <p key={i} className="text-[13px] leading-[1.75] text-gray-600 dark:text-gray-300">
                       <Hi text={p} q={q} />
                     </p>
                   ))}
                 </div>
               </div>
 
+              {/* 대응 — iOS 틴티드 콜아웃(에메랄드) */}
               {modal.action ? (
-                <div className="mt-4">
-                  <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">대응</p>
-                  <p className="mt-1 text-[12.5px] leading-[1.7] text-gray-600 dark:text-gray-300">{modal.action}</p>
+                <div className="mt-3.5 rounded-2xl bg-emerald-50/70 p-4 ring-1 ring-inset ring-emerald-100 dark:bg-emerald-500/10 dark:ring-emerald-500/20">
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">대응</p>
+                  <p className="mt-1.5 text-[13px] leading-[1.7] text-gray-700 dark:text-gray-200">{modal.action}</p>
                 </div>
               ) : null}
 
+              {/* 연결 지표 */}
               {modal.chipKeys.map((k) => chips[k]).filter(Boolean).length ? (
-                <div className="mt-5 border-t border-gray-100 dark:border-gray-800 pt-4">
-                  <p className="mb-1.5 text-[10px] font-bold tracking-widest text-gray-400 dark:text-gray-500">연결 지표</p>
+                <div className="mt-4">
+                  <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">연결 지표</p>
                   <div className="flex flex-wrap gap-1.5">
                     {modal.chipKeys
                       .map((k) => chips[k])
@@ -1144,15 +1150,16 @@ export default function Page() {
                 </div>
               ) : null}
 
+              {/* 원문 — iOS 풀폭 버튼 */}
               {modal.url ? (
                 <a
                   href={modal.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-[12.5px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95"
+                  className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-3 text-[13.5px] font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-[.98]"
                 >
                   원문 보기 · {modal.source}
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M7 17L17 7M17 7H8M17 7v9" />
                   </svg>
                 </a>

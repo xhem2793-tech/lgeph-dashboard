@@ -204,8 +204,9 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
           )}
         </div>
 
-        <div className="overflow-y-auto px-7 pb-7 pt-5">
-          <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
+        <div className="overflow-y-auto px-6 pb-6 pt-5">
+          {/* 메타 — iOS 캡션 */}
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-gray-500 dark:text-gray-400">
             <span className="font-semibold text-indigo-600 dark:text-indigo-400">{a.brand}</span>
             <span className="text-gray-300 dark:text-gray-600">·</span>
             <span>{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
@@ -213,44 +214,48 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
             <span className="num">{a.ad_started_on || "상시"}</span>
           </div>
 
-          <h3 className="mt-2 text-[19px] font-semibold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{clean(a.headline)}</h3>
+          {/* 제목 — iOS large title */}
+          <h3 className="mt-2.5 text-[22px] font-bold leading-[1.3] tracking-[-0.01em] text-gray-900 dark:text-gray-50">{clean(a.headline)}</h3>
 
           {a.offer && (
-            <span className="mt-3 inline-block rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-2.5 py-1 text-[12px] font-semibold text-emerald-700 dark:text-emerald-300">{clean(a.offer)}</span>
+            <span className="mt-3 inline-block rounded-full bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 text-[12px] font-semibold text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-emerald-100 dark:ring-emerald-500/20">{clean(a.offer)}</span>
           )}
 
+          {/* 시사점 — iOS 틴티드 콜아웃 카드 */}
           {bodyImpl && (
-            <div className="mt-4 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-3">
-              <p className="text-[10.5px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-400">시사점</p>
-              <p className="mt-1 text-[13.5px] leading-[1.7] text-gray-800 dark:text-gray-100">{bodyImpl}</p>
+            <div className="mt-4 rounded-2xl bg-indigo-50/80 p-4 ring-1 ring-inset ring-indigo-100 dark:bg-indigo-500/10 dark:ring-indigo-500/20">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">시사점</p>
+              <p className="mt-1.5 text-[14px] font-medium leading-[1.7] text-gray-800 dark:text-gray-100">{bodyImpl}</p>
             </div>
           )}
 
+          {/* 본문 요약 — iOS 그룹 카드 */}
           {bodyMain && (
-            <div className="mt-5">
-              <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
-              <div className="mt-1 space-y-2">
+            <div className="mt-3.5 rounded-2xl bg-gray-50 p-4 dark:bg-gray-800/40">
+              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
+              <div className="mt-2 space-y-2.5">
                 {para(bodyMain).map((p, i) => (
-                  <p key={i} className="text-[12.5px] leading-[1.7] text-gray-600 dark:text-gray-300">{p}</p>
+                  <p key={i} className="text-[13px] leading-[1.75] text-gray-600 dark:text-gray-300">{p}</p>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="mt-5 border-t border-gray-100 dark:border-gray-800 pt-3">
+          <div className="mt-4 px-1">
             <p className="text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400">{meta.join(" · ")}</p>
             <p className="mt-1 text-[10.5px] text-gray-400 dark:text-gray-500">Meta 광고 라이브러리(자체 수집) · {a.confidence || "—"}</p>
           </div>
 
+          {/* 원문 — iOS 풀폭 버튼 */}
           {a.ad_url && (
             <a
               href={a.ad_url}
               target="_blank"
               rel="noreferrer"
-              className="mt-6 inline-flex items-center gap-1.5 rounded-lg bg-indigo-600 px-4 py-2 text-[12.5px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95"
+              className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-3 text-[13.5px] font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-[.98]"
             >
               원문 광고 보기 · {a.brand}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M17 7H8M17 7v9" /></svg>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M17 7H8M17 7v9" /></svg>
             </a>
           )}
         </div>

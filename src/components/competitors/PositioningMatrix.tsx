@@ -19,6 +19,14 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
   const [dling, setDling] = React.useState(false)
   const [logY, setLogY] = React.useState(true)   // 세로축 스케일 기본=로그(가격 범위 넓어 저가 구간 펼침), Auto=선형
   const cardRef = React.useRef<HTMLDivElement>(null)
+  // 매트릭스 가용 폭 측정 — 화면 인치(폭)에 맞춰 카드 폭을 줄여 전 브랜드(LG 포함)를 한 화면에 수용(가로 잘림 방지)
+  const wrapRef = React.useRef<HTMLDivElement>(null)
+  const [wrapW, setWrapW] = React.useState(0)
+  React.useEffect(() => {
+    const el = wrapRef.current; if (!el) return
+    const ro = new ResizeObserver((es) => { for (const e of es) setWrapW(e.contentRect.width) })
+    ro.observe(el); return () => ro.disconnect()
+  }, [])
   const R = rows ?? []
   // 모델명 검색 → 그 모델이 속한 분류(제품·유형)로 자동 이동. 현재 화면에 없고 다른 분류에 있으면 전환.
   React.useEffect(() => {
@@ -136,7 +144,14 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
   const lgv = (v: number) => Math.log(Math.max(1, v))
   const topFor = (p: number) => PAD + ((logY ? lgv(gmax) - lgv(p) : gmax - p) / ((logY ? lgv(gmax) - lgv(gmin) : gmax - gmin) || 1)) * (plotH - PAD - BOTTOM - CARD_H)
   const brandN = (b: string) => cards.filter((c) => c.b === b).reduce((s, c) => s + c.n, 0)
-  const minW = Math.max(1040, GUT + brands.length * 150 + 20)
+  // 반응형 카드 폭 — 측정된 가용 폭을 브랜드 수로 나눠 컬럼에 맞춤(90~132px). 좁은 화면에선 카드가 줄어 전부 수용.
+  const cardW = React.useMemo(() => {
+    if (!wrapW || !brands.length) return CARD_W
+    const colW = (wrapW - GUT - 32) / brands.length   // px-4 좌우 패딩 32
+    return Math.max(90, Math.min(CARD_W, Math.floor(colW - 8)))
+  }, [wrapW, brands.length])
+  // 컨테이너 폭에 맞춰 채우되 과도한 가로 스크롤 방지(브랜드당 최소 96px 바닥값 — 14"에서도 한 화면)
+  const minW = GUT + brands.length * 96 + 20
   const qq = q.trim().toLowerCase()
   return (
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
@@ -153,11 +168,11 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
             className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
           {q && <button type="button" onClick={() => setQ("")} aria-label="지우기" className="absolute right-2 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 dark:text-gray-500 transition-all duration-200 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-90"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
         </div>
-        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 lg:flex">최종 {stamp ? fmtStamp(stamp) : "—"}<span className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">CONFIRMED</span></span>
+        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 lg:flex">최종 {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
 
       {/* 매트릭스 */}
-      <div className="overflow-x-auto">
+      <div ref={wrapRef} className="overflow-x-auto">
         <div ref={cardRef} className="overflow-hidden rounded-xl" style={{ minWidth: minW }}>
           <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-4 w-1 rounded bg-indigo-500" />
@@ -221,7 +236,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
                           <a key={c.label + ci} href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer"
                             title={`${c.b} · ${c.label} · ${peso(c.avg)}${c.retailer ? " @ " + pmShopLabel(c.retailer) : ""} · ${c.shops}개 유통 취급${c.star != null ? " · New DOE ★" + c.star : ""}${c.kwh != null ? " · " + Math.round(c.kwh) + "kWh/월" : ""}${c.url ? " · 클릭→원문" : ""}`}
                             className={"absolute block overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (qq && !hit ? "opacity-20 " : "") + (qq && hit ? "z-20 ring-2 ring-indigo-500 " : "") + (c.oos ? "border-dashed border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 opacity-70 grayscale" : lg ? "z-10 border-transparent bg-indigo-600 text-white" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
-                            style={{ top: c.top, left: "50%", marginLeft: -(CARD_W / 2), width: CARD_W, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "opacity" }}>
+                            style={{ top: c.top, left: "50%", marginLeft: -(cardW / 2), width: cardW, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "opacity" }}>
                             {/* 왼쪽 세로 스트립 = 가격대 색(LOW 초록·MED 파랑·프리미엄 주황) — 배지 대체 */}
                             <span className={"absolute inset-y-0 left-0 w-1.5 " + pmTierBar(c.tier)} title={"가격대: " + pmTierLabel(c.tier)} />
                             <div className="pl-2.5 pr-2">

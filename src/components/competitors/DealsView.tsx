@@ -45,6 +45,9 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
   const [rmin, setRmin] = React.useState(0)
   const [rmax, setRmax] = React.useState(0)
   const [q, setQ] = React.useState("")
+  // 처음엔 중앙에 선택만 → 조건을 고르면(activated) 필터가 위로 올라가며 아래에 목록이 등장
+  const [activated, setActivated] = React.useState(false)
+  const act = React.useCallback(() => setActivated(true), [])
   const R = rows ?? []
   const cats = React.useMemo(() => { const av = PM_CATS.filter((c) => R.some((r) => r.category === c)); return av.length ? av : PM_CATS }, [R])
   const formList = pmFormsFor(cat)
@@ -111,42 +114,61 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
   if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">불러오는 중</div>
 
   return (
-    <div className="mt-3 overflow-hidden rounded-xl">
-      <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
-        <span className="h-4 w-1 rounded bg-indigo-500" />
-        <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">동일 스펙 경쟁사 비교</h2>
-        <span className="rounded border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-rose-600 dark:text-rose-400">INTERNAL USE ONLY</span>
-        <div className="ml-auto flex items-center gap-1"><span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">종류</span>{PTYPES.map((p) => <span key={p.k} className={"rounded px-1.5 py-0.5 text-[10.5px] font-bold " + p.cls}>{p.label}</span>)}</div>
-      </header>
-      {/* 필터 */}
-      <div className="flex flex-col gap-2.5 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40 px-4 py-3">
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-          <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체") }} /></div>
-          {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체") }} /></div>}
-          <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={setSize} /></div>
-          <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={setBrand} /></div>
-          <div className="relative ml-auto">
-            <svg className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="모델·브랜드 검색" className="w-[200px] rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-1.5 pl-8 pr-3 text-[12px] outline-none focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+    <div className="flex flex-col">
+      {/* 상단 여백 — 활성 전엔 패널을 아래로 밀어 중앙 느낌, 선택 시 0으로 접히며 위로 상승 */}
+      <div aria-hidden style={{ height: activated ? 0 : 92, transition: "height .55s cubic-bezier(.22,1,.36,1)" }} />
+
+      {/* 히어로 타이틀 — 활성 전만(선택 시 자연스럽게 접힘) */}
+      <div style={{ display: "grid", gridTemplateRows: activated ? "0fr" : "1fr", opacity: activated ? 0 : 1, transition: "grid-template-rows .5s cubic-bezier(.22,1,.36,1), opacity .35s ease" }}>
+        <div className="overflow-hidden">
+          <div className="flex flex-col items-center gap-2 pb-5 text-center">
+            <span className="rounded-full border border-rose-200 dark:border-rose-500/30 bg-rose-50 dark:bg-rose-500/10 px-2 py-0.5 text-[10px] font-bold tracking-wide text-rose-600 dark:text-rose-400">INTERNAL USE ONLY</span>
+            <h2 className="text-[23px] font-bold tracking-tight text-gray-900 dark:text-gray-50">동일 스펙 경쟁사 비교</h2>
+            <p className="text-[12.5px] text-gray-500 dark:text-gray-400">제품·유형·가격대를 선택하면 조건에 맞는 프로모 딜 목록이 아래에 나타납니다</p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+      </div>
+
+      {/* 필터 패널 — 항상 표시. 활성 전엔 중앙정렬 카드, 후엔 좌측 툴바 */}
+      <div className={"rounded-2xl border px-4 py-3.5 transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (activated ? "border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40" : "border-gray-200 dark:border-gray-800 bg-gray-50/80 dark:bg-gray-900/50 shadow-sm")}>
+        <div className={"flex flex-wrap items-center gap-x-3 gap-y-2 " + (activated ? "" : "justify-center")}>
+          <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체"); act() }} /></div>
+          {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체"); act() }} /></div>}
+          <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={(k) => { setSize(k); act() }} /></div>
+          <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={(k) => { setBrand(k); act() }} /></div>
+          <div className={"relative " + (activated ? "ml-auto" : "")}>
+            <svg className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="11" cy="11" r="7" /><path d="M21 21l-4-4" /></svg>
+            <input value={q} onChange={(e) => { setQ(e.target.value); act() }} placeholder="모델·브랜드 검색" className="w-[200px] rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 py-1.5 pl-8 pr-3 text-[12px] outline-none focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
+          </div>
+        </div>
+        <div className={"mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-2 " + (activated ? "" : "justify-center")}>
           <span className="w-9 shrink-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">가격대</span>
           <span className="w-[74px] shrink-0 text-right text-[12px] font-bold tabular-nums text-indigo-700 dark:text-indigo-300">{peso(rmin)}</span>
           <div ref={trackRef} className="relative h-6 w-[320px] shrink-0 select-none">
             <div className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-gray-200 dark:bg-gray-700" />
             <div className="absolute top-1/2 h-1 -translate-y-1/2 rounded-full bg-indigo-500" style={{ left: pctOf(rmin) + "%", width: (pctOf(rmax) - pctOf(rmin)) + "%" }} />
             <div className="pointer-events-none absolute inset-0">{sizeOffers.map((o, i) => { const inR = o.net >= rmin && o.net <= rmax; return <span key={i} className={"absolute top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full transition-opacity " + (o.own ? "bg-indigo-500" : "bg-gray-400") + (inR ? "" : " opacity-25")} style={{ left: pctOf(o.net) + "%" }} /> })}</div>
-            <div onPointerDown={startDrag(true)} className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none rounded-full border-2 border-indigo-500 bg-white dark:bg-gray-900 shadow transition-transform active:scale-110" style={{ left: pctOf(rmin) + "%" }} />
-            <div onPointerDown={startDrag(false)} className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none rounded-full border-2 border-indigo-500 bg-white dark:bg-gray-900 shadow transition-transform active:scale-110" style={{ left: pctOf(rmax) + "%" }} />
+            <div onPointerDown={(e) => { act(); startDrag(true)(e) }} className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none rounded-full border-2 border-indigo-500 bg-white dark:bg-gray-900 shadow transition-transform active:scale-110" style={{ left: pctOf(rmin) + "%" }} />
+            <div onPointerDown={(e) => { act(); startDrag(false)(e) }} className="absolute top-1/2 h-4 w-4 -translate-x-1/2 -translate-y-1/2 cursor-grab touch-none rounded-full border-2 border-indigo-500 bg-white dark:bg-gray-900 shadow transition-transform active:scale-110" style={{ left: pctOf(rmax) + "%" }} />
           </div>
           <span className="w-[74px] shrink-0 text-[12px] font-bold tabular-nums text-indigo-700 dark:text-indigo-300">{peso(rmax)}</span>
           <button type="button" onClick={() => { setRmin(dom[0]); setRmax(dom[1]) }} className="rounded-md px-2 py-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 transition hover:bg-white dark:hover:bg-gray-800">초기화</button>
-          <p className="ml-auto text-[11.5px] text-gray-500 dark:text-gray-400">{lgRef ? <>자사 <b className="text-indigo-700 dark:text-indigo-300">{lgRef.model}</b> 기준</> : "자사(LG) 모델 없음"} · 표시 <b className="tabular-nums">{list.length}</b></p>
+          {activated
+            ? <p className="ml-auto text-[11.5px] text-gray-500 dark:text-gray-400">{lgRef ? <>자사 <b className="text-indigo-700 dark:text-indigo-300">{lgRef.model}</b> 기준</> : "자사(LG) 모델 없음"} · 표시 <b className="tabular-nums">{list.length}</b></p>
+            : <button type="button" onClick={act} className="ml-1 inline-flex items-center gap-1 rounded-full bg-indigo-600 px-3.5 py-1.5 text-[12px] font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95">이 조건으로 보기<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14M13 6l6 6-6 6" /></svg></button>}
         </div>
       </div>
-      {/* 테이블 */}
-      <div className="overflow-x-auto">
+
+      {/* 결과 — 선택 시 아래에서 등장 */}
+      <div style={{ display: "grid", gridTemplateRows: activated ? "1fr" : "0fr", opacity: activated ? 1 : 0, transition: "grid-template-rows .55s cubic-bezier(.22,1,.36,1), opacity .45s ease" }}>
+        <div className="overflow-hidden">
+          <div className="mt-3 overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40 px-4 py-2">
+              <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">프로모 종류</span>
+              <div className="ml-auto flex items-center gap-1">{PTYPES.map((p) => <span key={p.k} className={"rounded px-1.5 py-0.5 text-[10.5px] font-bold " + p.cls}>{p.label}</span>)}</div>
+            </div>
+            {/* 테이블 */}
+            <div className="overflow-x-auto">
         <table className="w-full min-w-[1200px] table-fixed border-collapse text-[12px]">
           <colgroup>
             <col style={{ width: 62 }} /><col style={{ width: 220 }} /><col style={{ width: 92 }} /><col style={{ width: 110 }} /><col style={{ width: 72 }} /><col style={{ width: 96 }} />
@@ -195,6 +217,9 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
               : <span className="text-rose-700 dark:text-rose-300">자사 <b>{lgRank > 0 ? lgRank + "위" : "범위 밖"}</b>{cheaper.length ? <> · 더 싼 경쟁사 <b>{cheaper.map((c) => c.brand).join(", ")}</b>(최저 −{won(lgRef.net - best)})</> : ""}. {rivalOnly.length ? <>경쟁사만 주는 <b>{rivalOnly.map((p) => p.label).join("·")}</b>도 열세 — 대응 필요.</> : "가격 대응 우선."}</span>}
           </p>
         ) : <p className="text-[12px] text-gray-400 dark:text-gray-500">이 유형·용량에 자사(LG) 모델이 없어 vs 자사 비교를 생략합니다.</p>}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )
