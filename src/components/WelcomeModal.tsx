@@ -25,6 +25,13 @@ export default function WelcomeModal() {
     try { if (!localStorage.getItem(SEEN_KEY)) setOpen(true) } catch { setOpen(true) }
   }, [])
 
+  // TopNav 전구 아이콘 등에서 다시 열기 — 첫 방문 여부와 무관하게 노출
+  React.useEffect(() => {
+    const reopen = () => { setClosing(false); setOpen(true) }
+    window.addEventListener("ax:open-welcome", reopen)
+    return () => window.removeEventListener("ax:open-welcome", reopen)
+  }, [])
+
   const close = () => {
     setClosing(true)
     try { if (dontShow) localStorage.setItem(SEEN_KEY, "1") } catch {}

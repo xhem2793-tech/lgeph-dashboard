@@ -99,6 +99,16 @@ export function TopNav() {
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2.5">
+          {/* 소개(웰컴) 다시 보기 — 전구 아이콘. 클릭 시 웰컴 모달 재노출 */}
+          <button
+            type="button"
+            onClick={() => { if (typeof window !== "undefined") window.dispatchEvent(new Event("ax:open-welcome")) }}
+            aria-label="소개 다시 보기"
+            title="소개 다시 보기"
+            className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:-translate-y-px hover:bg-indigo-50 hover:text-indigo-600 active:scale-90 dark:text-gray-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6" /><path d="M10 22h4" /><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5" /></svg>
+          </button>
           <PillToggle
             ariaLabel="언어 선택"
             value={lang}
