@@ -96,6 +96,19 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
   const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
   const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
 
+  // 원본(raw) 일일 거래선 가격 CSV 다운로드 — 필터 무관, 전체 관측 그대로(엑셀 호환 BOM+CRLF)
+  const dlRaw = () => {
+    if (!D.length) return
+    const head = ["날짜", "브랜드", "분류", "모델코드", "모델명", "용량", "거래선", "현금가", "SRP", "URL"]
+    const esc = (v: unknown) => { const s = v == null ? "" : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s }
+    const rows = D.map((r) => [r.d, r.brand, r.category, canonCode(r.model, r.code), r.model, r.capacity, r.retailer, r.price, r.srp, r.url].map(esc).join(","))
+    const csv = "﻿" + [head.join(","), ...rows].join("\r\n")
+    const a = document.createElement("a")
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }))
+    a.download = "channel_prices_raw_" + (dates[0] ?? "") + ".csv"
+    a.click(); URL.revokeObjectURL(a.href)
+  }
+
   return (
     <div className="flex flex-col gap-2.5">
       {/* 검색·필터 — LG 기본 · 제품/스펙 호버 드롭다운 · 뉴스형 검색 · 최종갱신(맨오른쪽) */}
@@ -116,7 +129,12 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
             </label>
           </div>
         )}
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2.5">
+          {/* 원본 일일 거래선 가격 CSV 다운로드 */}
+          <button type="button" onClick={dlRaw} disabled={!D.length} title="원본 데이터(CSV) 다운로드" className="flex h-[30px] shrink-0 items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2 text-[11.5px] font-semibold text-gray-600 dark:text-gray-300 transition-all duration-200 hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300 active:scale-95 disabled:opacity-40 disabled:hover:translate-y-0">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+            CSV
+          </button>
           <ListSearch value={q} onChange={setQ} placeholder="모델·코드 검색" />
           <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최신 {stamp ? fmtStamp(stamp) : curDate ? md(curDate) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
         </div>
