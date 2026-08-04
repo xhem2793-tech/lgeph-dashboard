@@ -2,9 +2,10 @@
 
 import React from "react"
 
-/** 첫 방문 웰컴 팝업 — AX 필리핀법인 마켓 인텔리전스 대시보드 베타 안내.
- *  첫 방문 1회 노출(localStorage). 닫으면 다시 뜨지 않고, 상단 전구 아이콘으로 언제든 재열기. */
-const SEEN_KEY = "ax_welcome_v1"
+/** 웰컴 팝업 — AX 필리핀법인 마켓 인텔리전스 대시보드 베타 안내.
+ *  하루 1회 노출(localStorage에 마지막 노출 날짜 저장). 닫으면 그날은 다시 안 뜨고, 상단 전구 아이콘으로 언제든 재열기. */
+const SEEN_KEY = "ax_welcome_seen_date"
+const todayStr = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") }
 
 const BUILDING: { icon: React.ReactNode; t: string; d: string }[] = [
   { t: "국가동향", d: "필리핀 뉴스·규제·정책 + 인사이트 리포트 자동 수집·개인별 맞춤 발송", icon: <path d="M4 6h16M4 12h16M4 18h10" /> },
@@ -19,7 +20,7 @@ export default function WelcomeModal() {
   const [closing, setClosing] = React.useState(false)
 
   React.useEffect(() => {
-    try { if (!localStorage.getItem(SEEN_KEY)) setOpen(true) } catch { setOpen(true) }
+    try { if (localStorage.getItem(SEEN_KEY) !== todayStr()) setOpen(true) } catch { setOpen(true) }
   }, [])
 
   // TopNav 전구 아이콘 등에서 다시 열기 — 첫 방문 여부와 무관하게 노출
@@ -31,7 +32,7 @@ export default function WelcomeModal() {
 
   const close = () => {
     setClosing(true)
-    try { localStorage.setItem(SEEN_KEY, "1") } catch {}
+    try { localStorage.setItem(SEEN_KEY, todayStr()) } catch {}
     window.setTimeout(() => { setOpen(false); setClosing(false) }, 220)
   }
 
