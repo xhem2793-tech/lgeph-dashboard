@@ -186,6 +186,17 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
         {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
       </div>
 
+      {/* 결론 히어로 — 표보다 먼저 '그래서 뭐(LG 시사점)'가 눈에 들어오게 */}
+      {activated && lgRef && (
+        <div className={"flex items-start gap-2.5 rounded-2xl p-3.5 ring-1 ring-inset " + (win ? "bg-emerald-50/70 ring-emerald-100 dark:bg-emerald-500/10 dark:ring-emerald-500/20" : "bg-rose-50/70 ring-rose-100 dark:bg-rose-500/10 dark:ring-rose-500/20")} style={{ animation: "fadeUp .4s cubic-bezier(.22,1,.36,1) both" }}>
+          <span className={"mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10px] font-bold text-white " + (win ? "bg-emerald-600" : "bg-rose-500")}>LG 시사점</span>
+          <p className="text-[13.5px] font-semibold leading-relaxed">
+            {win ? <span className="text-emerald-800 dark:text-emerald-200">자사 <b>최저가</b> · 할인율 {lgRef.list != null && lgRef.list > lgRef.net ? Math.round((lgRef.list - lgRef.net) / lgRef.list * 100) : 0}%. {rivalOnly.length ? <>단, 경쟁사만 제공하는 <b>{rivalOnly.map((p) => p.label).join("·")}</b> 확인 — 프로모 구성 보완.</> : "프로모 스택도 우위."}</span>
+              : <span className="text-rose-700 dark:text-rose-200">자사 <b>{lgRank > 0 ? lgRank + "위" : "범위 밖"}</b>{cheaper.length ? <> · 더 싼 경쟁사 <b>{cheaper.map((c) => c.brand).join(", ")}</b>(최저 −{won(lgRef.net - best)})</> : ""}. {rivalOnly.length ? <>경쟁사만 주는 <b>{rivalOnly.map((p) => p.label).join("·")}</b>도 열세 — 대응 필요.</> : "가격 대응 우선."}</span>}
+          </p>
+        </div>
+      )}
+
       {/* 표시 요약 */}
       {activated && <p className="text-[11.5px] text-gray-500 dark:text-gray-400">{lgRef ? <>자사 <b className="text-indigo-700 dark:text-indigo-300">{lgRef.model}</b> 기준</> : "자사(LG) 모델 없음"} · 표시 <b className="tabular-nums">{list.length}</b></p>}
 
@@ -238,16 +249,8 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
           </tbody>
         </table>
       </div>
-      {/* 시사점 */}
-      <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3">
-        {lgRef ? (
-          <p className="flex items-start gap-1.5 text-[12px] leading-relaxed">
-            <span className={"mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[10.5px] font-bold text-white " + (win ? "bg-emerald-600" : "bg-rose-500")}>LG 시사점</span>
-            {win ? <span className="text-emerald-800 dark:text-emerald-300">자사 <b>최저가</b> · 할인율 {lgRef.list != null && lgRef.list > lgRef.net ? Math.round((lgRef.list - lgRef.net) / lgRef.list * 100) : 0}%. {rivalOnly.length ? <>단, 경쟁사만 제공하는 <b>{rivalOnly.map((p) => p.label).join("·")}</b> 확인 — 프로모 구성 보완.</> : "프로모 스택도 우위."}</span>
-              : <span className="text-rose-700 dark:text-rose-300">자사 <b>{lgRank > 0 ? lgRank + "위" : "범위 밖"}</b>{cheaper.length ? <> · 더 싼 경쟁사 <b>{cheaper.map((c) => c.brand).join(", ")}</b>(최저 −{won(lgRef.net - best)})</> : ""}. {rivalOnly.length ? <>경쟁사만 주는 <b>{rivalOnly.map((p) => p.label).join("·")}</b>도 열세 — 대응 필요.</> : "가격 대응 우선."}</span>}
-          </p>
-        ) : <p className="text-[12px] text-gray-400 dark:text-gray-500">이 유형·용량에 자사(LG) 모델이 없어 vs 자사 비교를 생략합니다.</p>}
-            </div>
+      {/* 자사 모델 없을 때만 안내(결론은 상단 히어로로 이동) */}
+      {!lgRef && <div className="border-t border-gray-100 dark:border-gray-800 px-4 py-3"><p className="text-[12px] text-gray-400 dark:text-gray-500">이 유형·용량에 자사(LG) 모델이 없어 vs 자사 비교를 생략합니다.</p></div>}
           </div>
         </div>
       </div>
