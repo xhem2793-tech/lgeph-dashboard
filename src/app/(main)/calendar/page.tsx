@@ -469,7 +469,7 @@ export default function Calendar() {
           <div className="rounded-xl p-4">
             <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
               <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{label} 구성</h2>
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">최신 {stamp ? fmtStamp(stamp) : "—"}</span>
+              <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500">최신 {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
             </header>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               {[
