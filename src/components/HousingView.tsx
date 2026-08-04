@@ -104,7 +104,7 @@ export default function HousingView() {
         ) : <Soon label="RPPI 상승률" />}
 
         {permits.series.length ? (
-          <ChartCard title="주거 건축허가 연면적" seg="B2B·CE" unit="백만㎡ · 분기" decimals={2}
+          <ChartCard title="주거 건축허가 연면적" seg="B2B·CE" unit="백만㎡ · 분기" kind="bar" decimals={2}
             legend={<Lg c={C.teal} t="주거 연면적" b />}
             series={permits.series} labels={permits.labels}
             meaning={<>승인 건축허가 <b className="text-gray-700 dark:text-gray-200">주거 연면적</b> — 12~24개월 후 준공·입주 선행</>}

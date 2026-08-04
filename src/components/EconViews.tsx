@@ -435,7 +435,7 @@ export function ApplianceView() {
           tone="emerald" src={src("PSA 에너지통계 부문별 최종소비 · 연간")} />
       )}
       {show(["전 제품"]) && elecpc.series.length > 0 && (
-        <ChartCard seg="전 제품" title="1인당 전력소비" unit="kWh/인 · 연간" kind="bar" labels={elecpc.labels} series={elecpc.series} decimals={0} seriesUnit="kWh"
+        <ChartCard seg="전 제품" title="1인당 전력소비" unit="kWh/인 · 연간" labels={elecpc.labels} series={elecpc.series} decimals={0} seriesUnit="kWh"
           legend={<Lg c={C.ind} t="1인당 전력소비" b />}
           meaning={<>국민 1인당 연간 전력사용량 — <b className="text-gray-700 dark:text-gray-200">전력화·가전 보유 심화 프록시</b></>}
           ai={<>필리핀 1인당 전력소비는 <b className="font-semibold text-amber-600 dark:text-amber-400">900kWh대로 태국(약 3,000)·말련(약 5,000)의 1/3 이하</b> = <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 보급·대형화 성장여력이 큰 저변</b>. <b>트렌드</b>: 소득 증가와 함께 완만한 우상향 — 냉장고·에어컨 등 상시가동 가전 확산의 구조적 순풍, 다만 高전기료가 고효율 수요를 동시에 자극.</>}
