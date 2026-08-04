@@ -61,7 +61,7 @@ function useMacro(keys: string[]) {
 
 // ── 접이식 배너 — 현재 지표값을 녹인 한 줄 요약(펼치면 LG 관점) ────────────
 type Kv = Record<string, number>
-type BannerDef = { headline: React.ReactNode; lg?: React.ReactNode; summary?: (kv: Kv, asOf: string) => React.ReactNode }
+type BannerDef = { headline?: React.ReactNode; lg?: React.ReactNode; summary?: (kv: Kv, asOf: string) => React.ReactNode }
 function Banner({ headline, lg, summary, d, kpiDefs }: BannerDef & { d: Mon; kpiDefs?: KpiDef[] }) {
   const [open, setOpen] = useState(false)
   const items = (kpiDefs ?? []).map((k) => ({ ...k, cur: latestOf(d, k.key) })).filter((k) => k.cur)
@@ -139,26 +139,27 @@ function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
-      {banner && <Banner {...banner} d={d} kpiDefs={loaded ? kpiDefs : undefined} />}
+      {/* 카테고리별 인사이트 배너 — 잠깐 숨김(추후 재노출 시 false 제거) */}
+      {false && banner && <Banner {...banner} d={d} kpiDefs={loaded ? kpiDefs : undefined} />}
       <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
-          {/* 기간토글 라인 — 카테고리명(물가 등)은 위 섹션 헤더와 중복이라 시각 제거(sr-only 유지). 토글만 노출 */}
-          <header className="mb-3 flex items-center border-b border-gray-100 dark:border-gray-800 pb-2.5">
+          {/* 헤더 라인 — 좌: 하위 카테고리 선택 버튼, 우: 기간토글(동일 선상). 카테고리명은 위 섹션 헤더와 중복이라 sr-only */}
+          <header className="mb-3.5 flex flex-wrap items-center gap-x-2 gap-y-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <h2 className="sr-only">{title}</h2>
+            {loaded && !empty && sections && sections.length > 1 && (
+              <nav className="flex flex-wrap gap-1.5">
+                {sections.map((s) => (
+                  <button key={s.key} type="button" onClick={() => setActiveSub(s.key)}
+                    className={"rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (activeSub === s.key ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")}>
+                    {s.label}
+                  </button>
+                ))}
+              </nav>
+            )}
             <span className="ml-auto">
               <Segmented size="sm" value={win} onChange={setWin} options={winOpts.map((w) => ({ k: w.k, label: w.k }))} />
             </span>
           </header>
-          {loaded && !empty && sections && sections.length > 1 && (
-            <nav className="mb-3.5 flex flex-wrap gap-1.5">
-              {sections.map((s) => (
-                <button key={s.key} type="button" onClick={() => setActiveSub(s.key)}
-                  className={"rounded-full border px-2 py-0.5 text-[11px] font-medium transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95 " + (activeSub === s.key ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")}>
-                  {s.label}
-                </button>
-              ))}
-            </nav>
-          )}
           {!loaded ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {[0, 1, 2, 3].map((i) => <div key={i} className="h-72 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}

@@ -118,6 +118,22 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 .scroll-soft { scrollbar-width: thin; scrollbar-color: transparent transparent; transition: scrollbar-color 0.45s ease; }
 .scroll-soft:hover, .scroll-soft:focus-within, .scroll-soft.is-scrolling { scrollbar-color: rgba(120, 120, 128, 0.42) transparent; }
 
+/* 메인 창(페이지) 스크롤바 — 전 페이지 공통. 평소 투명, 스크롤 중에만 부드럽게 나타났다 멈추면 페이드아웃.
+   (ScrollbarAutoHide가 스크롤 동안 html.is-scrolling 부여) */
+html::-webkit-scrollbar { width: 11px; height: 11px; }
+html::-webkit-scrollbar-track { background: transparent; }
+html::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 9999px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+html.is-scrolling::-webkit-scrollbar-thumb { background-color: rgba(120, 120, 128, 0.4); }
+html::-webkit-scrollbar-thumb:hover { background-color: rgba(120, 120, 128, 0.62); }
+html { scrollbar-color: transparent transparent; transition: scrollbar-color 0.5s ease; }
+html.is-scrolling { scrollbar-color: rgba(120, 120, 128, 0.4) transparent; }
+
 /* 통일된 포커스 링 — 키보드 탐색에만(마우스 클릭엔 안 뜸). iOS식 은은한 인디고 글로우.
    요소 자신의 border-radius를 그대로 따르므로 알약·카드 모두 자연스럽게 감싼다. */
 a:focus-visible,
