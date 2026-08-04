@@ -7,7 +7,7 @@ import React from "react"
 import { useTheme } from "next-themes"
 import { useLang } from "@/lib/i18n"
 
-const NAV_KEY: Record<string, "nav_overview" | "nav_economy" | "nav_news" | "nav_competitors" | "nav_competitor_ads" | "nav_calendar" | "nav_appendix" | "nav_reports"> = {
+const NAV_KEY: Record<string, "nav_overview" | "nav_economy" | "nav_news" | "nav_competitors" | "nav_competitor_ads" | "nav_calendar" | "nav_appendix" | "nav_reports" | "nav_weather"> = {
   "/overview": "nav_overview",
   "/economy": "nav_economy",
   "/news": "nav_news",
@@ -16,6 +16,7 @@ const NAV_KEY: Record<string, "nav_overview" | "nav_economy" | "nav_news" | "nav
   "/calendar": "nav_calendar",
   "/appendix": "nav_appendix",
   "/reports": "nav_reports",
+  "/weather": "nav_weather",
 }
 
 /** 슬라이딩 알약 토글 — 활성 옵션 뒤로 흰 스위치가 부드럽게 이동(cubic-bezier).
@@ -79,18 +80,21 @@ export function TopNav() {
 
         <nav className="flex shrink-0 items-center gap-0.5 overflow-x-auto">
           {siteConfig.nav.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={
-                (isActive(item.href)
-                  ? "text-indigo-700 dark:text-indigo-400 "
-                  : "text-gray-900 hover:text-indigo-600 dark:text-gray-100 dark:hover:text-indigo-400 ") +
-                "shrink-0 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-300 ease-out active:scale-95"
-              }
-            >
-              {t(NAV_KEY[item.href] ?? "nav_overview")}
-            </Link>
+            <React.Fragment key={item.href}>
+              {item.divider && <span aria-hidden className="mx-1.5 h-4 w-px shrink-0 rounded bg-gray-200 dark:bg-gray-700" />}
+              <Link
+                href={item.href}
+                className={
+                  (isActive(item.href)
+                    ? "text-indigo-700 dark:text-indigo-400 "
+                    : "text-gray-900 hover:text-indigo-600 dark:text-gray-100 dark:hover:text-indigo-400 ") +
+                  "inline-flex shrink-0 items-center gap-1 rounded-md px-3 py-1.5 text-sm font-medium transition-all duration-300 ease-out active:scale-95"
+                }
+              >
+                {t(NAV_KEY[item.href] ?? "nav_overview")}
+                {item.soon && <span className="rounded-full border border-amber-200 bg-amber-50 px-1 py-px text-[8.5px] font-bold uppercase leading-none tracking-wide text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">예정</span>}
+              </Link>
+            </React.Fragment>
           ))}
         </nav>
 

@@ -6,7 +6,6 @@ import RegionMapView from "@/components/RegionMapView"
 import RegionPriceExtras from "@/components/RegionPriceExtras"
 import EnergyLabelView from "@/components/EnergyLabelView"
 import OnlineMarketView from "@/components/OnlineMarketView"
-import WeatherView from "@/components/WeatherView"
 import ImportPriceView from "@/components/ImportPriceView"
 import HousingView from "@/components/HousingView"
 import AllIndicatorsView from "@/components/AllIndicatorsView"
@@ -31,7 +30,6 @@ const NAV: NavItem[] = [
   { id: "energy", ko: "에너지 라벨", sub: "에어컨·냉장고·TV 브랜드별 에너지효율·별점(DOE)", count: "4", group: "가전 인텔리전스", star: true, subs: ["브랜드별 효율", "5성 비중", "카테고리별"] },
   { id: "importprice", ko: "수입 단가", sub: "가전 수입 단가($/kg)·원산지 점유(Comtrade)", count: "4", group: "가전 인텔리전스", subs: ["냉장고", "에어컨", "세탁기", "TV"] },
   { id: "online", ko: "온라인 시장", sub: "이커머스 규모·디지털/통신 침투", count: "3", group: "소비·디지털", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
-  { id: "weather", ko: "날씨·재난", sub: "냉방도일 CDD·기온·태풍·지진", count: "4", group: "환경·리스크", subs: ["냉방도일 CDD", "월평균 기온", "태풍 경보", "지진 활동"] },
   { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도 + 지역 물가", count: "17", group: "지역", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운", "지역 물가 히트맵"] },
 ]
 
@@ -49,7 +47,6 @@ function viewFor(id: string) {
   if (id === "fx") return <FxView />
   if (id === "energy") return <EnergyLabelView />
   if (id === "online") return <OnlineMarketView />
-  if (id === "weather") return <WeatherView />
   if (id === "importprice") return <ImportPriceView />
   if (id === "housing") return <HousingView />
   if (id === "prices") return <PricesView />
