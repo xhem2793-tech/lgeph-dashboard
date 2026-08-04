@@ -163,6 +163,28 @@ const PROD_KW: { key: string; label: string; syn: string[] }[] = [
   { key: "b2b", label: "공조·B2B", syn: ["칠러", "VRF", "시스템에어컨", "데이터센터", "공조", "히트펌프", "상업용"] },
 ]
 
+// ── EN 표시 라벨 맵(키·필터값은 한글 로직 유지, '표시'만 번역). 함수라 렌더 시점 평가 → 토글 즉시 반영. ──
+const MENU_EN: Record<string, string> = {
+  "전체 동향": "All Trends", "인사이트·칼럼": "Insights & Columns",
+  "물가·인플레이션": "Prices & Inflation", "금리·통화정책": "Rates & Monetary Policy", "환율·외환·송금": "FX & Remittances", "성장·무역·고용": "Growth, Trade & Jobs",
+  "유가·연료": "Fuel & Oil", "전기요금·전력": "Electricity & Power",
+  "정치·행정·정세": "Politics & Governance", "규제·통관·관세": "Regulation & Customs",
+  "B2B·공조·HVAC": "B2B HVAC", "데이터센터·인프라": "Data Center & Infra", "가전·유통·경쟁": "Appliance Retail & Competition",
+  "기상·재난·냉방수요": "Weather, Disaster & Cooling",
+}
+const GROUP_EN: Record<string, string> = {
+  "인사이트 칼럼": "Insight Columns", "거시·금융": "Macro & Finance", "에너지·전력": "Energy & Power",
+  "정책·규제": "Policy & Regulation", "산업·유통": "Industry & Retail", "환경·리스크": "Environment & Risk",
+}
+const PRODKW_EN: Record<string, string> = { "전 제품": "All", "에어컨": "RAC", "냉장고": "REF", "세탁·건조": "Laundry", "TV·AV": "TV·AV", "에어케어": "Air Care", "공조·B2B": "HVAC B2B" }
+const TOPIC_EN: Record<string, string> = { "전체": "All", "거시·금융": "Macro & Finance", "에너지·전력": "Energy & Power", "CE·유통": "Appliance Retail", "B2B": "B2B", "정치·정책": "Politics", "규제·정책": "Regulation", "기상·재난": "Weather & Disaster", "인사이트": "Insight" }
+const INSIGHT_EN: Record<string, string> = { "전체": "All", "AI": "AI", "정책": "Policy", "시장전망": "Outlook", "기술": "Tech" }
+const menuLabel = (l: string) => T(l, MENU_EN[l] ?? l)
+const groupLabelN = (g: string) => T(g, GROUP_EN[g] ?? g)
+const prodChipLabel = (l: string) => T(l, PRODKW_EN[l] ?? l)
+const topicLabelN = (t: string) => T(t, TOPIC_EN[t] ?? t)
+const insightLabelN = (c: string) => T(c, INSIGHT_EN[c] ?? c)
+
 const PAGE = 20
 
 function ageDays(s: string) {
@@ -706,7 +728,7 @@ export default function Page() {
               <div className="flex flex-col gap-1">
                 {MENUS.map((m, i) => (
                   <React.Fragment key={m.key}>
-                    {m.group && m.group !== MENUS[i - 1]?.group && <p className="px-2.5 pb-1 pt-3.5 text-[11px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">{m.group}</p>}
+                    {m.group && m.group !== MENUS[i - 1]?.group && <p className="px-2.5 pb-1 pt-3.5 text-[11px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">{groupLabelN(m.group)}</p>}
                     <button
                       type="button"
                       onClick={() => { setMenu(m.key); setPage(1); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }) }}
@@ -723,7 +745,7 @@ export default function Page() {
                             (menu === m.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")
                           }
                         >
-                          {m.label}
+                          {menuLabel(m.label)}
                         </span>
                         <span className="num shrink-0 text-[11px] text-gray-400 dark:text-gray-500">{counts[m.key] ?? 0}</span>
                       </span>
@@ -780,7 +802,7 @@ export default function Page() {
                     const on = insightCat === k
                     const n = k === "전체" ? slice.length : slice.filter((g) => insightCatOf(g.head) === k).length
                     if (k !== "전체" && n === 0) return null
-                    return <button key={k} type="button" onClick={() => setInsightCat(k)} style={{ animation: "fadeUp .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 8) * 0.03 + "s" }} className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{k}<span className={"tabular-nums text-[10.5px] " + (on ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+                    return <button key={k} type="button" onClick={() => setInsightCat(k)} style={{ animation: "fadeUp .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 8) * 0.03 + "s" }} className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{insightLabelN(k)}<span className={"tabular-nums text-[10.5px] " + (on ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
                   })}
                 </div>
               )}
@@ -789,7 +811,7 @@ export default function Page() {
                 <div className="flex flex-wrap items-center gap-1.5">
                   {[{ key: "", label: "전 제품" }, ...PROD_KW.map((p) => ({ key: p.key, label: p.label }))].map((p, i) => {
                     const on = (prodKw ?? "") === p.key
-                    return <button key={p.key || "all"} type="button" onClick={() => setProdKw(p.key === "" ? null : p.key)} style={{ animation: "fadeUp .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 8) * 0.03 + "s" }} className={"inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{p.label}</button>
+                    return <button key={p.key || "all"} type="button" onClick={() => setProdKw(p.key === "" ? null : p.key)} style={{ animation: "fadeUp .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 8) * 0.03 + "s" }} className={"inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{prodChipLabel(p.label)}</button>
                   })}
                 </div>
               )}
@@ -872,7 +894,7 @@ export default function Page() {
                       </div>
                       <div className="flex min-w-0 flex-1 flex-col justify-center">
                         <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
-                          <span className="flex items-center gap-1.5 font-semibold" style={{ color: (ART[d.topic] ?? ART["거시·금융"]).accent }}><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: (ART[d.topic] ?? ART["거시·금융"]).accent }} />{d.topic}</span>
+                          <span className="flex items-center gap-1.5 font-semibold" style={{ color: (ART[d.topic] ?? ART["거시·금융"]).accent }}><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: (ART[d.topic] ?? ART["거시·금융"]).accent }} />{topicLabelN(d.topic)}</span>
                           <span className="text-gray-300 dark:text-gray-600">·</span>
                           <span>{d.source}</span>{d.source === OURS || d.kind === "insight" ? <AiMark /> : null}
                           <span className="text-gray-300 dark:text-gray-600">·</span>
@@ -947,7 +969,7 @@ export default function Page() {
                               {d.dDay != null && <span className={"num text-[10px] font-bold " + (d.dDay >= 0 && d.dDay <= 7 ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400")}>{d.dDay <= 0 ? T("시행 중", "In effect") : T("시행 D-", "Effective D-") + d.dDay}</span>}
                             </>
                           )}
-                          <span className="text-[10.5px] font-medium text-gray-500 dark:text-gray-400">{d.kind === "reg" ? (d.agency || d.topic) : d.topic}</span>
+                          <span className="text-[10.5px] font-medium text-gray-500 dark:text-gray-400">{d.kind === "reg" ? (d.agency || topicLabelN(d.topic)) : topicLabelN(d.topic)}</span>
                           <span className="text-[11.5px] text-gray-300 dark:text-gray-600">·</span>
                           <span className="text-[11.5px] text-gray-500 dark:text-gray-400">{d.source}</span>
                           {d.source === OURS || d.kind === "insight" ? <AiMark /> : null}
@@ -1086,7 +1108,7 @@ export default function Page() {
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-gray-500 dark:text-gray-400">
                 <span className="flex items-center gap-1.5 font-semibold" style={{ color: (ART[modal.topic] ?? ART["거시·금융"]).accent }}>
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: (ART[modal.topic] ?? ART["거시·금융"]).accent }} />
-                  {modal.topic}
+                  {topicLabelN(modal.topic)}
                 </span>
                 <span className="text-gray-300 dark:text-gray-600">·</span>
                 <span>{modal.source}</span>
