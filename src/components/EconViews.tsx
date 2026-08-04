@@ -130,9 +130,7 @@ export function AgendaCard() {
 
 // ── 공용 셸 — 환율 페이지와 동일 레이아웃(배너 + 좌 차트 | 우 위젯 286px) ──
 type Section = { key: string; label: string; node: React.ReactNode }
-// 도메인별 액센트 바(퍼지-세이프 전체 클래스)
-const BARCLS: Record<string, string> = { indigo: "bg-indigo-500", blue: "bg-blue-500", violet: "bg-violet-500", amber: "bg-amber-500", emerald: "bg-emerald-500", teal: "bg-teal-500", rose: "bg-rose-500" }
-function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children, sections, accent = "indigo" }: { title: string; sub?: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; banner?: BannerDef; kpiDefs?: KpiDef[]; d: Mon; children?: React.ReactNode; sections?: Section[]; accent?: string }) {
+function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children, sections }: { title: string; sub?: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; banner?: BannerDef; kpiDefs?: KpiDef[]; d: Mon; children?: React.ReactNode; sections?: Section[]; accent?: string }) {
   const [activeSub, setActiveSub] = useState(sections?.[0]?.key ?? "")
   const curSub = sections?.find((s) => s.key === activeSub) ?? sections?.[0]
   // 적응형 토글 — 뷰의 실제 데이터 기간(년)보다 긴 창은 숨김(5년치 데이터 없는데 5Y 토글 노출 방지)
@@ -144,9 +142,9 @@ function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children
       {banner && <Banner {...banner} d={d} kpiDefs={loaded ? kpiDefs : undefined} />}
       <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
-          <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-            <span className={"h-[18px] w-1 rounded " + (BARCLS[accent] || BARCLS.indigo)} />
-            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h2>
+          {/* 기간토글 라인 — 카테고리명(물가 등)은 위 섹션 헤더와 중복이라 시각 제거(sr-only 유지). 토글만 노출 */}
+          <header className="mb-3 flex items-center border-b border-gray-100 dark:border-gray-800 pb-2.5">
+            <h2 className="sr-only">{title}</h2>
             <span className="ml-auto">
               <Segmented size="sm" value={win} onChange={setWin} options={winOpts.map((w) => ({ k: w.k, label: w.k }))} />
             </span>

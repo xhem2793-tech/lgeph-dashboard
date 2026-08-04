@@ -429,19 +429,6 @@ function Hi({ text, q }: { text: string; q: string }) {
   )
 }
 
-function hitCount(x: Doc, q: string) {
-  const k = q.trim().toLowerCase()
-  if (!k) return 0
-  const s = (x.title + " " + x.summary + " " + x.so).toLowerCase()
-  let n = 0
-  let i = s.indexOf(k)
-  while (i >= 0) {
-    n++
-    i = s.indexOf(k, i + k.length)
-  }
-  return n
-}
-
 /** 같은 사건 묶기 — 날짜 ±2일 + 제목·요약 토큰 유사도. 시트(관점)가 다르면 묶지 않는다 */
 const STOP = /^(그|및|등|위해|대한|관련|올해|지난|이번|the|a|an|of|in|on|to|for|and|with|its|his|by)$/i
 
@@ -781,7 +768,8 @@ export default function Page() {
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               {/* 정렬 */}
               <Segmented value={sort} onChange={(k) => setSort(k as "new" | "impact")} options={[{ k: "new", label: "최신순" }, { k: "impact", label: "영향도순" }]} size="sm" />
-              {/* 제품 키워드 검색 — 제품군 유의어 OR 매칭 */}
+              {/* 제품 키워드 검색 — 제품군 유의어 OR 매칭. 인사이트 칼럼 뷰에선 숨김(자체 카테고리 필터 사용) */}
+              {menu !== "인사이트" && (
               <div className="flex items-center gap-1">
                 <span className="mr-0.5 hidden text-[10.5px] font-semibold text-gray-400 dark:text-gray-500 sm:inline">제품</span>
                 {PROD_KW.map((p) => {
@@ -813,6 +801,7 @@ export default function Page() {
                   </button>
                 )}
               </div>
+              )}
             </div>
 
             <div className="flex items-center gap-3">
@@ -981,13 +970,6 @@ export default function Page() {
                           {d.source === OURS || d.kind === "insight" ? <AiMark /> : null}
                           <span className="text-[11.5px] text-gray-300 dark:text-gray-600">·</span>
                           <span className="num text-[11.5px] text-gray-500 dark:text-gray-400">{rel(d.date)}</span>
-                          
-
-                          {q.trim() && hitCount(d, q) > 0 ? (
-                            <span className="num rounded-full bg-yellow-100 dark:bg-yellow-500/15 px-1.5 py-px text-[10px] font-semibold text-yellow-800 dark:text-yellow-300">
-                              일치 {hitCount(d, q)}
-                            </span>
-                          ) : null}
 
                           {g.dups.length ? (
                             <button
