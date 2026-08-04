@@ -907,12 +907,16 @@ export default function Page() {
                       </div>
 
                       <div className="flex min-w-0 flex-1 flex-col justify-center">
-                        {/* 히어로 = 시사점(결론). 없으면 제목이 히어로 — 인사이트가 먼저 눈에 들어오게 */}
-                        <p className="line-clamp-2 text-[14.5px] font-semibold leading-snug text-gray-800 dark:text-gray-100 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                          <Hi text={d.so || d.title} q={q} />
+                        <p
+                          className={
+                            "line-clamp-1 font-semibold leading-snug text-gray-800 dark:text-gray-100 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 " +
+                            "text-[14.5px]"
+                          }
+                        >
+                          <Hi text={d.title} q={q} />
                         </p>
-                        {/* 보조 = 원문 제목(시사점이 히어로일 때만 맥락으로) */}
-                        {d.so ? <p className="mt-1 line-clamp-1 text-[12px] leading-snug text-gray-400 dark:text-gray-500"><Hi text={d.title} q={q} /></p> : null}
+
+                        <p className="mt-1 line-clamp-1 text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{d.so ? <Hi text={d.so} q={q} /> : null}</p>
                         <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
                           {d.kind === "reg" && (
                             <>
