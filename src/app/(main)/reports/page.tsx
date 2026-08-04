@@ -98,6 +98,14 @@ export default function Page() {
 
       {tab === "reports" ? (
         <div key="reports" style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
+          {/* 맞춤 리포트 안내 */}
+          <div className="mb-4 flex items-start gap-2.5 rounded-2xl bg-indigo-50/70 p-4 ring-1 ring-inset ring-indigo-100 dark:bg-indigo-500/10 dark:ring-indigo-500/20">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-indigo-500 dark:text-indigo-400"><path d="M12 3l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 14.6 7 18.2l1.9-5.8L4 8.8h6.1L12 3z" /></svg>
+            <div className="min-w-0">
+              <p className="text-[13px] font-bold text-indigo-700 dark:text-indigo-300">맞춤 리포트 — 준비 중</p>
+              <p className="mt-0.5 text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">리포트는 <b>부서별 · 제품별 · 기간별</b>로 커스터마이징해 발간할 예정입니다. 필요한 관점(경영기획·마케팅·상품기획 / 냉장고·세탁기·TV·에어컨 / 주간·월간·분기)에 맞춰 자동 구성됩니다.</p>
+            </div>
+          </div>
           {reports === null ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[320px] animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}
