@@ -42,13 +42,13 @@ import { ErrorBoundary } from "@/components/ErrorBoundary"
 
 type Status = "live" | "next" | "plan"
 
-const GROUPS: { group: string; items: { key: string; no: number; label: string; desc: string; status: Status }[] }[] = [
+const GROUPS: { group: string; items: { key: string; no: number; label: string; desc: string; status: Status; badge?: "예정" | "beta" }[] }[] = [
   {
     group: "가격 모니터링",
     items: [
       { key: "board", no: 0, label: "채널별 가격 비교", desc: "거래선 × 대표 제품 오늘가 매트릭스 · 동일모델 유통 최저가", status: "live" },
       { key: "movers", no: 1, label: "일일 가격 변동", desc: "3일 가격·변동폭·할인율", status: "live" },
-      { key: "outlier", no: 12, label: "이상치 알림", desc: "가격 급락·급등·깊은할인·품절 감지 · 유리/불리 신호", status: "live" },
+      { key: "outlier", no: 12, label: "이상치 알림", desc: "가격 급락·급등·깊은할인·품절 감지 · 유리/불리 신호", status: "live", badge: "beta" },
     ],
   },
   {
@@ -63,7 +63,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
   {
     group: "채널·프로모션",
     items: [
-      { key: "promo", no: 4, label: "프로모션 트래커", desc: "브랜드별 프로모 강도 · 유통 캠페인", status: "live" },
+      { key: "promo", no: 4, label: "프로모션 트래커", desc: "브랜드별 프로모 강도 · 유통 캠페인", status: "live", badge: "예정" },
       { key: "deals", no: 14, label: "프로모 딜", desc: "실딜 리스트 · 할인율·무료배송·번들·쿠폰 · 유통별", status: "live" },
     ],
   },
@@ -342,7 +342,7 @@ export default function Competitors() {
                       {view === it.key && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
                       <span className="flex w-full items-center gap-1.5">
                         <span className={"flex-1 truncate text-[14px] transition-colors " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>{it.label}</span>
-                        {it.status !== "live" && <span className="shrink-0 text-[9.5px] font-medium text-gray-400 dark:text-gray-500">예정</span>}
+                        {it.badge === "beta" ? <span className="shrink-0 rounded-full border border-indigo-200 bg-indigo-50 px-1.5 py-px text-[8.5px] font-bold uppercase tracking-wide text-indigo-600 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400">beta</span> : (it.badge === "예정" || it.status !== "live") ? <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-px text-[8.5px] font-bold uppercase tracking-wide text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">예정</span> : null}
                       </span>
                     </button>
                   ))}
