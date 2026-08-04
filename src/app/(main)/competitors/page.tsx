@@ -64,7 +64,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
     group: "채널·프로모션",
     items: [
       { key: "promo", no: 4, label: "프로모션 트래커", desc: "브랜드별 프로모 강도 · 유통 캠페인", status: "live", badge: "예정" },
-      { key: "deals", no: 14, label: "프로모 딜", desc: "실딜 리스트 · 할인율·무료배송·번들·쿠폰 · 유통별", status: "live" },
+      { key: "deals", no: 14, label: "프로모 비교", desc: "실딜 리스트 · 할인율·무료배송·번들·쿠폰 · 유통별", status: "live" },
     ],
   },
   {
