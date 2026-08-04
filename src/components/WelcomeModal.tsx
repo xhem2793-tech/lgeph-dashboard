@@ -54,10 +54,13 @@ export default function WelcomeModal() {
             <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300">AX 필리핀법인</span>
             <span className="block text-gray-900 dark:text-gray-50">마켓 인텔리전스 대시보드</span>
           </h2>
-          <p className="relative mt-2 text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400" style={{ animation: "fadeUp .55s cubic-bezier(.22,1,.36,1) both", animationDelay: ".24s" }}>AI 전환(AX)으로 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.</p>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-7 py-5">
+          {/* 리드 문구 — 헤더에서 내려 제목형(좌측 인디고 액센트)으로 강조 */}
+          <p className="mb-4 border-l-[3px] border-indigo-400 pl-3 text-[13.5px] font-semibold leading-relaxed text-gray-800 dark:border-indigo-500/50 dark:text-gray-100">
+            AI 전환(AX)으로 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.
+          </p>
           {/* 주의 — 정확도·갱신 안내 */}
           <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-amber-500"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" /></svg>
