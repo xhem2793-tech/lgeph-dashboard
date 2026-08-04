@@ -11,6 +11,12 @@ import React from "react"
  */
 export type Lang = "ko" | "en"
 
+/** 인라인 번역 헬퍼 — 컴포넌트 어디서나 `T("한글", "English")`로 병기.
+ *  LangProvider가 현재 언어를 이 모듈 변수에 동기화하고, 언어 전환 시 트리를 리마운트(key=lang)해 즉시 반영된다.
+ *  (키 관리 없이 전면 번역용. 훅이 아니라 JSX 텍스트/문자열 어디든 사용 가능) */
+let _lang: Lang = "ko"
+export function T(ko: string, en: string): string { return _lang === "en" ? en : ko }
+
 const Ctx = React.createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
   lang: "ko",
   setLang: () => {},
@@ -39,7 +45,9 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
       window.setTimeout(() => root.classList.remove("lang-in"), 420)
     }, 130)
   }, [])
-  return <Ctx.Provider value={{ lang, setLang }}>{children}</Ctx.Provider>
+  _lang = lang  // 모듈 변수 동기화(T 헬퍼가 참조)
+  // key={lang} — 언어 전환 시 트리 전체 리마운트로 T() 결과가 즉시 반영됨
+  return <Ctx.Provider value={{ lang, setLang }}><React.Fragment key={lang}>{children}</React.Fragment></Ctx.Provider>
 }
 
 export function useLang() {
