@@ -98,11 +98,25 @@ body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; 
 }
 *::-webkit-scrollbar-thumb:hover { background-color: rgba(120,120,128,0.55); }
 
-/* 좌측 리스트 등 — 평소엔 스크롤바 숨김, 스크롤/hover 시에만 노출(오버레이 톤). */
-.scroll-soft { scrollbar-width: none; }
-.scroll-soft::-webkit-scrollbar { width: 0; height: 0; }
-.scroll-soft:hover, .scroll-soft:focus-within { scrollbar-width: thin; }
-.scroll-soft:hover::-webkit-scrollbar, .scroll-soft:focus-within::-webkit-scrollbar { width: 7px; height: 7px; }
+/* 좌측 리스트 등 — 평소엔 스크롤바 숨김, 스크롤 중·hover 시에만 '부드럽게' 노출(오버레이 톤).
+   폭은 항상 확보(0↔7 점프 방지)하고 thumb 색만 투명↔반투명으로 페이드 → 나타남/사라짐이 매끄럽다.
+   .is-scrolling 은 스크롤 이벤트 동안 JS가 잠시 부여 → 멈추면 서서히 사라짐. */
+.scroll-soft::-webkit-scrollbar { width: 7px; height: 7px; }
+.scroll-soft::-webkit-scrollbar-track { background: transparent; }
+.scroll-soft::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+  transition: background-color 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.scroll-soft:hover::-webkit-scrollbar-thumb,
+.scroll-soft:focus-within::-webkit-scrollbar-thumb,
+.scroll-soft.is-scrolling::-webkit-scrollbar-thumb { background-color: rgba(120, 120, 128, 0.42); }
+.scroll-soft::-webkit-scrollbar-thumb:hover { background-color: rgba(120, 120, 128, 0.62); }
+/* Firefox — thumb 색 전환(느린 페이드는 미지원이라 hover/scroll 시 표시로 대체) */
+.scroll-soft { scrollbar-width: thin; scrollbar-color: transparent transparent; transition: scrollbar-color 0.45s ease; }
+.scroll-soft:hover, .scroll-soft:focus-within, .scroll-soft.is-scrolling { scrollbar-color: rgba(120, 120, 128, 0.42) transparent; }
 
 /* 통일된 포커스 링 — 키보드 탐색에만(마우스 클릭엔 안 뜸). iOS식 은은한 인디고 글로우.
    요소 자신의 border-radius를 그대로 따르므로 알약·카드 모두 자연스럽게 감싼다. */
