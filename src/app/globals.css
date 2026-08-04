@@ -81,6 +81,16 @@ html.lang-in header {
   --dur-slow: 0.45s;
 }
 
+/* 다크/라이트 전환 — 전환 순간에만 전역 color 크로스페이드(평소 hover엔 영향 X).
+   ThemeTransition이 <html>에 theme-anim을 ~420ms 부여. */
+html.theme-anim,
+html.theme-anim *,
+html.theme-anim *::before,
+html.theme-anim *::after {
+  transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease, fill 0.4s ease, stroke 0.4s ease, box-shadow 0.4s ease !important;
+  transition-delay: 0s !important;
+}
+
 /* iOS 디테일 — 부드러운 스크롤 · 탭 하이라이트 제거 · 폰트 스무딩 */
 html { scroll-behavior: smooth; }
 * { -webkit-tap-highlight-color: transparent; }

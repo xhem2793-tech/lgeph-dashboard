@@ -22,6 +22,7 @@ const plexNum = IBM_Plex_Sans({ subsets: ["latin"], weight: ["400", "500", "600"
 
 import { TopNav } from "@/components/ui/navigation/TopNav"
 import { LangProvider } from "@/lib/i18n"
+import ThemeTransition from "@/components/ThemeTransition"
 import { siteConfig } from "./siteConfig"
 
 export const metadata: Metadata = {
@@ -75,6 +76,7 @@ export default function RootLayout({
       >
         <div className="w-full">
           <ThemeProvider defaultTheme="system" attribute="class">
+            <ThemeTransition />
             <LangProvider>
               <TopNav />
               <main>{children}</main>

@@ -49,10 +49,8 @@ export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; dea
   const [brand, setBrand] = React.useState("전체")
   const [priceBand, setPriceBand] = React.useState<number | null>(null)   // 가격대 프리셋 인덱스(null=전체)
   const [q, setQ] = React.useState("")
-  // 조건을 고르면(touched) 활성. 단, 검색만으로 활성화된 경우 검색을 지우면 다시 비활성 → 리스트가 실시간으로 사라짐.
-  const [touched, setTouched] = React.useState(false)
-  const act = React.useCallback(() => setTouched(true), [])
-  const activated = touched || q.trim() !== ""
+  // 활성 = 실제 필터 상태 기준. 필터를 전부 '전체'로 되돌리고 검색어도 비우면 다시 초기(가이드) 화면으로 복귀.
+  const activated = cat !== "전체" || form !== "전체" || size !== "전체" || brand !== "전체" || priceBand !== null || q.trim() !== ""
   const R = rows ?? []
   const cats = React.useMemo(() => { const av = PM_CATS.filter((c) => R.some((r) => r.category === c)); return ["전체", ...(av.length ? av : PM_CATS)] }, [R])
   const formList = pmFormsFor(cat)
@@ -136,11 +134,11 @@ export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; dea
     <div className="flex flex-col gap-3">
       {/* 필터바 — 한 라인 통일(제품·유형·용량·브랜드·가격대) + 검색 오른쪽. 일일 가격 변동과 동일 */}
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-2 py-2.5">
-        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체"); act() }} /></div>
-        {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체"); act() }} /></div>}
-        <div className="w-fit"><PmDrop label={sizeLabel} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={(k) => { setSize(k); act() }} /></div>
-        <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={(k) => { setBrand(k); act() }} /></div>
-        <div className="w-fit"><PmDrop label="가격대" sel={priceBand == null ? "전체" : String(priceBand)} options={[{ k: "전체", t: "전체" }, ...bands.map((b, i) => ({ k: String(i), t: b.label }))]} onSelect={(k) => { setPriceBand(k === "전체" ? null : Number(k)); act() }} /></div>
+        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체") }} /></div>
+        {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체") }} /></div>}
+        <div className="w-fit"><PmDrop label={sizeLabel} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={(k) => { setSize(k) }} /></div>
+        <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={(k) => { setBrand(k) }} /></div>
+        <div className="w-fit"><PmDrop label="가격대" sel={priceBand == null ? "전체" : String(priceBand)} options={[{ k: "전체", t: "전체" }, ...bands.map((b, i) => ({ k: String(i), t: b.label }))]} onSelect={(k) => { setPriceBand(k === "전체" ? null : Number(k)) }} /></div>
         <ListSearch className="ml-auto" value={q} onChange={(v) => setQ(v)} placeholder="모델·브랜드 검색" />
         <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최신 {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
