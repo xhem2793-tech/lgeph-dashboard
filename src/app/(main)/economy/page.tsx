@@ -10,7 +10,7 @@ import WeatherView from "@/components/WeatherView"
 import ImportPriceView from "@/components/ImportPriceView"
 import HousingView from "@/components/HousingView"
 import AllIndicatorsView from "@/components/AllIndicatorsView"
-import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView, PricesView } from "@/components/EconViews"
+import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView, PricesView, AgendaCard } from "@/components/EconViews"
 import { Segmented } from "@/components/Segmented"
 import { dataProvenance } from "@/lib/supabase"
 import { countByCat } from "@/lib/indicatorCats"
@@ -128,7 +128,7 @@ export default function Page() {
   return (
     <main className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}"}</style>
-      <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
+      <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)_300px] lg:gap-7">
         <aside className="h-fit lg:sticky lg:top-[61px] lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="sticky top-0 z-10 flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 bg-white/95 px-2 py-2.5 backdrop-blur dark:bg-gray-950/90">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
@@ -185,6 +185,11 @@ export default function Page() {
             </div>
           )}
         </div>
+
+        {/* 우측 경제일정 위젯 — sticky 고정, 스크롤 따라 내려옴 */}
+        <aside className="hidden lg:block lg:sticky lg:top-[61px] lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:border-l lg:border-gray-100 lg:dark:border-gray-800/70 lg:pl-6" style={{ animation: "fadeUp .5s ease both" }}>
+          <AgendaCard />
+        </aside>
       </div>
     </main>
   )
