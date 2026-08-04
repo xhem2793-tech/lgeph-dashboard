@@ -379,7 +379,7 @@ export default function Competitors() {
           ) : view === "promo" ? (
             <PromoView rows={promo} camps={camps} />
           ) : view === "deals" ? (
-            <DealsView rows={rows} deals={deals} />
+            <DealsView rows={rows} deals={deals} stamp={stamp} />
           ) : view === "outlier" ? (
             <AnomalyView rows={rows} ads={ads} stamp={stamp} />
           ) : view === "movers" ? (

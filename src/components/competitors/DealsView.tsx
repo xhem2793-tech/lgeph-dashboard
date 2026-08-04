@@ -2,7 +2,7 @@
 
 // 프로모 딜 — 동일 스펙 경쟁사 비교(쿠폰·번들·할부·배송·사은품 + 가격대 프리셋).
 import React from "react"
-import { type PriceRow, type DealRow } from "@/lib/supabase"
+import { fmtStamp, type PriceRow, type DealRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormsFor, pmFormHit, pmSizeList, pmSizeBucket } from "@/lib/classify"
 import { peso, pmShopLabel, PmDrop, ListSearch } from "@/components/competitors/shared"
 
@@ -42,16 +42,17 @@ type Band = { lo: number; hi: number; label: string; last: boolean }
 /** 동일 스펙 경쟁사 비교 — 유형(+용량) 고정, 브랜드=행·프로모 종류별 컬럼(쿠폰·번들·할부·배송·사은품).
  *  진입 시 구글식 중앙 검색 + 카테고리·가격대 프리셋만 → 조건 선택하면 선택 배지가 위에 쌓이며 결과 목록 등장.
  *  레이아웃: Claude Design `spec-compare-photo.reference.html`. */
-export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: DealRow[] | null }) {
+export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; deals: DealRow[] | null; stamp?: string | null }) {
   const [cat, setCat] = React.useState("냉장고")
   const [form, setForm] = React.useState("SxS")
   const [size, setSize] = React.useState("전체")
   const [brand, setBrand] = React.useState("전체")
   const [priceBand, setPriceBand] = React.useState<number | null>(null)   // 가격대 프리셋 인덱스(null=전체)
   const [q, setQ] = React.useState("")
-  // 처음엔 중앙에 검색·조건만 → 조건을 고르면(activated) 필터가 위로 올라가며 아래에 목록이 등장
-  const [activated, setActivated] = React.useState(false)
-  const act = React.useCallback(() => setActivated(true), [])
+  // 조건을 고르면(touched) 활성. 단, 검색만으로 활성화된 경우 검색을 지우면 다시 비활성 → 리스트가 실시간으로 사라짐.
+  const [touched, setTouched] = React.useState(false)
+  const act = React.useCallback(() => setTouched(true), [])
+  const activated = touched || q.trim() !== ""
   const R = rows ?? []
   const cats = React.useMemo(() => { const av = PM_CATS.filter((c) => R.some((r) => r.category === c)); return av.length ? av : PM_CATS }, [R])
   const formList = pmFormsFor(cat)
@@ -145,13 +146,9 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
         {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체"); act() }} /></div>}
         <div className="w-fit"><PmDrop label={sizeLabel} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={(k) => { setSize(k); act() }} /></div>
         <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={(k) => { setBrand(k); act() }} /></div>
-        <span className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
-        <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">가격대</span>
-        <button type="button" onClick={() => setPriceBand(null)} className={"rounded-full px-3 py-1 text-[11.5px] font-semibold transition-all duration-200 ease-out active:scale-95 " + (priceBand == null ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300")}>전체</button>
-        {bands.map((b, i) => (
-          <button key={i} type="button" onClick={() => { setPriceBand(i); act() }} className={"rounded-full px-3 py-1 text-[11.5px] font-semibold tabular-nums transition-all duration-200 ease-out active:scale-95 " + (priceBand === i ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300")}>{b.label}</button>
-        ))}
-        <ListSearch className="ml-auto" value={q} onChange={(v) => { setQ(v); act() }} placeholder="모델·브랜드 검색" />
+        <div className="w-fit"><PmDrop label="가격대" sel={priceBand == null ? "전체" : String(priceBand)} options={[{ k: "전체", t: "전체" }, ...bands.map((b, i) => ({ k: String(i), t: b.label }))]} onSelect={(k) => { setPriceBand(k === "전체" ? null : Number(k)); act() }} /></div>
+        <ListSearch className="ml-auto" value={q} onChange={(v) => setQ(v)} placeholder="모델·브랜드 검색" />
+        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최신 {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
 
       {/* 선택 배지 — 검색창 위, 차례대로 */}
@@ -183,6 +180,15 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
 
       {/* 표시 요약 */}
       {activated && <p className="text-[11.5px] text-gray-500 dark:text-gray-400">{lgRef ? <>자사 <b className="text-indigo-700 dark:text-indigo-300">{lgRef.model}</b> 기준</> : "자사(LG) 모델 없음"} · 표시 <b className="tabular-nums">{list.length}</b></p>}
+
+      {/* 빈 상태 — 조건·검색 전 가이드(검색을 지우면 다시 이 상태로 돌아옴) */}
+      {!activated && (
+        <div className="mt-2 flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/40 dark:bg-gray-900/30 py-16 text-center" style={{ animation: "fadeUp .4s ease both" }}>
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300 dark:text-gray-600"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
+          <p className="text-[13px] font-semibold text-gray-600 dark:text-gray-300">조건을 선택하거나 검색해 보세요</p>
+          <p className="text-[12px] text-gray-400 dark:text-gray-500">제품·유형·가격대를 고르거나 모델명을 검색하면 조건에 맞는 프로모 딜이 여기에 표시됩니다</p>
+        </div>
+      )}
 
       {/* 결과 — 선택 시 아래에서 등장 */}
       <div style={{ display: "grid", gridTemplateRows: activated ? "1fr" : "0fr", opacity: activated ? 1 : 0, transition: "grid-template-rows .55s cubic-bezier(.22,1,.36,1), opacity .45s ease" }}>
