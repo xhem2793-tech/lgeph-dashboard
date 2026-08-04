@@ -97,8 +97,8 @@
     position:absolute;top:26px;left:30px;z-index:5;pointer-events:none;
   }
   .brand .ki{font-size:11px;letter-spacing:.32em;color:var(--muted);font-weight:600;text-transform:uppercase}
-  .brand h1{font-size:15.5px;font-weight:800;letter-spacing:-.01em;margin-top:3px;line-height:1.15}
-  .brand .sub{font-size:10.5px;color:var(--muted);margin-top:5px}
+  .brand h1{font-size:26px;font-weight:800;letter-spacing:-.01em;margin-top:6px;line-height:1.05}
+  .brand .sub{font-size:12.5px;color:var(--muted);margin-top:7px}
 
   .backbtn{
     position:absolute;top:26px;right:30px;z-index:6;
@@ -375,7 +375,7 @@
     <div class="brand">
       <div class="ki">Republic of the Philippines</div>
       <h1>필리핀 행정 지역</h1>
-      <div class="sub">17개 지역 · 클릭 확대·세부정보 · 스크롤 줌 · 드래그 이동</div>
+      <div class="sub">17개 지역 · 클릭하면 확대·세부 정보</div>
     </div>
     <button class="backbtn" id="back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -1051,20 +1051,9 @@ d3.json("data/ph-regions.geojson").then(geo=>{
       n.style.transition="transform .08s linear";  // 휠/드래그는 즉각 반응, 클릭 드릴다운은 selectRegion 이 .95s 로 복원
       n.style.transform=`translate(${curT.tx}px,${curT.ty}px) scale(${curT.scale})`;
     }
-    stage.addEventListener("wheel",(e)=>{
-      e.preventDefault();
-      const r=svg.node().getBoundingClientRect();
-      if(!r.width||!r.height) return;
-      const px=(e.clientX-r.left)/r.width*W, py=(e.clientY-r.top)/r.height*H; // 커서 위치(뷰박스 좌표)
-      const ns0=curT.scale*(e.deltaY<0?1.15:1/1.15);
-      let ns=Math.min(MAXS,Math.max(MINS,ns0));
-      const wx=(px-curT.tx)/curT.scale, wy=(py-curT.ty)/curT.scale;
-      let ntx=px-ns*wx, nty=py-ns*wy;
-      if(ns<=1.0001){ ns=1; ntx=0; nty=0; }        // 원배율로 돌아오면 정확히 초기 위치로
-      curT={tx:ntx,ty:nty,scale:ns};
-      apply();
-      stage.style.cursor=ns>1?"grab":"";
-    },{passive:false});
+    // 휠 줌인/줌아웃 비활성화(클릭 드릴다운 줌은 selectRegion에서 별도 유지). 페이지 점프만 막고 확대는 안 함.
+    void MINS; void MAXS; void apply;
+    // (자유 줌 비활성 — 필요 시 아래 주석 해제)
     // 드래그 이동 — 확대 상태(scale>1)에서만. 클릭 보존을 위해 '실제 이동(>4px)' 후에만 포인터 캡처.
     let drag=null;
     stage.addEventListener("pointerdown",(e)=>{
