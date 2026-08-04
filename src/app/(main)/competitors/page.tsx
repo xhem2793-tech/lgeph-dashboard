@@ -376,7 +376,7 @@ export default function Competitors() {
           </header>)}
 
           <ErrorBoundary key={view} label={active?.label}>{view === "board" ? (
-            <BoardView daily={daily} stamp={stamp} elabels={elabels} deals={deals} />
+            <BoardView daily={daily} stamp={stamp} elabels={elabels} />
           ) : view === "asp" ? (
             <PositioningMatrix rows={rows} elabels={elabels} stamp={stamp} />
           ) : view === "promo" ? (
