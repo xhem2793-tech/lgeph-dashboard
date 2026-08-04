@@ -1022,11 +1022,11 @@ export async function calendarEvents(from: string, to: string) {
 //    로직: v_calendar_month(월초~+3개월) → kind!=other(공휴일 예외) 필터 → 오늘~+14일 창 +
 //    트리거(급여일·이커머스 대형세일·전기요금 변동) 병합 → 날짜순 → 상위 10.
 export type AgendaItem = { date: string; label: string; note: string; dot: string; category: string; ev?: CalEvent }
-const CAT_DOT: Record<string, string> = { 경제: "bg-emerald-500", 금융: "bg-blue-500", 정치: "bg-purple-500", 규제: "bg-red-500", 에너지: "bg-amber-500", 유통: "bg-violet-500", 공휴일: "bg-teal-500", 기타: "bg-gray-400" }
+const CAT_DOT: Record<string, string> = { 경제: "bg-emerald-500", 금융: "bg-blue-500", 정치: "bg-purple-500", 규제: "bg-red-500", 에너지: "bg-amber-500", 유통: "bg-violet-500", 공휴일: "bg-teal-500", 사회: "bg-pink-500", 통상: "bg-cyan-500", 기타: "bg-gray-400" }
 const KIND_LABEL: Record<string, string> = { release: "지표 발표", policy: "정책·규제", holiday: "공휴일" }
 const KIND_LABEL_EN: Record<string, string> = { release: "Data Release", policy: "Policy·Regulation", holiday: "Holiday" }
 // 카테고리 '표시'용 영문(enum 비교 키는 그대로) — ko 표시는 규제→정책으로 접어 보여줌
-const AG_CAT_EN: Record<string, string> = { 경제: "Economy", 금융: "Finance", 정치: "Politics", 규제: "Policy", 에너지: "Energy", 유통: "Retail", 공휴일: "Holiday", 사회: "Society", 정책: "Policy", 기타: "Other" }
+const AG_CAT_EN: Record<string, string> = { 경제: "Economy", 금융: "Finance", 정치: "Politics", 규제: "Policy", 에너지: "Energy", 유통: "Retail", 공휴일: "Holiday", 사회: "Society", 통상: "Trade", 정책: "Policy", 기타: "Other" }
 const agHead = (s: string) => s.split(/[—–]/)[0].replace(/\s*\(.*?\)\s*$/, "").trim()
 // 렌더/호출 시점 평가 — pickL이 최신 언어를 참조하도록 함수로 유지(모듈 상수에 굳히지 않음)
 const kindLabel = (k: string) => pickL(KIND_LABEL[k] || "", KIND_LABEL_EN[k] || "")
