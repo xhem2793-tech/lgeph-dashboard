@@ -767,7 +767,7 @@ export default function Page() {
         </aside>
 
         {/* ── 중앙 : 결론 앵커 + 피드 ── */}
-        <div className="flex min-h-[1200px] min-w-0 flex-col gap-4">
+        <div className="flex min-h-[1200px] min-w-0 flex-col gap-4" style={{ animation: "fadeUp .5s ease both" }}>
         <InsightBanner banner={banner} open={newsOpen} onToggle={() => setNewsOpen((v) => !v)} />
         <header className="relative flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
@@ -776,20 +776,20 @@ export default function Page() {
               {/* 인사이트 칼럼 — 카테고리 필터(알약형, 통일 스타일) */}
               {menu === "인사이트" && (
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {["전체", ...INSIGHT_CATS].map((k) => {
+                  {["전체", ...INSIGHT_CATS].map((k, i) => {
                     const on = insightCat === k
                     const n = k === "전체" ? slice.length : slice.filter((g) => insightCatOf(g.head) === k).length
                     if (k !== "전체" && n === 0) return null
-                    return <button key={k} type="button" onClick={() => setInsightCat(k)} className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{k}<span className={"tabular-nums text-[10.5px] " + (on ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+                    return <button key={k} type="button" onClick={() => setInsightCat(k)} style={{ animation: "fadeUp .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 8) * 0.03 + "s" }} className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{k}<span className={"tabular-nums text-[10.5px] " + (on ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
                   })}
                 </div>
               )}
               {/* 제품 키워드 필터 — 알약형(통일 스타일, 인사이트 뷰에선 숨김) */}
               {menu !== "인사이트" && (
                 <div className="flex flex-wrap items-center gap-1.5">
-                  {[{ key: "", label: "전 제품" }, ...PROD_KW.map((p) => ({ key: p.key, label: p.label }))].map((p) => {
+                  {[{ key: "", label: "전 제품" }, ...PROD_KW.map((p) => ({ key: p.key, label: p.label }))].map((p, i) => {
                     const on = (prodKw ?? "") === p.key
-                    return <button key={p.key || "all"} type="button" onClick={() => setProdKw(p.key === "" ? null : p.key)} className={"inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{p.label}</button>
+                    return <button key={p.key || "all"} type="button" onClick={() => setProdKw(p.key === "" ? null : p.key)} style={{ animation: "fadeUp .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 8) * 0.03 + "s" }} className={"inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{p.label}</button>
                   })}
                 </div>
               )}
