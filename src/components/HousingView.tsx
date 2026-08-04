@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { macroMonthly, infraRegional, type InfraRegion } from "@/lib/supabase"
 import { ChartCard, Lg, fmtLabels, type SLine } from "@/components/EconChart"
-import { AgendaCard } from "@/components/EconViews"
 import { Segmented } from "@/components/Segmented"
 
 const REGSHORT: Record<string, string> = {
@@ -76,7 +75,7 @@ export default function HousingView() {
         </div>
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+      <div className="grid items-start gap-4">
       <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
         {/* 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
@@ -148,7 +147,6 @@ export default function HousingView() {
         )}
         </div>
       </section>
-        <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
 
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">BSP 주택가격지수(RPPI, 2019=100, 분기·전국) · PSA 건축허가 · 공실률(Colliers)·건설 GVA(PSA) · NCR/지역별 세부·프리셀링·모기지는 분기 리포트 수동 취합 예정</p>

@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react"
 import { ChartCard, fmtLabels } from "@/components/EconChart"
-import { AgendaCard } from "@/components/EconViews"
 import { macroDual, latestMacro } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 
@@ -97,7 +96,7 @@ export default function OnlineMarketView() {
         </div>
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+      <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
@@ -183,7 +182,6 @@ export default function OnlineMarketView() {
           )}
         </section>
 
-        <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
 
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">출처 디지털/결제/인프라·6개국 비교=World Bank(WDI·Global Findex)·ITU 연간 실측 · 신용카드·계정 보유율은 격년 서베이(2011~2024) · 인터넷은 WB·ITU 기준(교차국 비교 일치)</p>

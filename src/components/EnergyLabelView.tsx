@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { energyLabels, latestMacro, brandPriceRanges, type EnergyRow, type PriceRange } from "@/lib/supabase"
-import { AgendaCard } from "@/components/EconViews"
 import { Segmented } from "@/components/Segmented"
 
 /** 에너지 효율 — 전문기관 수준 분석. 카테고리×설치형×냉매×용량 세그먼트별 브랜드 효율·등급·전력비용(TCO). */
@@ -714,7 +713,7 @@ export default function EnergyLabelView() {
         )}
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+      <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
@@ -794,7 +793,6 @@ export default function EnergyLabelView() {
             </>
           )}
         </section>
-        <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">출처 필리핀 DOE 에너지효율 라벨 등록 데이터(공식) · 설치형·용량 세그먼트별 브랜드 평균 {cur.metric}(높을수록 고효율) · TCO=DOE 라벨 월소비전력×Meralco 가정용 요금(₱{rate.toFixed(1)}/kWh{rateAsOf ? " · " + rateAsOf + " 기준" : ""}) 추정 · 전체 평균은 스펙 혼합 왜곡</p>
 

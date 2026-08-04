@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from "react"
 import { importPriceSeries, importOrigins, type ImpSeries, type ImpOrigin } from "@/lib/supabase"
 import { ChartCard, Lg, fmtLabels, type SLine } from "@/components/EconChart"
 import { Segmented } from "@/components/Segmented"
-import { AgendaCard } from "@/components/EconViews"
 
 /** 수입 단가 — UN Comtrade 필리핀 가전 수입(HS 8418/8415/8450/8528)의 월별 단가($/kg)와 원산지 점유·단가.
  *  조달원가·수입가전 경쟁 구도(중국 저가·한국 프리미엄)를 추적. 무역데이터 특성상 최신 확보월 기준. */
@@ -54,7 +53,7 @@ export default function ImportPriceView() {
         </div>
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+      <div className="grid items-start gap-4">
       <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
         {/* 제품 + 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
@@ -107,7 +106,6 @@ export default function ImportPriceView() {
         </div>
       </div>
       </section>
-        <aside className="flex flex-col gap-4"><AgendaCard /></aside>
       </div>
 
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">UN Comtrade 필리핀 수입 통계(HS 8418 냉장고·8415 에어컨·8450 세탁기·8528 TV) · 단가=CIF÷순중량($/kg) · 무역데이터 특성상 발표 지연(최신 확보월 기준) · 연간 수입액은 &lt;가전 선행지표&gt; 참조</p>

@@ -2,7 +2,6 @@
 
 import React from "react"
 import { fxStrip, pageBanner } from "@/lib/supabase"
-import { CountUp } from "@/components/ProChartCore"
 import { Segmented } from "@/components/Segmented"
 import { useIsDark, chartColors } from "@/components/EconChart"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
@@ -23,7 +22,6 @@ const FX_BANNER: Banner = {
  *  · 카드: 차트 → 지표 의미(간단) → AI 분석(시사점, 색=신호) → 고정 출처(mt-auto). */
 
 type Strip = { asOf: string | null; pairs: Record<string, any>; peers: any[] }
-const nf = (v: number, d = 1) => (v > 0 ? "+" : "") + v.toFixed(d)
 
 // ── 실측 데이터 (2021.7–2026.6 월별) ──────────────────────────────────────
 const DATA = {"labels": ["21.7", "21.8", "21.9", "21.10", "21.11", "21.12", "22.1", "22.2", "22.3", "22.4", "22.5", "22.6", "22.7", "22.8", "22.9", "22.10", "22.11", "22.12", "23.1", "23.2", "23.3", "23.4", "23.5", "23.6", "23.7", "23.8", "23.9", "23.10", "23.11", "23.12", "24.1", "24.2", "24.3", "24.4", "24.5", "24.6", "24.7", "24.8", "24.9", "24.10", "24.11", "24.12", "25.1", "25.2", "25.3", "25.4", "25.5", "25.6", "25.7", "25.8", "25.9", "25.10", "25.11", "25.12", "26.1", "26.2", "26.3", "26.4", "26.5", "26.6"], "region": {"ph": [49.97, 49.63, 51.08, 50.521, 50.41, 50.99, 51.07, 51.17, 51.71, 52.31, 52.44, 54.97, 55.34, 56.24, 58.75, 58.08, 56.47, 55.67, 54.71, 55.32, 54.266, 55.47, 56.353, 55.264, 54.91, 56.64, 56.69, 56.865, 55.46, 55.388, 56.29, 56.2, 56.16, 57.71, 58.575, 58.48, 58.32, 56.221, 55.98, 58.334, 58.62, 58.076, 58.411, 57.952, 57.251, 55.771, 55.776, 56.275, 58.221, 57.11, 58.279, 58.695, 58.573, 58.8, 58.845, 57.642, 60.557, 61.263, 61.513, 61.32], "id": [14460, 14302, 14265, 14168, 14315, 14275, 14390, 14366, 14352, 14495, 14575, 14880, 14955, 14850, 15225, 15595, 15729, 15565, 14984, 15236, 14989, 14664, 14984, 14989, 15074, 15232, 15485, 15879, 15504, 15394, 15774, 15709, 15850, 16255, 16244, 16369, 16254, 15449, 15134, 15689, 15839, 16089, 16294, 16574, 16554, 16594, 16295, 16230, 16450, 16485, 16660, 16625, 16650, 16670, 16780, 16760, 16990, 17305, 17865, 17875], "my": [4.218, 4.155, 4.185, 4.139, 4.2, 4.164, 4.184, 4.196, 4.203, 4.352, 4.377, 4.406, 4.448, 4.474, 4.635, 4.726, 4.443, 4.4, 4.263, 4.485, 4.41, 4.458, 4.613, 4.665, 4.507, 4.637, 4.694, 4.762, 4.657, 4.585, 4.727, 4.742, 4.722, 4.77, 4.704, 4.715, 4.592, 4.318, 4.121, 4.375, 4.44, 4.468, 4.45, 4.46, 4.435, 4.312, 4.253, 4.21, 4.26, 4.222, 4.206, 4.184, 4.13, 4.056, 3.939, 3.888, 4.046, 3.967, 3.963, 4.082], "th": [32.91, 32.114, 33.663, 33.273, 33.747, 33.205, 33.21, 32.68, 33.228, 34.368, 34.271, 35.24, 36.29, 36.537, 37.853, 38.01, 35.091, 34.6, 32.83, 35.19, 34.15, 34.11, 34.523, 35.29, 34.01, 34.98, 36.426, 36.09, 35.3, 34.37, 35.52, 35.88, 36.36, 37.135, 36.685, 36.76, 35.52, 33.944, 32.4, 33.76, 34.26, 34.27, 33.76, 34.2, 33.93, 33.349, 32.8, 32.41, 32.74, 32.28, 32.44, 32.36, 32.1, 31.48, 31.53, 31.0, 32.56, 32.45, 32.44, 33.2], "vn": [23004, 22774, 22750, 22755, 22687, 22825, 22644, 22805, 22838, 22940, 23185, 23255, 23335, 23450, 23855, 24840, 24630, 23610, 23445, 23740, 23450, 23450, 23485, 23574, 23680, 24060, 24278, 24558, 24250, 24260, 24415, 24640, 24810, 25329, 25440, 25444, 25235, 24860, 24370, 25270, 25343, 25480, 25060, 25530, 25565, 25980, 26030, 26118, 26197, 26340, 26425, 26310, 26330, 26295, 25880, 26040, 26323, 26355, 26255, 26255], "sg": [1.3536, 1.3444, 1.3576, 1.3488, 1.3648, 1.3482, 1.3511, 1.3548, 1.3539, 1.3835, 1.3702, 1.3892, 1.38, 1.3968, 1.435, 1.4155, 1.3608, 1.34, 1.3137, 1.3483, 1.3306, 1.3339, 1.3514, 1.3514, 1.3289, 1.3504, 1.3652, 1.3699, 1.3373, 1.3192, 1.3396, 1.3455, 1.348, 1.3651, 1.351, 1.3556, 1.3356, 1.3065, 1.2841, 1.3201, 1.3374, 1.3649, 1.3575, 1.3507, 1.3425, 1.3058, 1.2907, 1.2711, 1.298, 1.2834, 1.2895, 1.3005, 1.2957, 1.2855, 1.2721, 1.2645, 1.2857, 1.2724, 1.2764, 1.2933]}, "fxusd": [49.97, 49.63, 51.08, 50.521, 50.41, 50.99, 51.07, 51.17, 51.71, 52.31, 52.44, 54.97, 55.34, 56.24, 58.75, 58.08, 56.47, 55.67, 54.71, 55.32, 54.266, 55.47, 56.353, 55.264, 54.91, 56.64, 56.69, 56.865, 55.46, 55.388, 56.29, 56.2, 56.16, 57.71, 58.575, 58.48, 58.32, 56.221, 55.98, 58.334, 58.62, 58.076, 58.411, 57.952, 57.251, 55.771, 55.776, 56.275, 58.221, 57.11, 58.279, 58.695, 58.573, 58.8, 58.845, 57.642, 60.557, 61.263, 61.513, 61.32], "asia": {"cny": [7.7336, 7.6821, 7.9258, 7.887, 7.9205, 8.0222, 8.0281, 8.1108, 8.1564, 7.9156, 7.8597, 8.2062, 8.2056, 8.1641, 8.2584, 7.9545, 7.9671, 8.0714, 8.1015, 7.9787, 7.8938, 8.0183, 7.927, 7.6216, 7.6867, 7.8022, 7.7636, 7.7721, 7.773, 7.8035, 7.8513, 7.8188, 7.7768, 7.9686, 8.0881, 8.0471, 8.0703, 7.9274, 7.9727, 8.1957, 8.0877, 7.9563, 8.0559, 7.9607, 7.8891, 7.6785, 7.7509, 7.8557, 8.0865, 8.0094, 8.1841, 8.2437, 8.28, 8.4145, 8.4589, 8.399, 8.7915, 8.9684, 9.0911, 9.0336], "inr": [0.6722, 0.6804, 0.6887, 0.6744, 0.6713, 0.6848, 0.6851, 0.6778, 0.681, 0.684, 0.6759, 0.6963, 0.6975, 0.7074, 0.7209, 0.7019, 0.6941, 0.6731, 0.6695, 0.6696, 0.6607, 0.6789, 0.6819, 0.6737, 0.6679, 0.685, 0.6826, 0.6832, 0.6655, 0.666, 0.6778, 0.6781, 0.6739, 0.6916, 0.7022, 0.7017, 0.6969, 0.6705, 0.6685, 0.6941, 0.6934, 0.679, 0.6752, 0.6627, 0.6702, 0.6596, 0.6525, 0.6567, 0.6654, 0.6479, 0.6562, 0.6614, 0.6555, 0.6544, 0.6419, 0.6331, 0.648, 0.6456, 0.6475, 0.6478]}, "eer": {"neer": [96.84, 96.83, 96.65, 96.24, 97.16, 97.51, 95.67, 95.54, 95.42, 97.07, 98.63, 96.92, 94.64, 94.87, 94.8, 94.96, 95.1, 95.41, 94.43, 95.44, 96.46, 94.77, 95.09, 96.28, 97.67, 96.55, 96.92, 97.75, 98.13, 97.18, 96.96, 97.75, 98.11, 97.49, 96.04, 95.01, 95.26, 95.32, 95.41, 94.26, 94.06, 95.45, 96.11, 95.93, 96.4, 96.5, 96.87, 94.82, 93.91, 93.92, 93.46, 92.45, 92.21, 91.68, 90.81, 91.69, 90.67, 89.26, 87.62, 88.71], "reer": [98.77, 99.1, 98.47, 97.76, 98.94, 99.35, 98.13, 97.32, 97.14, 99.12, 100.72, 99.26, 97.28, 97.78, 97.67, 98.47, 99.47, 99.98, 100.16, 101.04, 101.75, 99.63, 100.0, 101.18, 102.42, 101.87, 103.15, 103.71, 104.54, 103.53, 103.86, 104.44, 105.03, 104.09, 102.46, 101.33, 101.99, 101.82, 101.61, 100.5, 100.79, 102.57, 103.68, 102.99, 103.18, 102.78, 103.07, 100.84, 99.93, 100.42, 99.77, 98.56, 98.54, 98.6, 98.54, 99.02, 99.17, 99.72, 97.19, 98.1]}, "extra": {"wonperpeso": [23.05, 23.36, 23.19, 23.25, 23.46, 23.3, 23.59, 23.45, 23.48, 24.14, 23.69, 23.42, 23.54, 23.86, 24.51, 24.54, 23.05, 22.67, 22.54, 23.92, 24.07, 24.12, 23.42, 23.81, 23.25, 23.37, 23.85, 23.76, 23.43, 23.37, 23.69, 23.75, 23.95, 23.98, 23.59, 23.61, 23.45, 23.77, 23.5, 23.52, 23.79, 25.43, 24.92, 25.22, 25.71, 25.53, 24.78, 24.03, 23.91, 24.32, 24.09, 24.34, 25.05, 24.5, 24.65, 24.97, 24.87, 24.05, 24.5, 25.23], "pesoperjpy": [0.4559, 0.4512, 0.459, 0.4432, 0.4455, 0.4431, 0.4439, 0.445, 0.425, 0.4029, 0.4075, 0.405, 0.4155, 0.4044, 0.4059, 0.3905, 0.4091, 0.4247, 0.4206, 0.4063, 0.4086, 0.4071, 0.4045, 0.3831, 0.386, 0.3893, 0.3796, 0.375, 0.3743, 0.3928, 0.3832, 0.3747, 0.3712, 0.3659, 0.3724, 0.3636, 0.3892, 0.3846, 0.3899, 0.3837, 0.3915, 0.3694, 0.3764, 0.3849, 0.3819, 0.3901, 0.3873, 0.3908, 0.3862, 0.3885, 0.394, 0.3811, 0.3751, 0.3754, 0.3802, 0.3694, 0.3816, 0.3913, 0.3862, 0.3773], "pesopereur": [59.3186, 58.6435, 59.1615, 58.4125, 57.1672, 57.9893, 57.3949, 57.417, 57.252, 55.1793, 56.2963, 57.6205, 56.5964, 56.5453, 57.5811, 57.414, 58.7923, 59.6102, 59.4415, 58.5211, 58.8632, 61.1172, 60.2448, 60.3055, 60.407, 61.425, 59.9514, 60.1619, 60.4008, 61.1482, 60.9067, 60.7436, 60.6349, 61.5836, 63.5786, 62.6661, 63.1647, 62.1433, 62.3455, 63.5032, 62.0252, 60.145, 60.5295, 60.1349, 61.96, 63.2109, 63.3099, 66.3464, 66.4623, 66.7485, 68.3865, 67.7146, 67.9265, 69.0627, 69.7464, 68.1026, 69.9757, 71.8881, 71.7269, 70.04]}}
@@ -193,7 +191,7 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
 }
 
 export default function FxView() {
-  const [s, setS] = React.useState<Strip | null>(null)
+  const [, setS] = React.useState<Strip | null>(null)
   const [open, setOpen] = React.useState(false)
   const [win, setWin] = React.useState("2Y")
   const [banner, setBanner] = React.useState<Banner>(FX_BANNER)
@@ -225,31 +223,6 @@ export default function FxView() {
     { name: "REER 실질", color: "#a1795b", data: lastN(DATA.eer.reer, n) },
   ]
 
-  // 우측 위젯 KPI — ₱/USD·₩/₱ 실측(fx_daily) + NEER·REER 실측(BIS)
-  const usdphp = s?.pairs.USDPHP?.rate ?? DATA.fxusd[59]
-  const krwphp = s?.pairs.KRWPHP?.rate ?? DATA.extra.wonperpeso[59]
-  const neerNow = DATA.eer.neer[59], neer12 = DATA.eer.neer[47]
-  const reerNow = DATA.eer.reer[59], reer12 = DATA.eer.reer[47]
-  const fx12 = DATA.fxusd[47]
-  const KPI: { n: string; v: number; d: string; tone: "rose" | "emerald" | "amber" | "gray"; dec: number }[] = [
-    { n: "₱ / USD", v: usdphp, d: nf(usdphp - fx12, 1), tone: "rose", dec: 1 },
-    { n: "₩ / ₱", v: krwphp, d: nf(krwphp - DATA.extra.wonperpeso[47], 2), tone: "emerald", dec: 2 },
-    { n: "페소 NEER", v: neerNow, d: nf(neerNow - neer12, 1), tone: "rose", dec: 1 },
-    { n: "페소 REER", v: reerNow, d: nf(reerNow - reer12, 1), tone: "amber", dec: 1 },
-  ]
-  const toneTxt: Record<string, string> = { rose: "text-rose-600 dark:text-rose-400", emerald: "text-emerald-600 dark:text-emerald-400", amber: "text-amber-600 dark:text-amber-400", gray: "text-gray-500 dark:text-gray-400" }
-  const AGENDA: { label: string; note: string; date: string; dot: string }[] = [
-    { label: "BSP 통화정책회의", note: "금리 → 페소 방향 좌우", date: "2026-08-14", dot: "bg-rose-500" },
-    { label: "미국 CPI 발표", note: "달러·페소 변동성", date: "2026-08-12", dot: "bg-amber-500" },
-    { label: "필리핀 7월 CPI", note: "실질환율(REER) 재료", date: "2026-08-05", dot: "bg-indigo-500" },
-    { label: "6월 국제수지(BoP)", note: "대외 완충·환율 압력", date: "2026-08-19", dot: "bg-emerald-500" },
-  ]
-  const NEWS: { tag: string; t: string; m: string }[] = [
-    { tag: "환율", t: "페소 61.7 사상최저 근접…BSP 개입 관측", m: "Philstar · 오늘" },
-    { tag: "원가", t: "위안 강세로 중국산 부품 조달비 상승 압력", m: "BusinessWorld · 어제" },
-  ]
-  const today = new Date()
-  const dday = (iso: string) => Math.round((new Date(iso + "T00:00:00").getTime() - new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime()) / 86400000)
 
   return (
     <div className="flex flex-col gap-4">
@@ -258,8 +231,8 @@ export default function FxView() {
       {/* 배너 — 주요뉴스·경쟁사와 동일(매니페스트 기반, 월간 자동 갱신) */}
       <InsightBanner banner={banner} open={open} onToggle={() => setOpen((v) => !v)} />
 
-      {/* 본문: 좌 차트 + 우 상시 위젯(286px) */}
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,1fr)_286px]">
+      {/* 본문: 차트(우측 위젯 제거 — 경제일정 레일과 중복) */}
+      <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
@@ -304,56 +277,6 @@ export default function FxView() {
           </div>
         </section>
 
-        {/* 우 — 상시 위젯(286px, 캘린더 위젯 어법) */}
-        <aside className="flex flex-col gap-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: "80ms" }}>
-          <div className="rounded-xl p-4">
-            <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
-              <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율 핵심 KPI</h2>
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">{s?.asOf ? s.asOf.slice(0, 10).replace(/-/g, ".") : "26.06"} 기준</span>
-            </header>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              {KPI.map((k) => (
-                <div key={k.n} className="rounded-lg bg-gray-50 dark:bg-gray-900 px-3 py-2.5">
-                  <p className="text-[11px] font-medium text-gray-500 dark:text-gray-400">{k.n}</p>
-                  <p className="mt-0.5 text-[18px] font-bold leading-none tabular-nums text-gray-900 dark:text-gray-50"><CountUp value={k.v} decimals={k.dec} /></p>
-                  <span className={"mt-1 inline-flex items-center gap-0.5 text-[11px] font-bold tabular-nums " + toneTxt[k.tone]}>{k.d.replace(/^[+-]/, "")}<span className="text-[10px]">{k.d.startsWith("-") ? "↓" : "↑"}</span></span>
-                </div>
-              ))}
-            </div>
-            <p className="mt-2.5 text-[10.5px] leading-relaxed text-gray-400 dark:text-gray-500">₱/USD·₩/₱ 실측(fx_daily) · NEER·REER 실측(BIS, 전년비 Δ)</p>
-          </div>
-
-          <div className="rounded-xl p-4">
-            <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
-              <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">연결 일정</h2>
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">환율 영향</span>
-            </header>
-            <div className="mt-2 flex flex-col">
-              {AGENDA.map((x, i) => {
-                const dd = dday(x.date)
-                return (
-                  <div key={x.label} style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: 40 + i * 24 + "ms" }} className="flex items-start gap-2.5 rounded-lg px-1.5 py-2 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
-                    <span className={"mt-1.5 h-2 w-2 shrink-0 rounded-full " + x.dot} />
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate text-[12px] font-semibold text-gray-900 dark:text-gray-50">{x.label}</span>
-                      <span className="block text-[10.5px] text-gray-500 dark:text-gray-400">{x.note}</span>
-                    </span>
-                    <span className="shrink-0 tabular-nums text-[11px] font-semibold text-gray-500 dark:text-gray-400">{dd === 0 ? "오늘" : dd > 0 ? "D-" + dd : "D+" + -dd}</span>
-                  </div>
-                )
-              })}
-            </div>
-            <div className="mt-2 border-t border-gray-100 dark:border-gray-800 pt-2.5">
-              <p className="mb-1 text-[11px] font-bold text-gray-500 dark:text-gray-400">연결 뉴스</p>
-              {NEWS.map((nw) => (
-                <a key={nw.t} href="/news" className="flex items-start gap-2 rounded-lg px-1.5 py-1.5 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10">
-                  <span className="mt-0.5 shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{nw.tag}</span>
-                  <span><span className="block text-[12px] font-semibold leading-snug text-gray-700 dark:text-gray-200">{nw.t}</span><span className="mt-0.5 block text-[10px] text-gray-400 dark:text-gray-500">{nw.m}</span></span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </aside>
       </div>
     </div>
   )
