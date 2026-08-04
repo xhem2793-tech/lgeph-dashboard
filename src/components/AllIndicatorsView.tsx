@@ -6,6 +6,7 @@ import { dataProvenance, allIndicatorLatest, indicatorSeries, econSpark, fmtStam
 import { Segmented } from "@/components/Segmented"
 import { LineChart, Lg } from "@/components/EconChart"
 import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
+import { INDICATOR_DESC } from "@/lib/indicatorDesc"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
 
 /** 전체 지표 리스트 상단 배너 — 뉴스·경쟁사광고와 동일한 InsightBanner(크기·스타일 통일). */
@@ -294,8 +295,10 @@ function Spark({ pts }: { pts: number[] }) {
   )
 }
 
-// 지표별 설명 — 지표별 prose 데이터가 없어 단위·출처·보유기간으로 합성(카테고리 설명은 CAT_MI 헤더에서)
+// 지표별 설명 — 큐레이션된 실제 문구(INDICATOR_DESC) 우선, 없으면 단위·출처로 합성
 function descOf(r: Row): string {
+  const d = INDICATOR_DESC[r.indicator]
+  if (d) return d
   const u = inferUnit(r.indicator, r.label || "")
   const kind = u.unit === "%" ? "전기 대비 증감률·비율" : u.unit === "지수" ? "지수(기준계열)" : u.prefix === "₱" ? "가격·금액(₱ 페소)" : u.prefix === "$" ? "금액($ 미달러)" : u.unit === "℃" ? "월평균 기온" : u.unit === "CDD" ? "냉방도일(에어컨 수요 선행)" : u.unit.indexOf("명") >= 0 ? "규모·수량" : "국가지표 관측값"
   return kind + " · 출처 " + r.source + (r.n ? " · " + ym(r.mn) + "~" + ym(r.mx) : "")
