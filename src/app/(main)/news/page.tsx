@@ -701,7 +701,7 @@ export default function Page() {
       <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
         {/* ── 좌 : 메뉴 ── */}
         <aside
-          className="h-fit lg:sticky lg:top-[61px] lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6"
+          className="h-fit lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6"
           style={{ animation: "fadeUp .5s ease both" }}
         >
           <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
