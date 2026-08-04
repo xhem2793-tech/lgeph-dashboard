@@ -39,3 +39,12 @@
 - **00:44** — [③완료] **Supabase 로그인 배포**(f6a2d67): /login(이메일 OTP·SDK없이 REST), authClient, AuthGate(기본 OFF·Access 병행), login_allowlist+RPC(목록 비노출), TopNav /login 숨김.
   - 검증: 게이트 정상(master/@lge.com 허용·random 차단·목록 0행 비노출), email 인증 활성 확인. 위 ☀️체크리스트로 전환.
 - **00:44** — [④시작] **본사 제출 자가점검** — 적합성·수정점·디자인 철학·추가 지표/페이지/데이터 제안.
+
+- **00:48** — [④진행] 메타데이터 실브랜딩+noindex, HQ_REVIEW.md 작성 배포(f5f94b8).
+- **00:51** — [④진행] 캘린더 event_en 전건(20건) DB 채움 + 통상/사회 카테고리(ec188ba).
+- **00:59** — [④/EN최종스윕] 전 페이지 EN 한글 재스캔 후 잔여 정리 배포(b895206):
+  - TopNav soon 뱃지 '예정' raw→T (전역 — 모든 페이지 '예정' 원인이었음).
+  - calendar: 사회/통상 라벨 + 발표시각 'N AM/PM' 포맷.
+  - competitor-ads prodLabel 정규식 폴백(bare '에어컨'→RAC).
+  - **남은 한글(데이터·불가피):** ①경쟁광고 카드 본문(유통사 스크랩 원문), ②reports 문서 제목·kind(한글 분석문서, EN원본 없음), ③이벤트 상세 summary(summary_en 컬럼 없음). 모두 UI가 아닌 '데이터 콘텐츠' → EN 원본 생성 시에만 번역 가능(별도 데이터 작업).
+  - **UI 크롬 한글 = 사실상 0.**

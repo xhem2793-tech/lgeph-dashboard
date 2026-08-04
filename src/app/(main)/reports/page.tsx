@@ -4,7 +4,7 @@ import React from "react"
 import { publishedReports, type PubReport } from "@/lib/supabase"
 import DataVerification from "@/components/DataVerification"
 import { Segmented } from "@/components/Segmented"
-import { T } from "@/lib/i18n"
+import { T, useLang } from "@/lib/i18n"
 
 /** 리포트 — 발간 리포트(발행 파이프라인이 채움) + 데이터 검증(구 자료 페이지)을 한 페이지에.
  *  · 리포트 카드 클릭 → PDF 원문(새 탭). 발행 = 자동 노출(reports/index.json 매니페스트).
@@ -16,6 +16,7 @@ function fmtDate(d: string) {
 }
 
 function ReportCard({ r, i }: { r: PubReport; i: number }) {
+  const { pick } = useLang()
   const [err, setErr] = React.useState(false)
   const open = () => { if (r.pdf) window.open(r.pdf, "_blank", "noopener") }
   return (
@@ -32,10 +33,10 @@ function ReportCard({ r, i }: { r: PubReport; i: number }) {
         ) : (
           <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-indigo-500 to-violet-600">
             <span className="text-[12.5px] font-bold tracking-tight text-white">axlgeph.report</span>
-            <span className="text-[10px] font-medium text-white/70">{r.kind}</span>
+            <span className="text-[10px] font-medium text-white/70">{pick(r.kind, r.kind_en)}</span>
           </div>
         )}
-        <span className="absolute left-3 top-3 rounded-full bg-white/90 dark:bg-gray-900/90 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 backdrop-blur">{r.kind}</span>
+        <span className="absolute left-3 top-3 rounded-full bg-white/90 dark:bg-gray-900/90 px-2 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300 backdrop-blur">{pick(r.kind, r.kind_en)}</span>
         <span className="absolute right-3 top-3 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><path d="M14 2v6h6" /></svg>
           PDF
@@ -44,15 +45,15 @@ function ReportCard({ r, i }: { r: PubReport; i: number }) {
 
       <div className="flex flex-1 flex-col p-3.5">
         <div className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
-          <span className="font-semibold text-gray-600 dark:text-gray-300">{r.source}</span>
+          <span className="font-semibold text-gray-600 dark:text-gray-300">{pick(r.source, r.source_en)}</span>
           <span className="text-gray-300 dark:text-gray-600">·</span>
           <span className="num">{fmtDate(r.date)}</span>
-          {r.topic && <><span className="text-gray-300 dark:text-gray-600">·</span><span className="text-indigo-600 dark:text-indigo-400">{r.topic}</span></>}
+          {r.topic && <><span className="text-gray-300 dark:text-gray-600">·</span><span className="text-indigo-600 dark:text-indigo-400">{pick(r.topic, r.topic_en)}</span></>}
         </div>
-        <h3 className="mt-1.5 line-clamp-2 text-[14.5px] font-bold leading-snug tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{r.title}</h3>
-        <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400">{r.summary}</p>
+        <h3 className="mt-1.5 line-clamp-2 text-[14.5px] font-bold leading-snug tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{pick(r.title, r.title_en)}</h3>
+        <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400">{pick(r.summary, r.summary_en)}</p>
         {r.so && (
-          <p className="mt-2 line-clamp-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2 text-[11.5px] leading-relaxed text-gray-700 dark:text-gray-200"><b className="font-semibold text-indigo-600 dark:text-indigo-400">{T("시사점", "Implication")}</b> {r.so}</p>
+          <p className="mt-2 line-clamp-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2 text-[11.5px] leading-relaxed text-gray-700 dark:text-gray-200"><b className="font-semibold text-indigo-600 dark:text-indigo-400">{T("시사점", "Implication")}</b> {pick(r.so, r.so_en)}</p>
         )}
         <div className="mt-auto flex items-center gap-2 border-t border-gray-100 dark:border-gray-800 pt-2.5 text-[10.5px] text-gray-400 dark:text-gray-500">
           {r.sentAt ? (

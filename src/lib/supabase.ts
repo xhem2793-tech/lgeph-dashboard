@@ -1227,6 +1227,13 @@ export type PubReport = {
   recipients?: number | null // 수신 인원
   pdfName?: string | null // 다운로드 파일명
   review?: boolean | null // 검토용(미발송, 대시보드 업로드만)
+  // 영문 카드 메타(있으면 EN 모드에서 pick으로 표시 — PDF 본문은 한글 원본)
+  title_en?: string | null
+  summary_en?: string | null
+  so_en?: string | null
+  topic_en?: string | null
+  kind_en?: string | null
+  source_en?: string | null
 }
 export async function publishedReports(): Promise<PubReport[]> {
   try {
