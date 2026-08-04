@@ -169,6 +169,7 @@ export default function Page() {
                 >
                   <div className="mb-3 flex items-baseline gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
                     <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{n.ko}</h2>
+                    <span className="truncate text-[12px] text-gray-400 dark:text-gray-500">{n.sub}</span>
                   </div>
                   {mounted.has(n.id)
                     ? <div style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>{viewFor(n.id)}</div>

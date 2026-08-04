@@ -132,7 +132,7 @@ export function AgendaCard() {
 type Section = { key: string; label: string; node: React.ReactNode }
 // 도메인별 액센트 바(퍼지-세이프 전체 클래스)
 const BARCLS: Record<string, string> = { indigo: "bg-indigo-500", blue: "bg-blue-500", violet: "bg-violet-500", amber: "bg-amber-500", emerald: "bg-emerald-500", teal: "bg-teal-500", rose: "bg-rose-500" }
-function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, children, sections, accent = "indigo" }: { title: string; sub: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; banner?: BannerDef; kpiDefs?: KpiDef[]; d: Mon; children?: React.ReactNode; sections?: Section[]; accent?: string }) {
+function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children, sections, accent = "indigo" }: { title: string; sub?: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; banner?: BannerDef; kpiDefs?: KpiDef[]; d: Mon; children?: React.ReactNode; sections?: Section[]; accent?: string }) {
   const [activeSub, setActiveSub] = useState(sections?.[0]?.key ?? "")
   const curSub = sections?.find((s) => s.key === activeSub) ?? sections?.[0]
   // 적응형 토글 — 뷰의 실제 데이터 기간(년)보다 긴 창은 숨김(5년치 데이터 없는데 5Y 토글 노출 방지)
@@ -147,7 +147,6 @@ function Shell({ title, sub, win, setWin, loaded, empty, banner, kpiDefs, d, chi
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className={"h-[18px] w-1 rounded " + (BARCLS[accent] || BARCLS.indigo)} />
             <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h2>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{sub}</span>
             <span className="ml-auto">
               <Segmented size="sm" value={win} onChange={setWin} options={winOpts.map((w) => ({ k: w.k, label: w.k }))} />
             </span>
