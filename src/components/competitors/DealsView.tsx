@@ -4,7 +4,7 @@
 import React from "react"
 import { type PriceRow, type DealRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormsFor, pmFormHit, pmSizeList, pmSizeBucket } from "@/lib/classify"
-import { peso, pmShopLabel, PmDrop } from "@/components/competitors/shared"
+import { peso, pmShopLabel, PmDrop, ListSearch } from "@/components/competitors/shared"
 
 const PTYPES: { k: "c" | "b" | "i" | "f" | "g"; label: string; cls: string }[] = [
   { k: "c", label: "쿠폰", cls: "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" },
@@ -139,22 +139,19 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
         <p className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">제품·유형·가격대를 선택하거나 검색하면 아래에 조건에 맞는 프로모 딜이 나타납니다</p>
       </div>
 
-      {/* 필터바 — 일일 가격 변동과 동일한 상단 묶음(bordered) */}
-      <div className="flex flex-col gap-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
-          <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체"); act() }} /></div>
-          {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체"); act() }} /></div>}
-          <div className="w-fit"><PmDrop label={sizeLabel} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={(k) => { setSize(k); act() }} /></div>
-          <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={(k) => { setBrand(k); act() }} /></div>
-        </div>
-        {/* 가격대 프리셋 버튼 — 슬라이더 대체 */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">가격대</span>
-          <button type="button" onClick={() => setPriceBand(null)} className={"rounded-full px-3 py-1 text-[11.5px] font-semibold transition-all duration-200 ease-out active:scale-95 " + (priceBand == null ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300")}>전체</button>
-          {bands.map((b, i) => (
-            <button key={i} type="button" onClick={() => { setPriceBand(i); act() }} className={"rounded-full px-3 py-1 text-[11.5px] font-semibold tabular-nums transition-all duration-200 ease-out active:scale-95 " + (priceBand === i ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300")}>{b.label}</button>
-          ))}
-        </div>
+      {/* 필터바 — 한 라인 통일(제품·유형·용량·브랜드·가격대) + 검색 오른쪽. 일일 가격 변동과 동일 */}
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체"); act() }} /></div>
+        {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체"); act() }} /></div>}
+        <div className="w-fit"><PmDrop label={sizeLabel} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={(k) => { setSize(k); act() }} /></div>
+        <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={(k) => { setBrand(k); act() }} /></div>
+        <span className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
+        <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">가격대</span>
+        <button type="button" onClick={() => setPriceBand(null)} className={"rounded-full px-3 py-1 text-[11.5px] font-semibold transition-all duration-200 ease-out active:scale-95 " + (priceBand == null ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300")}>전체</button>
+        {bands.map((b, i) => (
+          <button key={i} type="button" onClick={() => { setPriceBand(i); act() }} className={"rounded-full px-3 py-1 text-[11.5px] font-semibold tabular-nums transition-all duration-200 ease-out active:scale-95 " + (priceBand === i ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300")}>{b.label}</button>
+        ))}
+        <ListSearch className="ml-auto" value={q} onChange={(v) => { setQ(v); act() }} placeholder="모델·브랜드 검색" />
       </div>
 
       {/* 선택 배지 — 검색창 위, 차례대로 */}
@@ -172,19 +169,6 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
           ))}
         </div>
       )}
-
-      {/* 검색 — 필터 아래, 리스트 바로 위. 표준 인풋 트랜지션 */}
-      <div className="group relative">
-        <svg aria-hidden className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-        <input
-          value={q}
-          onChange={(e) => { setQ(e.target.value); act() }}
-          placeholder="모델·브랜드 검색"
-          aria-label="모델·브랜드 검색"
-          className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-2.5 pl-10 pr-10 text-[14px] outline-none transition-[background,border,box-shadow] duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 hover:bg-white dark:hover:border-gray-700 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)] dark:focus:border-indigo-500/50 dark:focus:bg-gray-950"
-        />
-        {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
-      </div>
 
       {/* 결론 히어로 — 표보다 먼저 '그래서 뭐(LG 시사점)'가 눈에 들어오게 */}
       {activated && lgRef && (

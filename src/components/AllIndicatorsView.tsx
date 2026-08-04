@@ -213,7 +213,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
           )}
         </div>
         <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
-          최종 갱신 {loadedAt ? fmtStamp(loadedAt.toISOString()) : "—"}
+          최신 {loadedAt ? fmtStamp(loadedAt.toISOString()) : "—"}
           <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span>
         </span>
       </div>

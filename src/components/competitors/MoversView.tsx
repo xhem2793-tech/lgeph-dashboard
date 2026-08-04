@@ -137,7 +137,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
         </div>
         <div className="ml-auto flex items-center gap-3">
           <ListSearch value={q} onChange={setQ} placeholder="모델·브랜드 검색" />
-          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최종 {stamp ? fmtStamp(stamp) : repDates.d0 ? md(repDates.d0) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최신 {stamp ? fmtStamp(stamp) : repDates.d0 ? md(repDates.d0) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
         </div>
       </div>
       {/* 매트릭스 — 브랜드·분류·모델·★·SRP·오늘·할인율·전일비·날짜3열·최근7일변동·유통 */}

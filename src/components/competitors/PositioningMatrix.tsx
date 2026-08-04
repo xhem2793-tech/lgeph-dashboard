@@ -162,7 +162,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
         <div className="w-fit"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
         <div className="w-fit"><PmDrop label="재고" sel={stockF} options={["전체", "재고있음", "재고없음"].map((s) => ({ k: s, t: s }))} onSelect={setStockF} /></div>
         <ListSearch value={q} onChange={setQ} placeholder="모델·브랜드 검색" className="ml-auto" />
-        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 lg:flex">최종 {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 lg:flex">최신 {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
 
       {/* 매트릭스 */}

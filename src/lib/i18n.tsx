@@ -113,7 +113,7 @@ export const DICT = {
   cur_year: { ko: "현재", en: "Current" },
   news_title: { ko: "주요 뉴스", en: "Top News" },
   news_sub: { ko: "경제·산업·B2B", en: "Economy · Industry · B2B" },
-  news_updated: { ko: "최종 갱신", en: "Updated" },
+  news_updated: { ko: "최신", en: "Updated" },
   news_none_today: { ko: "오늘 신규 없음", en: "No new items today" },
   ce_title: { ko: "CE 동향", en: "CE Trends" },
   ce_sub: { ko: "생활가전·소비", en: "Home appliances" },

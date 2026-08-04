@@ -118,7 +118,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
         )}
         <div className="ml-auto flex items-center gap-3">
           <ListSearch value={q} onChange={setQ} placeholder="모델·코드 검색" />
-          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최종 {stamp ? fmtStamp(stamp) : curDate ? md(curDate) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최신 {stamp ? fmtStamp(stamp) : curDate ? md(curDate) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
         </div>
       </div>
 
@@ -172,7 +172,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
           </tbody>
         </table>
       </div>
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">LG 모델 × {BOARD_SHOPS.length}개 거래선 {curDate ? md(curDate) : ""} 스냅샷(경쟁사 제외·유통별 가격차 점검) · 셀=거래선 최저 현금가(클릭→원문)·행 최저가 초록·고가순 정렬 · ▼▲={prevDate ? md(prevDate) + " 대비" : "전일 대비"} · 스프레드=(최고−최저)/최저 ≥5% 적색 · ★=New DOE 등급 · {Math.min(data.length, 300)}/{data.length}행{stamp ? " · 최종 " + fmtStamp(stamp) : ""}</p>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">LG 모델 × {BOARD_SHOPS.length}개 거래선 {curDate ? md(curDate) : ""} 스냅샷(경쟁사 제외·유통별 가격차 점검) · 셀=거래선 최저 현금가(클릭→원문)·행 최저가 초록·고가순 정렬 · ▼▲={prevDate ? md(prevDate) + " 대비" : "전일 대비"} · 스프레드=(최고−최저)/최저 ≥5% 적색 · ★=New DOE 등급 · {Math.min(data.length, 300)}/{data.length}행{stamp ? " · 최신 " + fmtStamp(stamp) : ""}</p>
     </div>
   )
 }
