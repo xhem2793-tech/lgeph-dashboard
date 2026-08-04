@@ -22,7 +22,7 @@ function ReportCard({ r, i }: { r: PubReport; i: number }) {
       type="button"
       onClick={open}
       style={{ animation: "repIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(i, 10) * 0.05 + "s" }}
-      className="group flex h-full w-full flex-col overflow-hidden rounded-xl text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99]"
+      className="group flex h-full w-full flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 text-left transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-lg active:scale-[.99]"
     >
       {/* 썸네일 — 리포트 미리보기(있으면), 없으면 브랜드 그라디언트 */}
       <div className="relative aspect-[16/10] w-full overflow-hidden border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950">
