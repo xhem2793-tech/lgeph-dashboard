@@ -181,27 +181,23 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
     return [...filtered].sort((a, b) => (b.period || "").localeCompare(a.period || ""))
   }, [filtered, sort])
 
-  const confN = rows.filter((r) => (r.confidence || "").toUpperCase() === "CONFIRMED").length
-
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes detFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes bkFade{from{opacity:0}to{opacity:1}}@keyframes detSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes detModalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}"}</style>
 
       <InsightBanner banner={ALL_BANNER} open={bnOpen} onToggle={() => setBnOpen((v) => !v)} />
 
-      {/* 정렬(주요뉴스와 동일 Segmented) + 검색(우측) + 최종 갱신(뉴스와 동일 위치·포맷) */}
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+      {/* 정렬(분류순/최신순) + 카테고리 필터를 같은 줄에 + 총 지표 + 검색 + 최종 갱신 */}
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
         <Segmented value={sort} onChange={(k) => setSort(k as "cat" | "recent")} options={[{ k: "cat", label: "분류순" }, { k: "recent", label: "최신순" }]} size="sm" />
-        <div className="flex flex-wrap items-center gap-2.5 text-[11.5px]">
-          <span className="text-gray-500 dark:text-gray-400">총 지표 <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
-          <span className="text-gray-300 dark:text-gray-600">·</span>
-          <span className="text-gray-500 dark:text-gray-400">검색 결과 <b className="text-indigo-600 dark:text-indigo-400">{filtered.length}</b></span>
-          <span className="text-gray-300 dark:text-gray-600">·</span>
-          <span className="text-gray-500 dark:text-gray-400">CONFIRMED <b className="text-emerald-600 dark:text-emerald-400">{confN}</b></span>
-          <span className="text-gray-300 dark:text-gray-600">·</span>
-          <span className="text-gray-500 dark:text-gray-400">분류 <b className="text-gray-900 dark:text-gray-50">{Object.keys(catCounts).length}</b></span>
-        </div>
-        <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[420px]" : "w-full max-w-[320px]")}>
+        <span className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
+        {/* 카테고리 필터 — 분류/최신순과 같은 줄 인라인 */}
+        <FCat k="all" ko="전체" n={rows.length} cat={cat} setCat={setCat} />
+        {[...CATS.map((c) => c.key), "etc"].filter((k) => catCounts[k]).map((k) => (
+          <FCat key={k} k={k} ko={catKo(k)} n={catCounts[k]} cat={cat} setCat={setCat} />
+        ))}
+        <span className="shrink-0 text-[11.5px] text-gray-500 dark:text-gray-400">총 지표 <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
+        <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[360px]" : "w-full max-w-[260px]")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden
             className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400">
             <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
@@ -220,14 +216,6 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
           최종 갱신 {loadedAt ? fmtStamp(loadedAt.toISOString()) : "—"}
           <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span>
         </span>
-      </div>
-
-      {/* 카테고리 필터 칩 */}
-      <div className="flex flex-wrap gap-1.5">
-        <FCat k="all" ko="전체" n={rows.length} cat={cat} setCat={setCat} />
-        {[...CATS.map((c) => c.key), "etc"].filter((k) => catCounts[k]).map((k) => (
-          <FCat key={k} k={k} ko={catKo(k)} n={catCounts[k]} cat={cat} setCat={setCat} />
-        ))}
       </div>
 
       {/* 분류순: 카테고리별 섹션 — 카테고리 제목·설명 + 지표 리스트(설명·최신값·24H·7일) */}
