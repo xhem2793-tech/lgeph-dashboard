@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import React from "react"
 import { useTheme } from "next-themes"
-import { useLang } from "@/lib/i18n"
+import { useLang, T } from "@/lib/i18n"
 import { useAccessIdentity } from "@/lib/useAccessIdentity"
 
 const NAV_KEY: Record<string, "nav_overview" | "nav_economy" | "nav_news" | "nav_competitors" | "nav_competitor_ads" | "nav_calendar" | "nav_appendix" | "nav_reports" | "nav_weather"> = {
@@ -97,7 +97,7 @@ export function TopNav() {
                 }
               >
                 {t(NAV_KEY[item.href] ?? "nav_overview")}
-                {item.soon && <span className="rounded-full border border-amber-200 bg-amber-50 px-1 py-px text-[8.5px] font-bold uppercase leading-none tracking-wide text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">예정</span>}
+                {item.soon && <span className="rounded-full border border-amber-200 bg-amber-50 px-1 py-px text-[8.5px] font-bold uppercase leading-none tracking-wide text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">{T("예정", "Soon")}</span>}
               </Link>
             </React.Fragment>
           ))}

@@ -32,12 +32,21 @@ const tone = (c: string) => CAT[c] ?? CAT["기타"]
     : c === "에너지" ? T("에너지", "Energy")
     : c === "유통" ? T("유통", "Retail")
     : c === "공휴일" ? T("공휴일", "Holiday")
+    : c === "사회" ? T("사회", "Society")
+    : c === "통상" ? T("통상", "Trade")
     : c === "기타" ? T("기타", "Other")
     : c === "영업" ? T("영업", "Sales")
     : c === "물류" ? T("물류", "Logistics")
     : c === "관리" ? T("관리", "Management")
     : c === "전체" ? T("전체", "All")
     : c
+  // 발표시각 표시 — 데이터의 "오전/오후 N시"를 EN에선 "N AM/PM"로(원문은 KO 유지)
+  const fmtTime = (s?: string | null): string => {
+    if (!s) return ""
+    const m = s.match(/(오전|오후)\s*(\d{1,2})시(?:\s*(\d{1,2})분)?/)
+    if (!m) return s
+    return T(s, `${m[2]}${m[3] ? ":" + m[3].padStart(2, "0") : ""} ${m[1] === "오전" ? "AM" : "PM"}`)
+  }
   const DEPTS = ["영업", "물류", "관리"]
   const deptOf = (e: CalEvent) => {
     const s = e.category + " " + e.event
@@ -410,7 +419,7 @@ export default function Calendar() {
                     <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{e.importance >= 3 ? "★ " : ""}{pickL(e.event, e.event_en)}</span>
                     {e.actual !== null ? (
                       <span className={"shrink-0 text-[12px] font-bold tabular-nums " + (up ? "text-rose-600 dark:text-rose-400" : down ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-gray-50")}>{fmtVal(e.actual, e.unit)}</span>
-                    ) : e.releaseTime ? <span className="shrink-0 text-[11px] text-gray-500 dark:text-gray-400">{e.releaseTime}</span> : <span className="shrink-0 rounded bg-indigo-100 dark:bg-indigo-500/20 px-1.5 py-px text-[9.5px] font-bold text-indigo-700 dark:text-indigo-300">{T("예정", "Upcoming")}</span>}
+                    ) : e.releaseTime ? <span className="shrink-0 text-[11px] text-gray-500 dark:text-gray-400">{fmtTime(e.releaseTime)}</span> : <span className="shrink-0 rounded bg-indigo-100 dark:bg-indigo-500/20 px-1.5 py-px text-[9.5px] font-bold text-indigo-700 dark:text-indigo-300">{T("예정", "Upcoming")}</span>}
                   </button>
                 )
               })}

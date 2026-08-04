@@ -35,13 +35,17 @@ const AD_TYPE: Record<string, string> = { promo: "프로모", launch: "신제품
 const AD_TYPE_EN: Record<string, string> = { promo: "Promo", launch: "New model", brand: "Brand", campaign: "Campaign", event: "Event", roadshow: "Roadshow", other: "Other" }
 const adTypeLabel = (k: string) => (AD_TYPE[k] ? T(AD_TYPE[k], AD_TYPE_EN[k] ?? AD_TYPE[k]) : k)
 const PRODS = ["에어컨(RAC)", "TV·AV", "세탁·건조", "냉장고", "에어케어", "기타"]
-const prodLabel = (c: string) =>
-  c === "에어컨(RAC)" ? T("에어컨", "RAC") :
-  c === "TV·AV" ? T("TV·AV", "TV·AV") :
-  c === "세탁·건조" ? T("세탁·건조", "Laundry") :
-  c === "냉장고" ? T("냉장고", "REF") :
-  c === "에어케어" ? T("에어케어", "Air Care") :
-  c === "기타" ? T("기타", "Other") : c
+// 표시 라벨(키는 로직 유지) — 정확매칭 + 데이터 변형(bare "에어컨" 등) 정규식 폴백으로 EN 잔여 한글 방지
+const prodLabel = (c: string) => {
+  const s = c || ""
+  if (s === "에어컨(RAC)" || /에어컨|aircon|air ?con|\brac\b/i.test(s)) return T("에어컨", "RAC")
+  if (s === "TV·AV" || /\btv\b|\bav\b|텔레비/i.test(s)) return T("TV·AV", "TV·AV")
+  if (s === "세탁·건조" || /세탁|건조|laundry|washer|dryer/i.test(s)) return T("세탁·건조", "Laundry")
+  if (s === "냉장고" || /냉장|refriger|\bref\b/i.test(s)) return T("냉장고", "REF")
+  if (s === "에어케어" || /에어케어|air ?care|공기청정|청정기/i.test(s)) return T("에어케어", "Air Care")
+  if (s === "기타" || /기타|other/i.test(s) || !s) return T("기타", "Other")
+  return T(s, s)
+}
 const clean = (s: string | null | undefined) =>
   (s || "").replace(/&#8211;|&#8212;/g, "–").replace(/&amp;/g, "&").replace(/&#\d+;|&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim()
 const ymLabel = (ym: string) => T(Number(ym.slice(0, 4)) + "년 " + Number(ym.slice(5, 7)) + "월", Number(ym.slice(5, 7)) + "/" + Number(ym.slice(0, 4)))
