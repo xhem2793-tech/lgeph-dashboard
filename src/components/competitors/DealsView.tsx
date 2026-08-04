@@ -135,12 +135,12 @@ export function DealsView({ rows, deals }: { rows: PriceRow[] | null; deals: Dea
     <div className="flex flex-col gap-3">
       {/* 타이틀 — 맨 위, 좌측 정렬 */}
       <div>
-        <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">동일 스펙 경쟁사 비교</h2>
+        <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">프로모 비교</h2>
         <p className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">제품·유형·가격대를 선택하거나 검색하면 아래에 조건에 맞는 프로모 딜이 나타납니다</p>
       </div>
 
-      {/* 필터 — 검색 위로. 제품 토글 + 가격대 프리셋 */}
-      <div className="flex flex-col gap-2.5">
+      {/* 필터바 — 일일 가격 변동과 동일한 상단 묶음(bordered) */}
+      <div className="flex flex-col gap-2.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
           <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체"); act() }} /></div>
           {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체"); act() }} /></div>}

@@ -129,8 +129,8 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
 
   return (
     <div className="mt-3 flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both" }}>
-      {/* 필터 — 제품 + 신호를 한 줄에(다른 페이지와 동일한 인라인 라인) */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      {/* 필터바 — 일일 가격 변동과 동일한 상단 묶음(bordered) */}
+      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
         {["전체", ...CATS].map((c) => {
           const n = c === "전체" ? signals.length : (catCounts[c] ?? 0)
