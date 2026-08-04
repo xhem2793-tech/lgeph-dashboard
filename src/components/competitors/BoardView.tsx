@@ -111,17 +111,12 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
   const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
 
   // 원본(raw) 일일 거래선 가격 CSV — 수집 원본 9컬럼 전부 + 편의 파생(분류약자·유형·용량·모델코드).
-  //  실제 수집: d·retailer·brand·category·model·capacity(상세 스펙 원문)·price·srp·url. days=최근 N일(달력), null=전체. 엑셀 호환(BOM+CRLF)
-  const dlRaw = (days: number | null) => {
+  //  실제 수집: d·retailer·brand·category·model·capacity(상세 스펙 원문)·price·srp·url. onDate=해당 날짜만, null=전체. 엑셀 호환(BOM+CRLF)
+  const dlRaw = (onDate: string | null) => {
     if (!D.length) return
-    // 사이니지·상업용 디스플레이(TV 오분류) 제외
+    // 사이니지·상업용 디스플레이(TV 오분류) 제외 + 선택 날짜(onDate) 필터
     let rows = D.filter((r) => !isSignage(r.model))
-    if (days != null && dates.length) {
-      const latest = new Date(dates[0] + "T00:00:00")
-      latest.setDate(latest.getDate() - (days - 1))
-      const cutoff = latest.getFullYear() + "-" + String(latest.getMonth() + 1).padStart(2, "0") + "-" + String(latest.getDate()).padStart(2, "0")
-      rows = rows.filter((r) => r.d >= cutoff)
-    }
+    if (onDate) rows = rows.filter((r) => r.d === onDate)
     const head = ["Date", "Retailer", "Brand", "Category", "Type", "Size", "ModelCode", "ModelName", "Spec", "Price", "SRP", "URL"]
     const esc = (v: unknown) => { const s = v == null ? "" : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s }
     const body = rows.map((r) => {
@@ -135,7 +130,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
     const csv = "﻿" + [head.join(","), ...body].join("\r\n")
     const a = document.createElement("a")
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }))
-    a.download = "channel_prices_" + (days == null ? "all" : days + "d") + "_" + (dates[0] ?? "") + ".csv"
+    a.download = "channel_prices_" + (onDate ?? "all") + ".csv"
     a.click(); URL.revokeObjectURL(a.href)
   }
 
@@ -160,8 +155,8 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
           </div>
         )}
         <div className="ml-auto flex items-center gap-2.5">
-          {/* 원본 일일 거래선 가격 CSV — 아이콘 1클릭 다운로드(전체) */}
-          <button type="button" onClick={() => dlRaw(null)} disabled={!D.length} aria-label="원본 데이터(CSV) 다운로드" title="원본 데이터(CSV) 다운로드" className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 transition-all duration-200 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300 active:scale-95 disabled:opacity-40">
+          {/* 원본 CSV — 현재 선택한 날짜(curDate) 스냅샷 다운로드 */}
+          <button type="button" onClick={() => dlRaw(curDate)} disabled={!D.length} aria-label="선택 날짜 원본 데이터(CSV) 다운로드" title={"원본 데이터(CSV) 다운로드 · " + (curDate ? md(curDate) : "—")} className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 transition-all duration-200 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300 active:scale-95 disabled:opacity-40">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
           </button>
           <ListSearch value={q} onChange={setQ} placeholder="모델·코드 검색" />
