@@ -1,46 +1,45 @@
-# PRIVATE 접근 설정 — Outlook(Microsoft Entra ID) 기반, LG전자 계정 전용
+# PRIVATE 접근 설정 — Cloudflare Access + 이메일 허용리스트(One-time PIN)
 
-axlgeph.report(Cloudflare Pages 정적 배포)를 **허락된 계정만** 접근 가능하게 만드는 설정 가이드.
-정적 사이트라 앱 코드 변경 없이 **엣지(Cloudflare Access)** 에서 인증을 거는 방식이 가장 안전·간단하다.
+axlgeph.report(Cloudflare Pages 정적 배포)를 **승인된 개별 계정만** 접근 가능하게 만드는 설정.
+**결정 사항**: Cloudflare Access / 개별 계정 허용리스트 / Entra 앱 등록 불가 → **One-time PIN(OTP)** 방식 채택.
 
-## 권장안 — Cloudflare Access (Zero Trust) + Microsoft Entra ID
+## 왜 OTP(One-time PIN)인가
+- **Entra ID(Azure AD) 앱 등록이 필요 없음** — 사내 IT 협조 없이 Cloudflare 대시보드만으로 완결.
+- 사용자는 **이메일 입력 → 받은편지함(Outlook)으로 온 6자리 코드 입력 → 통과**.
+- **허용리스트에 없는 이메일은 코드조차 못 받고 차단** — 콘텐츠 노출 0.
+- Zero Trust **무료 플랜 최대 50인**. 앱 코드/배포 변경 0.
 
-사용자가 사이트에 접속하면 → Microsoft(Outlook/회사계정) 로그인 → **@lge.com(또는 지정 그룹)** 만 통과.
-- **앱 코드 변경 0** (빌드/배포 그대로). 로그인·세션·리다이렉트를 Cloudflare가 엣지에서 처리.
-- Zero Trust **무료 플랜: 최대 50 사용자** 무료(초과 시 사용자당 과금).
-- 로그인 실패/미허가 계정은 사이트 자체가 안 보임(콘텐츠 노출 0).
+## 설정 절차 (Cloudflare 대시보드에서 전부 가능)
 
-### 1) Microsoft Entra ID(Azure AD) 앱 등록 — LG전자 IT/관리자
-1. Entra 관리센터 → App registrations → New registration
-   - Name: `axlgeph-report-access`
-   - Redirect URI(Web): `https://<team-name>.cloudflareaccess.com/cdn-cgi/access/callback`
-     (`<team-name>` = 2)단계에서 정하는 Cloudflare Zero Trust 팀 도메인)
-2. Certificates & secrets → New client secret → 값 복사(Application secret)
-3. Overview에서 **Application (client) ID**, **Directory (tenant) ID** 복사
-4. API permissions → Microsoft Graph → Delegated: `openid`, `email`, `profile`, `offline_access`, (그룹 제한 쓰면 `GroupMember.Read.All`) → Grant admin consent
+### 1) Zero Trust 팀 생성(최초 1회)
+Cloudflare 대시보드 → **Zero Trust** 진입 → 팀 이름(team domain) 지정(예: `axlgeph`) → 무료 플랜 선택.
 
-### 2) Cloudflare Zero Trust — IdP 연결
-Cloudflare 대시보드 → Zero Trust → Settings → Authentication → Login methods → Add new → **Azure AD**
-- App ID / Client secret / Directory(tenant) ID 입력
-- (선택) "Support groups" 체크 시 Entra 보안그룹으로 정밀 제한 가능
+### 2) Access Application 추가
+Zero Trust → **Access → Applications → Add an application → Self-hosted**
+- **Application name**: axlgeph report
+- **Session Duration**: 24 hours(권장)
+- **Application domain**: `axlgeph.report`  (필요 시 `www.axlgeph.report` 도 추가)
 
-### 3) Access Application + 정책
-Zero Trust → Access → Applications → Add an application → **Self-hosted**
-- Application domain: `axlgeph.report` (+ 필요 시 `www.axlgeph.report`)
-- Identity providers: 위에서 추가한 Azure AD
-- Policy(허용 기준) — 택1:
-  - **이메일 도메인**: Selector `Emails ending in` = `@lge.com`  ← 가장 간단
-  - **Entra 그룹**: Selector `Azure groups` = `<대시보드 승인 그룹>`  ← 세밀한 제어
-- Session Duration: 24h(권장)
+### 3) 로그인 방법 = One-time PIN
+Zero Trust → Settings → **Authentication → Login methods** 에 **One-time PIN** 이 기본 활성.
+(별도 IdP/Entra 등록 불필요. Google/Azure 등은 추가하지 않아도 됨.)
 
-### 4) 확인
-- 시크릿창으로 `https://axlgeph.report` 접속 → Microsoft 로그인 화면 → @lge.com 로그인 시 통과, 외부 계정은 차단.
+### 4) 정책(Policy) — 개별 허용리스트
+Application → **Add a policy**
+- **Action**: Allow
+- **Configure rules → Include → Selector: `Emails`** → 승인 계정 이메일을 하나씩 추가
+  (예: `hong@lge.com`, `kim@lge.com` …)
+  - 나중에 도메인 전체로 바꾸려면 Selector `Emails ending in` = `@lge.com` 로 교체.
+- Save.
 
-## 대안 — 앱 레벨(MSAL) 인증
-정적 export를 유지하면서 클라이언트에서 MSAL로 로그인 게이트를 두는 방법. 단점: 콘텐츠가 번들에 포함되어 완전 차단이 아니고(민감 데이터 노출 위험), 구현·유지비 큼. **비권장.** (Cloudflare Access가 더 안전)
+### 5) 확인
+시크릿창에서 `https://axlgeph.report` 접속 → 이메일 입력 화면 → 허용리스트 계정으로 코드 수신·입력 시 통과, 그 외 차단.
 
-## 결정 필요 사항(사용자 확인)
-- [ ] 허용 기준: **@lge.com 전체** vs **특정 Entra 보안그룹**(그룹명?)
-- [ ] Cloudflare Zero Trust 팀 도메인(`<team-name>`) 신규 생성 가능 여부
-- [ ] Entra 앱 등록 주체: 직접 가능 / LG전자 IT 협조 필요
-- [ ] 예상 사용자 수(50명 무료 플랜 내인지)
+## 운영 메모
+- **계정 추가/삭제**: 위 정책의 Emails 목록만 수정하면 즉시 반영(재배포 불필요).
+- **여러 명 반복 입력 관리**: 인원이 늘면 Cloudflare **Access Group**(이메일 목록 그룹)으로 묶어 여러 앱/정책에서 재사용.
+- **로그아웃/세션**: `https://<team>.cloudflareaccess.com/cdn-cgi/access/logout` 로 로그아웃.
+- **나중에 Entra(SSO) 전환**: IT 협조가 가능해지면 Login method에 Azure AD를 추가하고 정책을 그룹 기준으로 바꾸면 됨(무중단 전환). 상세 절차는 git 이력의 이전 버전 참고.
+
+## 앱(레포) 측 필요 작업
+- **없음.** 엣지에서 인증하므로 Next.js 빌드/배포는 그대로. (원하면 Access가 붙은 뒤 접근 거부 화면 커스터마이징만 대시보드에서 선택 가능.)
