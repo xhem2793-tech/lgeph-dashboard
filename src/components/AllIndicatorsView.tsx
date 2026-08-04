@@ -217,15 +217,12 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
       {/* 분류순: 카테고리별 섹션 — 카테고리 제목·설명 + 지표 리스트(설명·최신값·24H·7일) */}
       {grouped && grouped.map(([k, items]) => (
         <section key={k} style={{ animation: "fadeUp .5s ease both" }}>
-          <header className="mb-1 flex items-start gap-2 px-1">
-            <div className="min-w-0 flex-1">
-              <div className="flex items-baseline gap-2">
-                <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{catKo(k)}</h2>
-                <span className="text-[11px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
-              </div>
-              <p className="mt-0.5 line-clamp-1 text-[12px] text-gray-500 dark:text-gray-400">{CAT_MI[k]?.mean ?? "국가 공식통계 기반 최신 관측 지표"}</p>
-            </div>
-            {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="mt-0.5 shrink-0 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">차트 전체 보기 →</button>}
+          {/* 카테고리 헤더 — 제목·개수·설명을 한 줄로 */}
+          <header className="mb-1 flex items-baseline gap-2 px-1">
+            <h2 className="shrink-0 text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{catKo(k)}</h2>
+            <span className="shrink-0 text-[11px] text-gray-400 dark:text-gray-500">{items.length}개 지표</span>
+            <span className="min-w-0 flex-1 truncate text-[12px] text-gray-500 dark:text-gray-400">{CAT_MI[k]?.mean ?? "국가 공식통계 기반 최신 관측 지표"}</span>
+            {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="shrink-0 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">차트 전체 보기 →</button>}
           </header>
           <IndListTable items={items} q={q} spark={spark} fav={fav} onFav={toggleFav} onDetail={setDetail} />
         </section>
