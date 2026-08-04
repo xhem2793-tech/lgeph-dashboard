@@ -212,15 +212,14 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
         </span>
       </div>
 
-      {/* 좌측 세로 카테고리 필터 레일 + 우측 리스트 */}
-      <div className="grid gap-x-5 gap-y-4 lg:grid-cols-[168px_minmax(0,1fr)]">
-      <aside className="flex h-fit flex-col gap-0.5 lg:sticky lg:top-[70px]">
+      {/* 카테고리 필터 — 시장동향 상단 필터 바(테두리 묶음, 가로 버튼) */}
+      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+        <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">분류</span>
         <FCatV k="all" ko="전체" n={rows.length} cat={cat} setCat={setCat} />
         {[...CATS.map((c) => c.key), "etc"].filter((k) => catCounts[k]).map((k) => (
           <FCatV key={k} k={k} ko={catKo(k)} n={catCounts[k]} cat={cat} setCat={setCat} />
         ))}
-      </aside>
-      <div className="flex min-w-0 flex-col gap-4">
+      </div>
       {/* 분류순: 카테고리별 섹션 — 카테고리 제목·설명 + 지표 리스트(설명·최신값·24H·7일) */}
       {grouped && grouped.map(([k, items]) => (
         <section key={k} style={{ animation: "fadeUp .5s ease both" }}>
@@ -255,8 +254,6 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
       {prov.length > 0 && filtered.length === 0 && (
         <div className="flex h-40 items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 text-[12.5px] text-gray-400">검색 결과 없음</div>
       )}
-      </div>
-      </div>
 
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
         최신값=국가지표(PHILIPPINES) 최신 관측 · 직전 대비=직전 관측 대비 증감 · 기간=데이터 보유 범위(관측수) · <b className="font-semibold text-gray-500 dark:text-gray-400">자세히보기=시계열(연·분기·월)+전년비·전월비, 엑셀=CSV 다운로드</b> · 「전망」은 ADB·IMF·BSP 예측치.
@@ -510,10 +507,8 @@ function FCatV({ k, ko, n, cat, setCat }: { k: string; ko: string; n: number; ca
   const on = cat === k
   return (
     <button type="button" onClick={() => setCat(k)}
-      className={"group relative flex w-full items-center gap-1.5 rounded-md px-2.5 py-1.5 text-left transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 active:scale-[.98] " + (on ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-indigo-50 dark:hover:bg-indigo-500/10")}>
-      {on && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
-      <span className={"flex-1 truncate text-[12.5px] " + (on ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>{ko}</span>
-      <span className="shrink-0 text-[11px] tabular-nums text-gray-400 dark:text-gray-500">{n}</span>
+      className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>
+      {ko}<span className={"tabular-nums text-[10.5px] " + (on ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span>
     </button>
   )
 }
