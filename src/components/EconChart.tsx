@@ -250,7 +250,7 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
 export type Tone = "rose" | "amber" | "emerald"
 
 // 차트 카드(환율과 동일): 차트 → 의미 → AI 분석 → 고정 출처
-export function ChartCard({ title, legend, series, labels, decimals, seriesUnit, meaning, ai, src, idx = 0, kind = "line", seg }: {
+export function ChartCard({ title, legend, series, labels, decimals, seriesUnit, meaning, ai, idx = 0, kind = "line", seg }: {
   title: string; unit?: string; legend: React.ReactNode; series: SLine[]; labels: string[]; decimals?: number; seriesUnit?: string
   meaning: React.ReactNode; ai: React.ReactNode; tone?: Tone; src: React.ReactNode; idx?: number; kind?: "line" | "bar"; seg?: string
 }) {
@@ -286,7 +286,6 @@ export function ChartCard({ title, legend, series, labels, decimals, seriesUnit,
           </div>
         </>
       )}
-      <p className="mt-auto border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{src}</p>
     </div>
   )
 }

@@ -279,13 +279,14 @@ function Spark({ pts }: { pts: number[] }) {
   )
 }
 
-// 지표별 설명 — 큐레이션된 실제 문구(INDICATOR_DESC) 우선, 없으면 단위·출처로 합성
+// 지표별 설명 — 큐레이션 문구(INDICATOR_DESC) 우선 + 단위·출처·기간을 붙여 전 행 2줄 분량으로 보강(균일)
 function descOf(r: Row): string {
-  const d = INDICATOR_DESC[r.indicator]
-  if (d) return d
   const u = inferUnit(r.indicator, r.label || "")
-  const kind = u.unit === "%" ? "전기 대비 증감률·비율" : u.unit === "지수" ? "지수(기준계열)" : u.prefix === "₱" ? "가격·금액(₱ 페소)" : u.prefix === "$" ? "금액($ 미달러)" : u.unit === "℃" ? "월평균 기온" : u.unit === "CDD" ? "냉방도일(에어컨 수요 선행)" : u.unit.indexOf("명") >= 0 ? "규모·수량" : "국가지표 관측값"
-  return kind + " · 출처 " + r.source + (r.n ? " · " + ym(r.mn) + "~" + ym(r.mx) : "")
+  const base = INDICATOR_DESC[r.indicator]
+    ?? ((u.unit === "%" ? "전기 대비 증감률·비율" : u.unit === "지수" ? "기준계열 대비 지수" : u.prefix === "₱" ? "가격·금액(₱ 페소)" : u.prefix === "$" ? "금액($ 미달러)" : u.unit === "℃" ? "월평균 기온" : u.unit === "CDD" ? "냉방도일(에어컨 수요 선행)" : u.unit.indexOf("명") >= 0 ? "인구·규모·수량" : "국가 공식통계 관측값") + " 지표")
+  // 단위 + 출처 + 데이터 기간(관측수)로 2줄 분량 보강
+  const prov = "단위 " + u.note + " · 출처 " + r.source + (r.n ? " · " + ym(r.mn) + "~" + ym(r.mx) + " " + r.n + "관측" : "")
+  return base + " · " + prov
 }
 
 // ── 이미지형 리스트 테이블 — 지표(☆) | 설명 | 최신값 | 24H(%) | 최근 7일 ──
@@ -321,7 +322,7 @@ function IndListTable({ items, q, spark, fav, onFav, onDetail, showCat }: { item
                   </div>
                 </td>
                 {showCat && <td className="truncate px-2 py-3 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
-                <td className="px-2 py-3"><p className="line-clamp-2 text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></td>
+                <td className="px-2 py-3 align-middle"><p className="line-clamp-2 min-h-[2.75em] text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></td>
                 <td className="px-2 py-3 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
                 <td className={"px-2 py-3 text-right font-semibold tabular-nums " + (pc == null ? "text-gray-300 dark:text-gray-600" : up ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>{pc == null ? "—" : (up ? "+" : "") + pc.toFixed(2) + "%"}</td>
                 <td className="px-3 py-3"><div className="flex justify-end">{sp && sp.length >= 2 ? <Spark pts={sp} /> : <span className="text-[12px] text-gray-300 dark:text-gray-600">—</span>}</div></td>
