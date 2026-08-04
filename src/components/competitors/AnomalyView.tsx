@@ -105,14 +105,13 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
   }, [R, A])
 
   // 카테고리별 큐레이션 — 심각도·점수 순 상위만(중구난방 해소)
-  const groups = React.useMemo(() => {
-    const byCat: Record<string, Signal[]> = {}
-    signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF)).forEach((s) => { (byCat[s.cat] = byCat[s.cat] || []).push(s) })
-    return CATS.filter((c) => catF === "전체" || c === catF).map((cat) => ({
-      cat,
-      items: (byCat[cat] || []).sort((a, b) => SEV_META[a.sev].order - SEV_META[b.sev].order || b.score - a.score).slice(0, catF === "전체" ? 8 : 40),
-    })).filter((g) => g.items.length)
-  }, [signals, kind, catF])
+  // 전체 기준 단일 정렬 리스트(제품별 섹션 X) — 심각도·점수 순 상위. 제품 선택 시 해당 제품만.
+  const list = React.useMemo(() =>
+    signals
+      .filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF))
+      .sort((a, b) => SEV_META[a.sev].order - SEV_META[b.sev].order || b.score - a.score)
+      .slice(0, 60)
+  , [signals, kind, catF])
 
   const counts = React.useMemo(() => { const c: Record<string, number> = { price: 0, promo: 0, ad: 0, stock: 0 }; signals.forEach((s) => c[s.kind]++); return c }, [signals])
   const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
@@ -130,56 +129,43 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
 
   return (
     <div className="mt-3 flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both" }}>
-      {/* 필터 — 제품(카테고리) + 신호 계열 배지 */}
-      <div className="flex flex-col gap-2">
-        {/* 제품별 */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-0.5 w-8 shrink-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
-          {["전체", ...CATS].map((c) => {
-            const n = c === "전체" ? signals.length : (catCounts[c] ?? 0)
-            if (c !== "전체" && n === 0) return null
-            return <button key={c} type="button" onClick={() => setCatF(c)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (c === catF ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{c === "전체" ? "전체" : <><span className={"h-1.5 w-1.5 rounded-full " + (CAT_DOT[c] ?? "bg-gray-400")} />{c}</>}<span className={"tabular-nums text-[10.5px] " + (c === catF ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
-          })}
-        </div>
-        {/* 신호 계열 */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="mr-0.5 w-8 shrink-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">신호</span>
-          {KIND_FILTERS.map((f) => {
-            const n = f.k === "전체" ? signals.length : counts[f.k]
-            return <button key={f.k} type="button" onClick={() => setKind(f.k)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (f.k === kind ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{f.label}<span className={"tabular-nums text-[10.5px] " + (f.k === kind ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
-          })}
-          <span className="ml-auto hidden text-[11px] text-gray-400 dark:text-gray-500 sm:inline">최종 {stamp ? fmtStamp(stamp) : "—"}</span>
-        </div>
+      {/* 필터 — 제품 + 신호를 한 줄에(다른 페이지와 동일한 인라인 라인) */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
+        {["전체", ...CATS].map((c) => {
+          const n = c === "전체" ? signals.length : (catCounts[c] ?? 0)
+          if (c !== "전체" && n === 0) return null
+          return <button key={c} type="button" onClick={() => setCatF(c)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (c === catF ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{c === "전체" ? "전체" : <><span className={"h-1.5 w-1.5 rounded-full " + (CAT_DOT[c] ?? "bg-gray-400")} />{c}</>}<span className={"tabular-nums text-[10.5px] " + (c === catF ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+        })}
+        <span className="mx-1 h-4 w-px bg-gray-200 dark:bg-gray-700" />
+        <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">신호</span>
+        {KIND_FILTERS.map((f) => {
+          const n = f.k === "전체" ? signals.length : counts[f.k]
+          return <button key={f.k} type="button" onClick={() => setKind(f.k)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (f.k === kind ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{f.label}<span className={"tabular-nums text-[10.5px] " + (f.k === kind ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+        })}
+        <span className="ml-auto hidden text-[11px] text-gray-400 dark:text-gray-500 sm:inline">최종 {stamp ? fmtStamp(stamp) : "—"}</span>
       </div>
 
-      {/* 카테고리별 피드 */}
-      {groups.length === 0 ? (
+      {/* 전체 기준 단일 리스트(제품별 섹션 X) — 각 행에 제품 태그 표시 */}
+      {list.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400 dark:text-gray-500">해당 신호가 없습니다.</div>
-      ) : groups.map((g, gi) => (
-        <div key={g.cat} style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both", animationDelay: gi * 0.05 + "s" }}>
-          {/* 카테고리 헤더 */}
-          <div className="mb-2 flex items-center gap-2">
-            <span className={"h-2 w-2 shrink-0 rounded-full " + (CAT_DOT[g.cat] ?? "bg-gray-400")} />
-            <span className="text-[13px] font-bold text-gray-800 dark:text-gray-100">{g.cat}</span>
-            <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[10px] font-bold tabular-nums text-gray-500 dark:text-gray-400">{g.items.length}</span>
-            <span className="ml-1 h-px flex-1 bg-gray-100 dark:bg-gray-800" />
-          </div>
-          <div className="overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800">
-            {g.items.map((s, i) => { const km = KIND_META[s.kind]; return (
-              <div key={s.id + i} className="flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 transition-colors last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/40" style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 8) * 0.03 + "s" }}>
-                <span className={"inline-flex w-12 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + km.cls}>{km.label}</span>
-                <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                  <span className="shrink-0 whitespace-nowrap text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{s.own ? <span className="text-indigo-700 dark:text-indigo-300">{s.title}</span> : s.title}</span>
-                  <span className="truncate text-[12px] text-gray-400 dark:text-gray-500">{s.detail}</span>
-                </div>
-                <div className="shrink-0 text-right">{metricChip(s)}</div>
-                {s.channel ? (s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="hidden w-20 shrink-0 truncate text-right text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400 md:block">{pmShopLabel(s.channel)} ↗</a> : <span className="hidden w-20 shrink-0 truncate text-right text-[11px] text-gray-400 dark:text-gray-500 md:block">{pmShopLabel(s.channel)}</span>) : <span className="hidden w-20 shrink-0 md:block" />}
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800">
+          {list.map((s, i) => { const km = KIND_META[s.kind]; return (
+            <div key={s.id + i} className="flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 transition-colors last:border-0 hover:bg-gray-50 dark:hover:bg-gray-800/40" style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 12) * 0.02 + "s" }}>
+              <span className={"inline-flex w-12 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + km.cls}>{km.label}</span>
+              <span className="hidden w-16 shrink-0 items-center gap-1 sm:inline-flex"><span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (CAT_DOT[s.cat] ?? "bg-gray-400")} /><span className="truncate text-[11px] font-medium text-gray-500 dark:text-gray-400">{s.cat}</span></span>
+              <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                <span className="shrink-0 whitespace-nowrap text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{s.own ? <span className="text-indigo-700 dark:text-indigo-300">{s.title}</span> : s.title}</span>
+                <span className="truncate text-[12px] text-gray-400 dark:text-gray-500">{s.detail}</span>
               </div>
-            ) })}
-          </div>
+              <div className="shrink-0 text-right">{metricChip(s)}</div>
+              {s.channel ? (s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="hidden w-20 shrink-0 truncate text-right text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400 md:block">{pmShopLabel(s.channel)} ↗</a> : <span className="hidden w-20 shrink-0 truncate text-right text-[11px] text-gray-400 dark:text-gray-500 md:block">{pmShopLabel(s.channel)}</span>) : <span className="hidden w-20 shrink-0 md:block" />}
+            </div>
+          ) })}
         </div>
-      ))}
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">감지 룰: 가격 급락/급등(3일 실판매가 −6%↓·+8%↑) · 프로모(SRP 대비 ≥30% 할인) · 광고(종료 D-5 이내·신규 D+3 이내, v_competitor_ads_board) · 재고(보조) · 제품별 상위 신호만 큐레이션 · 유리(기회)/불리(경보·주의)</p>
+      )}
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">감지 룰: 가격 급락/급등(3일 실판매가 −6%↓·+8%↑) · 프로모(SRP 대비 ≥30% 할인) · 광고(종료 D-5 이내·신규 D+3 이내, v_competitor_ads_board) · 재고(보조) · 전체 상위 신호 큐레이션 · 유리(기회)/불리(경보·주의)</p>
     </div>
   )
 }
