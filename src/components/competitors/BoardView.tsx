@@ -156,12 +156,12 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
           </div>
         )}
         <div className="ml-auto flex items-center gap-2.5">
-          {/* 원본 CSV — 현재 선택한 날짜(curDate) 스냅샷 다운로드 */}
+          <ListSearch value={q} onChange={setQ} placeholder={T("모델·코드 검색", "Search model or code")} />
+          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : curDate ? md(curDate) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+          {/* 원본 CSV — 현재 선택한 날짜(curDate) 스냅샷 다운로드(맨오른쪽 · C 옆) */}
           <button type="button" onClick={() => dlRaw(curDate)} disabled={!D.length} aria-label={T("선택 날짜 원본 데이터(CSV) 다운로드", "Download raw data (CSV) for the selected date")} title={T("원본 데이터(CSV) 다운로드 · ", "Download raw data (CSV) · ") + (curDate ? md(curDate) : "—")} className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 transition-all duration-200 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300 active:scale-95 disabled:opacity-40">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
           </button>
-          <ListSearch value={q} onChange={setQ} placeholder={T("모델·코드 검색", "Search model or code")} />
-          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : curDate ? md(curDate) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
         </div>
       </div>
 

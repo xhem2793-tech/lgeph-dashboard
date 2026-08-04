@@ -95,6 +95,20 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   }, [list])
   const dHead = (d: string | null) => <span className="tabular-nums text-gray-700 dark:text-gray-200">{d ? md(d) : "—"}</span>
 
+  // 현재 필터된 일일 변동 목록 CSV — 화면 표와 동일 컬럼(브랜드·분류·모델·SRP·오늘가·할인·전일비·최근일자·7일변동·유통). 엑셀 호환(BOM+CRLF)
+  const dlRaw = () => {
+    if (!list.length) return
+    const head = ["Brand", "Category", "ModelCode", "ModelName", "SRP", "Price", "Discount%", "DoD%", "DoD_PHP", "P-1", "P-2", "P-3", "Change7d%", "Retailer", "URL"]
+    const esc = (v: unknown) => { const s = v == null ? "" : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s }
+    const ch7 = (s: number[] | null) => { const p = (s || []).filter((n) => Number.isFinite(n) && n > 0); if (p.length < 2) return ""; const f = p[0], l = p[p.length - 1]; return f > 0 ? (((l - f) / f) * 100).toFixed(1) : "" }
+    const body = list.map((r) => [r.brand, r.category, r.code && r.code.length >= 4 && r.code !== "N/A" ? r.code : canonCode(r.model, r.code), r.model, r.srp, r.p0, r.discountPct != null ? r.discountPct.toFixed(0) : "", r.deltaPct != null ? r.deltaPct.toFixed(1) : "", r.deltaPhp != null ? Math.round(r.deltaPhp) : "", r.p1, r.p2, r.p3, ch7(r.prices7), r.retailer, r.url].map(esc).join(","))
+    const csv = "﻿" + [head.join(","), ...body].join("\r\n")
+    const a = document.createElement("a")
+    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }))
+    a.download = "daily_moves_" + effCat + (repDates.d0 ? "_" + repDates.d0 : "") + ".csv"
+    a.click(); URL.revokeObjectURL(a.href)
+  }
+
   if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("불러오는 중", "Loading")}</div>
 
   return (
@@ -111,9 +125,13 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
           <button type="button" onClick={() => setSortDir("down")} className={"relative z-10 rounded-full px-3 py-0.5 transition-colors duration-200 active:scale-95 " + (sortDir === "down" ? "text-emerald-600 dark:text-emerald-400" : "text-gray-500 dark:text-gray-400")}>{T("인하순", "Cuts")}</button>
           <button type="button" onClick={() => setSortDir("up")} className={"relative z-10 rounded-full px-3 py-0.5 transition-colors duration-200 active:scale-95 " + (sortDir === "up" ? "text-rose-600 dark:text-rose-400" : "text-gray-500 dark:text-gray-400")}>{T("인상순", "Hikes")}</button>
         </div>
-        <div className="ml-auto flex items-center gap-3">
+        <div className="ml-auto flex items-center gap-2.5">
           <ListSearch value={q} onChange={setQ} placeholder={T("모델·브랜드 검색", "Search model or brand")} />
           <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Latest")} {stamp ? fmtStamp(stamp) : repDates.d0 ? md(repDates.d0) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+          {/* 원본 CSV — 현재 필터된 일일 변동 목록(맨오른쪽 · C 옆) */}
+          <button type="button" onClick={dlRaw} disabled={!list.length} aria-label={T("일일 가격 변동(CSV) 다운로드", "Download daily price moves (CSV)")} title={T("일일 가격 변동(CSV) 다운로드", "Download daily price moves (CSV)")} className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 transition-all duration-200 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300 active:scale-95 disabled:opacity-40">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+          </button>
         </div>
       </div>
       {/* 매트릭스 — 브랜드·분류·모델·★·SRP·오늘·할인율·전일비·날짜3열·최근7일변동·유통 */}
