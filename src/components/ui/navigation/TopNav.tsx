@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation"
 import React from "react"
 import { useTheme } from "next-themes"
 import { useLang } from "@/lib/i18n"
+import { useAccessIdentity } from "@/lib/useAccessIdentity"
 
 const NAV_KEY: Record<string, "nav_overview" | "nav_economy" | "nav_news" | "nav_competitors" | "nav_competitor_ads" | "nav_calendar" | "nav_appendix" | "nav_reports" | "nav_weather"> = {
   "/overview": "nav_overview",
@@ -61,6 +62,7 @@ export function TopNav() {
   const pathname = usePathname()
   const { lang, setLang, t } = useLang()
   const { theme, resolvedTheme, setTheme } = useTheme()
+  const me = useAccessIdentity()
   const [mounted, setMounted] = React.useState(false)
   React.useEffect(() => setMounted(true), [])
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
@@ -122,6 +124,27 @@ export function TopNav() {
               onChange={(v) => setTheme(v)}
               options={[{ value: "light", label: SunIcon }, { value: "dark", label: MoonIcon }]}
             />
+          )}
+          {/* 로그인 사용자(Cloudflare Access 신원) — 이니셜 칩 + 호버 시 이메일·로그아웃 */}
+          {me && (
+            <div className="group relative">
+              <button type="button" aria-label="내 계정" className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-[11px] font-bold uppercase text-white shadow-sm ring-1 ring-indigo-200/60 transition-transform hover:-translate-y-px active:scale-95 dark:ring-indigo-500/30">
+                {me.name.slice(0, 1)}
+              </button>
+              <div className="invisible absolute right-0 top-[calc(100%+6px)] z-50 w-[212px] rounded-xl border border-gray-200 bg-white p-1.5 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100 dark:border-gray-800 dark:bg-gray-900">
+                <div className="flex items-center gap-2 px-2 py-2">
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-[12px] font-bold uppercase text-white">{me.name.slice(0, 1)}</span>
+                  <span className="min-w-0">
+                    <span className="block truncate text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{me.name}</span>
+                    <span className="block truncate text-[11px] text-gray-400 dark:text-gray-500">{me.email}</span>
+                  </span>
+                </div>
+                <a href="/cdn-cgi/access/logout" className="mt-0.5 flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] font-medium text-gray-600 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-gray-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>
+                  로그아웃
+                </a>
+              </div>
+            </div>
           )}
         </div>
       </div>
