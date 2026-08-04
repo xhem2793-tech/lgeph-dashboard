@@ -6,43 +6,13 @@ import { fmtStamp, type PriceRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, PM_CATS, pmFormsFor, pmFormHit } from "@/lib/classify"
 import { peso, md, pmShopLabel, pmStarCls, DOE_CODE, doeNorm, PmDrop, ListSearch } from "@/components/competitors/shared"
 
-function MvCountUp({ value, decimals = 1, suffix = "", fmt }: { value: number; decimals?: number; suffix?: string; fmt?: (n: number) => string }) {
-  const ref = React.useRef<HTMLSpanElement | null>(null)
-  const render = (n: number) => (fmt ? fmt(n) : n.toFixed(decimals) + suffix)
-  React.useEffect(() => {
-    const node = ref.current
-    if (!node) return
-    const to = Number.isFinite(value) ? value : 0
-    const t0 = performance.now()
-    let raf = 0
-    const step = (t: number) => {
-      const k = Math.min((t - t0) / 900, 1)
-      const e = 1 - Math.pow(1 - k, 3)
-      node.textContent = render(to * e)
-      if (k < 1) raf = requestAnimationFrame(step)
-    }
-    raf = requestAnimationFrame(step)
-    return () => cancelAnimationFrame(raf)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value])
-  return <span ref={ref}>{render(Number.isFinite(value) ? value : 0)}</span>
-}
+// 전일비 — 주변 셀과 통일한 ▼▲ 컬러 텍스트(채움·자동토글 없음). ₱ 금액은 hover 툴팁.
 function MvDelta({ php, pct }: { php: number | null; pct: number | null }) {
-  const [mode, setMode] = React.useState(0)
-  React.useEffect(() => {
-    const id = setInterval(() => setMode((m) => (m === 0 ? 1 : 0)), 4000)
-    return () => clearInterval(id)
-  }, [])
   if (pct == null || pct === 0 || php == null) return <span className="text-gray-300 dark:text-gray-600">—</span>
   const dn = pct < 0
   return (
-    <span className={"inline-flex w-[74px] items-center rounded px-1 py-0.5 text-[10.5px] font-semibold tabular-nums transition-all duration-300 ease-out hover:-translate-y-0.5 " + (dn ? "bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : "bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400")}>
-      <span className="w-[10px] shrink-0 text-left">{dn ? "↓" : "↑"}</span>
-      <span key={mode} className="flex-1 text-right" style={{ animation: "badgeSwap .45s cubic-bezier(.22,1,.36,1) both" }}>
-        {mode === 1
-          ? <MvCountUp value={Math.abs(php)} fmt={(n) => "₱" + Math.round(n).toLocaleString("en-US")} />
-          : <MvCountUp value={Math.abs(pct)} decimals={1} suffix="%" />}
-      </span>
+    <span title={"₱" + Math.round(Math.abs(php)).toLocaleString("en-US")} className={"inline-flex items-center gap-0.5 text-[11.5px] font-semibold tabular-nums " + (dn ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
+      <span className="text-[10px]">{dn ? "▼" : "▲"}</span>{Math.abs(pct).toFixed(1)}%
     </span>
   )
 }
