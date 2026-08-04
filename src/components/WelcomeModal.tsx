@@ -1,0 +1,96 @@
+"use client"
+
+import React from "react"
+
+/** 첫 방문 웰컴 팝업(시안) — AX 필리핀법인 인텔리전스 대시보드 베타 안내.
+ *  · 데이터 누적·테스트 기간이라 정확도 감안 + 실시간 갱신 안내
+ *  · 무엇을 구축 중인지 간단 소개
+ *  첫 방문 1회 노출(localStorage). "다시 보지 않기" 선택 시 재노출 안 함. */
+const SEEN_KEY = "ax_welcome_v1"
+
+const BUILDING: { icon: React.ReactNode; t: string; d: string }[] = [
+  { t: "국가동향", d: "필리핀 뉴스·규제·정책 + 인사이트 리포트 자동 수집", icon: <path d="M4 6h16M4 12h16M4 18h10" /> },
+  { t: "시장동향", d: "경쟁사 가격·프로모·신제품/EOL 실시간 관측", icon: <><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 4-5" /></> },
+  { t: "주요지표", d: "거시·금융·가전 선행지표 200+ (World Bank·PSA·BSP)", icon: <><rect x="3" y="10" width="4" height="10" rx="1" /><rect x="10" y="4" width="4" height="16" rx="1" /><rect x="17" y="13" width="4" height="7" rx="1" /></> },
+  { t: "마케팅·경쟁광고", d: "경쟁사 광고·캠페인 트래킹, 종료·신규 감지", icon: <><path d="M3 11l18-5v12L3 14z" /><path d="M11.6 16.8a3 3 0 0 1-5.8-1.1" /></> },
+  { t: "주요일정·리포트", d: "경제·정책 캘린더 + 부서·제품·기간별 맞춤 리포트(예정)", icon: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></> },
+]
+
+export default function WelcomeModal() {
+  const [open, setOpen] = React.useState(false)
+  const [dontShow, setDontShow] = React.useState(true)
+  const [closing, setClosing] = React.useState(false)
+
+  React.useEffect(() => {
+    try { if (!localStorage.getItem(SEEN_KEY)) setOpen(true) } catch { setOpen(true) }
+  }, [])
+
+  const close = () => {
+    setClosing(true)
+    try { if (dontShow) localStorage.setItem(SEEN_KEY, "1") } catch {}
+    window.setTimeout(() => { setOpen(false); setClosing(false) }, 220)
+  }
+
+  if (!open) return null
+  return (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 sm:p-6" aria-modal role="dialog">
+      <div className="absolute inset-0 bg-gray-900/45 backdrop-blur-md" style={{ animation: (closing ? "veilOut" : "veilIn") + " .24s ease both" }} onClick={close} />
+      <div
+        className="relative flex max-h-[88vh] w-full max-w-[520px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_28px_80px_-24px_rgba(0,0,0,0.55)] dark:bg-gray-900 dark:ring-white/10"
+        style={{ animation: (closing ? "popOut .22s ease both" : "popIn .5s cubic-bezier(.34,1.42,.64,1) both") }}
+      >
+        {/* 헤더 — 그라디언트 + BETA */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-600 px-7 pb-6 pt-7 text-white">
+          <div className="absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+          <div className="absolute -bottom-12 right-16 h-28 w-28 rounded-full bg-violet-300/20 blur-2xl" />
+          <div className="relative flex items-center gap-2">
+            <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest ring-1 ring-white/30">Beta</span>
+            <span className="text-[11px] font-medium text-white/80">테스트 · 데이터 누적 중</span>
+          </div>
+          <h2 className="relative mt-3 text-[20px] font-extrabold leading-snug tracking-tight">AX 필리핀법인<br />마켓 인텔리전스 대시보드</h2>
+          <p className="relative mt-2 text-[12.5px] leading-relaxed text-white/85">AI 전환(AX)으로 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.</p>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto px-7 py-5">
+          {/* 주의 — 정확도·갱신 안내 */}
+          <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-amber-500"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" /></svg>
+            <p className="text-[12px] leading-relaxed text-amber-800 dark:text-amber-200">
+              현재 데이터베이스를 <b className="font-bold">실시간으로 누적·수집</b>하는 테스트 기간입니다. 일부 수치는 정확도가 완전하지 않을 수 있으니 <b className="font-bold">참고용</b>으로 봐주세요 — 파이프라인이 계속 돌며 <b className="font-bold">자동으로 갱신·보정</b>됩니다.
+            </p>
+          </div>
+
+          {/* 무엇을 구축 중인가 */}
+          <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">지금 구축 중인 것</p>
+          <div className="flex flex-col gap-1.5">
+            {BUILDING.map((b, i) => (
+              <div key={b.t} className="flex items-start gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10" style={{ animation: "fadeUp .45s cubic-bezier(.22,1,.36,1) both", animationDelay: 0.06 + i * 0.05 + "s" }}>
+                <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-300">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{b.icon}</svg>
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-bold text-gray-900 dark:text-gray-50">{b.t}</div>
+                  <div className="text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{b.d}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 푸터 */}
+        <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-7 py-4 dark:border-gray-800">
+          <label className="flex cursor-pointer select-none items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400">
+            <button type="button" role="checkbox" aria-checked={dontShow} onClick={() => setDontShow((v) => !v)}
+              className={"flex h-4 w-4 items-center justify-center rounded border transition-colors " + (dontShow ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 dark:border-gray-600")}>
+              {dontShow && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>}
+            </button>
+            <span onClick={() => setDontShow((v) => !v)}>다시 보지 않기</span>
+          </label>
+          <button type="button" onClick={close} className="rounded-xl bg-indigo-600 px-5 py-2 text-[13px] font-bold text-white shadow-sm shadow-indigo-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95">
+            살펴보기
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
