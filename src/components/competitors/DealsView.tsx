@@ -43,8 +43,8 @@ type Band = { lo: number; hi: number; label: string; last: boolean }
  *  진입 시 구글식 중앙 검색 + 카테고리·가격대 프리셋만 → 조건 선택하면 선택 배지가 위에 쌓이며 결과 목록 등장.
  *  레이아웃: Claude Design `spec-compare-photo.reference.html`. */
 export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; deals: DealRow[] | null; stamp?: string | null }) {
-  const [cat, setCat] = React.useState("냉장고")
-  const [form, setForm] = React.useState("SxS")
+  const [cat, setCat] = React.useState("전체")
+  const [form, setForm] = React.useState("전체")
   const [size, setSize] = React.useState("전체")
   const [brand, setBrand] = React.useState("전체")
   const [priceBand, setPriceBand] = React.useState<number | null>(null)   // 가격대 프리셋 인덱스(null=전체)
@@ -54,7 +54,7 @@ export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; dea
   const act = React.useCallback(() => setTouched(true), [])
   const activated = touched || q.trim() !== ""
   const R = rows ?? []
-  const cats = React.useMemo(() => { const av = PM_CATS.filter((c) => R.some((r) => r.category === c)); return av.length ? av : PM_CATS }, [R])
+  const cats = React.useMemo(() => { const av = PM_CATS.filter((c) => R.some((r) => r.category === c)); return ["전체", ...(av.length ? av : PM_CATS)] }, [R])
   const formList = pmFormsFor(cat)
   const effForm = formList.includes(form) ? form : (formList[0] ?? "전체")
   const sizes = pmSizeList(cat)
@@ -64,7 +64,7 @@ export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; dea
   // 세그먼트 = 현재 유형(cat+form)의 모델별 최저오퍼
   const segment = React.useMemo(() => {
     const g: Record<string, PriceRow[]> = {}
-    R.forEach((r) => { if (r.category !== cat || r.p0 == null) return; if (!pmFormHit(cat, r.model + " " + (r.capacity || ""), effForm, r.brand)) return; const cc = canonCode(r.model, r.code); if (cc.length < 5) return; (g[cc] = g[cc] || []).push(r) })
+    R.forEach((r) => { if (r.p0 == null) return; if (cat !== "전체" && r.category !== cat) return; if (cat !== "전체" && !pmFormHit(cat, r.model + " " + (r.capacity || ""), effForm, r.brand)) return; const cc = canonCode(r.model, r.code); if (cc.length < 5) return; (g[cc] = g[cc] || []).push(r) })
     return Object.entries(g).map(([cc, list]) => {
       const best = list.reduce((a, x) => ((x.p0 ?? Infinity) < (a.p0 ?? Infinity) ? x : a))
       const srps = list.map((x) => x.srp).filter((v): v is number => v != null)
@@ -134,14 +134,8 @@ export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; dea
 
   return (
     <div className="flex flex-col gap-3">
-      {/* 타이틀 — 맨 위, 좌측 정렬 */}
-      <div>
-        <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">프로모 비교</h2>
-        <p className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">제품·유형·가격대를 선택하거나 검색하면 아래에 조건에 맞는 프로모 딜이 나타납니다</p>
-      </div>
-
       {/* 필터바 — 한 라인 통일(제품·유형·용량·브랜드·가격대) + 검색 오른쪽. 일일 가격 변동과 동일 */}
-      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-2 py-2.5">
         <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체"); act() }} /></div>
         {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체"); act() }} /></div>}
         <div className="w-fit"><PmDrop label={sizeLabel} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={(k) => { setSize(k); act() }} /></div>
@@ -200,20 +194,20 @@ export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; dea
             </div>
             {/* 테이블 */}
             <div className="overflow-x-auto">
-        <table className="w-full min-w-[1200px] table-fixed border-collapse text-[12px]">
+        <table className="w-full min-w-[820px] table-fixed border-collapse text-[12px]">
           <colgroup>
-            <col style={{ width: 62 }} /><col style={{ width: 220 }} /><col style={{ width: 92 }} /><col style={{ width: 110 }} /><col style={{ width: 72 }} /><col style={{ width: 96 }} />
-            {PTYPES.map((p) => <col key={p.k} style={{ width: 118 }} />)}
+            <col style={{ width: 46 }} /><col style={{ width: 168 }} /><col style={{ width: 70 }} /><col style={{ width: 90 }} /><col style={{ width: 54 }} /><col style={{ width: 76 }} />
+            {PTYPES.map((p) => <col key={p.k} style={{ width: 74 }} />)}
           </colgroup>
           <thead className="bg-gray-50 dark:bg-gray-900">
             <tr className="text-[11.5px]">
-              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">제품</th>
-              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">브랜드 · 모델</th>
-              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">최저 채널</th>
-              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-right font-semibold text-gray-600 dark:text-gray-300">실판매가</th>
-              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-center font-semibold text-gray-600 dark:text-gray-300">할인율</th>
-              <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2.5 text-right font-semibold text-gray-600 dark:text-gray-300">vs 자사</th>
-              {PTYPES.map((p) => <th key={p.k} className="border-b border-l border-gray-200 dark:border-gray-700 px-3 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">{p.label}</th>)}
+              <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">제품</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">브랜드 · 모델</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">최저 채널</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-right font-semibold text-gray-600 dark:text-gray-300">실판매가</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-center font-semibold text-gray-600 dark:text-gray-300">할인율</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-right font-semibold text-gray-600 dark:text-gray-300">vs 자사</th>
+              {PTYPES.map((p) => <th key={p.k} className="border-b border-l border-gray-200 dark:border-gray-700 px-2 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">{p.label}</th>)}
             </tr>
           </thead>
           <tbody>
@@ -223,16 +217,16 @@ export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; dea
               const isBest = o.net === best, disc = o.list != null && o.list > o.net ? Math.round((o.list - o.net) / o.list * 100) : 0
               return (
                 <tr key={o.cc + ri} className={"border-b border-gray-100 dark:border-gray-800/60 last:border-0 " + (o.own ? "bg-indigo-50/40 dark:bg-indigo-500/5" : "hover:bg-gray-50 dark:hover:bg-gray-800/40")}>
-                  <td className="px-3 py-3"><div className={"flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border bg-white dark:bg-gray-900 " + (o.own ? "border-indigo-200 dark:border-indigo-500/40" : "border-gray-200 dark:border-gray-700")}>{o.image ? <img src={o.image} alt={o.model} loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; const s = e.currentTarget.nextElementSibling as HTMLElement | null; if (s) s.style.display = "flex" }} /> : null}<span className={"h-full w-full items-center justify-center text-[14.5px] font-bold " + (o.image ? "hidden " : "flex ") + (o.own ? "text-indigo-500" : "text-gray-400 dark:text-gray-500")}>{o.brand.slice(0, 2)}</span></div></td>
-                  <td className={"px-3 py-3 " + (o.own ? "border-r border-indigo-100 dark:border-indigo-500/20" : "")}>
+                  <td className="px-2 py-2.5"><div className={"flex h-10 w-10 items-center justify-center overflow-hidden rounded-lg border bg-white dark:bg-gray-900 " + (o.own ? "border-indigo-200 dark:border-indigo-500/40" : "border-gray-200 dark:border-gray-700")}>{o.image ? <img src={o.image} alt={o.model} loading="lazy" className="h-full w-full object-contain" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = "none"; const s = e.currentTarget.nextElementSibling as HTMLElement | null; if (s) s.style.display = "flex" }} /> : null}<span className={"h-full w-full items-center justify-center text-[14.5px] font-bold " + (o.image ? "hidden " : "flex ") + (o.own ? "text-indigo-500" : "text-gray-400 dark:text-gray-500")}>{o.brand.slice(0, 2)}</span></div></td>
+                  <td className={"px-2 py-2.5 " + (o.own ? "border-r border-indigo-100 dark:border-indigo-500/20" : "")}>
                     <span className="flex flex-wrap items-center gap-1.5">{o.own ? <span className="h-3.5 w-1 rounded bg-indigo-500" /> : null}<span className={"text-[12.5px] font-bold " + (o.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{o.brand}</span>{o.own ? <span className="rounded bg-indigo-100 dark:bg-indigo-500/20 px-1 py-px text-[10px] font-bold text-indigo-600 dark:text-indigo-300">자사</span> : isBest ? <span className="rounded bg-emerald-500 px-1 py-px text-[10px] font-bold text-white">최저가</span> : null}</span>
                     <span className={"mt-0.5 block " + (o.own ? "pl-2.5" : "")}>{o.url ? <a href={o.url} target="_blank" rel="noopener noreferrer" className="text-[11px] tabular-nums text-indigo-600 hover:underline dark:text-indigo-400">{o.model}</a> : <span className="text-[11px] tabular-nums text-gray-400">{o.model}</span>}</span>
                   </td>
-                  <td className="px-3 py-3 text-[12px] text-gray-600 dark:text-gray-300">{o.at ? pmShopLabel(o.at) : "—"}</td>
-                  <td className="px-3 py-3 text-right"><span className={"text-[13.5px] tabular-nums font-bold " + (o.own ? "text-indigo-700 dark:text-indigo-300" : isBest ? "text-emerald-700 dark:text-emerald-300" : "text-gray-900 dark:text-gray-50")}>{won(o.net)}</span>{o.list != null && o.list > o.net ? <div className="text-[10.5px] tabular-nums text-gray-400 line-through dark:text-gray-500">{won(o.list)}</div> : null}</td>
-                  <td className="px-3 py-3 text-center">{disc > 0 ? <span className="rounded bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-rose-600 dark:text-rose-400">-{disc}%</span> : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
-                  <td className="px-3 py-3 text-right text-[12px] tabular-nums">{gapCell(o)}</td>
-                  {PTYPES.map((p) => { const pa = promoAt(o, p.k); return <td key={p.k} className="border-l border-gray-100 dark:border-gray-800 px-3 py-3 align-top">{pa ? <><span className={"inline-flex items-center whitespace-nowrap rounded px-1.5 py-0.5 text-[11.5px] font-semibold " + p.cls}>{pa.val}</span>{pa.other ? <span className="mt-0.5 block text-[10px] text-amber-600 dark:text-amber-400">↳ {pmShopLabel(pa.at)}</span> : null}</> : <span className="text-[12.5px] text-gray-300 dark:text-gray-600">—</span>}</td> })}
+                  <td className="px-2 py-2.5 text-[12px] text-gray-600 dark:text-gray-300">{o.at ? pmShopLabel(o.at) : "—"}</td>
+                  <td className="px-2 py-2.5 text-right"><span className={"text-[13.5px] tabular-nums font-bold " + (o.own ? "text-indigo-700 dark:text-indigo-300" : isBest ? "text-emerald-700 dark:text-emerald-300" : "text-gray-900 dark:text-gray-50")}>{won(o.net)}</span>{o.list != null && o.list > o.net ? <div className="text-[10.5px] tabular-nums text-gray-400 line-through dark:text-gray-500">{won(o.list)}</div> : null}</td>
+                  <td className="px-2 py-2.5 text-center">{disc > 0 ? <span className="rounded bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 text-[11px] font-bold tabular-nums text-rose-600 dark:text-rose-400">-{disc}%</span> : <span className="text-gray-300 dark:text-gray-600">—</span>}</td>
+                  <td className="px-2 py-2.5 text-right text-[12px] tabular-nums">{gapCell(o)}</td>
+                  {PTYPES.map((p) => { const pa = promoAt(o, p.k); return <td key={p.k} className="border-l border-gray-100 dark:border-gray-800 px-2 py-2.5 align-top">{pa ? <><span className={"inline-flex items-center whitespace-nowrap rounded px-1.5 py-0.5 text-[11.5px] font-semibold " + p.cls}>{pa.val}</span>{pa.other ? <span className="mt-0.5 block text-[10px] text-amber-600 dark:text-amber-400">↳ {pmShopLabel(pa.at)}</span> : null}</> : <span className="text-[12.5px] text-gray-300 dark:text-gray-600">—</span>}</td> })}
                 </tr>
               )
             })}
