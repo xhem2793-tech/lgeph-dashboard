@@ -96,18 +96,28 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
   const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
   const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
 
-  // 원본(raw) 일일 거래선 가격 CSV 다운로드 — 필터 무관, 전체 관측 그대로(엑셀 호환 BOM+CRLF)
-  const dlRaw = () => {
+  // 원본(raw) 일일 거래선 가격 CSV 다운로드 — 필터 무관 전체 관측. days=최근 N일(달력), null=전체(엑셀 호환 BOM+CRLF)
+  const dlRaw = (days: number | null) => {
     if (!D.length) return
+    let rows = D
+    if (days != null && dates.length) {
+      const latest = new Date(dates[0] + "T00:00:00")
+      latest.setDate(latest.getDate() - (days - 1))
+      const cutoff = latest.getFullYear() + "-" + String(latest.getMonth() + 1).padStart(2, "0") + "-" + String(latest.getDate()).padStart(2, "0")
+      rows = D.filter((r) => r.d >= cutoff)
+    }
     const head = ["날짜", "브랜드", "분류", "모델코드", "모델명", "용량", "거래선", "현금가", "SRP", "URL"]
     const esc = (v: unknown) => { const s = v == null ? "" : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s }
-    const rows = D.map((r) => [r.d, r.brand, r.category, canonCode(r.model, r.code), r.model, r.capacity, r.retailer, r.price, r.srp, r.url].map(esc).join(","))
-    const csv = "﻿" + [head.join(","), ...rows].join("\r\n")
+    const body = rows.map((r) => [r.d, r.brand, r.category, canonCode(r.model, r.code), r.model, r.capacity, r.retailer, r.price, r.srp, r.url].map(esc).join(","))
+    const csv = "﻿" + [head.join(","), ...body].join("\r\n")
     const a = document.createElement("a")
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }))
-    a.download = "channel_prices_raw_" + (dates[0] ?? "") + ".csv"
+    a.download = "channel_prices_" + (days == null ? "all" : days + "d") + "_" + (dates[0] ?? "") + ".csv"
     a.click(); URL.revokeObjectURL(a.href)
   }
+  const DL_RANGES: { label: string; days: number | null }[] = [
+    { label: "최신일", days: 1 }, { label: "최근 7일", days: 7 }, { label: "최근 30일", days: 30 }, { label: "전체", days: null },
+  ]
 
   return (
     <div className="flex flex-col gap-2.5">
@@ -130,11 +140,23 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
           </div>
         )}
         <div className="ml-auto flex items-center gap-2.5">
-          {/* 원본 일일 거래선 가격 CSV 다운로드 */}
-          <button type="button" onClick={dlRaw} disabled={!D.length} title="원본 데이터(CSV) 다운로드" className="flex h-[30px] shrink-0 items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2 text-[11.5px] font-semibold text-gray-600 dark:text-gray-300 transition-all duration-200 hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300 active:scale-95 disabled:opacity-40 disabled:hover:translate-y-0">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
-            CSV
-          </button>
+          {/* 원본 일일 거래선 가격 CSV — 아이콘만, 호버 시 기간별 추출 */}
+          <div className="group relative shrink-0">
+            <button type="button" disabled={!D.length} aria-label="원본 데이터(CSV) 다운로드" title="원본 데이터(CSV) 다운로드" className="flex h-[30px] w-[30px] items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 transition-all duration-200 group-hover:border-indigo-300 group-hover:text-indigo-600 dark:group-hover:border-indigo-500/40 dark:group-hover:text-indigo-300 active:scale-95 disabled:opacity-40">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+            </button>
+            {D.length > 0 && (
+              <div className="invisible absolute right-0 top-[calc(100%+4px)] z-40 w-max min-w-[132px] rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+                <div className="px-2 py-1 text-[9.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">기간별 원본 CSV</div>
+                {DL_RANGES.map((r) => (
+                  <button key={r.label} type="button" onClick={() => dlRaw(r.days)} className="flex w-full items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1.5 text-left text-[12px] text-gray-600 dark:text-gray-300 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <ListSearch value={q} onChange={setQ} placeholder="모델·코드 검색" />
           <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최신 {stamp ? fmtStamp(stamp) : curDate ? md(curDate) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
         </div>
