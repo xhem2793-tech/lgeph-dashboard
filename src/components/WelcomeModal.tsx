@@ -39,15 +39,22 @@ export default function WelcomeModal() {
         className="relative flex max-h-[88vh] w-full max-w-[520px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_28px_80px_-24px_rgba(0,0,0,0.55)] dark:bg-gray-900 dark:ring-white/10"
         style={{ animation: (closing ? "popOut .22s ease both" : "popIn .5s cubic-bezier(.34,1.42,.64,1) both") }}
       >
-        {/* 헤더 — 절제된 화이트 + 상단 얇은 브랜드 액센트(과한 그라디언트 지양) */}
-        <div className="relative border-b border-gray-100 px-7 pb-5 pt-6 dark:border-gray-800">
-          <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-indigo-500 to-violet-500" />
-          <div className="flex items-center gap-2">
-            <span className="rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 ring-1 ring-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-500/20">Beta</span>
-            <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">테스트 · 데이터 누적 중</span>
+        {/* 헤더 — 파스텔 오로라 그라디언트(감성) + 그라디언트 타이틀 */}
+        <div className="relative overflow-hidden bg-gradient-to-br from-indigo-50/80 via-white to-fuchsia-50/50 px-7 pb-6 pt-7 dark:from-indigo-500/[0.07] dark:via-gray-900 dark:to-fuchsia-500/[0.05]">
+          <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-indigo-400 via-violet-400 to-fuchsia-400" />
+          {/* 오로라 오브 — 파스텔·저채도 블러로 은은한 깊이감 */}
+          <div className="pointer-events-none absolute -left-12 -top-14 h-48 w-48 rounded-full bg-indigo-300/30 blur-3xl dark:bg-indigo-500/20" />
+          <div className="pointer-events-none absolute -right-10 -top-8 h-44 w-44 rounded-full bg-fuchsia-300/25 blur-3xl dark:bg-fuchsia-500/15" />
+          <div className="pointer-events-none absolute right-24 top-12 h-28 w-28 rounded-full bg-sky-300/20 blur-3xl dark:bg-sky-500/10" />
+          <div className="relative flex items-center gap-2" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: ".1s" }}>
+            <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 shadow-sm ring-1 ring-indigo-100 backdrop-blur dark:bg-white/10 dark:text-indigo-300 dark:ring-indigo-500/20">Beta</span>
+            <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">테스트 · 데이터 누적 중</span>
           </div>
-          <h2 className="mt-3 text-[18.5px] font-extrabold leading-snug tracking-tight text-gray-900 dark:text-gray-50">AX 필리핀법인 마켓 인텔리전스 대시보드</h2>
-          <p className="mt-1.5 text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400">AI 전환(AX)으로 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.</p>
+          <h2 className="relative mt-3.5 text-[20px] font-extrabold leading-[1.25] tracking-tight" style={{ animation: "fadeUp .55s cubic-bezier(.22,1,.36,1) both", animationDelay: ".17s" }}>
+            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300">AX 필리핀법인</span>
+            <span className="block text-gray-900 dark:text-gray-50">마켓 인텔리전스 대시보드</span>
+          </h2>
+          <p className="relative mt-2 text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400" style={{ animation: "fadeUp .55s cubic-bezier(.22,1,.36,1) both", animationDelay: ".24s" }}>AI 전환(AX)으로 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.</p>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-7 py-5">
@@ -85,7 +92,7 @@ export default function WelcomeModal() {
             </button>
             <span onClick={() => setDontShow((v) => !v)}>다시 보지 않기</span>
           </label>
-          <button type="button" onClick={close} className="rounded-xl bg-indigo-600 px-5 py-2 text-[13px] font-bold text-white shadow-sm shadow-indigo-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95">
+          <button type="button" onClick={close} className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2 text-[13px] font-bold text-white shadow-md shadow-violet-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:from-indigo-700 hover:to-violet-700 hover:shadow-lg hover:shadow-violet-600/30 active:scale-95">
             살펴보기
           </button>
         </div>
