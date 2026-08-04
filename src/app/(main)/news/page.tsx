@@ -864,8 +864,8 @@ export default function Page() {
             ) : slice.length === 0 ? (
               <p className="py-10 text-center text-[12px] text-gray-500 dark:text-gray-400">조건에 맞는 항목 없음</p>
             ) : menu === "인사이트" ? (
-              /* 인사이트 칼럼 — 1열 매거진형 큰 카드(이미지·큰 제목·시사점). 하나씩 독립적으로. */
-              <div className="mt-3 flex flex-col gap-5">
+              /* 인사이트 칼럼 — 1열 매거진형(좌 이미지 · 우 텍스트). 과하지 않게 컴팩트. */
+              <div className="mt-3 flex flex-col gap-3">
                 {slice.map((g, i) => {
                   const d = g.head
                   const c = lead(d, chips)
@@ -873,23 +873,22 @@ export default function Page() {
                     <article key={d.id} role="button" tabIndex={0}
                       onClick={() => { if (d.url && /\.pdf($|\?)/i.test(d.url)) window.open(d.url, "_blank", "noopener"); else setModal(d) }}
                       onKeyDown={(ev) => { if (ev.key === "Enter") setModal(d) }}
-                      style={{ animation: "rowIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(i, 8) * 0.05 + "s" }}
-                      className="group cursor-pointer overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-800 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-lg active:scale-[.997]">
-                      <div className="relative aspect-[21/9] w-full overflow-hidden bg-gray-50 dark:bg-gray-900">
+                      style={{ animation: "rowIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(i, 8) * 0.04 + "s" }}
+                      className="group flex cursor-pointer gap-4 overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800 p-3 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.997]">
+                      <div className="relative h-24 w-36 shrink-0 overflow-hidden rounded-lg bg-gray-50 dark:bg-gray-900 sm:h-28 sm:w-44">
                         <DocArt d={d} chip={c} big />
                         {d.image && <img src={d.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { ev.currentTarget.style.display = "none" }} />}
                       </div>
-                      <div className="p-5 sm:p-6">
-                        <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-gray-500 dark:text-gray-400">
+                      <div className="flex min-w-0 flex-1 flex-col justify-center">
+                        <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
                           <span className="flex items-center gap-1.5 font-semibold" style={{ color: (ART[d.topic] ?? ART["거시·금융"]).accent }}><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: (ART[d.topic] ?? ART["거시·금융"]).accent }} />{d.topic}</span>
                           <span className="text-gray-300 dark:text-gray-600">·</span>
                           <span>{d.source}</span>{d.source === OURS || d.kind === "insight" ? <AiMark /> : null}
                           <span className="text-gray-300 dark:text-gray-600">·</span>
                           <span className="num">{rel(d.date)}</span>
                         </div>
-                        <h3 className="mt-2.5 text-[19px] font-bold leading-[1.35] tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-700 dark:text-gray-50 dark:group-hover:text-indigo-300"><Hi text={d.title} q={q} /></h3>
-                        {d.so ? <p className="mt-2 line-clamp-3 text-[13.5px] leading-relaxed text-gray-600 dark:text-gray-300"><Hi text={d.so} q={q} /></p> : d.summary ? <p className="mt-2 line-clamp-3 text-[13.5px] leading-relaxed text-gray-600 dark:text-gray-300"><Hi text={d.summary} q={q} /></p> : null}
-                        <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-indigo-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:text-indigo-400">자세히 보기<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg></span>
+                        <h3 className="mt-1.5 line-clamp-2 text-[15px] font-bold leading-snug tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-700 dark:text-gray-50 dark:group-hover:text-indigo-300"><Hi text={d.title} q={q} /></h3>
+                        {d.so ? <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400"><Hi text={d.so} q={q} /></p> : d.summary ? <p className="mt-1 line-clamp-2 text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400"><Hi text={d.summary} q={q} /></p> : null}
                       </div>
                     </article>
                   )
