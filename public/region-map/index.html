@@ -84,10 +84,10 @@
   /* 색상 지표: 평소 최소화 아이콘 → hover 시 세로 목록 펼침, 지표 클릭 시 다시 최소화 */
   .panel{animation:ovin .55s cubic-bezier(.16,1,.3,1) both;animation-delay:.2s}
 
-  .app{display:grid;grid-template-columns:6fr 4fr;flex:1;min-height:0}
+  .app{display:grid;grid-template-columns:6fr 4fr;gap:12px;padding:12px;background:var(--bg);flex:1;min-height:0}
 
   /* ---- MAP SIDE ---- */
-  .stage{position:relative;overflow:hidden;background:var(--bg)}
+  .stage{position:relative;overflow:hidden;background:var(--bg);border-radius:16px;border:1px solid var(--hair)}
   .stage::before{
     content:"";position:absolute;inset:0;
     background-image:radial-gradient(var(--hair) 1px,transparent 1px);
@@ -97,8 +97,8 @@
     position:absolute;top:26px;left:30px;z-index:5;pointer-events:none;
   }
   .brand .ki{font-size:11px;letter-spacing:.32em;color:var(--muted);font-weight:600;text-transform:uppercase}
-  .brand h1{font-size:26px;font-weight:800;letter-spacing:-.01em;margin-top:6px;line-height:1.05}
-  .brand .sub{font-size:12.5px;color:var(--muted);margin-top:7px}
+  .brand h1{font-size:15.5px;font-weight:800;letter-spacing:-.01em;margin-top:3px;line-height:1.15}
+  .brand .sub{font-size:10.5px;color:var(--muted);margin-top:5px}
 
   .backbtn{
     position:absolute;top:26px;right:30px;z-index:6;
@@ -199,8 +199,8 @@
 
   /* ---- PANEL SIDE ---- */
   .panel{
-    background:var(--panel);border-left:1.5px solid var(--line);
-    display:flex;flex-direction:column;height:100vh;overflow:hidden;position:relative;
+    background:var(--panel);border:1px solid var(--line);border-radius:16px;
+    display:flex;flex-direction:column;height:100%;overflow:hidden;position:relative;
   }
   .panel-head{padding:22px 28px 18px;border-bottom:1px solid var(--hair)}
   .panel-head .ey{font-size:11px;letter-spacing:.28em;color:var(--muted);font-weight:600;text-transform:uppercase}
@@ -372,6 +372,11 @@
 <!-- 상단 KPI 스트립 제거: 지도 내 우하단 오버레이(.kpiover)로 이동 -->
 <div class="app">
   <div class="stage">
+    <div class="brand">
+      <div class="ki">Republic of the Philippines</div>
+      <h1>필리핀 행정 지역</h1>
+      <div class="sub">17개 지역 · 클릭 확대·세부정보 · 스크롤 줌 · 드래그 이동</div>
+    </div>
     <button class="backbtn" id="back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       <span>전체 지도</span>
