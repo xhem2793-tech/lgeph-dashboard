@@ -250,51 +250,20 @@ export function BarChart({ data, labels, color = IND, decimals = 1, unit = "" }:
 export type Tone = "rose" | "amber" | "emerald"
 
 // 차트 카드(환율과 동일): 차트 → 의미 → AI 분석 → 고정 출처
-export function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, meaning, ai, src, idx = 0, kind = "line", seg }: {
+export function ChartCard({ title, legend, series, labels, decimals, seriesUnit, meaning, ai, src, idx = 0, kind = "line", seg }: {
   title: string; unit?: string; legend: React.ReactNode; series: SLine[]; labels: string[]; decimals?: number; seriesUnit?: string
   meaning: React.ReactNode; ai: React.ReactNode; tone?: Tone; src: React.ReactNode; idx?: number; kind?: "line" | "bar"; seg?: string
 }) {
-  const cardRef = React.useRef<HTMLDivElement | null>(null)
   const [aiOpen, setAiOpen] = React.useState(false)
-  const safe = title.replace(/[^\w가-힣]+/g, "_")
-  const dlCsv = () => { // 데이터 CSV 다운로드
-    const head = ["기간", ...series.map((s) => s.name)].join(",")
-    const rows = labels.map((lb, i) => [lb, ...series.map((s) => (Number.isFinite(s.data[i]) ? s.data[i] : ""))].join(","))
-    const blob = new Blob(["﻿" + [head, ...rows].join("\n")], { type: "text/csv;charset=utf-8" })
-    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = safe + ".csv"; a.click(); URL.revokeObjectURL(a.href)
-  }
-  const dlImg = async () => { // 카드 전체를 PNG 이미지로 저장(제목·범례·차트·의미·인사이트·출처 포함)
-    const node = cardRef.current; if (!node) return
-    try {
-      const { toPng } = await import("html-to-image")
-      const url = await toPng(node, {
-        pixelRatio: 3,
-        backgroundColor: "#ffffff",
-        cacheBust: true,
-        // 다운로드 버튼(아이콘)은 캡처에서 제외
-        filter: (n) => !(n instanceof HTMLElement && n.dataset && n.dataset.noexport === "1"),
-      })
-      const a = document.createElement("a"); a.href = url; a.download = safe + ".png"
-      document.body.appendChild(a); a.click(); a.remove()
-    } catch (e) { console.error("[chart] PNG export failed for", safe, e) }
-  }
   return (
-    <div ref={cardRef}
+    <div
       className="group/card relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:z-30 hover:-translate-y-0.5 hover:shadow-md"
       style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(idx, 8) * 0.025 + "s" }}
     >
+      {/* 제목 한 줄 유지 — unit(연간 등)·PNG/CSV 다운로드 제거로 제목 폭 확보 */}
       <div className="flex items-center gap-1.5">
-        <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
+        <h3 className="min-w-0 flex-1 truncate text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50" title={title}>{title}</h3>
         {seg && <span className={"shrink-0 rounded px-1.5 py-0.5 text-[9px] font-bold " + (seg === "B2B" ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" : seg === "CE" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-violet-50 dark:bg-violet-500/10 text-violet-700")}>{seg}</span>}
-        {unit && <span className="ml-auto shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{unit}</span>}
-        <span data-noexport="1" className={"flex shrink-0 items-center gap-0.5 " + (unit ? "ml-1.5" : "ml-auto")}>
-          <button type="button" onClick={dlImg} title="이미지(PNG) 다운로드" className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><circle cx="8.5" cy="8.5" r="1.5" /><path d="M21 15l-5-5L5 21" /></svg>
-          </button>
-          <button type="button" onClick={dlCsv} title="데이터(CSV) 다운로드" className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-indigo-600 dark:hover:bg-gray-800 dark:hover:text-indigo-400">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3v12" /><path d="M8 11l4 4 4-4" /><path d="M4 21h16" /></svg>
-          </button>
-        </span>
       </div>
       <div className="mt-1.5 flex min-h-[30px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">{legend}</div>
       {kind === "bar"
