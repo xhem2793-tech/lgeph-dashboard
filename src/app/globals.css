@@ -40,15 +40,15 @@ html[lang="en"] .tabular-nums {
   from { opacity: 0.25; transform: translateY(4px); }
   to   { opacity: 1;    transform: none; }
 }
-html.lang-out main,
-html.lang-out header {
-  opacity: 0.25;
-  transform: translateY(2px);
-  transition: opacity 0.13s ease, transform 0.13s ease;
-}
-html.lang-in main,
-html.lang-in header {
-  animation: langIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
+/* 언어 전환 순간 — 리마운트 첫 페인트 동안 진입 애니메이션·트랜지션을 꺼서
+   '화면이 깨지며 위로 튀는' 현상 제거(스크롤은 JS가 즉시 복원). 전환은 '깜빡임 없이 즉시'. */
+html.lang-switching *,
+html.lang-switching *::before,
+html.lang-switching *::after {
+  animation-duration: 0.001s !important;
+  animation-delay: 0s !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
 }
 
 /* 지표 숫자 — IBM Plex Sans(tabular). 금융 대시보드 톤, 자릿수 정렬 */

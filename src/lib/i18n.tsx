@@ -29,6 +29,7 @@ const Ctx = React.createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
 
 export function LangProvider({ children }: { children: React.ReactNode }) {
   const [lang, setLangState] = React.useState<Lang>("ko")
+  const scrollRef = React.useRef<number | null>(null)   // 전환 직전 스크롤 위치(리마운트로 튀는 것 방지)
   React.useEffect(() => {
     const saved = typeof window !== "undefined" ? window.localStorage.getItem("ax_lang") : null
     if (saved === "en" || saved === "ko") {
@@ -36,18 +37,25 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
       if (typeof document !== "undefined") document.documentElement.lang = saved
     }
   }, [])
-  /** 언어 전환 — 상태를 '즉시' 바꿔 리마운트로 바로 반영(지연 없음). 페이드는 순수 CSS로 겹쳐만 준다. */
+  /** 언어 전환 — 트리 리마운트로 T()를 즉시 반영하되, (1)스크롤 위치를 보존하고 (2)전환 순간
+   *  진입 애니메이션을 잠깐 꺼서 '화면이 깨지며 위로 튀는' 현상을 없앤다. */
   const setLang = React.useCallback((l: Lang) => {
-    _lang = l                                    // T() 헬퍼가 이번 렌더에서 곧바로 새 언어 참조
-    setLangState(l)                              // 즉시 상태 변경 → 트리 리마운트(key=lang) → 전체 반영
-    try { window.localStorage.setItem("ax_lang", l) } catch {}
     const root = typeof document !== "undefined" ? document.documentElement : null
-    if (root) {
-      root.lang = l
-      root.classList.add("lang-in")              // 짧은 페이드-인(반영을 막지 않음)
-      window.setTimeout(() => root.classList.remove("lang-in"), 300)
-    }
+    scrollRef.current = typeof window !== "undefined" ? window.scrollY : 0
+    root?.classList.add("lang-switching")        // 리마운트 첫 페인트 동안 애니메이션/트랜지션 억제
+    _lang = l                                    // T() 헬퍼가 이번 렌더에서 곧바로 새 언어 참조
+    setLangState(l)
+    try { window.localStorage.setItem("ax_lang", l) } catch {}
+    if (root) root.lang = l
   }, [])
+  // 리마운트 직후(페인트 전) 스크롤 복원 + 다음 프레임에 애니메이션 억제 해제
+  React.useLayoutEffect(() => {
+    if (scrollRef.current != null) { window.scrollTo(0, scrollRef.current); scrollRef.current = null }
+    const root = typeof document !== "undefined" ? document.documentElement : null
+    if (!root || !root.classList.contains("lang-switching")) return
+    const id = window.requestAnimationFrame(() => root.classList.remove("lang-switching"))
+    return () => window.cancelAnimationFrame(id)
+  }, [lang])
   _lang = lang  // 모듈 변수 동기화(T 헬퍼가 참조)
   // key={lang} — 언어 전환 시 트리 전체 리마운트로 T() 결과가 즉시 반영됨
   return <Ctx.Provider value={{ lang, setLang }}><React.Fragment key={lang}>{children}</React.Fragment></Ctx.Provider>
