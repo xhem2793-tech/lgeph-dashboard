@@ -26,20 +26,16 @@ import ThemeTransition from "@/components/ThemeTransition"
 import { siteConfig } from "./siteConfig"
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://yoururl.com"),
+  metadataBase: new URL(siteConfig.url),
   title: siteConfig.name,
   description: siteConfig.description,
-  keywords: [],
-  authors: [
-    {
-      name: "yourname",
-      url: "",
-    },
-  ],
-  creator: "yourname",
+  keywords: ["LG전자", "필리핀", "가전시장", "경쟁사 가격", "거시경제", "시장 인텔리전스", "LGE-PH"],
+  authors: [{ name: "LGE-PH 경영기획", url: siteConfig.url }],
+  creator: "LGE-PH 경영기획",
+  robots: { index: false, follow: false },
   openGraph: {
     type: "website",
-    locale: "en_US",
+    locale: "ko_KR",
     url: siteConfig.url,
     title: siteConfig.name,
     description: siteConfig.description,
@@ -47,8 +43,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Tremor OSS Dashboard",
-    creator: "@tremorlabs",
+    title: siteConfig.name,
+    description: siteConfig.description,
   },
   icons: {
     icon: "/favicon.ico",

@@ -1,33 +1,41 @@
 # 야간 자동작업 로그 (김성욱님 취침 중)
 
-> 각 태스크 전환·완료·배포·질문·중단 시각을 기록. 시간은 로컬(Asia/Manila 기준 시스템 시계).
-> 순서: ① 영문화 완성 → ② 최적화(30분+ 철저 검사) → ③ Supabase 로그인(방식 A: 매직링크)
+---
+
+## ☀️ 깨어나서 할 일 — Supabase 로그인 전환 (약 3분, 제가 못 누르는 것만)
+
+> 지금 상태: 로그인 페이지·DB·게이트 **전부 구축·배포·검증 완료**. 단 **Cloudflare Access가 켜져 있어** 아직은 Access로 로그인합니다(안전, 아무것도 안 깨짐). 아래만 하시면 Supabase 로그인으로 전환됩니다. **급하지 않으면 그냥 두셔도 사이트는 정상 작동합니다.**
+
+**A. Supabase 대시보드 (제가 로그인 못 함)**
+1. **이메일 템플릿에 코드 넣기** (필수) — Authentication → Emails → **Magic Link** 템플릿에 아래 한 줄 추가(코드 로그인이라 코드가 메일에 보여야 함):
+   `<p>로그인 코드: <b>{{ .Token }}</b></p>`
+   - (선택) 발송량이 많으면 Project Settings → Auth → SMTP에 사내 메일 서버 연결(무료 기본 SMTP는 시간당 한도 있음).
+2. 확인만: Authentication → Providers → **Email = 켜짐**(이미 켜져 있음 ✓), Confirm email 유지.
+
+**B. 코드에서 스위치 켜기 (제가 해둘 수도 있으나, Access와 동시 전환 타이밍이라 남겨둠)**
+3. `src/lib/authClient.ts` 의 `SUPABASE_AUTH_ENABLED = false` → `true` 로 바꾸고 저장 → 자동 배포(git push는 제가 안내). 
+   - *원하시면 "로그인 켜줘" 한마디면 제가 이 한 줄 바꿔 배포합니다.*
+
+**C. Cloudflare Zero Trust 대시보드 (제가 로그인 못 함)**
+4. Access → Applications → axlgeph.report → 정책을 끄거나 앱 삭제(= Access 해제). 그래야 Supabase 로그인이 실제로 뜹니다.
+
+**D. 첫 로그인 테스트**
+5. axlgeph.report 접속 → /login → 본인 이메일(`xhem2793@gmail.com` 또는 `@lge.com`) → 메일 코드 입력 → 진입.
+
+> 허용 계정: **@lge.com 전체 + xhem2793@gmail.com**. 추가하려면 "○○@메일 허용해줘" 하시면 제가 DB에 넣습니다. (허용목록은 외부에 노출 안 되게 RLS로 막아둠.)
+
+---
+
+> 각 태스크 전환·완료·배포·질문·중단 시각 기록. 시간=로컬 시스템 시계.
+> 순서: ① 영문화 완성 → ② 최적화 → ③ Supabase 로그인 → ④ 본사 제출 자가점검(디자인철학·추가지표/페이지/데이터)
 
 ## 타임라인
 
-- **2026-08-05 00:16** — 야간 자동작업 시작. 로그 개시.
-  - 직전 상태: 영문화 워크플로(5에이전트) 완료. 검증 에이전트가 EconViews 프리즈 상수 2개(OWN_ITEMS·SEA_SPECS) 지적 → 방금 수정 완료.
-  - 로그인 방식: 사용자 **A(매직링크/이메일 OTP) 확정**.
-  - 다음: 영문화 통합 빌드·검증·배포.
-
-<!-- 아래에 계속 append -->
-
-- **00:17** — 영문화 통합 빌드·tsc 통과. EN 재스캔(economy) → 잔여 한글 발견(WIN "전체", 아젠다 "사회", ApplianceView 제품필터, 웰컴 "한국어" 배지).
-- **00:21** — [태스크① 완료] **영문화 완성 배포** (커밋 b3abb52). 워크플로 5에이전트 결과 + 잔여 한글 코드수정 통합.
-  - 남은 한글(불가피): 일부 아젠다 이벤트 제목(DB event_en=null인 건) → 데이터 보정 필요(코드 아님). 뉴스 본문·이벤트 상세(summary)는 원문 유지(정책대로).
-- **00:21** — [태스크② 시작] **대시보드 최적화 검사** (번들·캐시·로딩지연, 30분+ 목표).
-
-- **00:26** — [태스크② 진행] 최적화 조사 결과·조치 배포 (커밋 575de1c):
-  - 핵심: sb() 모든 fetch가 `no-store`였음 → **세션 인메모리 캐시(TTL 3분)+Promise 디듀프** 추가. 페이지 이동/재방문 시 대용량 재조회 제거.
-  - _headers: _next/static·woff2 immutable + 보안헤더.
-  - 이미지 lazy(경쟁광고·인사이트). CompetitorMovers=데드코드(미사용) 확인.
-  - recharts/datepicker=숨긴 /overview 전용(라우트 분리라 메인 영향 적음) → 유지, 정리는 메모.
-  - 다음: 실측 로드/네비 속도 테스트(지속 모니터링).
-
-- **00:28** — [태스크② 실측·검증]
-  - economy 초기: DOMContentLoaded 346ms · load 717ms · Supabase 7건(최대 1.04s) — 정적 셸 빠름, 데이터 페치가 병목.
-  - **캐시 검증(핵심):** SPA 재방문(news→economy) 시 **신규 Supabase 요청 0건**(53→53). 이전엔 매 방문 전량 재조회(competitors 첫방문만 31건). → 재방문/서브뷰 전환 즉시화.
-  - 콘솔 에러 0 (economy·news·competitors 네비 전체). 안정성 양호.
-  - JS 772KB는 로컬 무압축 수치 — CF Pages는 brotli/gzip로 실제 ~1/3, _next/static은 이제 immutable 영구캐시.
-  - [태스크② 완료] 성능·안정성 검증 통과. 남은 여지(메모): competitors 첫로드 31요청(병렬·불가피), /overview 데드코드(recharts·datepicker) 정리 가능.
-- **00:28** — [태스크③ 시작] **Supabase 로그인화면(방식 A: 매직링크)** 제작 — 코드+DB, Cloudflare Access는 켜둔 채 안전 배포.
+- **2026-08-05 00:16** — 야간 자동작업 시작. 로그 개시. 로그인 방식 A(이메일 OTP) 확정.
+- **00:21** — [①완료] **영문화 완성 배포**(b3abb52). 워크플로 5에이전트(캘린더 event_en·지표 210개 EN·배너 _en·마케팅) + 잔여 한글 정리.
+  - 남은 한글(불가피): 일부 아젠다 이벤트(DB event_en=null) → 데이터 보정 필요. 뉴스 본문·이벤트 상세(summary_en 컬럼 없음)는 원문 유지(정책대로).
+- **00:26** — [②진행] **최적화 배포**(575de1c): sb() 세션 인메모리 캐시(TTL 3분)+디듀프, _next/static·woff2 immutable, 보안헤더, 이미지 lazy.
+- **00:28** — [②완료] 실측: economy DOMContentLoaded 346ms/load 717ms. **캐시 검증: SPA 재방문 시 신규 Supabase 요청 0건**. 콘솔 에러 0. 안정성 양호.
+- **00:44** — [③완료] **Supabase 로그인 배포**(f6a2d67): /login(이메일 OTP·SDK없이 REST), authClient, AuthGate(기본 OFF·Access 병행), login_allowlist+RPC(목록 비노출), TopNav /login 숨김.
+  - 검증: 게이트 정상(master/@lge.com 허용·random 차단·목록 0행 비노출), email 인증 활성 확인. 위 ☀️체크리스트로 전환.
+- **00:44** — [④시작] **본사 제출 자가점검** — 적합성·수정점·디자인 철학·추가 지표/페이지/데이터 제안.
