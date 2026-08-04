@@ -5,7 +5,7 @@
 import React from "react"
 import { fmtStamp, type DailyRow } from "@/lib/supabase"
 import { canonCode, PM_CATS } from "@/lib/classify"
-import { peso } from "@/components/competitors/shared"
+import { peso, catLabel } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
 
 type Kind = "new" | "eol"
@@ -97,7 +97,7 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
         <span className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
         <div className="flex flex-wrap items-center gap-1.5">
           {CATS.map((c) => { const n = c === "전체" ? events.length : (catCounts[c] ?? 0); if (c !== "전체" && n === 0) return null; const on = cat === c; return (
-            <button key={c} type="button" onClick={() => setCat(c)} className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:text-indigo-600")}>{c}<span className={"tabular-nums text-[10.5px] " + (on ? "text-gray-300 dark:text-gray-500" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+            <button key={c} type="button" onClick={() => setCat(c)} className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:text-indigo-600")}>{catLabel(c)}<span className={"tabular-nums text-[10.5px] " + (on ? "text-gray-300 dark:text-gray-500" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
           ) })}
         </div>
         <div className="ml-auto flex items-center gap-3.5 text-[12px]">

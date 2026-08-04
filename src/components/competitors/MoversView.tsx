@@ -5,7 +5,7 @@ import React from "react"
 import { T } from "@/lib/i18n"
 import { fmtStamp, type PriceRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, PM_CATS, pmFormsFor, pmFormHit } from "@/lib/classify"
-import { peso, md, pmShopLabel, pmStarCls, DOE_CODE, doeNorm, PmDrop, PmMultiDrop, ListSearch } from "@/components/competitors/shared"
+import { peso, md, pmShopLabel, pmStarCls, DOE_CODE, doeNorm, PmDrop, PmMultiDrop, ListSearch, catLabel } from "@/components/competitors/shared"
 
 // 전일비 — 주변과 통일한 ▼▲ 컬러 텍스트. 4초마다 %↔₱ 토글(badgeSwap 애니메이션).
 function MvDelta({ php, pct }: { php: number | null; pct: number | null }) {
@@ -116,7 +116,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
       {/* 필터바 — 채널별 가격 비교와 동일: 브랜드·제품·유형·용량 + 인하/인상 알약토글 + 검색 + 최종갱신 */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <div className="w-fit"><PmMultiDrop label={T("브랜드", "Brand")} sel={brands} options={brandsL.filter((b) => b !== "전체").map((b) => ({ k: b, t: b }))} onToggle={(k) => setBrands((v) => v.includes(k) ? v.filter((x) => x !== k) : [...v, k])} onClear={() => setBrands([])} /></div>
-        <div className="w-fit"><PmDrop label={T("제품", "Product")} sel={effCat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setBrands([]); setForm("전체"); setShop("전체") }} /></div>
+        <div className="w-fit"><PmDrop label={T("제품", "Product")} sel={effCat} options={cats.map((c) => ({ k: c, t: catLabel(c) }))} onSelect={(k) => { setCat(k); setBrands([]); setForm("전체"); setShop("전체") }} /></div>
         <div className="w-fit"><PmDrop label={T("유형", "Type")} sel={effForm} options={[{ k: "전체", t: T("전체", "All") }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>
         <div className="w-fit"><PmDrop label={T("거래선", "Retailer")} sel={effShop} options={shopsL.map((s) => ({ k: s, t: s === "전체" ? T("전체", "All") : pmShopLabel(s) }))} onSelect={setShop} /></div>
         {/* 인하순/인상순 — 슬라이딩 알약 토글(초록↔빨강) */}
@@ -165,7 +165,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
               return (
               <tr key={r.retailer + r.model + ri} style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s" }} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
                 <td className={"truncate whitespace-nowrap px-2 py-1.5 text-center text-[11.5px] font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")} title={r.brand}>{r.brand}</td>
-                <td className="px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400">{r.category}</td>
+                <td className="px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400">{catLabel(r.category)}</td>
                 <td className="truncate px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code && r.code.length >= 4 && r.code !== "N/A" ? r.code : canonCode(r.model, r.code)}</td>
                 <td className="px-1 py-1.5 text-center">{star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(star)}>★{star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>

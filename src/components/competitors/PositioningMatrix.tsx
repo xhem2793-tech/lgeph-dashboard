@@ -5,7 +5,7 @@ import React from "react"
 import { T } from "@/lib/i18n"
 import { fmtStamp, type PriceRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormOf, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit, pmTierOf, PM_TIER_BANDS } from "@/lib/classify"
-import { peso, pmShopLabel, pmStarCls, pmTierLabel, pmTierBar, DOE_CODE, doeNorm, pmMean, pmTicks, pmShort, PmDrop, ListSearch } from "@/components/competitors/shared"
+import { peso, pmShopLabel, pmStarCls, pmTierLabel, pmTierBar, DOE_CODE, doeNorm, pmMean, pmTicks, pmShort, PmDrop, ListSearch, catLabel } from "@/components/competitors/shared"
 
 type PMCard = { b: string; tier: string; label: string; avg: number; shops: number; n: number; star: number | null; kwh: number | null; url: string | null; retailer: string | null; oos: boolean; idx: number; left: number; top: number }
 
@@ -157,7 +157,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
       {/* 상단 가로 필터 — 일일 가격 변동과 동일한 테두리 묶음 */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <div className="w-fit"><PmDrop label={T("제품", "Product")} sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm(pmFormsFor(k)[0] ?? "전체"); setShop("전체") }} /></div>
+        <div className="w-fit"><PmDrop label={T("제품", "Product")} sel={cat} options={cats.map((c) => ({ k: c, t: catLabel(c) }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm(pmFormsFor(k)[0] ?? "전체"); setShop("전체") }} /></div>
         {formList.length > 0 && <div className="w-fit"><PmDrop label={T("유형", "Type")} sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={setForm} /></div>}
         {sizeList.length > 0 && <div className="w-fit"><PmDrop label={isAC(cat) ? T("마력", "HP") : cat === "TV" ? T("화면", "Screen") : T("용량", "Capacity")} sel={effSpec} options={[{ k: "전체", t: T("전체", "All") }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
         <div className="w-fit"><PmDrop label={T("거래선", "Retailer")} sel={effShop} options={[{ k: "전체", t: T("전체", "All") }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
@@ -172,7 +172,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
           <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-4 w-1 rounded bg-indigo-500" />
             {(() => { const sp = effSpec !== "전체" ? effSpec : effForm !== "전체" ? effForm : ""; return (
-              <span className="text-[22.5px] font-bold leading-tight text-gray-800 dark:text-gray-100">{cat} <span className="font-semibold text-gray-400 dark:text-gray-500">{T("vs 경쟁사", "vs Competitors")}</span> <span className="text-indigo-600 dark:text-indigo-400">{sp ? sp + " " : ""}{T("가격", "Price")}</span></span>
+              <span className="text-[22.5px] font-bold leading-tight text-gray-800 dark:text-gray-100">{catLabel(cat)} <span className="font-semibold text-gray-400 dark:text-gray-500">{T("vs 경쟁사", "vs Competitors")}</span> <span className="text-indigo-600 dark:text-indigo-400">{sp ? sp + " " : ""}{T("가격", "Price")}</span></span>
             ) })()}
             <div className="ml-auto flex items-center gap-1.5">
               {/* 세로축 스케일: Auto(선형) / 로그 */}

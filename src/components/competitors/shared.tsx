@@ -6,6 +6,10 @@ import { T } from "@/lib/i18n"
 // 경쟁사 뷰 공용 프리미티브 — 포맷·라벨·DOE정규화·진열 세그먼트 + 드롭다운 컴포넌트.
 // 여러 뷰(BoardView·PositioningMatrix·DealsView·AnomalyView·MoversView)에서 공유.
 
+/** 카테고리 표시 라벨 — KO는 원문, EN은 통일 약자(REF·W/M·TV·RAC·All). 필터 키(한글)는 그대로 두고 '표시'만 전환. */
+const CAT_ABBR_EN: Record<string, string> = { 전체: "All", 냉장고: "REF", 세탁기: "W/M", TV: "TV", 에어컨: "RAC", RAC: "RAC", SAC: "SAC", 오디오: "Audio", 기타: "Other" }
+export const catLabel = (c: string): string => T(c, CAT_ABBR_EN[c] ?? c)
+
 /** 세그먼트 — 유통 매장이 실제로 진열을 나누는 축(설치형태·도어·급) */
 export const SEGMENTS: Record<string, { t: string; re: RegExp }[]> = {
   에어컨: [

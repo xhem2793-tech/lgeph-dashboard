@@ -4,7 +4,7 @@
 import React from "react"
 import { fmtStamp, type PriceRow, type DealRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormsFor, pmFormHit, pmSizeList, pmSizeBucket } from "@/lib/classify"
-import { peso, pmShopLabel, PmDrop, ListSearch } from "@/components/competitors/shared"
+import { peso, pmShopLabel, PmDrop, ListSearch, catLabel } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
 
 const PTYPES: { k: "c" | "b" | "i" | "f" | "g"; label: string; cls: string }[] = [
@@ -135,7 +135,7 @@ export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; dea
     <div className="flex flex-col gap-3">
       {/* 필터바 — 한 라인 통일(제품·유형·용량·브랜드·가격대) + 검색 오른쪽. 일일 가격 변동과 동일 */}
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-2 py-2.5">
-        <div className="w-fit"><PmDrop label={T("제품", "Product")} sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체") }} /></div>
+        <div className="w-fit"><PmDrop label={T("제품", "Product")} sel={cat} options={cats.map((c) => ({ k: c, t: catLabel(c) }))} onSelect={(k) => { setCat(k); setForm(pmFormsFor(k)[0] ?? "전체"); setSize("전체"); setBrand("전체") }} /></div>
         {formList.length > 0 && <div className="w-fit"><PmDrop label={T("유형", "Type")} sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={(k) => { setForm(k); setBrand("전체") }} /></div>}
         <div className="w-fit"><PmDrop label={sizeLabel} sel={effSize} options={["전체", ...sizes].map((t) => ({ k: t, t }))} onSelect={(k) => { setSize(k) }} /></div>
         <div className="w-fit"><PmDrop label={T("브랜드", "Brand")} sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={(k) => { setBrand(k) }} /></div>

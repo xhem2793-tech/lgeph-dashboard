@@ -4,12 +4,12 @@
 import React from "react"
 import { fmtStamp, type DailyRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormOf, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit, pmSizeBucket, acHpLabel } from "@/lib/classify"
-import { peso, md, deltaCol, pmStarCls, DOE_CODE, doeNorm, PmDrop, PmMultiDrop, ListSearch } from "@/components/competitors/shared"
+import { peso, md, deltaCol, pmStarCls, DOE_CODE, doeNorm, PmDrop, PmMultiDrop, ListSearch, catLabel } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
 
 // 분류 영문 약자 — REF/WM/TV/RAC/SAC/AUDIO. 냉동고→REF, 오디오(사운드바·스피커) 감지, 에어컨은 RAC/SAC 휴리스틱
-const CAT_EN: Record<string, string> = { 냉장고: "REF", 세탁기: "WM", TV: "TV" }
-const CAT_KO: Record<string, string> = { REF: "냉장고", WM: "세탁기", TV: "TV", RAC: "RAC", SAC: "SAC", AUDIO: "오디오" }
+const CAT_EN: Record<string, string> = { 냉장고: "REF", 세탁기: "W/M", TV: "TV" }
+const CAT_KO: Record<string, string> = { REF: "냉장고", "W/M": "세탁기", TV: "TV", RAC: "RAC", SAC: "SAC", AUDIO: "오디오" }
 const catAbbr = (cat: string, model: string) => {
   const m = model || ""
   if (/soundbar|사운드바|xboom|\bspeaker\b|스피커|home ?theat|홈시어터|\bAV\b/i.test(m)) return "AUDIO"
@@ -140,7 +140,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
       {/* 검색·필터 — LG 기본 · 제품/스펙 호버 드롭다운 · 뉴스형 검색 · 최종갱신(맨오른쪽) */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <div className="w-fit"><PmMultiDrop label={T("브랜드", "Brand")} sel={brands} options={brandsL.filter((b) => b !== "전체").map((b) => ({ k: b, t: b }))} onToggle={(k) => setBrands((v) => v.includes(k) ? v.filter((x) => x !== k) : [...v, k])} onClear={() => setBrands([])} /></div>
-        <div className="w-fit"><PmDrop label={T("제품", "Product")} sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm("전체"); setSize("전체") }} /></div>
+        <div className="w-fit"><PmDrop label={T("제품", "Product")} sel={cat} options={cats.map((c) => ({ k: c, t: catLabel(c) }))} onSelect={(k) => { setCat(k); setForm("전체"); setSize("전체") }} /></div>
         <div className="w-fit"><PmDrop label={T("유형", "Type")} sel={effForm} options={[{ k: "전체", t: T("전체", "All") }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>
         <div className="w-fit"><PmDrop label={isAC(cat) ? T("마력", "HP") : cat === "TV" ? T("화면", "Screen") : T("용량", "Capacity")} sel={effSize} options={[{ k: "전체", t: T("전체", "All") }, ...sizes.map((t) => ({ k: t, t }))]} onSelect={setSize} /></div>
         {/* 날짜 네비게이터 — 과거 특정일 스냅샷(◀ 이전일 · ▶ 다음일 · 📅 달력에서 선택) */}
@@ -194,7 +194,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
             ) : data.slice(0, 300).map((r, ri) => (
               <tr key={curDate + r.brand + r.code + ri} style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s" }} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
                 <td className={"truncate whitespace-nowrap px-2 py-1.5 text-center text-[11.5px] font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")} title={r.brand}>{r.brand}</td>
-                <td className="px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400">{r.cat}</td>
+                <td className="px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400">{catLabel(r.cat)}</td>
                 <td className="truncate px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code}</td>
                 <td className="px-1 py-1.5 text-center">{r.star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(r.star)}>★{r.star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>
