@@ -135,7 +135,8 @@ export const tvFormOf = (m: string, brand?: string): string | null => {
   // 액세서리(녹음기·마이크·셋톱박스·마운트 '단품')는 TV 아님 → 배제.
   //   ※ 광의어(bracket/mount) 금지 — 'with FREE 벽걸이 번들' 실제 TV가 잘못 제외되던 문제. 단품 식별코드만.
   if (/\bVML\d|\bVLT\d|\bVXT\d|\bVST\d|affordabox|set-?top|\bICD-|voice recorder|\bmicrophone\b|\bDM-?1000/i.test(s)) return null
-  if (/\boled\b/i.test(s)) return "OLED"
+  // 'OLED55C3PSA'처럼 모델코드에 숫자가 붙으면 후행 \b가 안 걸려 UHD로 오분류됨 → 접두 경계만.
+  if (/\boled/i.test(s)) return "OLED"
   // QLED급(퀀텀닷/미니LED 프리미엄) — LG 고유(QNED/NanoCell/MiniLED)는 항상, QLED/ULED/NeoQLED는 비LG만
   if (/qned|nano ?cell|\bnano\b|mini ?led|miniled|mini ?rgb|micro ?rgb|rgb ?evo/i.test(s)) return "QLED급"   // LG Mini/Micro RGB evo(2026 플래그십)=프리미엄 등급
   if (!isLG && /qled|\buled\b|neo ?qled/i.test(s)) return "QLED급"
