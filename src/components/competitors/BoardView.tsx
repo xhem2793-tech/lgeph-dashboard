@@ -2,9 +2,19 @@
 
 // 채널별 가격 비교 — LG모델 × 거래선 매트릭스(날짜 네비·전일대비·스프레드·★DOE등급).
 import React from "react"
-import { fmtStamp, type DailyRow, type EnergyRow } from "@/lib/supabase"
+import { fmtStamp, type DailyRow, type EnergyRow, type DealRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormOf, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit, pmSizeBucket, acHpLabel } from "@/lib/classify"
 import { peso, md, deltaCol, pmStarCls, DOE_CODE, doeNorm, PmDrop, PmMultiDrop, ListSearch } from "@/components/competitors/shared"
+import { promoTypes } from "@/components/competitors/DealsView"
+
+// 분류 영문 약자 — REF/WM/TV/RAC/SAC. 에어컨은 모델 휴리스틱으로 RAC(창문·벽걸이)·SAC(스탠드·시스템) 분리
+const CAT_EN: Record<string, string> = { 냉장고: "REF", 세탁기: "WM", TV: "TV" }
+const CAT_KO: Record<string, string> = { REF: "냉장고", WM: "세탁기", TV: "TV", RAC: "RAC", SAC: "SAC" }
+const catAbbr = (cat: string, model: string) => {
+  if (CAT_EN[cat]) return CAT_EN[cat]
+  if (/에어컨|aircon|air ?con|\brac\b|\bsac\b/i.test(cat)) return /스탠드|시스템|천장|카세트|멀티|floor|ceiling|cassette|multi|system|inverter ?floor|\bAPN|\bAPU|\bAPW|\bAUW/i.test(model) ? "SAC" : "RAC"
+  return cat
+}
 
 const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
   { k: "Abenson", label: "Abenson", live: true },
@@ -17,7 +27,7 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
 ]
 
 type PivRow = { cat: string; brand: string; code: string; model: string; form: string | null; size: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
-export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp: string | null; elabels: EnergyRow[] | null }) {
+export function BoardView({ daily, stamp, elabels, deals }: { daily: DailyRow[] | null; stamp: string | null; elabels: EnergyRow[] | null; deals?: DealRow[] | null }) {
   const [cat, setCat] = React.useState("냉장고")
   const [brands, setBrands] = React.useState<string[]>([])
   const [form, setForm] = React.useState("전체")
@@ -96,7 +106,15 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
   const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
   const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
 
-  // 원본(raw) 일일 거래선 가격 CSV 다운로드 — 필터 무관 전체 관측. days=최근 N일(달력), null=전체(엑셀 호환 BOM+CRLF)
+  // 프로모 룩업(canonCode|거래선 → {c,b,i,f,g}) — 할부·쿠폰·번들·배송·사은품(deals 수집)
+  const promoLU = React.useMemo(() => {
+    const m: Record<string, Partial<Record<string, string>>> = {}
+    ;(deals ?? []).forEach((d) => { if (!d.promo) return; const k = canonCode(d.model, null) + "|" + d.retailer; if (!m[k]) m[k] = promoTypes(d.promo) })
+    return m
+  }, [deals])
+
+  // 원본(raw) 일일 거래선 가격 CSV — 필터 무관 전체. 영문 헤더/분류약자 + 유형·용량 분리 + 프로모(쿠폰·할부·번들·배송·사은품)
+  //  days=최근 N일(달력), null=전체. 엑셀 호환(BOM+CRLF)
   const dlRaw = (days: number | null) => {
     if (!D.length) return
     let rows = D
@@ -106,9 +124,17 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
       const cutoff = latest.getFullYear() + "-" + String(latest.getMonth() + 1).padStart(2, "0") + "-" + String(latest.getDate()).padStart(2, "0")
       rows = D.filter((r) => r.d >= cutoff)
     }
-    const head = ["날짜", "브랜드", "분류", "모델코드", "모델명", "용량", "거래선", "현금가", "SRP", "URL"]
+    const head = ["Date", "Brand", "Category", "Type", "Size", "ModelCode", "ModelName", "Capacity", "Retailer", "CashPrice", "SRP", "Coupon", "Installment", "Bundle", "FreeShip", "Gift", "URL"]
     const esc = (v: unknown) => { const s = v == null ? "" : String(v); return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s }
-    const body = rows.map((r) => [r.d, r.brand, r.category, canonCode(r.model, r.code), r.model, r.capacity, r.retailer, r.price, r.srp, r.url].map(esc).join(","))
+    const body = rows.map((r) => {
+      const catE = catAbbr(r.category, r.model || "")
+      const catK = CAT_KO[catE] ?? r.category
+      const type = pmFormOf(catK, (r.model || "") + " " + (r.capacity || ""), r.brand) ?? ""
+      const size = isAC(catK) ? acHpLabel(r.model || "") : (pmSizeBucket(catK, r.model, r.capacity) ?? "")
+      const cc = canonCode(r.model, r.code)
+      const pr = promoLU[cc + "|" + r.retailer] || {}
+      return [r.d, r.brand, catE, type, size, cc, r.model, r.capacity, r.retailer, r.price, r.srp, pr.c ?? "", pr.i ?? "", pr.b ?? "", pr.f ?? "", pr.g ?? "", r.url].map(esc).join(",")
+    })
     const csv = "﻿" + [head.join(","), ...body].join("\r\n")
     const a = document.createElement("a")
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }))

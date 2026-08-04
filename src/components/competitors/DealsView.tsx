@@ -13,8 +13,8 @@ const PTYPES: { k: "c" | "b" | "i" | "f" | "g"; label: string; cls: string }[] =
   { k: "f", label: "배송", cls: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300" },
   { k: "g", label: "사은품", cls: "bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-300" },
 ]
-// 프로모 문구 → 종류별 상세({c,b,i,f,g})
-const promoTypes = (txt: string | null): Partial<Record<string, string>> => {
+// 프로모 문구 → 종류별 상세({c,b,i,f,g}) — 쿠폰·번들·할부·배송·사은품. BoardView CSV에서도 재사용
+export const promoTypes = (txt: string | null): Partial<Record<string, string>> => {
   const s = txt || ""; const o: Partial<Record<string, string>> = {}
   // 할부 — 개월수 명시
   const inst = s.match(/x\s*(\d+)\s*mos|(\d+)\s*개월/i); if (inst || /installment|무이자|0 ?% ?install/i.test(s)) o.i = inst ? `${inst[1] || inst[2]}개월` : "무이자"
