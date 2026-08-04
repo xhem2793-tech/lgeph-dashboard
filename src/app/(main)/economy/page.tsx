@@ -31,6 +31,10 @@ const buildNav = (): NavItem[] => [
   { id: "online", ko: T("온라인 시장", "Online Market"), sub: T("이커머스 규모·디지털/통신 침투", "E-commerce size · digital/telecom penetration"), count: "3", group: "소비·디지털", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
 ]
 
+// 그룹 헤더 라벨 — 그룹 값(한글)은 그룹핑 키로 유지, 표시만 번역(함수라 렌더 시점 반영)
+const GROUP_EN: Record<string, string> = { "실물경제": "Real Economy", "외환·금융": "FX & Finance", "가전 인텔리전스": "Appliance Intelligence", "소비·디지털": "Consumer & Digital" }
+const groupLabel = (g: string) => T(g, GROUP_EN[g] ?? g)
+
 function Soon({ label }: { label: string }) {
   return (
     <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-center">
@@ -140,7 +144,7 @@ export default function Page() {
             <nav className="flex flex-col gap-1">
               {NAV.map((n, i) => (
                 <React.Fragment key={n.id}>
-                  {n.group !== NAV[i - 1]?.group && <p className="px-2.5 pb-1 pt-3.5 text-[11px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 first:pt-1">{n.group}</p>}
+                  {n.group !== NAV[i - 1]?.group && <p className="px-2.5 pb-1 pt-3.5 text-[11px] font-semibold tracking-wide text-gray-400 dark:text-gray-500 first:pt-1">{groupLabel(n.group)}</p>}
                   <button
                     onClick={() => go(n.id)}
                     className={
