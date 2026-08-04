@@ -120,7 +120,7 @@ function Card({ a, onOpen, q = "" }: { a: CompAd; onOpen: () => void; q?: string
   const brief = briefBody(a.body)
   const ended = a.status === "종료"
   return (
-    <button onClick={onOpen} className={"group flex h-full w-full flex-col overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800 text-left transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99] " + (ended ? "opacity-70 hover:opacity-100" : "")}>
+    <button onClick={onOpen} className={"group flex h-full w-full flex-col overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 text-left transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99] " + (ended ? "opacity-70 hover:opacity-100" : "")}>
       <Thumb a={a} />
       <div className="flex flex-1 flex-col p-2.5">
         <div className="flex items-center gap-1.5">

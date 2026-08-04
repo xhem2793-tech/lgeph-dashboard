@@ -349,23 +349,6 @@ export default function Competitors() {
             </div>
           </div>
 
-          <div className="border-t border-gray-100 dark:border-gray-800 px-2 py-2.5">
-            <button
-              type="button"
-              onClick={() => {
-                setCat("전체")
-                setSeg("전체")
-                setBand("전체")
-                setBrands(["LG"])
-                setShops([...SHOPS])
-                setOnlyMoved(false)
-                setQ("")
-              }}
-              className="w-full rounded-md border border-gray-200 dark:border-gray-800 py-1.5 text-[12px] text-gray-600 dark:text-gray-300 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-700 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-[.98]"
-            >
-              필터 초기화
-            </button>
-          </div>
         </aside>
 
         <div style={{ animation: "fadeUp .5s ease both" }} className="flex min-h-[1200px] min-w-0 flex-col gap-4">

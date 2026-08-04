@@ -705,7 +705,7 @@ export default function Page() {
                     {m.group && m.group !== MENUS[i - 1]?.group && <p className="px-2.5 pb-1 pt-3.5 text-[11px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">{m.group}</p>}
                     <button
                       type="button"
-                      onClick={() => setMenu(m.key)}
+                      onClick={() => { setMenu(m.key); setPage(1); if (typeof window !== "undefined") window.scrollTo({ top: 0, behavior: "smooth" }) }}
                       className={
                         "group relative flex items-center rounded-md px-2.5 py-2 text-left transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 active:scale-[.98] " +
                         (menu === m.key ? "bg-indigo-50/70 dark:bg-indigo-500/10" : "hover:bg-indigo-50 dark:hover:bg-indigo-500/10")
