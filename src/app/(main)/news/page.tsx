@@ -19,7 +19,6 @@ import { useLang } from "@/lib/i18n"
 import { SEV } from "@/lib/severity"
 import { Segmented } from "@/components/Segmented"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
-import { PmDrop } from "@/components/competitors/shared"
 
 /** 배너 폴백 — 매니페스트 로드 실패 시 표시(주간 자동 갱신 대상) */
 const NEWS_BANNER: Banner = {
@@ -774,15 +773,25 @@ export default function Page() {
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               {/* 정렬 */}
               <Segmented value={sort} onChange={(k) => setSort(k as "new" | "impact")} options={[{ k: "new", label: "최신순" }, { k: "impact", label: "영향도순" }]} size="sm" />
-              {/* 인사이트 칼럼 — 카테고리 필터(시장동향식 PmDrop 드롭다운으로 통일) */}
+              {/* 인사이트 칼럼 — 카테고리 필터(알약형, 통일 스타일) */}
               {menu === "인사이트" && (
-                <PmDrop label="분류" sel={insightCat} onSelect={setInsightCat}
-                  options={["전체", ...INSIGHT_CATS].filter((k) => k === "전체" || slice.some((g) => insightCatOf(g.head) === k)).map((k) => ({ k, t: k === "전체" ? "전체" : k + " (" + slice.filter((g) => insightCatOf(g.head) === k).length + ")" }))} />
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {["전체", ...INSIGHT_CATS].map((k) => {
+                    const on = insightCat === k
+                    const n = k === "전체" ? slice.length : slice.filter((g) => insightCatOf(g.head) === k).length
+                    if (k !== "전체" && n === 0) return null
+                    return <button key={k} type="button" onClick={() => setInsightCat(k)} className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{k}<span className={"tabular-nums text-[10.5px] " + (on ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+                  })}
+                </div>
               )}
-              {/* 제품 키워드 필터 — 시장동향식 PmDrop 드롭다운으로 통일(인사이트 뷰에선 숨김) */}
+              {/* 제품 키워드 필터 — 알약형(통일 스타일, 인사이트 뷰에선 숨김) */}
               {menu !== "인사이트" && (
-                <PmDrop label="제품" sel={prodKw ?? ""} onSelect={(k) => setProdKw(k === "" ? null : k)}
-                  options={[{ k: "", t: "전 제품" }, ...PROD_KW.map((p) => ({ k: p.key, t: p.label }))]} />
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {[{ key: "", label: "전 제품" }, ...PROD_KW.map((p) => ({ key: p.key, label: p.label }))].map((p) => {
+                    const on = (prodKw ?? "") === p.key
+                    return <button key={p.key || "all"} type="button" onClick={() => setProdKw(p.key === "" ? null : p.key)} className={"inline-flex items-center whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{p.label}</button>
+                  })}
+                </div>
               )}
             </div>
 
