@@ -36,8 +36,8 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
   const events = React.useMemo<Ev[]>(() => {
     const D = daily ?? []
     if (!D.length) return []
-    const dates = Array.from(new Set(D.map((r) => r.d))).sort()
-    const T = dayNum(dates[dates.length - 1])
+    // 기준일 = 오늘(8/4). 신제품 등장·미노출(EOL) 경과일을 '관측 최종일'이 아니라 '오늘' 기준으로 산정
+    const T = dayNum(new Date().toISOString().slice(0, 10))
     const g: Record<string, DailyRow[]> = {}
     D.forEach((r) => { if (!PM_CATS.includes(r.category)) return; const cc = canonCode(r.model, r.code); if (cc.length < 5) return; (g[cc] = g[cc] || []).push(r) })
     const out: Ev[] = []

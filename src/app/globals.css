@@ -114,6 +114,13 @@ button:focus-visible,
   box-shadow: 0 0 0 3.5px rgba(99, 102, 241, 0.32);
 }
 
+/* 전역 진입 모션 키프레임 — 컴포넌트 인라인 <style> 없이도 통일 적용(EOL·경쟁사 등 공통).
+   개별 컴포넌트가 같은 이름을 인라인 정의하면 그쪽이 우선(값 유사) — 여기 정의는 미정의 뷰의 폴백/통일 기준 */
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes viewIn { from { opacity: 0; transform: translateY(8px); }  to { opacity: 1; transform: none; } }
+@keyframes rowIn  { from { opacity: 0; transform: translateY(6px); }  to { opacity: 1; transform: none; } }
+@keyframes fadeOnly { from { opacity: 0; } to { opacity: 1; } }
+
 /* 모달 모션 — iOS 팝(스프링). 전 팝업 공통 키프레임. veil=배경 딤 */
 @keyframes popIn  { from { opacity: 0; transform: translateY(8px) scale(0.94); } to { opacity: 1; transform: none; } }
 @keyframes popOut { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(6px) scale(0.96); } }
