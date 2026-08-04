@@ -20,7 +20,6 @@ import { useLang } from "@/lib/i18n"
 
 type NavItem = { id: string; ko: string; sub: string; count: string; group: string; accent?: boolean; star?: boolean; subs: string[] }
 const NAV: NavItem[] = [
-  { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도 + 지역 물가", count: "17", group: "전국", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운", "지역 물가 히트맵"] },
   { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별 물가", count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
   { id: "growth", ko: "국민계정·성장", sub: "GDP·투자·건설·산업생산·가동률", count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
   { id: "labor", ko: "고용·임금·소득", sub: "실업률·최저임금·OFW 송금", count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
@@ -33,6 +32,7 @@ const NAV: NavItem[] = [
   { id: "importprice", ko: "수입 단가", sub: "가전 수입 단가($/kg)·원산지 점유(Comtrade)", count: "4", group: "가전 인텔리전스", subs: ["냉장고", "에어컨", "세탁기", "TV"] },
   { id: "online", ko: "온라인 시장", sub: "이커머스 규모·디지털/통신 침투", count: "3", group: "소비·디지털", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
   { id: "weather", ko: "날씨·재난", sub: "냉방도일 CDD·기온·태풍·지진", count: "4", group: "환경·리스크", subs: ["냉방도일 CDD", "월평균 기온", "태풍 경보", "지진 활동"] },
+  { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도 + 지역 물가", count: "17", group: "지역", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운", "지역 물가 히트맵"] },
 ]
 
 function Soon({ label }: { label: string }) {
@@ -65,9 +65,9 @@ export default function Page() {
   const { lang } = useLang()
   const en = lang === "en"
   const [mode, setMode] = useState<"card" | "list">("card")
-  const [active, setActive] = useState("regions")   // 스크롤스파이 현재 섹션
+  const [active, setActive] = useState("prices")   // 스크롤스파이 현재 섹션
   const [counts, setCounts] = useState<Record<string, number>>({})
-  const [mounted, setMounted] = useState<Set<string>>(() => new Set(["regions", "prices"]))
+  const [mounted, setMounted] = useState<Set<string>>(() => new Set(["prices", "growth"]))
   const secRefs = useRef<Record<string, HTMLElement | null>>({})
   const clickLock = useRef(false)
 
