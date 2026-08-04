@@ -29,6 +29,7 @@ import { DealsView } from "@/components/competitors/DealsView"
 import { AnomalyView } from "@/components/competitors/AnomalyView"
 import { MoversView } from "@/components/competitors/MoversView"
 import EnergyLabelView from "@/components/EnergyLabelView"
+import { EolView } from "@/components/competitors/EolView"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 
 /** 경쟁사 가격 — 좌 1/4 메뉴판 + 우 3/4 콘텐츠.
@@ -70,7 +71,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
   {
     group: "시장 신호·인사이트",
     items: [
-      { key: "lifecycle", no: 7, label: "신제품·EOL 감지", desc: "신규 리스팅 등장 / 구모델 소멸", status: "plan" },
+      { key: "lifecycle", no: 7, label: "신제품·EOL 감지", desc: "신규 리스팅 등장 / 구모델 소멸", status: "live", badge: "beta" },
       { key: "volatility", no: 8, label: "가격 변동성", desc: "모델별 변경 빈도·표준편차 랭킹", status: "plan" },
       { key: "intensity", no: 9, label: "경쟁 강도 지수", desc: "취급 브랜드 수·가격 밀집도", status: "plan" },
       { key: "listing", no: 10, label: "취급·노출 시그널", desc: "브랜드별 리스팅 수 변화", status: "plan" },
@@ -388,6 +389,8 @@ export default function Competitors() {
             <MoversView rows={rows} elabels={elabels} stamp={stamp} />
           ) : view === "energy" ? (
             <EnergyLabelView />
+          ) : view === "lifecycle" ? (
+            <EolView daily={daily} stamp={stamp} />
           ) : active?.status !== "live" ? (
             <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
               <p className="text-[12.5px] font-medium text-gray-600 dark:text-gray-300">{active?.desc}</p>
