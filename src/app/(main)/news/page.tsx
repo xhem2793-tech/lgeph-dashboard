@@ -688,7 +688,7 @@ export default function Page() {
       <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
         {/* ── 좌 : 메뉴 ── */}
         <aside
-          className="h-fit lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6"
+          className="h-fit lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6"
           style={{ animation: "fadeUp .5s ease both" }}
         >
           <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
@@ -768,6 +768,17 @@ export default function Page() {
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               {/* 정렬 */}
               <Segmented value={sort} onChange={(k) => setSort(k as "new" | "impact")} options={[{ k: "new", label: "최신순" }, { k: "impact", label: "영향도순" }]} size="sm" />
+              {/* 인사이트 칼럼 — 자체 카테고리 필터를 정렬 옆으로(제품 필터 대체) */}
+              {menu === "인사이트" && (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {["전체", ...INSIGHT_CATS].map((k) => {
+                    const on = insightCat === k
+                    const n = k === "전체" ? slice.length : slice.filter((g) => insightCatOf(g.head) === k).length
+                    if (k !== "전체" && n === 0) return null
+                    return <button key={k} type="button" onClick={() => setInsightCat(k)} className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{k}<span className={"tabular-nums text-[10.5px] " + (on ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+                  })}
+                </div>
+              )}
               {/* 제품 키워드 검색 — 제품군 유의어 OR 매칭. 인사이트 칼럼 뷰에선 숨김(자체 카테고리 필터 사용) */}
               {menu !== "인사이트" && (
               <div className="flex items-center gap-1">
@@ -864,16 +875,8 @@ export default function Page() {
             ) : slice.length === 0 ? (
               <p className="py-10 text-center text-[12px] text-gray-500 dark:text-gray-400">조건에 맞는 항목 없음</p>
             ) : menu === "인사이트" ? (
-              /* 인사이트 칼럼 — 자체 분류(AI·정책·시장전망·기술) 필터 + 1열 매거진 카드 */
-              <div className="mt-3 flex flex-col gap-3">
-                <div className="flex flex-wrap items-center gap-1.5">
-                  {["전체", ...INSIGHT_CATS].map((k) => {
-                    const on = insightCat === k
-                    const n = k === "전체" ? slice.length : slice.filter((g) => insightCatOf(g.head) === k).length
-                    if (k !== "전체" && n === 0) return null
-                    return <button key={k} type="button" onClick={() => setInsightCat(k)} className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-3 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{k}<span className={"tabular-nums text-[10.5px] " + (on ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
-                  })}
-                </div>
+              /* 인사이트 칼럼 — 1열 매거진 카드(카테고리 필터는 상단 정렬 옆으로 이동). 시작점 상향(mt 제거) */
+              <div className="flex flex-col gap-3">
                 {slice.filter((g) => insightCat === "전체" || insightCatOf(g.head) === insightCat).map((g, i) => {
                   const d = g.head
                   const c = lead(d, chips)
