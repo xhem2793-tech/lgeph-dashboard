@@ -22,15 +22,13 @@ body {
 @media (min-width: 900px)  and (max-width: 1279px)    { body { zoom: 0.8; } }   /* 13" · 소형 */
 @media (max-width: 899px)                             { body { zoom: 1; } }     /* 모바일: 스택 레이아웃 축소 안 함 */
 
-/* ── EN 모드 타이포 (2026-07-13) ─────────────────────────────
-   Yahoo Finance는 "GT America"(상용) + Tabular 숫자를 쓴다.
-   같은 톤의 오픈폰트 Public Sans로 대체하고, 숫자만 tabular로 고정한다.
-   레이아웃 폭은 한글 기준 고정이므로 자간을 살짝 좁혀 영문이 넘치지 않게 한다. */
+/* ── EN 모드 타이포 (2026-08-04 통일) ─────────────────────────────
+   영문 글꼴을 한글과 동일하게 — Pretendard(라틴 글리프 우수)로 통일해 KO/EN 톤 일치.
+   숫자만 tabular로 고정, 자간은 한글 폭 기준 미세 조정. */
 html[lang="en"] body {
-  /* --font-inter는 정의되지 않음(Inter는 className으로 적용) — 빈 var를 섞으면 선언 전체가 무효화된다 */
-  font-family: var(--font-public-sans), Inter, Arial, sans-serif;
+  font-family: "Pretendard Variable", Pretendard, system-ui, "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.006em;
+  letter-spacing: -0.004em;
 }
 html[lang="en"] table,
 html[lang="en"] .tabular-nums {
