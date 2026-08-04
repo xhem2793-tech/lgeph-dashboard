@@ -3,11 +3,16 @@
 import React from "react"
 import { createPortal } from "react-dom"
 import type { CalEvent } from "@/lib/supabase"
+import { T } from "@/lib/i18n"
 
 /** 이벤트 상세 팝업 — 캘린더 페이지와 위젯(AgendaCard)이 공유하는 단일 모달(디자인 동일). */
 
 const CAT_DOT: Record<string, string> = { 경제: "bg-emerald-500", 금융: "bg-blue-500", 정치: "bg-purple-500", 규제: "bg-red-500", 에너지: "bg-amber-500", 유통: "bg-violet-500", 공휴일: "bg-teal-500", 기타: "bg-gray-400" }
-const KIND: Record<string, string> = { release: "지표 발표", policy: "정책·규제", holiday: "공휴일" }
+const kindLabel = (k: string): string =>
+  k === "release" ? T("지표 발표", "Data release")
+  : k === "policy" ? T("정책·규제", "Policy & regulation")
+  : k === "holiday" ? T("공휴일", "Holiday")
+  : ""
 const dotOf = (c: string) => CAT_DOT[c] ?? CAT_DOT["기타"]
 const catLabel = (c: string) => (c === "규제" ? "정책" : c)
 const para = (s: string | null) => (s ?? "").split(/\n{2,}|(?<=\.)\s{2,}/).map((x) => x.trim()).filter(Boolean)
@@ -35,7 +40,7 @@ export default function EventModal({ event, onClose }: { event: CalEvent; onClos
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-md" style={{ animation: closing ? "veilOut .24s ease both" : "veilIn .24s ease both" }} onClick={close}>
       <style>{"@keyframes evBackIn{from{opacity:0}to{opacity:1}}@keyframes evBackOut{from{opacity:1}to{opacity:0}}@keyframes evModalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes evModalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
       <div className="relative flex max-h-[88vh] w-full max-w-[600px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" style={{ animation: closing ? "popOut .22s cubic-bezier(.4,0,1,1) both" : "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
-        <button type="button" onClick={close} aria-label="닫기" className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50">
+        <button type="button" onClick={close} aria-label={T("닫기", "Close")} className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
 
@@ -43,7 +48,7 @@ export default function EventModal({ event, onClose }: { event: CalEvent; onClos
           <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + dotOf(m.category)} />
           <span className="text-gray-800 dark:text-gray-100">{catLabel(m.category)}</span>
           <span className="text-gray-300 dark:text-gray-600">·</span>
-          <span className="text-gray-500 dark:text-gray-400">{KIND[m.kind] || ""}</span>
+          <span className="text-gray-500 dark:text-gray-400">{kindLabel(m.kind)}</span>
           {m.importance >= 2 && <span className="text-[12px] text-amber-500 dark:text-amber-400">{"★".repeat(m.importance)}</span>}
         </div>
 
@@ -58,35 +63,35 @@ export default function EventModal({ event, onClose }: { event: CalEvent; onClos
 
           {m.indicatorKey && (
             <div className="mt-4 inline-flex flex-wrap gap-4 rounded-lg bg-gray-50 dark:bg-gray-900 px-3.5 py-2 text-[12px] tabular-nums">
-              <span className="text-gray-400 dark:text-gray-500">예측 <span className="font-semibold text-gray-600 dark:text-gray-300">{m.forecast || "—"}</span></span>
-              <span className="text-indigo-500 dark:text-indigo-400">실제 <span className="font-semibold">{fmtVal(m.actual, m.unit)}</span></span>
-              <span className="text-gray-400 dark:text-gray-500">이전 <span className="font-semibold text-gray-500 dark:text-gray-400">{fmtVal(m.previous, m.unit)}</span></span>
+              <span className="text-gray-400 dark:text-gray-500">{T("예측 ", "Forecast ")}<span className="font-semibold text-gray-600 dark:text-gray-300">{m.forecast || "—"}</span></span>
+              <span className="text-indigo-500 dark:text-indigo-400">{T("실제 ", "Actual ")}<span className="font-semibold">{fmtVal(m.actual, m.unit)}</span></span>
+              <span className="text-gray-400 dark:text-gray-500">{T("이전 ", "Previous ")}<span className="font-semibold text-gray-500 dark:text-gray-400">{fmtVal(m.previous, m.unit)}</span></span>
             </div>
           )}
 
           {m.implication && (
             <div className="mt-4 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-3">
-              <p className="text-[10.5px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-400">시사점</p>
+              <p className="text-[10.5px] font-semibold tracking-wide text-indigo-600 dark:text-indigo-400">{T("시사점", "Implication")}</p>
               <p className="mt-1 text-[13.5px] leading-[1.7] text-gray-800 dark:text-gray-100">{m.implication}</p>
             </div>
           )}
 
           {m.summary && (
             <div className="mt-4 space-y-2">
-              <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
+              <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">{T("본문 요약", "Summary")}</p>
               {para(m.summary).map((p, k) => <p key={k} className="text-[12.5px] leading-[1.7] text-gray-600 dark:text-gray-300">{p}</p>)}
             </div>
           )}
 
           {m.actions && (
             <div className="mt-4">
-              <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">대응 · Owner</p>
+              <p className="text-[10.5px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">{T("대응 · Owner", "Action · Owner")}</p>
               <p className="mt-1 whitespace-pre-line text-[12.5px] leading-[1.7] text-gray-600 dark:text-gray-300">{m.actions}</p>
             </div>
           )}
 
           {m.url && (
-            <a href={m.url} target="_blank" rel="noreferrer" className="mt-5 flex items-center justify-center gap-1 rounded-lg bg-gray-900 py-2.5 text-[12.5px] font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-800 active:scale-[.99]">원문 보기 ↗</a>
+            <a href={m.url} target="_blank" rel="noreferrer" className="mt-5 flex items-center justify-center gap-1 rounded-lg bg-gray-900 py-2.5 text-[12.5px] font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-gray-800 active:scale-[.99]">{T("원문 보기 ↗", "View source ↗")}</a>
           )}
         </div>
       </div>

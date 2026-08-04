@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { pricesDomain, regionMetric } from "@/lib/supabase"
 import type { PricesDomain } from "@/lib/supabase"
+import { T } from "@/lib/i18n"
 
 /** 지역시장 지도 아래 지역별 상세 — 카테고리(물가·인구)별로 크게 나누고 그 안에서 세부 표시.
  *  물가 = pricesDomain().region(v_cost_of_living_regional). 인구 = macro_indicators(geo_level=region, 2020 센서스). */
@@ -15,9 +16,9 @@ const shortGeo = (g: string | number) => String(g).replace(/\(.*/, "").replace("
 
 type Cat = "price" | "pop" | "income"
 const CATS: { k: Cat; label: string; sub: string }[] = [
-  { k: "price", label: "지역 물가", sub: "지역×품목 CPI·물가 분포" },
-  { k: "pop", label: "인구·가구", sub: "지역별 인구·가구수 (2020 센서스)" },
-  { k: "income", label: "소득·빈곤", sub: "지역별 빈곤율 (2023 FIES)" },
+  { k: "price", label: T("지역 물가", "Regional Prices"), sub: T("지역×품목 CPI·물가 분포", "Region × item CPI · price distribution") },
+  { k: "pop", label: T("인구·가구", "Population · Households"), sub: T("지역별 인구·가구수 (2020 센서스)", "Population · households by region (2020 Census)") },
+  { k: "income", label: T("소득·빈곤", "Income · Poverty"), sub: T("지역별 빈곤율 (2023 FIES)", "Poverty rate by region (2023 FIES)") },
 ]
 
 export default function RegionPriceExtras() {
@@ -34,7 +35,7 @@ export default function RegionPriceExtras() {
     return () => cancelAnimationFrame(id)
   }, [cat])
 
-  const cols: [string, string][] = [["전체", "inf_all_items"], ["식품", "inf_food"], ["쌀", "inf_rice"], ["전기", "inf_electricity"], ["가전", "inf_appliances"], ["에어컨", "inf_aircon"]]
+  const cols: [string, string][] = [[T("전체", "All"), "inf_all_items"], [T("식품", "Food"), "inf_food"], [T("쌀", "Rice"), "inf_rice"], [T("전기", "Electricity"), "inf_electricity"], [T("가전", "Appliances"), "inf_appliances"], [T("에어컨", "Aircon"), "inf_aircon"]]
   const region = data?.region ?? []
   const rows = useMemo(() => [...region].sort((a, b) => num(b.inf_all_items) - num(a.inf_all_items)), [region])
   const regVals = rows.map((r) => num(r.inf_all_items)).filter((v) => v > 0)
@@ -78,8 +79,8 @@ export default function RegionPriceExtras() {
           <section className="min-w-0 overflow-hidden rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
             <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
               <span className="h-[18px] w-1 rounded bg-indigo-500" />
-              <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역 × 품목 물가</h2>
-              <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">전년비 % · 물가 높은 순</span>
+              <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("지역 × 품목 물가", "Region × Item Prices")}</h2>
+              <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("전년비 % · 물가 높은 순", "YoY % · highest inflation first")}</span>
             </div>
             <div className="mt-3 overflow-x-auto">
               <div className="grid min-w-[440px] gap-1" style={{ gridTemplateColumns: "auto repeat(6,1fr)" }}>
@@ -97,14 +98,14 @@ export default function RegionPriceExtras() {
                 ))}
               </div>
             </div>
-            <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">자료 PSA 지역별 CPI(v_cost_of_living_regional) · 전년비</p>
+            <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">{T("자료 PSA 지역별 CPI(v_cost_of_living_regional) · 전년비", "Source: PSA regional CPI (v_cost_of_living_regional) · YoY")}</p>
           </section>
 
           <section className="rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
-            <h2 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">지역 물가 분포 <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500">전국 {rows.length}곳</span></h2>
+            <h2 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">{T("지역 물가 분포", "Regional Price Distribution")} <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500">{T("전국", "Nationwide")} {rows.length}{T("곳", " regions")}</span></h2>
             <div className="mt-3 flex gap-5">
-              <div><p className="text-[11px] text-gray-400 dark:text-gray-500">평균</p><p className="text-[21.5px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rMean.toFixed(1)}<span className="text-[12px] text-gray-400 dark:text-gray-500">%</span></p></div>
-              <div><p className="text-[11px] text-gray-400 dark:text-gray-500">범위</p><p className="text-[21.5px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rLo.toFixed(1)}–{rHi.toFixed(1)}</p></div>
+              <div><p className="text-[11px] text-gray-400 dark:text-gray-500">{T("평균", "Avg")}</p><p className="text-[21.5px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rMean.toFixed(1)}<span className="text-[12px] text-gray-400 dark:text-gray-500">%</span></p></div>
+              <div><p className="text-[11px] text-gray-400 dark:text-gray-500">{T("범위", "Range")}</p><p className="text-[21.5px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rLo.toFixed(1)}–{rHi.toFixed(1)}</p></div>
             </div>
             <div className="relative mt-5 h-12">
               <div className="absolute inset-x-0 bottom-4 border-t border-gray-200 dark:border-gray-800" />
@@ -115,7 +116,7 @@ export default function RegionPriceExtras() {
               <span className="absolute bottom-0 left-0 text-[10px] text-gray-400 dark:text-gray-500">{rLo.toFixed(1)}%</span>
               <span className="absolute bottom-0 right-0 text-[10px] text-gray-400 dark:text-gray-500">{rHi.toFixed(1)}%</span>
             </div>
-            <p className="mt-2 text-[11px] text-gray-400 dark:text-gray-500">지역 편차 {(rHi - rLo).toFixed(1)}%p · 점선=전국 평균</p>
+            <p className="mt-2 text-[11px] text-gray-400 dark:text-gray-500">{T("지역 편차", "Regional spread")} {(rHi - rLo).toFixed(1)}{T("%p · 점선=전국 평균", "%p · dashed = national average")}</p>
           </section>
         </div>
       )}
@@ -124,9 +125,9 @@ export default function RegionPriceExtras() {
         <section className="min-w-0 overflow-hidden rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 인구·가구</h2>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">2020 센서스 · 인구 많은 순</span>
-            <span className="ml-auto text-[11px] font-semibold text-gray-500 dark:text-gray-400">전국 {(popTotal / 1e6).toFixed(1)}백만명 · {(hhTotal / 1e6).toFixed(1)}백만가구</span>
+            <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("지역별 인구·가구", "Population · Households by Region")}</h2>
+            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("2020 센서스 · 인구 많은 순", "2020 Census · most populous first")}</span>
+            <span className="ml-auto text-[11px] font-semibold text-gray-500 dark:text-gray-400">{T("전국", "Nationwide")} {(popTotal / 1e6).toFixed(1)}{T("백만명 · ", "M people · ")}{(hhTotal / 1e6).toFixed(1)}{T("백만가구", "M households")}</span>
           </div>
           <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
             {popRows.map((r, i) => (
@@ -139,7 +140,7 @@ export default function RegionPriceExtras() {
               </div>
             ))}
           </div>
-          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">자료 PSA 2020 인구주택총조사(CPH) · 지역별 총인구·가구수 · <b className="text-gray-500 dark:text-gray-400">인구 밀집 지역 = 가전 수요 최대 시장</b></p>
+          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">{T("자료 PSA 2020 인구주택총조사(CPH) · 지역별 총인구·가구수 · ", "Source: PSA 2020 Census of Population and Housing (CPH) · total population and households by region · ")}<b className="text-gray-500 dark:text-gray-400">{T("인구 밀집 지역 = 가전 수요 최대 시장", "densely populated regions = the largest appliance-demand markets")}</b></p>
         </section>
       )}
 
@@ -147,9 +148,9 @@ export default function RegionPriceExtras() {
         <section className="min-w-0 overflow-hidden rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">지역별 소득·빈곤</h2>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">2023 빈곤율(%) · 낮을수록 소득 상위</span>
-            <span className="ml-auto text-[11px] font-semibold text-gray-500 dark:text-gray-400">전국 평균 {povNat.toFixed(1)}%</span>
+            <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("지역별 소득·빈곤", "Income · Poverty by Region")}</h2>
+            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("2023 빈곤율(%) · 낮을수록 소득 상위", "2023 poverty rate (%) · lower = higher income")}</span>
+            <span className="ml-auto text-[11px] font-semibold text-gray-500 dark:text-gray-400">{T("전국 평균", "National avg")} {povNat.toFixed(1)}%</span>
           </div>
           <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
             {povRows.map((r, i) => {
@@ -160,13 +161,13 @@ export default function RegionPriceExtras() {
                   <div className="relative h-4 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
                     <div className="absolute inset-y-0 left-0 rounded" style={{ width: mounted ? (r.pov / povMax * 100) + "%" : "0%", background: "rgba(225,29,72," + (0.35 + t * 0.5).toFixed(2) + ")", transition: "width .7s cubic-bezier(.22,1,.36,1) " + (i * 0.02) + "s" }} />
                   </div>
-                  {r.inc > 0 && <span className="w-16 shrink-0 text-right text-[10px] tabular-nums text-gray-400 dark:text-gray-500">₱{Math.round(r.inc / 1000)}천</span>}
+                  {r.inc > 0 && <span className="w-16 shrink-0 text-right text-[10px] tabular-nums text-gray-400 dark:text-gray-500">₱{Math.round(r.inc / 1000)}{T("천", "k")}</span>}
                   <span className="w-10 shrink-0 text-right text-[11px] font-semibold tabular-nums text-gray-800 dark:text-gray-100">{r.pov.toFixed(1)}%</span>
                 </div>
               )
             })}
           </div>
-          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">자료 PSA FIES 빈곤통계(2023) · 지역별 빈곤율 · <b className="text-gray-500 dark:text-gray-400">저빈곤(고소득) 지역 = 프리미엄 가전 우선 시장</b></p>
+          <p className="mt-3 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] text-gray-400 dark:text-gray-500">{T("자료 PSA FIES 빈곤통계(2023) · 지역별 빈곤율 · ", "Source: PSA FIES poverty statistics (2023) · poverty rate by region · ")}<b className="text-gray-500 dark:text-gray-400">{T("저빈곤(고소득) 지역 = 프리미엄 가전 우선 시장", "low-poverty (high-income) regions = priority markets for premium appliances")}</b></p>
         </section>
       )}
     </div>

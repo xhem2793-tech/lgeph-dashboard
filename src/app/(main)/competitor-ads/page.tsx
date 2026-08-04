@@ -6,16 +6,7 @@ import type { CompAd } from "@/lib/supabase"
 import { ListSearch } from "@/components/competitors/shared"
 import { Segmented } from "@/components/Segmented"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
-
-/** 배너 폴백 — 매니페스트(public/banners.json) 로드 실패 시 표시(주간 자동 갱신 대상) */
-const ADS_BANNER: Banner = {
-  title: "성수기 TV·에어컨 경쟁 집중",
-  summary: "Samsung 가격딜·TCL 신모델 무이자·Hisense 월드컵 브랜딩",
-  body: "성수기 진입과 함께 경쟁사 광고가 **TV·에어컨**에 집중되는 흐름. **Samsung**은 비전 AI TV를 대형 할인+사운드바로 **가격 공세**, **TCL**은 인버터 에어컨 신모델을 무이자 할부로 밀며 **신제품+금융** 카드, **Hisense**는 월드컵 스폰서십으로 **브랜딩** 상향 시도.",
-  insight: "TV 성수기 프로모 강도·번들 점검, 에어컨 할부조건 경쟁력 확인, 중가 브랜드 상향 시도 주시.",
-  insightLabel: "LG 대응",
-  period: "2026-W31",
-}
+import { T } from "@/lib/i18n"
 
 /** 경쟁사 동향 — 좌측 체크박스 패싯 사이드바(브랜드·성격·제품·상태 멀티선택) + 상단 게재월 스테퍼·정렬 토글.
  *  3열 반응형 썸네일 갤러리(image_url 없으면 브랜드 이니셜). 카드 클릭 → 심플 팝업. 제목 한글.
@@ -30,17 +21,30 @@ const STATUS: St[] = [
   { key: "종료", label: "종료됨", text: "text-gray-500 dark:text-gray-400", dot: "bg-gray-400 dark:bg-gray-500", band: "bg-gray-100 dark:bg-gray-800" },
 ]
 const stOf = (s: string) => STATUS.find((x) => x.key === s)
+const stLabel = (k: string) =>
+  k === "진행중" ? T("진행중", "Active") :
+  k === "새로시작" ? T("새로시작", "New") :
+  k === "종료예정" ? T("종료예정", "Ending soon") :
+  k === "종료" ? T("종료됨", "Ended") : k
 const BRANDS = ["Samsung", "TCL", "Hisense", "Midea", "Sharp", "Panasonic"]
 const TYPES = [
   { k: "brand", label: "브랜드" }, { k: "promo", label: "프로모" }, { k: "launch", label: "신제품" },
   { k: "campaign", label: "캠페인" }, { k: "event", label: "행사" }, { k: "other", label: "기타" },
 ]
 const AD_TYPE: Record<string, string> = { promo: "프로모", launch: "신제품", brand: "브랜드", campaign: "캠페인", event: "행사", roadshow: "로드쇼", other: "기타" }
+const AD_TYPE_EN: Record<string, string> = { promo: "Promo", launch: "New model", brand: "Brand", campaign: "Campaign", event: "Event", roadshow: "Roadshow", other: "Other" }
+const adTypeLabel = (k: string) => (AD_TYPE[k] ? T(AD_TYPE[k], AD_TYPE_EN[k] ?? AD_TYPE[k]) : k)
 const PRODS = ["에어컨(RAC)", "TV·AV", "세탁·건조", "냉장고", "에어케어", "기타"]
-const prodLabel = (c: string) => (c === "에어컨(RAC)" ? "에어컨" : c)
+const prodLabel = (c: string) =>
+  c === "에어컨(RAC)" ? T("에어컨", "RAC") :
+  c === "TV·AV" ? T("TV·AV", "TV·AV") :
+  c === "세탁·건조" ? T("세탁·건조", "Laundry") :
+  c === "냉장고" ? T("냉장고", "REF") :
+  c === "에어케어" ? T("에어케어", "Air Care") :
+  c === "기타" ? T("기타", "Other") : c
 const clean = (s: string | null | undefined) =>
   (s || "").replace(/&#8211;|&#8212;/g, "–").replace(/&amp;/g, "&").replace(/&#\d+;|&[a-z]+;/gi, " ").replace(/\s+/g, " ").trim()
-const ymLabel = (ym: string) => Number(ym.slice(0, 4)) + "년 " + Number(ym.slice(5, 7)) + "월"
+const ymLabel = (ym: string) => T(Number(ym.slice(0, 4)) + "년 " + Number(ym.slice(5, 7)) + "월", Number(ym.slice(5, 7)) + "/" + Number(ym.slice(0, 4)))
 
 type Opt = { value: string; label: string; count: number; dot?: string }
 function Facet({ title, options, selected, onToggle }: { title: string; options: Opt[]; selected: string[]; onToggle: (v: string) => void }) {
@@ -75,11 +79,11 @@ function Thumb({ a }: { a: CompAd }) {
     <div className="relative aspect-[16/9] w-full overflow-hidden bg-indigo-50 dark:bg-indigo-500/10">
       {showImg
         ? <img src={a.image_url || ""} alt="" onError={() => setErr(true)} className="h-full w-full object-cover" />
-        : <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 bg-gradient-to-br from-indigo-500 to-violet-600"><span className="text-[19px] font-bold tracking-tight text-white">{a.brand}</span><span className="text-[9px] font-medium text-white/70">광고 이미지 없음</span></div>}
+        : <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 bg-gradient-to-br from-indigo-500 to-violet-600"><span className="text-[19px] font-bold tracking-tight text-white">{a.brand}</span><span className="text-[9px] font-medium text-white/70">{T("광고 이미지 없음", "No ad image")}</span></div>}
       {st && st.key !== "진행중" && (
         <span className={"absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/85 dark:bg-gray-900/85 px-2 py-0.5 text-[9px] font-bold " + st.text}>
           <span className={"h-1.5 w-1.5 rounded-full " + st.dot} />
-          {a.days_to_end != null && a.days_to_end >= 0 ? "D-" + a.days_to_end : st.label}
+          {a.days_to_end != null && a.days_to_end >= 0 ? "D-" + a.days_to_end : stLabel(st.key)}
         </span>
       )}
       <span className="absolute bottom-0 left-0 bg-white/60 dark:bg-gray-900/60 px-1.5 py-0.5 text-[8px] font-medium text-gray-600 dark:text-gray-300">{prodLabel(a.category || "기타")}</span>
@@ -88,9 +92,9 @@ function Thumb({ a }: { a: CompAd }) {
 }
 
 function period(a: CompAd) {
-  if (a.days_to_end != null && a.days_to_end >= 0) return "종료 D-" + a.days_to_end
-  if (a.ad_started_on) return "게재 " + (a.days_since_start != null ? a.days_since_start + "일차" : a.ad_started_on)
-  return "상시"
+  if (a.days_to_end != null && a.days_to_end >= 0) return T("종료 D-", "Ends D-") + a.days_to_end
+  if (a.ad_started_on) return a.days_since_start != null ? T("게재 " + a.days_since_start + "일차", "Posted · day " + a.days_since_start) : T("게재 " + a.ad_started_on, "Posted " + a.ad_started_on)
+  return T("상시", "Always-on")
 }
 const briefBody = (b: string | null) => clean((b || "").split("[실무]")[0])
 const offerShort = (o: string | null) => clean(o).replace(/\s*\([^)]*\)\s*$/, "")
@@ -116,7 +120,7 @@ function Hi({ text, q }: { text: string; q: string }) {
 }
 
 function Card({ a, onOpen, q = "" }: { a: CompAd; onOpen: () => void; q?: string }) {
-  const conf = a.confidence === "CONFIRMED" ? "확인" : a.confidence ? "AI" : ""
+  const conf = a.confidence === "CONFIRMED" ? T("확인", "Verified") : a.confidence ? "AI" : ""
   const openSrc = (e: React.MouseEvent) => { e.stopPropagation(); if (a.ad_url) window.open(a.ad_url, "_blank", "noopener") }
   const brief = briefBody(a.body)
   const ended = a.status === "종료"
@@ -126,7 +130,7 @@ function Card({ a, onOpen, q = "" }: { a: CompAd; onOpen: () => void; q?: string
       <div className="flex flex-1 flex-col p-2.5">
         <div className="flex items-center gap-1.5">
           <span className="text-[12px] font-bold tracking-tight text-gray-900 dark:text-gray-50"><Hi text={a.brand} q={q} /></span>
-          <span className="rounded border border-gray-200 dark:border-gray-800 px-1.5 py-0.5 text-[9.5px] font-medium text-gray-500 dark:text-gray-400">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+          <span className="rounded border border-gray-200 dark:border-gray-800 px-1.5 py-0.5 text-[9.5px] font-medium text-gray-500 dark:text-gray-400">{adTypeLabel(a.ad_type)}</span>
           {/* P4 신뢰 신호 — 상단 상시 노출 */}
           {conf && <span className={"ml-auto shrink-0 rounded px-1 py-0.5 text-[9px] font-semibold " + (a.confidence === "CONFIRMED" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400")}>{conf}</span>}
         </div>
@@ -140,10 +144,10 @@ function Card({ a, onOpen, q = "" }: { a: CompAd; onOpen: () => void; q?: string
             <><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0"><rect x="3" y="4" width="18" height="17" rx="2" /><path d="M3 9h18M8 2v4M16 2v4" /></svg><span>{period(a)}</span></>
           )}
           {a.ad_url ? (
-            <span onClick={openSrc} className="ml-auto inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">원문<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M7 7h10v10" /></svg></span>
+            <span onClick={openSrc} className="ml-auto inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">{T("원문", "Source")}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M7 7h10v10" /></svg></span>
           ) : (
             /* P5 클릭 어포던스 — 상세 열림 표시 */
-            <span className="ml-auto inline-flex items-center gap-0.5 text-gray-300 transition-colors duration-300 group-hover:text-indigo-500 dark:text-gray-600 dark:group-hover:text-indigo-400">자세히<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:translate-x-0.5"><path d="M9 6l6 6-6 6" /></svg></span>
+            <span className="ml-auto inline-flex items-center gap-0.5 text-gray-300 transition-colors duration-300 group-hover:text-indigo-500 dark:text-gray-600 dark:group-hover:text-indigo-400">{T("자세히", "Details")}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:translate-x-0.5"><path d="M9 6l6 6-6 6" /></svg></span>
           )}
         </div>
       </div>
@@ -168,9 +172,9 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
   }, [])
   const showImg = !!a.image_url && !imgErr
   const meta: string[] = []
-  if (a.ad_started_on) meta.push("게재 " + a.ad_started_on + (a.days_since_start != null ? " (" + a.days_since_start + "일차)" : ""))
-  if (a.ends_on) meta.push("종료 " + a.ends_on + (a.days_to_end != null && a.days_to_end >= 0 ? " (D-" + a.days_to_end + ")" : ""))
-  meta.push("제품 " + prodLabel(a.category || "기타"))
+  if (a.ad_started_on) meta.push(T("게재 ", "Posted ") + a.ad_started_on + (a.days_since_start != null ? " (" + a.days_since_start + T("일차", "d") + ")" : ""))
+  if (a.ends_on) meta.push(T("종료 ", "Ends ") + a.ends_on + (a.days_to_end != null && a.days_to_end >= 0 ? " (D-" + a.days_to_end + ")" : ""))
+  meta.push(T("제품 ", "Product ") + prodLabel(a.category || "기타"))
 
   return (
     <div
@@ -186,7 +190,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
         <button
           type="button"
           onClick={close}
-          aria-label="닫기"
+          aria-label={T("닫기", "Close")}
           className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -199,13 +203,13 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-indigo-500 to-violet-600">
               <span className="text-[27px] font-bold tracking-tight text-white">{a.brand}</span>
-              <span className="text-[10px] font-medium text-white/70">광고 이미지 없음</span>
+              <span className="text-[10px] font-medium text-white/70">{T("광고 이미지 없음", "No ad image")}</span>
             </div>
           )}
           {st && (
             <span className={"absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-white/90 dark:bg-gray-900/90 px-2.5 py-1 text-[11px] font-bold backdrop-blur " + st.text}>
               <span className={"h-1.5 w-1.5 rounded-full " + st.dot} />
-              {st.label}{a.days_to_end != null && a.days_to_end >= 0 ? " D-" + a.days_to_end : ""}
+              {stLabel(st.key)}{a.days_to_end != null && a.days_to_end >= 0 ? " D-" + a.days_to_end : ""}
             </span>
           )}
         </div>
@@ -215,9 +219,9 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11.5px] text-gray-500 dark:text-gray-400">
             <span className="font-semibold text-indigo-600 dark:text-indigo-400">{a.brand}</span>
             <span className="text-gray-300 dark:text-gray-600">·</span>
-            <span>{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+            <span>{adTypeLabel(a.ad_type)}</span>
             <span className="text-gray-300 dark:text-gray-600">·</span>
-            <span className="num">{a.ad_started_on || "상시"}</span>
+            <span className="num">{a.ad_started_on || T("상시", "Always-on")}</span>
           </div>
 
           {/* 제목 — iOS large title */}
@@ -230,7 +234,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
           {/* 시사점 — iOS 틴티드 콜아웃 카드 */}
           {bodyImpl && (
             <div className="mt-4 rounded-2xl bg-indigo-50/80 p-4 ring-1 ring-inset ring-indigo-100 dark:bg-indigo-500/10 dark:ring-indigo-500/20">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">시사점</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">{T("시사점", "Implication")}</p>
               <p className="mt-1.5 text-[14px] font-medium leading-[1.7] text-gray-800 dark:text-gray-100">{bodyImpl}</p>
             </div>
           )}
@@ -238,7 +242,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
           {/* 본문 요약 — iOS 그룹 카드 */}
           {bodyMain && (
             <div className="mt-3.5 rounded-2xl bg-gray-50 p-4 dark:bg-gray-800/40">
-              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
+              <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("본문 요약", "Summary")}</p>
               <div className="mt-2 space-y-2.5">
                 {para(bodyMain).map((p, i) => (
                   <p key={i} className="text-[13px] leading-[1.75] text-gray-600 dark:text-gray-300">{p}</p>
@@ -249,7 +253,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
 
           <div className="mt-4 px-1">
             <p className="text-[11.5px] leading-relaxed text-gray-500 dark:text-gray-400">{meta.join(" · ")}</p>
-            <p className="mt-1 text-[10.5px] text-gray-400 dark:text-gray-500">Meta 광고 라이브러리(자체 수집) · {a.confidence || "—"}</p>
+            <p className="mt-1 text-[10.5px] text-gray-400 dark:text-gray-500">{T("Meta 광고 라이브러리(자체 수집)", "Meta Ad Library (self-collected)")} · {a.confidence || "—"}</p>
           </div>
 
           {/* 원문 — iOS 풀폭 버튼 */}
@@ -260,7 +264,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
               rel="noreferrer"
               className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-3 text-[13.5px] font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-[.98]"
             >
-              원문 광고 보기 · {a.brand}
+              {T("원문 광고 보기", "View original ad")} · {a.brand}
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M17 7H8M17 7v9" /></svg>
             </a>
           )}
@@ -282,6 +286,15 @@ export default function Page() {
   const [sort, setSort] = useState("latest")
   const [q, setQ] = useState("")
   const [sel, setSel] = useState<CompAd | null>(null)
+  /** 배너 폴백 — 매니페스트(public/banners.json) 로드 실패 시 표시(주간 자동 갱신 대상) */
+  const ADS_BANNER: Banner = {
+    title: T("성수기 TV·에어컨 경쟁 집중", "Peak-season TV·AC competition intensifies"),
+    summary: T("Samsung 가격딜·TCL 신모델 무이자·Hisense 월드컵 브랜딩", "Samsung price deals · TCL 0% installment on new models · Hisense World Cup branding"),
+    body: T("성수기 진입과 함께 경쟁사 광고가 **TV·에어컨**에 집중되는 흐름. **Samsung**은 비전 AI TV를 대형 할인+사운드바로 **가격 공세**, **TCL**은 인버터 에어컨 신모델을 무이자 할부로 밀며 **신제품+금융** 카드, **Hisense**는 월드컵 스폰서십으로 **브랜딩** 상향 시도.", "As peak season begins, competitor advertising is concentrating on **TV·AC**. **Samsung** is running a **price offensive** on its Vision AI TV with steep discounts plus soundbars; **TCL** is pushing new inverter AC models on interest-free installments — a **new-product + financing** play; **Hisense** is lifting **brand** presence via World Cup sponsorship."),
+    insight: T("TV 성수기 프로모 강도·번들 점검, 에어컨 할부조건 경쟁력 확인, 중가 브랜드 상향 시도 주시.", "Review peak-season TV promo intensity and bundles, verify AC installment competitiveness, and watch mid-tier brands moving upmarket."),
+    insightLabel: T("LG 대응", "LG response"),
+    period: "2026-W31",
+  }
   const [banner, setBanner] = useState<Banner>(ADS_BANNER)
 
   useEffect(() => { competitorAds().then(setAds).catch(() => setAds([])) }, [])
@@ -313,9 +326,9 @@ export default function Page() {
   const hits = qq ? shown.reduce((s, a) => s + [a.brand, a.headline, a.body, a.offer, a.venue].reduce((t, f) => t + ((f || "").toLowerCase().split(qq).length - 1), 0), 0) : 0
 
   const brandOpts: Opt[] = BRANDS.map((b) => ({ value: b, label: b, count: cnt((a) => a.brand === b) })).filter((o) => o.count > 0)
-  const typeOpts: Opt[] = TYPES.map((t) => ({ value: t.k, label: t.label, count: cnt((a) => a.ad_type === t.k) })).filter((o) => o.count > 0)
+  const typeOpts: Opt[] = TYPES.map((t) => ({ value: t.k, label: adTypeLabel(t.k), count: cnt((a) => a.ad_type === t.k) })).filter((o) => o.count > 0)
   const prodOpts: Opt[] = PRODS.map((p) => ({ value: p, label: prodLabel(p), count: cnt((a) => (a.category || "기타") === p) })).filter((o) => o.count > 0)
-  const statOpts: Opt[] = STATUS.map((s) => ({ value: s.key, label: s.label, count: cnt((a) => a.status === s.key), dot: s.dot })).filter((o) => o.count > 0)
+  const statOpts: Opt[] = STATUS.map((s) => ({ value: s.key, label: stLabel(s.key), count: cnt((a) => a.status === s.key), dot: s.dot })).filter((o) => o.count > 0)
 
   const anyFilter = fBrand.length + fType.length + fProd.length + fStat.length > 0 || monthSel !== null
   const clearAll = () => { setFBrand([]); setFType([]); setFProd([]); setFStat([]); setMonthIdx(-1) }
@@ -339,29 +352,29 @@ export default function Page() {
           <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
             <span className="flex items-center gap-1.5">
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M22 3H2l8 9.46V19l4 2v-8.54z" /></svg>
-              <span className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">필터</span>
+              <span className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("필터", "Filters")}</span>
             </span>
-            {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">초기화</button>}
+            {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">{T("초기화", "Reset")}</button>}
           </div>
-          <Facet title="브랜드" options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} />
+          <Facet title={T("브랜드", "Brand")} options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} />
           <div className="mx-1.5 h-px bg-gray-100 dark:bg-gray-800" />
-          <Facet title="제품" options={prodOpts} selected={fProd} onToggle={(v) => toggle(fProd, setFProd, v)} />
+          <Facet title={T("제품", "Product")} options={prodOpts} selected={fProd} onToggle={(v) => toggle(fProd, setFProd, v)} />
           <div className="mx-1.5 h-px bg-gray-100 dark:bg-gray-800" />
-          <Facet title="카테고리" options={typeOpts} selected={fType} onToggle={(v) => toggle(fType, setFType, v)} />
+          <Facet title={T("카테고리", "Category")} options={typeOpts} selected={fType} onToggle={(v) => toggle(fType, setFType, v)} />
           <div className="mx-1.5 h-px bg-gray-100 dark:bg-gray-800" />
-          <Facet title="상태" options={statOpts} selected={fStat} onToggle={(v) => toggle(fStat, setFStat, v)} />
+          <Facet title={T("상태", "Status")} options={statOpts} selected={fStat} onToggle={(v) => toggle(fStat, setFStat, v)} />
         </aside>
 
         <div className="min-w-0" style={{animation:"fadeUp .5s ease both"}}>
           <div className="mb-4"><InsightBanner banner={banner} open={sitOpen} onToggle={() => setSitOpen((v) => !v)} /></div>
 
-        <div className="relative mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5"><div className="flex shrink-0 items-center gap-3"><Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: "최신순" }, { k: "ending", label: "종료임박순" }]} size="sm" /><div className="inline-flex items-center gap-1 rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]"><button onClick={() => setMonthIdx(-1)} className={"h-7 rounded-full px-3 text-[12px] font-semibold transition-all duration-200 active:scale-[.93] " + (monthSel === null ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")}>전체</button><button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label="이전 달" disabled={months.length === 0 || monthIdx >= months.length - 1} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg></button><span className={"min-w-[92px] px-1 text-center text-[12px] font-semibold " + (monthSel ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500")}>{monthSel ? ymLabel(monthSel) : "전체 기간"}</span><button onClick={() => setMonthIdx((i) => (i <= 0 ? 0 : i - 1))} aria-label="다음 달" disabled={monthIdx <= 0} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg></button></div></div><div className="flex shrink-0 items-center gap-3"><ListSearch value={q} onChange={setQ} placeholder="브랜드 · 제목 · 프로모 · 장소 검색" className="hidden lg:block" /><span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-700 dark:text-gray-200">{shown.length}건</b>{qq ? <span>· {hits}곳 일치</span> : null}{_maxDate ? <>· 최신 {_fresh}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></> : null}</span></div></div>
+        <div className="relative mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5"><div className="flex shrink-0 items-center gap-3"><Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: T("최신순", "Latest") }, { k: "ending", label: T("종료임박순", "Ending soon") }]} size="sm" /><div className="inline-flex items-center gap-1 rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]"><button onClick={() => setMonthIdx(-1)} className={"h-7 rounded-full px-3 text-[12px] font-semibold transition-all duration-200 active:scale-[.93] " + (monthSel === null ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")}>{T("전체", "All")}</button><button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label={T("이전 달", "Previous month")} disabled={months.length === 0 || monthIdx >= months.length - 1} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg></button><span className={"min-w-[92px] px-1 text-center text-[12px] font-semibold " + (monthSel ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500")}>{monthSel ? ymLabel(monthSel) : T("전체 기간", "All periods")}</span><button onClick={() => setMonthIdx((i) => (i <= 0 ? 0 : i - 1))} aria-label={T("다음 달", "Next month")} disabled={monthIdx <= 0} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg></button></div></div><div className="flex shrink-0 items-center gap-3"><ListSearch value={q} onChange={setQ} placeholder={T("브랜드 · 제목 · 프로모 · 장소 검색", "Search brand · title · promo · venue")} className="hidden lg:block" /><span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-700 dark:text-gray-200">{shown.length}{T("건", "")}</b>{qq ? <span>· {hits}{T("곳 일치", " matches")}</span> : null}{_maxDate ? <>· {T("최신", "Updated")} {_fresh}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></> : null}</span></div></div>
 
           <div key={(ads === null ? "L" : "R") + fBrand.join() + fType.join() + fProd.join() + fStat.join() + String(monthSel) + sort + q} style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
           {ads === null ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}</div>
           ) : shown.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12px] text-gray-400 dark:text-gray-500">{qq ? "검색 결과 없음" : "해당 조건의 광고 없음"}</div>
+            <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12px] text-gray-400 dark:text-gray-500">{qq ? T("검색 결과 없음", "No results") : T("해당 조건의 광고 없음", "No ads match these filters")}</div>
           ) : (
             <>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -371,12 +384,12 @@ export default function Page() {
                 </div>
               ))}
             </div>
-            {totalPages > 1 ? (<div className="mt-4 flex items-center justify-center gap-1 border-t border-gray-100 dark:border-gray-800 pt-3"><button type="button" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)} className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">이전</button>{Array.from({ length: totalPages }, (_, k) => k + 1).map((p) => (<button key={p} type="button" onClick={() => setPage(p)} className={"min-w-[26px] rounded-md px-1.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " + (p === curPage ? "bg-indigo-600 text-white" : "text-gray-600 dark:text-gray-300 hover:-translate-y-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400")}>{p}</button>))}<button type="button" disabled={curPage >= totalPages} onClick={() => setPage(curPage + 1)} className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">다음</button></div>) : null}
+            {totalPages > 1 ? (<div className="mt-4 flex items-center justify-center gap-1 border-t border-gray-100 dark:border-gray-800 pt-3"><button type="button" disabled={curPage <= 1} onClick={() => setPage(curPage - 1)} className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">{T("이전", "Prev")}</button>{Array.from({ length: totalPages }, (_, k) => k + 1).map((p) => (<button key={p} type="button" onClick={() => setPage(p)} className={"min-w-[26px] rounded-md px-1.5 py-1 text-[11px] font-medium transition-all duration-300 ease-out active:scale-95 " + (p === curPage ? "bg-indigo-600 text-white" : "text-gray-600 dark:text-gray-300 hover:-translate-y-0.5 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400")}>{p}</button>))}<button type="button" disabled={curPage >= totalPages} onClick={() => setPage(curPage + 1)} className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0">{T("다음", "Next")}</button></div>) : null}
             </>
           )}
           </div>
 
-          <p className="mt-5 text-[10.5px] leading-relaxed text-gray-400 dark:text-gray-500">색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 썸네일 없으면 브랜드 이니셜 · 제목 한글 번역 · 클릭 시 상세</p>
+          <p className="mt-5 text-[10.5px] leading-relaxed text-gray-400 dark:text-gray-500">{T("색=상태 신호(진행중 emerald·새로시작 indigo·종료예정 amber) · 썸네일 없으면 브랜드 이니셜 · 제목 한글 번역 · 클릭 시 상세", "Color = status signal (active emerald · new indigo · ending soon amber) · brand initials when no thumbnail · Korean-translated titles · click for detail")}</p>
         </div>
       </div>
 

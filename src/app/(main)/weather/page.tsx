@@ -1,6 +1,7 @@
 "use client"
 
 import WeatherView from "@/components/WeatherView"
+import { T } from "@/lib/i18n"
 
 /** 날씨·재난 — 냉방도일 CDD·기온·태풍·지진. 경제지표에서 분리한 별도 페이지(예정/실험). */
 export default function WeatherPage() {
@@ -16,10 +17,10 @@ export default function WeatherPage() {
           </span>
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <h1 className="text-[20px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">날씨·재난</h1>
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">예정</span>
+              <h1 className="text-[20px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">{T("날씨·재난", "Weather & Disasters")}</h1>
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase tracking-wide text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">{T("예정", "Coming soon")}</span>
             </div>
-            <p className="mt-0.5 text-[12.5px] text-gray-500 dark:text-gray-400">냉방도일(CDD)·월평균 기온·태풍 경보·지진 활동 — <b className="font-semibold text-gray-600 dark:text-gray-300">냉방 수요 선행</b>과 <b className="font-semibold text-gray-600 dark:text-gray-300">공급망·재해 리스크</b>를 함께</p>
+            <p className="mt-0.5 text-[12.5px] text-gray-500 dark:text-gray-400">{T("냉방도일(CDD)·월평균 기온·태풍 경보·지진 활동 — ", "Cooling degree days (CDD) · monthly mean temperature · typhoon alerts · seismic activity — ")}<b className="font-semibold text-gray-600 dark:text-gray-300">{T("냉방 수요 선행", "leading cooling demand")}</b>{T("과 ", " alongside ")}<b className="font-semibold text-gray-600 dark:text-gray-300">{T("공급망·재해 리스크", "supply-chain and disaster risk")}</b>{T("를 함께", "")}</p>
           </div>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { fxStrip, pageBanner } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 import { useIsDark, chartColors } from "@/components/EconChart"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
+import { T } from "@/lib/i18n"
 
 /** 배너 폴백 — 매니페스트(public/banners.json) 로드 실패 시 표시(월간 자동 갱신 대상) */
 const FX_BANNER: Banner = {
@@ -201,26 +202,26 @@ export default function FxView() {
   const n = WINDOWS.find((w) => w.k === win)!.n
   const labels = lastN(DATA.labels, n)
   const region = [
-    { name: "필리핀", color: "#4338ca", w: 1.6, data: strengthOf(lastN(DATA.region.ph, n)), endLabel: "필리핀" }, // 굵기 강조 대신 우측 끝 라벨 카드로 위치 표기
-    { name: "인니", color: "#ef4444", w: 1.6, data: strengthOf(lastN(DATA.region.id, n)) },
-    { name: "말련", color: "#0ea5e9", w: 1.6, data: strengthOf(lastN(DATA.region.my, n)) },
-    { name: "태국", color: "#10b981", w: 1.6, data: strengthOf(lastN(DATA.region.th, n)) },
-    { name: "베트남", color: "#f59e0b", w: 1.6, data: strengthOf(lastN(DATA.region.vn, n)) },
-    { name: "싱가포르", color: "#a855f7", w: 1.6, data: strengthOf(lastN(DATA.region.sg, n)) },
+    { name: T("필리핀", "Philippines"), color: "#4338ca", w: 1.6, data: strengthOf(lastN(DATA.region.ph, n)), endLabel: T("필리핀", "Philippines") }, // 굵기 강조 대신 우측 끝 라벨 카드로 위치 표기
+    { name: T("인니", "Indonesia"), color: "#ef4444", w: 1.6, data: strengthOf(lastN(DATA.region.id, n)) },
+    { name: T("말련", "Malaysia"), color: "#0ea5e9", w: 1.6, data: strengthOf(lastN(DATA.region.my, n)) },
+    { name: T("태국", "Thailand"), color: "#10b981", w: 1.6, data: strengthOf(lastN(DATA.region.th, n)) },
+    { name: T("베트남", "Vietnam"), color: "#f59e0b", w: 1.6, data: strengthOf(lastN(DATA.region.vn, n)) },
+    { name: T("싱가포르", "Singapore"), color: "#a855f7", w: 1.6, data: strengthOf(lastN(DATA.region.sg, n)) },
   ]
   const fxusd = [{ name: "₱/USD", color: "#6366f1", w: 2, data: lastN(DATA.fxusd, n) }]
   const won = [{ name: "₩/₱", color: "#0f766e", w: 2, data: lastN(DATA.extra.wonperpeso, n) }]
   const asia = [
-    { name: "위안 CNY", color: "#dc2626", w: 2, data: idx100(lastN(DATA.asia.cny, n)) },
-    { name: "루피 INR", color: "#7c3aed", data: idx100(lastN(DATA.asia.inr, n)) },
+    { name: T("위안 CNY", "Yuan CNY"), color: "#dc2626", w: 2, data: idx100(lastN(DATA.asia.cny, n)) },
+    { name: T("루피 INR", "Rupee INR"), color: "#7c3aed", data: idx100(lastN(DATA.asia.inr, n)) },
   ]
   const jpyeur = [
-    { name: "엔 JPY", color: "#0284c7", w: 2, data: idx100(lastN(DATA.extra.pesoperjpy, n)) },
-    { name: "유로 EUR", color: "#b45309", data: idx100(lastN(DATA.extra.pesopereur, n)) },
+    { name: T("엔 JPY", "Yen JPY"), color: "#0284c7", w: 2, data: idx100(lastN(DATA.extra.pesoperjpy, n)) },
+    { name: T("유로 EUR", "Euro EUR"), color: "#b45309", data: idx100(lastN(DATA.extra.pesopereur, n)) },
   ]
   const eer = [
-    { name: "NEER 명목", color: "#6366f1", w: 2, data: lastN(DATA.eer.neer, n) },
-    { name: "REER 실질", color: "#a1795b", data: lastN(DATA.eer.reer, n) },
+    { name: T("NEER 명목", "NEER nominal"), color: "#6366f1", w: 2, data: lastN(DATA.eer.neer, n) },
+    { name: T("REER 실질", "REER real"), color: "#a1795b", data: lastN(DATA.eer.reer, n) },
   ]
 
 
@@ -236,44 +237,44 @@ export default function FxView() {
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">환율</h2>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">필리핀 페소 · 대달러·역내·조달통화·실효환율</span>
+            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("환율", "Exchange Rates")}</h2>
+            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("필리핀 페소 · 대달러·역내·조달통화·실효환율", "Philippine peso · vs. USD · regional · sourcing currencies · effective rates")}</span>
             <span className="ml-auto flex items-center gap-2">
               <span className="hidden text-[10.5px] text-gray-400 dark:text-gray-500 sm:inline">{labels[0]} → {labels[labels.length - 1]}</span>
-              <Segmented size="sm" value={win} onChange={setWin} options={WINDOWS.map((w) => ({ k: w.k, label: w.k }))} />
+              <Segmented size="sm" value={win} onChange={setWin} options={WINDOWS.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} />
             </span>
           </header>
           <div className="grid items-stretch gap-4 sm:grid-cols-2">
-            <ChartCard title="동남아 6개국 통화 약세도" unit="대미달러 · 창 시작=100 · 위=절하" labels={labels} series={region} tone="rose"
-              legend={<><Lg c="#4338ca" t="필리핀" b /><Lg c="#ef4444" t="인니" /><Lg c="#0ea5e9" t="말련" /><Lg c="#10b981" t="태국" /><Lg c="#f59e0b" t="베트남" /><Lg c="#a855f7" t="싱가포르" /></>}
-              meaning={<>대미달러 가치 지수화(시작=100) — <b className="text-gray-700 dark:text-gray-200">아래로 갈수록 약세</b></>}
-              ai={<>페소는 5년간 대미달러 약 18% 절하로 <b className="font-semibold text-rose-600 dark:text-rose-400">역내 최대 낙폭</b>. 페소로 결제하지 않는 한 경쟁국 대비 원가 방어력이 약함 → 헤지·현지조달 확대 검토.</>}
-              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 양자환율</>} />
-            <ChartCard title="₱/USD 기본 환율" unit="달러당 페소" labels={labels} series={fxusd} seriesUnit="" decimals={2} tone="rose"
-              legend={<Lg c="#6366f1" t="₱/USD 월 종가" b />}
-              meaning={<>조달·결제의 기준 환율. <b className="text-gray-700 dark:text-gray-200">오를수록 페소 약세</b>.</>}
-              ai={<>₱/USD가 <b className="font-semibold text-rose-600 dark:text-rose-400">60선을 넘어 사상 최저권</b>. 달러결제 부품·완제품 원가가 구조적 상방 → 판가 전가 여력·달러 헤지 비율 점검.</>}
-              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 (USD/PHP) · 일별 BSP fx_daily</>} />
-            <ChartCard title="원/페소 (한국 조달)" unit="페소당 원" labels={labels} series={won} seriesUnit="" decimals={2} tone="emerald"
-              legend={<Lg c="#0f766e" t="₩/₱ 월 종가" b />}
-              meaning={<>페소로 살 수 있는 원. <b className="text-gray-700 dark:text-gray-200">오를수록 페소가 원에 강세</b>(한국 조달 유리).</>}
-              ai={<>원/페소 25선으로 <b className="font-semibold text-emerald-600 dark:text-emerald-400">페소가 원에 상대적 강세</b> → 한국 조달분(비중 大) 원가는 상대적 완충. 원 약세 지속 시 한국 소싱 확대가 유리.</>}
-              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 (USD/KRW ÷ USD/PHP)</>} />
-            <ChartCard title="위안·루피의 대페소 가치" unit="창 시작=100" labels={labels} series={asia} tone="rose"
-              legend={<><Lg c="#dc2626" t="위안 CNY/₱" /><Lg c="#7c3aed" t="루피 INR/₱" /></>}
-              meaning={<>가전 조달통화(중국·인도)의 대페소 가치 — <b className="text-gray-700 dark:text-gray-200">오를수록 조달비 상승</b>.</>}
-              ai={<>위안이 대페소 <b className="font-semibold text-rose-600 dark:text-rose-400">+17% 강세</b> — 중국 조달 비중이 큰 만큼 원가 압박의 핵심. 대체 소싱(인도·인니)·결제통화 조정이 방어 1순위.</>}
-              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 · 대페소 환산, 창 시작=100</>} />
-            <ChartCard title="엔·유로의 대페소 가치" unit="창 시작=100" labels={labels} series={jpyeur} tone="amber"
-              legend={<><Lg c="#0284c7" t="엔 JPY/₱" /><Lg c="#b45309" t="유로 EUR/₱" /></>}
-              meaning={<>일본·유럽 조달통화의 대페소 가치 — <b className="text-gray-700 dark:text-gray-200">오를수록 조달비 상승</b>.</>}
-              ai={<>엔은 대페소 <b className="font-semibold text-emerald-600 dark:text-emerald-400">약세</b>로 일본 조달·부품 원가 우호적, 유로는 <b className="font-semibold text-amber-600 dark:text-amber-400">+18% 강세</b>로 유럽 조달 부담. 통화 국면에 맞춰 소싱 믹스 조정.</>}
-              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> Alpha Vantage 월별 · 대페소 환산, 창 시작=100</>} />
-            <ChartCard title="페소 실효환율 NEER·REER" unit="BIS · 2020=100" labels={labels} series={eer} tone="amber"
-              legend={<><Lg c="#6366f1" t="NEER 명목" b /><Lg c="#a1795b" t="REER 실질" /></>}
-              meaning={<><b className="text-gray-700 dark:text-gray-200">NEER</b>=명목 교역가중, <b className="text-gray-700 dark:text-gray-200">REER</b>=물가반영 실질</>}
-              ai={<>명목(NEER) 96.8→88.7 약세지만 실질(REER)은 98선 유지 — <b className="font-semibold text-amber-600 dark:text-amber-400">물가가 명목 약세를 상쇄</b>. 원가는 오르는데 실질 구매력은 정체 → 저가·필수형 우선, 프리미엄은 심리 반등 후.</>}
-              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">자료</b> BIS 실효환율 공식통계 (Broad, 64개국)</>} />
+            <ChartCard title={T("동남아 6개국 통화 약세도", "ASEAN 6-Currency Depreciation")} unit={T("대미달러 · 창 시작=100 · 위=절하", "vs. USD · window start=100 · up=depreciation")} labels={labels} series={region} tone="rose"
+              legend={<><Lg c="#4338ca" t={T("필리핀", "Philippines")} b /><Lg c="#ef4444" t={T("인니", "Indonesia")} /><Lg c="#0ea5e9" t={T("말련", "Malaysia")} /><Lg c="#10b981" t={T("태국", "Thailand")} /><Lg c="#f59e0b" t={T("베트남", "Vietnam")} /><Lg c="#a855f7" t={T("싱가포르", "Singapore")} /></>}
+              meaning={<>{T("대미달러 가치 지수화(시작=100) — ", "Value vs. USD, indexed (start=100) — ")}<b className="text-gray-700 dark:text-gray-200">{T("아래로 갈수록 약세", "lower = weaker")}</b></>}
+              ai={<>{T("페소는 5년간 대미달러 약 18% 절하로 ", "The peso has depreciated ~18% vs. USD over five years — ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("역내 최대 낙폭", "the region's largest drop")}</b>{T(". 페소로 결제하지 않는 한 경쟁국 대비 원가 방어력이 약함 → 헤지·현지조달 확대 검토.", ". Unless settled in pesos, cost resilience lags peers → consider expanding hedging and local sourcing.")}</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">{T("자료", "Source")}</b> {T("Alpha Vantage 월별 양자환율", "Alpha Vantage monthly bilateral rates")}</>} />
+            <ChartCard title={T("₱/USD 기본 환율", "₱/USD Benchmark Rate")} unit={T("달러당 페소", "pesos per dollar")} labels={labels} series={fxusd} seriesUnit="" decimals={2} tone="rose"
+              legend={<Lg c="#6366f1" t={T("₱/USD 월 종가", "₱/USD month-end")} b />}
+              meaning={<>{T("조달·결제의 기준 환율. ", "The reference rate for sourcing and settlement. ")}<b className="text-gray-700 dark:text-gray-200">{T("오를수록 페소 약세", "higher = weaker peso")}</b>.</>}
+              ai={<>{T("₱/USD가 ", "₱/USD has ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("60선을 넘어 사상 최저권", "broken past 60, near record lows")}</b>{T(". 달러결제 부품·완제품 원가가 구조적 상방 → 판가 전가 여력·달러 헤지 비율 점검.", ". Dollar-settled components and finished goods face structural cost upside → review pricing pass-through headroom and the dollar hedge ratio.")}</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">{T("자료", "Source")}</b> {T("Alpha Vantage 월별 (USD/PHP) · 일별 BSP fx_daily", "Alpha Vantage monthly (USD/PHP) · daily BSP fx_daily")}</>} />
+            <ChartCard title={T("원/페소 (한국 조달)", "KRW/Peso (Korea Sourcing)")} unit={T("페소당 원", "won per peso")} labels={labels} series={won} seriesUnit="" decimals={2} tone="emerald"
+              legend={<Lg c="#0f766e" t={T("₩/₱ 월 종가", "₩/₱ month-end")} b />}
+              meaning={<>{T("페소로 살 수 있는 원. ", "Won purchasable per peso. ")}<b className="text-gray-700 dark:text-gray-200">{T("오를수록 페소가 원에 강세", "higher = peso stronger vs. won")}</b>{T("(한국 조달 유리).", " (favorable for Korea sourcing).")}</>}
+              ai={<>{T("원/페소 25선으로 ", "At the 25 level, ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("페소가 원에 상대적 강세", "the peso is relatively strong vs. the won")}</b>{T(" → 한국 조달분(비중 大) 원가는 상대적 완충. 원 약세 지속 시 한국 소싱 확대가 유리.", " → a relative cushion for Korea-sourced costs (a large share). Sustained won weakness favors expanding Korea sourcing.")}</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">{T("자료", "Source")}</b> {T("Alpha Vantage 월별 (USD/KRW ÷ USD/PHP)", "Alpha Vantage monthly (USD/KRW ÷ USD/PHP)")}</>} />
+            <ChartCard title={T("위안·루피의 대페소 가치", "Yuan & Rupee vs. Peso")} unit={T("창 시작=100", "window start=100")} labels={labels} series={asia} tone="rose"
+              legend={<><Lg c="#dc2626" t={T("위안 CNY/₱", "Yuan CNY/₱")} /><Lg c="#7c3aed" t={T("루피 INR/₱", "Rupee INR/₱")} /></>}
+              meaning={<>{T("가전 조달통화(중국·인도)의 대페소 가치 — ", "Value of appliance-sourcing currencies (China, India) vs. peso — ")}<b className="text-gray-700 dark:text-gray-200">{T("오를수록 조달비 상승", "higher = higher sourcing cost")}</b>.</>}
+              ai={<>{T("위안이 대페소 ", "The yuan is ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("+17% 강세", "+17% stronger")}</b>{T(" — 중국 조달 비중이 큰 만큼 원가 압박의 핵심. 대체 소싱(인도·인니)·결제통화 조정이 방어 1순위.", " vs. the peso — with a large China sourcing share, this is the core cost pressure. Alternative sourcing (India, Indonesia) and settlement-currency adjustments are the top defense.")}</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">{T("자료", "Source")}</b> {T("Alpha Vantage 월별 · 대페소 환산, 창 시작=100", "Alpha Vantage monthly · converted vs. peso, window start=100")}</>} />
+            <ChartCard title={T("엔·유로의 대페소 가치", "Yen & Euro vs. Peso")} unit={T("창 시작=100", "window start=100")} labels={labels} series={jpyeur} tone="amber"
+              legend={<><Lg c="#0284c7" t={T("엔 JPY/₱", "Yen JPY/₱")} /><Lg c="#b45309" t={T("유로 EUR/₱", "Euro EUR/₱")} /></>}
+              meaning={<>{T("일본·유럽 조달통화의 대페소 가치 — ", "Value of Japan/Europe sourcing currencies vs. peso — ")}<b className="text-gray-700 dark:text-gray-200">{T("오를수록 조달비 상승", "higher = higher sourcing cost")}</b>.</>}
+              ai={<>{T("엔은 대페소 ", "The yen is ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("약세", "weaker")}</b>{T("로 일본 조달·부품 원가 우호적, 유로는 ", " vs. the peso, favorable for Japan sourcing and component costs, while the euro is ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("+18% 강세", "+18% stronger")}</b>{T("로 유럽 조달 부담. 통화 국면에 맞춰 소싱 믹스 조정.", ", a burden for Europe sourcing. Adjust the sourcing mix to the currency cycle.")}</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">{T("자료", "Source")}</b> {T("Alpha Vantage 월별 · 대페소 환산, 창 시작=100", "Alpha Vantage monthly · converted vs. peso, window start=100")}</>} />
+            <ChartCard title={T("페소 실효환율 NEER·REER", "Peso Effective Rates NEER·REER")} unit={T("BIS · 2020=100", "BIS · 2020=100")} labels={labels} series={eer} tone="amber"
+              legend={<><Lg c="#6366f1" t={T("NEER 명목", "NEER nominal")} b /><Lg c="#a1795b" t={T("REER 실질", "REER real")} /></>}
+              meaning={<><b className="text-gray-700 dark:text-gray-200">NEER</b>{T("=명목 교역가중, ", "=nominal trade-weighted, ")}<b className="text-gray-700 dark:text-gray-200">REER</b>{T("=물가반영 실질", "=inflation-adjusted real")}</>}
+              ai={<>{T("명목(NEER) 96.8→88.7 약세지만 실질(REER)은 98선 유지 — ", "Nominal (NEER) weakened 96.8→88.7 but real (REER) held near 98 — ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("물가가 명목 약세를 상쇄", "inflation offsets the nominal weakness")}</b>{T(". 원가는 오르는데 실질 구매력은 정체 → 저가·필수형 우선, 프리미엄은 심리 반등 후.", ". Costs rise while real purchasing power stalls → prioritize value/essential models; premium after sentiment recovers.")}</>}
+              src={<><b className="font-semibold text-gray-500 dark:text-gray-400">{T("자료", "Source")}</b> {T("BIS 실효환율 공식통계 (Broad, 64개국)", "BIS effective exchange rate official statistics (Broad, 64 countries)")}</>} />
           </div>
         </section>
 

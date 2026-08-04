@@ -4,6 +4,7 @@ import React from "react"
 import { publishedReports, type PubReport } from "@/lib/supabase"
 import DataVerification from "@/components/DataVerification"
 import { Segmented } from "@/components/Segmented"
+import { T } from "@/lib/i18n"
 
 /** 리포트 — 발간 리포트(발행 파이프라인이 채움) + 데이터 검증(구 자료 페이지)을 한 페이지에.
  *  · 리포트 카드 클릭 → PDF 원문(새 탭). 발행 = 자동 노출(reports/index.json 매니페스트).
@@ -51,23 +52,23 @@ function ReportCard({ r, i }: { r: PubReport; i: number }) {
         <h3 className="mt-1.5 line-clamp-2 text-[14.5px] font-bold leading-snug tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">{r.title}</h3>
         <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-gray-500 dark:text-gray-400">{r.summary}</p>
         {r.so && (
-          <p className="mt-2 line-clamp-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2 text-[11.5px] leading-relaxed text-gray-700 dark:text-gray-200"><b className="font-semibold text-indigo-600 dark:text-indigo-400">시사점</b> {r.so}</p>
+          <p className="mt-2 line-clamp-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2 text-[11.5px] leading-relaxed text-gray-700 dark:text-gray-200"><b className="font-semibold text-indigo-600 dark:text-indigo-400">{T("시사점", "Implication")}</b> {r.so}</p>
         )}
         <div className="mt-auto flex items-center gap-2 border-t border-gray-100 dark:border-gray-800 pt-2.5 text-[10.5px] text-gray-400 dark:text-gray-500">
           {r.sentAt ? (
             <span className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2 11 13" /><path d="M22 2 15 22l-4-9-9-4z" /></svg>
-              발송 {r.recipients ?? "—"}명 · {fmtDate(r.sentAt)}
+              {T("발송 ", "Sent to ")}{r.recipients ?? "—"}{T("명 · ", " · ")}{fmtDate(r.sentAt)}
             </span>
           ) : r.review ? (
             <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 font-semibold text-amber-700 dark:text-amber-300">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
-              검토용 · 미발송
+              {T("검토용 · 미발송", "Draft · Unsent")}
             </span>
           ) : (
-            <span>미발송</span>
+            <span>{T("미발송", "Unsent")}</span>
           )}
-          <span className="ml-auto inline-flex items-center gap-0.5 font-semibold text-indigo-600 dark:text-indigo-400">원문 열기<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7M7 7h10v10" /></svg></span>
+          <span className="ml-auto inline-flex items-center gap-0.5 font-semibold text-indigo-600 dark:text-indigo-400">{T("원문 열기", "Open")}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7M7 7h10v10" /></svg></span>
         </div>
       </div>
     </button>
@@ -86,13 +87,13 @@ export default function Page() {
       <header className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-3" style={{ animation: "fadeUp .5s ease both" }}>
         <div>
           <p className="text-[11px] font-bold uppercase tracking-[.12em] text-indigo-600 dark:text-indigo-400">Market Intelligence</p>
-          <h1 className="mt-0.5 text-[21.5px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">리포트</h1>
-          <p className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">발간 리포트 원문 · 데이터 출처 검증</p>
+          <h1 className="mt-0.5 text-[21.5px] font-extrabold tracking-tight text-gray-900 dark:text-gray-50">{T("리포트", "Reports")}</h1>
+          <p className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">{T("발간 리포트 원문 · 데이터 출처 검증", "Published report sources · Data source verification")}</p>
         </div>
         <Segmented
           value={tab}
           onChange={(k) => setTab(k as "reports" | "data")}
-          options={[{ k: "reports", label: "발간 리포트" }, { k: "data", label: "데이터 검증" }]}
+          options={[{ k: "reports", label: T("발간 리포트", "Published") }, { k: "data", label: T("데이터 검증", "Data Verification") }]}
         />
       </header>
 
@@ -102,8 +103,8 @@ export default function Page() {
           <div className="mb-4 flex items-start gap-2.5 rounded-2xl bg-indigo-50/70 p-4 ring-1 ring-inset ring-indigo-100 dark:bg-indigo-500/10 dark:ring-indigo-500/20">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-indigo-500 dark:text-indigo-400"><path d="M12 3l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 14.6 7 18.2l1.9-5.8L4 8.8h6.1L12 3z" /></svg>
             <div className="min-w-0">
-              <p className="text-[13px] font-bold text-indigo-700 dark:text-indigo-300">맞춤 리포트 — 준비 중</p>
-              <p className="mt-0.5 text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">리포트는 <b>부서별 · 제품별 · 기간별</b>로 커스터마이징해 발간할 예정입니다. 필요한 관점(경영기획·마케팅·상품기획 / 냉장고·세탁기·TV·에어컨 / 주간·월간·분기)에 맞춰 자동 구성됩니다.</p>
+              <p className="text-[13px] font-bold text-indigo-700 dark:text-indigo-300">{T("맞춤 리포트 — 준비 중", "Custom reports — coming soon")}</p>
+              <p className="mt-0.5 text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">{T("리포트는 ", "Reports will be ")}<b>{T("부서별 · 제품별 · 기간별", "by department · product · period")}</b>{T("로 커스터마이징해 발간할 예정입니다. 필요한 관점(경영기획·마케팅·상품기획 / 냉장고·세탁기·TV·에어컨 / 주간·월간·분기)에 맞춰 자동 구성됩니다.", " customized before publication, and auto-assembled to the required lens (Strategy · Marketing · Product Planning / REF · W/M · TV · RAC / weekly · monthly · quarterly).")}</p>
             </div>
           </div>
           {reports === null ? (
@@ -111,13 +112,13 @@ export default function Page() {
               {Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-[320px] animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}
             </div>
           ) : reports.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-20 text-center text-[12.5px] text-gray-400 dark:text-gray-500">아직 발간된 리포트가 없습니다 · <code className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[11px]">npm run publish-report</code> 로 발행</div>
+            <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-20 text-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("아직 발간된 리포트가 없습니다 · ", "No reports published yet · ")}<code className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-[11px]">npm run publish-report</code>{T(" 로 발행", " to publish")}</div>
           ) : (
             <>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {reports.map((r, i) => <ReportCard key={r.id} r={r} i={i} />)}
               </div>
-              <p className="mt-5 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">발행 파이프라인(<code className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-px text-[10px]">publish-report</code>)이 리포트를 자동 등록 · 클릭 시 PDF 원문 · 법인 이메일 동시 발송</p>
+              <p className="mt-5 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">{T("발행 파이프라인(", "The publishing pipeline (")}<code className="rounded bg-gray-100 dark:bg-gray-800 px-1 py-px text-[10px]">publish-report</code>{T(")이 리포트를 자동 등록 · 클릭 시 PDF 원문 · 법인 이메일 동시 발송", ") auto-registers reports · click for the source PDF · sent to corporate email at the same time")}</p>
             </>
           )}
         </div>

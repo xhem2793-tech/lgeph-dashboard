@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>axlgeph.report — 시스템 아키텍처</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net">
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0f1729; --sub:#5b6472; --line:#e6e9ef; --soft:#f6f7f9;
+    --indigo:#6366f1; --indigo-d:#4f46e5; --indigo-soft:#eef0ff;
+    --emerald:#059669; --emerald-soft:#e7f6f0;
+    --amber:#d97706; --amber-soft:#fdf1e3;
+    --sky:#0284c7; --sky-soft:#e6f4fb;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif;color:var(--ink);
+    -webkit-font-smoothing:antialiased;background:#eceef3}
+  body{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px}
+
+  /* 16:9 슬라이드 캔버스 */
+  .slide{width:1280px;height:720px;background:#fff;border-radius:22px;position:relative;overflow:hidden;
+    box-shadow:0 30px 80px -30px rgba(20,28,55,.35);padding:40px 48px 34px;display:flex;flex-direction:column}
+  .slide::before{content:"";position:absolute;inset:0;background:
+    radial-gradient(1100px 260px at 12% -8%, rgba(99,102,241,.08), transparent 60%),
+    radial-gradient(900px 240px at 100% 120%, rgba(2,132,199,.06), transparent 60%);pointer-events:none}
+
+  /* 헤더 */
+  header{display:flex;align-items:flex-end;justify-content:space-between;position:relative;z-index:1}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,var(--indigo),#8b5cf6);
+    display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:17px;
+    box-shadow:0 6px 16px -4px rgba(99,102,241,.5)}
+  h1{font-size:23px;font-weight:800;letter-spacing:-.02em}
+  .brand .dom{font-size:12.5px;color:var(--sub);font-weight:600;margin-top:1px}
+  .tag{font-size:12px;font-weight:700;color:var(--indigo-d);background:var(--indigo-soft);
+    padding:6px 12px;border-radius:999px}
+
+  .subtitle{position:relative;z-index:1;margin-top:6px;font-size:13px;color:var(--sub);font-weight:500}
+
+  /* 파이프라인 */
+  .flow{flex:1;display:flex;align-items:stretch;gap:0;position:relative;z-index:1;margin-top:20px}
+  .col{flex:1;display:flex;flex-direction:column}
+  .col .caphead{font-size:11px;font-weight:800;letter-spacing:.02em;text-transform:uppercase;
+    color:var(--sub);margin-bottom:9px;display:flex;align-items:center;gap:6px}
+  .caphead .n{width:17px;height:17px;border-radius:5px;background:var(--ink);color:#fff;font-size:10px;
+    display:inline-flex;align-items:center;justify-content:center;font-weight:800}
+  .arrow{width:44px;display:flex;align-items:center;justify-content:center;color:#c3c8d4;
+    font-size:22px;flex-shrink:0;padding-top:26px}
+
+  .card{border:1px solid var(--line);border-radius:14px;padding:14px 15px;background:#fff;flex:1;
+    display:flex;flex-direction:column;gap:8px;box-shadow:0 2px 10px -6px rgba(20,28,55,.12)}
+  .card.soft{background:var(--soft)}
+  .card .ct{font-size:13.5px;font-weight:800;letter-spacing:-.01em;display:flex;align-items:center;gap:7px}
+  .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+  .chip{font-size:11.5px;font-weight:600;color:#39414f;background:#fff;border:1px solid var(--line);
+    border-radius:8px;padding:6px 9px;line-height:1.35}
+  .card.soft .chip{background:#fff}
+  .muted{font-size:11px;color:var(--sub);font-weight:600;margin-top:auto;line-height:1.4}
+
+  .accent-indigo{border-color:#c9ccff;box-shadow:0 6px 20px -10px rgba(99,102,241,.5)}
+  .accent-indigo .ct{color:var(--indigo-d)}
+
+  /* 하단 스택 뱃지 */
+  .stackbar{position:relative;z-index:1;margin-top:16px;display:flex;align-items:center;gap:10px;
+    border-top:1px solid var(--line);padding-top:13px;flex-wrap:wrap}
+  .stackbar .lab{font-size:11px;font-weight:800;color:var(--sub);text-transform:uppercase;letter-spacing:.03em}
+  .st{font-size:11.5px;font-weight:700;padding:5px 11px;border-radius:999px;background:var(--soft);
+    border:1px solid var(--line);color:#39414f}
+  .foot{margin-left:auto;font-size:11px;color:#98a0af;font-weight:600}
+
+  /* 포지셔닝 메모 */
+  .note{position:absolute;right:48px;bottom:74px;z-index:2;max-width:250px;font-size:10.5px;color:var(--sub);
+    line-height:1.5;background:rgba(255,255,255,.75);backdrop-filter:blur(4px);padding:0}
+</style>
+</head>
+<body>
+  <div class="slide">
+    <header>
+      <div class="brand">
+        <div class="logo">a</div>
+        <div>
+          <h1>axlgeph.report — 시스템 아키텍처</h1>
+          <div class="dom">LGE-PH 시장 인텔리전스 플랫폼</div>
+        </div>
+      </div>
+      <div class="tag">상시 운영 중 · End-to-End</div>
+    </header>
+    <div class="subtitle">필리핀 거시경제·경쟁사·유통·마케팅 데이터를 매일 자동 수집 → 정제 → 시각화하는 의사결정 대시보드</div>
+
+    <div class="flow">
+      <!-- 소스 -->
+      <div class="col">
+        <div class="caphead">데이터 소스</div>
+        <div class="card soft">
+          <div class="ct"><span class="dot" style="background:var(--sky)"></span>External Sources</div>
+          <div class="chip">World Bank · BSP · PSA</div>
+          <div class="chip">경쟁사 7개 거래선 웹</div>
+          <div class="chip">DOE 에너지라벨 · 경쟁광고</div>
+          <div class="muted">거시지표 + 실시간 시장 데이터</div>
+        </div>
+      </div>
+
+      <div class="arrow">→</div>
+
+      <!-- 수집 -->
+      <div class="col">
+        <div class="caphead"><span class="n">4</span>수집</div>
+        <div class="card">
+          <div class="ct"><span class="dot" style="background:var(--amber)"></span>Collection</div>
+          <div class="chip"><b>Python</b> 스크래퍼</div>
+          <div class="chip"><b>GitHub Actions</b> 스케줄</div>
+          <div class="chip">정제·모델매칭·카테고리 분류</div>
+          <div class="muted">버전관리 · 실행로그 · 자동 재시도</div>
+        </div>
+      </div>
+
+      <div class="arrow">→</div>
+
+      <!-- 저장 -->
+      <div class="col">
+        <div class="caphead"><span class="n">3</span>저장</div>
+        <div class="card">
+          <div class="ct"><span class="dot" style="background:var(--emerald)"></span>Storage</div>
+          <div class="chip"><b>Supabase</b> (PostgreSQL)</div>
+          <div class="chip">REST API · 뷰(View) 집계</div>
+          <div class="chip">누적 7.5만건 · 일 4.6천건</div>
+          <div class="muted">DB 직접노출 없이 제한 뷰만 서빙</div>
+        </div>
+      </div>
+
+      <div class="arrow">→</div>
+
+      <!-- 제품 -->
+      <div class="col">
+        <div class="caphead"><span class="n">1</span><span class="n">2</span>제품 · 배포</div>
+        <div class="card accent-indigo">
+          <div class="ct"><span class="dot" style="background:var(--indigo)"></span>Product</div>
+          <div class="chip"><b>Next.js</b> (React/TS) · Tailwind</div>
+          <div class="chip"><b>Cloudflare Pages</b> 자동배포</div>
+          <div class="chip"><b>Cloudflare Access</b> 사내 인증</div>
+          <div class="muted">한/영 이중언어 · 다크모드 · 계정별 개인화</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stackbar">
+      <span class="lab">Stack</span>
+      <span class="st">Next.js / TypeScript</span>
+      <span class="st">Tailwind CSS</span>
+      <span class="st">Supabase · PostgreSQL</span>
+      <span class="st">Cloudflare Pages</span>
+      <span class="st">Cloudflare Access</span>
+      <span class="st">Python · GitHub Actions</span>
+      <span class="foot">서버리스 · git push = 배포 · 2026.08</span>
+    </div>
+  </div>
+</body>
+</html>

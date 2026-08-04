@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { macroMonthly, weatherRecent, typhoonAlerts, earthquakesRecent } from "@/lib/supabase"
 import type { WxDay, Typhoon, Quake } from "@/lib/supabase"
 import { ChartCard, Lg, fmtLabels, type SLine } from "@/components/EconChart"
+import { T } from "@/lib/i18n"
 
 /** 날씨·재난 — 냉방도일(CDD)·기온(가전 냉방 수요 선행) + 태풍·지진(공급망·매장·재난 후 교체수요 리스크).
  *  데이터: macro_indicators(cdd_monthly·temp_monthly)·weather(일별)·weather_alerts(태풍)·earthquakes(USGS 실측). */
@@ -22,33 +23,33 @@ function monSeries(d: Mon, key: string, years: number, name: string, color: stri
   return { series: [{ name, color, data: use.map((x) => s.values[x.i]), w: 2 }], labels: fmtLabels(use.map((x) => x.dt)) }
 }
 
-const SIG: Record<number, { t: string; c: string }> = {
-  0: { t: "해제", c: "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" },
-  1: { t: "신호 1", c: "bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300" },
-  2: { t: "신호 2", c: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" },
-  3: { t: "신호 3", c: "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300" },
-  4: { t: "신호 4", c: "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300" },
-  5: { t: "신호 5", c: "bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-200" },
+const SIG: Record<number, { t: string; e: string; c: string }> = {
+  0: { t: "해제", e: "Cleared", c: "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" },
+  1: { t: "신호 1", e: "Signal 1", c: "bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-300" },
+  2: { t: "신호 2", e: "Signal 2", c: "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" },
+  3: { t: "신호 3", e: "Signal 3", c: "bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-300" },
+  4: { t: "신호 4", e: "Signal 4", c: "bg-red-50 dark:bg-red-500/10 text-red-700 dark:text-red-300" },
+  5: { t: "신호 5", e: "Signal 5", c: "bg-red-100 dark:bg-red-500/20 text-red-800 dark:text-red-200" },
 }
 const relDays = (iso: string) => {
   const d = Math.round((Date.now() - new Date(iso).getTime()) / 86400000)
-  return d <= 0 ? "오늘" : d === 1 ? "어제" : d < 30 ? d + "일 전" : Math.round(d / 30) + "개월 전"
+  return d <= 0 ? T("오늘", "Today") : d === 1 ? T("어제", "Yesterday") : d < 30 ? d + T("일 전", "d ago") : Math.round(d / 30) + T("개월 전", "mo ago")
 }
 const magColor = (m: number) => (m >= 6 ? "#b91c1c" : m >= 5 ? "#ea580c" : m >= 4.5 ? "#d99400" : "#0f766e")
 // PAGASA 열지수(Heat Index) 위험 단계
 function heatRisk(hi: number | null): { t: string; c: string; bg: string } {
   if (hi == null) return { t: "—", c: "text-gray-500", bg: "bg-gray-100 dark:bg-gray-800" }
-  if (hi >= 52) return { t: "매우위험", c: "text-red-800 dark:text-red-300", bg: "bg-red-100 dark:bg-red-500/20" }
-  if (hi >= 42) return { t: "위험", c: "text-red-700 dark:text-red-400", bg: "bg-red-50 dark:bg-red-500/10" }
-  if (hi >= 33) return { t: "경보", c: "text-amber-700 dark:text-amber-300", bg: "bg-amber-50 dark:bg-amber-500/10" }
-  if (hi >= 27) return { t: "주의", c: "text-yellow-700 dark:text-yellow-300", bg: "bg-yellow-50 dark:bg-yellow-500/10" }
-  return { t: "안전", c: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-50 dark:bg-emerald-500/10" }
+  if (hi >= 52) return { t: T("매우위험", "Extreme danger"), c: "text-red-800 dark:text-red-300", bg: "bg-red-100 dark:bg-red-500/20" }
+  if (hi >= 42) return { t: T("위험", "Danger"), c: "text-red-700 dark:text-red-400", bg: "bg-red-50 dark:bg-red-500/10" }
+  if (hi >= 33) return { t: T("경보", "Alert"), c: "text-amber-700 dark:text-amber-300", bg: "bg-amber-50 dark:bg-amber-500/10" }
+  if (hi >= 27) return { t: T("주의", "Caution"), c: "text-yellow-700 dark:text-yellow-300", bg: "bg-yellow-50 dark:bg-yellow-500/10" }
+  return { t: T("안전", "Safe"), c: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-50 dark:bg-emerald-500/10" }
 }
 const MONF = ["1","2","3","4","5","6","7","8","9","10","11","12"]
 
 /** 월별 기후 평년 — 강수(막대) + 열지수(선). 우기(6~10월)·건기 패턴 */
 function ClimateChart({ mon }: { mon: { rain: number; hi: number }[] }) {
-  if (mon.length < 12) return <div className="flex h-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  if (mon.length < 12) return <div className="flex h-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
   const W = 420, H = 150, padB = 20, padT = 10, padL = 8
   const rMax = Math.max(...mon.map((m) => m.rain), 1)
   const hiMin = Math.min(...mon.map((m) => m.hi)), hiMax = Math.max(...mon.map((m) => m.hi))
@@ -66,7 +67,7 @@ function ClimateChart({ mon }: { mon: { rain: number; hi: number }[] }) {
       <polyline points={hpts} fill="none" stroke="#dc2626" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
       {mon.map((m, i) => <circle key={i} cx={padL + bw * i + bw / 2} cy={hy(m.hi)} r="1.8" fill="#dc2626" />)}
       {MONF.map((mm, i) => <text key={i} x={padL + bw * i + bw / 2} y={H - 6} textAnchor="middle" className="fill-gray-400" style={{ fontSize: 8 }}>{mm}</text>)}
-      <text x={padL + bw * 7.5} y={padT + 8} textAnchor="middle" className="fill-sky-500" style={{ fontSize: 8.5, fontWeight: 700 }}>우기</text>
+      <text x={padL + bw * 7.5} y={padT + 8} textAnchor="middle" className="fill-sky-500" style={{ fontSize: 8.5, fontWeight: 700 }}>{T("우기", "Wet")}</text>
     </svg>
   )
 }
@@ -74,7 +75,7 @@ function ClimateChart({ mon }: { mon: { rain: number; hi: number }[] }) {
 /** 일별 기온(최저~최고 밴드+평균선) + 강수 막대 — 최근 N일 */
 function DailyChart({ days }: { days: WxDay[] }) {
   const d = days.slice(-90).filter((x) => x.maxT != null && x.minT != null)
-  if (d.length < 3) return <div className="flex h-full items-center justify-center text-[12px] text-gray-400">데이터 부족</div>
+  if (d.length < 3) return <div className="flex h-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
   const W = 420, H = 150, padB = 18, padT = 8, padL = 6
   const temps = d.flatMap((x) => [x.maxT!, x.minT!])
   const tMin = Math.min(...temps) - 1, tMax = Math.max(...temps) + 1
@@ -99,7 +100,7 @@ function DailyChart({ days }: { days: WxDay[] }) {
 /** 최근 지진 규모 스트립 — 시간축 위 규모 점(색=규모) */
 function QuakeStrip({ quakes }: { quakes: Quake[] }) {
   const [hi, setHi] = useState<number | null>(null)
-  if (!quakes.length) return <div className="flex h-32 items-center justify-center text-[12px] text-gray-400">지진 데이터 없음</div>
+  if (!quakes.length) return <div className="flex h-32 items-center justify-center text-[12px] text-gray-400">{T("지진 데이터 없음", "No earthquake data")}</div>
   const pts = [...quakes].reverse() // 오래된→최신
   const t0 = new Date(pts[0].at).getTime(), t1 = new Date(pts[pts.length - 1].at).getTime()
   const span = Math.max(1, t1 - t0)
@@ -137,7 +138,7 @@ function Panel({ title, seg, children, meaning, src }: { title: string; seg?: st
         {seg && <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{seg}</span>}
       </div>
       <div className="mt-2 min-h-0 flex-1">{children}</div>
-      <p className="mt-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">의미</b> {meaning}</p>
+      <p className="mt-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {meaning}</p>
       <p className="mt-auto pt-2 text-[10px] text-gray-400 dark:text-gray-500">{src}</p>
     </div>
   )
@@ -158,13 +159,13 @@ export default function WeatherView() {
   }, [])
 
   const years = WIN.find((w) => w.k === win)!.n
-  const cdd = useMemo(() => monSeries(mon, "cdd_monthly", years, "냉방도일 CDD", C.rose), [mon, years])
-  const enso = useMemo(() => monSeries(mon, "enso_oni", Math.max(years, 3), "ONI 지수", C.blue), [mon, years])
+  const cdd = useMemo(() => monSeries(mon, "cdd_monthly", years, T("냉방도일 CDD", "Cooling Degree Days CDD"), C.rose), [mon, years])
+  const enso = useMemo(() => monSeries(mon, "enso_oni", Math.max(years, 3), T("ONI 지수", "ONI Index"), C.blue), [mon, years])
   const oni = mon.enso_oni?.values?.at(-1)
   const phase = oni == null ? null
-    : oni >= 0.5 ? { t: "엘니뇨", c: "text-rose-700 dark:text-rose-300", bg: "bg-rose-50 dark:bg-rose-500/10", dot: "bg-rose-500", d: "건조·고온 경향 — 냉방·냉장 수요↑, 가뭄·전력수급 리스크" }
-    : oni <= -0.5 ? { t: "라니냐", c: "text-sky-700 dark:text-sky-300", bg: "bg-sky-50 dark:bg-sky-500/10", dot: "bg-sky-500", d: "다우·태풍 경향 — 홍수·물류 차질, 제습·에어케어 수요" }
-    : { t: "중립(Neutral)", c: "text-gray-600 dark:text-gray-300", bg: "bg-gray-100 dark:bg-gray-800", dot: "bg-gray-400", d: "평년 수준 — 계절 패턴 우세" }
+    : oni >= 0.5 ? { t: T("엘니뇨", "El Niño"), c: "text-rose-700 dark:text-rose-300", bg: "bg-rose-50 dark:bg-rose-500/10", dot: "bg-rose-500", d: T("건조·고온 경향 — 냉방·냉장 수요↑, 가뭄·전력수급 리스크", "Dry, hot bias — cooling & refrigeration demand↑, drought & power-supply risk") }
+    : oni <= -0.5 ? { t: T("라니냐", "La Niña"), c: "text-sky-700 dark:text-sky-300", bg: "bg-sky-50 dark:bg-sky-500/10", dot: "bg-sky-500", d: T("다우·태풍 경향 — 홍수·물류 차질, 제습·에어케어 수요", "Wet, typhoon bias — floods & logistics disruption, dehumidifier & air-care demand") }
+    : { t: T("중립(Neutral)", "Neutral"), c: "text-gray-600 dark:text-gray-300", bg: "bg-gray-100 dark:bg-gray-800", dot: "bg-gray-400", d: T("평년 수준 — 계절 패턴 우세", "Near normal — seasonal patterns dominate") }
 
   const cddLatest = mon.cdd_monthly?.values?.at(-1)
   const activeTy = tys.filter((t) => t.maxSignal > 0)
@@ -178,7 +179,7 @@ export default function WeatherView() {
     for (const d of wx) { const m = Number(d.date.slice(5, 7)) - 1; if (m < 0 || m > 11) continue; if (d.rain != null) { acc[m].r += d.rain } acc[m].n++; if (d.heat != null) { acc[m].hi += d.heat; acc[m].hn++ } }
     return acc.map((a) => ({ rain: a.n ? a.r / a.n : 0, hi: a.hn ? a.hi / a.hn : 0 }))
   }, [wx])
-  const season = cur ? (Number(cur.date.slice(5, 7)) >= 6 && Number(cur.date.slice(5, 7)) <= 10 ? "우기(6~10월)" : "건기(11~5월)") : ""
+  const season = cur ? (Number(cur.date.slice(5, 7)) >= 6 && Number(cur.date.slice(5, 7)) <= 10 ? T("우기(6~10월)", "Wet season (Jun–Oct)") : T("건기(11~5월)", "Dry season (Nov–May)")) : ""
 
   return (
     <div className="flex flex-col gap-4">
@@ -197,12 +198,12 @@ export default function WeatherView() {
                 <span className="num text-[27px] font-extrabold leading-none text-gray-900 dark:text-gray-50">{cur?.maxT != null ? Math.round(cur.maxT) : "–"}°</span>
                 <span className="num text-[14.5px] font-semibold text-gray-400 dark:text-gray-500">/ {cur?.minT != null ? Math.round(cur.minT) : "–"}°</span>
               </div>
-              <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">필리핀(전국 관측) · {cur ? cur.date.slice(5).replace("-", "/") : "—"} · {season}</div>
+              <div className="mt-0.5 text-[11px] text-gray-500 dark:text-gray-400">{T("필리핀(전국 관측)", "Philippines (nationwide obs.)")} · {cur ? cur.date.slice(5).replace("-", "/") : "—"} · {season}</div>
             </div>
           </div>
           {/* 체감(열지수) */}
           <div className="flex flex-col">
-            <span className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">체감(열지수)</span>
+            <span className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("체감(열지수)", "Feels-like (Heat Index)")}</span>
             <span className="flex items-center gap-1.5">
               <span className="num text-[19px] font-bold text-gray-900 dark:text-gray-50">{cur?.heat != null ? cur.heat.toFixed(1) + "°" : "–"}</span>
               <span className={"rounded px-1.5 py-0.5 text-[10px] font-bold " + hr.bg + " " + hr.c}>{hr.t}</span>
@@ -211,11 +212,11 @@ export default function WeatherView() {
           {/* 타일 */}
           <div className="flex flex-wrap items-center gap-2">
             {[
-              { l: "강수", v: cur?.rain != null ? cur.rain.toFixed(0) + "mm" : "–", c: "text-sky-700 dark:text-sky-300" },
+              { l: T("강수", "Rainfall"), v: cur?.rain != null ? cur.rain.toFixed(0) + "mm" : "–", c: "text-sky-700 dark:text-sky-300" },
               { l: "ENSO", v: phase ? phase.t : "–", c: phase ? phase.c.split(" ")[0] : "text-gray-500" },
-              { l: "냉방도일", v: cddLatest != null ? Math.round(cddLatest) + "" : "–", c: "text-rose-700 dark:text-rose-300" },
-              { l: "활성태풍", v: activeTy.length + "건", c: "text-amber-700 dark:text-amber-300" },
-              { l: "지진 M4+", v: eqs.length + "건", c: "text-orange-700 dark:text-orange-300" },
+              { l: T("냉방도일", "Cooling degree days"), v: cddLatest != null ? Math.round(cddLatest) + "" : "–", c: "text-rose-700 dark:text-rose-300" },
+              { l: T("활성태풍", "Active typhoons"), v: activeTy.length + T("건", ""), c: "text-amber-700 dark:text-amber-300" },
+              { l: T("지진 M4+", "Quakes M4+"), v: eqs.length + T("건", ""), c: "text-orange-700 dark:text-orange-300" },
             ].map((t) => (
               <div key={t.l} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white/70 dark:bg-gray-900/70 px-2.5 py-1.5 text-center">
                 <div className="text-[9.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{t.l}</div>
@@ -225,7 +226,7 @@ export default function WeatherView() {
           </div>
           <div className="ml-auto hidden shrink-0 items-center rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)] sm:flex">
             {WIN.map((w) => (
-              <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-all duration-200 active:scale-[.93] " + (win === w.k ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{w.k}</button>
+              <button key={w.k} type="button" onClick={() => setWin(w.k)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold transition-all duration-200 active:scale-[.93] " + (win === w.k ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{w.k === "전체" ? T("전체", "All") : w.k}</button>
             ))}
           </div>
         </div>
@@ -233,23 +234,23 @@ export default function WeatherView() {
 
       <div className="grid items-stretch gap-4 lg:grid-cols-2">
         {/* 일별 기온·강수 */}
-        <Panel title="일별 기온·강수 (최근 90일)" seg="관측"
-          meaning={<>일 최저~최고 기온(음영)·평균(선) + 강수(파랑 막대) — 폭염·우기 강도 추적</>}
-          src="PAGASA 일별 관측(자체 수집)">
-          <div className="h-[150px] w-full">{wx.length ? <DailyChart days={wx} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}</div>
+        <Panel title={T("일별 기온·강수 (최근 90일)", "Daily Temperature & Rainfall (last 90 days)")} seg={T("관측", "Observed")}
+          meaning={<>{T("일 최저~최고 기온(음영)·평균(선) + 강수(파랑 막대) — 폭염·우기 강도 추적", "Daily min–max temperature (band) & mean (line) + rainfall (blue bars) — tracks heatwave and wet-season intensity")}</>}
+          src={T("PAGASA 일별 관측(자체 수집)", "PAGASA daily observations (in-house collection)")}>
+          <div className="h-[150px] w-full">{wx.length ? <DailyChart days={wx} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">{T("불러오는 중", "Loading")}</div>}</div>
         </Panel>
 
         {/* 월별 기후 평년 — 우기/건기 */}
-        <Panel title="월별 기후 평년 (우기·건기)" seg="기후"
-          meaning={<>월별 평균 강수(파랑)·열지수(빨강) — <b className="text-sky-600 dark:text-sky-400">우기 6~10월</b> 다우, <b className="text-rose-600 dark:text-rose-400">건기 3~5월</b> 폭염</>}
-          src="PAGASA 관측 월별 집계">
-          <div className="h-[150px] w-full">{monthly.some((m) => m.hi > 0) ? <ClimateChart mon={monthly} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}</div>
+        <Panel title={T("월별 기후 평년 (우기·건기)", "Monthly Climate Normals (wet · dry)")} seg={T("기후", "Climate")}
+          meaning={<>{T("월별 평균 강수(파랑)·열지수(빨강) — ", "Monthly mean rainfall (blue) & heat index (red) — ")}<b className="text-sky-600 dark:text-sky-400">{T("우기 6~10월", "Wet season Jun–Oct")}</b>{T(" 다우, ", " heavy rain, ")}<b className="text-rose-600 dark:text-rose-400">{T("건기 3~5월", "Dry season Mar–May")}</b>{T(" 폭염", " heatwave")}</>}
+          src={T("PAGASA 관측 월별 집계", "PAGASA monthly aggregates")}>
+          <div className="h-[150px] w-full">{monthly.some((m) => m.hi > 0) ? <ClimateChart mon={monthly} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">{T("불러오는 중", "Loading")}</div>}</div>
         </Panel>
 
         {/* ENSO 현황 — 엘니뇨/라니냐 */}
         <Panel
-          title="ENSO — 엘니뇨 · 라니냐" seg="기후"
-          meaning={<>ONI(해수면온도 편차) — <b className="text-rose-600 dark:text-rose-400">+0.5↑ 엘니뇨</b>·<b className="text-sky-600 dark:text-sky-400">−0.5↓ 라니냐</b>·중립. 필리핀 강수·기온 계절성의 최대 변수</>}
+          title={T("ENSO — 엘니뇨 · 라니냐", "ENSO — El Niño · La Niña")} seg={T("기후", "Climate")}
+          meaning={<>{T("ONI(해수면온도 편차) — ", "ONI (sea-surface temp anomaly) — ")}<b className="text-rose-600 dark:text-rose-400">{T("+0.5↑ 엘니뇨", "+0.5↑ El Niño")}</b>·<b className="text-sky-600 dark:text-sky-400">{T("−0.5↓ 라니냐", "−0.5↓ La Niña")}</b>{T("·중립. 필리핀 강수·기온 계절성의 최대 변수", " · Neutral. The primary driver of PH rainfall and temperature seasonality")}</>}
           src="NOAA CPC Oceanic Niño Index(ONI)"
         >
           {phase ? (
@@ -259,56 +260,56 @@ export default function WeatherView() {
                   <span className={"h-2.5 w-2.5 rounded-full " + phase.dot} />{phase.t}
                 </span>
                 <span className="flex flex-col leading-tight">
-                  <span className="text-[11px] text-gray-500 dark:text-gray-400">현재 ONI</span>
+                  <span className="text-[11px] text-gray-500 dark:text-gray-400">{T("현재 ONI", "Current ONI")}</span>
                   <span className={"num text-[19px] font-bold " + phase.c}>{oni! > 0 ? "+" : ""}{oni!.toFixed(2)}</span>
                 </span>
               </div>
-              <p className="mt-2.5 text-[12px] leading-relaxed text-gray-700 dark:text-gray-200"><b className="font-semibold">가전 함의</b> {phase.d}</p>
+              <p className="mt-2.5 text-[12px] leading-relaxed text-gray-700 dark:text-gray-200"><b className="font-semibold">{T("가전 함의", "Appliance implication")}</b> {phase.d}</p>
               <div className="mt-2 flex gap-1 text-[9.5px] font-semibold">
-                <span className="rounded bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 text-rose-700 dark:text-rose-300">엘니뇨 ≥+0.5</span>
-                <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-gray-500 dark:text-gray-400">중립</span>
-                <span className="rounded bg-sky-50 dark:bg-sky-500/10 px-1.5 py-0.5 text-sky-700 dark:text-sky-300">라니냐 ≤−0.5</span>
+                <span className="rounded bg-rose-50 dark:bg-rose-500/10 px-1.5 py-0.5 text-rose-700 dark:text-rose-300">{T("엘니뇨 ≥+0.5", "El Niño ≥+0.5")}</span>
+                <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 text-gray-500 dark:text-gray-400">{T("중립", "Neutral")}</span>
+                <span className="rounded bg-sky-50 dark:bg-sky-500/10 px-1.5 py-0.5 text-sky-700 dark:text-sky-300">{T("라니냐 ≤−0.5", "La Niña ≤−0.5")}</span>
               </div>
             </div>
-          ) : <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}
+          ) : <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">{T("불러오는 중", "Loading")}</div>}
         </Panel>
 
         {/* ONI 추이 */}
         {enso.series.length ? (
           <ChartCard
-            title="ONI 지수 추이" seg="기후" unit="편차(℃) · 계절" decimals={2}
-            legend={<Lg c={C.blue} t="ONI(Niño 3.4 편차)" b />}
+            title={T("ONI 지수 추이", "ONI Index Trend")} seg={T("기후", "Climate")} unit={T("편차(℃) · 계절", "Anomaly (°C) · seasonal")} decimals={2}
+            legend={<Lg c={C.blue} t={T("ONI(Niño 3.4 편차)", "ONI (Niño 3.4 anomaly)")} b />}
             series={enso.series} labels={enso.labels}
-            meaning={<>3개월 이동 해수면온도 편차 — <b className="text-gray-700 dark:text-gray-200">추세 전환</b>(라니냐→엘니뇨 등)이 계절 리스크 신호</>}
-            ai={<>엘니뇨 국면은 <b className="font-semibold text-rose-600 dark:text-rose-400">고온·건조로 냉방(에어컨)·냉장 수요를 밀어올리나</b> 가뭄·전력수급 부담을, 라니냐는 <b className="font-semibold text-sky-600 dark:text-sky-400">다우·태풍으로 홍수·물류 차질과 제습·에어케어 수요</b>를 키움. 전환 시점을 성수기 재고·프로모 계획에 선반영.</>}
+            meaning={<>{T("3개월 이동 해수면온도 편차 — ", "3-month running sea-surface temp anomaly — ")}<b className="text-gray-700 dark:text-gray-200">{T("추세 전환", "Trend reversals")}</b>{T("(라니냐→엘니뇨 등)이 계절 리스크 신호", " (e.g. La Niña→El Niño) signal seasonal risk")}</>}
+            ai={<>{T("엘니뇨 국면은 ", "El Niño phases ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("고온·건조로 냉방(에어컨)·냉장 수요를 밀어올리나", "lift cooling (AC) and refrigeration demand through heat and dryness")}</b>{T(" 가뭄·전력수급 부담을, 라니냐는 ", " while straining drought and power supply; La Niña ")}<b className="font-semibold text-sky-600 dark:text-sky-400">{T("다우·태풍으로 홍수·물류 차질과 제습·에어케어 수요", "drives floods, logistics disruption, and dehumidifier/air-care demand via heavy rain and typhoons")}</b>{T("를 키움. 전환 시점을 성수기 재고·프로모 계획에 선반영.", ". Front-load the transition timing into peak-season inventory and promo planning.")}</>}
             src="NOAA CPC ONI(Niño 3.4)"
           />
-        ) : <Panel title="ONI 지수 추이" meaning="데이터 로딩" src="NOAA"><div className="flex h-40 items-center justify-center text-[12px] text-gray-400">불러오는 중</div></Panel>}
+        ) : <Panel title={T("ONI 지수 추이", "ONI Index Trend")} meaning={T("데이터 로딩", "Loading data")} src="NOAA"><div className="flex h-40 items-center justify-center text-[12px] text-gray-400">{T("불러오는 중", "Loading")}</div></Panel>}
 
         {/* CDD */}
         {cdd.series.length ? (
           <ChartCard
-            title="냉방도일 (CDD)" seg="CE" unit="냉방도일 · 월" decimals={0}
-            legend={<Lg c={C.rose} t="냉방도일 CDD" b />}
+            title={T("냉방도일 (CDD)", "Cooling Degree Days (CDD)")} seg="CE" unit={T("냉방도일 · 월", "Cooling degree days · monthly")} decimals={0}
+            legend={<Lg c={C.rose} t={T("냉방도일 CDD", "Cooling Degree Days CDD")} b />}
             series={cdd.series} labels={cdd.labels}
-            meaning={<>기준 24℃ 초과 누적 — <b className="text-gray-700 dark:text-gray-200">높을수록 냉방(에어컨·냉장) 상시가동 수요↑</b></>}
-            ai={<>CDD는 에어컨·냉장고 가동시간과 직접 연동되는 <b className="font-semibold">냉방 수요 선행지표</b>. 성수기(4~6월) 피크 구간의 전년 대비 상승폭이 클수록 <b className="font-semibold text-rose-600 dark:text-rose-400">교체·신규·대형화 수요</b> 여지. 폭염 국면엔 고효율 인버터 소구가 유효.</>}
-            src="PSA/PAGASA 관측 기온 기반 산출(기준 24℃)"
+            meaning={<>{T("기준 24℃ 초과 누적 — ", "Cumulative degrees above the 24℃ base — ")}<b className="text-gray-700 dark:text-gray-200">{T("높을수록 냉방(에어컨·냉장) 상시가동 수요↑", "higher values mean stronger always-on cooling (AC/refrigeration) demand↑")}</b></>}
+            ai={<>{T("CDD는 에어컨·냉장고 가동시간과 직접 연동되는 ", "CDD ties directly to AC and refrigerator runtime as a ")}<b className="font-semibold">{T("냉방 수요 선행지표", "leading indicator of cooling demand")}</b>{T(". 성수기(4~6월) 피크 구간의 전년 대비 상승폭이 클수록 ", ". The larger the YoY rise across the peak window (Apr–Jun), ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("교체·신규·대형화 수요", "the greater the room for replacement, new-purchase, and upsizing demand")}</b>{T(" 여지. 폭염 국면엔 고효율 인버터 소구가 유효.", ". In heatwave phases, high-efficiency inverter messaging is effective.")}</>}
+            src={T("PSA/PAGASA 관측 기온 기반 산출(기준 24℃)", "Derived from PSA/PAGASA observed temperatures (24℃ base)")}
           />
-        ) : <Panel title="냉방도일 (CDD)" meaning="데이터 로딩" src="PAGASA"><div className="flex h-40 items-center justify-center text-[12px] text-gray-400">불러오는 중</div></Panel>}
+        ) : <Panel title={T("냉방도일 (CDD)", "Cooling Degree Days (CDD)")} meaning={T("데이터 로딩", "Loading data")} src="PAGASA"><div className="flex h-40 items-center justify-center text-[12px] text-gray-400">{T("불러오는 중", "Loading")}</div></Panel>}
 
         {/* 태풍 */}
         <Panel
-          title="태풍 경보 이력" seg="전사"
-          meaning={<>PAGASA 태풍 신호(TCWS) — <b className="text-gray-700 dark:text-gray-200">물류·매장 방문 차질</b> 및 재난 후 <b className="text-gray-700 dark:text-gray-200">가전 침수 교체수요</b> 신호</>}
-          src="PAGASA 태풍 공보(자체 수집)"
+          title={T("태풍 경보 이력", "Typhoon Alert History")} seg={T("전사", "Company-wide")}
+          meaning={<>{T("PAGASA 태풍 신호(TCWS) — ", "PAGASA tropical cyclone wind signals (TCWS) — ")}<b className="text-gray-700 dark:text-gray-200">{T("물류·매장 방문 차질", "logistics and store-footfall disruption")}</b>{T(" 및 재난 후 ", " and post-disaster ")}<b className="text-gray-700 dark:text-gray-200">{T("가전 침수 교체수요", "flood-driven appliance replacement demand")}</b>{T(" 신호", " signals")}</>}
+          src={T("PAGASA 태풍 공보(자체 수집)", "PAGASA typhoon bulletins (in-house collection)")}
         >
           <div className="flex flex-col divide-y divide-gray-100 dark:divide-gray-800/60">
-            {tys.length === 0 ? <div className="flex h-32 items-center justify-center text-[12px] text-gray-400">최근 태풍 없음</div> : tys.slice(0, 6).map((t) => {
+            {tys.length === 0 ? <div className="flex h-32 items-center justify-center text-[12px] text-gray-400">{T("최근 태풍 없음", "No recent typhoons")}</div> : tys.slice(0, 6).map((t) => {
               const sig = SIG[t.maxSignal] ?? SIG[0]
               return (
                 <div key={t.name + t.asOf} className="flex items-start gap-2.5 py-2">
-                  <span className={"mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[9.5px] font-bold " + sig.c}>{sig.t}</span>
+                  <span className={"mt-0.5 shrink-0 rounded px-1.5 py-0.5 text-[9.5px] font-bold " + sig.c}>{T(sig.t, sig.e)}</span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-baseline gap-1.5">
                       <b className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{t.name}</b>
@@ -326,17 +327,17 @@ export default function WeatherView() {
 
         {/* 지진 */}
         <Panel
-          title="최근 지진 활동 (M4.0+)" seg="전사"
-          meaning={<>USGS 실측 필리핀 지진 — <b className="text-gray-700 dark:text-gray-200">공급망·매장·설비 리스크</b>, 강진 후 <b className="text-gray-700 dark:text-gray-200">복구 가전 수요</b> 신호</>}
-          src="USGS FDSN(실시간) · 최근 1년 M4.0+"
+          title={T("최근 지진 활동 (M4.0+)", "Recent Seismic Activity (M4.0+)")} seg={T("전사", "Company-wide")}
+          meaning={<>{T("USGS 실측 필리핀 지진 — ", "USGS-measured Philippine earthquakes — ")}<b className="text-gray-700 dark:text-gray-200">{T("공급망·매장·설비 리스크", "supply-chain, store, and facility risk")}</b>{T(", 강진 후 ", "; after major quakes, ")}<b className="text-gray-700 dark:text-gray-200">{T("복구 가전 수요", "recovery appliance demand")}</b>{T(" 신호", " signals")}</>}
+          src={T("USGS FDSN(실시간) · 최근 1년 M4.0+", "USGS FDSN (real-time) · last 12 months M4.0+")}
         >
           <div className="flex h-full flex-col">
             <div className="mb-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-gray-500 dark:text-gray-400">
-              <span>1년 <b className="text-gray-800 dark:text-gray-100">{eqs.length}</b>건</span>
-              <span>M5+ <b className="text-orange-600 dark:text-orange-400">{bigQuakes.length}</b>건</span>
-              {maxQuake && <span>최대 <b className="text-red-600 dark:text-red-400">M{maxQuake.toFixed(1)}</b></span>}
+              <span>{T("1년 ", "1yr ")}<b className="text-gray-800 dark:text-gray-100">{eqs.length}</b>{T("건", "")}</span>
+              <span>M5+ <b className="text-orange-600 dark:text-orange-400">{bigQuakes.length}</b>{T("건", "")}</span>
+              {maxQuake && <span>{T("최대 ", "Max ")}<b className="text-red-600 dark:text-red-400">M{maxQuake.toFixed(1)}</b></span>}
             </div>
-            <div className="h-[150px] w-full">{eqs.length ? <QuakeStrip quakes={eqs} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">불러오는 중</div>}</div>
+            <div className="h-[150px] w-full">{eqs.length ? <QuakeStrip quakes={eqs} /> : <div className="flex h-full items-center justify-center text-[12px] text-gray-400">{T("불러오는 중", "Loading")}</div>}</div>
             <div className="mt-1.5 flex flex-col gap-1 border-t border-gray-100 dark:border-gray-800 pt-1.5">
               {eqs.slice(0, 3).map((q, i) => (
                 <div key={i} className="flex items-center gap-2 text-[11px]">
@@ -351,7 +352,7 @@ export default function WeatherView() {
 
       </div>
 
-      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">냉방도일(CDD)·기온=PAGASA 관측 기반 · 태풍=PAGASA 공보 · 지진=USGS FDSN 실시간(필리핀 4~21°N/116~128°E, M4.0+) · 화산 경보(PHIVOLCS)는 공식 API 부재로 추후 반영</p>
+      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">{T("냉방도일(CDD)·기온=PAGASA 관측 기반 · 태풍=PAGASA 공보 · 지진=USGS FDSN 실시간(필리핀 4~21°N/116~128°E, M4.0+) · 화산 경보(PHIVOLCS)는 공식 API 부재로 추후 반영", "Cooling degree days (CDD) & temperature = PAGASA observations · typhoons = PAGASA bulletins · earthquakes = USGS FDSN real-time (Philippines 4–21°N / 116–128°E, M4.0+) · volcano alerts (PHIVOLCS) pending due to the lack of an official API")}</p>
     </div>
   )
 }

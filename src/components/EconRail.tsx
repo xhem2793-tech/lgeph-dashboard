@@ -3,7 +3,7 @@
 import React from "react"
 import { homeBand, econSeries } from "@/lib/supabase"
 import { ProChart, CountUp } from "@/components/ProChartCore"
-import { useLang } from "@/lib/i18n"
+import { T, useLang } from "@/lib/i18n"
 
 /** 주요지표 레일 — 월별·분기 지표.
  *
@@ -27,7 +27,7 @@ const IND = "#6366f1"
 function periodLabel(iso: string, freq: string) {
   const y = iso.slice(2, 4)
   const m = Number(iso.slice(5, 7))
-  return freq === "분기" ? `${Math.floor((m - 1) / 3) + 1}Q${y}` : `${m}월`
+  return freq === "분기" ? `${Math.floor((m - 1) / 3) + 1}Q${y}` : `${m}${T("월", "")}`
 }
 
 /** 송금 원자료는 절대값(달러) — 10억 단위로 읽는다 */
@@ -251,7 +251,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
           <span className="num text-[19px] font-semibold text-gray-900 dark:text-gray-50">
             <CountUp value={Number(c.value)} prefix={c.prefix} suffix={c.suffix} decimals={dec} />
           </span>
-          <span className="text-[10px] text-gray-400/90 dark:text-gray-500/90">{c.asOf?.slice(0, 7).replace("-", ".")} 기준</span>
+          <span className="text-[10px] text-gray-400/90 dark:text-gray-500/90">{c.asOf?.slice(0, 7).replace("-", ".")} {T("기준", "as of")}</span>
         </p>
 
         {/* 변동률 라벨은 상세에서 본다 — 목록 배지에는 숫자만 */}
@@ -283,7 +283,7 @@ function Detail({ c, s }: { c: Card; s: Series }) {
         />
 
         <div className="mt-2 border-t border-gray-200 dark:border-gray-800 pt-2">
-          <span className="text-[10px] text-gray-400 dark:text-gray-500">출처 {c.freq === "분기" ? "BSP·PSA 분기" : "PSA·BSP 월별"} · {c.deltaLabel}</span>
+          <span className="text-[10px] text-gray-400 dark:text-gray-500">{T("출처", "Source")} {c.freq === "분기" ? T("BSP·PSA 분기", "BSP·PSA quarterly") : T("PSA·BSP 월별", "PSA·BSP monthly")} · {c.deltaLabel}</span>
         </div>
       </div>
     </div>

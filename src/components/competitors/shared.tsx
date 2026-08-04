@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { T } from "@/lib/i18n"
 
 // 경쟁사 뷰 공용 프리미티브 — 포맷·라벨·DOE정규화·진열 세그먼트 + 드롭다운 컴포넌트.
 // 여러 뷰(BoardView·PositioningMatrix·DealsView·AnomalyView·MoversView)에서 공유.
@@ -55,7 +56,7 @@ export const doeNorm = (doeCode: string, s: string) => { const n = pmNorm(s); re
 export const pmShopLabel = (s: string) => (s === "SM Appliance" ? "SM" : s === "Western Appliances" ? "Western" : s === "Robinsons Appliances" ? "Robinsons" : s)
 export const pmStarCls = (s: number | null) => (s == null ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500" : s >= 4 ? "bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300" : s >= 2 ? "bg-amber-50 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300" : "bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300")
 // 가격대(tier) 라벨·색 — 엔트리=LOW(초록) · 미드=MED(파랑) · 프리미엄(주황)
-export const pmTierLabel = (t: string) => (t === "프리미엄" ? "프리미엄" : t === "미드" ? "MED" : "LOW")
+export const pmTierLabel = (t: string) => (t === "프리미엄" ? T("프리미엄", "Premium") : t === "미드" ? "MED" : "LOW")
 // 카드 왼쪽 세로 스트립 색 — 가격대 구분(배지 대신)
 export const pmTierBar = (t: string) => (t === "프리미엄" ? "bg-amber-400 dark:bg-amber-500" : t === "미드" ? "bg-sky-400 dark:bg-sky-500" : "bg-emerald-400 dark:bg-emerald-500")
 
@@ -77,8 +78,8 @@ export function PmDrop({ label, sel, options, onSelect }: { label: string; sel: 
 }
 
 /** 복수선택 드롭다운 — PmDrop과 동일 톤 + 체크박스. sel=[] 이면 '전체'. 브랜드 등 다중 비교용. */
-export function PmMultiDrop({ label, sel, options, onToggle, onClear, allLabel = "전체" }: { label: string; sel: string[]; options: { k: string; t: string }[]; onToggle: (k: string) => void; onClear: () => void; allLabel?: string }) {
-  const cur = sel.length === 0 ? allLabel : sel.length === 1 ? (options.find((o) => o.k === sel[0])?.t ?? sel[0]) : sel.length + "개 선택"
+export function PmMultiDrop({ label, sel, options, onToggle, onClear, allLabel = T("전체", "All") }: { label: string; sel: string[]; options: { k: string; t: string }[]; onToggle: (k: string) => void; onClear: () => void; allLabel?: string }) {
+  const cur = sel.length === 0 ? allLabel : sel.length === 1 ? (options.find((o) => o.k === sel[0])?.t ?? sel[0]) : sel.length + T("개 선택", " selected")
   return (
     <div className="group relative shrink-0">
       <button type="button" className="flex w-full items-center gap-1 whitespace-nowrap rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-left transition-colors group-hover:border-indigo-300 dark:group-hover:border-indigo-500/40">
@@ -110,7 +111,7 @@ export function ListSearch({ value, onChange, placeholder, className = "" }: {
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 transition-colors duration-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400"><circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" /></svg>
       <input value={value} onChange={(e) => onChange(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} placeholder={placeholder} aria-label={placeholder}
         className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-8 text-[13px] outline-none transition-[background,border,box-shadow] duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 hover:bg-white dark:hover:border-gray-700 dark:hover:bg-gray-900 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)] dark:focus:border-indigo-500/50 dark:focus:bg-gray-950" />
-      {value && <button type="button" onClick={() => onChange("")} aria-label="검색어 지우기" className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+      {value && <button type="button" onClick={() => onChange("")} aria-label={T("검색어 지우기", "Clear search")} className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:text-gray-500 dark:hover:bg-gray-800 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
     </div>
   )
 }

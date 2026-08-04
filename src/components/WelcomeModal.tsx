@@ -1,18 +1,19 @@
 "use client"
 
 import React from "react"
+import { T } from "@/lib/i18n"
 
 /** 웰컴 팝업 — AX 필리핀법인 마켓 인텔리전스 대시보드 베타 안내.
  *  하루 1회 노출(localStorage에 마지막 노출 날짜 저장). 닫으면 그날은 다시 안 뜨고, 상단 전구 아이콘으로 언제든 재열기. */
 const SEEN_KEY = "ax_welcome_seen_date"
 const todayStr = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") }
 
-const BUILDING: { icon: React.ReactNode; t: string; d: string }[] = [
-  { t: "국가동향", d: "필리핀 뉴스·규제·정책 + 인사이트 리포트 자동 수집·개인별 맞춤 발송", icon: <path d="M4 6h16M4 12h16M4 18h10" /> },
-  { t: "시장동향", d: "경쟁사 가격·프로모·신제품/EOL 실시간 관측", icon: <><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 4-5" /></> },
-  { t: "주요지표", d: "거시·금융·가전 선행지표 200+ (World Bank·PSA·BSP)", icon: <><rect x="3" y="10" width="4" height="10" rx="1" /><rect x="10" y="4" width="4" height="16" rx="1" /><rect x="17" y="13" width="4" height="7" rx="1" /></> },
-  { t: "마케팅·경쟁광고", d: "경쟁사 광고·캠페인 트래킹, 종료·신규 감지", icon: <><path d="M3 11l18-5v12L3 14z" /><path d="M11.6 16.8a3 3 0 0 1-5.8-1.1" /></> },
-  { t: "주요일정·리포트", d: "경제·정책 캘린더 + 부서·제품·기간별 맞춤 리포트(예정)", icon: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></> },
+const BUILDING: { icon: React.ReactNode; t: string; tEn: string; d: string; dEn: string }[] = [
+  { t: "국가동향", tEn: "National Trends", d: "필리핀 뉴스·규제·정책 + 인사이트 리포트 자동 수집·개인별 맞춤 발송", dEn: "Auto-collects Philippine news, regulation & policy plus insight reports, delivered personalized", icon: <path d="M4 6h16M4 12h16M4 18h10" /> },
+  { t: "시장동향", tEn: "Market Trends", d: "경쟁사 가격·프로모·신제품/EOL 실시간 관측", dEn: "Real-time tracking of competitor pricing, promotions, and new/EOL products", icon: <><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 4-5" /></> },
+  { t: "주요지표", tEn: "Key Indicators", d: "거시·금융·가전 선행지표 200+ (World Bank·PSA·BSP)", dEn: "200+ leading macro, financial & appliance indicators (World Bank · PSA · BSP)", icon: <><rect x="3" y="10" width="4" height="10" rx="1" /><rect x="10" y="4" width="4" height="16" rx="1" /><rect x="17" y="13" width="4" height="7" rx="1" /></> },
+  { t: "마케팅·경쟁광고", tEn: "Marketing & Competitor Ads", d: "경쟁사 광고·캠페인 트래킹, 종료·신규 감지", dEn: "Tracks competitor ads and campaigns, detecting launches and terminations", icon: <><path d="M3 11l18-5v12L3 14z" /><path d="M11.6 16.8a3 3 0 0 1-5.8-1.1" /></> },
+  { t: "주요일정·리포트", tEn: "Key Schedule & Reports", d: "경제·정책 캘린더 + 부서·제품·기간별 맞춤 리포트(예정)", dEn: "Economic & policy calendar plus custom reports by team, product, and period (planned)", icon: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></> },
 ]
 
 export default function WelcomeModal() {
@@ -59,26 +60,26 @@ export default function WelcomeModal() {
             <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 shadow-sm ring-1 ring-indigo-100 backdrop-blur dark:bg-white/10 dark:text-indigo-300 dark:ring-indigo-500/20">Beta</span>
           </div>
           <h2 className="relative mt-3.5 text-[20px] font-extrabold leading-[1.25] tracking-tight" style={{ animation: "fadeUp .55s cubic-bezier(.22,1,.36,1) both", animationDelay: ".17s" }}>
-            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300">AX 필리핀법인</span>
-            <span className="block text-gray-900 dark:text-gray-50">마켓 인텔리전스 대시보드</span>
+            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300">{T("AX 필리핀법인", "AX Philippines")}</span>
+            <span className="block text-gray-900 dark:text-gray-50">{T("마켓 인텔리전스 대시보드", "Market Intelligence Dashboard")}</span>
           </h2>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-7 py-5">
           {/* 리드 문구 — 헤더에서 내려 제목형(좌측 인디고 액센트)으로 강조 */}
           <p className="mb-4 border-l-[3px] border-indigo-400 pl-3 text-[13.5px] font-semibold leading-relaxed text-gray-800 dark:border-indigo-500/50 dark:text-gray-100">
-            AX로 구축한 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.
+            {T("AX로 구축한 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.", "A dashboard that brings AX-built Philippine macroeconomic, appliance-market, and competitor data into one place to support decision-making.")}
           </p>
           {/* 주의 — 정확도·갱신 안내 */}
           <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-amber-500"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" /></svg>
             <p className="text-[12px] leading-relaxed text-amber-800 dark:text-amber-200">
-              현재 데이터베이스를 <b className="font-bold">수집하는 테스트 기간</b>입니다. 일부 수치는 정확도가 완전하지 않을 수 있으니 <b className="font-bold">참고용</b>으로 봐주세요 — 파이프라인이 돌며 <b className="font-bold">자동으로 갱신·보정</b>되고, <b className="font-bold">실시간으로 구축 중</b>이라 일시적으로 <b className="font-bold">웹사이트가 불안정</b>할 수 있습니다.
+              {T("현재 데이터베이스를 ", "The database is currently in a ")}<b className="font-bold">{T("수집하는 테스트 기간", "data-collection test phase")}</b>{T("입니다. 일부 수치는 정확도가 완전하지 않을 수 있으니 ", ". Some figures may not be fully accurate, so please treat them as ")}<b className="font-bold">{T("참고용", "reference only")}</b>{T("으로 봐주세요 — 파이프라인이 돌며 ", " — as the pipeline runs, data is ")}<b className="font-bold">{T("자동으로 갱신·보정", "automatically updated and corrected")}</b>{T("되고, ", ", and it is ")}<b className="font-bold">{T("실시간으로 구축 중", "actively being built in real time")}</b>{T("이라 일시적으로 ", ", so the ")}<b className="font-bold">{T("웹사이트가 불안정", "site may be temporarily unstable")}</b>{T("할 수 있습니다.", ".")}
             </p>
           </div>
 
           {/* 무엇을 구축 중인가 */}
-          <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">지금 구축 중인 것</p>
+          <p className="mb-2 mt-4 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("지금 구축 중인 것", "Now building")}</p>
           <div className="flex flex-col gap-1.5">
             {BUILDING.map((b, i) => (
               <div key={b.t} className="flex items-start gap-3 rounded-xl px-2.5 py-2 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/10" style={{ animation: "fadeUp .45s cubic-bezier(.22,1,.36,1) both", animationDelay: 0.06 + i * 0.05 + "s" }}>
@@ -86,8 +87,8 @@ export default function WelcomeModal() {
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">{b.icon}</svg>
                 </span>
                 <div className="min-w-0">
-                  <div className="text-[13px] font-bold text-gray-900 dark:text-gray-50">{b.t}</div>
-                  <div className="text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{b.d}</div>
+                  <div className="text-[13px] font-bold text-gray-900 dark:text-gray-50">{T(b.t, b.tEn)}</div>
+                  <div className="text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{T(b.d, b.dEn)}</div>
                 </div>
               </div>
             ))}
@@ -98,10 +99,10 @@ export default function WelcomeModal() {
         <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-7 py-3.5 dark:border-gray-800">
           <span className="hidden items-center gap-1.5 text-[11.5px] text-gray-400 dark:text-gray-500 sm:flex">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-amber-400"><path d="M9 18h6" /><path d="M10 22h4" /><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5" /></svg>
-            상단 <b className="font-semibold text-gray-500 dark:text-gray-400">전구 아이콘</b>으로 언제든 다시 볼 수 있어요
+            {T("상단 ", "Reopen anytime from the ")}<b className="font-semibold text-gray-500 dark:text-gray-400">{T("전구 아이콘", "lightbulb icon")}</b>{T("으로 언제든 다시 볼 수 있어요", " in the top bar")}
           </span>
           <button type="button" onClick={close} className="ml-auto rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2 text-[13px] font-bold text-white shadow-md shadow-violet-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:from-indigo-700 hover:to-violet-700 hover:shadow-lg hover:shadow-violet-600/30 active:scale-95">
-            살펴보기
+            {T("살펴보기", "Explore")}
           </button>
         </div>
       </div>

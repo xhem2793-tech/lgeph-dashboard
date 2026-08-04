@@ -15,7 +15,7 @@ import {
   type RegBoardItem,
   type PubReport,
 } from "@/lib/supabase"
-import { useLang } from "@/lib/i18n"
+import { useLang, T } from "@/lib/i18n"
 import { SEV } from "@/lib/severity"
 import { Segmented } from "@/components/Segmented"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
@@ -174,9 +174,9 @@ function ageDays(s: string) {
 
 function rel(s: string) {
   const a = ageDays(s)
-  if (a <= 0) return "오늘"
-  if (a === 1) return "어제"
-  if (a < 7) return a + "일 전"
+  if (a <= 0) return T("오늘", "Today")
+  if (a === 1) return T("어제", "Yesterday")
+  if (a < 7) return a + T("일 전", "d ago")
   return s.slice(5).replace("-", "/")
 }
 
@@ -222,7 +222,7 @@ function ChipPill({ c }: { c: Chip }) {
     <a
       href={"/economy?k=" + c.k}
       onClick={(e) => e.stopPropagation()}
-      title={c.label + " · " + chipStamp(c) + " 기준"}
+      title={c.label + " · " + chipStamp(c) + T(" 기준", " as of")}
       className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-800 px-1.5 py-px text-[10px] leading-4 text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95"
     >
       <span>{c.label}</span>
@@ -345,7 +345,7 @@ function DocArt({ d, chip, big }: { d: Doc; chip: Chip | null; big?: boolean }) 
   let big1 = ""
   let sub = ""
   if (d.kind === "reg") {
-    big1 = d.dDay == null ? "—" : d.dDay <= 0 ? "시행 중" : "D-" + d.dDay
+    big1 = d.dDay == null ? "—" : d.dDay <= 0 ? T("시행 중", "In effect") : "D-" + d.dDay
     sub = d.agency ?? ""
   } else if (chip) {
     big1 = (chip.unit === "₱" ? "₱" : "") + (chip.value ?? "—") + (chip.unit && chip.unit !== "₱" ? chip.unit : "")
@@ -698,7 +698,7 @@ export default function Page() {
         >
           <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 4h18M6 12h12M10 20h4" /></svg>
-            <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분류</p>
+            <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분류", "Categories")}</p>
           </div>
 
           {mode === "topic" ? (
@@ -772,7 +772,7 @@ export default function Page() {
         <header className="relative flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               {/* 정렬 */}
-              <Segmented value={sort} onChange={(k) => setSort(k as "new" | "impact")} options={[{ k: "new", label: "최신순" }, { k: "impact", label: "영향도순" }]} size="sm" />
+              <Segmented value={sort} onChange={(k) => setSort(k as "new" | "impact")} options={[{ k: "new", label: T("최신순", "Latest") }, { k: "impact", label: T("영향도순", "Impact") }]} size="sm" />
               {/* 인사이트 칼럼 — 카테고리 필터(알약형, 통일 스타일) */}
               {menu === "인사이트" && (
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -807,14 +807,14 @@ export default function Page() {
                 onChange={(ev) => setQ(ev.target.value)}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
-                placeholder="제목 · 본문 · SO WHAT · 출처 검색"
-                aria-label="뉴스 검색"
+                placeholder={T("제목 · 본문 · SO WHAT · 출처 검색", "Search title, body, SO WHAT, source")}
+                aria-label={T("뉴스 검색", "Search news")}
                 className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-8 text-[13px] outline-none transition-[background,border,box-shadow] duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 hover:bg-white dark:hover:border-gray-700 dark:hover:bg-gray-900 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)] dark:focus:border-indigo-500/50 dark:focus:bg-gray-950"
               />
-              {q && <button type="button" onClick={() => setQ("")} aria-label="검색어 지우기" className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:hover:bg-gray-800 dark:text-gray-500 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
+              {q && <button type="button" onClick={() => setQ("")} aria-label={T("검색어 지우기", "Clear search")} className="absolute right-2.5 top-1/2 flex h-5 w-5 -translate-y-1/2 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:bg-gray-100 hover:text-indigo-600 active:scale-90 dark:hover:bg-gray-800 dark:text-gray-500 dark:hover:text-indigo-400" style={{ animation: "fadeUp .2s ease both" }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>}
             </div>
             <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
-              최신 {stamp ? fmtStamp(stamp) : "—"}
+              {T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}
               <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span>
             </span>
           </div>
@@ -839,7 +839,7 @@ export default function Page() {
             <input
               value={q}
               onChange={(ev) => setQ(ev.target.value)}
-              placeholder="제목 · 본문 · SO WHAT · 출처 검색"
+              placeholder={T("제목 · 본문 · SO WHAT · 출처 검색", "Search title, body, SO WHAT, source")}
               className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900"
             />
           </div>
@@ -853,7 +853,7 @@ export default function Page() {
                 ))}
               </div>
             ) : slice.length === 0 ? (
-              <p className="py-10 text-center text-[12px] text-gray-500 dark:text-gray-400">조건에 맞는 항목 없음</p>
+              <p className="py-10 text-center text-[12px] text-gray-500 dark:text-gray-400">{T("조건에 맞는 항목 없음", "No matching items")}</p>
             ) : menu === "인사이트" ? (
               /* 인사이트 칼럼 — 1열 매거진 카드(카테고리 필터는 상단 정렬 옆으로 이동). 시작점 상향(mt 제거) */
               <div className="flex flex-col gap-3">
@@ -944,7 +944,7 @@ export default function Page() {
                           {d.kind === "reg" && (
                             <>
                               <span className={"rounded px-1 py-px text-[9px] font-bold leading-4 " + (SEV[d.severity ?? ""] ?? SEV.Medium)}>{d.severity}</span>
-                              {d.dDay != null && <span className={"num text-[10px] font-bold " + (d.dDay >= 0 && d.dDay <= 7 ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400")}>{d.dDay <= 0 ? "시행 중" : "시행 D-" + d.dDay}</span>}
+                              {d.dDay != null && <span className={"num text-[10px] font-bold " + (d.dDay >= 0 && d.dDay <= 7 ? "text-red-600 dark:text-red-400" : "text-gray-500 dark:text-gray-400")}>{d.dDay <= 0 ? T("시행 중", "In effect") : T("시행 D-", "Effective D-") + d.dDay}</span>}
                             </>
                           )}
                           <span className="text-[10.5px] font-medium text-gray-500 dark:text-gray-400">{d.kind === "reg" ? (d.agency || d.topic) : d.topic}</span>
@@ -968,7 +968,7 @@ export default function Page() {
                               }}
                               className="rounded-full border border-gray-200 dark:border-gray-800 px-2 py-px text-[10.5px] text-indigo-600 dark:text-indigo-400 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 active:scale-95"
                             >
-                              관련 {g.dups.length}건 {openDup.has(d.id) ? "▴" : "▾"}
+                              {T("관련", "Related")} {g.dups.length}{T("건", "")} {openDup.has(d.id) ? "▴" : "▾"}
                             </button>
                           ) : null}
                         </div>
@@ -1010,7 +1010,7 @@ export default function Page() {
                 onClick={() => go(cur - 1)}
                 className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
               >
-                이전
+                {T("이전", "Prev")}
               </button>
               {Array.from({ length: pages })
                 .map((_, i) => i + 1)
@@ -1036,7 +1036,7 @@ export default function Page() {
                 onClick={() => go(cur + 1)}
                 className="rounded-md border border-gray-200 dark:border-gray-800 px-2 py-1 text-[11px] text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:translate-y-0"
               >
-                다음
+                {T("다음", "Next")}
               </button>
             </div>
           ) : null}
@@ -1061,7 +1061,7 @@ export default function Page() {
             <button
               type="button"
               onClick={closeModal}
-              aria-label="닫기"
+              aria-label={T("닫기", "Close")}
               className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50"
             >
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -1105,7 +1105,7 @@ export default function Page() {
                           (modal.dDay >= 0 && modal.dDay <= 7 ? "bg-red-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300")
                         }
                       >
-                        {modal.dDay <= 0 ? "시행 중" : "시행 D-" + modal.dDay}
+                        {modal.dDay <= 0 ? T("시행 중", "In effect") : T("시행 D-", "Effective D-") + modal.dDay}
                       </span>
                     ) : null}
                   </>
@@ -1120,14 +1120,14 @@ export default function Page() {
               {/* 시사점 — iOS 틴티드 콜아웃 카드 */}
               {modal.so ? (
                 <div className="mt-4 rounded-2xl bg-indigo-50/80 p-4 ring-1 ring-inset ring-indigo-100 dark:bg-indigo-500/10 dark:ring-indigo-500/20">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">시사점</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-indigo-600 dark:text-indigo-300">{T("시사점", "Implication")}</p>
                   <p className="mt-1.5 text-[14px] font-medium leading-[1.7] text-gray-800 dark:text-gray-100"><Hi text={modal.so} q={q} /></p>
                 </div>
               ) : null}
 
               {/* 본문 요약 — iOS 그룹 카드 */}
               <div className="mt-3.5 rounded-2xl bg-gray-50 p-4 dark:bg-gray-800/40">
-                <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">본문 요약</p>
+                <p className="text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("본문 요약", "Summary")}</p>
                 <div className="mt-2 space-y-2.5">
                   {para(modal.summary).map((p, i) => (
                     <p key={i} className="text-[13px] leading-[1.75] text-gray-600 dark:text-gray-300">
@@ -1140,7 +1140,7 @@ export default function Page() {
               {/* 대응 — iOS 틴티드 콜아웃(에메랄드) */}
               {modal.action ? (
                 <div className="mt-3.5 rounded-2xl bg-emerald-50/70 p-4 ring-1 ring-inset ring-emerald-100 dark:bg-emerald-500/10 dark:ring-emerald-500/20">
-                  <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">대응</p>
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">{T("대응", "Action")}</p>
                   <p className="mt-1.5 text-[13px] leading-[1.7] text-gray-700 dark:text-gray-200">{modal.action}</p>
                 </div>
               ) : null}
@@ -1148,7 +1148,7 @@ export default function Page() {
               {/* 연결 지표 */}
               {modal.chipKeys.map((k) => chips[k]).filter(Boolean).length ? (
                 <div className="mt-4">
-                  <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">연결 지표</p>
+                  <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("연결 지표", "Linked indicators")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {modal.chipKeys
                       .map((k) => chips[k])
@@ -1168,7 +1168,7 @@ export default function Page() {
                   rel="noreferrer"
                   className="mt-5 flex w-full items-center justify-center gap-1.5 rounded-2xl bg-indigo-600 px-4 py-3 text-[13.5px] font-semibold text-white shadow-sm shadow-indigo-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-[.98]"
                 >
-                  원문 보기 · {modal.source}
+                  {T("원문 보기", "View source")} · {modal.source}
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M7 17L17 7M17 7H8M17 7v9" />
                   </svg>

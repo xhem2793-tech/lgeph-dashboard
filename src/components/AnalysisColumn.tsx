@@ -3,7 +3,7 @@
 import React from "react"
 import { createPortal } from "react-dom"
 import { analysisPosts, regAlerts, type RegAlert } from "@/lib/supabase"
-import { useLang } from "@/lib/i18n"
+import { useLang, T } from "@/lib/i18n"
 import { SEV } from "@/lib/severity"
 
 /** 4번째 열 — 위: 규제 동향 1건 / 아래: 이번 주 분석 1건.
@@ -21,9 +21,9 @@ function dday(eff: string | null): { text: string; urgent: boolean } | null {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
   const diff = Math.round((d - today) / 86400000)
-  if (diff < 0) return { text: "시행 중", urgent: false }
-  if (diff === 0) return { text: "오늘 시행", urgent: true }
-  return { text: "시행 D-" + diff, urgent: diff <= 7 }
+  if (diff < 0) return { text: T("시행 중", "In effect"), urgent: false }
+  if (diff === 0) return { text: T("오늘 시행", "Effective today"), urgent: true }
+  return { text: T("시행 D-", "Effective D-") + diff, urgent: diff <= 7 }
 }
 
 /** 자체 칼럼 대표 비주얼 — 사진이 아니라 데이터 */
@@ -35,7 +35,7 @@ function OwnVisual({ tags, compact }: { tags: string[]; compact?: boolean }) {
         (compact ? "h-[76px]" : "h-full min-h-[180px]")
       }
     >
-      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">AX 자체 분석</span>
+      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">{T("AX 자체 분석", "AX In-house Analysis")}</span>
       <div className="flex gap-1">
         {tags.slice(0, 3).map((t) => (
           <span key={t} className="rounded bg-white/15 dark:bg-gray-900/15 px-1.5 py-px text-[10px] text-white">
@@ -129,7 +129,7 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="닫기"
+            aria-label={T("닫기", "Close")}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -145,7 +145,7 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
         {r.implication ? (
           <div className="mt-4 rounded-lg border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/50 dark:bg-indigo-500/10 p-3">
             <p className="text-[13.5px] leading-relaxed text-gray-700 dark:text-gray-200">
-              <b className="font-semibold text-gray-900 dark:text-gray-50">우리 영향 · </b>
+              <b className="font-semibold text-gray-900 dark:text-gray-50">{T("우리 영향", "Our impact")} · </b>
               {r.implication}
             </p>
           </div>
@@ -154,7 +154,7 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
         {r.actions ? (
           <div className="mt-2 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-3">
             <p className="text-[13.5px] leading-relaxed text-gray-700 dark:text-gray-200">
-              <b className="font-semibold text-gray-900 dark:text-gray-50">액션 · </b>
+              <b className="font-semibold text-gray-900 dark:text-gray-50">{T("액션", "Action")} · </b>
               {r.actions}
             </p>
           </div>
@@ -167,7 +167,7 @@ function RegModal({ r, onClose }: { r: RegAlert; onClose: () => void }) {
             rel="noopener noreferrer"
             className="mt-3 inline-block text-[12px] text-indigo-600 dark:text-indigo-400 transition-colors duration-200 hover:underline"
           >
-            원문 전체 보기 · {r.source} ↗
+            {T("원문 전체 보기", "View full source")} · {r.source} ↗
           </a>
         ) : null}
       </div>
@@ -193,10 +193,10 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
                 (p.kind === "own" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300")
               }
             >
-              {p.kind === "own" ? "자체 칼럼" : "외부 큐레이션"}
+              {p.kind === "own" ? T("자체 칼럼", "In-house Column") : T("외부 큐레이션", "Curated External")}
             </span>
             <span className="text-[11px] text-gray-500 dark:text-gray-400">
-              {fmt(p.publishedAt)} · {p.kind === "own" ? p.author ?? "경영기획" : p.source}
+              {fmt(p.publishedAt)} · {p.kind === "own" ? p.author ?? T("경영기획", "Strategy") : p.source}
             </span>
             {p.confidence ? (
               <span className="rounded bg-gray-50 dark:bg-gray-900 px-1.5 py-px text-[10px] text-gray-500 dark:text-gray-400">{p.confidence}</span>
@@ -205,7 +205,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="닫기"
+            aria-label={T("닫기", "Close")}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"
           >
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg>
@@ -245,7 +245,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
                 rel="noopener noreferrer"
                 className="mt-3 inline-block text-[12px] text-indigo-600 dark:text-indigo-400 transition-colors duration-200 hover:underline"
               >
-                {p.kind === "own" ? "근거 원문" : "원문 전체 보기"} · {p.source} ↗
+                {p.kind === "own" ? T("근거 원문", "Source material") : T("원문 전체 보기", "View full source")} · {p.source} ↗
               </a>
             ) : null}
           </div>
@@ -292,7 +292,7 @@ export default function AnalysisColumn() {
         </a>
 
         {err ? (
-          <p className="py-6 text-[12px] text-gray-500 dark:text-gray-400">분석 글을 불러오지 못함 · 확인 필요</p>
+          <p className="py-6 text-[12px] text-gray-500 dark:text-gray-400">{T("분석 글을 불러오지 못함 · 확인 필요", "Failed to load analysis · check needed")}</p>
         ) : !post ? (
           <div className="h-[150px] rounded-lg bg-gray-50 dark:bg-gray-900" />
         ) : (
@@ -329,7 +329,7 @@ export default function AnalysisColumn() {
               >
                 {post.kind === "own" ? t("analysis_own") : t("analysis_ext")}
               </span>
-              <span className="min-w-0 truncate">{post.kind === "own" ? post.author ?? "경영기획" : post.source}</span>
+              <span className="min-w-0 truncate">{post.kind === "own" ? post.author ?? T("경영기획", "Strategy") : post.source}</span>
               <span className="shrink-0">·</span>
               <span className="shrink-0">{fmt(post.publishedAt)}</span>
             </p>
@@ -340,7 +340,7 @@ export default function AnalysisColumn() {
       <section className="border-t border-gray-100 dark:border-gray-800 pt-3">
         <a href="/news?cat=규제" className="group mb-2 flex items-baseline gap-1">
           <span className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-            규제 동향
+            {T("규제 동향", "Regulatory Watch")}
           </span>
           <span className="text-gray-400 dark:text-gray-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
             ›
@@ -350,7 +350,7 @@ export default function AnalysisColumn() {
         {!regs ? (
           <div className="h-[150px] rounded-lg bg-gray-50 dark:bg-gray-900" />
         ) : !reg ? (
-          <p className="py-6 text-[12px] text-gray-500 dark:text-gray-400">등재된 규제 동향 없음</p>
+          <p className="py-6 text-[12px] text-gray-500 dark:text-gray-400">{T("등재된 규제 동향 없음", "No regulatory updates")}</p>
         ) : (
           <button type="button" onClick={() => setOpenReg(reg)} className={CARD_BTN}>
             <span className="mb-1 flex flex-wrap items-center gap-1">

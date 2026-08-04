@@ -12,29 +12,29 @@ import { ApplianceView, RatesView, GrowthView, LaborView, SentimentView, PricesV
 import { Segmented } from "@/components/Segmented"
 import { dataProvenance } from "@/lib/supabase"
 import { countByCat } from "@/lib/indicatorCats"
-import { useLang } from "@/lib/i18n"
+import { T, useLang } from "@/lib/i18n"
 
 /** 경제지표 — 좌측 카테고리 네비 + 각 도메인 뷰(환율과 동일 레이아웃). 물가 포함 전 카테고리 EconViews로 통일. */
 
 type NavItem = { id: string; ko: string; sub: string; count: string; group: string; accent?: boolean; star?: boolean; subs: string[] }
 const NAV: NavItem[] = [
-  { id: "prices", ko: "물가", sub: "소비자물가 CPI·품목별 물가", count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
-  { id: "growth", ko: "국민계정·성장", sub: "GDP·투자·건설·산업생산·가동률", count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
-  { id: "labor", ko: "고용·임금·소득", sub: "실업률·최저임금·OFW 송금", count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
-  { id: "sentiment", ko: "기업·소비 심리", sub: "소비자심리 CCI·기업심리 BCI·BES 기업경기", count: "11", group: "실물경제", subs: ["소비자심리 CCI", "기업심리 BCI", "내구재 구매의향", "BES 종합·업종·고용", "사업 제약요인"] },
-  { id: "housing", ko: "부동산·주택", sub: "주택가격지수 RPPI·건축허가·공실(가전 상관 최고)", count: "4", group: "실물경제", subs: ["주택가격지수 RPPI", "RPPI 상승률", "주거 건축허가", "오피스 공실·건설"] },
-  { id: "fx", ko: "환율·원가", sub: "대달러·실효환율·역내 통화·수입원가", count: "7", group: "외환·금융", subs: ["동남아 6개국 통화", "₱/USD 기본 환율", "실효환율 NEER·REER", "수입 원가 영향"] },
-  { id: "rates", ko: "통화·금리·신용", sub: "기준금리·통화량 M3·가계신용", count: "9", group: "외환·금융", subs: ["기준금리 BSP", "통화량 M3", "가계·카드 대출"] },
-  { id: "appliance", ko: "가전 선행지표", sub: "가전 물가·PPI·수입액·실질가격 갭", count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
-  { id: "importprice", ko: "수입 단가", sub: "가전 수입 단가($/kg)·원산지 점유(Comtrade)", count: "4", group: "가전 인텔리전스", subs: ["냉장고", "에어컨", "세탁기", "TV"] },
-  { id: "online", ko: "온라인 시장", sub: "이커머스 규모·디지털/통신 침투", count: "3", group: "소비·디지털", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
+  { id: "prices", ko: T("물가", "Prices"), sub: T("소비자물가 CPI·품목별 물가", "Consumer CPI · item-level prices"), count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
+  { id: "growth", ko: T("국민계정·성장", "National Accounts · Growth"), sub: T("GDP·투자·건설·산업생산·가동률", "GDP · investment · construction · output · utilization"), count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
+  { id: "labor", ko: T("고용·임금·소득", "Employment · Wages · Income"), sub: T("실업률·최저임금·OFW 송금", "Unemployment · minimum wage · OFW remittances"), count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
+  { id: "sentiment", ko: T("기업·소비 심리", "Business · Consumer Sentiment"), sub: T("소비자심리 CCI·기업심리 BCI·BES 기업경기", "Consumer sentiment CCI · business sentiment BCI · BES conditions"), count: "11", group: "실물경제", subs: ["소비자심리 CCI", "기업심리 BCI", "내구재 구매의향", "BES 종합·업종·고용", "사업 제약요인"] },
+  { id: "housing", ko: T("부동산·주택", "Real Estate · Housing"), sub: T("주택가격지수 RPPI·건축허가·공실(가전 상관 최고)", "Housing price index RPPI · permits · vacancy (top appliance correlation)"), count: "4", group: "실물경제", subs: ["주택가격지수 RPPI", "RPPI 상승률", "주거 건축허가", "오피스 공실·건설"] },
+  { id: "fx", ko: T("환율·원가", "FX · Input Costs"), sub: T("대달러·실효환율·역내 통화·수입원가", "USD rate · effective FX · regional currencies · import costs"), count: "7", group: "외환·금융", subs: ["동남아 6개국 통화", "₱/USD 기본 환율", "실효환율 NEER·REER", "수입 원가 영향"] },
+  { id: "rates", ko: T("통화·금리·신용", "Money · Rates · Credit"), sub: T("기준금리·통화량 M3·가계신용", "Policy rate · money supply M3 · household credit"), count: "9", group: "외환·금융", subs: ["기준금리 BSP", "통화량 M3", "가계·카드 대출"] },
+  { id: "appliance", ko: T("가전 선행지표", "Appliance Leading Indicators"), sub: T("가전 물가·PPI·수입액·실질가격 갭", "Appliance CPI · PPI · import value · real price gap"), count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
+  { id: "importprice", ko: T("수입 단가", "Import Unit Prices"), sub: T("가전 수입 단가($/kg)·원산지 점유(Comtrade)", "Appliance import unit price ($/kg) · origin share (Comtrade)"), count: "4", group: "가전 인텔리전스", subs: ["냉장고", "에어컨", "세탁기", "TV"] },
+  { id: "online", ko: T("온라인 시장", "Online Market"), sub: T("이커머스 규모·디지털/통신 침투", "E-commerce size · digital/telecom penetration"), count: "3", group: "소비·디지털", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
 ]
 
 function Soon({ label }: { label: string }) {
   return (
     <div className="flex h-64 flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-center">
       <div className="text-[13.5px] font-bold text-gray-500 dark:text-gray-400">{label}</div>
-      <div className="text-[12px] text-gray-400 dark:text-gray-500">물가·생활비 템플릿을 이 도메인에도 적용 예정</div>
+      <div className="text-[12px] text-gray-400 dark:text-gray-500">{T("물가·생활비 템플릿을 이 도메인에도 적용 예정", "Cost-of-living template to be extended to this domain")}</div>
     </div>
   )
 }
@@ -126,13 +126,13 @@ export default function Page() {
           <div className="sticky top-0 z-10 flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 bg-white/95 px-2 py-2.5 backdrop-blur dark:bg-gray-950/90">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /></svg>
             <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{en ? "View" : "보기"}</p>
-            <span className="ml-auto"><Segmented size="sm" value={mode} onChange={(k) => setMode(k as "card" | "list")} options={[{ k: "card", label: "카드" }, { k: "list", label: "리스트" }]} /></span>
+            <span className="ml-auto"><Segmented size="sm" value={mode} onChange={(k) => setMode(k as "card" | "list")} options={[{ k: "card", label: T("카드", "Card") }, { k: "list", label: T("리스트", "List") }]} /></span>
           </div>
           <div className="px-2 py-3">
             {/* 지역시장 지도 — 별도 페이지로 분리, 좌측 메뉴 최상단 링크 */}
             <a href="/regions" className="group mb-1.5 flex items-center gap-2 rounded-md border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/10 px-2.5 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-500 dark:text-indigo-400"><path d="M9 20l-6-3V4l6 3m0 13 6-3m-6 3V7m6 10 6 3V7l-6-3m0 13V4m0 0L9 7" /></svg>
-              <span className="flex-1 text-[14px] font-semibold text-indigo-700 dark:text-indigo-300">지역시장 지도</span>
+              <span className="flex-1 text-[14px] font-semibold text-indigo-700 dark:text-indigo-300">{T("지역시장 지도", "Regional Market Map")}</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"><path d="M7 17 17 7M7 7h10v10" /></svg>
             </a>
             <nav className="flex flex-col gap-1">

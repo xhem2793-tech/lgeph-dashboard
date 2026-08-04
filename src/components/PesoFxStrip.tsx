@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { fxStrip } from "@/lib/supabase"
+import { T } from "@/lib/i18n"
 
 const ORDER = ["USDPHP", "CNYPHP", "KRWPHP", "USDKRW"]
 
@@ -28,7 +29,7 @@ export default function PesoFxStrip() {
   return (
     <div style={{ animation: "fadeUp .8s ease both" }}>
       <p className="mb-1.5 text-[11px] text-gray-500 dark:text-gray-400">
-        페소 약세 · 수입원가 환경 <span className="text-gray-400 dark:text-gray-500">· {asOf} 기준 · 전년비 절하율</span>
+        {T("페소 약세 · 수입원가 환경", "Peso weakness · import cost environment")} <span className="text-gray-400 dark:text-gray-500">· {asOf} {T("기준 · 전년비 절하율", "as of · YoY depreciation")}</span>
       </p>
       <div className="grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-200 dark:bg-gray-700 sm:grid-cols-3 lg:grid-cols-[repeat(4,1fr)_1.5fr]">
         {ORDER.map((k) => {
@@ -48,7 +49,7 @@ export default function PesoFxStrip() {
         })}
         <div className={cell}>
           <div className="mb-1 text-[10px] text-gray-500 dark:text-gray-400">
-            역내 절하 비교 <span className="text-gray-400 dark:text-gray-500">전년비 vs USD</span>
+            {T("역내 절하 비교", "Regional depreciation")} <span className="text-gray-400 dark:text-gray-500">{T("전년비 vs USD", "YoY vs USD")}</span>
           </div>
           {peers.map((p, i) => {
             const hl = /페소|PHP/.test(p.label)

@@ -2,6 +2,7 @@
 
 import React from "react"
 import { weekHighlights } from "@/lib/supabase"
+import { T } from "@/lib/i18n"
 
 /** 금주 핵심 — 원래 "오늘의 변화"였으나 가격 피드로 전락했던 자리.
  *
@@ -23,13 +24,11 @@ const DOT: Record<Row["tone"], string> = {
   warn: "bg-amber-500",
   neutral: "bg-gray-300",
 }
-const KIND: Record<Row["kind"], string> = {
-  stock: "재고",
-  price: "가격",
-  macro: "거시",
-  weather: "기상",
-  news: "뉴스",
-}
+const kindLabel = (k: Row["kind"]) =>
+  k === "stock" ? T("재고", "Stock") :
+  k === "price" ? T("가격", "Price") :
+  k === "macro" ? T("거시", "Macro") :
+  k === "weather" ? T("기상", "Weather") : T("뉴스", "News")
 
 /** 모델명이 길어 잘림 — 브랜드+카테고리만 남긴다 */
 function trimSubject(s: string) {
@@ -54,24 +53,24 @@ export default function ChangeFeed() {
     <section className="h-full rounded-xl p-4">
       <header className="mb-2 flex items-baseline justify-between">
         <div className="flex items-baseline gap-2">
-          <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">금주 핵심</h2>
-          <span className="text-[11px] text-gray-400 dark:text-gray-500">최근 7일 · {fmtDate(asOf)} 기준</span>
+          <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("금주 핵심", "This Week's Focus")}</h2>
+          <span className="text-[11px] text-gray-400 dark:text-gray-500">{T("최근 7일 · ", "Past 7 days · ")}{fmtDate(asOf)}{T(" 기준", "")}</span>
         </div>
         <a
           href="/competitors"
           className="text-[11px] text-gray-400 dark:text-gray-500 transition-colors duration-200 hover:text-indigo-600 dark:hover:text-indigo-400"
         >
-          전체 &gt;
+          {T("전체", "All")} &gt;
         </a>
       </header>
 
       {err ? (
         <p className="py-6 text-center text-[12px] text-gray-400 dark:text-gray-500">
-          데이터를 불러오지 못함 — 확인 필요
+          {T("데이터를 불러오지 못함 — 확인 필요", "Failed to load data — check needed")}
         </p>
       ) : empty ? (
         <p className="py-8 text-center text-[12px] text-gray-400 dark:text-gray-500">
-          특이사항 없음 — 이번 주 변화 0건
+          {T("특이사항 없음 — 이번 주 변화 0건", "Nothing notable — 0 changes this week")}
         </p>
       ) : (
         <div className="flex flex-col">
@@ -90,7 +89,7 @@ export default function ChangeFeed() {
                   <span className="text-gray-500 dark:text-gray-400">{r.detail}</span>
                   {r.source ? <span className="text-gray-400 dark:text-gray-500"> · {r.source}</span> : null}
                 </p>
-                <span className="shrink-0 text-[10px] text-gray-300 dark:text-gray-600">{KIND[r.kind]}</span>
+                <span className="shrink-0 text-[10px] text-gray-300 dark:text-gray-600">{kindLabel(r.kind)}</span>
               </div>
             ),
           )}
@@ -98,7 +97,7 @@ export default function ChangeFeed() {
       )}
 
       <p className="mt-2 border-t border-gray-100 dark:border-gray-800 pt-2 text-[10px] leading-snug text-gray-400 dark:text-gray-500">
-        가격·재고·거시·기상·뉴스 각 축에 자리를 배분 — 가격이 다른 축을 밀어내지 않도록 고정
+        {T("가격·재고·거시·기상·뉴스 각 축에 자리를 배분 — 가격이 다른 축을 밀어내지 않도록 고정", "Each axis — price · stock · macro · weather · news — gets a fixed slot so price cannot crowd out the others")}
       </p>
     </section>
   )

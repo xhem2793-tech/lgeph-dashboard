@@ -7,6 +7,7 @@ import React from "react"
 import { fmtStamp, type PriceRow, type CompAd } from "@/lib/supabase"
 import { canonCode } from "@/lib/classify"
 import { peso, pmShopLabel } from "@/components/competitors/shared"
+import { T } from "@/lib/i18n"
 
 const SEV_META: Record<string, { label: string; dot: string; chip: string; order: number }> = {
   alert: { label: "경보", dot: "bg-rose-500", chip: "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400", order: 0 },
@@ -37,7 +38,6 @@ const normCat = (raw?: string | null): string => {
   return "기타"
 }
 const cleanTxt = (s?: string | null) => (s || "").replace(/<[^>]*>/g, "").replace(/&[^;]+;/g, " ").replace(/\s+/g, " ").trim()
-const AD_TYPE: Record<string, string> = { promo: "프로모", launch: "신제품", brand: "브랜드", campaign: "캠페인", event: "행사", roadshow: "로드쇼", other: "광고" }
 
 type Signal = {
   id: string; kind: "price" | "promo" | "ad" | "stock"; sev: string; cat: string; brand: string; own: boolean
@@ -50,6 +50,10 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
   const [catF, setCatF] = React.useState("전체")
   const R = rows ?? []
   const A = ads ?? []
+  const AD_TYPE: Record<string, string> = { promo: T("프로모", "Promo"), launch: T("신제품", "New model"), brand: T("브랜드", "Brand"), campaign: T("캠페인", "Campaign"), event: T("행사", "Event"), roadshow: T("로드쇼", "Roadshow"), other: T("광고", "Ad") }
+  const SEV_LABEL: Record<string, string> = { alert: T("경보", "Alert"), warn: T("주의", "Watch"), opp: T("기회", "Opportunity") }
+  const KIND_LABEL: Record<string, string> = { price: T("가격", "Price"), promo: T("프로모", "Promo"), ad: T("광고", "Ad"), stock: T("재고", "Stock") }
+  const CAT_LABEL: Record<string, string> = { "냉장고": T("냉장고", "REF"), "세탁기": T("세탁기", "W/M"), "TV": T("TV", "TV"), "에어컨": T("에어컨", "RAC"), "기타": T("기타", "Other") }
 
   const signals = React.useMemo(() => {
     const out: Signal[] = []
@@ -69,19 +73,19 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
         if (bef == null || aft == null || bef <= 0) return
         const chg = (aft - bef) / bef, pctN = Math.round(chg * 100)
         if (chg <= -0.06) {
-          add({ id: `p${i}-d${si}`, kind: "price", sev: own ? "opp" : (chg <= -0.13 ? "alert" : "warn"), cat, brand: r.brand, own, title: nm, detail: own ? "자사 실판매가 인하 — 가격 경쟁력↑" : `${pmShopLabel(r.retailer)} 실판매가 급락 — 자사 최저가 위협`, metric: `${pctN}%`, metricTone: "down", before: bef, after: aft, channel: r.retailer, url: r.url, score: Math.abs(chg) * 100 * (own ? 0.8 : 1.25) })
+          add({ id: `p${i}-d${si}`, kind: "price", sev: own ? "opp" : (chg <= -0.13 ? "alert" : "warn"), cat, brand: r.brand, own, title: nm, detail: own ? T("자사 실판매가 인하 — 가격 경쟁력↑", "Own street price cut — pricing edge up") : `${pmShopLabel(r.retailer)}${T(" 실판매가 급락 — 자사 최저가 위협", " street price plunge — threatens our floor")}`, metric: `${pctN}%`, metricTone: "down", before: bef, after: aft, channel: r.retailer, url: r.url, score: Math.abs(chg) * 100 * (own ? 0.8 : 1.25) })
         } else if (chg >= 0.08 && !own) {
-          add({ id: `r${i}-d${si}`, kind: "price", sev: "opp", cat, brand: r.brand, own, title: nm, detail: `${pmShopLabel(r.retailer)} 가격 인상 — 자사 상대 우위 확대`, metric: `+${pctN}%`, metricTone: "up", before: bef, after: aft, channel: r.retailer, url: r.url, score: chg * 100 * 0.8 })
+          add({ id: `r${i}-d${si}`, kind: "price", sev: "opp", cat, brand: r.brand, own, title: nm, detail: `${pmShopLabel(r.retailer)}${T(" 가격 인상 — 자사 상대 우위 확대", " price hike — widens our relative edge")}`, metric: `+${pctN}%`, metricTone: "up", before: bef, after: aft, channel: r.retailer, url: r.url, score: chg * 100 * 0.8 })
         }
       })
       // 깊은 할인(프로모 성격)
       if ((r.discountPct ?? 0) >= 30 && r.d0) {
         const d = Math.round(r.discountPct as number)
-        add({ id: `d${i}`, kind: "promo", sev: own ? "opp" : "warn", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)} 자사 프로모 강세` : `${pmShopLabel(r.retailer)} 경쟁 공격적 할인`, metric: `-${d}%`, metricTone: "down", before: r.srp, after: r.p0, channel: r.retailer, url: r.url, score: d * (own ? 0.75 : 1) })
+        add({ id: `d${i}`, kind: "promo", sev: own ? "opp" : "warn", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)}${T(" 자사 프로모 강세", " strong own promo")}` : `${pmShopLabel(r.retailer)}${T(" 경쟁 공격적 할인", " aggressive rival discount")}`, metric: `-${d}%`, metricTone: "down", before: r.srp, after: r.p0, channel: r.retailer, url: r.url, score: d * (own ? 0.75 : 1) })
       }
       // 재고(보조) — 점수 낮춰 편중 방지. 경쟁사 품절은 반사이익, 자사 품절은 손실.
       if (r.availability === "OutOfStock" && r.d0) {
-        add({ id: `s${i}`, kind: "stock", sev: own ? "alert" : "opp", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)} 자사 품절 — 판매 기회 손실` : `${pmShopLabel(r.retailer)} 경쟁사 품절 — 반사이익`, metric: "품절", metricTone: "flat", before: null, after: null, channel: r.retailer, url: r.url, score: own ? 42 : 16 })
+        add({ id: `s${i}`, kind: "stock", sev: own ? "alert" : "opp", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)}${T(" 자사 품절 — 판매 기회 손실", " own stockout — lost sales opportunity")}` : `${pmShopLabel(r.retailer)}${T(" 경쟁사 품절 — 반사이익", " rival stockout — our gain")}`, metric: "품절", metricTone: "flat", before: null, after: null, channel: r.retailer, url: r.url, score: own ? 42 : 16 })
       }
     })
 
@@ -89,16 +93,16 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
     A.forEach((ad, i) => {
       const cat = normCat(ad.category)
       const own = /^lg\b|엘지|엘지전자/i.test(ad.brand)
-      const head = cleanTxt(ad.headline).slice(0, 44) || (own ? "자사 광고" : `${ad.brand} 광고`)
-      const at = AD_TYPE[ad.ad_type] ?? "광고"
+      const head = cleanTxt(ad.headline).slice(0, 44) || (own ? T("자사 광고", "Own ad") : `${ad.brand}${T(" 광고", " ad")}`)
+      const at = AD_TYPE[ad.ad_type] ?? T("광고", "Ad")
       const offer = cleanTxt(ad.offer).slice(0, 20)
       // 프로모/광고 종료 임박(D-5 이내) — 경쟁사 종료=압력 완화(기회), 자사 종료=후속 점검(주의)
       if (ad.days_to_end != null && ad.days_to_end >= 0 && ad.days_to_end <= 5) {
-        add({ id: `ae${i}`, kind: "ad", sev: own ? "warn" : "opp", cat, brand: ad.brand, own, title: head, detail: own ? "자사 광고 종료 임박 — 후속 캠페인 점검" : `${ad.brand} ${at} 종료 임박 — 경쟁 압력 완화`, metric: `D-${ad.days_to_end}`, metricTone: "flat", before: null, after: null, channel: ad.venue, url: ad.ad_url, score: (6 - ad.days_to_end) * 10 + (offer ? 14 : 0) + (own ? -8 : 0) })
+        add({ id: `ae${i}`, kind: "ad", sev: own ? "warn" : "opp", cat, brand: ad.brand, own, title: head, detail: own ? T("자사 광고 종료 임박 — 후속 캠페인 점검", "Own ad ending soon — plan follow-up campaign") : `${ad.brand} ${at}${T(" 종료 임박 — 경쟁 압력 완화", " ending soon — competitive pressure easing")}`, metric: `D-${ad.days_to_end}`, metricTone: "flat", before: null, after: null, channel: ad.venue, url: ad.ad_url, score: (6 - ad.days_to_end) * 10 + (offer ? 14 : 0) + (own ? -8 : 0) })
       }
       // 신규 광고 개시(D+3 이내) — 경쟁사 신규 캠페인=주시, 자사=정보
       if (ad.days_since_start != null && ad.days_since_start >= 0 && ad.days_since_start <= 3) {
-        add({ id: `an${i}`, kind: "ad", sev: own ? "opp" : "warn", cat, brand: ad.brand, own, title: head, detail: own ? `자사 신규 ${at} 광고 개시` : `${ad.brand} 신규 ${at} 광고 — 경쟁 캠페인 주시`, metric: offer || at, metricTone: "flat", before: null, after: null, channel: ad.venue, url: ad.ad_url, score: (4 - ad.days_since_start) * 8 + (offer ? 12 : 0) + (own ? -10 : 0) })
+        add({ id: `an${i}`, kind: "ad", sev: own ? "opp" : "warn", cat, brand: ad.brand, own, title: head, detail: own ? `${T("자사 신규", "New own")} ${at}${T(" 광고 개시", " ad launched")}` : `${ad.brand} ${T("신규", "new")} ${at}${T(" 광고 — 경쟁 캠페인 주시", " ad — monitor rival campaign")}`, metric: offer || at, metricTone: "flat", before: null, after: null, channel: ad.venue, url: ad.ad_url, score: (4 - ad.days_since_start) * 8 + (offer ? 12 : 0) + (own ? -10 : 0) })
       }
     })
     return out
@@ -119,7 +123,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
   const counts = React.useMemo(() => { const c: Record<string, number> = { price: 0, promo: 0, ad: 0, stock: 0 }; signals.forEach((s) => c[s.kind]++); return c }, [signals])
   const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
 
-  if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">불러오는 중</div>
+  if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("불러오는 중", "Loading")}</div>
 
   const metricChip = (s: Signal) => {
     if (s.before != null && s.after != null && s.before > 0) {
@@ -127,31 +131,31 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       return <span className="inline-flex items-center gap-1 whitespace-nowrap rounded-md bg-gray-50 dark:bg-gray-800 px-1.5 py-0.5 text-[11px] font-semibold tabular-nums text-gray-600 dark:text-gray-300"><span className="text-gray-400 line-through dark:text-gray-500">{peso(s.before)}</span>→<span className="font-bold text-gray-900 dark:text-gray-50">{peso(s.after)}</span><span className={"font-bold " + (down ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{s.metric}</span></span>
     }
     const tone = s.metric.startsWith("D-") ? "bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300" : s.metric === "품절" ? "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" : "bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300"
-    return <span className={"inline-flex items-center whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-bold " + tone}>{s.metric}</span>
+    return <span className={"inline-flex items-center whitespace-nowrap rounded-md px-1.5 py-0.5 text-[11px] font-bold " + tone}>{s.metric === "품절" ? T("품절", "Out of stock") : s.metric}</span>
   }
 
   return (
     <div className="mt-3 flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both" }}>
       {/* 필터바 — 일일 가격 변동과 동일한 상단 묶음(bordered) */}
       <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">제품</span>
+        <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("제품", "Product")}</span>
         {["전체", ...CATS].map((c) => {
           const n = c === "전체" ? signals.length : (catCounts[c] ?? 0)
           if (c !== "전체" && n === 0) return null
-          return <button key={c} type="button" onClick={() => setCatF(c)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (c === catF ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{c === "전체" ? "전체" : <><span className={"h-1.5 w-1.5 rounded-full " + (CAT_DOT[c] ?? "bg-gray-400")} />{c}</>}<span className={"tabular-nums text-[10.5px] " + (c === catF ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+          return <button key={c} type="button" onClick={() => setCatF(c)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (c === catF ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{c === "전체" ? T("전체", "All") : <><span className={"h-1.5 w-1.5 rounded-full " + (CAT_DOT[c] ?? "bg-gray-400")} />{CAT_LABEL[c] ?? c}</>}<span className={"tabular-nums text-[10.5px] " + (c === catF ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
         })}
         <span className="mx-1 h-4 w-px bg-gray-200 dark:bg-gray-700" />
-        <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">신호</span>
+        <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("신호", "Signal")}</span>
         {KIND_FILTERS.map((f) => {
           const n = f.k === "전체" ? signals.length : counts[f.k]
-          return <button key={f.k} type="button" onClick={() => setKind(f.k)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (f.k === kind ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{f.label}<span className={"tabular-nums text-[10.5px] " + (f.k === kind ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+          return <button key={f.k} type="button" onClick={() => setKind(f.k)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (f.k === kind ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{f.k === "전체" ? T("전체", "All") : KIND_LABEL[f.k]}<span className={"tabular-nums text-[10.5px] " + (f.k === kind ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
         })}
-        <span className="ml-auto hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">최신 {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+        <span className="ml-auto hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
 
       {/* 제품(모델)별로 묶은 그룹 카드 — 헤더(제품·카테고리·신호수) + 소속 신호 나열 */}
       {groups.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400 dark:text-gray-500">해당 신호가 없습니다.</div>
+        <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("해당 신호가 없습니다.", "No matching signals.")}</div>
       ) : (
         <div className="flex flex-col gap-2.5">
           {groups.map((g, gi) => { const head = g[0]; return (
@@ -159,15 +163,15 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
               {/* 그룹 헤더 — 제품명 + 카테고리 + 신호 수 */}
               <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2">
                 <span className={"h-2 w-2 shrink-0 rounded-full " + (CAT_DOT[head.cat] ?? "bg-gray-400")} />
-                <span className="shrink-0 whitespace-nowrap text-[13px] font-bold text-gray-900 dark:text-gray-50">{head.own ? <span className="text-indigo-700 dark:text-indigo-300">{head.title}</span> : head.title}{head.own ? <span className="ml-1 rounded bg-indigo-100 dark:bg-indigo-500/20 px-1 py-px text-[9.5px] font-bold text-indigo-600 dark:text-indigo-300">자사</span> : null}</span>
-                <span className="hidden rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 sm:inline">{head.cat}</span>
-                <span className="ml-auto shrink-0 rounded-full bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[10px] font-bold tabular-nums text-gray-500 dark:text-gray-400">신호 {g.length}</span>
+                <span className="shrink-0 whitespace-nowrap text-[13px] font-bold text-gray-900 dark:text-gray-50">{head.own ? <span className="text-indigo-700 dark:text-indigo-300">{head.title}</span> : head.title}{head.own ? <span className="ml-1 rounded bg-indigo-100 dark:bg-indigo-500/20 px-1 py-px text-[9.5px] font-bold text-indigo-600 dark:text-indigo-300">{T("자사", "Own")}</span> : null}</span>
+                <span className="hidden rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 sm:inline">{CAT_LABEL[head.cat] ?? head.cat}</span>
+                <span className="ml-auto shrink-0 rounded-full bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[10px] font-bold tabular-nums text-gray-500 dark:text-gray-400">{T("신호", "Signals")} {g.length}</span>
               </div>
               {/* 소속 신호들 */}
               {g.map((s, i) => { const km = KIND_META[s.kind]; return (
                 <div key={s.id + i} className="flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 transition-colors last:border-0 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
-                  <span className={"inline-flex w-12 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + km.cls}>{km.label}</span>
-                  <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + SEV_META[s.sev].dot} title={SEV_META[s.sev].label} />
+                  <span className={"inline-flex w-12 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + km.cls}>{KIND_LABEL[s.kind]}</span>
+                  <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + SEV_META[s.sev].dot} title={SEV_LABEL[s.sev]} />
                   <div className="flex min-w-0 flex-1 items-baseline gap-2">
                     <span className="truncate text-[12px] text-gray-500 dark:text-gray-400">{s.detail}</span>
                   </div>
@@ -179,7 +183,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
           ) })}
         </div>
       )}
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">감지 룰: 가격 급락/급등(3일 실판매가 −6%↓·+8%↑) · 프로모(SRP 대비 ≥30% 할인) · 광고(종료 D-5 이내·신규 D+3 이내, v_competitor_ads_board) · 재고(보조) · 전체 상위 신호 큐레이션 · 유리(기회)/불리(경보·주의)</p>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">{T("감지 룰: 가격 급락/급등(3일 실판매가 −6%↓·+8%↑) · 프로모(SRP 대비 ≥30% 할인) · 광고(종료 D-5 이내·신규 D+3 이내, v_competitor_ads_board) · 재고(보조) · 전체 상위 신호 큐레이션 · 유리(기회)/불리(경보·주의)", "Detection rules: price plunge/spike (3-day street price −6%↓·+8%↑) · promo (≥30% off SRP) · ads (ending within D-5 · new within D+3, v_competitor_ads_board) · stock (secondary) · curated top signals overall · favorable (opportunity)/adverse (alert·watch)")}</p>
     </div>
   )
 }

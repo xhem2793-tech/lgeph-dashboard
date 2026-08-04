@@ -31,6 +31,7 @@ import { MoversView } from "@/components/competitors/MoversView"
 import EnergyLabelView from "@/components/EnergyLabelView"
 import { EolView } from "@/components/competitors/EolView"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
+import { T } from "@/lib/i18n"
 
 /** 경쟁사 가격 — 좌 1/4 메뉴판 + 우 3/4 콘텐츠.
  *
@@ -45,38 +46,38 @@ type Status = "live" | "next" | "plan"
 
 const GROUPS: { group: string; items: { key: string; no: number; label: string; desc: string; status: Status; badge?: "예정" | "beta" }[] }[] = [
   {
-    group: "가격 모니터링",
+    group: T("가격 모니터링", "Price Monitoring"),
     items: [
-      { key: "board", no: 0, label: "채널별 가격 비교", desc: "거래선 × 대표 제품 오늘가 매트릭스 · 동일모델 유통 최저가", status: "live" },
-      { key: "movers", no: 1, label: "일일 가격 변동", desc: "3일 가격·변동폭·할인율", status: "live" },
-      { key: "outlier", no: 12, label: "이상치 알림", desc: "가격 급락·급등·깊은할인·품절 감지 · 유리/불리 신호", status: "live", badge: "beta" },
+      { key: "board", no: 0, label: T("채널별 가격 비교", "Price by Channel"), desc: T("거래선 × 대표 제품 오늘가 매트릭스 · 동일모델 유통 최저가", "Retailer × key-model today-price matrix · lowest cross-channel price for the same model"), status: "live" },
+      { key: "movers", no: 1, label: T("일일 가격 변동", "Daily Price Moves"), desc: T("3일 가격·변동폭·할인율", "3-day prices, change and discount rate"), status: "live" },
+      { key: "outlier", no: 12, label: T("이상치 알림", "Outlier Alerts"), desc: T("가격 급락·급등·깊은할인·품절 감지 · 유리/불리 신호", "Detects sharp drops/spikes, deep discounts and stockouts · favorable/adverse signals"), status: "live", badge: "beta" },
     ],
   },
   {
-    group: "포지셔닝·비교",
+    group: T("포지셔닝·비교", "Positioning & Comparison"),
     items: [
-      { key: "asp", no: 2, label: "가격 포지셔닝", desc: "브랜드 × 가격대 산점도 · New DOE ★ · LG 위치", status: "live" },
-      { key: "energy", no: 15, label: "에너지 라벨", desc: "에어컨·냉장고·TV 브랜드별 에너지효율·별점(DOE)", status: "live" },
-      { key: "gap", no: 3, label: "LG vs 경쟁 갭", desc: "동급 스펙 가격차(%) · 프리미엄/디스카운트", status: "next" },
-      { key: "trend", no: 5, label: "ASP 추세", desc: "주·월 평균가 시계열 · 가격 인덱스(100)", status: "next" },
+      { key: "asp", no: 2, label: T("가격 포지셔닝", "Price Positioning"), desc: T("브랜드 × 가격대 산점도 · New DOE ★ · LG 위치", "Brand × price-band scatter · New DOE ★ · LG position"), status: "live" },
+      { key: "energy", no: 15, label: T("에너지 라벨", "Energy Labels"), desc: T("에어컨·냉장고·TV 브랜드별 에너지효율·별점(DOE)", "Energy efficiency and star rating (DOE) by brand for RAC, REF and TV"), status: "live" },
+      { key: "gap", no: 3, label: T("LG vs 경쟁 갭", "LG vs Competitor Gap"), desc: T("동급 스펙 가격차(%) · 프리미엄/디스카운트", "Like-for-like spec price gap (%) · premium/discount"), status: "next" },
+      { key: "trend", no: 5, label: T("ASP 추세", "ASP Trend"), desc: T("주·월 평균가 시계열 · 가격 인덱스(100)", "Weekly/monthly average-price time series · price index (100)"), status: "next" },
     ],
   },
   {
-    group: "채널·프로모션",
+    group: T("채널·프로모션", "Channel & Promotion"),
     items: [
-      { key: "promo", no: 4, label: "프로모션 트래커", desc: "브랜드별 프로모 강도 · 유통 캠페인", status: "live", badge: "예정" },
-      { key: "deals", no: 14, label: "프로모 비교", desc: "실딜 리스트 · 할인율·무료배송·번들·쿠폰 · 유통별", status: "live" },
+      { key: "promo", no: 4, label: T("프로모션 트래커", "Promotion Tracker"), desc: T("브랜드별 프로모 강도 · 유통 캠페인", "Promo intensity by brand · retailer campaigns"), status: "live", badge: "예정" },
+      { key: "deals", no: 14, label: T("프로모 비교", "Deal Comparison"), desc: T("실딜 리스트 · 할인율·무료배송·번들·쿠폰 · 유통별", "Live deal list · discount, free shipping, bundle, coupon · by retailer"), status: "live" },
     ],
   },
   {
-    group: "시장 신호·인사이트",
+    group: T("시장 신호·인사이트", "Market Signals & Insights"),
     items: [
-      { key: "lifecycle", no: 7, label: "신제품·EOL 감지", desc: "신규 리스팅 등장 / 구모델 소멸", status: "live", badge: "beta" },
-      { key: "volatility", no: 8, label: "가격 변동성", desc: "모델별 변경 빈도·표준편차 랭킹", status: "plan" },
-      { key: "intensity", no: 9, label: "경쟁 강도 지수", desc: "취급 브랜드 수·가격 밀집도", status: "plan" },
-      { key: "listing", no: 10, label: "취급·노출 시그널", desc: "브랜드별 리스팅 수 변화", status: "plan" },
-      { key: "fx", no: 11, label: "환율 연동 분석", desc: "페소 약세 ↔ 수입가전 가격 상관", status: "plan" },
-      { key: "sowhat", no: 13, label: "경쟁분석 요약", desc: "핵심 인사이트 · 액션(Owner·Timing)", status: "plan" },
+      { key: "lifecycle", no: 7, label: T("신제품·EOL 감지", "New Product & EOL Detection"), desc: T("신규 리스팅 등장 / 구모델 소멸", "New listings appearing / legacy models disappearing"), status: "live", badge: "beta" },
+      { key: "volatility", no: 8, label: T("가격 변동성", "Price Volatility"), desc: T("모델별 변경 빈도·표준편차 랭킹", "Change frequency and standard-deviation ranking by model"), status: "plan" },
+      { key: "intensity", no: 9, label: T("경쟁 강도 지수", "Competitive Intensity Index"), desc: T("취급 브랜드 수·가격 밀집도", "Number of brands carried and price density"), status: "plan" },
+      { key: "listing", no: 10, label: T("취급·노출 시그널", "Assortment & Exposure Signals"), desc: T("브랜드별 리스팅 수 변화", "Change in listing count by brand"), status: "plan" },
+      { key: "fx", no: 11, label: T("환율 연동 분석", "FX-Linked Analysis"), desc: T("페소 약세 ↔ 수입가전 가격 상관", "Peso weakness ↔ imported-appliance price correlation"), status: "plan" },
+      { key: "sowhat", no: 13, label: T("경쟁분석 요약", "Competitive Analysis Summary"), desc: T("핵심 인사이트 · 액션(Owner·Timing)", "Key insights · actions (Owner, Timing)"), status: "plan" },
     ],
   },
 ]
@@ -323,7 +324,7 @@ export default function Competitors() {
           {/* 좌 메뉴 — 뉴스·경쟁사 광고 사이드바와 동일한 구조(아이콘 헤더·그룹 라벨·우측 상태 메타) */}
           <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
-            <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">분석</p>
+            <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분석", "Analysis")}</p>
           </div>
           <div className="px-2 py-3">
             <div className="flex flex-col gap-1">
@@ -343,7 +344,7 @@ export default function Competitors() {
                       {view === it.key && <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />}
                       <span className="flex w-full items-center gap-1.5">
                         <span className={"flex-1 truncate text-[14px] transition-colors " + (view === it.key ? "font-semibold text-indigo-700 dark:text-indigo-300" : "font-medium text-gray-700 dark:text-gray-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400")}>{it.label}</span>
-                        {it.badge === "beta" ? <span className="shrink-0 rounded-full border border-indigo-200 bg-indigo-50 px-1.5 py-px text-[8.5px] font-bold uppercase tracking-wide text-indigo-600 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400">beta</span> : (it.badge === "예정" || it.status !== "live") ? <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-px text-[8.5px] font-bold uppercase tracking-wide text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">예정</span> : null}
+                        {it.badge === "beta" ? <span className="shrink-0 rounded-full border border-indigo-200 bg-indigo-50 px-1.5 py-px text-[8.5px] font-bold uppercase tracking-wide text-indigo-600 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400">beta</span> : (it.badge === "예정" || it.status !== "live") ? <span className="shrink-0 rounded-full border border-amber-200 bg-amber-50 px-1.5 py-px text-[8.5px] font-bold uppercase tracking-wide text-amber-600 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-400">{T("예정", "Soon")}</span> : null}
                       </span>
                     </button>
                   ))}
@@ -368,7 +369,7 @@ export default function Competitors() {
               </span>
             </h2>
             <span className="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
-              최신 {stamp ? fmtStamp(stamp) : md(asOf)}
+              {T("최신", "Updated")} {stamp ? fmtStamp(stamp) : md(asOf)}
               <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
                 C
               </span>
@@ -394,7 +395,7 @@ export default function Competitors() {
           ) : active?.status !== "live" ? (
             <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
               <p className="text-[12.5px] font-medium text-gray-600 dark:text-gray-300">{active?.desc}</p>
-              <p className="text-[12px] text-gray-400 dark:text-gray-500">데이터 연결 예정 — 뷰 확정 후 구현</p>
+              <p className="text-[12px] text-gray-400 dark:text-gray-500">{T("데이터 연결 예정 — 뷰 확정 후 구현", "Data connection pending — to be built once the view is finalized")}</p>
             </div>
           ) : (
             <>
@@ -403,43 +404,43 @@ export default function Competitors() {
 
               {/* 필터 바 — 매장이 실제로 진열을 나누는 축 순서: 카테고리 → 세그먼트 → 가격대 → 브랜드 → 유통 */}
               <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
-                <FacetMenu label="카테고리" value={cat} active={cat !== "전체"}>
+                <FacetMenu label={T("카테고리", "Category")} value={cat} active={cat !== "전체"}>
                   {CATS.map((c) => (
                     <Opt key={c} on={cat === c} count={rows ? (c === "전체" ? rows.length : rows.filter((r) => r.category === c).length) : null} onClick={() => { setCat(c); setSeg("전체") }}>{c}</Opt>
                   ))}
                 </FacetMenu>
                 {(SEGMENTS[cat] ?? []).length > 0 ? (
-                  <FacetMenu label="세그먼트" value={seg} active={seg !== "전체"}>
-                    <Opt on={seg === "전체"} onClick={() => setSeg("전체")}>전체</Opt>
+                  <FacetMenu label={T("세그먼트", "Segment")} value={seg} active={seg !== "전체"}>
+                    <Opt on={seg === "전체"} onClick={() => setSeg("전체")}>{T("전체", "All")}</Opt>
                     {(SEGMENTS[cat] ?? []).map((s) => (
                       <Opt key={s.t} on={seg === s.t} onClick={() => setSeg(s.t)}>{s.t}</Opt>
                     ))}
                   </FacetMenu>
                 ) : null}
-                <FacetMenu label="가격대" value={band} active={band !== "전체"}>
-                  <Opt on={band === "전체"} onClick={() => setBand("전체")}>전체</Opt>
+                <FacetMenu label={T("가격대", "Price band")} value={band} active={band !== "전체"}>
+                  <Opt on={band === "전체"} onClick={() => setBand("전체")}>{T("전체", "All")}</Opt>
                   {BANDS.map((b) => (
                     <Opt key={b.t} on={band === b.t} onClick={() => setBand(b.t)}>{b.t}</Opt>
                   ))}
                 </FacetMenu>
-                <FacetMenu label="브랜드" value={brands.length === BRANDS.length ? "전체" : brands.length + "개"} active={brands.length !== BRANDS.length}>
+                <FacetMenu label={T("브랜드", "Brand")} value={brands.length === BRANDS.length ? T("전체", "All") : brands.length + T("개", " selected")} active={brands.length !== BRANDS.length}>
                   {BRANDS.map((b) => (
                     <Opt key={b} multi on={brands.includes(b)} count={rows ? rows.filter((r) => r.brand === b).length : null} onClick={() => toggle(brands, b, setBrands)}>{b}</Opt>
                   ))}
                 </FacetMenu>
-                <FacetMenu label="유통" value={shops.length === SHOPS.length ? "전체" : shops.length + "곳"} active={shops.length !== SHOPS.length}>
+                <FacetMenu label={T("유통", "Retailer")} value={shops.length === SHOPS.length ? T("전체", "All") : shops.length + T("곳", " selected")} active={shops.length !== SHOPS.length}>
                   {SHOPS.map((s) => (
                     <Opt key={s} multi on={shops.includes(s)} count={rows ? rows.filter((r) => r.retailer === s).length : null} onClick={() => toggle(shops, s, setShops)}>{s === "SM Appliance" ? "SM" : s}</Opt>
                   ))}
                 </FacetMenu>
                 <button type="button" onClick={() => setOnlyMoved(!onlyMoved)} className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium transition-colors " + (onlyMoved ? "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "border-transparent bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700")}>
                   <span className={"flex h-4 w-7 items-center rounded-full px-0.5 transition-colors " + (onlyMoved ? "bg-indigo-600" : "bg-gray-300")}><span className={"h-3 w-3 rounded-full bg-white dark:bg-gray-900 transition-transform " + (onlyMoved ? "translate-x-3" : "")} /></span>
-                  변동분만
+                  {T("변동분만", "Changed only")}
                 </button>
                 <div className="ml-auto flex items-center gap-2.5">
-                  <ListSearch value={q} onChange={setQ} placeholder="모델코드·모델명 검색" />
-                  <span className="whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500"><b className="text-gray-700 dark:text-gray-200">{data.length}</b>행{stamp ? " · 최신 " + fmtStamp(stamp) : ""} <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
-                  <button type="button" onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-300">엑셀</button>
+                  <ListSearch value={q} onChange={setQ} placeholder={T("모델코드·모델명 검색", "Search model code or name")} />
+                  <span className="whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500"><b className="text-gray-700 dark:text-gray-200">{data.length}</b>{T("행", " rows")}{stamp ? " · " + T("최신", "Updated") + " " + fmtStamp(stamp) : ""} <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+                  <button type="button" onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-300">{T("엑셀", "Excel")}</button>
                 </div>
               </div>
 
@@ -456,7 +457,7 @@ export default function Competitors() {
                             (c.num ? "text-right" : "text-left")
                           }
                         >
-                          {c.t === "D-2" ? "D-2 " + md(rows?.[0]?.d2 ?? null) : c.t === "D-1" ? "D-1 " + md(rows?.[0]?.d1 ?? null) : c.t === "당일" ? "당일 " + md(asOf) : c.t}
+                          {c.t === "D-2" ? "D-2 " + md(rows?.[0]?.d2 ?? null) : c.t === "D-1" ? "D-1 " + md(rows?.[0]?.d1 ?? null) : c.t === "당일" ? T("당일 ", "Today ") + md(asOf) : c.t}
                           {sort.k === c.k ? <span className="ml-0.5 text-indigo-500 dark:text-indigo-400">{sort.asc ? "▲" : "▼"}</span> : null}
                         </th>
                       ))}
@@ -466,13 +467,13 @@ export default function Competitors() {
                     {rows === null ? (
                       <tr>
                         <td colSpan={activeCols.length} className="px-2 py-10 text-center text-[12px] text-gray-400 dark:text-gray-500">
-                          불러오는 중…
+                          {T("불러오는 중…", "Loading…")}
                         </td>
                       </tr>
                     ) : data.length === 0 ? (
                       <tr>
                         <td colSpan={activeCols.length} className="px-2 py-10 text-center text-[12px] text-gray-400 dark:text-gray-500">
-                          조건에 맞는 행 없음
+                          {T("조건에 맞는 행 없음", "No rows match the filters")}
                         </td>
                       </tr>
                     ) : (
@@ -517,7 +518,7 @@ export default function Competitors() {
                 </table>
               </div>
               <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">
-                표는 상위 100행만 표시(정렬 기준) · 엑셀(CSV)에는 필터된 전체 {data.length}행 전부 · 모델코드에 마우스를 올리면 원문 모델명
+                {T("표는 상위 100행만 표시(정렬 기준) · 엑셀(CSV)에는 필터된 전체 ", "Table shows the top 100 rows (by sort) · Excel (CSV) includes all filtered ")}{data.length}{T("행 전부 · 모델코드에 마우스를 올리면 원문 모델명", " rows · hover a model code to see the full model name")}
               </p>
             </>
           )}</ErrorBoundary>

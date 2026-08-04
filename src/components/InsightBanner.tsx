@@ -1,6 +1,7 @@
 "use client"
 
 import React from "react"
+import { T } from "@/lib/i18n"
 
 /** 페이지 상단 인사이트 배너 — 뉴스·경쟁사 광고·환율 뷰가 공유하는 단일 컴포넌트.
  *  워딩은 public/banners.json 매니페스트에서 로드(주간/월간 자동 갱신).
@@ -32,9 +33,9 @@ function rich(s: string): React.ReactNode[] {
 function fmtPeriod(p?: string | null): string {
   if (!p) return ""
   const w = p.match(/W(\d+)/)
-  if (w) return Number(w[1]) + "주차"
+  if (w) return Number(w[1]) + T("주차", "W")
   const m = p.match(/^\d{4}-(\d{2})$/)
-  if (m) return Number(m[1]) + "월"
+  if (m) return Number(m[1]) + T("월", "M")
   return p
 }
 
@@ -60,7 +61,7 @@ export function InsightBanner({ banner, open, onToggle }: { banner: Banner; open
           <div className="border-t border-indigo-100/70 dark:border-indigo-500/25 px-4 pb-3.5 pt-3">
             <p className="text-[12.5px] leading-relaxed text-gray-700 dark:text-gray-200">{rich(banner.body)}</p>
             <p className="mt-2 flex items-start gap-1.5 text-[12px] leading-relaxed text-indigo-700 dark:text-indigo-300">
-              <span className="mt-0.5 shrink-0 rounded-md bg-indigo-600/10 dark:bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">{banner.insightLabel || "LG 관점"}</span>
+              <span className="mt-0.5 shrink-0 rounded-md bg-indigo-600/10 dark:bg-indigo-500/20 px-1.5 py-0.5 text-[10px] font-bold text-indigo-700 dark:text-indigo-300">{banner.insightLabel || T("LG 관점", "LG View")}</span>
               <span>{rich(banner.insight)}</span>
             </p>
           </div>

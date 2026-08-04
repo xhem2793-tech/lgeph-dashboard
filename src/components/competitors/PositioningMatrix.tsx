@@ -2,6 +2,7 @@
 
 // 가격 포지셔닝 매트릭스 — 브랜드×가격대 카드맵(로그축·재고필터·MED밴드·★조인).
 import React from "react"
+import { T } from "@/lib/i18n"
 import { fmtStamp, type PriceRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormOf, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit, pmTierOf, PM_TIER_BANDS } from "@/lib/classify"
 import { peso, pmShopLabel, pmStarCls, pmTierLabel, pmTierBar, DOE_CODE, doeNorm, pmMean, pmTicks, pmShort, PmDrop, ListSearch } from "@/components/competitors/shared"
@@ -156,13 +157,13 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
     <div className="flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
       {/* 상단 가로 필터 — 일일 가격 변동과 동일한 테두리 묶음 */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm(pmFormsFor(k)[0] ?? "전체"); setShop("전체") }} /></div>
-        {formList.length > 0 && <div className="w-fit"><PmDrop label="유형" sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={setForm} /></div>}
-        {sizeList.length > 0 && <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSpec} options={[{ k: "전체", t: "전체" }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
-        <div className="w-fit"><PmDrop label="거래선" sel={effShop} options={[{ k: "전체", t: "전체" }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
-        <div className="w-fit"><PmDrop label="재고" sel={stockF} options={["전체", "재고있음", "재고없음"].map((s) => ({ k: s, t: s }))} onSelect={setStockF} /></div>
-        <ListSearch value={q} onChange={setQ} placeholder="모델·브랜드 검색" className="ml-auto" />
-        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 lg:flex">최신 {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+        <div className="w-fit"><PmDrop label={T("제품", "Product")} sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setSpec("전체"); setForm(pmFormsFor(k)[0] ?? "전체"); setShop("전체") }} /></div>
+        {formList.length > 0 && <div className="w-fit"><PmDrop label={T("유형", "Type")} sel={effForm} options={formList.map((t) => ({ k: t, t }))} onSelect={setForm} /></div>}
+        {sizeList.length > 0 && <div className="w-fit"><PmDrop label={isAC(cat) ? T("마력", "HP") : cat === "TV" ? T("화면", "Screen") : T("용량", "Capacity")} sel={effSpec} options={[{ k: "전체", t: T("전체", "All") }, ...sizeList.map((t) => ({ k: t, t }))]} onSelect={setSpec} /></div>}
+        <div className="w-fit"><PmDrop label={T("거래선", "Retailer")} sel={effShop} options={[{ k: "전체", t: T("전체", "All") }, ...shopList.map((s) => ({ k: s, t: pmShopLabel(s) }))]} onSelect={setShop} /></div>
+        <div className="w-fit"><PmDrop label={T("재고", "Stock")} sel={stockF} options={[{ k: "전체", t: T("전체", "All") }, { k: "재고있음", t: T("재고있음", "In stock") }, { k: "재고없음", t: T("재고없음", "Out of stock") }]} onSelect={setStockF} /></div>
+        <ListSearch value={q} onChange={setQ} placeholder={T("모델·브랜드 검색", "Search model or brand")} className="ml-auto" />
+        <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 lg:flex">{T("최신", "Latest")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
 
       {/* 매트릭스 */}
@@ -171,17 +172,17 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
           <header className="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
             <span className="h-4 w-1 rounded bg-indigo-500" />
             {(() => { const sp = effSpec !== "전체" ? effSpec : effForm !== "전체" ? effForm : ""; return (
-              <span className="text-[22.5px] font-bold leading-tight text-gray-800 dark:text-gray-100">{cat} <span className="font-semibold text-gray-400 dark:text-gray-500">vs 경쟁사</span> <span className="text-indigo-600 dark:text-indigo-400">{sp ? sp + " " : ""}가격</span></span>
+              <span className="text-[22.5px] font-bold leading-tight text-gray-800 dark:text-gray-100">{cat} <span className="font-semibold text-gray-400 dark:text-gray-500">{T("vs 경쟁사", "vs Competitors")}</span> <span className="text-indigo-600 dark:text-indigo-400">{sp ? sp + " " : ""}{T("가격", "Price")}</span></span>
             ) })()}
             <div className="ml-auto flex items-center gap-1.5">
               {/* 세로축 스케일: Auto(선형) / 로그 */}
-              <div className="flex items-center rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)] text-[10.5px] font-semibold" title="세로축 가격 스케일 — 로그는 가격대가 넓을 때 저가 구간을 펼쳐 봄">
+              <div className="flex items-center rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)] text-[10.5px] font-semibold" title={T("세로축 가격 스케일 — 로그는 가격대가 넓을 때 저가 구간을 펼쳐 봄", "Y-axis price scale — log expands the low-price range when the price span is wide")}>
                 <button type="button" onClick={() => setLogY(false)} className={"rounded-full px-2.5 py-0.5 transition-all duration-200 active:scale-[.93] " + (!logY ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 dark:text-gray-400")}>Auto</button>
-                <button type="button" onClick={() => setLogY(true)} className={"rounded-full px-2.5 py-0.5 transition-all duration-200 active:scale-[.93] " + (logY ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 dark:text-gray-400")}>로그</button>
+                <button type="button" onClick={() => setLogY(true)} className={"rounded-full px-2.5 py-0.5 transition-all duration-200 active:scale-[.93] " + (logY ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 dark:text-gray-400")}>{T("로그", "Log")}</button>
               </div>
-              <button type="button" onClick={dlPng} disabled={dling} data-noexport="1" title="카드 전체를 PPT 슬라이드 크기 이미지로 저장" className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[10.5px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-50">
+              <button type="button" onClick={dlPng} disabled={dling} data-noexport="1" title={T("카드 전체를 PPT 슬라이드 크기 이미지로 저장", "Save the full card as a PPT slide-sized image")} className="flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[10.5px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-50">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
-                {dling ? "생성중…" : "이미지"}
+                {dling ? T("생성중…", "Generating…") : T("이미지", "Image")}
               </button>
             </div>
           </header>
@@ -193,7 +194,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
               {brands.map((b) => { const lg = b === "LG"; return (
                 <div key={b} className="min-w-0 flex-1 px-1 text-center">
                   <div className={"truncate text-[12.5px] font-extrabold tracking-tight " + (lg ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{b}</div>
-                  <div className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{brandN(b)}개</div>
+                  <div className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{brandN(b)}{T("개", "")}</div>
                 </div>
               ) })}
             </div>
@@ -202,15 +203,15 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
           {/* 플롯 — 좌 축 게이지 + 브랜드별 세로 레인(카드는 레인 내부에 가격순 배치) */}
           <div key={cat + effSpec + effShop + stockF} className="flex px-4 pb-3 pt-3">
             {cards.length === 0 ? (
-              <div className="flex h-44 w-full items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">해당 조건의 데이터가 부족합니다</div>
+              <div className="flex h-44 w-full items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">{T("해당 조건의 데이터가 부족합니다", "Insufficient data for the selected filters")}</div>
             ) : (
               <>
                 <div className="relative shrink-0" style={{ width: GUT, height: plotH }}>
                   {ticks.map((v) => (
                     <span key={v} className="absolute right-2 -translate-y-1/2 text-[11px] font-semibold tabular-nums text-gray-500 dark:text-gray-400" style={{ top: topFor(v) }}>{pmShort(v)}</span>
                   ))}
-                  <span className="absolute right-2 top-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">고가</span>
-                  <span className="absolute right-2 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500" style={{ bottom: 2 }}>저가</span>
+                  <span className="absolute right-2 top-0 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("고가", "High")}</span>
+                  <span className="absolute right-2 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500" style={{ bottom: 2 }}>{T("저가", "Low")}</span>
                 </div>
                 <div className="relative flex-1" style={{ height: plotH }}>
                   {/* 좌측 세로축(absolute → 컬럼 폭에 영향 없음, 정렬 유지) */}
@@ -228,16 +229,16 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
                       <div key={b} className={"relative min-w-0 flex-1 " + (lg ? "bg-indigo-50/40 dark:bg-indigo-500/5" : bi % 2 === 1 ? "bg-gray-50/50 dark:bg-gray-800/20" : "")}>
                         {cards.filter((c) => c.b === b).map((c, ci) => { const hit = !qq || (c.b + " " + c.label).toLowerCase().includes(qq); return (
                           <a key={c.label + ci} href={c.url ?? undefined} target={c.url ? "_blank" : undefined} rel="noreferrer"
-                            title={`${c.b} · ${c.label} · ${peso(c.avg)}${c.retailer ? " @ " + pmShopLabel(c.retailer) : ""} · ${c.shops}개 유통 취급${c.star != null ? " · New DOE ★" + c.star : ""}${c.kwh != null ? " · " + Math.round(c.kwh) + "kWh/월" : ""}${c.url ? " · 클릭→원문" : ""}`}
+                            title={`${c.b} · ${c.label} · ${peso(c.avg)}${c.retailer ? " @ " + pmShopLabel(c.retailer) : ""} · ${c.shops}${T("개 유통 취급", " retailers")}${c.star != null ? " · New DOE ★" + c.star : ""}${c.kwh != null ? " · " + Math.round(c.kwh) + T("kWh/월", "kWh/mo") : ""}${c.url ? T(" · 클릭→원문", " · Click for source") : ""}`}
                             className={"absolute block overflow-hidden rounded-lg border transition-all duration-200 hover:z-30 hover:shadow-md " + (c.url ? "cursor-pointer " : "cursor-default ") + (qq && !hit ? "opacity-20 " : "") + (qq && hit ? "z-20 ring-2 ring-indigo-500 " : "") + (c.oos ? "border-dashed border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 opacity-70 grayscale" : lg ? "z-10 border-transparent bg-indigo-600 text-white" : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-50")}
                             style={{ top: c.top, left: "50%", marginLeft: -(cardW / 2), width: cardW, animation: "rowIn .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (Math.min(ci, 8) * 0.03) + "s", willChange: "opacity" }}>
                             {/* 왼쪽 세로 스트립 = 가격대 색(LOW 초록·MED 파랑·프리미엄 주황) — 배지 대체 */}
-                            <span className={"absolute inset-y-0 left-0 w-1.5 " + pmTierBar(c.tier)} title={"가격대: " + pmTierLabel(c.tier)} />
+                            <span className={"absolute inset-y-0 left-0 w-1.5 " + pmTierBar(c.tier)} title={T("가격대: ", "Tier: ") + pmTierLabel(c.tier)} />
                             <div className="pl-2.5 pr-2">
                               {/* 1행 — 모델 서픽스 + 에너지등급(★) */}
                               <div className="flex items-center gap-1 py-0.5">
                                 <span className={"truncate text-[9.5px] font-medium " + (c.oos ? "text-gray-400 dark:text-gray-500" : lg ? "text-indigo-100" : "text-gray-500 dark:text-gray-400")}>{c.label}</span>
-                                {c.oos ? <span className="ml-auto shrink-0 rounded bg-gray-300 dark:bg-gray-600 px-1 text-[8px] font-bold leading-4 text-gray-600 dark:text-gray-200">품절</span> : c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
+                                {c.oos ? <span className="ml-auto shrink-0 rounded bg-gray-300 dark:bg-gray-600 px-1 text-[8px] font-bold leading-4 text-gray-600 dark:text-gray-200">{T("품절", "Sold out")}</span> : c.star != null && <span className={"ml-auto shrink-0 rounded px-1 text-[9px] font-bold leading-4 " + pmStarCls(c.star)}>★{c.star}</span>}
                               </div>
                               {/* 2행 — 가격 + 지수(최저가=100). 가격대는 왼쪽 색 스트립으로 표시 */}
                               <div className={"flex items-center gap-1 border-t py-0.5 " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
@@ -246,7 +247,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
                               </div>
                               {/* 3행 — 전력효율(월 소비전력) */}
                               <div className={"flex items-center justify-between gap-1 border-t py-0.5 text-[9px] " + (lg ? "border-indigo-400/40" : "border-gray-100 dark:border-gray-700/60")}>
-                                <span className={lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500"}>전력</span>
+                                <span className={lg ? "text-indigo-200" : "text-gray-400 dark:text-gray-500"}>{T("전력", "Power")}</span>
                                 <span className={"tabular-nums font-semibold " + (lg ? "text-white" : "text-gray-600 dark:text-gray-300")}>{c.kwh != null ? Math.round(c.kwh) + " kWh" : "—"}</span>
                               </div>
                             </div>
@@ -262,23 +263,23 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
 
           <footer className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-t border-gray-100 dark:border-gray-800 px-4 py-2.5 text-[11px] text-gray-500 dark:text-gray-400">
             <span className="font-semibold text-gray-600 dark:text-gray-300">New DOE ★</span>
-            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(5)}>★5·4</span>고효율</span>
+            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(5)}>★5·4</span>{T("고효율", "High-efficiency")}</span>
             <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(3)}>★3·2</span></span>
-            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(1)}>★1</span>저효율</span>
+            <span className="inline-flex items-center gap-1"><span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(1)}>★1</span>{T("저효율", "Low-efficiency")}</span>
             <span className="mx-0.5 h-3 w-px bg-gray-200 dark:bg-gray-700" />
-            <span className="font-semibold text-gray-600 dark:text-gray-300">가격대</span>
-            <span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-1.5 rounded-sm bg-emerald-400 dark:bg-emerald-500" />LOW 〈₱{Math.round((PM_TIER_BANDS[cat]?.[0] ?? 25000) / 10000)}만</span>
+            <span className="font-semibold text-gray-600 dark:text-gray-300">{T("가격대", "Tier")}</span>
+            <span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-1.5 rounded-sm bg-emerald-400 dark:bg-emerald-500" />LOW 〈₱{Math.round((PM_TIER_BANDS[cat]?.[0] ?? 25000) / 10000)}{T("만", "0k")}</span>
             <span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-1.5 rounded-sm bg-sky-400 dark:bg-sky-500" />MED</span>
-            <span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-1.5 rounded-sm bg-amber-400 dark:bg-amber-500" />프리미엄 ₱{Math.round((PM_TIER_BANDS[cat]?.[1] ?? 60000) / 10000)}만+</span>
-            <span className="ml-auto inline-flex items-center gap-1.5"><span className="inline-block h-3 w-4 rounded bg-indigo-600" />자사(LG) · <span className="inline-block h-3 w-4 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />경쟁사</span>
+            <span className="inline-flex items-center gap-1"><span className="inline-block h-3 w-1.5 rounded-sm bg-amber-400 dark:bg-amber-500" />{T("프리미엄", "Premium")} ₱{Math.round((PM_TIER_BANDS[cat]?.[1] ?? 60000) / 10000)}{T("만+", "0k+")}</span>
+            <span className="ml-auto inline-flex items-center gap-1.5"><span className="inline-block h-3 w-4 rounded bg-indigo-600" />{T("자사(LG)", "Own (LG)")} · <span className="inline-block h-3 w-4 rounded border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900" />{T("경쟁사", "Competitors")}</span>
           </footer>
         </div>
         <p className="mt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">
-          세로축 = <b className="text-gray-500 dark:text-gray-300">{exact ? pmShopLabel(effShop) + " 현금가" : "거래선 최저 현금가"}</b>(위=고가) · 가로축 = 브랜드(좌 저가→우 <b className="text-indigo-500 dark:text-indigo-400">LG</b>) · 카드 = 모델별(동일모델 거래선 병합, 우상단 ★=New DOE) · <span className="tabular-nums">( )</span> = 가격지수(최저=100) · 카드 클릭 → 원문
+          {T("세로축 =", "Y-axis =")} <b className="text-gray-500 dark:text-gray-300">{exact ? pmShopLabel(effShop) + T(" 현금가", " cash price") : T("거래선 최저 현금가", "Lowest retailer cash price")}</b>{T("(위=고가) · 가로축 = 브랜드(좌 저가→우 ", "(top = high) · X-axis = brand (left low → right ")}<b className="text-indigo-500 dark:text-indigo-400">LG</b>{T(") · 카드 = 모델별(동일모델 거래선 병합, 우상단 ★=New DOE) · ", ") · Card = per model (same-model retailers merged, top-right ★ = New DOE) · ")}<span className="tabular-nums">( )</span>{T(" = 가격지수(최저=100) · 카드 클릭 → 원문", " = price index (lowest = 100) · Click card → source")}
         </p>
-        <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">New DOE ★ = <b className="text-gray-500 dark:text-gray-400">2026 개정 에너지효율등급</b>(energy_labels 모델코드 {DOE_CODE[cat] || "-"} 매칭) · 가격 데이터 <b className="tabular-nums">{stamp ? fmtStamp(stamp) : "—"}</b> 기준 조인</p>
+        <p className="mt-1 text-[10px] text-gray-400 dark:text-gray-500">New DOE ★ = <b className="text-gray-500 dark:text-gray-400">{T("2026 개정 에너지효율등급", "2026 revised energy-efficiency rating")}</b>{T("(energy_labels 모델코드 ", "(energy_labels model code ")}{DOE_CODE[cat] || "-"}{T(" 매칭) · 가격 데이터 ", " match) · Price data ")}<b className="tabular-nums">{stamp ? fmtStamp(stamp) : "—"}</b>{T(" 기준 조인", " join basis")}</p>
         <p className="mt-1 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">
-          ※ 유형·스펙 분류는 유통 상품속성·모델명에서 추출(모델 단위로 전 거래선 공유). <b className="font-semibold text-gray-500 dark:text-gray-400">정확도 전브랜드 유형 96%·스펙 93%(자사 LG 96%·91%)</b> · 분류 안 되는 잔여는 <b className="font-semibold">기타</b>로 노출돼 필터에서 사라지지 않음 · 가격·스펙·프로모는 수집 가능하나 판매량·점유율은 GfK 패널(비공개) 필요
+          {T("※ 유형·스펙 분류는 유통 상품속성·모델명에서 추출(모델 단위로 전 거래선 공유). ", "※ Type and spec classification is extracted from retailer product attributes and model names (shared across all retailers per model). ")}<b className="font-semibold text-gray-500 dark:text-gray-400">{T("정확도 전브랜드 유형 96%·스펙 93%(자사 LG 96%·91%)", "Accuracy: all-brand type 96% · spec 93% (LG own 96% · 91%)")}</b>{T(" · 분류 안 되는 잔여는 ", " · Unclassified residuals are shown as ")}<b className="font-semibold">{T("기타", "Other")}</b>{T("로 노출돼 필터에서 사라지지 않음 · 가격·스펙·프로모는 수집 가능하나 판매량·점유율은 GfK 패널(비공개) 필요", " so they never drop out of filters · Price, spec, and promo are collectable, but sales volume and share require the GfK panel (proprietary)")}
         </p>
       </div>
     </div>
