@@ -71,6 +71,8 @@ type Menu = { key: string; label: string; topic: string; kw?: string[]; group?: 
 const MENUS: Menu[] = [
   { key: "전체", label: "전체 동향", topic: "전체" },
 
+  { key: "인사이트", label: "인사이트·칼럼", topic: "인사이트", group: "인사이트 칼럼" },
+
   // 거시·금융 → 4분할
   { key: "물가·인플레", label: "물가·인플레이션", topic: "거시·금융", group: "거시·금융", kw: ["물가", "인플레", "cpi", "소비자물가", "생활비", "가격"] },
   { key: "금리·통화", label: "금리·통화정책", topic: "거시·금융", group: "거시·금융", kw: ["금리", "기준금리", "bsp", "통화", "유동성", "대출", "신용", "m3"] },
@@ -90,7 +92,6 @@ const MENUS: Menu[] = [
   { key: "CE·유통", label: "가전·유통·경쟁", topic: "CE·유통", group: "산업·유통" },
 
   { key: "기상·재난", label: "기상·재난·냉방수요", topic: "기상·재난", group: "환경·리스크" },
-  { key: "인사이트", label: "인사이트·칼럼", topic: "인사이트", group: "관점" },
 ]
 
 /** 문서가 메뉴에 속하는지 — topic 일치 + (kw 있으면) 제목·요약·시사점에 키워드 포함 */
@@ -862,6 +863,38 @@ export default function Page() {
               </div>
             ) : slice.length === 0 ? (
               <p className="py-10 text-center text-[12px] text-gray-500 dark:text-gray-400">조건에 맞는 항목 없음</p>
+            ) : menu === "인사이트" ? (
+              /* 인사이트 칼럼 — 1열 매거진형 큰 카드(이미지·큰 제목·시사점). 하나씩 독립적으로. */
+              <div className="mt-3 flex flex-col gap-5">
+                {slice.map((g, i) => {
+                  const d = g.head
+                  const c = lead(d, chips)
+                  return (
+                    <article key={d.id} role="button" tabIndex={0}
+                      onClick={() => { if (d.url && /\.pdf($|\?)/i.test(d.url)) window.open(d.url, "_blank", "noopener"); else setModal(d) }}
+                      onKeyDown={(ev) => { if (ev.key === "Enter") setModal(d) }}
+                      style={{ animation: "rowIn .5s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(i, 8) * 0.05 + "s" }}
+                      className="group cursor-pointer overflow-hidden rounded-2xl border border-gray-100 dark:border-gray-800 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-lg active:scale-[.997]">
+                      <div className="relative aspect-[21/9] w-full overflow-hidden bg-gray-50 dark:bg-gray-900">
+                        <DocArt d={d} chip={c} big />
+                        {d.image && <img src={d.image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" onError={(ev) => { ev.currentTarget.style.display = "none" }} />}
+                      </div>
+                      <div className="p-5 sm:p-6">
+                        <div className="flex flex-wrap items-center gap-1.5 text-[11.5px] text-gray-500 dark:text-gray-400">
+                          <span className="flex items-center gap-1.5 font-semibold" style={{ color: (ART[d.topic] ?? ART["거시·금융"]).accent }}><span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: (ART[d.topic] ?? ART["거시·금융"]).accent }} />{d.topic}</span>
+                          <span className="text-gray-300 dark:text-gray-600">·</span>
+                          <span>{d.source}</span>{d.source === OURS || d.kind === "insight" ? <AiMark /> : null}
+                          <span className="text-gray-300 dark:text-gray-600">·</span>
+                          <span className="num">{rel(d.date)}</span>
+                        </div>
+                        <h3 className="mt-2.5 text-[19px] font-bold leading-[1.35] tracking-tight text-gray-900 transition-colors duration-300 group-hover:text-indigo-700 dark:text-gray-50 dark:group-hover:text-indigo-300"><Hi text={d.title} q={q} /></h3>
+                        {d.so ? <p className="mt-2 line-clamp-3 text-[13.5px] leading-relaxed text-gray-600 dark:text-gray-300"><Hi text={d.so} q={q} /></p> : d.summary ? <p className="mt-2 line-clamp-3 text-[13.5px] leading-relaxed text-gray-600 dark:text-gray-300"><Hi text={d.summary} q={q} /></p> : null}
+                        <span className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold text-indigo-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100 dark:text-indigo-400">자세히 보기<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg></span>
+                      </div>
+                    </article>
+                  )
+                })}
+              </div>
             ) : (
               <div className="mt-3 grid grid-cols-1 gap-x-6 sm:grid-cols-2">
                 {slice.map((g, i) => {
