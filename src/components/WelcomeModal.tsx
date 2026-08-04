@@ -76,7 +76,7 @@ export default function WelcomeModal() {
           <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-amber-500"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" /></svg>
             <p className="text-[12px] leading-relaxed text-amber-800 dark:text-amber-200">
-              현재 데이터베이스를 <b className="font-bold">실시간으로 누적·수집</b>하는 테스트 기간입니다. 일부 수치는 정확도가 완전하지 않을 수 있으니 <b className="font-bold">참고용</b>으로 봐주세요 — 파이프라인이 계속 돌며 <b className="font-bold">자동으로 갱신·보정</b>됩니다.
+              현재 데이터베이스를 <b className="font-bold">수집하는 테스트 기간</b>입니다. 일부 수치는 정확도가 완전하지 않을 수 있으니 <b className="font-bold">참고용</b>으로 봐주세요 — 파이프라인이 돌며 <b className="font-bold">자동으로 갱신·보정</b>되고, <b className="font-bold">실시간으로 구축 중</b>이라 일시적으로 <b className="font-bold">웹사이트가 불안정</b>할 수 있습니다.
             </p>
           </div>
 
