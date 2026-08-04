@@ -69,11 +69,12 @@ export function TopNav() {
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
       <style>{"@keyframes axfade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}"}</style>
       <div className="mx-auto flex items-center gap-6 px-6 py-3.5 sm:px-8 lg:px-10" style={{ animation: "axfade .5s ease both" }}>
-        <Link href="/overview" className="flex shrink-0 items-center leading-none">
+        <Link href="/news" className="flex shrink-0 items-center gap-1.5 leading-none">
           <span className="text-[21.5px] font-extrabold tracking-tight leading-none">
             <span className="text-gray-900 dark:text-gray-50">axlgeph</span>
             <span className="text-indigo-600 dark:text-indigo-400">.report</span>
           </span>
+          <span className="rounded-full border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[9.5px] font-bold uppercase leading-none tracking-wide text-indigo-600 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-400">beta</span>
         </Link>
 
         <nav className="flex shrink-0 items-center gap-0.5 overflow-x-auto">
