@@ -9,7 +9,11 @@ import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
 import { INDICATOR_DESC } from "@/lib/indicatorDesc"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
 import { PmDrop } from "@/components/competitors/shared"
-import { T } from "@/lib/i18n"
+import { T, pickL } from "@/lib/i18n"
+import { INDICATOR_EN } from "@/lib/indicatorLabelsEn"
+
+/** 지표 라벨 표시용 — EN이면 코드 번역맵, KO면 한글 원문. 라벨 없으면 indicator 키 폴백. (매칭·정렬 로직엔 쓰지 말 것) */
+const enLabel = (indicator: string, label?: string | null) => pickL(label, INDICATOR_EN[indicator]) || indicator
 
 /** 전체 지표 리스트 상단 배너 — 뉴스·경쟁사광고와 동일한 InsightBanner(크기·스타일 통일). */
 // 렌더 시점 생성(언어 토글 반영) — 모듈 최상위 T()는 import 시 굳어버림
@@ -167,7 +171,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase()
-    return rows.filter((r) => (cat === "all" || r.cat === cat) && (!s || (r.label + " " + r.indicator + " " + r.source + " " + (r.source_ref ?? "") + " " + r.catKo).toLowerCase().includes(s)))
+    return rows.filter((r) => (cat === "all" || r.cat === cat) && (!s || (r.label + " " + (INDICATOR_EN[r.indicator] ?? "") + " " + r.indicator + " " + r.source + " " + (r.source_ref ?? "") + " " + r.catKo).toLowerCase().includes(s)))
   }, [rows, q, cat])
 
   // 분류순: 카테고리별 그룹 / 최신순: 최신 관측일(period) 내림차순 플랫
@@ -318,7 +322,7 @@ function IndListTable({ items, q, spark, fav, onFav, onDetail, showCat }: { item
                     <button type="button" onClick={(e) => { e.stopPropagation(); onFav(r.indicator) }} aria-label={T("즐겨찾기", "Favorite")} className={"shrink-0 transition-colors active:scale-90 " + (isFav ? "text-amber-400" : "text-gray-300 hover:text-amber-400 dark:text-gray-600")}>
                       <svg width="14" height="14" viewBox="0 0 24 24" fill={isFav ? "currentColor" : "none"} stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round"><path d="M12 3.5l2.6 5.27 5.82.85-4.21 4.1.99 5.8L12 16.77 6.79 19.5l.99-5.8-4.21-4.1 5.82-.85z" /></svg>
                     </button>
-                    <span className="truncate font-semibold text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={r.label || r.indicator}><Hi text={r.label || r.indicator} q={q} /></span>
+                    <span className="truncate font-semibold text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={enLabel(r.indicator, r.label)}><Hi text={enLabel(r.indicator, r.label)} q={q} /></span>
                   </div>
                 </td>
                 {showCat && <td className="truncate px-2 py-3 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
@@ -404,7 +408,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
   const canOpen = NAV_IDS.has(row.cat)
   // 페이지 차트(LineChart)와 동일 포맷 — 라벨은 파서 호환 컴팩트('YY / YY.Qn / YY.M)
   const chLabels = chartData.map((d) => (gran === "year" ? "'" + d.k.slice(2) : gran === "quarter" ? d.k.split("-")[0].slice(2) + "." + d.k.split("-")[1] : d.k.slice(2, 4) + "." + Number(d.k.slice(5))))
-  const chSeries = [{ name: row.label || row.indicator, color: "#4f46e5", data: chartData.map((d) => d.v), w: 2, endLabel: "" }]
+  const chSeries = [{ name: enLabel(row.indicator, row.label), color: "#4f46e5", data: chartData.map((d) => d.v), w: 2, endLabel: "" }]
   const chDec = Math.abs(chartData[chartData.length - 1]?.v ?? 0) < 20 ? 1 : 0
   const chUnit = u.suffix || (u.prefix ? " " + u.prefix : u.unit && u.unit !== "값" ? " " + u.unit : "") // 툴팁 단위
 
@@ -423,7 +427,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
             <span className="num">{ym(row.mn)}~{ym(row.mx)} ({row.n}{T("관측", " obs.")})</span>
             {row.confidence === "FORECAST" && <span className="ml-1 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[10px] font-bold text-amber-700 dark:text-amber-300">{T("전망", "Forecast")}</span>}
           </div>
-          <h3 className="mt-2 text-[19px] font-semibold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h3>
+          <h3 className="mt-2 text-[19px] font-semibold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{enLabel(row.indicator, row.label)}</h3>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {canOpen && <button type="button" onClick={() => { onOpenChart(row.cat); onClose() }} className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-[12px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95">{T("경제지표에서 보기", "View in Indicators")} →</button>}
             <button type="button" onClick={() => onExcel(row)} className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 text-[12px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95">
@@ -441,7 +445,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
               {/* 차트 카드 — 경제지표 페이지와 동일한 LineChart. 토글(Segmented)은 카드에 상주(리마운트 X)해 슬라이드 애니메이션 유지 */}
               <div className="rounded-xl p-3.5">
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-                  <h4 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{row.label || row.indicator}</h4>
+                  <h4 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{enLabel(row.indicator, row.label)}</h4>
                   <span className="shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
                   <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: T("전체", "All") }]} /></span>
                 </div>
@@ -450,7 +454,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                 {/* 기간 토글에 맞춰 차트/최신값만 부드럽게 리렌더(카드·토글은 유지) */}
                 <div key={"ch-" + win} style={{ animation: "bkFade .4s ease both" }}>
                   <div className="mt-1.5 flex min-h-[26px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">
-                    <Lg c="#4f46e5" t={row.label || row.indicator} b />
+                    <Lg c="#4f46e5" t={enLabel(row.indicator, row.label)} b />
                     <span className="ml-auto tabular-nums text-gray-500 dark:text-gray-400">{T("최신", "Latest")} <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
                   </div>
                   <div className="detchart mx-auto" style={{ maxWidth: 560 }}>

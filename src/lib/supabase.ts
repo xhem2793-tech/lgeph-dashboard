@@ -1,3 +1,5 @@
+import { pickL } from "@/lib/i18n"
+
 const SB_URL = "https://ozvbyigntwhwzzagwojr.supabase.co"
 const SB_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96dmJ5aWdudHdod3p6YWd3b2pyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4ODkxNDEsImV4cCI6MjA5ODQ2NTE0MX0.LrkBzEK9QzX1PCNm9KzTUZE29VcHuJOqikFOnbEpv6U"
@@ -953,6 +955,7 @@ export type CalEvent = {
   category: string
   importance: number
   event: string
+  event_en: string | null
   releaseTime: string | null
   indicatorKey: string | null
   kind: string
@@ -980,6 +983,7 @@ export async function calendarEvents(from: string, to: string) {
     category: (r.category ?? "기타") as string,
     importance: String(r.importance ?? "").length,
     event: r.event as string,
+    event_en: (r.event_en ?? null) as string | null,
     releaseTime: (r.release_time ?? null) as string | null,
     indicatorKey: (r.indicator_key ?? null) as string | null,
     kind: (r.kind ?? "other") as string,
@@ -1005,8 +1009,13 @@ export async function calendarEvents(from: string, to: string) {
 export type AgendaItem = { date: string; label: string; note: string; dot: string; category: string; ev?: CalEvent }
 const CAT_DOT: Record<string, string> = { 경제: "bg-emerald-500", 금융: "bg-blue-500", 정치: "bg-purple-500", 규제: "bg-red-500", 에너지: "bg-amber-500", 유통: "bg-violet-500", 공휴일: "bg-teal-500", 기타: "bg-gray-400" }
 const KIND_LABEL: Record<string, string> = { release: "지표 발표", policy: "정책·규제", holiday: "공휴일" }
+const KIND_LABEL_EN: Record<string, string> = { release: "Data Release", policy: "Policy·Regulation", holiday: "Holiday" }
+// 카테고리 '표시'용 영문(enum 비교 키는 그대로) — ko 표시는 규제→정책으로 접어 보여줌
+const AG_CAT_EN: Record<string, string> = { 경제: "Economy", 금융: "Finance", 정치: "Politics", 규제: "Policy", 에너지: "Energy", 유통: "Retail", 공휴일: "Holiday", 사회: "Society", 정책: "Policy", 기타: "Other" }
 const agHead = (s: string) => s.split(/[—–]/)[0].replace(/\s*\(.*?\)\s*$/, "").trim()
-const agCat = (c: string) => (c === "규제" ? "정책" : c)
+// 렌더/호출 시점 평가 — pickL이 최신 언어를 참조하도록 함수로 유지(모듈 상수에 굳히지 않음)
+const kindLabel = (k: string) => pickL(KIND_LABEL[k] || "", KIND_LABEL_EN[k] || "")
+const agCat = (c: string) => pickL(c === "규제" ? "정책" : c, AG_CAT_EN[c] ?? c)
 
 export async function upcomingAgenda(): Promise<AgendaItem[]> {
   const t = new Date()
@@ -1019,18 +1028,18 @@ export async function upcomingAgenda(): Promise<AgendaItem[]> {
   const t14 = isoD(new Date(t.getFullYear(), t.getMonth(), t.getDate() + 14))
   const items: AgendaItem[] = []
   for (const r of all) {
-    if (r.date >= t0 && r.date <= t14) items.push({ date: r.date, label: agHead(r.event), note: agCat(r.category) + " · " + (KIND_LABEL[r.kind] || ""), dot: CAT_DOT[r.category] ?? CAT_DOT["기타"], category: r.category, ev: r })
+    if (r.date >= t0 && r.date <= t14) items.push({ date: r.date, label: agHead(pickL(r.event, r.event_en)), note: agCat(r.category) + " · " + kindLabel(r.kind), dot: CAT_DOT[r.category] ?? CAT_DOT["기타"], category: r.category, ev: r })
   }
   // 트리거(캘린더 페이지와 동일)
   const y = t.getFullYear(), mo = t.getMonth(), dd = t.getDate()
   const eom = new Date(y, mo + 1, 0).getDate()
   const nextPay = dd < 15 ? new Date(y, mo, 15) : dd < eom ? new Date(y, mo + 1, 0) : new Date(y, mo + 1, 15)
-  const trg: AgendaItem[] = [{ date: isoD(nextPay), label: "급여일", note: "오프라인 가전 구매 스파이크", dot: "bg-emerald-500", category: "경제" }]
+  const trg: AgendaItem[] = [{ date: isoD(nextPay), label: pickL("급여일", "Payday"), note: pickL("오프라인 가전 구매 스파이크", "Offline appliance-purchase spike"), dot: "bg-emerald-500", category: "경제" }]
   const sales = ["2026-08-08", "2026-09-09", "2026-10-10", "2026-11-11", "2026-12-12"]
   const ns = sales.find((s) => s >= t0)
-  if (ns) trg.push({ date: ns, label: "이커머스 대형세일", note: ns.slice(5).replace("-", ".") + " 메가세일", dot: "bg-violet-500", category: "유통" })
+  if (ns) trg.push({ date: ns, label: pickL("이커머스 대형세일", "E-commerce mega sale"), note: ns.slice(5).replace("-", ".") + pickL(" 메가세일", " Mega Sale"), dot: "bg-violet-500", category: "유통" })
   const elec = all.filter((r) => r.category === "에너지" && (r.event.includes("전기요금") || r.event.includes("Meralco")) && r.date >= t0).sort((a, b) => a.date.localeCompare(b.date))[0]
-  if (elec) trg.push({ date: elec.date, label: "전기요금 변동", note: "냉방가전 사용부담 좌우", dot: "bg-amber-500", category: "에너지" })
+  if (elec) trg.push({ date: elec.date, label: pickL("전기요금 변동", "Electricity tariff change"), note: pickL("냉방가전 사용부담 좌우", "Drives cooling-appliance running cost"), dot: "bg-amber-500", category: "에너지" })
   for (const x of trg) if (x.date >= t0 && x.date <= t14) items.push(x)
   items.sort((a, b) => a.date.localeCompare(b.date))
   return items.slice(0, 10)

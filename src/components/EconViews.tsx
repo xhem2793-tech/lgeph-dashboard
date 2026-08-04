@@ -158,7 +158,7 @@ function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children
               </nav>
             )}
             <span className="ml-auto">
-              <Segmented size="sm" value={win} onChange={setWin} options={winOpts.map((w) => ({ k: w.k, label: w.k }))} />
+              <Segmented size="sm" value={win} onChange={setWin} options={winOpts.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} />
             </span>
           </header>
           {!loaded ? (
@@ -283,12 +283,13 @@ function CrossBarCard({ d, items, title, seg, unit, meaning, ai, source, sort = 
   )
 }
 // 가전 보유율(침투율) — PSA 2020 센서스 단면. 낮을수록 성장여력↑
-const OWN_ITEMS: { key: string; name: string }[] = [
+// 렌더 시점 생성(언어 토글 반영) — 모듈 최상위 T()는 import 시 굳음
+const buildOwnItems = (): { key: string; name: string }[] => [
   { key: "appl_own_cool", name: T("냉방·선풍기", "Cooling·Fans") }, { key: "appl_own_tv", name: "TV" },
   { key: "appl_own_ref", name: T("냉장고", "Refrigerator") }, { key: "appl_own_wash", name: T("세탁기", "Washer") }, { key: "appl_own_mobile", name: T("휴대폰", "Mobile Phone") },
 ]
 function OwnershipCard({ d }: { d: Mon }) {
-  const rows = OWN_ITEMS.map((it) => ({ ...it, v: latestOf(d, it.key)?.v ?? 0 })).filter((r) => r.v > 0).sort((a, b) => b.v - a.v)
+  const rows = buildOwnItems().map((it) => ({ ...it, v: latestOf(d, it.key)?.v ?? 0 })).filter((r) => r.v > 0).sort((a, b) => b.v - a.v)
   if (!rows.length) return null
   return (
     <div className="relative z-0 flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
@@ -362,6 +363,9 @@ function RegionOwnCard() {
   )
 }
 const PRODS = ["전체", "냉장고", "세탁·건조", "에어컨(RAC)", "TV·AV", "공조(B2B)", "모니터·사이니지"]
+// 제품 필터 표시 라벨 — 키(한글)는 로직 유지, EN 표시만(함수라 렌더 시점 반영)
+const PROD_EN: Record<string, string> = { "전체": "All", "냉장고": "REF", "세탁·건조": "Laundry", "에어컨(RAC)": "RAC", "TV·AV": "TV·AV", "공조(B2B)": "HVAC (B2B)", "모니터·사이니지": "Monitor·Signage" }
+const prodLabel = (p: string) => T(p, PROD_EN[p] ?? p)
 export function ApplianceView() {
   const [win, setWin] = useState("2Y")
   const [prod, setProd] = useState("전체")
@@ -389,7 +393,7 @@ export function ApplianceView() {
       {false && <MarketCard />}
       <div className="col-span-full -mt-1 flex flex-wrap items-center gap-1.5">
         <span className="mr-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("제품", "Product")}</span>
-        {PRODS.map((p) => <button key={p} type="button" onClick={() => setProd(p)} className={"rounded-lg px-2.5 py-1 text-[12px] font-semibold transition-all " + (prod === p ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-teal-500/15")}>{p}</button>)}
+        {PRODS.map((p) => <button key={p} type="button" onClick={() => setProd(p)} className={"rounded-lg px-2.5 py-1 text-[12px] font-semibold transition-all " + (prod === p ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-teal-500/15")}>{prodLabel(p)}</button>)}
       </div>
       {show(["전 제품"]) && <OwnershipCard d={d} />}
       {false && <RegionOwnCard />}{/* 지역별 보유율 — 지도(RegionMap)에 반영 예정, 잠시 숨김 */}
@@ -623,7 +627,8 @@ export function RatesView() {
 // ══════════════════════════════════════════════════════════════════════
 const GROWTH_KEYS = ["gdp_growth_yoy", "household_consumption_yoy", "gross_capital_formation_yoy", "gfcf_growth", "construction_gva_growth", "construction_gfcf_growth", "permits_residential_value", "permits_total_value", "permits_nonresidential_floorarea", "industry_gva_yoy", "industry_va_growth", "manufacturing_va_growth", "services_va_growth", "capacity_utilization", "retail_gva_growth", "wholesale_retail_trade_yoy", "wholesale_gva_growth", "services_gva_yoy", "retail_sales_growth", "gdp_per_capita_usd", "office_vacancy_ncr", "residential_property_price_yoy", "residential_property_price_real_yoy", "tourism_arrivals"]
 // 동남아 6개국 비교 — 필리핀 강조(굵은선+끝점 핀), 나머지 색 구분
-const SEA_SPECS: Spec[] = [
+// 렌더 시점 생성(언어 토글 반영) — 모듈 최상위 T()는 import 시 굳음
+const buildSeaSpecs = (): Spec[] => [
   { key: "Philippines", name: T("필리핀", "Philippines"), color: C.ind, w: 2.4, endLabel: T("필리핀", "Philippines") },
   { key: "Indonesia", name: T("인니", "Indonesia"), color: C.rose },
   { key: "Thailand", name: T("태국", "Thailand"), color: C.blue },
@@ -631,6 +636,7 @@ const SEA_SPECS: Spec[] = [
   { key: "Malaysia", name: T("말련", "Malaysia"), color: C.amber },
 ]
 export function GrowthView() {
+  const SEA_SPECS = buildSeaSpecs()
   const [win, setWin] = useState("전체")
   const { d, loaded } = useMacro(GROWTH_KEYS)
   const n = WIN.find((w) => w.k === win)!.n

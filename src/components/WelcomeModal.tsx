@@ -1,38 +1,43 @@
 "use client"
 
 import React from "react"
-import { T } from "@/lib/i18n"
+import { T, useLang } from "@/lib/i18n"
 
 /** 웰컴 팝업 — AX 필리핀법인 마켓 인텔리전스 대시보드 베타 안내.
  *  하루 1회 노출(localStorage에 마지막 노출 날짜 저장). 닫으면 그날은 다시 안 뜨고, 상단 전구 아이콘으로 언제든 재열기. */
 const SEEN_KEY = "ax_welcome_seen_date"
 const todayStr = () => { const d = new Date(); return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0") }
+// 언어 토글 시 트리가 리마운트돼도(LangProvider key=lang) 팝업이 닫히지 않게 열림 상태를 모듈에 유지
+let _wOpen = false
 
 const BUILDING: { icon: React.ReactNode; t: string; tEn: string; d: string; dEn: string }[] = [
   { t: "국가동향", tEn: "National Trends", d: "필리핀 뉴스·규제·정책 + 인사이트 리포트 자동 수집·개인별 맞춤 발송", dEn: "Auto-collects Philippine news, regulation & policy plus insight reports, delivered personalized", icon: <path d="M4 6h16M4 12h16M4 18h10" /> },
   { t: "시장동향", tEn: "Market Trends", d: "경쟁사 가격·프로모·신제품/EOL 실시간 관측", dEn: "Real-time tracking of competitor pricing, promotions, and new/EOL products", icon: <><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 4-5" /></> },
   { t: "주요지표", tEn: "Key Indicators", d: "거시·금융·가전 선행지표 200+ (World Bank·PSA·BSP)", dEn: "200+ leading macro, financial & appliance indicators (World Bank · PSA · BSP)", icon: <><rect x="3" y="10" width="4" height="10" rx="1" /><rect x="10" y="4" width="4" height="16" rx="1" /><rect x="17" y="13" width="4" height="7" rx="1" /></> },
-  { t: "마케팅·경쟁광고", tEn: "Marketing & Competitor Ads", d: "경쟁사 광고·캠페인 트래킹, 종료·신규 감지", dEn: "Tracks competitor ads and campaigns, detecting launches and terminations", icon: <><path d="M3 11l18-5v12L3 14z" /><path d="M11.6 16.8a3 3 0 0 1-5.8-1.1" /></> },
-  { t: "주요일정·리포트", tEn: "Key Schedule & Reports", d: "경제·정책 캘린더 + 부서·제품·기간별 맞춤 리포트(예정)", dEn: "Economic & policy calendar plus custom reports by team, product, and period (planned)", icon: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></> },
+  { t: "마케팅·경쟁광고", tEn: "Marketing & Ads", d: "경쟁사 광고·캠페인 트래킹, 종료·신규 감지", dEn: "Tracks competitor ads and campaigns, detecting launches and terminations", icon: <><path d="M3 11l18-5v12L3 14z" /><path d="M11.6 16.8a3 3 0 0 1-5.8-1.1" /></> },
+  { t: "주요일정·리포트", tEn: "Schedule & Reports", d: "경제·정책 캘린더 + 부서·제품·기간별 맞춤 리포트(예정)", dEn: "Economic & policy calendar plus custom reports by team, product, and period (planned)", icon: <><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></> },
 ]
 
 export default function WelcomeModal() {
-  const [open, setOpen] = React.useState(false)
+  const { lang, setLang } = useLang()
+  const [open, setOpen] = React.useState(_wOpen)   // 리마운트(언어 토글) 시에도 열림 유지
   const [closing, setClosing] = React.useState(false)
 
   React.useEffect(() => {
-    try { if (localStorage.getItem(SEEN_KEY) !== todayStr()) setOpen(true) } catch { setOpen(true) }
+    if (_wOpen) { setOpen(true); return }   // 언어 토글로 재마운트된 경우 그대로 열어둠
+    try { if (localStorage.getItem(SEEN_KEY) !== todayStr()) { _wOpen = true; setOpen(true) } } catch { _wOpen = true; setOpen(true) }
   }, [])
 
   // TopNav 전구 아이콘 등에서 다시 열기 — 첫 방문 여부와 무관하게 노출
   React.useEffect(() => {
-    const reopen = () => { setClosing(false); setOpen(true) }
+    const reopen = () => { _wOpen = true; setClosing(false); setOpen(true) }
     window.addEventListener("ax:open-welcome", reopen)
     return () => window.removeEventListener("ax:open-welcome", reopen)
   }, [])
 
   const close = () => {
     setClosing(true)
+    _wOpen = false
     try { localStorage.setItem(SEEN_KEY, todayStr()) } catch {}
     window.setTimeout(() => { setOpen(false); setClosing(false) }, 220)
   }
@@ -58,6 +63,12 @@ export default function WelcomeModal() {
               <span className="text-gray-900 dark:text-gray-50">axlgeph</span><span className="text-indigo-600 dark:text-indigo-400">.report</span>
             </span>
             <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 shadow-sm ring-1 ring-indigo-100 backdrop-blur dark:bg-white/10 dark:text-indigo-300 dark:ring-indigo-500/20">Beta</span>
+            {/* 언어 배지 — 누가 들어올지 몰라 팝업 안에서 바로 KO/EN 선택(기본 한글) */}
+            <div className="ml-auto flex items-center rounded-full bg-white/70 p-0.5 text-[10.5px] font-bold shadow-sm ring-1 ring-indigo-100 backdrop-blur dark:bg-white/10 dark:ring-indigo-500/20">
+              {(["ko", "en"] as const).map((l) => (
+                <button key={l} type="button" onClick={() => setLang(l)} aria-label={l === "ko" ? "한국어" : "English"} className={"rounded-full px-2 py-0.5 leading-none transition-colors " + (lang === l ? "bg-indigo-600 text-white shadow-sm" : "text-indigo-500 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200")}>{l === "ko" ? "KO" : "EN"}</button>
+              ))}
+            </div>
           </div>
           <h2 className="relative mt-3.5 text-[20px] font-extrabold leading-[1.25] tracking-tight" style={{ animation: "fadeUp .55s cubic-bezier(.22,1,.36,1) both", animationDelay: ".17s" }}>
             <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300">{T("AX 필리핀법인", "AX Philippines")}</span>

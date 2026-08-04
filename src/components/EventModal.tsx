@@ -3,7 +3,7 @@
 import React from "react"
 import { createPortal } from "react-dom"
 import type { CalEvent } from "@/lib/supabase"
-import { T } from "@/lib/i18n"
+import { T, pickL } from "@/lib/i18n"
 
 /** 이벤트 상세 팝업 — 캘린더 페이지와 위젯(AgendaCard)이 공유하는 단일 모달(디자인 동일). */
 
@@ -14,7 +14,17 @@ const kindLabel = (k: string): string =>
   : k === "holiday" ? T("공휴일", "Holiday")
   : ""
 const dotOf = (c: string) => CAT_DOT[c] ?? CAT_DOT["기타"]
-const catLabel = (c: string) => (c === "규제" ? "정책" : c)
+// 표시 라벨만 번역 — 비교/필터 키(원문 한글)는 그대로 유지.
+const catLabel = (c: string): string =>
+  c === "규제" ? T("정책", "Policy")
+  : c === "경제" ? T("경제", "Economy")
+  : c === "금융" ? T("금융", "Finance")
+  : c === "정치" ? T("정치", "Politics")
+  : c === "에너지" ? T("에너지", "Energy")
+  : c === "유통" ? T("유통", "Retail")
+  : c === "공휴일" ? T("공휴일", "Holiday")
+  : c === "기타" ? T("기타", "Other")
+  : c
 const para = (s: string | null) => (s ?? "").split(/\n{2,}|(?<=\.)\s{2,}/).map((x) => x.trim()).filter(Boolean)
 const fmtVal = (v: number | null, unit: string | null) => {
   if (v === null) return "—"
@@ -59,7 +69,7 @@ export default function EventModal({ event, onClose }: { event: CalEvent; onClos
             <span className="tabular-nums">{m.date}</span>
           </div>
 
-          <h3 className="mt-2 text-[19px] font-semibold leading-snug tracking-tight text-gray-900 dark:text-gray-50">{m.event}</h3>
+          <h3 className="mt-2 text-[19px] font-semibold leading-snug tracking-tight text-gray-900 dark:text-gray-50">{pickL(m.event, m.event_en)}</h3>
 
           {m.indicatorKey && (
             <div className="mt-4 inline-flex flex-wrap gap-4 rounded-lg bg-gray-50 dark:bg-gray-900 px-3.5 py-2 text-[12px] tabular-nums">

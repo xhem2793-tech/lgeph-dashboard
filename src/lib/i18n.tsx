@@ -16,6 +16,11 @@ export type Lang = "ko" | "en"
  *  (키 관리 없이 전면 번역용. 훅이 아니라 JSX 텍스트/문자열 어디든 사용 가능) */
 let _lang: Lang = "ko"
 export function T(ko: string, en: string): string { return _lang === "en" ? en : ko }
+/** 데이터 필드용 비-훅 picker — EN이면 en(없으면 ko 폴백), KO면 ko. 훅이 아니라 data 레이어/어디서나 사용.
+ *  (언어 토글 시 트리가 리마운트되어 데이터 재조회·재평가되므로 최신 _lang을 참조한다) */
+export function pickL(ko?: string | null, en?: string | null): string {
+  return _lang === "en" ? (en && en.trim() ? en : ko ?? "") : (ko ?? "")
+}
 
 const Ctx = React.createContext<{ lang: Lang; setLang: (l: Lang) => void }>({
   lang: "ko",

@@ -3,7 +3,7 @@
 import React from "react"
 import { calendarEvents, freshness, fmtStamp, upcomingAgenda, type CalEvent, type AgendaItem } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
-import { T } from "@/lib/i18n"
+import { T, pickL } from "@/lib/i18n"
 
 /** 경제캘린더 — 좌 그리드(전체 이벤트) + 우 위젯(구성·수요 선행) + 하단 목록.
  *  팝업·애니메이션은 주요뉴스 페일지와 동일(backIn/modalIn, popIn 계열).
@@ -21,7 +21,23 @@ const CAT: Record<string, { bg: string; fg: string; dot: string; band: string }>
   기타: { bg: "bg-gray-100 dark:bg-gray-800", fg: "text-gray-700 dark:text-gray-200", dot: "bg-gray-400", band: "bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-100" },
 }
 const tone = (c: string) => CAT[c] ?? CAT["기타"]
-  const catLabel = (c: string) => (c === "규제" ? "정책" : c)
+  // 표시 라벨만 번역 — 비교/필터 키(원문 한글)는 그대로 유지.
+  const EN_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+  const EN_DOW = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  const catLabel = (c: string): string =>
+    c === "규제" ? T("정책", "Policy")
+    : c === "경제" ? T("경제", "Economy")
+    : c === "금융" ? T("금융", "Finance")
+    : c === "정치" ? T("정치", "Politics")
+    : c === "에너지" ? T("에너지", "Energy")
+    : c === "유통" ? T("유통", "Retail")
+    : c === "공휴일" ? T("공휴일", "Holiday")
+    : c === "기타" ? T("기타", "Other")
+    : c === "영업" ? T("영업", "Sales")
+    : c === "물류" ? T("물류", "Logistics")
+    : c === "관리" ? T("관리", "Management")
+    : c === "전체" ? T("전체", "All")
+    : c
   const DEPTS = ["영업", "물류", "관리"]
   const deptOf = (e: CalEvent) => {
     const s = e.category + " " + e.event
@@ -138,7 +154,7 @@ export default function Calendar() {
     },
     [week.from, week.to],
   )
-  const groupOf = (r: CalEvent) => (r.date >= week.from && r.date <= week.to ? "이번 주" : Number(r.date.slice(5, 7)) + "월")
+  const groupOf = (r: CalEvent) => (r.date >= week.from && r.date <= week.to ? T("이번 주", "This week") : T(Number(r.date.slice(5, 7)) + "월", EN_MONTHS[Number(r.date.slice(5, 7)) - 1]))
   const list = React.useMemo(() => {
     const f = all.filter((r) => {
       const b = inBucket(r)
@@ -177,7 +193,7 @@ export default function Calendar() {
   const label =
     span === "2주"
       ? `${range.from.getMonth() + 1}/${range.from.getDate()} – ${range.to.getMonth() + 1}/${range.to.getDate()}`
-      : `${range.from.getFullYear()}년 ${range.from.getMonth() + 1}월`
+      : T(`${range.from.getFullYear()}년 ${range.from.getMonth() + 1}월`, `${EN_MONTHS[range.from.getMonth()]} ${range.from.getFullYear()}`)
 
   return (
     <div className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
@@ -236,8 +252,8 @@ export default function Calendar() {
           </header>
 
           <div className="mt-3 grid grid-cols-7 gap-1.5 text-[11.5px] font-semibold text-gray-400 dark:text-gray-500">
-            {["일", "월", "화", "수", "목", "금", "토"].map((d) => (
-              <div key={d} className="px-1">{d}</div>
+            {["일", "월", "화", "수", "목", "금", "토"].map((d, i) => (
+              <div key={d} className="px-1">{T(d, EN_DOW[i])}</div>
             ))}
           </div>
 
@@ -282,9 +298,9 @@ export default function Calendar() {
                             className={
                               "mb-0.5 flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11.5px] font-medium leading-tight text-gray-700 dark:text-gray-200 transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-800 active:scale-[.97] "
                             }
-                            title={e.event}
+                            title={pickL(e.event, e.event_en)}
                           >
-                            <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + t.dot} /><span className="min-w-0 truncate">{e.importance >= 3 ? "★ " : ""}{head(e.event)}</span>
+                            <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + t.dot} /><span className="min-w-0 truncate">{e.importance >= 3 ? "★ " : ""}{head(pickL(e.event, e.event_en))}</span>
                           </button>
                         )
                       })}
@@ -370,7 +386,7 @@ export default function Calendar() {
                 (cat === c ? "bg-indigo-600 text-white" : "border border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-300 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:text-indigo-600 dark:hover:text-indigo-400")
               }
             >
-              {c}
+              {catLabel(c)}
             </button>
           ))}
         </div>
@@ -391,7 +407,7 @@ export default function Calendar() {
                   <button key={e.date + e.event} type="button" onClick={() => openEvent(e)} className="flex items-center gap-2.5 px-3.5 py-2 text-left transition-colors hover:bg-indigo-50/60 dark:hover:bg-indigo-500/10">
                     <span className={"h-2 w-2 shrink-0 rounded-full " + t.dot} />
                     <span className="shrink-0 text-[10.5px] font-semibold text-gray-500 dark:text-gray-400">{catLabel(e.category)}</span>
-                    <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{e.importance >= 3 ? "★ " : ""}{e.event}</span>
+                    <span className="min-w-0 flex-1 truncate text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{e.importance >= 3 ? "★ " : ""}{pickL(e.event, e.event_en)}</span>
                     {e.actual !== null ? (
                       <span className={"shrink-0 text-[12px] font-bold tabular-nums " + (up ? "text-rose-600 dark:text-rose-400" : down ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-gray-50")}>{fmtVal(e.actual, e.unit)}</span>
                     ) : e.releaseTime ? <span className="shrink-0 text-[11px] text-gray-500 dark:text-gray-400">{e.releaseTime}</span> : <span className="shrink-0 rounded bg-indigo-100 dark:bg-indigo-500/20 px-1.5 py-px text-[9.5px] font-bold text-indigo-700 dark:text-indigo-300">{T("예정", "Upcoming")}</span>}
@@ -449,7 +465,7 @@ export default function Calendar() {
                           <span className="flex items-center gap-1.5"><span className={"h-1.5 w-1.5 shrink-0 rounded-full " + t.dot} /><span className="text-[11.5px] text-gray-600 dark:text-gray-300">{catLabel(e.category)}</span></span>
                         </td>
                         <td className="h-[44px] px-2 align-middle text-[11.5px] text-gray-500 dark:text-gray-400">{kindLabel(e.kind) || "—"}</td>
-                        <td className="max-w-0 truncate h-[44px] px-2 align-middle font-medium text-gray-900 dark:text-gray-50">{e.event}</td>
+                        <td className="max-w-0 truncate h-[44px] px-2 align-middle font-medium text-gray-900 dark:text-gray-50">{pickL(e.event, e.event_en)}</td>
                         <td className="h-[44px] px-2 align-middle text-right text-[11px] text-amber-500 dark:text-amber-400">{"★".repeat(e.importance)}</td>
                         <td className="h-[44px] px-2 align-middle text-right tabular-nums text-gray-400 dark:text-gray-500">{e.forecast ?? "—"}</td>
                         <td className={"h-[44px] px-2 align-middle text-right font-bold tabular-nums " + (up ? "text-rose-600 dark:text-rose-400" : down ? "text-emerald-600 dark:text-emerald-400" : "text-gray-900 dark:text-gray-50")}>{fmtVal(e.actual, e.unit)}</td>
@@ -559,7 +575,7 @@ export default function Calendar() {
                   <span className="tabular-nums">{modal.date}</span>
                 </div>
 
-                <h3 className="mt-2 text-[19px] font-semibold leading-snug tracking-tight text-gray-900 dark:text-gray-50">{modal.event}</h3>
+                <h3 className="mt-2 text-[19px] font-semibold leading-snug tracking-tight text-gray-900 dark:text-gray-50">{pickL(modal.event, modal.event_en)}</h3>
 
                 {modal.indicatorKey && (
                   <div className="mt-4 inline-flex flex-wrap gap-4 rounded-lg bg-gray-50 dark:bg-gray-900 px-3.5 py-2 text-[12px] tabular-nums">
@@ -627,7 +643,7 @@ export default function Calendar() {
                     >
                       <span className={"mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full " + t.dot} />
                       <span className="min-w-0 flex-1">
-                        <span className="block line-clamp-1 text-[12.5px] font-semibold leading-snug text-gray-900 dark:text-gray-50">{e.importance >= 3 ? "★ " : ""}{e.event}</span>
+                        <span className="block line-clamp-1 text-[12.5px] font-semibold leading-snug text-gray-900 dark:text-gray-50">{e.importance >= 3 ? "★ " : ""}{pickL(e.event, e.event_en)}</span>
                         <span className="mt-0.5 block text-[11px] text-gray-500 dark:text-gray-400">{kindLabel(e.kind) || "—"}{e.sourceLabel ? " · " + e.sourceLabel : ""}</span>
                       </span>
                     </button>
