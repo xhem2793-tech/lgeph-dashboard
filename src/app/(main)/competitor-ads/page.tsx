@@ -78,7 +78,7 @@ function Thumb({ a }: { a: CompAd }) {
   return (
     <div className="relative aspect-[16/9] w-full overflow-hidden bg-indigo-50 dark:bg-indigo-500/10">
       {showImg
-        ? <img src={a.image_url || ""} alt="" onError={() => setErr(true)} className="h-full w-full object-cover" />
+        ? <img src={a.image_url || ""} alt="" loading="lazy" decoding="async" onError={() => setErr(true)} className="h-full w-full object-cover" />
         : <div className="flex h-full w-full flex-col items-center justify-center gap-0.5 bg-gradient-to-br from-indigo-500 to-violet-600"><span className="text-[19px] font-bold tracking-tight text-white">{a.brand}</span><span className="text-[9px] font-medium text-white/70">{T("광고 이미지 없음", "No ad image")}</span></div>}
       {st && st.key !== "진행중" && (
         <span className={"absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-white/85 dark:bg-gray-900/85 px-2 py-0.5 text-[9px] font-bold " + st.text}>
@@ -199,7 +199,7 @@ function Modal({ a, onClose }: { a: CompAd; onClose: () => void }) {
         {/* 히어로 — 광고 이미지, 없으면 브랜드 그라디언트 폴백 */}
         <div className="relative h-[200px] w-full shrink-0 overflow-hidden">
           {showImg ? (
-            <img src={a.image_url || ""} alt="" className="h-full w-full object-cover" onError={() => setImgErr(true)} />
+            <img src={a.image_url || ""} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" onError={() => setImgErr(true)} />
           ) : (
             <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-indigo-500 to-violet-600">
               <span className="text-[27px] font-bold tracking-tight text-white">{a.brand}</span>

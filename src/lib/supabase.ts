@@ -4,13 +4,28 @@ const SB_URL = "https://ozvbyigntwhwzzagwojr.supabase.co"
 const SB_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im96dmJ5aWdudHdod3p6YWd3b2pyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4ODkxNDEsImV4cCI6MjA5ODQ2NTE0MX0.LrkBzEK9QzX1PCNm9KzTUZE29VcHuJOqikFOnbEpv6U"
 
+// 세션 인메모리 캐시 — 정적 export(서버 없음)라 클라이언트에서 직접 캐시.
+//  · 같은 쿼리(path)를 페이지 이동/재방문 시 재조회하지 않음(데이터는 일 단위 갱신 → 3분 TTL 충분).
+//  · Promise를 캐시해 동시 요청(여러 컴포넌트가 같은 쿼리)도 1회 네트워크로 디듀프.
+//  · 실패는 캐시하지 않음(다음 호출에서 재시도). 대용량(경쟁사 13.8k행 등) 재조회 제거가 핵심.
+const _sbCache = new Map<string, { t: number; p: Promise<any[]> }>()
+const _SB_TTL = 180_000 // 3분
+
 async function sb(path: string): Promise<any[]> {
-  const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
-    headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
-    cache: "no-store",
-  })
-  if (!r.ok) throw new Error(`supabase ${r.status}`)
-  return r.json()
+  const now = Date.now()
+  const hit = _sbCache.get(path)
+  if (hit && now - hit.t < _SB_TTL) return hit.p
+  const p = (async () => {
+    const r = await fetch(`${SB_URL}/rest/v1/${path}`, {
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}` },
+      cache: "no-store",
+    })
+    if (!r.ok) throw new Error(`supabase ${r.status}`)
+    return r.json()
+  })()
+  _sbCache.set(path, { t: now, p })
+  p.catch(() => { const c = _sbCache.get(path); if (c && c.p === p) _sbCache.delete(path) })
+  return p
 }
 
 /** 페이지네이션 병렬 로딩 — 필요한 페이지 전부를 한 웨이브로 동시 요청(HTTP/2 멀티플렉싱).

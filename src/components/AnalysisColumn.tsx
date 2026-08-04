@@ -221,7 +221,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
               <OwnVisual tags={p.tags} />
             ) : p.image ? (
               <div className="w-full overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-800">
-                <img src={p.image} alt="" className="h-auto w-full object-contain" />
+                <img src={p.image} alt="" loading="lazy" decoding="async" className="h-auto w-full object-contain" />
               </div>
             ) : null}
           </div>
