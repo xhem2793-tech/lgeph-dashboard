@@ -158,22 +158,23 @@ export default function Page() {
           {mode === "list" ? (
             <div style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}><AllIndicatorsView onPick={(id) => go(id)} /></div>
           ) : (
-            <div className="flex flex-col gap-12">
+            <div className="flex flex-col gap-6">
               {NAV.map((n) => (
                 <section
                   key={n.id}
                   id={"sec-" + n.id}
                   data-sec={n.id}
                   ref={(el) => { secRefs.current[n.id] = el }}
-                  className="scroll-mt-[76px]"
+                  className="scroll-mt-[76px] rounded-2xl border border-gray-200 dark:border-gray-800/80 bg-white/70 dark:bg-gray-900/25 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:p-5"
                 >
-                  <div className="mb-3 flex items-baseline gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+                  {/* 카테고리 제목 — 바로 밑 토글과 밀착(간격 축소), 카드로 카테고리 구분 */}
+                  <div className="mb-2.5 flex items-baseline gap-2 pb-2">
                     <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{n.ko}</h2>
                     <span className="truncate text-[12px] text-gray-400 dark:text-gray-500">{n.sub}</span>
                   </div>
                   {mounted.has(n.id)
                     ? <div style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>{viewFor(n.id)}</div>
-                    : <div className="min-h-[420px] rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40" />}
+                    : <div className="min-h-[360px] rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40" />}
                 </section>
               ))}
             </div>

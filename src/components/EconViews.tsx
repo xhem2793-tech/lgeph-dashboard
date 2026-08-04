@@ -142,7 +142,7 @@ function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children
       {/* 카테고리별 인사이트 배너 — 잠깐 숨김(추후 재노출 시 false 제거) */}
       {false && banner && <Banner {...banner} d={d} kpiDefs={loaded ? kpiDefs : undefined} />}
       <div className="grid items-start gap-4">
-        <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
+        <section className="min-w-0" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           {/* 헤더 라인 — 좌: 하위 카테고리 선택 버튼, 우: 기간토글(동일 선상). 카테고리명은 위 섹션 헤더와 중복이라 sr-only */}
           <header className="mb-3.5 flex flex-wrap items-center gap-x-2 gap-y-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <h2 className="sr-only">{title}</h2>

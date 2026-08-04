@@ -228,8 +228,8 @@ export default function FxView() {
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}"}</style>
 
-      {/* 배너 — 주요뉴스·경쟁사와 동일(매니페스트 기반, 월간 자동 갱신) */}
-      <InsightBanner banner={banner} open={open} onToggle={() => setOpen((v) => !v)} />
+      {/* 카테고리별 인사이트 배너 — 다른 카테고리와 통일해 잠깐 숨김(추후 false 제거로 복구) */}
+      {false && <InsightBanner banner={banner} open={open} onToggle={() => setOpen((v) => !v)} />}
 
       {/* 본문: 차트(우측 위젯 제거 — 경제일정 레일과 중복) */}
       <div className="grid items-start gap-4">
