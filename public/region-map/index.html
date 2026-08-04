@@ -84,7 +84,7 @@
   /* 색상 지표: 평소 최소화 아이콘 → hover 시 세로 목록 펼침, 지표 클릭 시 다시 최소화 */
   .panel{animation:ovin .55s cubic-bezier(.16,1,.3,1) both;animation-delay:.2s}
 
-  .app{display:grid;grid-template-columns:1fr 400px;flex:1;min-height:0}
+  .app{display:grid;grid-template-columns:6fr 4fr;flex:1;min-height:0}
 
   /* ---- MAP SIDE ---- */
   .stage{position:relative;overflow:hidden;background:var(--bg)}
@@ -372,11 +372,6 @@
 <!-- 상단 KPI 스트립 제거: 지도 내 우하단 오버레이(.kpiover)로 이동 -->
 <div class="app">
   <div class="stage">
-    <div class="brand">
-      <div class="ki">Republic of the Philippines</div>
-      <h1>필리핀 행정 지역</h1>
-      <div class="sub">17개 지역 · 클릭하면 확대·세부 정보 · 스크롤로 확대/축소, 드래그로 이동</div>
-    </div>
     <button class="backbtn" id="back">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
       <span>전체 지도</span>
