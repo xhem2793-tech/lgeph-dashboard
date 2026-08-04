@@ -39,16 +39,15 @@ export default function WelcomeModal() {
         className="relative flex max-h-[88vh] w-full max-w-[520px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_28px_80px_-24px_rgba(0,0,0,0.55)] dark:bg-gray-900 dark:ring-white/10"
         style={{ animation: (closing ? "popOut .22s ease both" : "popIn .5s cubic-bezier(.34,1.42,.64,1) both") }}
       >
-        {/* 헤더 — 그라디언트 + BETA */}
-        <div className="relative overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-600 px-7 pb-6 pt-7 text-white">
-          <div className="absolute -right-8 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-          <div className="absolute -bottom-12 right-16 h-28 w-28 rounded-full bg-violet-300/20 blur-2xl" />
-          <div className="relative flex items-center gap-2">
-            <span className="rounded-md bg-white/20 px-1.5 py-0.5 text-[10px] font-extrabold uppercase tracking-widest ring-1 ring-white/30">Beta</span>
-            <span className="text-[11px] font-medium text-white/80">테스트 · 데이터 누적 중</span>
+        {/* 헤더 — 절제된 화이트 + 상단 얇은 브랜드 액센트(과한 그라디언트 지양) */}
+        <div className="relative border-b border-gray-100 px-7 pb-5 pt-6 dark:border-gray-800">
+          <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-indigo-500 to-violet-500" />
+          <div className="flex items-center gap-2">
+            <span className="rounded-md bg-indigo-50 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 ring-1 ring-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-500/20">Beta</span>
+            <span className="text-[11px] font-medium text-gray-400 dark:text-gray-500">테스트 · 데이터 누적 중</span>
           </div>
-          <h2 className="relative mt-3 text-[20px] font-extrabold leading-snug tracking-tight">AX 필리핀법인<br />마켓 인텔리전스 대시보드</h2>
-          <p className="relative mt-2 text-[12.5px] leading-relaxed text-white/85">AI 전환(AX)으로 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.</p>
+          <h2 className="mt-3 text-[18.5px] font-extrabold leading-snug tracking-tight text-gray-900 dark:text-gray-50">AX 필리핀법인 마켓 인텔리전스 대시보드</h2>
+          <p className="mt-1.5 text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400">AI 전환(AX)으로 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.</p>
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-7 py-5">
