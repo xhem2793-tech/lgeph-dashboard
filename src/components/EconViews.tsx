@@ -428,14 +428,14 @@ export function ApplianceView() {
           tone="amber" src={src("Open-Meteo 메트로마닐라 기온 · 냉방도일 월집계")} />
       )}
       {show(["전 제품"]) && energy.series.length > 0 && (
-        <ChartCard seg="전 제품" title="가정용 에너지소비" unit="ktoe · 연간" labels={energy.labels} series={energy.series} decimals={0} seriesUnit="ktoe"
+        <ChartCard seg="전 제품" title="가정용 에너지소비" unit="ktoe · 연간" kind="bar" labels={energy.labels} series={energy.series} decimals={0} seriesUnit="ktoe"
           legend={<Lg c={C.ind} t="가정용 에너지소비" b />}
           meaning={<>가구부문 최종에너지소비 — <b className="text-gray-700 dark:text-gray-200">가전 사용량·전력화 심화의 구조적 지표</b></>}
           ai={<>가정용 에너지소비 증가는 <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 보유·사용 심화 = 시장 성숙</b> → 고효율·인버터 소구 여지 확대, 전력화 진전 지역 우선</>}
           tone="emerald" src={src("PSA 에너지통계 부문별 최종소비 · 연간")} />
       )}
       {show(["전 제품"]) && elecpc.series.length > 0 && (
-        <ChartCard seg="전 제품" title="1인당 전력소비" unit="kWh/인 · 연간" labels={elecpc.labels} series={elecpc.series} decimals={0} seriesUnit="kWh"
+        <ChartCard seg="전 제품" title="1인당 전력소비" unit="kWh/인 · 연간" kind="bar" labels={elecpc.labels} series={elecpc.series} decimals={0} seriesUnit="kWh"
           legend={<Lg c={C.ind} t="1인당 전력소비" b />}
           meaning={<>국민 1인당 연간 전력사용량 — <b className="text-gray-700 dark:text-gray-200">전력화·가전 보유 심화 프록시</b></>}
           ai={<>필리핀 1인당 전력소비는 <b className="font-semibold text-amber-600 dark:text-amber-400">900kWh대로 태국(약 3,000)·말련(약 5,000)의 1/3 이하</b> = <b className="font-semibold text-emerald-600 dark:text-emerald-400">가전 보급·대형화 성장여력이 큰 저변</b>. <b>트렌드</b>: 소득 증가와 함께 완만한 우상향 — 냉장고·에어컨 등 상시가동 가전 확산의 구조적 순풍, 다만 高전기료가 고효율 수요를 동시에 자극.</>}
@@ -599,7 +599,7 @@ export function RatesView() {
           tone="amber" src={src("World Bank 수출입·무역수지(%GDP) · 연간")} />
       )}
       {reserves.series.length > 0 && (
-        <ChartCard seg="B2B" title="외환보유액" unit="십억$ · 연간" labels={reserves.labels} series={reserves.series} decimals={0} seriesUnit="십억$"
+        <ChartCard seg="B2B" title="외환보유액" unit="십억$ · 연간" kind="bar" labels={reserves.labels} series={reserves.series} decimals={0} seriesUnit="십억$"
           legend={<Lg c={C.ind} t="외환보유액" b />}
           meaning={<>외환보유고 — <b className="text-gray-700 dark:text-gray-200">페소 방어력·수입결제 안정성</b></>}
           ai={<>외환보유 충분은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">페소 안정·수입가전 원가 예측성</b> → 조달·판가 안정, 급감 시 환리스크·수입비용 변동성 경계</>}
@@ -680,14 +680,14 @@ export function GrowthView() {
           tone="emerald" src={src("PSA 국민계정 GDE(소비·투자) · 분기/연")} />
       )}
       {pcap.series.length > 0 && (
-        <ChartCard seg="CE" title="1인당 GDP" unit="US$ · 연간" labels={pcap.labels} series={pcap.series} decimals={0} seriesUnit="$"
+        <ChartCard seg="CE" title="1인당 GDP" unit="US$ · 연간" kind="bar" labels={pcap.labels} series={pcap.series} decimals={0} seriesUnit="$"
           legend={<Lg c={C.ind} t="1인당 GDP" b />}
           meaning={<>1인당 명목 GDP — <b className="text-gray-700 dark:text-gray-200">가전 구매력·프리미엄 전환의 구조적 기반</b></>}
           ai={<>1인당 GDP는 10년간 2,163$→4,171$로 상승 = <b className="font-semibold text-emerald-600 dark:text-emerald-400">중산층 확대·프리미엄 가전 침투 여력↑</b> → 상위 라인업·신가전 카테고리 확장 기회</>}
           tone="emerald" src={src("World Bank 1인당 GDP(명목) · 연간")} />
       )}
       {tour.series.length > 0 && (
-        <ChartCard seg="CE" title="국제 관광객 입국자수" unit="백만명 · 연간" labels={tour.labels} series={tour.series} decimals={1} seriesUnit="M"
+        <ChartCard seg="CE" title="국제 관광객 입국자수" unit="백만명 · 연간" kind="bar" labels={tour.labels} series={tour.series} decimals={1} seriesUnit="M"
           legend={<Lg c={C.teal} t="국제 관광객(백만명)" b />}
           meaning={<>연간 국제 방문객 수 — <b className="text-gray-700 dark:text-gray-200">서비스·소매·숙박·리조트 B2B 수요</b></>}
           ai={<>관광 회복은 호텔·리조트·요식 <b className="font-semibold text-emerald-600 dark:text-emerald-400">B2B 가전(에어컨·냉장·주방)</b> 및 관광지 소매 수요를 자극. <b>트렌드</b>: 2019년 <b>8.3M</b> 정점 → 2020~21 코로나로 <b className="font-semibold text-rose-600 dark:text-rose-400">0.2M까지 붕괴</b> → 2023 5.5M·2025 6.4M로 회복 중이나 아직 팬데믹 이전 미달 · 회복 지속 시 B2B·지방 소매 순풍.</>}
@@ -883,7 +883,7 @@ export function LaborView() {
           tone="emerald" src={src("World Bank·PSA 산업별 고용비중 · 연간")} />
       )}
       {remY.series.length > 0 && (
-        <ChartCard seg="CE" title="연간 해외송금액" unit="십억$ · 연간" labels={remY.labels} series={remY.series} decimals={1} seriesUnit="십억$"
+        <ChartCard seg="CE" title="연간 해외송금액" unit="십억$ · 연간" kind="bar" labels={remY.labels} series={remY.series} decimals={1} seriesUnit="십억$"
           legend={<Lg c={C.emer} t="연간 송금액" b />}
           meaning={<>연간 총 해외송금(장기) — <b className="text-gray-700 dark:text-gray-200">가전 구매력의 구조적 성장 기반</b></>}
           ai={<>송금은 10년 넘게 <b className="font-semibold text-emerald-600 dark:text-emerald-400">우상향 = 내구재 구매력 구조적 확대</b> → 프리미엄 침투 여지 지속 확대</>}
@@ -899,7 +899,7 @@ export function LaborView() {
           tone="emerald" src={src("World Bank 인구 · 연간")} />
       )}
       {wage.series.length > 0 && (
-        <ChartCard seg="CE" title="최저임금 (일급)" unit="₱/일 · 연간" labels={wage.labels} series={wage.series} decimals={0} seriesUnit="₱"
+        <ChartCard seg="CE" title="최저임금 (일급)" unit="₱/일 · 연간" kind="bar" labels={wage.labels} series={wage.series} decimals={0} seriesUnit="₱"
           legend={<Lg c={C.ind} t="최저임금(일급)" b />}
           meaning={<>법정 최저임금 추이 — <b className="text-gray-700 dark:text-gray-200">저소득 가구의 가전 구매력 하한</b></>}
           ai={<>최저임금 인상은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">보급형·필수 가전 구매력 직접 확대</b> → 임금 인상기 진입가 라인업 프로모 효과적</>}
@@ -971,14 +971,14 @@ export function LaborView() {
           tone="emerald" src={src("World Bank Findex 금융계좌 · 연간")} />
       )}
       {cons.series.length > 0 && (
-        <ChartCard seg="CE" title="1인당 가계소비" unit="불변 US$ · 연간" labels={cons.labels} series={cons.series} decimals={0} seriesUnit="$"
+        <ChartCard seg="CE" title="1인당 가계소비" unit="불변 US$ · 연간" kind="bar" labels={cons.labels} series={cons.series} decimals={0} seriesUnit="$"
           legend={<Lg c={C.ind} t="1인당 가계소비" b />}
           meaning={<>실질 1인당 소비지출 — <b className="text-gray-700 dark:text-gray-200">가전 포함 재량소비의 구조적 성장</b></>}
           ai={<>1인당 소비 우상향은 <b className="font-semibold text-emerald-600 dark:text-emerald-400">재량·프리미엄 지출 여력 구조적 확대</b> → 상위 라인업·신가전 카테고리 침투 기회</>}
           tone="emerald" src={src("World Bank 1인당 가계소비(불변) · 연간")} />
       )}
       {gni.series.length > 0 && (
-        <ChartCard seg="CE" title="1인당 GNI (국민총소득)" unit="US$ · 연간" labels={gni.labels} series={gni.series} decimals={0} seriesUnit="$"
+        <ChartCard seg="CE" title="1인당 GNI (국민총소득)" unit="US$ · 연간" kind="bar" labels={gni.labels} series={gni.series} decimals={0} seriesUnit="$"
           legend={<Lg c={C.ind} t="1인당 GNI" b />}
           meaning={<>1인당 국민총소득 — <b className="text-gray-700 dark:text-gray-200">해외소득(OFW) 포함 실질 소득수준</b></>}
           ai={<>GNI는 GDP+해외소득(OFW) → <b className="font-semibold text-emerald-600 dark:text-emerald-400">송금 반영 실제 구매력 지표</b>, 중진국 상단 진입 시 프리미엄 전환 가속</>}
