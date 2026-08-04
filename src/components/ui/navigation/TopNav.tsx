@@ -139,6 +139,10 @@ export function TopNav() {
                     <span className="block truncate text-[11px] text-gray-400 dark:text-gray-500">{me.email}</span>
                   </span>
                 </div>
+                <Link href="/me" className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] font-medium text-gray-600 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:text-gray-300 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="4" /><path d="M4 21c0-4 4-6 8-6s8 2 8 6" /></svg>
+                  내 설정
+                </Link>
                 <a href="/cdn-cgi/access/logout" className="mt-0.5 flex items-center gap-2 rounded-lg px-2.5 py-2 text-[12.5px] font-medium text-gray-600 transition-colors hover:bg-rose-50 hover:text-rose-600 dark:text-gray-300 dark:hover:bg-rose-500/10 dark:hover:text-rose-400">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><path d="M16 17l5-5-5-5" /><path d="M21 12H9" /></svg>
                   로그아웃
