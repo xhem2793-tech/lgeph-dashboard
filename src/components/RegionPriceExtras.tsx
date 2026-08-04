@@ -15,13 +15,14 @@ const num = (s: string | number | undefined) => {
 const shortGeo = (g: string | number) => String(g).replace(/\(.*/, "").replace("Region ", "").trim().slice(0, 14)
 
 type Cat = "price" | "pop" | "income"
-const CATS: { k: Cat; label: string; sub: string }[] = [
-  { k: "price", label: T("지역 물가", "Regional Prices"), sub: T("지역×품목 CPI·물가 분포", "Region × item CPI · price distribution") },
-  { k: "pop", label: T("인구·가구", "Population · Households"), sub: T("지역별 인구·가구수 (2020 센서스)", "Population · households by region (2020 Census)") },
-  { k: "income", label: T("소득·빈곤", "Income · Poverty"), sub: T("지역별 빈곤율 (2023 FIES)", "Poverty rate by region (2023 FIES)") },
-]
 
 export default function RegionPriceExtras() {
+  // 렌더 시점 생성(언어 토글 반영) — 모듈 최상위 T()는 import 시 굳어버림
+  const CATS: { k: Cat; label: string; sub: string }[] = [
+    { k: "price", label: T("지역 물가", "Regional Prices"), sub: T("지역×품목 CPI·물가 분포", "Region × item CPI · price distribution") },
+    { k: "pop", label: T("인구·가구", "Population · Households"), sub: T("지역별 인구·가구수 (2020 센서스)", "Population · households by region (2020 Census)") },
+    { k: "income", label: T("소득·빈곤", "Income · Poverty"), sub: T("지역별 빈곤율 (2023 FIES)", "Poverty rate by region (2023 FIES)") },
+  ]
   const [data, setData] = useState<PricesDomain | null>(null)
   const [pop, setPop] = useState<Record<string, Record<string, number>>>({})
   const [cat, setCat] = useState<Cat>("price")

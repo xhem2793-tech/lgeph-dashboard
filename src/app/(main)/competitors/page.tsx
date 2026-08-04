@@ -44,7 +44,8 @@ import { T } from "@/lib/i18n"
 
 type Status = "live" | "next" | "plan"
 
-const GROUPS: { group: string; items: { key: string; no: number; label: string; desc: string; status: Status; badge?: "예정" | "beta" }[] }[] = [
+// 렌더 시점에 평가(언어 토글 반영) — 모듈 최상위에서 T()를 굳혀버리면 EN 전환이 안 됨
+const buildGroups = (): { group: string; items: { key: string; no: number; label: string; desc: string; status: Status; badge?: "예정" | "beta" }[] }[] => [
   {
     group: T("가격 모니터링", "Price Monitoring"),
     items: [
@@ -82,7 +83,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
   },
 ]
 
-const ALL = GROUPS.flatMap((g) => g.items)
+// GROUPS·ALL은 컴포넌트 내부에서 buildGroups()로 생성(렌더 시점 언어 반영)
 // 대시보드에 노출할 브랜드 화이트리스트 — 각 제품군에서 최소 8개 브랜드가 보이도록 실제 가전/TV 브랜드를 포괄.
 //   (포지셔닝은 카테고리별 취급수 상위 8개만 표시하므로, 후보를 넓혀 TV·냉장고 등도 8개 채워지게)
 const SHOWN_BRANDS = [
@@ -218,6 +219,8 @@ const COLS: { k: string; t: string; num?: boolean }[] = [
  *  ⚠ Anson's는 정가 필드가 항상 세일가로 잡혀 '비중'이 구조적으로 100%가 된다.
  *     따라서 판단은 '전주 대비 변화'와 '평균 할인율'로만 한다. */
 export default function Competitors() {
+  const GROUPS = buildGroups()
+  const ALL = GROUPS.flatMap((g) => g.items)
   const [view, setView] = React.useState("board")
   const [cat, setCat] = React.useState("전체")
   const [brands, setBrands] = React.useState<string[]>(["LG"])

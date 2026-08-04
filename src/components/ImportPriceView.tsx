@@ -10,7 +10,7 @@ import { T } from "@/lib/i18n"
  *  조달원가·수입가전 경쟁 구도(중국 저가·한국 프리미엄)를 추적. 무역데이터 특성상 최신 확보월 기준. */
 
 const C = { ind: "#6366f1", rose: "#dc2626", emer: "#059669", amber: "#d99400", blue: "#0284c7", violet: "#7c3aed", teal: "#0f766e" }
-const HS = [{ hs: "8418", label: T("냉장고", "Refrigerator") }, { hs: "8415", label: T("에어컨", "Air conditioner") }, { hs: "8450", label: T("세탁기", "Washing machine") }, { hs: "8528", label: T("TV·모니터", "TV · Monitor") }]
+// HS는 컴포넌트 내부에서 생성(렌더 시점 언어 반영)
 const OCOL: Record<string, string> = { 중국: C.rose, 한국: C.ind, 태국: C.emer, 베트남: C.amber, 일본: C.violet, 말레이시아: C.blue, 인도네시아: C.teal, 전체: "#94a3b8" }
 
 function toSeries(s: ImpSeries[string] | undefined, years: number, color: string): { series: SLine[]; labels: string[] } {
@@ -24,6 +24,7 @@ function toSeries(s: ImpSeries[string] | undefined, years: number, color: string
 const fmtMonth = (d: string) => d.slice(0, 4) + "." + Number(d.slice(5, 7)) + T("월", "")
 
 export default function ImportPriceView() {
+  const HS = [{ hs: "8418", label: T("냉장고", "Refrigerator") }, { hs: "8415", label: T("에어컨", "Air conditioner") }, { hs: "8450", label: T("세탁기", "Washing machine") }, { hs: "8528", label: T("TV·모니터", "TV · Monitor") }]
   const [win, setWin] = useState("2Y")
   const [hs, setHs] = useState("8418")
   const [ser, setSer] = useState<ImpSeries>({})

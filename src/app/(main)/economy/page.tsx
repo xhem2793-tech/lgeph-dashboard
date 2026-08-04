@@ -17,7 +17,8 @@ import { T, useLang } from "@/lib/i18n"
 /** 경제지표 — 좌측 카테고리 네비 + 각 도메인 뷰(환율과 동일 레이아웃). 물가 포함 전 카테고리 EconViews로 통일. */
 
 type NavItem = { id: string; ko: string; sub: string; count: string; group: string; accent?: boolean; star?: boolean; subs: string[] }
-const NAV: NavItem[] = [
+// 렌더 시점 평가(언어 토글 반영) — 모듈 최상위에서 T()를 굳히면 EN 전환이 안 됨
+const buildNav = (): NavItem[] => [
   { id: "prices", ko: T("물가", "Prices"), sub: T("소비자물가 CPI·품목별 물가", "Consumer CPI · item-level prices"), count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
   { id: "growth", ko: T("국민계정·성장", "National Accounts · Growth"), sub: T("GDP·투자·건설·산업생산·가동률", "GDP · investment · construction · output · utilization"), count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
   { id: "labor", ko: T("고용·임금·소득", "Employment · Wages · Income"), sub: T("실업률·최저임금·OFW 송금", "Unemployment · minimum wage · OFW remittances"), count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
@@ -51,12 +52,13 @@ function viewFor(id: string) {
   if (id === "sentiment") return <SentimentView />
   if (id === "rates") return <RatesView />
   if (id === "appliance") return <ApplianceView />
-  return <Soon label={NAV.find((n) => n.id === id)?.ko ?? ""} />
+  return <Soon label={buildNav().find((n) => n.id === id)?.ko ?? ""} />
 }
 
 export default function Page() {
   const { lang } = useLang()
   const en = lang === "en"
+  const NAV = buildNav()   // 렌더 시점 생성(언어 토글 반영)
   const [mode, setMode] = useState<"card" | "list">("card")
   const [active, setActive] = useState("prices")   // 스크롤스파이 현재 섹션
   const [counts, setCounts] = useState<Record<string, number>>({})

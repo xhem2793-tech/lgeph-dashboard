@@ -31,19 +31,17 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
       if (typeof document !== "undefined") document.documentElement.lang = saved
     }
   }, [])
-  /** 언어 전환은 '깜빡'이 아니라 '넘어감' — 짧게 페이드아웃 후 새 언어로 페이드인 */
+  /** 언어 전환 — 상태를 '즉시' 바꿔 리마운트로 바로 반영(지연 없음). 페이드는 순수 CSS로 겹쳐만 준다. */
   const setLang = React.useCallback((l: Lang) => {
+    _lang = l                                    // T() 헬퍼가 이번 렌더에서 곧바로 새 언어 참조
+    setLangState(l)                              // 즉시 상태 변경 → 트리 리마운트(key=lang) → 전체 반영
+    try { window.localStorage.setItem("ax_lang", l) } catch {}
     const root = typeof document !== "undefined" ? document.documentElement : null
-    if (!root) { setLangState(l); return }
-    root.classList.add("lang-out")
-    window.setTimeout(() => {
-      setLangState(l)
-      try { window.localStorage.setItem("ax_lang", l) } catch {}
+    if (root) {
       root.lang = l
-      root.classList.remove("lang-out")
-      root.classList.add("lang-in")
-      window.setTimeout(() => root.classList.remove("lang-in"), 420)
-    }, 130)
+      root.classList.add("lang-in")              // 짧은 페이드-인(반영을 막지 않음)
+      window.setTimeout(() => root.classList.remove("lang-in"), 300)
+    }
   }, [])
   _lang = lang  // 모듈 변수 동기화(T 헬퍼가 참조)
   // key={lang} — 언어 전환 시 트리 전체 리마운트로 T() 결과가 즉시 반영됨

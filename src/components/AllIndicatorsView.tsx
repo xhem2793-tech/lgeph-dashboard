@@ -12,12 +12,13 @@ import { PmDrop } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
 
 /** 전체 지표 리스트 상단 배너 — 뉴스·경쟁사광고와 동일한 InsightBanner(크기·스타일 통일). */
-const ALL_BANNER: Banner = {
+// 렌더 시점 생성(언어 토글 반영) — 모듈 최상위 T()는 import 시 굳어버림
+const buildAllBanner = (): Banner => ({
   title: T("전체 지표 리스트 · 출처 검증", "All Indicators · Source Verification"),
   summary: T("모든 지표를 한 화면에서 — 최신값·직전 대비·기간·출처·신뢰도", "Every indicator on one screen — latest value, prior change, coverage, source, confidence"),
   body: T("분류별 차트 대신 **모든 지표를 한 화면에서** 훑어봅니다 — 최신값·직전 대비·데이터 기간·**출처 링크·신뢰도**까지 한 줄로 정리. 각 지표의 **자세히보기(시계열·전년비/전월비)·엑셀 다운로드**를 지원합니다.", "Scan **every indicator on one screen** instead of category charts — latest value, prior change, data coverage and **source link & confidence** in a single row. Each indicator supports **detail view (time series, YoY/MoM) and Excel download**."),
   insight: T("출처·신뢰도가 검증된 지표만 의사결정에 활용 — 원본 링크로 즉시 교차 확인이 가능합니다.", "Use only source- and confidence-verified indicators for decisions — cross-check instantly via the original link."),
-}
+})
 
 /** 전체 지표 리스트(+데이터 출처·검증 통합) — 분류별 차트 대신 모든 지표를 한 화면에서 검색·정렬로 훑어보고,
  *  각 지표의 최신값·직전 대비·데이터 기간·원본 코드·출처 링크·신뢰도를 한 줄로. 행 클릭 시 해당 분류 차트로 이동. */
@@ -25,13 +26,13 @@ const ALL_BANNER: Banner = {
 const ym = (d: string) => (d ? d.slice(0, 4) + "." + Number(d.slice(5, 7)) + T("월", "M") : "—")
 
 // 전망(forecast) 지표 — provenance(실측 검증 뷰)에 없으므로 별도 메타로 목록에 포함. 값은 v_latest_indicator에서.
-const FORECAST_META: Record<string, { label: string; source: string; cat: string }> = {
+const buildForecastMeta = (): Record<string, { label: string; source: string; cat: string }> => ({
   cpi_forecast_adb: { label: T("소비자물가 상승률 전망(ADB)", "CPI Inflation Forecast (ADB)"), source: T("ADB 전망", "ADB Forecast"), cat: "prices" },
   cpi_inflation_forecast: { label: T("인플레이션 전망(시장·BSP)", "Inflation Forecast (Market·BSP)"), source: T("BSP/시장 전망", "BSP/Market Forecast"), cat: "prices" },
   gdp_forecast_adb: { label: T("GDP 성장률 전망(ADB)", "GDP Growth Forecast (ADB)"), source: T("ADB 전망", "ADB Forecast"), cat: "growth" },
   gdp_forecast_imf: { label: T("GDP 성장률 전망(IMF)", "GDP Growth Forecast (IMF)"), source: T("IMF 전망", "IMF Forecast"), cat: "growth" },
   ofw_remittance_forecast: { label: T("OFW 송금액 전망($B)", "OFW Remittance Forecast ($B)"), source: T("BSP/시장 전망", "BSP/Market Forecast"), cat: "labor" },
-}
+})
 function fmtVal(v: number): string {
   if (v == null || Number.isNaN(v)) return "—"
   const a = Math.abs(v)
@@ -57,7 +58,7 @@ function inferUnit(indicator: string, label: string): { prefix?: string; suffix?
 }
 
 // 카테고리별 의미·LG 인사이트(페이지 차트카드처럼 차트 하단에 표기)
-const CAT_MI: Record<string, { mean: string; ai: string }> = {
+const buildCatMi = (): Record<string, { mean: string; ai: string }> => ({
   prices: { mean: T("소비자물가(CPI)·품목별 물가 — 생활비·구매력의 직접 지표", "CPI and item-level prices — a direct read on cost of living and purchasing power"), ai: T("물가 상승은 재량소비 위축·가격민감도 확대로 대형·프리미엄 가전 수요에 부담. 안정 시 교체·프리미엄 소구 여지.", "Rising prices curb discretionary spending and raise price sensitivity, pressuring large and premium appliance demand; stable prices open room for replacement and premium positioning.") },
   growth: { mean: T("국민계정·성장·투자·생산 — 경기 사이클과 시장 규모의 배경", "National accounts, growth, investment and output — the backdrop for the cycle and market size"), ai: T("성장·투자 확대는 소득·고용을 통해 가전 수요 저변 확장. 둔화 시 내구재 지출 이연 경계.", "Stronger growth and investment widen the demand base via income and jobs; a slowdown risks deferred durable-goods spending.") },
   labor: { mean: T("고용·임금·소득·해외송금 — 가처분소득·구매력의 원천", "Employment, wages, income and remittances — the source of disposable income and purchasing power"), ai: T("고용·임금·송금 개선은 볼륨존~프리미엄 수요 견인. 실업·송금 둔화는 수요 하방 신호.", "Gains in jobs, wages and remittances drive demand from the volume zone to premium; weaker employment or remittances signal downside.") },
@@ -71,7 +72,7 @@ const CAT_MI: Record<string, { mean: string; ai: string }> = {
   online: { mean: T("이커머스·디지털·통신 침투 — 온라인 판매 채널 성장", "E-commerce, digital and telecom penetration — growth of online sales channels"), ai: T("온라인 침투 확대는 D2C·이커머스 채널 강화 근거. 물류·디지털 마케팅 투자 연동.", "Deeper online penetration supports strengthening D2C and e-commerce channels, tied to logistics and digital-marketing investment.") },
   weather: { mean: T("냉방도일(CDD)·기온·태풍·지진 — 냉방 수요·재해 리스크", "Cooling degree days (CDD), temperature, typhoons and earthquakes — cooling demand and disaster risk"), ai: T("CDD·폭염은 에어컨 수요 선행, 태풍·지진은 공급망·재해복구 가전 교체 변수.", "CDD and heat waves lead AC demand; typhoons and earthquakes drive supply-chain and disaster-recovery replacement demand.") },
   etc: { mean: T("참고 지표 — 인구·디지털·재정 등 구조적 배경", "Reference indicators — structural backdrop such as demographics, digital and fiscal"), ai: T("직접 수요 지표는 아니나 시장 규모·구매력·인프라의 배경 맥락으로 활용.", "Not direct demand indicators, but useful as context for market size, purchasing power and infrastructure.") },
-}
+})
 
 /** 검색어 하이라이트 — 뉴스 검색과 동일(노란 mark) */
 function Hi({ text, q }: { text: string; q: string }) {
@@ -84,6 +85,7 @@ function Hi({ text, q }: { text: string; q: string }) {
 type Row = Provenance & { cat: string; catKo: string; value: number | null; period: string; prev: number | null }
 
 export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string) => void; layout?: "list" | "card" }) {
+  const ALL_BANNER = buildAllBanner(), FORECAST_META = buildForecastMeta(), CAT_MI = buildCatMi()   // 렌더 시점 생성(언어 반영)
   const [prov, setProv] = useState<Provenance[]>([])
   const [latest, setLatest] = useState<Record<string, { value: number; period: string; prev: number | null }>>({})
   const [q, setQ] = useState("")
@@ -335,6 +337,7 @@ function IndListTable({ items, q, spark, fav, onFav, onDetail, showCat }: { item
 
 // 지표 자세히보기 — 시계열(월/분기/연)을 엑셀 표처럼, 전월비·전년비 반영
 function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onClose: () => void; onExcel: (r: Row) => void; onOpenChart: (cat: string) => void }) {
+  const CAT_MI = buildCatMi()   // 렌더 시점 생성(언어 반영)
   const [series, setSeries] = useState<{ date: string; value: number }[] | null>(null)
   const [gran, setGran] = useState<"month" | "quarter" | "year">("month")
   const [win, setWin] = useState("전체")
