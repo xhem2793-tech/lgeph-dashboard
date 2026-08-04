@@ -4,7 +4,7 @@
 import React from "react"
 import { fmtStamp, type PriceRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, PM_CATS, pmFormsFor, pmFormHit } from "@/lib/classify"
-import { peso, md, pmShopLabel, pmStarCls, DOE_CODE, doeNorm, PmDrop, ListSearch } from "@/components/competitors/shared"
+import { peso, md, pmShopLabel, pmStarCls, DOE_CODE, doeNorm, PmDrop, PmMultiDrop, ListSearch } from "@/components/competitors/shared"
 
 // 전일비 — 주변 셀과 통일한 ▼▲ 컬러 텍스트(채움·자동토글 없음). ₱ 금액은 hover 툴팁.
 function MvDelta({ php, pct }: { php: number | null; pct: number | null }) {
@@ -44,7 +44,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const R = rows ?? []
   const cats = React.useMemo(() => { const av = PM_CATS.filter((c) => R.some((r) => r.category === c)); return av.length ? av : PM_CATS }, [R])
   const [cat, setCat] = React.useState("냉장고")
-  const [brand, setBrand] = React.useState("전체")
+  const [brands, setBrands] = React.useState<string[]>([])
   const [form, setForm] = React.useState("전체")
   const [shop, setShop] = React.useState("전체")
   const [sortDir, setSortDir] = React.useState<"down" | "up">("down")
@@ -72,7 +72,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
   const starFor = (c: string, model: string) => { const code = DOE_CODE[c]; const idx = code ? starIdx[code] : null; if (!idx) return null; const mm = doeNorm(code, model); const cc = doeNorm(code, canonCode(model, null)); for (const e of idx) { if (e.codeN.length < 5) continue; if (mm.includes(e.codeN)) return e.star; if (cc.length >= 8 && e.codeN.includes(cc)) return e.star } return null }
   const kw = q.trim().toLowerCase()
   const list = React.useMemo(() => {
-    const f = R.filter((r) => r.p0 != null && r.category === effCat && (brand === "전체" || r.brand === brand) && (effShop === "전체" || r.retailer === effShop) && pmFormHit(effCat, r.model + " " + (r.capacity || ""), effForm, r.brand) && (!kw || (r.brand + " " + r.model + " " + (r.code || "")).toLowerCase().includes(kw)))
+    const f = R.filter((r) => r.p0 != null && r.category === effCat && (brands.length === 0 || brands.includes(r.brand)) && (effShop === "전체" || r.retailer === effShop) && pmFormHit(effCat, r.model + " " + (r.capacity || ""), effForm, r.brand) && (!kw || (r.brand + " " + r.model + " " + (r.code || "")).toLowerCase().includes(kw)))
     // 전일비 있는 것 우선, 방향순
     return f.slice().sort((a, b) => {
       const da = a.deltaPct, db = b.deltaPct
@@ -80,7 +80,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
       const vb = db == null ? (sortDir === "down" ? 1 : -1) * 9e9 : db
       return sortDir === "down" ? va - vb : vb - va
     })
-  }, [R, effCat, brand, effForm, effShop, kw, sortDir]) // eslint-disable-line
+  }, [R, effCat, brands, effForm, effShop, kw, sortDir]) // eslint-disable-line
   const moved = list.filter((r) => r.deltaPct != null && r.deltaPct !== 0).length
   // 컬럼 헤더용 대표 날짜(최빈값) — 유통별 수집일이 달라도 다수 기준으로 표기
   const repDates = React.useMemo(() => {
@@ -95,8 +95,8 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
     <div className="flex flex-col gap-2.5">
       {/* 필터바 — 채널별 가격 비교와 동일: 브랜드·제품·유형·용량 + 인하/인상 알약토글 + 검색 + 최종갱신 */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={setBrand} /></div>
-        <div className="w-fit"><PmDrop label="제품" sel={effCat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setBrand("전체"); setForm("전체"); setShop("전체") }} /></div>
+        <div className="w-fit"><PmMultiDrop label="브랜드" sel={brands} options={brandsL.filter((b) => b !== "전체").map((b) => ({ k: b, t: b }))} onToggle={(k) => setBrands((v) => v.includes(k) ? v.filter((x) => x !== k) : [...v, k])} onClear={() => setBrands([])} /></div>
+        <div className="w-fit"><PmDrop label="제품" sel={effCat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setBrands([]); setForm("전체"); setShop("전체") }} /></div>
         <div className="w-fit"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>
         <div className="w-fit"><PmDrop label="거래선" sel={effShop} options={shopsL.map((s) => ({ k: s, t: s === "전체" ? "전체" : pmShopLabel(s) }))} onSelect={setShop} /></div>
         {/* 인하순/인상순 — 슬라이딩 알약 토글(초록↔빨강) */}

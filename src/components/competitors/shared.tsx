@@ -76,6 +76,29 @@ export function PmDrop({ label, sel, options, onSelect }: { label: string; sel: 
   )
 }
 
+/** 복수선택 드롭다운 — PmDrop과 동일 톤 + 체크박스. sel=[] 이면 '전체'. 브랜드 등 다중 비교용. */
+export function PmMultiDrop({ label, sel, options, onToggle, onClear, allLabel = "전체" }: { label: string; sel: string[]; options: { k: string; t: string }[]; onToggle: (k: string) => void; onClear: () => void; allLabel?: string }) {
+  const cur = sel.length === 0 ? allLabel : sel.length === 1 ? (options.find((o) => o.k === sel[0])?.t ?? sel[0]) : sel.length + "개 선택"
+  return (
+    <div className="group relative shrink-0">
+      <button type="button" className="flex w-full items-center gap-1 whitespace-nowrap rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-left transition-colors group-hover:border-indigo-300 dark:group-hover:border-indigo-500/40">
+        <span className="shrink-0 whitespace-nowrap text-[9.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{label}</span>
+        <span className="ml-1.5 whitespace-nowrap text-[12px] font-semibold text-gray-800 dark:text-gray-100">{cur}</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-300 transition-transform duration-200 group-hover:rotate-180"><path d="M6 9l6 6 6-6" /></svg>
+      </button>
+      <div className="invisible absolute left-0 top-[calc(100%-2px)] z-40 max-h-[280px] w-max min-w-full max-w-[280px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-1 opacity-0 shadow-lg transition-all duration-150 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+        <button type="button" onClick={onClear} className={"block w-full whitespace-nowrap rounded-md px-2.5 py-1 text-left text-[12px] transition-colors " + (sel.length === 0 ? "bg-indigo-600 font-semibold text-white" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")}>{allLabel}</button>
+        {options.map((o) => { const ck = sel.includes(o.k); return (
+          <button key={o.k} type="button" onClick={() => onToggle(o.k)} className={"flex w-full items-center gap-1.5 whitespace-nowrap rounded-md px-2.5 py-1 text-left text-[12px] transition-colors " + (ck ? "font-semibold text-indigo-700 dark:text-indigo-300" : "text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800")}>
+            <span className={"flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors " + (ck ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 dark:border-gray-700")}>{ck && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>}</span>
+            {o.t}
+          </button>
+        ) })}
+      </div>
+    </div>
+  )
+}
+
 /** 표준 리스트 검색 인풋 — 전 리스트(경쟁사 가격·이동·포지셔닝 등) 공용. 뉴스 검색과 폭·스타일 단일 소스.
  *  기본 320px, 포커스·입력 시 416px로 부드럽게 확장(뉴스와 동일). 폭을 개별 뷰에서 다르게 주지 말 것. */
 export function ListSearch({ value, onChange, placeholder, className = "" }: {

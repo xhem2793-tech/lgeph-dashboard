@@ -4,7 +4,7 @@
 import React from "react"
 import { fmtStamp, type DailyRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormOf, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit, pmSizeBucket, acHpLabel } from "@/lib/classify"
-import { peso, md, deltaCol, pmStarCls, DOE_CODE, doeNorm, PmDrop, ListSearch } from "@/components/competitors/shared"
+import { peso, md, deltaCol, pmStarCls, DOE_CODE, doeNorm, PmDrop, PmMultiDrop, ListSearch } from "@/components/competitors/shared"
 
 const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
   { k: "Abenson", label: "Abenson", live: true },
@@ -19,7 +19,7 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
 type PivRow = { cat: string; brand: string; code: string; model: string; form: string | null; size: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
 export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null; stamp: string | null; elabels: EnergyRow[] | null }) {
   const [cat, setCat] = React.useState("냉장고")
-  const [brand, setBrand] = React.useState("전체")
+  const [brands, setBrands] = React.useState<string[]>([])
   const [form, setForm] = React.useState("전체")
   const [size, setSize] = React.useState("전체")
   const [q, setQ] = React.useState("")
@@ -61,7 +61,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
     // 전일(직전 데이터일) 최저가 인덱스 — canonCode|거래선 → 가격(▼▲ 전일 대비)
     const prevIdx: Record<string, number> = {}
     D.filter((r) => r.d === prevDate && r.price != null).forEach((r) => { const cc = canonCode(r.model, r.code); if (!cc) return; const k = cc + "|" + r.retailer; prevIdx[k] = Math.min(prevIdx[k] ?? Infinity, r.price as number) })
-    const f = D.filter((r) => r.d === curDate && r.price != null && (brand === "전체" || r.brand === brand) && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmFormHit(cat, r.model + " " + (r.capacity || ""), effForm, r.brand) && pmSizeHit(cat, r.model, r.capacity, effSize) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
+    const f = D.filter((r) => r.d === curDate && r.price != null && (brands.length === 0 || brands.includes(r.brand)) && PM_CATS.includes(r.category) && (cat === "전체" || r.category === cat) && pmFormHit(cat, r.model + " " + (r.capacity || ""), effForm, r.brand) && pmSizeHit(cat, r.model, r.capacity, effSize) && canonCode(r.model, r.code).length >= 5 && (!kw || (r.code + " " + r.model + " " + canonCode(r.model, r.code)).toLowerCase().includes(kw)))
     const g: Record<string, DailyRow[]> = {}
     f.forEach((r) => { const cc = canonCode(r.model, r.code); (g[r.brand + "|" + cc] = g[r.brand + "|" + cc] || []).push(r) })
     const out: PivRow[] = Object.values(g).map((list) => {
@@ -92,7 +92,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
       return (typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y))) * dir
     })
     return out
-  }, [D, curDate, prevDate, cat, brand, effForm, effSize, q, sort]) // eslint-disable-line
+  }, [D, curDate, prevDate, cat, brands, effForm, effSize, q, sort]) // eslint-disable-line
   const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
   const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
 
@@ -100,7 +100,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
     <div className="flex flex-col gap-2.5">
       {/* 검색·필터 — LG 기본 · 제품/스펙 호버 드롭다운 · 뉴스형 검색 · 최종갱신(맨오른쪽) */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <div className="w-fit"><PmDrop label="브랜드" sel={brand} options={brandsL.map((b) => ({ k: b, t: b }))} onSelect={setBrand} /></div>
+        <div className="w-fit"><PmMultiDrop label="브랜드" sel={brands} options={brandsL.filter((b) => b !== "전체").map((b) => ({ k: b, t: b }))} onToggle={(k) => setBrands((v) => v.includes(k) ? v.filter((x) => x !== k) : [...v, k])} onClear={() => setBrands([])} /></div>
         <div className="w-fit"><PmDrop label="제품" sel={cat} options={cats.map((c) => ({ k: c, t: c }))} onSelect={(k) => { setCat(k); setForm("전체"); setSize("전체") }} /></div>
         <div className="w-fit"><PmDrop label="유형" sel={effForm} options={[{ k: "전체", t: "전체" }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>
         <div className="w-fit"><PmDrop label={isAC(cat) ? "마력" : cat === "TV" ? "화면" : "용량"} sel={effSize} options={[{ k: "전체", t: "전체" }, ...sizes.map((t) => ({ k: t, t }))]} onSelect={setSize} /></div>
