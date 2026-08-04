@@ -120,12 +120,14 @@ function Card({ a, onOpen, q = "" }: { a: CompAd; onOpen: () => void; q?: string
   const brief = briefBody(a.body)
   const ended = a.status === "종료"
   return (
-    <button onClick={onOpen} className={"group flex h-full w-full flex-col overflow-hidden rounded-xl text-left transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99] " + (ended ? "opacity-70 hover:opacity-100" : "")}>
+    <button onClick={onOpen} className={"group flex h-full w-full flex-col overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800 text-left transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md active:scale-[.99] " + (ended ? "opacity-70 hover:opacity-100" : "")}>
       <Thumb a={a} />
       <div className="flex flex-1 flex-col p-2.5">
         <div className="flex items-center gap-1.5">
           <span className="text-[12px] font-bold tracking-tight text-gray-900 dark:text-gray-50"><Hi text={a.brand} q={q} /></span>
           <span className="rounded border border-gray-200 dark:border-gray-800 px-1.5 py-0.5 text-[9.5px] font-medium text-gray-500 dark:text-gray-400">{AD_TYPE[a.ad_type] ?? a.ad_type}</span>
+          {/* P4 신뢰 신호 — 상단 상시 노출 */}
+          {conf && <span className={"ml-auto shrink-0 rounded px-1 py-0.5 text-[9px] font-semibold " + (a.confidence === "CONFIRMED" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400")}>{conf}</span>}
         </div>
         <p className="mt-1.5 line-clamp-2 text-[12px] font-medium leading-snug text-gray-800 dark:text-gray-100"><Hi text={clean(a.headline)} q={q} /></p>
         {a.offer && <span className="mt-1.5 max-w-full self-start truncate rounded-md bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 text-[10.5px] font-semibold text-emerald-700 dark:text-emerald-300"><Hi text={offerShort(a.offer)} q={q} /></span>}
@@ -138,7 +140,10 @@ function Card({ a, onOpen, q = "" }: { a: CompAd; onOpen: () => void; q?: string
           )}
           {a.ad_url ? (
             <span onClick={openSrc} className="ml-auto inline-flex items-center gap-0.5 text-indigo-500 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300">원문<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M7 7h10v10" /></svg></span>
-          ) : conf ? <span className="ml-auto">{conf}</span> : null}
+          ) : (
+            /* P5 클릭 어포던스 — 상세 열림 표시 */
+            <span className="ml-auto inline-flex items-center gap-0.5 text-gray-300 transition-colors duration-300 group-hover:text-indigo-500 dark:text-gray-600 dark:group-hover:text-indigo-400">자세히<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300 group-hover:translate-x-0.5"><path d="M9 6l6 6-6 6" /></svg></span>
+          )}
         </div>
       </div>
     </button>
@@ -354,12 +359,12 @@ export default function Page() {
 
           <div key={(ads === null ? "L" : "R") + fBrand.join() + fType.join() + fProd.join() + fStat.join() + String(monthSel) + sort + q} style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
           {ads === null ? (
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}</div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-40 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}</div>
           ) : shown.length === 0 ? (
             <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12px] text-gray-400 dark:text-gray-500">{qq ? "검색 결과 없음" : "해당 조건의 광고 없음"}</div>
           ) : (
             <>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {paged.map((a, i) => (
                 <div key={a.brand + a.headline + i} style={{ animation: "fadeUp .45s ease both", animationDelay: (Math.min(i, 16) * 30) + "ms" }}>
                   <Card a={a} onOpen={() => setSel(a)} q={q} />

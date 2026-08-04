@@ -294,7 +294,6 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
       <div className="flex items-center justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
           <span className="shrink-0 cursor-default text-sm font-medium text-gray-700 dark:text-gray-200">{title}</span>
-          <DeltaBadge down={s.dDown} pct={s.dPct} pctSuffix={s.dPctSuffix} absVal={s.dAbs} absPrefix={s.dAbsPrefix} />
         </div>
         <div className="flex shrink-0 items-center gap-2.5 text-[11px] text-gray-400 dark:text-gray-500">
           <span className="flex items-center gap-1"><span className="inline-block h-2 w-2 rounded-sm" style={{ background: GRY }} />{s.chart.prevName}</span>
@@ -308,10 +307,12 @@ function MultiCard({ title, items, delay, range }: { title: string; items: { lab
           ))}
         </div>
       ) : null}
-      <p className="mt-1 flex items-baseline gap-1.5">
+      {/* 히어로 = 값 + 변화 co-location — '값 ▲2.3%'가 한 눈에, 방향은 컬러로 즉시 */}
+      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
         <span className="inline-block cursor-default text-xl font-semibold tabular-nums text-gray-900 dark:text-gray-50">
           <CountUp key={`${range}-${idx}`} value={s.vNum} prefix={s.vPrefix} suffix={s.vSuffix} decimals={s.vDec} />
         </span>
+        <DeltaBadge down={s.dDown} pct={s.dPct} pctSuffix={s.dPctSuffix} absVal={s.dAbs} absPrefix={s.dAbsPrefix} />
         <span className="cursor-default text-[10px] text-gray-400/90 dark:text-gray-500/90">{s.prevText}</span>
       </p>
       <div key={`${range}-${idx}`} style={{ animation: "chartSwap .55s cubic-bezier(.22,1,.36,1) both" }}>
