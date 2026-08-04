@@ -2,10 +2,13 @@
 
 import React from "react"
 import { sendOtp, verifyOtp, isAllowed, getSession, signOut } from "@/lib/authClient"
+import { T, useLang } from "@/lib/i18n"
 
 /** 로그인 — Supabase 이메일 OTP(코드). Cloudflare Access와 사용감 동일(이메일→코드).
- *  허용된 이메일(@lge.com 또는 허용목록)만 접근. 성공 시 /news 로 이동. nav/웰컴 없이 독립 렌더. */
+ *  허용된 이메일(@lge.com 또는 허용목록)만 접근. 성공 시 /news 로 이동. nav/웰컴 없이 독립 렌더.
+ *  한/영 이중언어 — 누가 들어올지 몰라 화면 안에서 KO/EN 선택(기본 KO). */
 export default function LoginPage() {
+  const { lang, setLang } = useLang()
   const [step, setStep] = React.useState<"email" | "code">("email")
   const [email, setEmail] = React.useState("")
   const [code, setCode] = React.useState("")
@@ -22,33 +25,31 @@ export default function LoginPage() {
     e.preventDefault()
     setErr(null); setNote(null)
     const em = email.trim().toLowerCase()
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { setErr("올바른 이메일을 입력해 주세요"); return }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)) { setErr(T("올바른 이메일을 입력해 주세요", "Please enter a valid email")); return }
     setBusy(true)
     try {
-      // 접근 허용 이메일인지 먼저 확인(불필요한 메일 발송 방지)
-      if (!(await isAllowed(em))) { setErr("접근 권한이 없는 이메일입니다. 관리자에게 문의해 주세요."); setBusy(false); return }
+      if (!(await isAllowed(em))) { setErr(T("접근 권한이 없는 이메일입니다. 관리자에게 문의해 주세요.", "This email is not authorized. Please contact the administrator.")); setBusy(false); return }
       await sendOtp(em)
-      setStep("code"); setNote("이메일로 보낸 6자리 코드를 입력해 주세요.")
-    } catch (e) { setErr(e instanceof Error ? e.message : "발송 중 오류가 발생했습니다") }
+      setStep("code"); setNote(T("이메일로 보낸 6자리 코드를 입력해 주세요.", "Enter the 6-digit code sent to your email."))
+    } catch (e) { setErr(e instanceof Error ? e.message : T("발송 중 오류가 발생했습니다", "Something went wrong while sending")) }
     setBusy(false)
   }
 
   const submitCode = async (e: React.FormEvent) => {
     e.preventDefault()
     setErr(null)
-    if (code.trim().length < 6) { setErr("6자리 코드를 입력해 주세요"); return }
+    if (code.trim().length < 6) { setErr(T("6자리 코드를 입력해 주세요", "Enter the 6-digit code")); return }
     setBusy(true)
     try {
       await verifyOtp(email, code)
-      // 이중 확인 — 세션 확보 후 허용 재검증
-      if (!(await isAllowed(email))) { signOut(); setErr("접근 권한이 없는 계정입니다."); setBusy(false); return }
+      if (!(await isAllowed(email))) { signOut(); setErr(T("접근 권한이 없는 계정입니다.", "This account is not authorized.")); setBusy(false); return }
       go("/news/")
-    } catch (e) { setErr(e instanceof Error ? e.message : "인증 실패"); setBusy(false) }
+    } catch (e) { setErr(e instanceof Error ? e.message : T("인증 실패", "Verification failed")); setBusy(false) }
   }
 
   const resend = async () => {
     setErr(null); setNote(null); setBusy(true)
-    try { await sendOtp(email); setNote("코드를 다시 보냈습니다.") } catch (e) { setErr(e instanceof Error ? e.message : "재발송 실패") }
+    try { await sendOtp(email); setNote(T("코드를 다시 보냈습니다.", "Code sent again.")) } catch (e) { setErr(e instanceof Error ? e.message : T("재발송 실패", "Resend failed")) }
     setBusy(false)
   }
 
@@ -65,20 +66,27 @@ export default function LoginPage() {
         <span className="absolute inset-x-0 top-0 h-[3px] bg-gradient-to-r from-indigo-400 via-violet-400 to-fuchsia-400" />
 
         <div className="px-8 pb-8 pt-9">
-          {/* 로고 */}
+          {/* 로고 + 언어 배지 */}
           <div className="flex items-center gap-2">
             <span className="text-[17px] font-extrabold tracking-tight">
               <span className="text-gray-900 dark:text-gray-50">axlgeph</span><span className="text-indigo-600 dark:text-indigo-400">.report</span>
             </span>
             <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 ring-1 ring-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-500/20">Beta</span>
+            {/* 한/영 선택(기본 KO) */}
+            <div className="ml-auto flex items-center rounded-full bg-gray-100 p-0.5 text-[10.5px] font-bold ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
+              {(["ko", "en"] as const).map((l) => (
+                <button key={l} type="button" onClick={() => setLang(l)} aria-label={l === "ko" ? "한국어" : "English"} className={"rounded-full px-2 py-0.5 leading-none transition-colors " + (lang === l ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{l === "ko" ? "KO" : "EN"}</button>
+              ))}
+            </div>
           </div>
+
           <h1 className="mt-5 text-[21px] font-extrabold leading-tight tracking-tight text-gray-900 dark:text-gray-50">
-            {step === "email" ? "로그인" : "코드 확인"}
+            {step === "email" ? T("로그인", "Sign in") : T("코드 확인", "Verify code")}
           </h1>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400">
             {step === "email"
-              ? "LGE-PH 마켓 인텔리전스 대시보드. 사내 이메일로 로그인해 주세요."
-              : <><b className="font-semibold text-gray-700 dark:text-gray-200">{email}</b> 으로 보낸 6자리 코드를 입력하세요.</>}
+              ? T("LGE-PH 마켓 인텔리전스 대시보드. 사내 이메일로 로그인해 주세요.", "LGE-PH Market Intelligence Dashboard. Sign in with your work email.")
+              : <>{T("아래 이메일로 보낸 6자리 코드를 입력하세요: ", "Enter the 6-digit code sent to: ")}<b className="font-semibold text-gray-700 dark:text-gray-200">{email}</b></>}
           </p>
 
           {step === "email" ? (
@@ -90,7 +98,7 @@ export default function LoginPage() {
               />
               <button type="submit" disabled={busy}
                 className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-[14px] font-bold text-white shadow-md shadow-violet-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0">
-                {busy ? "확인 중…" : "로그인 코드 받기"}
+                {busy ? T("확인 중…", "Checking…") : T("로그인 코드 받기", "Get login code")}
               </button>
             </form>
           ) : (
@@ -103,11 +111,11 @@ export default function LoginPage() {
               />
               <button type="submit" disabled={busy}
                 className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-3 text-[14px] font-bold text-white shadow-md shadow-violet-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:opacity-60 disabled:hover:translate-y-0">
-                {busy ? "확인 중…" : "로그인"}
+                {busy ? T("확인 중…", "Verifying…") : T("로그인", "Sign in")}
               </button>
               <div className="flex items-center justify-between text-[12px]">
-                <button type="button" onClick={() => { setStep("email"); setCode(""); setErr(null); setNote(null) }} className="font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">← 이메일 변경</button>
-                <button type="button" onClick={resend} disabled={busy} className="font-semibold text-indigo-600 hover:underline disabled:opacity-50 dark:text-indigo-400">코드 재발송</button>
+                <button type="button" onClick={() => { setStep("email"); setCode(""); setErr(null); setNote(null) }} className="font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">{T("← 이메일 변경", "← Change email")}</button>
+                <button type="button" onClick={resend} disabled={busy} className="font-semibold text-indigo-600 hover:underline disabled:opacity-50 dark:text-indigo-400">{T("코드 재발송", "Resend code")}</button>
               </div>
             </form>
           )}
@@ -116,7 +124,7 @@ export default function LoginPage() {
           {note && !err && <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-[12px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" style={{ animation: "loUp .3s ease both" }}>{note}</p>}
 
           <p className="mt-6 border-t border-gray-100 pt-4 text-[11px] leading-relaxed text-gray-400 dark:border-gray-800 dark:text-gray-500">
-            사내 이메일(@lge.com) 또는 승인된 계정만 접근할 수 있습니다. 문제가 있으면 관리자에게 문의하세요.
+            {T("사내 이메일(@lge.com) 또는 승인된 계정만 접근할 수 있습니다. 문제가 있으면 관리자에게 문의하세요.", "Only work emails (@lge.com) or approved accounts can access this. If you have trouble, please contact the administrator.")}
           </p>
         </div>
       </div>
