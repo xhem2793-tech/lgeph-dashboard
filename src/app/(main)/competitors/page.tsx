@@ -28,6 +28,7 @@ import { PromoView } from "@/components/competitors/PromoView"
 import { DealsView } from "@/components/competitors/DealsView"
 import { AnomalyView } from "@/components/competitors/AnomalyView"
 import { MoversView } from "@/components/competitors/MoversView"
+import EnergyLabelView from "@/components/EnergyLabelView"
 import { ErrorBoundary } from "@/components/ErrorBoundary"
 
 /** 경쟁사 가격 — 좌 1/4 메뉴판 + 우 3/4 콘텐츠.
@@ -54,6 +55,7 @@ const GROUPS: { group: string; items: { key: string; no: number; label: string; 
     group: "포지셔닝·비교",
     items: [
       { key: "asp", no: 2, label: "가격 포지셔닝", desc: "브랜드 × 가격대 산점도 · New DOE ★ · LG 위치", status: "live" },
+      { key: "energy", no: 15, label: "에너지 라벨", desc: "에어컨·냉장고·TV 브랜드별 에너지효율·별점(DOE)", status: "live" },
       { key: "gap", no: 3, label: "LG vs 경쟁 갭", desc: "동급 스펙 가격차(%) · 프리미엄/디스카운트", status: "next" },
       { key: "trend", no: 5, label: "ASP 추세", desc: "주·월 평균가 시계열 · 가격 인덱스(100)", status: "next" },
     ],
@@ -384,6 +386,8 @@ export default function Competitors() {
             <AnomalyView rows={rows} ads={ads} stamp={stamp} />
           ) : view === "movers" ? (
             <MoversView rows={rows} elabels={elabels} stamp={stamp} />
+          ) : view === "energy" ? (
+            <EnergyLabelView />
           ) : active?.status !== "live" ? (
             <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
               <p className="text-[12.5px] font-medium text-gray-600 dark:text-gray-300">{active?.desc}</p>

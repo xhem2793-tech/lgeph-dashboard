@@ -6,13 +6,15 @@ import { fmtStamp, type PriceRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, PM_CATS, pmFormsFor, pmFormHit } from "@/lib/classify"
 import { peso, md, pmShopLabel, pmStarCls, DOE_CODE, doeNorm, PmDrop, PmMultiDrop, ListSearch } from "@/components/competitors/shared"
 
-// 전일비 — 주변 셀과 통일한 ▼▲ 컬러 텍스트(채움·자동토글 없음). ₱ 금액은 hover 툴팁.
+// 전일비 — 주변과 통일한 ▼▲ 컬러 텍스트. %·₱ 둘 다 동시 표시(자동토글 없음) + 진입 애니메이션.
 function MvDelta({ php, pct }: { php: number | null; pct: number | null }) {
   if (pct == null || pct === 0 || php == null) return <span className="text-gray-300 dark:text-gray-600">—</span>
   const dn = pct < 0
   return (
-    <span title={"₱" + Math.round(Math.abs(php)).toLocaleString("en-US")} className={"inline-flex items-center gap-0.5 text-[11.5px] font-semibold tabular-nums " + (dn ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>
-      <span className="text-[10px]">{dn ? "▼" : "▲"}</span>{Math.abs(pct).toFixed(1)}%
+    <span className={"inline-flex items-center gap-1 tabular-nums " + (dn ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")} style={{ animation: "badgeSwap .42s cubic-bezier(.22,1,.36,1) both" }}>
+      <span className="text-[10px]">{dn ? "▼" : "▲"}</span>
+      <span className="text-[11.5px] font-semibold">{Math.abs(pct).toFixed(1)}%</span>
+      <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500">₱{Math.round(Math.abs(php)).toLocaleString("en-US")}</span>
     </span>
   )
 }
