@@ -16,3 +16,18 @@
 - **00:21** — [태스크① 완료] **영문화 완성 배포** (커밋 b3abb52). 워크플로 5에이전트 결과 + 잔여 한글 코드수정 통합.
   - 남은 한글(불가피): 일부 아젠다 이벤트 제목(DB event_en=null인 건) → 데이터 보정 필요(코드 아님). 뉴스 본문·이벤트 상세(summary)는 원문 유지(정책대로).
 - **00:21** — [태스크② 시작] **대시보드 최적화 검사** (번들·캐시·로딩지연, 30분+ 목표).
+
+- **00:26** — [태스크② 진행] 최적화 조사 결과·조치 배포 (커밋 575de1c):
+  - 핵심: sb() 모든 fetch가 `no-store`였음 → **세션 인메모리 캐시(TTL 3분)+Promise 디듀프** 추가. 페이지 이동/재방문 시 대용량 재조회 제거.
+  - _headers: _next/static·woff2 immutable + 보안헤더.
+  - 이미지 lazy(경쟁광고·인사이트). CompetitorMovers=데드코드(미사용) 확인.
+  - recharts/datepicker=숨긴 /overview 전용(라우트 분리라 메인 영향 적음) → 유지, 정리는 메모.
+  - 다음: 실측 로드/네비 속도 테스트(지속 모니터링).
+
+- **00:28** — [태스크② 실측·검증]
+  - economy 초기: DOMContentLoaded 346ms · load 717ms · Supabase 7건(최대 1.04s) — 정적 셸 빠름, 데이터 페치가 병목.
+  - **캐시 검증(핵심):** SPA 재방문(news→economy) 시 **신규 Supabase 요청 0건**(53→53). 이전엔 매 방문 전량 재조회(competitors 첫방문만 31건). → 재방문/서브뷰 전환 즉시화.
+  - 콘솔 에러 0 (economy·news·competitors 네비 전체). 안정성 양호.
+  - JS 772KB는 로컬 무압축 수치 — CF Pages는 brotli/gzip로 실제 ~1/3, _next/static은 이제 immutable 영구캐시.
+  - [태스크② 완료] 성능·안정성 검증 통과. 남은 여지(메모): competitors 첫로드 31요청(병렬·불가피), /overview 데드코드(recharts·datepicker) 정리 가능.
+- **00:28** — [태스크③ 시작] **Supabase 로그인화면(방식 A: 매직링크)** 제작 — 코드+DB, Cloudflare Access는 켜둔 채 안전 배포.

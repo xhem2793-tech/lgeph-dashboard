@@ -68,6 +68,9 @@ export function TopNav() {
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/")
   const cur = (theme === "system" ? resolvedTheme : theme) === "dark" ? "dark" : "light"
 
+  // 로그인 화면은 nav 없이 독립 렌더
+  if (pathname?.startsWith("/login")) return null
+
   return (
     <header className="sticky top-0 z-40 border-b border-gray-200 bg-white/95 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
       <style>{"@keyframes axfade{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}"}</style>
