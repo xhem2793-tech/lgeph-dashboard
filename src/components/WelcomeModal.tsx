@@ -9,7 +9,7 @@ import React from "react"
 const SEEN_KEY = "ax_welcome_v1"
 
 const BUILDING: { icon: React.ReactNode; t: string; d: string }[] = [
-  { t: "국가동향", d: "필리핀 뉴스·규제·정책 + 인사이트 리포트 자동 수집", icon: <path d="M4 6h16M4 12h16M4 18h10" /> },
+  { t: "국가동향", d: "필리핀 뉴스·규제·정책 + 인사이트 리포트 자동 수집·개인별 맞춤 발송", icon: <path d="M4 6h16M4 12h16M4 18h10" /> },
   { t: "시장동향", d: "경쟁사 가격·프로모·신제품/EOL 실시간 관측", icon: <><path d="M3 3v18h18" /><path d="M7 14l3-3 3 3 4-5" /></> },
   { t: "주요지표", d: "거시·금융·가전 선행지표 200+ (World Bank·PSA·BSP)", icon: <><rect x="3" y="10" width="4" height="10" rx="1" /><rect x="10" y="4" width="4" height="16" rx="1" /><rect x="17" y="13" width="4" height="7" rx="1" /></> },
   { t: "마케팅·경쟁광고", d: "경쟁사 광고·캠페인 트래킹, 종료·신규 감지", icon: <><path d="M3 11l18-5v12L3 14z" /><path d="M11.6 16.8a3 3 0 0 1-5.8-1.1" /></> },
@@ -54,8 +54,12 @@ export default function WelcomeModal() {
           <div className="pointer-events-none absolute -right-10 -top-8 h-44 w-44 rounded-full bg-fuchsia-300/25 blur-3xl dark:bg-fuchsia-500/15" />
           <div className="pointer-events-none absolute right-24 top-12 h-28 w-28 rounded-full bg-sky-300/20 blur-3xl dark:bg-sky-500/10" />
           <div className="relative flex items-center gap-2" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: ".1s" }}>
+            {/* 로고 워드마크 */}
+            <span className="text-[15px] font-extrabold leading-none tracking-tight">
+              <span className="text-gray-900 dark:text-gray-50">axlgeph</span><span className="text-indigo-600 dark:text-indigo-400">.report</span>
+            </span>
             <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 shadow-sm ring-1 ring-indigo-100 backdrop-blur dark:bg-white/10 dark:text-indigo-300 dark:ring-indigo-500/20">Beta</span>
-            <span className="text-[11px] font-medium text-gray-500 dark:text-gray-400">테스트 · 데이터 누적 중</span>
+            <span className="hidden text-[11px] font-medium text-gray-500 dark:text-gray-400 sm:inline">테스트 · 데이터 누적 중</span>
           </div>
           <h2 className="relative mt-3.5 text-[20px] font-extrabold leading-[1.25] tracking-tight" style={{ animation: "fadeUp .55s cubic-bezier(.22,1,.36,1) both", animationDelay: ".17s" }}>
             <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300">AX 필리핀법인</span>
@@ -66,7 +70,7 @@ export default function WelcomeModal() {
         <div className="min-h-0 flex-1 overflow-y-auto px-7 py-5">
           {/* 리드 문구 — 헤더에서 내려 제목형(좌측 인디고 액센트)으로 강조 */}
           <p className="mb-4 border-l-[3px] border-indigo-400 pl-3 text-[13.5px] font-semibold leading-relaxed text-gray-800 dark:border-indigo-500/50 dark:text-gray-100">
-            AI 전환(AX)으로 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.
+            AX로 구축한 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.
           </p>
           {/* 주의 — 정확도·갱신 안내 */}
           <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">

@@ -28,7 +28,6 @@ const NAV: NavItem[] = [
   { id: "appliance", ko: "가전 선행지표", sub: "가전 물가·PPI·수입액·실질가격 갭", count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
   { id: "importprice", ko: "수입 단가", sub: "가전 수입 단가($/kg)·원산지 점유(Comtrade)", count: "4", group: "가전 인텔리전스", subs: ["냉장고", "에어컨", "세탁기", "TV"] },
   { id: "online", ko: "온라인 시장", sub: "이커머스 규모·디지털/통신 침투", count: "3", group: "소비·디지털", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
-  { id: "regions", ko: "지역시장 지도", sub: "17개 지역 셀아웃·경제 choropleth 지도 + 지역 물가", count: "17", group: "지역", star: true, subs: ["전국 KPI", "지역별 choropleth", "지역 상세 드릴다운", "지역 물가 히트맵"] },
 ]
 
 function Soon({ label }: { label: string }) {
@@ -130,6 +129,12 @@ export default function Page() {
             <span className="ml-auto"><Segmented size="sm" value={mode} onChange={(k) => setMode(k as "card" | "list")} options={[{ k: "card", label: "카드" }, { k: "list", label: "리스트" }]} /></span>
           </div>
           <div className="px-2 py-3">
+            {/* 지역시장 지도 — 별도 페이지로 분리, 좌측 메뉴 최상단 링크 */}
+            <a href="/regions" className="group mb-1.5 flex items-center gap-2 rounded-md border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/10 px-2.5 py-2 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-sm">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-500 dark:text-indigo-400"><path d="M9 20l-6-3V4l6 3m0 13 6-3m-6 3V7m6 10 6 3V7l-6-3m0 13V4m0 0L9 7" /></svg>
+              <span className="flex-1 text-[14px] font-semibold text-indigo-700 dark:text-indigo-300">지역시장 지도</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"><path d="M7 17 17 7M7 7h10v10" /></svg>
+            </a>
             <nav className="flex flex-col gap-1">
               {NAV.map((n, i) => (
                 <React.Fragment key={n.id}>
