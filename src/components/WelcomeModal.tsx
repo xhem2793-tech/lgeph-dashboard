@@ -2,10 +2,8 @@
 
 import React from "react"
 
-/** 첫 방문 웰컴 팝업(시안) — AX 필리핀법인 인텔리전스 대시보드 베타 안내.
- *  · 데이터 누적·테스트 기간이라 정확도 감안 + 실시간 갱신 안내
- *  · 무엇을 구축 중인지 간단 소개
- *  첫 방문 1회 노출(localStorage). "다시 보지 않기" 선택 시 재노출 안 함. */
+/** 첫 방문 웰컴 팝업 — AX 필리핀법인 마켓 인텔리전스 대시보드 베타 안내.
+ *  첫 방문 1회 노출(localStorage). 닫으면 다시 뜨지 않고, 상단 전구 아이콘으로 언제든 재열기. */
 const SEEN_KEY = "ax_welcome_v1"
 
 const BUILDING: { icon: React.ReactNode; t: string; d: string }[] = [
@@ -18,7 +16,6 @@ const BUILDING: { icon: React.ReactNode; t: string; d: string }[] = [
 
 export default function WelcomeModal() {
   const [open, setOpen] = React.useState(false)
-  const [dontShow, setDontShow] = React.useState(true)
   const [closing, setClosing] = React.useState(false)
 
   React.useEffect(() => {
@@ -34,7 +31,7 @@ export default function WelcomeModal() {
 
   const close = () => {
     setClosing(true)
-    try { if (dontShow) localStorage.setItem(SEEN_KEY, "1") } catch {}
+    try { localStorage.setItem(SEEN_KEY, "1") } catch {}
     window.setTimeout(() => { setOpen(false); setClosing(false) }, 220)
   }
 
@@ -59,7 +56,6 @@ export default function WelcomeModal() {
               <span className="text-gray-900 dark:text-gray-50">axlgeph</span><span className="text-indigo-600 dark:text-indigo-400">.report</span>
             </span>
             <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 shadow-sm ring-1 ring-indigo-100 backdrop-blur dark:bg-white/10 dark:text-indigo-300 dark:ring-indigo-500/20">Beta</span>
-            <span className="hidden text-[11px] font-medium text-gray-500 dark:text-gray-400 sm:inline">테스트 · 데이터 누적 중</span>
           </div>
           <h2 className="relative mt-3.5 text-[20px] font-extrabold leading-[1.25] tracking-tight" style={{ animation: "fadeUp .55s cubic-bezier(.22,1,.36,1) both", animationDelay: ".17s" }}>
             <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300">AX 필리핀법인</span>
@@ -97,16 +93,13 @@ export default function WelcomeModal() {
           </div>
         </div>
 
-        {/* 푸터 */}
-        <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-7 py-4 dark:border-gray-800">
-          <label className="flex cursor-pointer select-none items-center gap-2 text-[12px] text-gray-500 dark:text-gray-400">
-            <button type="button" role="checkbox" aria-checked={dontShow} onClick={() => setDontShow((v) => !v)}
-              className={"flex h-4 w-4 items-center justify-center rounded border transition-colors " + (dontShow ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 dark:border-gray-600")}>
-              {dontShow && <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>}
-            </button>
-            <span onClick={() => setDontShow((v) => !v)}>다시 보지 않기</span>
-          </label>
-          <button type="button" onClick={close} className="rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2 text-[13px] font-bold text-white shadow-md shadow-violet-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:from-indigo-700 hover:to-violet-700 hover:shadow-lg hover:shadow-violet-600/30 active:scale-95">
+        {/* 푸터 — 재열기 안내 + CTA */}
+        <div className="flex items-center justify-between gap-3 border-t border-gray-100 px-7 py-3.5 dark:border-gray-800">
+          <span className="hidden items-center gap-1.5 text-[11.5px] text-gray-400 dark:text-gray-500 sm:flex">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-amber-400"><path d="M9 18h6" /><path d="M10 22h4" /><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5" /></svg>
+            상단 <b className="font-semibold text-gray-500 dark:text-gray-400">전구 아이콘</b>으로 언제든 다시 볼 수 있어요
+          </span>
+          <button type="button" onClick={close} className="ml-auto rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-5 py-2 text-[13px] font-bold text-white shadow-md shadow-violet-600/25 transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 hover:from-indigo-700 hover:to-violet-700 hover:shadow-lg hover:shadow-violet-600/30 active:scale-95">
             살펴보기
           </button>
         </div>
