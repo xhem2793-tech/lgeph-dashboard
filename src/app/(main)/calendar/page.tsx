@@ -37,7 +37,7 @@ const tone = (c: string) => CAT[c] ?? CAT["기타"]
     : c === "기타" ? T("기타", "Other")
     : c === "영업" ? T("영업", "Sales")
     : c === "물류" ? T("물류", "Logistics")
-    : c === "관리" ? T("관리", "Management")
+    : c === "관리" ? T("관리", "Mgmt")
     : c === "전체" ? T("전체", "All")
     : c
   // 발표시각 표시 — 데이터의 "오전/오후 N시"를 EN에선 "N AM/PM"로(원문은 KO 유지)
@@ -60,7 +60,7 @@ const tone = (c: string) => CAT[c] ?? CAT["기타"]
 const LEGEND = ["경제", "금융", "정치", "규제", "에너지", "공휴일"]
 const kindLabel = (k: string): string =>
   k === "release" ? T("지표 발표", "Data release")
-  : k === "policy" ? T("정책·규제", "Policy & regulation")
+  : k === "policy" ? T("정책·규제", "Policy & Reg.")
   : k === "holiday" ? T("공휴일", "Holiday")
   : ""
 
@@ -498,7 +498,7 @@ export default function Calendar() {
         <div className="flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both", animationDelay: "80ms" }}>
           <div className="rounded-xl p-4">
             <header className="flex items-baseline justify-between border-b border-gray-100 dark:border-gray-800 pb-2.5">
-              <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{label}{T(" 구성", " Composition")}</h2>
+              <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{label}{T(" 구성", " Comp.")}</h2>
               <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500">{T("최신", "Latest")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
             </header>
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
@@ -519,7 +519,7 @@ export default function Calendar() {
               <div className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3">
                 <div className="mb-1 flex items-baseline justify-between">
                   <h3 className="text-[12px] font-bold text-gray-700 dark:text-gray-200">{T("예정 일정", "Upcoming")}</h3>
-                  <span className="text-[11px] text-gray-400 dark:text-gray-500">{T("2주간", "Next 2 weeks")}</span>
+                  <span className="text-[11px] text-gray-400 dark:text-gray-500">{T("2주간", "2 weeks")}</span>
                 </div>
                 <div className="flex flex-col">
                   {agenda.map((x, i) => {

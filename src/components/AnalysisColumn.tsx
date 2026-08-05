@@ -22,7 +22,7 @@ function dday(eff: string | null): { text: string; urgent: boolean } | null {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime()
   const diff = Math.round((d - today) / 86400000)
   if (diff < 0) return { text: T("시행 중", "In effect"), urgent: false }
-  if (diff === 0) return { text: T("오늘 시행", "Effective today"), urgent: true }
+  if (diff === 0) return { text: T("오늘 시행", "Today"), urgent: true }
   return { text: T("시행 D-", "Effective D-") + diff, urgent: diff <= 7 }
 }
 
@@ -35,7 +35,7 @@ function OwnVisual({ tags, compact }: { tags: string[]; compact?: boolean }) {
         (compact ? "h-[76px]" : "h-full min-h-[180px]")
       }
     >
-      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">{T("AX 자체 분석", "AX In-house Analysis")}</span>
+      <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-200">{T("AX 자체 분석", "AX Analysis")}</span>
       <div className="flex gap-1">
         {tags.slice(0, 3).map((t) => (
           <span key={t} className="rounded bg-white/15 dark:bg-gray-900/15 px-1.5 py-px text-[10px] text-white">
@@ -193,7 +193,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
                 (p.kind === "own" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300")
               }
             >
-              {p.kind === "own" ? T("자체 칼럼", "In-house Column") : T("외부 큐레이션", "Curated External")}
+              {p.kind === "own" ? T("자체 칼럼", "In-house") : T("외부 큐레이션", "Curated External")}
             </span>
             <span className="text-[11px] text-gray-500 dark:text-gray-400">
               {fmt(p.publishedAt)} · {p.kind === "own" ? p.author ?? T("경영기획", "Strategy") : p.source}
@@ -245,7 +245,7 @@ function Modal({ p, onClose }: { p: Post; onClose: () => void }) {
                 rel="noopener noreferrer"
                 className="mt-3 inline-block text-[12px] text-indigo-600 dark:text-indigo-400 transition-colors duration-200 hover:underline"
               >
-                {p.kind === "own" ? T("근거 원문", "Source material") : T("원문 전체 보기", "View full source")} · {p.source} ↗
+                {p.kind === "own" ? T("근거 원문", "Source") : T("원문 전체 보기", "View full source")} · {p.source} ↗
               </a>
             ) : null}
           </div>
@@ -340,7 +340,7 @@ export default function AnalysisColumn() {
       <section className="border-t border-gray-100 dark:border-gray-800 pt-3">
         <a href="/news?cat=규제" className="group mb-2 flex items-baseline gap-1">
           <span className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50 transition-colors duration-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-            {T("규제 동향", "Regulatory Watch")}
+            {T("규제 동향", "Reg. Watch")}
           </span>
           <span className="text-gray-400 dark:text-gray-500 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
             ›

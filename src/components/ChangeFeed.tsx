@@ -53,7 +53,7 @@ export default function ChangeFeed() {
     <section className="h-full rounded-xl p-4">
       <header className="mb-2 flex items-baseline justify-between">
         <div className="flex items-baseline gap-2">
-          <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("금주 핵심", "This Week's Focus")}</h2>
+          <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("금주 핵심", "Weekly Focus")}</h2>
           <span className="text-[11px] text-gray-400 dark:text-gray-500">{T("최근 7일 · ", "Past 7 days · ")}{fmtDate(asOf)}{T(" 기준", "")}</span>
         </div>
         <a

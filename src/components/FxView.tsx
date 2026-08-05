@@ -237,7 +237,7 @@ export default function FxView() {
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("환율", "Exchange Rates")}</h2>
+            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("환율", "Exchange")}</h2>
             <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("필리핀 페소 · 대달러·역내·조달통화·실효환율", "Philippine peso · vs. USD · regional · sourcing currencies · effective rates")}</span>
             <span className="ml-auto flex items-center gap-2">
               <span className="hidden text-[10.5px] text-gray-400 dark:text-gray-500 sm:inline">{labels[0]} → {labels[labels.length - 1]}</span>
@@ -250,7 +250,7 @@ export default function FxView() {
               meaning={<>{T("대미달러 가치 지수화(시작=100) — ", "Value vs. USD, indexed (start=100) — ")}<b className="text-gray-700 dark:text-gray-200">{T("아래로 갈수록 약세", "lower = weaker")}</b></>}
               ai={<>{T("페소는 5년간 대미달러 약 18% 절하로 ", "The peso has depreciated ~18% vs. USD over five years — ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("역내 최대 낙폭", "the region's largest drop")}</b>{T(". 페소로 결제하지 않는 한 경쟁국 대비 원가 방어력이 약함 → 헤지·현지조달 확대 검토.", ". Unless settled in pesos, cost resilience lags peers → consider expanding hedging and local sourcing.")}</>}
               src={<><b className="font-semibold text-gray-500 dark:text-gray-400">{T("자료", "Source")}</b> {T("Alpha Vantage 월별 양자환율", "Alpha Vantage monthly bilateral rates")}</>} />
-            <ChartCard title={T("₱/USD 기본 환율", "₱/USD Benchmark Rate")} unit={T("달러당 페소", "pesos per dollar")} labels={labels} series={fxusd} seriesUnit="" decimals={2} tone="rose"
+            <ChartCard title={T("₱/USD 기본 환율", "₱/USD Rate")} unit={T("달러당 페소", "₱ per $")} labels={labels} series={fxusd} seriesUnit="" decimals={2} tone="rose"
               legend={<Lg c="#6366f1" t={T("₱/USD 월 종가", "₱/USD month-end")} b />}
               meaning={<>{T("조달·결제의 기준 환율. ", "The reference rate for sourcing and settlement. ")}<b className="text-gray-700 dark:text-gray-200">{T("오를수록 페소 약세", "higher = weaker peso")}</b>.</>}
               ai={<>{T("₱/USD가 ", "₱/USD has ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("60선을 넘어 사상 최저권", "broken past 60, near record lows")}</b>{T(". 달러결제 부품·완제품 원가가 구조적 상방 → 판가 전가 여력·달러 헤지 비율 점검.", ". Dollar-settled components and finished goods face structural cost upside → review pricing pass-through headroom and the dollar hedge ratio.")}</>}

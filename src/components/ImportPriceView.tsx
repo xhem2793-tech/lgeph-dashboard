@@ -24,7 +24,7 @@ function toSeries(s: ImpSeries[string] | undefined, years: number, color: string
 const fmtMonth = (d: string) => d.slice(0, 4) + "." + Number(d.slice(5, 7)) + T("월", "")
 
 export default function ImportPriceView() {
-  const HS = [{ hs: "8418", label: T("냉장고", "Refrigerator") }, { hs: "8415", label: T("에어컨", "Air conditioner") }, { hs: "8450", label: T("세탁기", "Washing machine") }, { hs: "8528", label: T("TV·모니터", "TV · Monitor") }]
+  const HS = [{ hs: "8418", label: T("냉장고", "Refrigerator") }, { hs: "8415", label: T("에어컨", "Air conditioner") }, { hs: "8450", label: T("세탁기", "Washer") }, { hs: "8528", label: T("TV·모니터", "TV · Monitor") }]
   const [win, setWin] = useState("2Y")
   const [hs, setHs] = useState("8418")
   const [ser, setSer] = useState<ImpSeries>({})
@@ -50,7 +50,7 @@ export default function ImportPriceView() {
       <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08] p-4" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200">
-            <b className="font-semibold text-gray-900 dark:text-gray-50">{T("가전 수입 단가", "Appliance import unit price")}</b> — {cur.label} <b className="text-indigo-700 dark:text-indigo-300">{latest != null ? "$" + latest.toFixed(2) + "/kg" : "–"}</b>{latest != null && prev != null ? <span className={"ml-0.5 " + (latest >= prev ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{latest >= prev ? "▲" : "▼"}{Math.abs(latest - prev).toFixed(2)}</span> : null}{yoy != null ? <> · {T("전년비", "YoY")} <b className={yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoy >= 0 ? "+" : ""}{yoy.toFixed(1)}%</b></> : null} — {T("페소 표시 조달원가·경쟁 수입가 신호", "peso-denominated procurement cost · competitive import price signal")}
+            <b className="font-semibold text-gray-900 dark:text-gray-50">{T("가전 수입 단가", "Import unit price")}</b> — {cur.label} <b className="text-indigo-700 dark:text-indigo-300">{latest != null ? "$" + latest.toFixed(2) + "/kg" : "–"}</b>{latest != null && prev != null ? <span className={"ml-0.5 " + (latest >= prev ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{latest >= prev ? "▲" : "▼"}{Math.abs(latest - prev).toFixed(2)}</span> : null}{yoy != null ? <> · {T("전년비", "YoY")} <b className={yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoy >= 0 ? "+" : ""}{yoy.toFixed(1)}%</b></> : null} — {T("페소 표시 조달원가·경쟁 수입가 신호", "peso-denominated procurement cost · competitive import price signal")}
           </div>
         </div>
       </div>
@@ -60,7 +60,7 @@ export default function ImportPriceView() {
         {/* 제품 + 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
-          <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("가전 수입 단가", "Appliance import unit price")}</h2>
+          <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("가전 수입 단가", "Import unit price")}</h2>
           <Segmented value={hs} onChange={setHs} options={HS.map((h) => ({ k: h.hs, label: h.label }))} size="sm" />
           <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">HS {hs}{lastDate ? " · " + T("최신 확보", "Latest") + " " + fmtMonth(lastDate) : ""}</span>
           <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: T("전체", "All") }]} /></span>
@@ -69,10 +69,10 @@ export default function ImportPriceView() {
         {/* 단가 추이 */}
         {chart.series.length ? (
           <ChartCard
-            title={cur.label + T(" 수입 단가 추이", " import unit price trend")} seg={T("조달", "Procurement")} unit="$/kg · 월" decimals={2}
+            title={cur.label + T(" 수입 단가 추이", " import unit price trend")} seg={T("조달", "Sourcing")} unit="$/kg · 월" decimals={2}
             legend={<Lg c={C.ind} t={cur.label + T(" 단가($/kg)", " unit price ($/kg)")} b />}
             series={chart.series} labels={chart.labels}
-            meaning={<>{T("월 수입액÷중량 = ", "Monthly import value ÷ weight = ")}<b className="text-gray-700 dark:text-gray-200">{T("평균 수입단가", "average import unit price")}</b>{T(" — 상승 시 조달원가·소매가 상방 압력", " — a rise pressures procurement and retail prices upward")}</>}
+            meaning={<>{T("월 수입액÷중량 = ", "Monthly import value ÷ weight = ")}<b className="text-gray-700 dark:text-gray-200">{T("평균 수입단가", "avg unit price")}</b>{T(" — 상승 시 조달원가·소매가 상방 압력", " — a rise pressures procurement and retail prices upward")}</>}
             ai={<>{T("수입단가 상승은 ", "A rise in import unit prices is ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("COGS·소비자가 인상 압력", "upward pressure on COGS and consumer prices")}</b>{T("이자 국내 조립·현지화 이점 확대 신호. 페소 약세와 겹치면 원가 이중 부담 — ", ", while widening the edge of local assembly and localization. Overlapping with peso weakness, it becomes a double cost burden — ")}<b className="font-semibold">{T("고효율 프리미엄 가격 정당화", "justifying high-efficiency premium pricing")}</b>{T("와 조달통화 헤지가 대응 축.", " and procurement-currency hedging are the key levers.")}</>}
             src="UN Comtrade(HS 84/85) · CIF÷순중량"
           />
@@ -83,8 +83,8 @@ export default function ImportPriceView() {
         {/* 원산지 점유·단가 */}
         <div className="flex h-full flex-col rounded-xl p-3.5" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <div className="flex items-center gap-1.5">
-            <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{cur.label} {T("원산지 점유·단가", "origin share · unit price")}</h3>
-            <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{T("조달", "Procurement")}</span>
+            <h3 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{cur.label} {T("원산지 점유·단가", "origin · unit price")}</h3>
+            <span className="shrink-0 rounded bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 dark:text-indigo-300">{T("조달", "Sourcing")}</span>
             {orig && <span className="ml-auto text-[10.5px] text-gray-400 dark:text-gray-500">{fmtMonth(orig.date)}</span>}
           </div>
           <div className="mt-2.5 min-h-0 flex-1">

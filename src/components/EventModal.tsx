@@ -10,7 +10,7 @@ import { T, pickL } from "@/lib/i18n"
 const CAT_DOT: Record<string, string> = { 경제: "bg-emerald-500", 금융: "bg-blue-500", 정치: "bg-purple-500", 규제: "bg-red-500", 에너지: "bg-amber-500", 유통: "bg-violet-500", 공휴일: "bg-teal-500", 기타: "bg-gray-400" }
 const kindLabel = (k: string): string =>
   k === "release" ? T("지표 발표", "Data release")
-  : k === "policy" ? T("정책·규제", "Policy & regulation")
+  : k === "policy" ? T("정책·규제", "Policy & Reg.")
   : k === "holiday" ? T("공휴일", "Holiday")
   : ""
 const dotOf = (c: string) => CAT_DOT[c] ?? CAT_DOT["기타"]

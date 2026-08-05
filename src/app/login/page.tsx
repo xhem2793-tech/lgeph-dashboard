@@ -55,6 +55,8 @@ export default function LoginPage() {
     try {
       await verifyOtp(email, code)
       if (!(await isAllowed(email))) { signOut(); setErr(T("접근 권한이 없는 계정입니다.", "This account is not authorized.")); setBusy(false); return }
+      // 로그인 성공 시 오늘 '웰컴 본 기록'을 지워, 로그인 직후 소개 팝업이 한 번 뜨도록 함
+      try { localStorage.removeItem("ax_welcome_seen_date") } catch {}
       go("/news/")
     } catch (e) { setErr(e instanceof Error ? e.message : T("인증 실패", "Verification failed")); setBusy(false) }
   }

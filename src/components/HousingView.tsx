@@ -58,8 +58,8 @@ export default function HousingView() {
     { key: "rppi_index", name: T("전체", "All"), color: C.ind }, { key: "rppi_index_condo", name: T("콘도", "Condo"), color: C.rose }, { key: "rppi_index_house", name: T("단독주택", "Detached"), color: C.emer },
   ]), [d, years])
   const yoy = useMemo(() => build(d, years, [{ key: "rppi_yoy", name: T("RPPI 상승률", "RPPI growth"), color: C.violet }]), [d, years])
-  const permits = useMemo(() => build(d, years, [{ key: "permits_residential_floorarea", name: T("주거 연면적", "Residential floor area"), color: C.teal, tf: (v) => v / 1e6 }]), [d, years])
-  const other = useMemo(() => build(d, years, [{ key: "office_vacancy_ncr", name: T("오피스 공실률 NCR", "Office vacancy NCR"), color: C.amber }, { key: "construction_gva_growth", name: T("건설 GVA 성장", "Construction GVA growth"), color: C.ind }]), [d, years])
+  const permits = useMemo(() => build(d, years, [{ key: "permits_residential_floorarea", name: T("주거 연면적", "Res. floor area"), color: C.teal, tf: (v) => v / 1e6 }]), [d, years])
+  const other = useMemo(() => build(d, years, [{ key: "office_vacancy_ncr", name: T("오피스 공실률 NCR", "Office vacancy NCR"), color: C.amber }, { key: "construction_gva_growth", name: T("건설 GVA 성장", "Const. GVA growth"), color: C.ind }]), [d, years])
 
   const [infra, setInfra] = useState<InfraRegion[]>([])
   useEffect(() => { infraRegional().then(setInfra).catch(() => {}) }, [])
@@ -77,7 +77,7 @@ export default function HousingView() {
       <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08] p-4" style={{ animation: "fadeUp .5s ease both" }}>
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200">
-            <b className="font-semibold text-gray-900 dark:text-gray-50">{T("주택·부동산", "Housing & Real Estate")}</b> — RPPI(2019=100) <b className="text-indigo-700 dark:text-indigo-300">{f1(rppiLast)}</b>{yoyLast != null ? <>{T(" · 전년비 ", " · YoY ")}<b className={yoyLast >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoyLast >= 0 ? "+" : ""}{f1(yoyLast)}%</b></> : null}{rppiDate ? " (" + rppiDate.slice(0, 4) + "Q" + (Math.floor(Number(rppiDate.slice(5, 7)) / 3) + 1) + ")" : ""}{T(" — 주택 공급·가격은 ", " — Housing supply & prices ")}<b className="text-gray-700 dark:text-gray-200">{T("빌트인·초도 가전 수요", "built-in and first-fit appliance demand")}</b>{T(" 선행", " lead")}
+            <b className="font-semibold text-gray-900 dark:text-gray-50">{T("주택·부동산", "Real Estate")}</b> — RPPI(2019=100) <b className="text-indigo-700 dark:text-indigo-300">{f1(rppiLast)}</b>{yoyLast != null ? <>{T(" · 전년비 ", " · YoY ")}<b className={yoyLast >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoyLast >= 0 ? "+" : ""}{f1(yoyLast)}%</b></> : null}{rppiDate ? " (" + rppiDate.slice(0, 4) + "Q" + (Math.floor(Number(rppiDate.slice(5, 7)) / 3) + 1) + ")" : ""}{T(" — 주택 공급·가격은 ", " — Housing supply & prices ")}<b className="text-gray-700 dark:text-gray-200">{T("빌트인·초도 가전 수요", "built-in and first-fit appliance demand")}</b>{T(" 선행", " lead")}
           </div>
         </div>
       </div>
@@ -87,13 +87,13 @@ export default function HousingView() {
         {/* 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
-          <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("부동산·주택", "Real Estate & Housing")}</h2>
+          <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("부동산·주택", "Real Estate")}</h2>
           <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("RPPI·건축허가·공실·인프라", "RPPI · Permits · Vacancy · Infra")}</span>
           <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} /></span>
         </header>
         <div className="grid items-stretch gap-4 sm:grid-cols-2">
         {rppi.series.length ? (
-          <ChartCard title={T("주택가격지수 RPPI", "Residential Property Price Index (RPPI)")} seg="CE" unit={T("2019=100 · 분기", "2019=100 · quarterly")} decimals={1}
+          <ChartCard title={T("주택가격지수 RPPI", "Residential Property Price Index (RPPI)")} seg="CE" unit={T("2019=100 · 분기", "2019=100 · Qtr")} decimals={1}
             legend={<><Lg c={C.ind} t={T("전체", "All")} b /><Lg c={C.rose} t={T("콘도", "Condo")} /><Lg c={C.emer} t={T("단독주택", "Detached")} /></>}
             series={rppi.series} labels={rppi.labels}
             meaning={<>{T("BSP 전국 주택 실거래가 지수 — ", "BSP nationwide residential transaction-price index — ")}<b className="text-gray-700 dark:text-gray-200">{T("주택자산·구매력·신규 입주", "housing wealth, purchasing power, and new move-ins")}</b>{T(" 대리", " proxy")}</>}
@@ -102,7 +102,7 @@ export default function HousingView() {
         ) : <Soon label={T("주택가격지수 RPPI", "Residential Property Price Index (RPPI)")} />}
 
         {yoy.series.length ? (
-          <ChartCard title={T("RPPI 상승률(전년비)", "RPPI Growth (YoY)")} seg="CE" unit={T("% · 분기", "% · quarterly")} decimals={1}
+          <ChartCard title={T("RPPI 상승률(전년비)", "RPPI Growth (YoY)")} seg="CE" unit={T("% · 분기", "% · Qtr")} decimals={1}
             legend={<Lg c={C.violet} t={T("RPPI 전년비", "RPPI YoY")} b />}
             series={yoy.series} labels={yoy.labels}
             meaning={<>{T("주택가격 ", "Home-price ")}<b className="text-gray-700 dark:text-gray-200">{T("전년비 상승률", "YoY growth rate")}</b>{T(" — 부동산 경기 모멘텀", " — real-estate cycle momentum")}</>}
@@ -111,8 +111,8 @@ export default function HousingView() {
         ) : <Soon label={T("RPPI 상승률", "RPPI Growth")} />}
 
         {permits.series.length ? (
-          <ChartCard title={T("주거 건축허가 연면적", "Residential Building Permits — Floor Area")} seg="B2B·CE" unit={T("백만㎡ · 분기", "million ㎡ · quarterly")} kind="bar" decimals={2}
-            legend={<Lg c={C.teal} t={T("주거 연면적", "Residential floor area")} b />}
+          <ChartCard title={T("주거 건축허가 연면적", "Residential Building Permits — Floor Area")} seg="B2B·CE" unit={T("백만㎡ · 분기", "M ㎡ · Qtr")} kind="bar" decimals={2}
+            legend={<Lg c={C.teal} t={T("주거 연면적", "Res. floor area")} b />}
             series={permits.series} labels={permits.labels}
             meaning={<>{T("승인 건축허가 ", "Approved building-permit ")}<b className="text-gray-700 dark:text-gray-200">{T("주거 연면적", "residential floor area")}</b>{T(" — 12~24개월 후 준공·입주 선행", " — leads completions and move-ins by 12–24 months")}</>}
             ai={<>{T("건축허가 연면적은 ", "Permit floor area is the ")}<b className="font-semibold">{T("신규 주택 공급 파이프라인", "new-housing supply pipeline")}</b>{T("으로, 준공 시차(1~2년) 후 ", ", converting after a 1–2 year completion lag into ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("빌트인·초도 가전 수요", "built-in and first-fit appliance demand")}</b>{T("로 전환. 지역별 허가 편중은 채널 배치 우선순위 신호(지역 지도 연계).", ". Regional permit concentration signals channel-placement priorities (links to the regional map).")}</>}
@@ -120,8 +120,8 @@ export default function HousingView() {
         ) : <Soon label={T("주거 건축허가 연면적", "Residential Building Permits — Floor Area")} />}
 
         {other.series.length ? (
-          <ChartCard title={T("오피스 공실·건설투자", "Office Vacancy & Construction Investment")} seg="B2B" unit={T("% · 분기", "% · quarterly")} decimals={1}
-            legend={<><Lg c={C.amber} t={T("오피스 공실률 NCR", "Office vacancy NCR")} b /><Lg c={C.ind} t={T("건설 GVA 성장", "Construction GVA growth")} /></>}
+          <ChartCard title={T("오피스 공실·건설투자", "Office Vacancy & Construction Investment")} seg="B2B" unit={T("% · 분기", "% · Qtr")} decimals={1}
+            legend={<><Lg c={C.amber} t={T("오피스 공실률 NCR", "Office vacancy NCR")} b /><Lg c={C.ind} t={T("건설 GVA 성장", "Const. GVA growth")} /></>}
             series={other.series} labels={other.labels}
             meaning={<>{T("NCR 오피스 공실률·건설 부가가치 성장 — ", "NCR office vacancy & construction value-added growth — ")}<b className="text-gray-700 dark:text-gray-200">{T("상업용 공조 수요", "commercial HVAC demand")}</b>{T(" 대리", " proxy")}</>}
             ai={<>{T("공실률 상승은 상업용 신규 착공·B2B 공조 수요 둔화 신호, 건설 GVA 성장은 ", "Rising vacancy signals slowing commercial starts and B2B HVAC demand, while construction GVA growth shapes the ")}<b className="font-semibold">{T("시스템에어컨·칠러", "system-AC and chiller")}</b>{T(" 발주 환경. 공실 개선+건설 확장 조합이 B2B 우호적.", " ordering environment. Improving vacancy plus construction expansion is the B2B-favorable combination.")}</>}
@@ -162,5 +162,5 @@ export default function HousingView() {
 }
 
 function Soon({ label }: { label: string }) {
-  return <div className="flex h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-[12px] text-gray-400"><b className="text-[12.5px] text-gray-500 dark:text-gray-400">{label}</b><span className="mt-1">{T("데이터 준비 중", "Data in preparation")}</span></div>
+  return <div className="flex h-[280px] flex-col items-center justify-center rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/60 text-[12px] text-gray-400"><b className="text-[12.5px] text-gray-500 dark:text-gray-400">{label}</b><span className="mt-1">{T("데이터 준비 중", "In prep.")}</span></div>
 }

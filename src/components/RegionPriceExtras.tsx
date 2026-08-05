@@ -80,7 +80,7 @@ export default function RegionPriceExtras() {
           <section className="min-w-0 overflow-hidden rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
             <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
               <span className="h-[18px] w-1 rounded bg-indigo-500" />
-              <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("지역 × 품목 물가", "Region × Item Prices")}</h2>
+              <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("지역 × 품목 물가", "Region × Item")}</h2>
               <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("전년비 % · 물가 높은 순", "YoY % · highest inflation first")}</span>
             </div>
             <div className="mt-3 overflow-x-auto">
@@ -103,7 +103,7 @@ export default function RegionPriceExtras() {
           </section>
 
           <section className="rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
-            <h2 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">{T("지역 물가 분포", "Regional Price Distribution")} <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500">{T("전국", "Nationwide")} {rows.length}{T("곳", " regions")}</span></h2>
+            <h2 className="text-[14.5px] font-bold text-gray-900 dark:text-gray-50">{T("지역 물가 분포", "Regional Prices")} <span className="text-[11px] font-normal text-gray-400 dark:text-gray-500">{T("전국", "Nationwide")} {rows.length}{T("곳", " regions")}</span></h2>
             <div className="mt-3 flex gap-5">
               <div><p className="text-[11px] text-gray-400 dark:text-gray-500">{T("평균", "Avg")}</p><p className="text-[21.5px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rMean.toFixed(1)}<span className="text-[12px] text-gray-400 dark:text-gray-500">%</span></p></div>
               <div><p className="text-[11px] text-gray-400 dark:text-gray-500">{T("범위", "Range")}</p><p className="text-[21.5px] font-bold tabular-nums text-gray-900 dark:text-gray-50">{rLo.toFixed(1)}–{rHi.toFixed(1)}</p></div>
@@ -126,9 +126,9 @@ export default function RegionPriceExtras() {
         <section className="min-w-0 overflow-hidden rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("지역별 인구·가구", "Population · Households by Region")}</h2>
+            <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("지역별 인구·가구", "Pop. · HH by Region")}</h2>
             <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("2020 센서스 · 인구 많은 순", "2020 Census · most populous first")}</span>
-            <span className="ml-auto text-[11px] font-semibold text-gray-500 dark:text-gray-400">{T("전국", "Nationwide")} {(popTotal / 1e6).toFixed(1)}{T("백만명 · ", "M people · ")}{(hhTotal / 1e6).toFixed(1)}{T("백만가구", "M households")}</span>
+            <span className="ml-auto text-[11px] font-semibold text-gray-500 dark:text-gray-400">{T("전국", "Nationwide")} {(popTotal / 1e6).toFixed(1)}{T("백만명 · ", "M people · ")}{(hhTotal / 1e6).toFixed(1)}{T("백만가구", "M HH")}</span>
           </div>
           <div className="mt-3 grid gap-x-6 gap-y-1.5 sm:grid-cols-2">
             {popRows.map((r, i) => (
@@ -149,7 +149,7 @@ export default function RegionPriceExtras() {
         <section className="min-w-0 overflow-hidden rounded-xl p-4" style={{ animation: "fadeUp .5s ease both" }}>
           <div className="flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("지역별 소득·빈곤", "Income · Poverty by Region")}</h2>
+            <h2 className="text-[14.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("지역별 소득·빈곤", "Income · Poverty")}</h2>
             <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("2023 빈곤율(%) · 낮을수록 소득 상위", "2023 poverty rate (%) · lower = higher income")}</span>
             <span className="ml-auto text-[11px] font-semibold text-gray-500 dark:text-gray-400">{T("전국 평균", "National avg")} {povNat.toFixed(1)}%</span>
           </div>

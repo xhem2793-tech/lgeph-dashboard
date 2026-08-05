@@ -720,7 +720,7 @@ export default function Page() {
         >
           <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 4h18M6 12h12M10 20h4" /></svg>
-            <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분류", "Categories")}</p>
+            <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분류", "Category")}</p>
           </div>
 
           {mode === "topic" ? (
@@ -1170,7 +1170,7 @@ export default function Page() {
               {/* 연결 지표 */}
               {modal.chipKeys.map((k) => chips[k]).filter(Boolean).length ? (
                 <div className="mt-4">
-                  <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("연결 지표", "Linked indicators")}</p>
+                  <p className="mb-2 px-1 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("연결 지표", "Linked")}</p>
                   <div className="flex flex-wrap gap-1.5">
                     {modal.chipKeys
                       .map((k) => chips[k])

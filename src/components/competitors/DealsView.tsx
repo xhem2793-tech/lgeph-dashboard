@@ -121,7 +121,7 @@ export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; dea
   const gapCell = (o: SCOffer) => o.own ? <span className="text-gray-300 dark:text-gray-600">{T("기준", "Base")}</span> : !lgRef ? <span className="text-gray-300">—</span> : (o.net - lgRef.net) > 0 ? <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">+{won(o.net - lgRef.net)}</span> : <span className="font-semibold tabular-nums text-rose-600 dark:text-rose-400">{won(o.net - lgRef.net)}</span>
 
   // 선택 배지 — 검색창 위에 차례대로(제품→유형→용량→브랜드→가격대). ×로 해제(제품·유형은 핵심이라 고정).
-  const sizeLabel = isAC(cat) ? T("마력", "HP") : cat === "TV" ? T("화면", "Screen") : T("용량", "Capacity")
+  const sizeLabel = isAC(cat) ? T("마력", "HP") : cat === "TV" ? T("화면", "Screen") : T("용량", "Cap.")
   const chips: { key: string; label: string; val: string; onClear?: () => void }[] = []
   chips.push({ key: "cat", label: T("제품", "Product"), val: cat })
   if (formList.length > 0) chips.push({ key: "form", label: T("유형", "Type"), val: effForm })
@@ -200,7 +200,7 @@ export function DealsView({ rows, deals, stamp }: { rows: PriceRow[] | null; dea
             <tr className="text-[11.5px]">
               <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-left font-semibold text-gray-600 dark:text-gray-300">{T("제품", "Product")}</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-center font-semibold text-gray-600 dark:text-gray-300">{T("브랜드 · 모델", "Brand · Model")}</th>
-              <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-center font-semibold text-gray-600 dark:text-gray-300">{T("최저 채널", "Lowest channel")}</th>
+              <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-center font-semibold text-gray-600 dark:text-gray-300">{T("최저 채널", "Channel")}</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-center font-semibold text-gray-600 dark:text-gray-300">{T("실판매가", "Net price")}</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-center font-semibold text-gray-600 dark:text-gray-300">{T("할인율", "Discount")}</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2.5 text-center font-semibold text-gray-600 dark:text-gray-300">{T("vs 자사", "vs Ours")}</th>

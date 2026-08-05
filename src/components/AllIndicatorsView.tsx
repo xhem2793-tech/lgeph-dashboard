@@ -197,7 +197,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
 
       {/* 정렬(분류순/최신순) + 분류 드롭다운(시장동향식) + 총 지표 + 검색 + 최신 — 한 줄 */}
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-        <Segmented value={sort} onChange={(k) => setSort(k as "cat" | "recent")} options={[{ k: "cat", label: T("분류순", "By category") }, { k: "recent", label: T("최신순", "Latest") }]} size="sm" />
+        <Segmented value={sort} onChange={(k) => setSort(k as "cat" | "recent")} options={[{ k: "cat", label: T("분류순", "By type") }, { k: "recent", label: T("최신순", "Latest") }]} size="sm" />
         <PmDrop label={T("분류", "Category")} sel={cat} onSelect={setCat} options={[{ k: "all", t: T("전체", "All") }, ...[...CATS.map((c) => c.key), "etc"].filter((k) => catCounts[k]).map((k) => ({ k, t: catKo(k) + " (" + catCounts[k] + ")" }))]} />
         <span className="shrink-0 text-[11.5px] text-gray-500 dark:text-gray-400">{T("총 지표", "Total")} <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
         <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[360px]" : "w-full max-w-[260px]")}>
@@ -303,7 +303,7 @@ function IndListTable({ items, q, spark, fav, onFav, onDetail, showCat }: { item
         <thead><tr className="border-b border-gray-100 dark:border-gray-800 text-left text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">
           <th className="px-3 py-2">{T("지표", "Indicator")}</th>
           {showCat && <th className="px-2 py-2">{T("분류", "Category")}</th>}
-          <th className="px-2 py-2">{T("설명", "Description")}</th>
+          <th className="px-2 py-2">{T("설명", "Desc.")}</th>
           <th className="px-2 py-2 text-right">{T("최신 값", "Latest")}</th>
           <th className="px-2 py-2 text-right">24H (%)</th>
           <th className="px-3 py-2 text-right">{T("최근 7일", "Last 7d")}</th>
@@ -462,7 +462,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                   </div>
                 </div>
                 {/* 의미 + LG 인사이트 — 페이지 차트카드와 동일 위치 */}
-                <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "What it means")}</b> {(CAT_MI[row.cat] || CAT_MI.etc).mean}</p>
+                <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {(CAT_MI[row.cat] || CAT_MI.etc).mean}</p>
                 <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
                   <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">{T("LG 인사이트", "LG Insight")}</b> {(CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
                 </div>
@@ -471,7 +471,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
               <div key={"tb-" + win} className="overflow-hidden rounded-xl" style={{ animation: "bkFade .45s ease .06s both" }}>
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
                   <span className="h-[15px] w-1 rounded bg-indigo-500" />
-                  <h4 className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{T("시계열 표", "Time-series table")} <span className="text-[11px] font-semibold text-gray-400">{T("· 전기·전년 대비", "· vs. prior period · YoY")}</span></h4>
+                  <h4 className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{T("시계열 표", "Time series")} <span className="text-[11px] font-semibold text-gray-400">{T("· 전기·전년 대비", "· vs. prior period · YoY")}</span></h4>
                   <button type="button" onClick={() => onExcel(row)} className="ml-auto inline-flex items-center gap-1 rounded-md border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all hover:-translate-y-0.5 active:scale-95">{T("엑셀", "Excel")} ↓</button>
                 </div>
                 <div className="max-h-[320px] overflow-auto">

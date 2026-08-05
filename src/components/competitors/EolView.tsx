@@ -209,12 +209,12 @@ function TableView({ events, f, setF, onSel }: { events: Ev[]; f: string; setF: 
           <thead className="bg-gray-50 dark:bg-gray-900"><tr className="text-[11px] font-semibold text-gray-600 dark:text-gray-300">
             <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2 text-left">{T("상태", "Status")}</th>
             <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("제품", "Product")}</th>
-            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("경쟁사", "Competitor")}</th>
+            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("경쟁사", "Rival")}</th>
             <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("카테고리", "Category")}</th>
             <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("최초 관측", "First seen")}</th>
             <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("최종 관측", "Last seen")}</th>
             <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("미노출", "Absent")}</th>
-            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-right">{T("등록가", "List price")}</th>
+            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-right">{T("등록가", "Price")}</th>
             <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("상세", "Details")}</th>
           </tr></thead>
           <tbody>
@@ -277,12 +277,12 @@ function EolModal({ e, onClose }: { e: Ev; onClose: () => void }) {
             {pts.length >= 2 ? spark() : <p className="mt-1 text-[11.5px] text-gray-400 dark:text-gray-500">{T("관측 이력 축적 중", "Accumulating observations")}</p>}
           </div>
           <div>
-            <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("감지 상세", "Detection details")}</p>
+            <p className="mb-1 text-[11px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("감지 상세", "Detection")}</p>
             <KV k={T("상태", "Status")} v={e.kind === "new" ? T("신제품", "New") : e.status} />
             <KV k={T("최초 관측", "First seen")} v={md(e.firstSeen)} />
-            <KV k={e.kind === "new" ? T("등장가", "Launch price") : T("최종 관측", "Last seen")} v={e.kind === "new" ? peso(e.price) : md(e.lastSeen)} />
+            <KV k={e.kind === "new" ? T("등장가", "Launch") : T("최종 관측", "Last seen")} v={e.kind === "new" ? peso(e.price) : md(e.lastSeen)} />
             <KV k={e.kind === "new" ? T("노출 채널", "Channels") : T("미노출", "Absent")} v={e.kind === "new" ? e.channels + T("개 거래선", " dealers") : "D+" + e.daysMissing} />
-            <KV k={T("등록가", "List price")} v={e.price != null ? peso(e.price) : "—"} />
+            <KV k={T("등록가", "Price")} v={e.price != null ? peso(e.price) : "—"} />
           </div>
         </div>
         <div className="flex items-center justify-between gap-2 border-t border-gray-100 dark:border-gray-800 px-6 py-3.5">

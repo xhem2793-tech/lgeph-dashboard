@@ -55,29 +55,29 @@ const buildGroups = (): { group: string; items: { key: string; no: number; label
     ],
   },
   {
-    group: T("포지셔닝·비교", "Positioning & Comparison"),
+    group: T("포지셔닝·비교", "Positioning"),
     items: [
-      { key: "asp", no: 2, label: T("가격 포지셔닝", "Price Positioning"), desc: T("브랜드 × 가격대 산점도 · New DOE ★ · LG 위치", "Brand × price-band scatter · New DOE ★ · LG position"), status: "live" },
+      { key: "asp", no: 2, label: T("가격 포지셔닝", "Positioning"), desc: T("브랜드 × 가격대 산점도 · New DOE ★ · LG 위치", "Brand × price-band scatter · New DOE ★ · LG position"), status: "live" },
       { key: "energy", no: 15, label: T("에너지 라벨", "Energy Labels"), desc: T("에어컨·냉장고·TV 브랜드별 에너지효율·별점(DOE)", "Energy efficiency and star rating (DOE) by brand for RAC, REF and TV"), status: "live" },
-      { key: "gap", no: 3, label: T("LG vs 경쟁 갭", "LG vs Competitor Gap"), desc: T("동급 스펙 가격차(%) · 프리미엄/디스카운트", "Like-for-like spec price gap (%) · premium/discount"), status: "next" },
+      { key: "gap", no: 3, label: T("LG vs 경쟁 갭", "LG vs Rival Gap"), desc: T("동급 스펙 가격차(%) · 프리미엄/디스카운트", "Like-for-like spec price gap (%) · premium/discount"), status: "next" },
       { key: "trend", no: 5, label: T("ASP 추세", "ASP Trend"), desc: T("주·월 평균가 시계열 · 가격 인덱스(100)", "Weekly/monthly average-price time series · price index (100)"), status: "next" },
     ],
   },
   {
-    group: T("채널·프로모션", "Channel & Promotion"),
+    group: T("채널·프로모션", "Channel · Promo"),
     items: [
       { key: "promo", no: 4, label: T("프로모션 트래커", "Promotion Tracker"), desc: T("브랜드별 프로모 강도 · 유통 캠페인", "Promo intensity by brand · retailer campaigns"), status: "live", badge: "예정" },
-      { key: "deals", no: 14, label: T("프로모 비교", "Deal Comparison"), desc: T("실딜 리스트 · 할인율·무료배송·번들·쿠폰 · 유통별", "Live deal list · discount, free shipping, bundle, coupon · by retailer"), status: "live" },
+      { key: "deals", no: 14, label: T("프로모 비교", "Deals"), desc: T("실딜 리스트 · 할인율·무료배송·번들·쿠폰 · 유통별", "Live deal list · discount, free shipping, bundle, coupon · by retailer"), status: "live" },
     ],
   },
   {
     group: T("시장 신호·인사이트", "Market Signals & Insights"),
     items: [
-      { key: "lifecycle", no: 7, label: T("신제품·EOL 감지", "New / EOL Detection"), desc: T("신규 리스팅 등장 / 구모델 소멸", "New listings appearing / legacy models disappearing"), status: "live", badge: "beta" },
-      { key: "volatility", no: 8, label: T("가격 변동성", "Price Volatility"), desc: T("모델별 변경 빈도·표준편차 랭킹", "Change frequency and standard-deviation ranking by model"), status: "plan" },
+      { key: "lifecycle", no: 7, label: T("신제품·EOL 감지", "New / EOL"), desc: T("신규 리스팅 등장 / 구모델 소멸", "New listings appearing / legacy models disappearing"), status: "live", badge: "beta" },
+      { key: "volatility", no: 8, label: T("가격 변동성", "Volatility"), desc: T("모델별 변경 빈도·표준편차 랭킹", "Change frequency and standard-deviation ranking by model"), status: "plan" },
       { key: "intensity", no: 9, label: T("경쟁 강도 지수", "Intensity Index"), desc: T("취급 브랜드 수·가격 밀집도", "Number of brands carried and price density"), status: "plan" },
       { key: "listing", no: 10, label: T("취급·노출 시그널", "Listing Signals"), desc: T("브랜드별 리스팅 수 변화", "Change in listing count by brand"), status: "plan" },
-      { key: "fx", no: 11, label: T("환율 연동 분석", "FX-Linked Analysis"), desc: T("페소 약세 ↔ 수입가전 가격 상관", "Peso weakness ↔ imported-appliance price correlation"), status: "plan" },
+      { key: "fx", no: 11, label: T("환율 연동 분석", "FX Analysis"), desc: T("페소 약세 ↔ 수입가전 가격 상관", "Peso weakness ↔ imported-appliance price correlation"), status: "plan" },
       { key: "sowhat", no: 13, label: T("경쟁분석 요약", "Analysis Summary"), desc: T("핵심 인사이트 · 액션(Owner·Timing)", "Key insights · actions (Owner, Timing)"), status: "plan" },
     ],
   },
@@ -438,10 +438,10 @@ export default function Competitors() {
                 </FacetMenu>
                 <button type="button" onClick={() => setOnlyMoved(!onlyMoved)} className={"inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-[12px] font-medium transition-colors " + (onlyMoved ? "border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" : "border-transparent bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700")}>
                   <span className={"flex h-4 w-7 items-center rounded-full px-0.5 transition-colors " + (onlyMoved ? "bg-indigo-600" : "bg-gray-300")}><span className={"h-3 w-3 rounded-full bg-white dark:bg-gray-900 transition-transform " + (onlyMoved ? "translate-x-3" : "")} /></span>
-                  {T("변동분만", "Changed only")}
+                  {T("변동분만", "Changed")}
                 </button>
                 <div className="ml-auto flex items-center gap-2.5">
-                  <ListSearch value={q} onChange={setQ} placeholder={T("모델코드·모델명 검색", "Search model code or name")} />
+                  <ListSearch value={q} onChange={setQ} placeholder={T("모델코드·모델명 검색", "Search model or code")} />
                   <span className="whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500"><b className="text-gray-700 dark:text-gray-200">{data.length}</b>{T("행", " rows")}{stamp ? " · " + T("최신", "Updated") + " " + fmtStamp(stamp) : ""} <span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
                   <button type="button" onClick={() => exportCsv(data, "LGEPH_경쟁사가격_" + asOf + ".csv")} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[11px] font-semibold text-gray-600 dark:text-gray-300 transition hover:border-emerald-300 dark:hover:border-emerald-500/40 hover:text-emerald-700 dark:hover:text-emerald-300">{T("엑셀", "Excel")}</button>
                 </div>

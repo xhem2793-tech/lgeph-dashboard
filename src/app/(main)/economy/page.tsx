@@ -20,19 +20,19 @@ type NavItem = { id: string; ko: string; sub: string; count: string; group: stri
 // 렌더 시점 평가(언어 토글 반영) — 모듈 최상위에서 T()를 굳히면 EN 전환이 안 됨
 const buildNav = (): NavItem[] => [
   { id: "prices", ko: T("물가", "Prices"), sub: T("소비자물가 CPI·품목별 물가", "Consumer CPI · item-level prices"), count: "10", group: "실물경제", subs: ["소비자물가 CPI", "품목별 물가", "에너지·유가", "실질 지표"] },
-  { id: "growth", ko: T("국민계정·성장", "National Accounts · Growth"), sub: T("GDP·투자·건설·산업생산·가동률", "GDP · investment · construction · output · utilization"), count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
-  { id: "labor", ko: T("고용·임금·소득", "Employment · Wages · Income"), sub: T("실업률·최저임금·OFW 송금", "Unemployment · minimum wage · OFW remittances"), count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
-  { id: "sentiment", ko: T("기업·소비 심리", "Business · Consumer Sentiment"), sub: T("소비자심리 CCI·기업심리 BCI·BES 기업경기", "Consumer sentiment CCI · business sentiment BCI · BES conditions"), count: "11", group: "실물경제", subs: ["소비자심리 CCI", "기업심리 BCI", "내구재 구매의향", "BES 종합·업종·고용", "사업 제약요인"] },
-  { id: "housing", ko: T("부동산·주택", "Real Estate · Housing"), sub: T("주택가격지수 RPPI·건축허가·공실(가전 상관 최고)", "Housing price index RPPI · permits · vacancy (top appliance correlation)"), count: "4", group: "실물경제", subs: ["주택가격지수 RPPI", "RPPI 상승률", "주거 건축허가", "오피스 공실·건설"] },
-  { id: "fx", ko: T("환율·원가", "FX · Input Costs"), sub: T("대달러·실효환율·역내 통화·수입원가", "USD rate · effective FX · regional currencies · import costs"), count: "7", group: "외환·금융", subs: ["동남아 6개국 통화", "₱/USD 기본 환율", "실효환율 NEER·REER", "수입 원가 영향"] },
-  { id: "rates", ko: T("통화·금리·신용", "Money · Rates · Credit"), sub: T("기준금리·통화량 M3·가계신용", "Policy rate · money supply M3 · household credit"), count: "9", group: "외환·금융", subs: ["기준금리 BSP", "통화량 M3", "가계·카드 대출"] },
-  { id: "appliance", ko: T("가전 선행지표", "Appliance Leading Indicators"), sub: T("가전 물가·PPI·수입액·실질가격 갭", "Appliance CPI · PPI · import value · real price gap"), count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
-  { id: "importprice", ko: T("수입 단가", "Import Unit Prices"), sub: T("가전 수입 단가($/kg)·원산지 점유(Comtrade)", "Appliance import unit price ($/kg) · origin share (Comtrade)"), count: "4", group: "가전 인텔리전스", subs: ["냉장고", "에어컨", "세탁기", "TV"] },
+  { id: "growth", ko: T("국민계정·성장", "Nat'l Accounts"), sub: T("GDP·투자·건설·산업생산·가동률", "GDP · investment · construction · output · utilization"), count: "14", group: "실물경제", subs: ["GDP 성장률", "투자·건설허가", "산업생산·가동률"] },
+  { id: "labor", ko: T("고용·임금·소득", "Jobs · Wages · Income"), sub: T("실업률·최저임금·OFW 송금", "Unemployment · minimum wage · OFW remittances"), count: "11", group: "실물경제", subs: ["실업률", "최저임금", "OFW 송금"] },
+  { id: "sentiment", ko: T("기업·소비 심리", "Biz · Consumer Sentiment"), sub: T("소비자심리 CCI·기업심리 BCI·BES 기업경기", "Consumer sentiment CCI · business sentiment BCI · BES conditions"), count: "11", group: "실물경제", subs: ["소비자심리 CCI", "기업심리 BCI", "내구재 구매의향", "BES 종합·업종·고용", "사업 제약요인"] },
+  { id: "housing", ko: T("부동산·주택", "Real Estate"), sub: T("주택가격지수 RPPI·건축허가·공실(가전 상관 최고)", "Housing price index RPPI · permits · vacancy (top appliance correlation)"), count: "4", group: "실물경제", subs: ["주택가격지수 RPPI", "RPPI 상승률", "주거 건축허가", "오피스 공실·건설"] },
+  { id: "fx", ko: T("환율·원가", "FX · Costs"), sub: T("대달러·실효환율·역내 통화·수입원가", "USD rate · effective FX · regional currencies · import costs"), count: "7", group: "외환·금융", subs: ["동남아 6개국 통화", "₱/USD 기본 환율", "실효환율 NEER·REER", "수입 원가 영향"] },
+  { id: "rates", ko: T("통화·금리·신용", "Rates · Credit"), sub: T("기준금리·통화량 M3·가계신용", "Policy rate · money supply M3 · household credit"), count: "9", group: "외환·금융", subs: ["기준금리 BSP", "통화량 M3", "가계·카드 대출"] },
+  { id: "appliance", ko: T("가전 선행지표", "Appliance Indicators"), sub: T("가전 물가·PPI·수입액·실질가격 갭", "Appliance CPI · PPI · import value · real price gap"), count: "8", group: "가전 인텔리전스", subs: ["가전 물가·PPI", "가전 실질가격 갭", "수입액"] },
+  { id: "importprice", ko: T("수입 단가", "Import Prices"), sub: T("가전 수입 단가($/kg)·원산지 점유(Comtrade)", "Appliance import unit price ($/kg) · origin share (Comtrade)"), count: "4", group: "가전 인텔리전스", subs: ["냉장고", "에어컨", "세탁기", "TV"] },
   { id: "online", ko: T("온라인 시장", "Online Market"), sub: T("이커머스 규모·디지털/통신 침투", "E-commerce size · digital/telecom penetration"), count: "3", group: "소비·디지털", subs: ["이커머스 규모", "디지털 이용", "통신 인프라"] },
 ]
 
 // 그룹 헤더 라벨 — 그룹 값(한글)은 그룹핑 키로 유지, 표시만 번역(함수라 렌더 시점 반영)
-const GROUP_EN: Record<string, string> = { "실물경제": "Real Economy", "외환·금융": "FX & Finance", "가전 인텔리전스": "Appliance Intelligence", "소비·디지털": "Consumer & Digital" }
+const GROUP_EN: Record<string, string> = { "실물경제": "Real Economy", "외환·금융": "FX & Finance", "가전 인텔리전스": "Appliance Intel", "소비·디지털": "Consumer & Digital" }
 const groupLabel = (g: string) => T(g, GROUP_EN[g] ?? g)
 
 function Soon({ label }: { label: string }) {

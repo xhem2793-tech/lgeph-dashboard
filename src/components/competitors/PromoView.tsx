@@ -75,7 +75,7 @@ export function PromoView({ rows, camps }: { rows: PromoIntensity[] | null; camp
                 <p className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{c.retailer}</p>
                 <p className="text-[12.5px] font-semibold text-gray-900 dark:text-gray-50">{c.title}</p>
                 <p className="mt-1 text-[11.5px] text-gray-600 dark:text-gray-300">
-                  {c.liveDiscounted !== null && <span>{T("할인 ", "Discounted ")}{c.liveDiscounted}{T("종 · 평균 ", " SKUs · avg ")}{c.avgDiscount}{T("% · 최대 ", "% · max ")}{c.maxDiscount}%</span>}
+                  {c.liveDiscounted !== null && <span>{T("할인 ", "Disc. ")}{c.liveDiscounted}{T("종 · 평균 ", " SKUs · avg ")}{c.avgDiscount}{T("% · 최대 ", "% · max ")}{c.maxDiscount}%</span>}
                   {c.onSaleCount !== null && <span>{T("세일 중 ", "On sale ")}{c.onSaleCount.toLocaleString()}{T("종", " SKUs")}</span>}
                 </p>
                 {c.brands.length > 0 && (

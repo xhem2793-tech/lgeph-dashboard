@@ -33,7 +33,7 @@ function EnergySim({ brands, lgKwh, rate0 }: { brands: { name: string; kwh: numb
   const [rate, setRate] = useState(rate0)
   useEffect(() => { setRate(rate0) }, [rate0])
   const pick = brands.find((b) => b.name === sel) || brands[0]
-  if (!pick) return <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">{T("세그먼트 데이터 부족", "Insufficient segment data")}</div>
+  if (!pick) return <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">{T("세그먼트 데이터 부족", "No segment data")}</div>
   const kwh = pick.kwh * mult
   const mo = Math.round(kwh * rate), yr = Math.round(kwh * rate * 12)
   const lgMo = lgKwh != null ? Math.round(lgKwh * mult * rate) : null
@@ -188,7 +188,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
                     <tbody>{sortedRows.map((r, ri) => <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (/^lg$/i.test(String(r[0])) ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>{r.map((c, ci) => <td key={ci} className={"py-1.5 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}</tr>)}</tbody>
                   </table>
                 </div>
-                <p className="mt-1.5 shrink-0 text-[10px] text-gray-400 dark:text-gray-500">{T("열 머리글·버튼 클릭 시 해당 기준 정렬(재클릭=오름/내림) · ", "Click a column header or button to sort (click again to toggle asc/desc) · ")}<b className="text-teal-600 dark:text-teal-400">{T("LG 강조", "LG highlighted")}</b></p>
+                <p className="mt-1.5 shrink-0 text-[10px] text-gray-400 dark:text-gray-500">{T("열 머리글·버튼 클릭 시 해당 기준 정렬(재클릭=오름/내림) · ", "Click a column header or button to sort (click again to toggle asc/desc) · ")}<b className="text-teal-600 dark:text-teal-400">{T("LG 강조", "LG in teal")}</b></p>
               </div>
             )}
           </div>
@@ -201,7 +201,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
 }
 function HBar({ items, hiName }: { items: { name: string; v: number; n?: number }[]; hiName?: string }) {
   const [h, setH] = useState<number | null>(null)
-  if (!items.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
+  if (!items.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const max = Math.max(...items.map((i) => i.v), 1), rowH = 24, padL = 78, padR = 40, W = 360, H = items.length * rowH + 2
   const bx = (v: number) => padL + (W - padL - padR) * (v / max)
   return (
@@ -221,7 +221,7 @@ function HBar({ items, hiName }: { items: { name: string; v: number; n?: number 
 }
 function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { label: string; lg: number | null; mkt: number }[]; fmt?: (v: number) => string }) {
   const [h, setH] = useState<number | null>(null)
-  if (!groups.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
+  if (!groups.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const max = Math.max(...groups.flatMap((g) => [g.lg ?? 0, g.mkt]), 1), W = 360, H = 158, B = 26, TP = 14, L = 6, R = 6
   const gw = (W - L - R) / groups.length, bw = Math.min(17, gw * 0.3)
   const Y = (v: number) => TP + (H - TP - B) * (1 - v / max)
@@ -248,7 +248,7 @@ function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { la
 // 산점도 — 효율(X, 높을수록 우측=좋음) vs 월전력(Y, 낮을수록 상단=좋음). LG 강조, 사분면 가이드·격자
 function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: number; isLG: boolean; n?: number }[]; metric: string }) {
   const [h, setH] = useState<number | null>(null)
-  if (pts.length < 2) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
+  if (pts.length < 2) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const W = 400, H = 200, L = 40, R = 14, TP = 14, B = 30
   const exs = pts.map((p) => p.eff), kys = pts.map((p) => p.kwh)
   const pad = (lo: number, hi: number) => { const d = (hi - lo) * 0.12 || 1; return [lo - d, hi + d] as const }
@@ -290,7 +290,7 @@ const avgOf = (a: number[]) => a.length ? a.reduce((x, y) => x + y, 0) / a.lengt
 // 히스토그램 — 세그먼트 내 전 모델의 효율 분포 + LG 포함분(teal)·중앙값. 시장 대비 LG가 분포 어디에 위치하는지.
 function EffHist({ vals, lgVals, metric }: { vals: number[]; lgVals: number[]; metric: string }) {
   const [h, setH] = useState<number | null>(null)
-  if (vals.length < 4) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
+  if (vals.length < 4) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const lo = Math.min(...vals), hi = Math.max(...vals)
   const nb = Math.min(8, Math.max(5, Math.round(Math.sqrt(vals.length))))
   const bw0 = (hi - lo) / nb || 1
@@ -330,7 +330,7 @@ function EffHist({ vals, lgVals, metric }: { vals: number[]; lgVals: number[]; m
 // 용량↔효율 지형 — 카테고리 전체 모델. x=용량(스펙), y=효율. LG(teal)·시장(gray). 용량대별 LG 포진·효율 추세를 한눈에.
 function CapScatter({ pts, metric, specUnit }: { pts: { spec: number; eff: number; isLG: boolean; name: string }[]; metric: string; specUnit: string }) {
   const [h, setH] = useState<number | null>(null)
-  if (pts.length < 3) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
+  if (pts.length < 3) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const W = 400, H = 200, L = 40, R = 12, TP = 14, B = 32
   const sxs = pts.map((p) => p.spec), eys = pts.map((p) => p.eff)
   const pad = (lo: number, hi: number) => { const d = (hi - lo) * 0.08 || 1; return [lo - d, hi + d] as const }
@@ -362,7 +362,7 @@ function CapScatter({ pts, metric, specUnit }: { pts: { spec: number; eff: numbe
 // 브랜드 포지셔닝 버블 — x=평균효율, y=5성 비중%, 크기=모델수(라인업 폭). 우상단·큰버블=고효율·프리미엄·풀라인업.
 function Bubble({ items, metric }: { items: { name: string; eff: number; s5: number; n: number; isLG: boolean }[]; metric: string }) {
   const [h, setH] = useState<number | null>(null)
-  if (items.length < 2) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
+  if (items.length < 2) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const W = 400, H = 200, L = 40, R = 16, TP = 16, B = 30
   const exs = items.map((p) => p.eff)
   const pad = (lo: number, hi: number) => { const d = (hi - lo) * 0.12 || 1; return [lo - d, hi + d] as const }
@@ -397,7 +397,7 @@ function Bubble({ items, metric }: { items: { name: string; eff: number; s5: num
 // 롤리팝 — 월 전기요금(낮을수록 유리). 막대 대신 선+원, LG teal 강조·값 라벨·hover. (스타일 변경 + 진입 애니메이션)
 function CostLollipop({ items }: { items: { label: string; cost: number; isLG: boolean }[] }) {
   const [h, setH] = useState<number | null>(null)
-  if (!items.length) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
+  if (!items.length) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const max = Math.max(...items.map((i) => i.cost), 1)
   const rowH = 26, padL = 62, padR = 56, W = 360, H = items.length * rowH + 8
   const bx = (v: number) => padL + (W - padL - padR) * (v / max)
@@ -422,7 +422,7 @@ function CostLollipop({ items }: { items: { label: string; cost: number; isLG: b
 // 100% 스택바(SVG) — 브랜드별 5·4·3성↓ 구성. 세그먼트별 growX 애니메이션·hover·값 라벨. (인라인 막대→SVG 스택바)
 function GradeStack({ rows }: { rows: { name: string; s5: number; s4: number; s3: number; n: number }[] }) {
   const [h, setH] = useState<number | null>(null)
-  if (!rows.length) return <div className="flex h-full min-h-[160px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
+  if (!rows.length) return <div className="flex h-full min-h-[160px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const rowH = 24, padL = 58, padR = 42, W = 360, H = rows.length * rowH + 4, barW = W - padL - padR
   const seg = [{ k: "s5" as const, c: "#10b981" }, { k: "s4" as const, c: AMBER }, { k: "s3" as const, c: "#cbd5e1" }]
   return (
@@ -475,7 +475,7 @@ function RefrigDonut({ keys, lg, mkt, colors }: { keys: string[]; lg: { m: Recor
 // 가격대 박스 — 브랜드별 소매가 분포(박스=P25~P75, 세로선=중앙값, 수염=P10~P90). LG teal 강조·growX 애니메이션.
 function PriceBox({ items }: { items: PriceRange[] }) {
   const [h, setH] = useState<number | null>(null)
-  if (!items.length) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">{T("가격 데이터 부족", "Insufficient price data")}</div>
+  if (!items.length) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">{T("가격 데이터 부족", "No price data")}</div>
   const max = Math.max(...items.map((i) => i.p90), 1)
   const rowH = 25, padL = 58, padR = 46, W = 360, H = items.length * rowH + 4
   const bx = (v: number) => padL + (W - padL - padR) * (v / max)
@@ -507,7 +507,7 @@ function PriceBox({ items }: { items: PriceRange[] }) {
 type Cell = { lgN: number; lgEff: number | null; mktN: number; mktEff: number | null }
 function Heatmap({ rowLabels, colLabels, cells, metric, effLo, effHi }: { rowLabels: string[]; colLabels: string[]; cells: Record<string, Cell>; metric: string; effLo: number; effHi: number }) {
   const [hov, setHov] = useState<string | null>(null)
-  if (!rowLabels.length) return <div className="flex h-40 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "Insufficient data")}</div>
+  if (!rowLabels.length) return <div className="flex h-40 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const tone = (eff: number | null) => { if (eff == null) return 0; const t = (eff - effLo) / ((effHi - effLo) || 1); return Math.max(0.12, Math.min(1, t)) }
   return (
     <div className="w-full overflow-x-auto">
@@ -782,12 +782,12 @@ export default function EnergyLabelView() {
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <button type="button" onClick={() => setModelOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: ".28s" }}>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-teal-600 text-white shadow-sm shadow-teal-600/25"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg></span>
-              <span className="flex-1"><span className="block text-[13px] font-bold text-gray-900 dark:text-gray-50">{T("모델별 상세 (제품코드)", "Model Details (product code)")}</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">{T("개별 모델 스펙·효율·별점·전력·냉매 · CSV", "Per-model spec · efficiency · stars · power · refrigerant · CSV")}</span></span>
+              <span className="flex-1"><span className="block text-[13px] font-bold text-gray-900 dark:text-gray-50">{T("모델별 상세 (제품코드)", "Model Details (code)")}</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">{T("개별 모델 스펙·효율·별점·전력·냉매 · CSV", "Per-model spec · efficiency · stars · power · refrigerant · CSV")}</span></span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
             </button>
             <button type="button" onClick={() => setSimOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: ".3s" }}>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-teal-600 text-white shadow-sm shadow-teal-600/25"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
-              <span className="flex-1"><span className="block text-[13px] font-bold text-gray-900 dark:text-gray-50">{T("전기요금 계산기 열기", "Open Electricity Bill Calculator")}</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">{T("브랜드·사용강도·요금 조정 → 월/연 전기요금·LG 절감액", "Adjust brand, usage & rate → monthly/annual bill · LG savings")}</span></span>
+              <span className="flex-1"><span className="block text-[13px] font-bold text-gray-900 dark:text-gray-50">{T("전기요금 계산기 열기", "Open Bill Calculator")}</span><span className="block text-[11px] text-gray-500 dark:text-gray-400">{T("브랜드·사용강도·요금 조정 → 월/연 전기요금·LG 절감액", "Adjust brand, usage & rate → monthly/annual bill · LG savings")}</span></span>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-teal-500"><path d="M9 18l6-6-6-6" /></svg>
             </button>
             </div>
@@ -802,7 +802,7 @@ export default function EnergyLabelView() {
           <div className="w-full max-w-[560px] overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" style={{ animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both" }} onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-teal-50/60 dark:bg-teal-500/10 px-4 py-3">
               <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-teal-600 text-white"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" /><path d="M8 6h8M8 10h8M8 14h3" /></svg></span>
-              <div className="flex-1"><div className="text-[13.5px] font-bold text-gray-900 dark:text-gray-50">{T("전기요금 계산기", "Electricity Bill Calculator")}</div><div className="text-[11px] text-gray-500 dark:text-gray-400">{cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}{T(" · DOE 표준 월소비전력 기반", " · based on DOE-standard monthly consumption")}</div></div>
+              <div className="flex-1"><div className="text-[13.5px] font-bold text-gray-900 dark:text-gray-50">{T("전기요금 계산기", "Bill Calculator")}</div><div className="text-[11px] text-gray-500 dark:text-gray-400">{cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}{T(" · DOE 표준 월소비전력 기반", " · based on DOE-standard monthly consumption")}</div></div>
               <button type="button" onClick={() => setSimOpen(false)} aria-label={T("닫기", "Close")} className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
             </div>
             <div className="p-4"><EnergySim brands={simBrands} lgKwh={lgKwh} rate0={rate} /></div>
@@ -820,10 +820,10 @@ export default function EnergyLabelView() {
               <span className="rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-bold text-teal-700 dark:text-teal-300">{typ !== "전체" ? typ + " " : ""}{seg?.k} · {modelRows.length}{T("개", "")}</span>
               <span className="ml-auto flex items-center gap-1.5">
                 <span className="hidden items-center gap-0.5 sm:flex">
-                  {([["eff", T("효율순", "By efficiency")], ["kwh", T("저전력순", "By low power")], ["star", T("별점순", "By stars")]] as const).map(([k, lbl]) => <button key={k} type="button" onClick={() => setMSort(k as "eff" | "kwh" | "star")} className={"rounded-md px-2 py-1 text-[11px] font-semibold transition-all " + (mSort === k ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50")}>{lbl}</button>)}
+                  {([["eff", T("효율순", "Eff.")], ["kwh", T("저전력순", "Low kWh")], ["star", T("별점순", "Stars")]] as const).map(([k, lbl]) => <button key={k} type="button" onClick={() => setMSort(k as "eff" | "kwh" | "star")} className={"rounded-md px-2 py-1 text-[11px] font-semibold transition-all " + (mSort === k ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50")}>{lbl}</button>)}
                 </span>
                 <button type="button" onClick={() => setMLgOnly((v) => !v)} className={"rounded-md px-2 py-1 text-[11px] font-bold transition-all " + (mLgOnly ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-teal-700 dark:text-teal-300 hover:bg-teal-50")}>{T("LG만", "LG only")}</button>
-                <IcoBtn onClick={() => dlCsvFrom({ head: [T("브랜드", "Brand"), T("모델(제품코드)", "Model (product code)"), cur.specUnit, cur.metric, T("별점", "Stars"), T("월전력kWh", "Monthly kWh"), T("냉매", "Refrigerant")], rows: modelRows.map((r) => [r.brand, r.model, r.spec ?? "—", r.eff ?? "—", r.star ?? "—", r.kwh ?? "—", r.refrigerant || "—"]) }, "에너지_모델별_" + cur.label)} title={T("CSV 다운로드", "Download CSV")} d={ICO.csv} />
+                <IcoBtn onClick={() => dlCsvFrom({ head: [T("브랜드", "Brand"), T("모델(제품코드)", "Model (code)"), cur.specUnit, cur.metric, T("별점", "Stars"), T("월전력kWh", "kWh/mo"), T("냉매", "Refrigerant")], rows: modelRows.map((r) => [r.brand, r.model, r.spec ?? "—", r.eff ?? "—", r.star ?? "—", r.kwh ?? "—", r.refrigerant || "—"]) }, "에너지_모델별_" + cur.label)} title={T("CSV 다운로드", "Download CSV")} d={ICO.csv} />
                 <button type="button" onClick={() => setModelOpen(false)} aria-label={T("닫기", "Close")} className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-400 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
               </span>
             </div>
@@ -831,9 +831,9 @@ export default function EnergyLabelView() {
               {modelRows.length === 0 ? <div className="flex h-40 items-center justify-center text-[12.5px] text-gray-400">{T("해당 세그먼트 모델 없음", "No models in this segment")}</div> : (
                 <table className="w-full border-collapse text-[12px]">
                   <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="border-b border-gray-200 dark:border-gray-800 text-[11px] text-gray-500 dark:text-gray-400">
-                    <th className="px-3 py-2 text-left font-semibold">{T("브랜드", "Brand")}</th><th className="px-3 py-2 text-left font-semibold">{T("모델 (제품코드)", "Model (product code)")}</th>
+                    <th className="px-3 py-2 text-left font-semibold">{T("브랜드", "Brand")}</th><th className="px-3 py-2 text-left font-semibold">{T("모델 (제품코드)", "Model (code)")}</th>
                     <th className="px-3 py-2 text-right font-semibold">{cur.specUnit}</th><th className="px-3 py-2 text-right font-semibold">{cur.metric}</th>
-                    <th className="px-3 py-2 text-right font-semibold">{T("별점", "Stars")}</th><th className="px-3 py-2 text-right font-semibold">{T("월 kWh", "Monthly kWh")}</th><th className="px-3 py-2 text-left font-semibold">{T("냉매", "Refrigerant")}</th>
+                    <th className="px-3 py-2 text-right font-semibold">{T("별점", "Stars")}</th><th className="px-3 py-2 text-right font-semibold">{T("월 kWh", "kWh/mo")}</th><th className="px-3 py-2 text-left font-semibold">{T("냉매", "Refrigerant")}</th>
                   </tr></thead>
                   <tbody>{modelRows.map((r, i) => { const isLG = /^lg$/i.test(r.brand); return (
                     <tr key={i} className={"border-b border-gray-100 dark:border-gray-800/60 " + (isLG ? "bg-teal-50/60 dark:bg-teal-500/10" : "hover:bg-gray-50 dark:hover:bg-gray-800/40")}>
@@ -849,7 +849,7 @@ export default function EnergyLabelView() {
                 </table>
               )}
             </div>
-            <div className="shrink-0 border-t border-gray-100 dark:border-gray-800 px-4 py-2 text-[10.5px] text-gray-400 dark:text-gray-500">{T("현재 세그먼트(", "Current segment (")}{cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}{T(")의 개별 모델 · ", ") individual models · ")}<b className="text-teal-600 dark:text-teal-400">{T("LG 강조", "LG highlighted")}</b>{T(" · DOE 라벨 등록 데이터", " · DOE label registration data")}</div>
+            <div className="shrink-0 border-t border-gray-100 dark:border-gray-800 px-4 py-2 text-[10.5px] text-gray-400 dark:text-gray-500">{T("현재 세그먼트(", "Current segment (")}{cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}{T(")의 개별 모델 · ", ") individual models · ")}<b className="text-teal-600 dark:text-teal-400">{T("LG 강조", "LG in teal")}</b>{T(" · DOE 라벨 등록 데이터", " · DOE label registration data")}</div>
           </div>
         </div>,
         document.body

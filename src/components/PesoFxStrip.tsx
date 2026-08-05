@@ -49,7 +49,7 @@ export default function PesoFxStrip() {
         })}
         <div className={cell}>
           <div className="mb-1 text-[10px] text-gray-500 dark:text-gray-400">
-            {T("역내 절하 비교", "Regional depreciation")} <span className="text-gray-400 dark:text-gray-500">{T("전년비 vs USD", "YoY vs USD")}</span>
+            {T("역내 절하 비교", "Regional dep.")} <span className="text-gray-400 dark:text-gray-500">{T("전년비 vs USD", "YoY vs USD")}</span>
           </div>
           {peers.map((p, i) => {
             const hl = /페소|PHP/.test(p.label)

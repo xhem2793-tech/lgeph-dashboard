@@ -398,56 +398,56 @@ export function ApplianceView() {
       {show(["전 제품"]) && <OwnershipCard d={d} />}
       {false && <RegionOwnCard />}{/* 지역별 보유율 — 지도(RegionMap)에 반영 예정, 잠시 숨김 */}
       {show(["전 제품"]) && ppi.series.length > 0 && (
-        <ChartCard seg={T("전 제품·CE·B2B", "All Products·CE·B2B")} title={T("가전 생산자물가 PPI", "Appliance Producer Price Index (PPI)")} unit={T("전년비 %", "YoY %")} labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
+        <ChartCard seg={T("전 제품·CE·B2B", "All Products·CE·B2B")} title={T("가전 생산자물가 PPI", "Appliance PPI")} unit={T("전년비 %", "YoY %")} labels={ppi.labels} series={ppi.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("가전 PPI", "Appliance PPI")} b /><Lg c={C.rose} t={T("전기기기", "Electrical equipment")} /><Lg c={C.blue} t={T("전자", "Electronics")} /><Lg c={C.brown} t={T("제조업 전체", "Total manufacturing")} /></>}
           meaning={<>{T("생산단계 출고가격 상승률 — ", "Factory-gate price growth — ")}<b className="text-gray-700 dark:text-gray-200">{T("소비자가·조달원가의 수개월 선행", "leads retail price & procurement cost by several months")}</b></>}
           ai={<>{T("가전 PPI가 제조업 전체보다 높으면 ", "When appliance PPI exceeds total manufacturing, ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("가전 특이 원가압력", "appliance-specific cost pressure")}</b>{T(" → 선제 판가·조달 대응·부품 헤지, 동행이면 경제 전반 원가 국면", " → pre-empt with pricing/procurement moves & component hedging; if in line, it is an economy-wide cost phase")}</>}
           tone="rose" src={src(T("PSA 생산자물가지수(PPI) · 월별", "PSA Producer Price Index (PPI) · Monthly"))} />
       )}
       {show(["전 제품"]) && imp.series.length > 0 && (
-        <ChartCard seg={T("전 제품·CE·B2B", "All Products·CE·B2B")} title={T("가전·전자·통신 수입액", "Appliance/Electronics/Telecom Imports")} unit={T("백만$ · 연간", "US$M · Annual")} labels={imp.labels} series={imp.series} decimals={0} seriesUnit={T("백만$", "US$M")}
+        <ChartCard seg={T("전 제품·CE·B2B", "All Products·CE·B2B")} title={T("가전·전자·통신 수입액", "Appl·CE·Telecom Imports")} unit={T("백만$ · 연간", "US$M · Annual")} labels={imp.labels} series={imp.series} decimals={0} seriesUnit={T("백만$", "US$M")}
           legend={<><Lg c={C.ind} t={T("가전", "Appliances")} b /><Lg c={C.rose} t={T("소비자전자", "Consumer electronics")} /><Lg c={C.blue} t={T("통신기기", "Telecom equipment")} /></>}
           meaning={<>{T("가전·인접 카테고리 완제품 수입 규모 — ", "Finished-goods imports of appliances & adjacent categories — ")}<b className="text-gray-700 dark:text-gray-200">{T("시장 공급량·경쟁 강도 선행", "leads market supply & competitive intensity")}</b></>}
           ai={<>{T("수입 급증은 중국계 물량 유입 신호 → ", "Import surges signal an influx of Chinese-brand volume → ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("채널 재고·가격 경쟁 압박", "pressure on channel inventory & price competition")}</b>{T(" · 소비자전자·통신 동반 확대는 스마트홈 연계 수요 신호", " · concurrent electronics/telecom growth signals smart-home-linked demand")}</>}
           tone="amber" src={src(T("PSA 수출입통계 · 연간", "PSA Foreign Trade Statistics · Annual"))} />
       )}
       {show(["전 제품", "에어컨(RAC)"]) && inf.series.length > 0 && (
-        <ChartCard seg={T("가전·에어컨", "Appliances·AC")} title={T("가전 소비자물가 상승률", "Appliance Consumer Price Growth")} unit={T("전년비 %", "YoY %")} labels={inf.labels} series={inf.series} decimals={1} seriesUnit="%"
+        <ChartCard seg={T("가전·에어컨", "Appliances·AC")} title={T("가전 소비자물가 상승률", "Appliance CPI Growth")} unit={T("전년비 %", "YoY %")} labels={inf.labels} series={inf.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("가전 물가", "Appliance CPI")} b /><Lg c={C.rose} t={T("에어컨", "Air conditioner")} /><Lg c={C.brown} t={T("전체 CPI", "Headline CPI")} /></>}
           meaning={<>{T("가전 소매물가 상승률 vs 전체 물가 — ", "Appliance retail price growth vs headline — ")}<b className="text-gray-700 dark:text-gray-200">{T("가전의 실질 가격 매력", "real price appeal of appliances")}</b></>}
           ai={<>{T("가전 물가가 전체 CPI보다 낮으면 ", "When appliance CPI runs below headline, ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("실질 저렴 → 구매 매력↑", "relatively cheaper → purchase appeal↑")}</b>{T(", 높으면 구매 저항 → 보급형·프로모 강화", "; when higher, purchase resistance → strengthen entry-level & promos")}</>}
           tone="rose" src={src(T("PSA CPI(가전·에어컨) · 전년비", "PSA CPI (appliances·AC) · YoY"))} />
       )}
       {show(["전 제품", "에어컨(RAC)", "냉장고", "공조(B2B)"]) && elec.series.length > 0 && (
-        <ChartCard seg={T("에어컨·냉장고·공조", "AC·Ref·HVAC")} title={T("가정용 전기요금 (Meralco)", "Residential Electricity Rate (Meralco)")} unit="₱/kWh" labels={elec.labels} series={elec.series} decimals={2}
+        <ChartCard seg={T("에어컨·냉장고·공조", "AC·Ref·HVAC")} title={T("가정용 전기요금 (Meralco)", "Res. Elec. Rate (Meralco)")} unit="₱/kWh" labels={elec.labels} series={elec.series} decimals={2}
           legend={<Lg c={C.ind} t={T("가정용 전기료", "Residential electricity rate")} b />}
           meaning={<>{T("전기요금 = 가전 ", "Electricity rate determines appliance ")}<b className="text-gray-700 dark:text-gray-200">{T("사용비용·에너지효율 소구력", "running cost & energy-efficiency appeal")}</b> {T("결정", "")}</>}
           ai={<>{T("전기료 상승기엔 ", "During rising electricity rates, ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("인버터·고효율 프리미엄 소구", "pitch inverter/high-efficiency premium")}</b>{T("가 유리 → 에너지 절감액을 판매 메시지로 전환", " works best → convert energy savings into a sales message")}</>}
           tone="amber" src={src(T("Meralco 가정용 요금 · 월별", "Meralco residential rate · Monthly"))} />
       )}
       {show(["에어컨(RAC)"]) && cdd.series.length > 0 && (
-        <ChartCard seg={T("에어컨", "Air Conditioner")} title={T("냉방도일 (에어컨 수요 선행)", "Cooling Degree Days (AC Demand Leading)")} unit={T("CDD · 월별 · 기준24℃", "CDD · Monthly · Base 24°C")} labels={cdd.labels} series={cdd.series} decimals={0} seriesUnit="CDD"
+        <ChartCard seg={T("에어컨", "Air Conditioner")} title={T("냉방도일 (에어컨 수요 선행)", "Cooling Degree Days (CDD)")} unit={T("CDD · 월별 · 기준24℃", "CDD · Monthly · Base 24°C")} labels={cdd.labels} series={cdd.series} decimals={0} seriesUnit="CDD"
           legend={<Lg c={C.rose} t={T("냉방도일 CDD", "Cooling Degree Days (CDD)")} b />}
           meaning={<>{T("냉방도일 = Σ(일평균기온−24℃) — ", "CDD = Σ(daily mean temp − 24°C) — ")}<b className="text-gray-700 dark:text-gray-200">{T("에어컨·냉장고 사용강도·판매 성수기 직접 선행", "directly leads AC/refrigerator usage intensity & the sales peak season")}</b></>}
           ai={<>{T("CDD 급등기(3~5월 혹서)는 ", "CDD spikes (Mar–May heat) mark the ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("에어컨·선풍기 판매 성수기", "AC/fan peak sales season")}</b>{T(" → 사전 재고·프로모 집중, 냉방 프리미엄(인버터) 소구 최적 · ", " → concentrate pre-stocking & promos; optimal window to pitch cooling premium (inverter) · ")}<b className="text-gray-500 dark:text-gray-400">{T("Open-Meteo 기온", "Open-Meteo temperature")}</b></>}
           tone="amber" src={src(T("Open-Meteo 메트로마닐라 기온 · 냉방도일 월집계", "Open-Meteo Metro Manila temperature · CDD monthly aggregation"))} />
       )}
       {show(["전 제품"]) && energy.series.length > 0 && (
-        <ChartCard seg={T("전 제품", "All Products")} title={T("가정용 에너지소비", "Household Energy Consumption")} unit={T("ktoe · 연간", "ktoe · Annual")} kind="bar" labels={energy.labels} series={energy.series} decimals={0} seriesUnit="ktoe"
+        <ChartCard seg={T("전 제품", "All Products")} title={T("가정용 에너지소비", "HH Energy Use")} unit={T("ktoe · 연간", "ktoe · Annual")} kind="bar" labels={energy.labels} series={energy.series} decimals={0} seriesUnit="ktoe"
           legend={<Lg c={C.ind} t={T("가정용 에너지소비", "Household energy consumption")} b />}
           meaning={<>{T("가구부문 최종에너지소비 — ", "Household-sector final energy consumption — ")}<b className="text-gray-700 dark:text-gray-200">{T("가전 사용량·전력화 심화의 구조적 지표", "structural gauge of appliance usage & deepening electrification")}</b></>}
           ai={<>{T("가정용 에너지소비 증가는 ", "Rising household energy use means ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("가전 보유·사용 심화 = 시장 성숙", "deeper appliance ownership/use = market maturing")}</b>{T(" → 고효율·인버터 소구 여지 확대, 전력화 진전 지역 우선", " → wider room to pitch high-efficiency/inverter; prioritize regions advancing in electrification")}</>}
           tone="emerald" src={src(T("PSA 에너지통계 부문별 최종소비 · 연간", "PSA Energy Statistics final consumption by sector · Annual"))} />
       )}
       {show(["전 제품"]) && elecpc.series.length > 0 && (
-        <ChartCard seg={T("전 제품", "All Products")} title={T("1인당 전력소비", "Electricity Use per Capita")} unit={T("kWh/인 · 연간", "kWh/person · Annual")} labels={elecpc.labels} series={elecpc.series} decimals={0} seriesUnit="kWh"
+        <ChartCard seg={T("전 제품", "All Products")} title={T("1인당 전력소비", "Elec. per Cap.")} unit={T("kWh/인 · 연간", "kWh/person · Annual")} labels={elecpc.labels} series={elecpc.series} decimals={0} seriesUnit="kWh"
           legend={<Lg c={C.ind} t={T("1인당 전력소비", "Electricity use per capita")} b />}
           meaning={<>{T("국민 1인당 연간 전력사용량 — ", "Annual electricity use per capita — ")}<b className="text-gray-700 dark:text-gray-200">{T("전력화·가전 보유 심화 프록시", "proxy for electrification & deepening appliance ownership")}</b></>}
           ai={<>{T("필리핀 1인당 전력소비는 ", "Philippine per-capita electricity use is ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("900kWh대로 태국(약 3,000)·말련(약 5,000)의 1/3 이하", "around 900 kWh, under 1/3 of Thailand (~3,000) or Malaysia (~5,000)")}</b> = <b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("가전 보급·대형화 성장여력이 큰 저변", "a base with large headroom for appliance uptake & up-sizing")}</b>{T(". ", ". ")}<b>{T("트렌드", "Trend")}</b>{T(": 소득 증가와 함께 완만한 우상향 — 냉장고·에어컨 등 상시가동 가전 확산의 구조적 순풍, 다만 高전기료가 고효율 수요를 동시에 자극.", ": gently rising with income — a structural tailwind for the spread of always-on appliances (refrigerators, AC), though high electricity rates simultaneously stoke demand for high efficiency.")}</>}
           tone="emerald" src={src(T("World Bank WDI 1인당 전력소비(EG.USE.ELEC.KH.PC) · 연간", "World Bank WDI electricity use per capita (EG.USE.ELEC.KH.PC) · Annual"))} />
       )}
       {show(["전 제품", "냉장고", "세탁기", "에어컨(RAC)", "TV"]) && (
-        <ChartCard seg={T("전 제품·CE", "All Products·CE")} title={T("품목별 가전 수입 규모 (HS)", "Appliance Imports by Category (HS)")} unit={T("백만$ · 연간", "US$M · Annual")} labels={HS_YRS} series={[{ name: T("에어컨", "Air conditioner"), color: C.rose, w: 2, data: HS_TOTALS.ac }, { name: T("냉장고", "Refrigerator"), color: C.ind, w: 2, data: HS_TOTALS.ref }, { name: T("TV·모니터", "TV·Monitor"), color: C.blue, data: HS_TOTALS.tv }, { name: T("세탁기", "Washer"), color: C.emer, data: HS_TOTALS.wash }]} decimals={0} seriesUnit={T("백만$", "US$M")}
+        <ChartCard seg={T("전 제품·CE", "All Products·CE")} title={T("품목별 가전 수입 규모 (HS)", "Appliance Imports by HS")} unit={T("백만$ · 연간", "US$M · Annual")} labels={HS_YRS} series={[{ name: T("에어컨", "Air conditioner"), color: C.rose, w: 2, data: HS_TOTALS.ac }, { name: T("냉장고", "Refrigerator"), color: C.ind, w: 2, data: HS_TOTALS.ref }, { name: T("TV·모니터", "TV·Monitor"), color: C.blue, data: HS_TOTALS.tv }, { name: T("세탁기", "Washer"), color: C.emer, data: HS_TOTALS.wash }]} decimals={0} seriesUnit={T("백만$", "US$M")}
           legend={<><Lg c={C.rose} t={T("에어컨", "Air conditioner")} b /><Lg c={C.ind} t={T("냉장고", "Refrigerator")} b /><Lg c={C.blue} t={T("TV·모니터", "TV·Monitor")} /><Lg c={C.emer} t={T("세탁기", "Washer")} /></>}
           meaning={<>{T("HS코드별 완제품 수입액 — ", "Finished-goods imports by HS code — ")}<b className="text-gray-700 dark:text-gray-200">{T("품목별 공급 규모·성장", "supply size & growth by category")}</b></>}
           ai={<>{T("에어컨 수입이 ", "AC imports grew ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("2015 $205M→2024 $666M(3.2배)", "$205M (2015) → $666M (2024), 3.2×")}</b>{T("로 최대·최고성장(냉방수요·기후) → 에어컨 라인 우선순위. 냉장고·세탁기도 견조, TV는 최근 정체. ", " — the largest & fastest (cooling demand & climate) → prioritize the AC line. Refrigerator/washer also solid; TV recently flat. ")}<b>{T("트렌드", "Trend")}</b>{T(": 전 품목 우상향, 코로나(2020) 일시 조정 후 회복.", ": all categories trend up, recovering after a temporary 2020 (COVID) dip.")}</>}
@@ -459,7 +459,7 @@ export function ApplianceView() {
         const scope = hcat ? prod : T("4품목 합산", "4-item total")
         const lastKr = og.kr[og.kr.length - 1], lastCn = og.cn[og.cn.length - 1], firstCn = og.cn[0]
         return (
-        <ChartCard seg={T("전 제품·CE·B2B", "All Products·CE·B2B")} title={T("가전 수입 원산지 점유율", "Appliance Import Origin Share") + (hcat ? " · " + prod : "")} unit={T("% · 연간(", "% · Annual(") + scope + ")"} labels={HS_YRS} series={[{ name: T("중국", "China"), color: C.rose, w: 2.4, data: og.cn }, { name: T("태국", "Thailand"), color: C.amber, data: og.th }, { name: T("베트남", "Vietnam"), color: C.emer, data: og.vn }, { name: T("한국", "Korea"), color: C.ind, w: 2, data: og.kr }]} decimals={1} seriesUnit="%"
+        <ChartCard seg={T("전 제품·CE·B2B", "All Products·CE·B2B")} title={T("가전 수입 원산지 점유율", "Appliance Origin Share") + (hcat ? " · " + prod : "")} unit={T("% · 연간(", "% · Annual(") + scope + ")"} labels={HS_YRS} series={[{ name: T("중국", "China"), color: C.rose, w: 2.4, data: og.cn }, { name: T("태국", "Thailand"), color: C.amber, data: og.th }, { name: T("베트남", "Vietnam"), color: C.emer, data: og.vn }, { name: T("한국", "Korea"), color: C.ind, w: 2, data: og.kr }]} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.rose} t={T("중국", "China")} b /><Lg c={C.amber} t={T("태국", "Thailand")} /><Lg c={C.emer} t={T("베트남", "Vietnam")} /><Lg c={C.ind} t={T("한국", "Korea")} b /></>}
           meaning={<>{hcat ? prod : T("가전", "Appliances")} {T("수입 원산지 구성 — ", "import origin mix — ")}<b className="text-gray-700 dark:text-gray-200">{T("경쟁 원산지·조달 구조", "competing origins & sourcing structure")}</b>{hcat ? "" : T(" · 제품 필터로 품목별 전환", " · switch by category via the product filter")}</>}
           ai={<>{T("중국이 ", "China rose ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{firstCn}%→{lastCn}%</b>{T("로 상승, ", ", while ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("한국은 ", "Korea is ")}{lastKr}%</b> = {hcat === "wash" ? T("세탁기는 그나마 한국 9%대·베트남 급상승(20%)", "for washers Korea holds ~9% while Vietnam surges (20%)") : hcat === "tv" ? T("TV는 베트남(27%)이 중국 다음 2위, 한국 0.5%로 최저", "for TVs Vietnam (27%) is #2 after China, Korea lowest at 0.5%") : hcat === "ac" ? T("에어컨은 태국(22%)이 중국 다음 조달허브, 한국 3%대", "for AC Thailand (22%) is the sourcing hub after China, Korea ~3%") : hcat === "ref" ? T("냉장고는 중국 57%로 편중 최고, 한국 2%대 최저", "refrigerators are most China-concentrated at 57%, Korea lowest ~2%") : T("필리핀 완제품 시장을 중국계가 장악", "Chinese brands dominate the Philippine finished-goods market")}{T(". LG는 ", ". LG must either ")}<b className="font-semibold">{T("현지·역내(태국·베트남) 생산·조달로 원가·물류 대응", "manage cost/logistics via local/regional (Thailand·Vietnam) production & sourcing")}</b>{T("하거나 고효율·프리미엄 차별화가 관건.", " or differentiate on high-efficiency/premium — that is the key.")}</>}
@@ -507,21 +507,21 @@ export function RatesView() {
       sections={[
         { key: "rate_credit", label: T("금리·신용", "Rates·Credit"), node: <>
       {pol.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title={T("정책금리·시장금리", "Policy Rate vs Market Rate")} unit={T("% · 월별", "% · Monthly")} labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title={T("정책금리·시장금리", "Policy vs Market")} unit={T("% · 월별", "% · Monthly")} labels={pol.labels} series={pol.series} decimals={2} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("정책금리 RRP", "Policy rate (RRP)")} b /><Lg c={C.rose} t={T("시장금리(콜)", "Market rate (call)")} /></>}
           meaning={<>{T("정책금리 vs 시장금리 — ", "Policy vs market rate — ")}<b className="text-gray-700 dark:text-gray-200">{T("할부·소비자 금융비용의 기준·자금시장 긴장도", "the benchmark for installment/consumer financing cost & funding-market stress")}</b></>}
           ai={<>{T("금리 인하기엔 ", "During rate cuts, ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("할부·카드 이자 부담↓ = 가전 구매력↑", "installment/card interest burden↓ = appliance purchasing power↑")}</b>{T(" · 시장금리 급등 시 유통 운전자금 부담 관찰. ", " · watch channel working-capital strain when market rates spike. ")}<b>{T("트렌드", "Trend")}</b>{T(": BSP 정책금리 2022~23 급인상(2%→6.5%, 물가·페소 방어) 후 2024말~2025 인하 개시 = 할부 여건 개선 국면 진입.", ": BSP hiked sharply in 2022–23 (2%→6.5%, defending prices & the peso), then began cutting from late-2024 into 2025 = entering a phase of improving installment conditions.")}</>}
           tone="amber" src={src(T("BSP 정책금리(RRP) · IMF IFS 시장금리 · 월별", "BSP policy rate (RRP) · IMF IFS market rate · Monthly"))} />
       )}
       {loan.series.length > 0 && (
-        <ChartCard seg="CE" title={T("가계·기업 대출 증가율", "Household & Corporate Loan Growth")} unit={T("전년비 % · 월별", "YoY % · Monthly")} labels={loan.labels} series={loan.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title={T("가계·기업 대출 증가율", "HH·Corp Loan Growth")} unit={T("전년비 % · 월별", "YoY % · Monthly")} labels={loan.labels} series={loan.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("소비자대출", "Consumer loans")} b /><Lg c={C.blue} t={T("은행 총대출", "Total bank loans")} /></>}
           meaning={<>{T("소비자·총대출 증가율 — ", "Consumer & total loan growth — ")}<b className="text-gray-700 dark:text-gray-200">{T("가전 할부 구매의 직접 재원", "the direct funding for appliance installment purchases")}</b></>}
           ai={<>{T("소비자대출 확대는 ", "Rising consumer loans ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("내구재 할부 수요 선행", "lead durable-goods installment demand")}</b>{T(" → 신용 확장기에 프리미엄·대형 라인업 푸시", " → push premium/large lineups during credit expansion")}</>}
           tone="emerald" src={src(T("BSP 대출통계(소비자·총대출) · 월별", "BSP loan statistics (consumer·total) · Monthly"))} />
       )}
       {credit.series.length > 0 && (
-        <ChartCard seg="CE" title={T("민간신용 침투 (% GDP)", "Private Credit Penetration (% GDP)")} unit={T("% GDP · 연간", "% GDP · Annual")} labels={credit.labels} series={credit.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title={T("민간신용 침투 (% GDP)", "Priv. Credit (%GDP)")} unit={T("% GDP · 연간", "% GDP · Annual")} labels={credit.labels} series={credit.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t={T("민간신용(%GDP)", "Private credit (%GDP)")} b />}
           meaning={<>{T("GDP 대비 민간신용 잔액 — ", "Private credit outstanding vs GDP — ")}<b className="text-gray-700 dark:text-gray-200">{T("가전 할부·카드 구매의 구조적 여력", "structural capacity for appliance installment/card purchases")}</b></>}
           ai={<>{T("신용침투는 10년간 28%→50% 확대 = ", "Credit penetration widened 28%→50% over a decade = ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("할부·카드 기반 내구재 구매 여력 구조적 상승", "a structural rise in installment/card-based durable-goods capacity")}</b>{T(" → 프리미엄 할부 프로모 지속 유효", " → premium installment promos remain effective")}</>}
@@ -530,14 +530,14 @@ export function RatesView() {
         </> },
         { key: "consumer_fin", label: T("소비 금융·결제", "Consumer Finance·Payments"), node: <>
       {cards.series.length > 0 && (
-        <ChartCard seg="CE" title={T("카드·계좌 보급률", "Card & Account Ownership")} unit={T("% 성인 · 연간", "% of adults · Annual")} labels={cards.labels} series={cards.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title={T("카드·계좌 보급률", "Card·Acct Ownership")} unit={T("% 성인 · 연간", "% of adults · Annual")} labels={cards.labels} series={cards.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("신용카드 보유", "Credit card ownership")} b /><Lg c={C.blue} t={T("직불카드 보유", "Debit card ownership")} /><Lg c={C.emer} t={T("계좌 보유", "Account ownership")} /></>}
           meaning={<>{T("성인 카드·계좌 보유율(Findex) — ", "Adult card & account ownership (Findex) — ")}<b className="text-gray-700 dark:text-gray-200">{T("가전 결제·할부 수단의 구조", "the structure of appliance payment/installment channels")}</b></>}
           ai={<>{T("계좌보유는 27%→50%로 급등했으나 ", "Account ownership jumped 27%→50%, but ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("신용카드는 3%대로 정체", "credit cards stall at ~3%")}</b>{T(" → 카드 무이자할부보다 ", " → rather than card 0% installments, ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("리테일러·핀테크 할부(BNPL)·현금·직불 중심", "retailer/fintech installments (BNPL), cash & debit-centric")}</b>{T(" 판매금융 설계가 시장 특성에 부합. ", " sales financing fits the market. ")}<b>{T("트렌드", "Trend")}</b>{T(": 계좌·카드 모두 2021년 급등(팬데믹 정부지원금 계좌지급·디지털드라이브)했다가 카드는 2024년 반락 — 계좌는 유지, 결제는 e-wallet으로 이동.", ": both surged in 2021 (pandemic subsidy account disbursement & digital drive); cards fell back by 2024 — accounts held, payments shifting to e-wallets.")}</>}
           tone="rose" src={src(T("World Bank Global Findex 카드·계좌 보유율 · 격년(2011~2024)", "World Bank Global Findex card & account ownership · Biennial (2011–2024)"))} />
       )}
       {finuse.series.length > 0 && (
-        <ChartCard seg="CE" title={T("차입·저축 행태", "Borrowing & Saving Behavior")} unit={T("% 성인 · 연간", "% of adults · Annual")} labels={finuse.labels} series={finuse.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title={T("차입·저축 행태", "Borrowing·Saving")} unit={T("% 성인 · 연간", "% of adults · Annual")} labels={finuse.labels} series={finuse.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.rose} t={T("차입 경험", "Borrowed (any)")} b /><Lg c={C.emer} t={T("금융기관 저축", "Saved at a financial institution")} /></>}
           meaning={<>{T("성인 차입·저축 경험율(Findex) — ", "Adult borrowing & saving incidence (Findex) — ")}<b className="text-gray-700 dark:text-gray-200">{T("가전 구매 자금조달 성향", "how appliance purchases are financed")}</b></>}
           ai={<>{T("차입율 ", "Borrowing is high at ")}<b className="font-semibold">72%</b>{T("로 높지만 대부분 ", ", but mostly via ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("가족·비공식 채널", "family/informal channels")}</b>{T("(카드 3%뿐) → 저축률 상승기·송금 유입기에 대형가전 수요, ", " (cards only 3%) → big-appliance demand rises with savings & remittance inflows; ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("유연 할부·계약금 낮춘 상품", "flexible installments & low-down-payment offers")}</b>{T("이 전환 견인. ", " drive conversion. ")}<b>{T("트렌드", "Trend")}</b>{T(": 차입율은 2017·2021 하락 후 2024년 72%로 재상승(물가·생활비 압박), 금융기관 저축률은 12%(2017)→24%(2024) 꾸준히 개선.", ": borrowing fell in 2017/2021 then rebounded to 72% in 2024 (price/cost-of-living pressure); saving at institutions steadily improved 12% (2017) → 24% (2024).")}</>}
@@ -546,28 +546,28 @@ export function RatesView() {
         </> },
         { key: "fiscal_cap", label: T("재정·자본시장", "Fiscal·Capital Markets"), node: <>
       {fisc.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("정부재정 (부채·저축·조세)", "Public Finance (Debt·Savings·Tax)")} unit={T("% GDP · 연간", "% GDP · Annual")} labels={fisc.labels} series={fisc.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="B2B" title={T("정부재정 (부채·저축·조세)", "Public Finance (Debt·Tax)")} unit={T("% GDP · 연간", "% GDP · Annual")} labels={fisc.labels} series={fisc.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.rose} t={T("정부부채", "Govt debt")} b /><Lg c={C.emer} t={T("총저축률", "Gross savings")} /><Lg c={C.ind} t={T("조세수입", "Tax revenue")} /></>}
           meaning={<>{T("재정 건전성·저축여력 — ", "Fiscal health & saving capacity — ")}<b className="text-gray-700 dark:text-gray-200">{T("거시 안정성·중장기 소비기반", "macro stability & the medium-term consumption base")}</b></>}
           ai={<>{T("총저축률 30%대는 ", "Gross savings around 30% is a ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("내구재 구매 잠재재원", "latent funding pool for durable purchases")}</b>{T(". ", ". ")}<b>{T("트렌드", "Trend")}</b>{T(": 정부부채 2018년 40%까지 하락했다가 ", ": govt debt fell to 40% by 2018, then ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("코로나로 61%(2022) 급등", "spiked to 61% (2022) on COVID")}</b>{T(" 후 유지 — 조세수입 14%대로 낮아 재정여력 제약, 증세·인프라 지출이 B2B 수요 변수.", " and held — tax revenue is low (~14%), constraining fiscal room; tax hikes & infra spending are swing factors for B2B demand.")}</>}
           tone="amber" src={src(T("World Bank WDI(저축·조세) · Bureau of Treasury(부채) · 연간", "World Bank WDI (savings·tax) · Bureau of Treasury (debt) · Annual"))} />
       )}
       {mktcap.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("주식 시가총액 (자본시장)", "Stock Market Cap (Capital Markets)")} unit={T("% GDP · 연간", "% GDP · Annual")} labels={mktcap.labels} series={mktcap.series} decimals={0} seriesUnit="%"
+        <ChartCard seg="B2B" title={T("주식 시가총액 (자본시장)", "Stock Market Cap")} unit={T("% GDP · 연간", "% GDP · Annual")} labels={mktcap.labels} series={mktcap.series} decimals={0} seriesUnit="%"
           legend={<Lg c={C.ind} t={T("주식 시가총액(%GDP)", "Market cap (%GDP)")} b />}
           meaning={<>{T("상장주식 시총/GDP — ", "Listed market cap / GDP — ")}<b className="text-gray-700 dark:text-gray-200">{T("자본시장 깊이·자산효과", "capital-market depth & wealth effect")}</b></>}
           ai={<>{T("시총/GDP는 ", "Market cap/GDP has been ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("2007 피크(~70%) 후 하락세(~48%)", "declining (~48%) since its 2007 peak (~70%)")}</b>{T(" = 자본시장 상대적 정체 → 소비는 자산효과보다 ", " = relative capital-market stagnation → consumption relies structurally on ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("소득·송금 의존", "income & remittances")}</b>{T("이 구조적.", " more than the wealth effect.")}</>}
           tone="amber" src={src(T("World Bank WDI 상장주식 시가총액(%GDP) · 연간", "World Bank WDI listed market cap (%GDP) · Annual"))} />
       )}
       {psei.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("PSEi 주가지수 (월말)", "PSEi Stock Index (Month-end)")} unit={T("지수 · 월별", "Index · Monthly")} labels={psei.labels} series={psei.series} decimals={0} seriesUnit=""
+        <ChartCard seg="B2B" title={T("PSEi 주가지수 (월말)", "PSEi Index (Month-end)")} unit={T("지수 · 월별", "Index · Monthly")} labels={psei.labels} series={psei.series} decimals={0} seriesUnit=""
           legend={<Lg c={C.ind} t={T("PSEi 종합지수", "PSEi composite index")} b />}
           meaning={<>{T("필리핀 증시 종합지수 — ", "Philippine composite stock index — ")}<b className="text-gray-700 dark:text-gray-200">{T("투자심리·자산효과·경기 선행", "investor sentiment, wealth effect & cycle leading")}</b></>}
           ai={<>{T("PSEi는 ", "The PSEi has been ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("2015년 7,700선 → 2026년 6,000대", "range-bound: ~7,700 (2015) → ~6,000 (2026)")}</b>{T("로 장기 박스권·정체 = 자산효과 제한적. ", ", a long stagnation = limited wealth effect. ")}<b>{T("트렌드", "Trend")}</b>{T(": 2020년 코로나 급락(4,000대) 후 회복했으나 고금리·외국인 이탈로 ", ": it recovered from the 2020 COVID plunge (~4,000) but, on high rates & foreign outflows, ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("2026년 상반기 5,700대까지 재하락", "fell again to ~5,700 in H1 2026")}</b>{T(" 후 반등 — 증시보다 소득·송금이 소비 동력.", " before rebounding — income & remittances, not equities, drive consumption.")}</>}
           tone="amber" src={src(T("PSE(필리핀증권거래소) 종합지수 · Yahoo Finance 월말 종가", "PSE (Philippine Stock Exchange) composite · Yahoo Finance month-end close"))} />
       )}
       {npl.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title={T("은행 부실채권(NPL) 비율", "Bank Non-Performing Loan (NPL) Ratio")} unit={T("% · 연간", "% · Annual")} labels={npl.labels} series={npl.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title={T("은행 부실채권(NPL) 비율", "Bank NPL Ratio")} unit={T("% · 연간", "% · Annual")} labels={npl.labels} series={npl.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.rose} t={T("NPL 비율(총대출 대비)", "NPL ratio (of total loans)")} b />}
           meaning={<>{T("은행 총여신 중 부실채권 비중 — ", "Share of non-performing loans in total bank credit — ")}<b className="text-gray-700 dark:text-gray-200">{T("가계·기업 상환능력·금융안정", "household/corporate repayment capacity & financial stability")}</b></>}
           ai={<>{T("NPL이 ", "When NPLs are ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("3%대로 낮고 안정", "low & stable around 3%")}</b>{T("이면 은행이 소비자·카드·할부 여신을 공격적으로 늘릴 여력 → ", ", banks have room to expand consumer/card/installment credit → ")}<b className="font-semibold">{T("무이자 할부·BNPL 확대에 우호적", "favorable to expanding 0% installments & BNPL")}</b>{T(". ", ". ")}<b>{T("트렌드", "Trend")}</b>{T(": 팬데믹기 2021년 4%대로 상승했다가 ", ": rose to ~4% in pandemic-era 2021, then ")}<b className="font-semibold">{T("2025년 3.0%로 안정 복귀", "returned to a stable 3.0% in 2025")}</b>{T(" — 신용 리스크 완화로 가전 할부 수요 뒷받침. 급등 반전 시 유통 여신·연체 선행 경보로 활용.", " — easing credit risk supports appliance installment demand. A sharp reversal serves as an early warning for channel credit & delinquencies.")}</>}
@@ -576,28 +576,28 @@ export function RatesView() {
         </> },
         { key: "money_ext", label: T("통화·대외", "Money·External"), node: <>
       {m3.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title={T("통화량 M3 증가율", "Money Supply M3 Growth")} unit={T("전년비 % · 월별", "YoY % · Monthly")} labels={m3.labels} series={m3.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title={T("통화량 M3 증가율", "M3 Money Growth")} unit={T("전년비 % · 월별", "YoY % · Monthly")} labels={m3.labels} series={m3.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t={T("광의통화(M3)", "Broad money (M3)")} b />}
           meaning={<>{T("시중 유동성(M3) 증가율 — ", "Liquidity (M3) growth — ")}<b className="text-gray-700 dark:text-gray-200">{T("소비여력·신용 확대 여지", "room for consumption capacity & credit expansion")}</b></>}
           ai={<>{T("M3 확대는 유동성·소비여력 개선 신호 → ", "M3 expansion signals improving liquidity & spending capacity → ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("수요 회복 국면", "a demand-recovery phase")}</b>{T(" 판단의 거시 배경", " as macro backdrop")}</>}
           tone="emerald" src={src(T("IMF IFS 광의통화(M3) · 월별 YoY", "IMF IFS broad money (M3) · Monthly YoY"))} />
       )}
       {cab.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("경상수지 (% GDP)", "Current Account (% GDP)")} unit={T("% GDP · 연간", "% GDP · Annual")} kind="bar" labels={cab.labels} series={cab.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="B2B" title={T("경상수지 (% GDP)", "Curr. Acct (%GDP)")} unit={T("% GDP · 연간", "% GDP · Annual")} kind="bar" labels={cab.labels} series={cab.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t={T("경상수지(%GDP)", "Current account (%GDP)")} b />}
           meaning={<>{T("대외 경상수지 균형 — ", "External current-account balance — ")}<b className="text-gray-700 dark:text-gray-200">{T("페소 환율·수입원가의 구조적 압력", "structural pressure on the peso & import costs")}</b></>}
           ai={<>{T("경상수지 적자 확대는 ", "A widening current-account deficit means ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("페소 약세·수입 가전 원가 상승 압력", "peso weakness & upward pressure on imported-appliance costs")}</b>{T(" → 조달 헤지·판가 방어 점검, 흑자 전환 시 원가 여유", " → review procurement hedging & price defense; a surplus eases cost pressure")}</>}
           tone="amber" src={src(T("BSP·World Bank 경상수지(%GDP) · 연간", "BSP·World Bank current account (%GDP) · Annual"))} />
       )}
       {fdi.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("외국인직접투자 순유입 (FDI)", "Net Foreign Direct Investment (FDI)")} unit={T("십억$ · 연간", "US$B · Annual")} kind="bar" labels={fdi.labels} series={fdi.series} decimals={1} seriesUnit={T("십억$", "US$B")}
+        <ChartCard seg="B2B" title={T("외국인직접투자 순유입 (FDI)", "Net FDI Inflow")} unit={T("십억$ · 연간", "US$B · Annual")} kind="bar" labels={fdi.labels} series={fdi.series} decimals={1} seriesUnit={T("십억$", "US$B")}
           legend={<Lg c={C.emer} t={T("FDI 순유입", "FDI net inflow")} b />}
           meaning={<>{T("FDI 순유입 규모 — ", "Net FDI inflow — ")}<b className="text-gray-700 dark:text-gray-200">{T("투자심리·중장기 소득·고용 기반", "investor sentiment & the medium-term income/employment base")}</b></>}
           ai={<>{T("FDI 확대는 고용·소득·소비 기반 강화 = ", "Rising FDI strengthens the jobs/income/consumption base = ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("중장기 가전 수요 저변 확장", "expanding the medium-term appliance demand base")}</b>{T(", 급감 시 투자·내수 둔화 경계", "; a sharp drop warns of slowing investment & domestic demand")}</>}
           tone="emerald" src={src(T("BSP·World Bank FDI 순유입 · 연간", "BSP·World Bank net FDI inflow · Annual"))} />
       )}
       {trade.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("대외거래 (수출·수입·무역수지)", "External Trade (Exports·Imports·Balance)")} unit={T("% GDP · 연간", "% GDP · Annual")} labels={trade.labels} series={trade.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="B2B" title={T("대외거래 (수출·수입·무역수지)", "Ext. Trade (Exp·Imp·Bal)")} unit={T("% GDP · 연간", "% GDP · Annual")} labels={trade.labels} series={trade.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.emer} t={T("수출", "Exports")} b /><Lg c={C.rose} t={T("수입", "Imports")} /><Lg c={C.ind} t={T("무역수지", "Trade balance")} /></>}
           meaning={<>{T("수출·수입·무역수지 — ", "Exports, imports & trade balance — ")}<b className="text-gray-700 dark:text-gray-200">{T("페소 환율·수입 가전 원가의 구조적 압력", "structural pressure on the peso & imported-appliance costs")}</b></>}
           ai={<>{T("수입 초과(무역적자 지속)은 ", "A persistent trade deficit (import surplus) means ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("페소 약세·수입가전 원가 상승 압력", "peso weakness & rising imported-appliance costs")}</b>{T(" → 현지조달·판가 헤지, 수출 회복 시 원가 완화", " → localize sourcing & hedge pricing; an export recovery eases costs")}</>}
@@ -611,7 +611,7 @@ export function RatesView() {
           tone="emerald" src={src(T("World Bank·BSP 외환보유액 · 연간", "World Bank·BSP FX reserves · Annual"))} />
       )}
       {govt.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title={T("정부지출·서비스업 비중", "Govt Spending & Services Share")} unit={T("% GDP · 연간", "% GDP · Annual")} labels={govt.labels} series={govt.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title={T("정부지출·서비스업 비중", "Govt·Services Share")} unit={T("% GDP · 연간", "% GDP · Annual")} labels={govt.labels} series={govt.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("정부지출", "Govt expenditure")} b /><Lg c={C.emer} t={T("서비스업 비중", "Services share")} /></>}
           meaning={<>{T("정부지출·서비스업 GDP비중 — ", "Govt spending & services' GDP share — ")}<b className="text-gray-700 dark:text-gray-200">{T("도시가구·B2B 수요 기반", "the urban-household & B2B demand base")}</b></>}
           ai={<>{T("서비스업 비중 확대·정부 인프라 지출은 ", "A rising services share & govt infrastructure spending underpin ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("도시화·사무실·상업용 가전 수요 저변", "urbanization and office/commercial appliance demand")}</b>{T(" → B2B·프리미엄 도시시장 성장", " → growth in B2B & premium urban markets")}</>}
@@ -680,21 +680,21 @@ export function GrowthView() {
           tone="emerald" src={src(T("PSA 국민계정 GDP · 분기/연", "PSA National Accounts GDP · Quarterly/Annual"))} />
       )}
       {demand.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title={T("민간소비·총투자 성장률", "Private Consumption & Gross Investment Growth")} unit={T("전년비 %", "YoY %")} labels={demand.labels} series={demand.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title={T("민간소비·총투자 성장률", "Consump·Invest Growth")} unit={T("전년비 %", "YoY %")} labels={demand.labels} series={demand.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("민간소비", "Private consumption")} b /><Lg c={C.blue} t={T("총투자", "Gross investment")} /></>}
           meaning={<>{T("내수 소비·투자 성장 — ", "Domestic consumption & investment growth — ")}<b className="text-gray-700 dark:text-gray-200">{T("가전 수요와 직결되는 지출 축", "the spending axis directly tied to appliance demand")}</b></>}
           ai={<>{T("민간소비 성장은 가전 수요와 직결 → ", "Private-consumption growth is directly tied to appliance demand → ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("소비 확장기에 시장 성장 가속", "market growth accelerates during consumption expansion")}</b>{T(", 둔화 시 보급형 방어", "; defend with entry-level during slowdowns")}</>}
           tone="emerald" src={src(T("PSA 국민계정 GDE(소비·투자) · 분기/연", "PSA National Accounts GDE (consumption·investment) · Quarterly/Annual"))} />
       )}
       {pcap.series.length > 0 && (
-        <ChartCard seg="CE" title={T("1인당 GDP", "GDP per Capita")} unit={T("US$ · 연간", "US$ · Annual")} kind="bar" labels={pcap.labels} series={pcap.series} decimals={0} seriesUnit="$"
+        <ChartCard seg="CE" title={T("1인당 GDP", "GDP per Cap.")} unit={T("US$ · 연간", "US$ · Annual")} kind="bar" labels={pcap.labels} series={pcap.series} decimals={0} seriesUnit="$"
           legend={<Lg c={C.ind} t={T("1인당 GDP", "GDP per capita")} b />}
           meaning={<>{T("1인당 명목 GDP — ", "Nominal GDP per capita — ")}<b className="text-gray-700 dark:text-gray-200">{T("가전 구매력·프리미엄 전환의 구조적 기반", "the structural base for appliance purchasing power & premium shift")}</b></>}
           ai={<>{T("1인당 GDP는 10년간 2,163$→4,171$로 상승 = ", "GDP per capita rose $2,163 → $4,171 over a decade = ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("중산층 확대·프리미엄 가전 침투 여력↑", "a growing middle class & rising room for premium-appliance penetration")}</b>{T(" → 상위 라인업·신가전 카테고리 확장 기회", " → opportunity to expand upper lineups & new appliance categories")}</>}
           tone="emerald" src={src(T("World Bank 1인당 GDP(명목) · 연간", "World Bank GDP per capita (nominal) · Annual"))} />
       )}
       {tour.series.length > 0 && (
-        <ChartCard seg="CE" title={T("국제 관광객 입국자수", "International Tourist Arrivals")} unit={T("백만명 · 연간", "Million · Annual")} kind="bar" labels={tour.labels} series={tour.series} decimals={1} seriesUnit="M"
+        <ChartCard seg="CE" title={T("국제 관광객 입국자수", "Int'l Tourist Arrivals")} unit={T("백만명 · 연간", "Million · Annual")} kind="bar" labels={tour.labels} series={tour.series} decimals={1} seriesUnit="M"
           legend={<Lg c={C.teal} t={T("국제 관광객(백만명)", "International tourists (million)")} b />}
           meaning={<>{T("연간 국제 방문객 수 — ", "Annual international visitors — ")}<b className="text-gray-700 dark:text-gray-200">{T("서비스·소매·숙박·리조트 B2B 수요", "services, retail, hospitality & resort B2B demand")}</b></>}
           ai={<>{T("관광 회복은 호텔·리조트·요식 ", "A tourism recovery stimulates hotel/resort/foodservice ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("B2B 가전(에어컨·냉장·주방)", "B2B appliances (AC, refrigeration, kitchen)")}</b>{T(" 및 관광지 소매 수요를 자극. ", " and destination retail demand. ")}<b>{T("트렌드", "Trend")}</b>{T(": 2019년 ", ": peaked at ")}<b>8.3M</b>{T(" 정점 → 2020~21 코로나로 ", " in 2019 → on COVID in 2020–21 it ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("0.2M까지 붕괴", "collapsed to 0.2M")}</b>{T(" → 2023 5.5M·2025 6.4M로 회복 중이나 아직 팬데믹 이전 미달 · 회복 지속 시 B2B·지방 소매 순풍.", " → recovering to 5.5M (2023) & 6.4M (2025) but still below pre-pandemic · continued recovery is a tailwind for B2B & provincial retail.")}</>}
@@ -704,21 +704,21 @@ export function GrowthView() {
         { key: "industry", label: T("산업·생산", "Industry·Output"), node: <>
       <GdpComposition />
       {ind.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("산업·제조 성장률", "Industry & Manufacturing Growth")} unit={T("전년비 %", "YoY %")} labels={ind.labels} series={ind.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="B2B" title={T("산업·제조 성장률", "Industry·Mfg Growth")} unit={T("전년비 %", "YoY %")} labels={ind.labels} series={ind.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("산업", "Industry")} b /><Lg c={C.rose} t={T("제조업", "Manufacturing")} /></>}
           meaning={<>{T("산업·제조 생산 성장 — ", "Industrial & manufacturing output growth — ")}<b className="text-gray-700 dark:text-gray-200">{T("현지 조달·공급망·경기 국면", "local sourcing, supply chain & cycle phase")}</b></>}
           ai={<>{T("제조업 둔화는 경기 하강 신호 → ", "A manufacturing slowdown signals a downturn → ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("수요 위축 대비", "prepare for softening demand")}</b>{T(", 재고·판가 보수적 운영", "; run inventory & pricing conservatively")}</>}
           tone="amber" src={src(T("PSA 국민계정 산업·제조 GVA · 분기/연", "PSA National Accounts industry & manufacturing GVA · Quarterly/Annual"))} />
       )}
       {cap.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("평균 가동률", "Average Capacity Utilization")} unit={T("% (레벨)", "% (level)")} labels={cap.labels} series={cap.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="B2B" title={T("평균 가동률", "Avg Utilization")} unit={T("% (레벨)", "% (level)")} labels={cap.labels} series={cap.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.amber} t={T("평균 가동률", "Avg capacity utilization")} b />}
           meaning={<>{T("산업·건설 평균 설비 가동률 — ", "Average industry & construction capacity utilization — ")}<b className="text-gray-700 dark:text-gray-200">{T("공급 여력·경기 과열/둔화", "supply slack & overheating/slowdown")}</b></>}
           ai={<>{T("가동률 하락은 수요 둔화·유휴 신호 → ", "Falling utilization signals softening demand & idle capacity → ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("보수적 재고·판가", "conservative inventory & pricing")}</b>{T(", 상승 지속 시 공급 병목 대비. ", "; sustained rises call for supply-bottleneck readiness. ")}<b>{T("트렌드", "Trend")}</b>{T(": 제조 가동률 2020년 코로나 저점 후 회복해 2024~ 77~79%대 안정(팬데믹 전 수준 상회).", ": manufacturing utilization recovered from the 2020 COVID trough to a stable 77–79% from 2024 (above pre-pandemic).")}</>}
           tone="amber" src={src(T("PSA 산업생산조사 가동률 · 월", "PSA Industry Production Survey utilization · Monthly"))} />
       )}
       {va.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("부문별 부가가치 성장", "Sector Value-Added Growth")} unit={T("전년비 %", "YoY %")} labels={va.labels} series={va.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="B2B" title={T("부문별 부가가치 성장", "Sector GVA Growth")} unit={T("전년비 %", "YoY %")} labels={va.labels} series={va.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("제조업", "Manufacturing")} b /><Lg c={C.rose} t={T("산업", "Industry")} /><Lg c={C.emer} t={T("서비스", "Services")} /></>}
           meaning={<>{T("제조·산업·서비스 부문 성장 — ", "Manufacturing, industry & services growth — ")}<b className="text-gray-700 dark:text-gray-200">{T("B2B 수요처 업황·설비투자 여력", "B2B customer conditions & capex capacity")}</b></>}
           ai={<>{T("제조·서비스 업황 개선은 ", "Improving manufacturing & services conditions mean ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("기업 설비·시설 투자 여력", "corporate capex & facility-investment capacity")}</b>{T(" → B2B 상업용·산업용 수요 우호", " → favorable for B2B commercial/industrial demand")}</>}
@@ -727,35 +727,35 @@ export function GrowthView() {
         </> },
         { key: "construction", label: T("건설·투자", "Construction·Investment"), node: <>
       {cons.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("건설 부가가치·투자 성장", "Construction GVA & Investment Growth")} unit={T("전년비 %", "YoY %")} labels={cons.labels} series={cons.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="B2B" title={T("건설 부가가치·투자 성장", "Construction GVA·Invest")} unit={T("전년비 %", "YoY %")} labels={cons.labels} series={cons.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("건설 부가가치", "Construction GVA")} b /><Lg c={C.violet} t={T("건설 투자", "Construction investment")} /></>}
           meaning={<>{T("건설 부문 성장 — ", "Construction-sector growth — ")}<b className="text-gray-700 dark:text-gray-200">{T("빌트인·냉난방·신규 가전 수요의 6~12개월 선행", "leads built-in/HVAC/new-appliance demand by 6–12 months")}</b></>}
           ai={<>{T("건설 성장 가속은 ", "Accelerating construction ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("신규 가전·에어컨 수요 선행", "leads new appliance/AC demand")}</b>{T(" → 착공 밀집 지역에 채널·재고 선제 배치", " → pre-position channels/inventory in start-dense areas")}</>}
           tone="emerald" src={src(T("PSA 국민계정 건설 GVA·GFCF · 분기", "PSA National Accounts construction GVA·GFCF · Quarterly"))} />
       )}
       {permitV.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("주거 건축허가액", "Residential Building Permit Value")} unit={T("십억₱ · 분기", "₱B · Quarterly")} kind="bar" labels={permitV.labels} series={permitV.series} decimals={1} seriesUnit={T("십억₱", "₱B")}
+        <ChartCard seg="B2B" title={T("주거 건축허가액", "Res. Permit Value")} unit={T("십억₱ · 분기", "₱B · Quarterly")} kind="bar" labels={permitV.labels} series={permitV.series} decimals={1} seriesUnit={T("십억₱", "₱B")}
           legend={<Lg c={C.violet} t={T("주거 건축허가액", "Residential permit value")} b />}
           meaning={<>{T("주거 신축 허가 금액 — ", "Value of new residential permits — ")}<b className="text-gray-700 dark:text-gray-200">{T("주택·가전 신규수요의 선행 규모", "the leading scale of new housing & appliance demand")}</b></>}
           ai={<>{T("허가액 확대는 ", "Rising permit value means ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("신규 주택 유입 = 가전 초도수요", "new-housing inflow = first-purchase appliance demand")}</b>{T(" → 착공 밀집 지역 채널 선점", " → secure channels in start-dense areas")}</>}
           tone="emerald" src={src(T("PSA 건축허가(주거) · 분기", "PSA building permits (residential) · Quarterly"))} />
       )}
       {permit.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("비주거 건축허가(상업·산업)", "Non-Residential Permits (Commercial·Industrial)")} unit={T("백만 ㎡ · 분기", "Million ㎡ · Quarterly")} kind="bar" labels={permit.labels} series={permit.series} decimals={2}
+        <ChartCard seg="B2B" title={T("비주거 건축허가(상업·산업)", "Non-Res. Permits (Comm·Ind)")} unit={T("백만 ㎡ · 분기", "Million ㎡ · Quarterly")} kind="bar" labels={permit.labels} series={permit.series} decimals={2}
           legend={<Lg c={C.ind} t={T("비주거 착공면적", "Non-residential floor area")} b />}
           meaning={<>{T("상업·산업 신축 착공면적 — ", "New commercial/industrial floor area — ")}<b className="text-gray-700 dark:text-gray-200">{T("B2B 냉난방·빌트인 수요의 선행", "leads B2B HVAC & built-in demand")}</b></>}
           ai={<>{T("비주거 착공 확대는 ", "More non-residential starts ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("상업용 HVAC·빌트인 프로젝트 수요 선행", "lead commercial HVAC & built-in project demand")}</b>{T(" → B2B 파이프라인·입찰 선제 대응", " → get ahead on the B2B pipeline & bids")}</>}
           tone="emerald" src={src(T("PSA 건축허가(비주거) · 분기", "PSA building permits (non-residential) · Quarterly"))} />
       )}
       {office.series.length > 0 && (
-        <ChartCard seg="B2B" title={T("오피스 공실률 (메트로 마닐라)", "Office Vacancy Rate (Metro Manila)")} unit={T("% · 분기 · 민간자료", "% · Quarterly · Private data")} labels={office.labels} series={office.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="B2B" title={T("오피스 공실률 (메트로 마닐라)", "Office Vacancy (Metro Manila)")} unit={T("% · 분기 · 민간자료", "% · Quarterly · Private data")} labels={office.labels} series={office.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.rose} t={T("오피스 공실률", "Office vacancy rate")} b />}
           meaning={<>{T("상업용 오피스 공실률 — ", "Commercial office vacancy — ")}<b className="text-gray-700 dark:text-gray-200">{T("B2B 상업용 HVAC·빌트인 수요의 역지표", "an inverse indicator of B2B commercial HVAC & built-in demand")}</b></>}
           ai={<>{T("공실률 하락은 ", "Falling vacancy means ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("오피스 임대·신규 입주 회복 = 상업용 냉난방·가전 수요", "recovering leasing/move-ins = commercial HVAC & appliance demand")}</b>{T(", 상승 시 B2B 프로젝트 지연 경계 · ", "; rising vacancy warns of B2B project delays · ")}<b className="text-gray-500 dark:text-gray-400">{T("민간자료(Colliers)", "Private data (Colliers)")}</b></>}
           tone="amber" src={src(T("Colliers PH Office · 분기 · 민간자료", "Colliers PH Office · Quarterly · Private data"))} />
       )}
       {rrepi.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title={T("주거용 부동산가격 상승률", "Residential Property Price Growth")} unit={T("전년비 % · 분기", "YoY % · Quarterly")} labels={rrepi.labels} series={rrepi.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title={T("주거용 부동산가격 상승률", "Res. Property Price Growth")} unit={T("전년비 % · 분기", "YoY % · Quarterly")} labels={rrepi.labels} series={rrepi.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("명목", "Nominal")} b /><Lg c={C.teal} t={T("실질(물가조정)", "Real (inflation-adjusted)")} /></>}
           meaning={<>{T("주택가격 상승률(명목·실질) — ", "House-price growth (nominal·real) — ")}<b className="text-gray-700 dark:text-gray-200">{T("자산효과·프리미엄·초도수요 동인", "a driver of wealth effect, premium & first-purchase demand")}</b></>}
           ai={<>{T("주택가격 상승은 ", "Rising house prices mean ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("자산효과·신규 입주 = 프리미엄·빌트인 가전 수요", "wealth effect & move-ins = premium/built-in appliance demand")}</b>{T(", 실질 하락(명목이 물가 하회) 시 소비여력 위축 경계 · ", "; a real decline (nominal below inflation) warns of weakening spending capacity · ")}<b className="text-gray-500 dark:text-gray-400">{T("BIS(BSP RREPI 원천)", "BIS (BSP RREPI source)")}</b>{T(". ", ". ")}<b>{T("트렌드", "Trend")}</b>{T(": 2024년 명목 7~9%였으나 2025년 2%대로 급둔화, 실질은 마이너스 근접 — 주택경기 냉각 신호.", ": nominal was 7–9% in 2024 but slowed sharply to ~2% in 2025, with real near negative — a signal of cooling housing.")}</>}
@@ -764,14 +764,14 @@ export function GrowthView() {
         </> },
         { key: "trade", label: T("유통", "Trade"), node: <>
       {ret.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title={T("도소매 유통 성장", "Wholesale & Retail Trade Growth")} unit={T("전년비 %", "YoY %")} labels={ret.labels} series={ret.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE·B2B" title={T("도소매 유통 성장", "W&R Trade Growth")} unit={T("전년비 %", "YoY %")} labels={ret.labels} series={ret.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("도소매 거래", "Wholesale & retail trade")} b /><Lg c={C.teal} t={T("소매 부가가치", "Retail GVA")} /><Lg c={C.amber} t={T("도매 부가가치", "Wholesale GVA")} /></>}
           meaning={<>{T("도소매업 성장률 — ", "Wholesale & retail growth — ")}<b className="text-gray-700 dark:text-gray-200">{T("유통 채널 활력·소비 실현", "channel vitality & realized consumption")}</b></>}
           ai={<>{T("도소매 성장 가속은 채널 판매 여건 개선 → ", "Accelerating trade improves channel selling conditions → ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("유통 프로모·진열 확대 적기", "prime time to scale channel promos & displays")}</b>{T(". ", ". ")}<b>{T("트렌드", "Trend")}</b>{T(": 2020년 코로나로 ", ": on COVID in 2020 it ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("-14% 급락", "plunged -14%")}</b>{T(" 후 2021~2022 9%대 반등, 2024~ 5%대 안정 성장.", ", rebounded ~9% in 2021–22, then steadied at ~5% from 2024.")}</>}
           tone="emerald" src={src(T("PSA 국민계정 도소매업 · 분기", "PSA National Accounts wholesale & retail · Quarterly"))} />
       )}
       {rsale.series.length > 0 && (
-        <ChartCard seg="CE" title={T("소매판매 증가율", "Retail Sales Growth")} unit={T("전년비 % · 연간", "YoY % · Annual")} kind="bar" labels={rsale.labels} series={rsale.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title={T("소매판매 증가율", "Retail Sales YoY")} unit={T("전년비 % · 연간", "YoY % · Annual")} kind="bar" labels={rsale.labels} series={rsale.series} decimals={1} seriesUnit="%"
           legend={<Lg c={C.ind} t={T("소매판매 증가율", "Retail sales growth")} b />}
           meaning={<>{T("소매판매 성장률 — ", "Retail sales growth — ")}<b className="text-gray-700 dark:text-gray-200">{T("가전 포함 소비재 실판매 대리지표", "a proxy for actual consumer-goods sales including appliances")}</b></>}
           ai={<>{T("소매판매 반등은 ", "A retail-sales rebound is a ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("가전 실수요 회복 신호", "signal of recovering real appliance demand")}</b>{T(" → 프로모·진열 확대 적기, 둔화 시 보급형 방어", " → prime time to scale promos/displays; defend with entry-level during slowdowns")}</>}
@@ -780,14 +780,14 @@ export function GrowthView() {
         </> },
         { key: "sea", label: T("동남아 비교", "SEA Comparison"), node: <>
       {seaPPP.series.length > 0 && (
-        <ChartCard seg="CE" title={T("1인당 GDP (PPP) — 동남아 6개국", "GDP per Capita (PPP) — 6 SEA Countries")} unit={T("천 int$ · 연간", "Thousand int$ · Annual")} labels={seaPPP.labels} series={seaPPP.series} decimals={1} seriesUnit="k"
+        <ChartCard seg="CE" title={T("1인당 GDP (PPP) — 동남아 6개국", "GDP per Cap. (PPP) — 6 SEA")} unit={T("천 int$ · 연간", "Thousand int$ · Annual")} labels={seaPPP.labels} series={seaPPP.series} decimals={1} seriesUnit="k"
           legend={<>{SEA_SPECS.map((s) => <Lg key={s.key} c={s.color} t={s.name} b={s.key === "Philippines"} />)}</>}
           meaning={<>{T("구매력평가(PPP) 1인당 GDP — ", "PPP GDP per capita — ")}<b className="text-gray-700 dark:text-gray-200">{T("역내 실질 생활수준·가전 구매력 순위", "regional real living standards & appliance purchasing-power ranking")}</b></>}
           ai={<>{T("필리핀은 역내 ", "The Philippines sits in the region's ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("하위권(태국·말련 대비 낮음)", "lower tier (below Thailand & Malaysia)")}</b>{T("이나 성장 지속 → 보급형 주력 + 중산층 확대 구간 프리미엄 침투 여지", " but keeps growing → lead with entry-level while premium penetration widens as the middle class expands")}</>}
           tone="amber" src={src(T("World Bank 1인당 GDP(PPP) · 연간", "World Bank GDP per capita (PPP) · Annual"))} />
       )}
       {seaNom.series.length > 0 && (
-        <ChartCard seg="CE" title={T("1인당 GDP (명목) — 동남아 6개국", "GDP per Capita (Nominal) — 6 SEA Countries")} unit={T("천 US$ · 연간", "Thousand US$ · Annual")} labels={seaNom.labels} series={seaNom.series} decimals={1} seriesUnit="k"
+        <ChartCard seg="CE" title={T("1인당 GDP (명목) — 동남아 6개국", "GDP per Cap. (Nominal) — SEA-6")} unit={T("천 US$ · 연간", "Thousand US$ · Annual")} labels={seaNom.labels} series={seaNom.series} decimals={1} seriesUnit="k"
           legend={<>{SEA_SPECS.map((s) => <Lg key={s.key} c={s.color} t={s.name} b={s.key === "Philippines"} />)}</>}
           meaning={<>{T("명목 달러 1인당 GDP — ", "Nominal-dollar GDP per capita — ")}<b className="text-gray-700 dark:text-gray-200">{T("환율 반영 실제 달러 구매력·수입가전 접근성", "FX-adjusted real dollar purchasing power & imported-appliance affordability")}</b></>}
           ai={<>{T("명목 기준 필리핀 위치는 ", "In nominal terms, the Philippines' position is ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("환율(페소 약세)에 민감", "sensitive to FX (peso weakness)")}</b>{T(" → 페소 약세기 수입 프리미엄가 부담↑, 현지화·보급형 방어", " → peso weakness raises imported premium prices; localize & defend with entry-level")}</>}
@@ -848,7 +848,7 @@ export function LaborView() {
       sections={[
         { key: "emp_rem", label: T("고용·송금", "Employment·Remittances"), node: <>
       {un.series.length > 0 && (
-        <ChartCard seg="CE" title={T("실업·불완전고용률", "Unemployment & Underemployment Rate")} unit="%" labels={un.labels} series={un.series} decimals={1} seriesUnit="%"
+        <ChartCard seg="CE" title={T("실업·불완전고용률", "Unemp. & Underemp.")} unit="%" labels={un.labels} series={un.series} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.ind} t={T("실업률", "Unemployment rate")} b /><Lg c={C.rose} t={T("불완전고용", "Underemployment")} /></>}
           meaning={<>{T("고용 여건 — ", "Employment conditions — ")}<b className="text-gray-700 dark:text-gray-200">{T("가처분소득·내구재 구매 여력", "disposable income & durable-purchase capacity")}</b></>}
           ai={<>{T("실업·불완전고용 하락은 소득 안정 신호 → ", "Falling unemployment/underemployment signals income stability → ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("가전 수요 우호", "favorable for appliance demand")}</b>{T(", 상승 시 필수·보급형 우선. ", "; when rising, prioritize essential/entry-level. ")}<b>{T("트렌드", "Trend")}</b>{T(": 실업률 2020년 코로나 ", ": unemployment ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("17.6% 급등", "spiked to 17.6% on COVID (2020)")}</b>{T(" 후 2024~ 3~5%로 정상화(역대 최저권), 불완전고용은 12%대 잔존.", ", then normalized to 3–5% from 2024 (near record lows); underemployment persists around 12%.")}</>}
@@ -1233,7 +1233,7 @@ export function PricesView() {
           tone="rose" src={src(T("PSA CPI 상승률(주거·가전·에어컨) · 월별", "PSA CPI growth (housing·appliances·AC) · Monthly"))} />
       )}
       {elec.series.length > 0 && (
-        <ChartCard seg="CE·B2B" title={T("가정용 전기요금 (Meralco)", "Residential Electricity Rate (Meralco)")} unit={T("₱/kWh · 월별", "₱/kWh · Monthly")} labels={elec.labels} series={elec.series} decimals={2} seriesUnit="₱"
+        <ChartCard seg="CE·B2B" title={T("가정용 전기요금 (Meralco)", "Res. Elec. Rate (Meralco)")} unit={T("₱/kWh · 월별", "₱/kWh · Monthly")} labels={elec.labels} series={elec.series} decimals={2} seriesUnit="₱"
           legend={<Lg c={C.ind} t={T("가정용 전기료", "Residential electricity rate")} b />}
           meaning={<>{T("실제 전기요금 수준 — ", "Actual electricity-rate level — ")}<b className="text-gray-700 dark:text-gray-200">{T("가전 사용비용의 절대 기준", "the absolute benchmark for appliance running cost")}</b></>}
           ai={<>{T("전기료 상승 추세엔 ", "In a rising-rate trend, ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("고효율·인버터 프리미엄 소구", "pitching high-efficiency/inverter premium")}</b>{T("가 유효 → TCO(총소유비용) 절감 메시지 강화", " is effective → strengthen the TCO (total cost of ownership) savings message")}</>}

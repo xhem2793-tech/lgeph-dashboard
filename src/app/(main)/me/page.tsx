@@ -68,7 +68,7 @@ export default function MePage() {
       <div className="flex flex-col gap-4">
         {/* 기본 시작 페이지 */}
         <section className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900/40 sm:p-5">
-          <h2 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{T("기본 시작 페이지", "Default landing page")}</h2>
+          <h2 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{T("기본 시작 페이지", "Default page")}</h2>
           <p className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">{T("로고를 클릭하면 이동할 나의 홈 화면입니다.", "The home screen you go to when you click the logo.")}</p>
           <div className="mt-3 flex flex-wrap gap-1.5">
             {HOME_OPTS.map((o) => {
@@ -101,7 +101,7 @@ export default function MePage() {
             </div>
           </div>
           <div className="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900/40 sm:p-5">
-            <h2 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{T("즐겨찾기 지표", "Favorite indicators")}</h2>
+            <h2 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{T("즐겨찾기 지표", "Favorites")}</h2>
             <p className="mt-2 text-[12px] text-gray-500 dark:text-gray-400">{T("주요지표 리스트에서 ☆로 담은 지표 ", "Indicators starred (☆) in the Key Indicators list: ")}<b className="tabular-nums text-indigo-600 dark:text-indigo-400">{favN}</b>{T("개", "")}</p>
             <a href="/economy" className="mt-3 inline-flex items-center gap-1 text-[12.5px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">{T("주요지표에서 관리 →", "Manage in Key Indicators →")}</a>
           </div>
