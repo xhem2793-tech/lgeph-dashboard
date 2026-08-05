@@ -1,17 +1,22 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { getSession } from "@/lib/authClient"
 
-/** Cloudflare Access가 인증한 로그인 사용자 신원(이메일·이름)을 읽는다.
- *  · Access 뒤(axlgeph.report)에서는 `/cdn-cgi/access/get-identity`가 신원 JSON을 반환.
- *  · Access가 없는 환경(로컬·pages.dev 프리뷰)에서는 실패 → null (개발/미리보기 대응).
- *  개인화(개인 설정)는 이 email을 키로 사용한다. */
+/** 로그인 사용자 신원(이메일·이름)을 읽는다.
+ *  · 1순위: Supabase 세션(현재 로그인 방식) — getSession().email.
+ *  · 2순위: Cloudflare Access 신원 `/cdn-cgi/access/get-identity`(Access 뒤일 때 이름 등 보강).
+ *  · 둘 다 없으면 null(로컬·프리뷰). 개인화(개인 설정)는 이 email을 키로 사용한다. */
 export type AccessIdentity = { email: string; name: string } | null
 
 export function useAccessIdentity(): AccessIdentity {
   const [id, setId] = useState<AccessIdentity>(null)
   useEffect(() => {
     let alive = true
+    // 1) Supabase 세션 우선 — 현재 로그인 게이트가 Supabase OTP이므로 여기서 신원 확보
+    const s = getSession()
+    if (s?.email) setId({ email: s.email, name: s.email.split("@")[0] })
+    // 2) Cloudflare Access 신원도 시도 — 있으면 실명 등으로 보강(없으면 무시)
     fetch("/cdn-cgi/access/get-identity", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {

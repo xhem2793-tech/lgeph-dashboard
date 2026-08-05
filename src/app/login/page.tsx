@@ -68,14 +68,14 @@ export default function LoginPage() {
         <div className="px-8 pb-8 pt-9">
           {/* 로고 + 언어 배지 */}
           <div className="flex items-center gap-2">
-            <span className="text-[17px] font-extrabold tracking-tight">
+            <span className="text-[17px] font-extrabold tracking-tight leading-none">
               <span className="text-gray-900 dark:text-gray-50">axlgeph</span><span className="text-indigo-600 dark:text-indigo-400">.report</span>
             </span>
-            <span className="rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 ring-1 ring-indigo-100 dark:bg-indigo-500/10 dark:text-indigo-300 dark:ring-indigo-500/20">Beta</span>
-            {/* 한/영 선택(기본 KO) */}
-            <div className="ml-auto flex items-center rounded-full bg-gray-100 p-0.5 text-[10.5px] font-bold ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
+            <span className="mt-0.5 text-[11px] font-semibold italic leading-none text-gray-400 dark:text-gray-500">beta</span>
+            {/* 한/영 선택(기본 KO) — 넉넉한 알약 토글 */}
+            <div className="ml-auto flex items-center rounded-full bg-gray-100 p-1 text-[12.5px] font-bold ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
               {(["ko", "en"] as const).map((l) => (
-                <button key={l} type="button" onClick={() => setLang(l)} aria-label={l === "ko" ? "한국어" : "English"} className={"rounded-full px-2 py-0.5 leading-none transition-colors " + (lang === l ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{l === "ko" ? "KO" : "EN"}</button>
+                <button key={l} type="button" onClick={() => setLang(l)} aria-label={l === "ko" ? "한국어" : "English"} className={"rounded-full px-3 py-1 leading-none transition-colors " + (lang === l ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{l === "ko" ? "KO" : "EN"}</button>
               ))}
             </div>
           </div>
@@ -85,7 +85,7 @@ export default function LoginPage() {
           </h1>
           <p className="mt-1.5 text-[12.5px] leading-relaxed text-gray-500 dark:text-gray-400">
             {step === "email"
-              ? T("LGE-PH 마켓 인텔리전스 대시보드. 사내 이메일로 로그인해 주세요.", "LGE-PH Market Intelligence Dashboard. Sign in with your work email.")
+              ? T("필리핀법인 마켓 인텔리전스 대시보드. 사내 이메일로 로그인해 주세요.", "LGE Philippines Market Intelligence Dashboard. Sign in with your work email.")
               : <>{T("아래 이메일로 보낸 6자리 코드를 입력하세요: ", "Enter the 6-digit code sent to: ")}<b className="font-semibold text-gray-700 dark:text-gray-200">{email}</b></>}
           </p>
 
@@ -123,9 +123,21 @@ export default function LoginPage() {
           {err && <p className="mt-3 rounded-lg bg-rose-50 px-3 py-2 text-[12px] font-medium text-rose-600 dark:bg-rose-500/10 dark:text-rose-300" style={{ animation: "loUp .3s ease both" }}>{err}</p>}
           {note && !err && <p className="mt-3 rounded-lg bg-emerald-50 px-3 py-2 text-[12px] font-medium text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" style={{ animation: "loUp .3s ease both" }}>{note}</p>}
 
-          <p className="mt-6 border-t border-gray-100 pt-4 text-[11px] leading-relaxed text-gray-400 dark:border-gray-800 dark:text-gray-500">
-            {T("사내 이메일(@lge.com) 또는 승인된 계정만 접근할 수 있습니다. 문제가 있으면 관리자에게 문의하세요.", "Only work emails (@lge.com) or approved accounts can access this. If you have trouble, please contact the administrator.")}
-          </p>
+          <div className="mt-6 border-t border-gray-100 pt-4 dark:border-gray-800">
+            <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
+              {T("사내 이메일(@lge.com) 또는 승인된 계정만 접근할 수 있습니다.", "Only work emails (@lge.com) or approved accounts can access this.")}
+            </p>
+            <p className="mt-2 flex flex-wrap items-center gap-2 text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
+              {T("접근에 문제가 있으신가요?", "Having trouble signing in?")}
+              <a
+                href={"mailto:xhem2793@gmail.com?subject=" + encodeURIComponent(T("[axlgeph.report] 접근 문의", "[axlgeph.report] Access inquiry"))}
+                className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[11px] font-semibold text-indigo-600 transition-colors hover:bg-indigo-100 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-10 6L2 7" /></svg>
+                {T("문의하기", "Contact admin")}
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </div>

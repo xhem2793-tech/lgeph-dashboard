@@ -62,11 +62,11 @@ export default function WelcomeModal() {
             <span className="text-[15px] font-extrabold leading-none tracking-tight">
               <span className="text-gray-900 dark:text-gray-50">axlgeph</span><span className="text-indigo-600 dark:text-indigo-400">.report</span>
             </span>
-            <span className="rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-widest text-indigo-600 shadow-sm ring-1 ring-indigo-100 backdrop-blur dark:bg-white/10 dark:text-indigo-300 dark:ring-indigo-500/20">Beta</span>
-            {/* 언어 배지 — 누가 들어올지 몰라 팝업 안에서 바로 KO/EN 선택(기본 한글) */}
-            <div className="ml-auto flex items-center rounded-full bg-white/70 p-0.5 text-[10.5px] font-bold shadow-sm ring-1 ring-indigo-100 backdrop-blur dark:bg-white/10 dark:ring-indigo-500/20">
+            <span className="mt-0.5 text-[11px] font-semibold italic leading-none text-gray-400 dark:text-gray-500">beta</span>
+            {/* 언어 배지 — 누가 들어올지 몰라 팝업 안에서 바로 KO/EN 선택(기본 한글). 넉넉한 크기 */}
+            <div className="ml-auto flex items-center rounded-full bg-white/70 p-1 text-[12.5px] font-bold shadow-sm ring-1 ring-indigo-100 backdrop-blur dark:bg-white/10 dark:ring-indigo-500/20">
               {(["ko", "en"] as const).map((l) => (
-                <button key={l} type="button" onClick={() => setLang(l)} aria-label={l === "ko" ? "한국어" : "English"} className={"rounded-full px-2 py-0.5 leading-none transition-colors " + (lang === l ? "bg-indigo-600 text-white shadow-sm" : "text-indigo-500 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200")}>{l === "ko" ? "KO" : "EN"}</button>
+                <button key={l} type="button" onClick={() => setLang(l)} aria-label={l === "ko" ? "한국어" : "English"} className={"rounded-full px-3 py-1 leading-none transition-colors " + (lang === l ? "bg-indigo-600 text-white shadow-sm" : "text-indigo-500 hover:text-indigo-700 dark:text-indigo-300 dark:hover:text-indigo-200")}>{l === "ko" ? "KO" : "EN"}</button>
               ))}
             </div>
           </div>
