@@ -14,7 +14,7 @@ const LS_KEY = "ax_sb_session"
 
 /** 인증 강제 스위치 — 기본 false(현재는 Cloudflare Access가 보호).
  *  Access를 끄고 Supabase 로그인으로 전환할 때 true로 바꾸고 배포하면 AuthGate가 /login으로 유도한다. */
-export const SUPABASE_AUTH_ENABLED = false
+export const SUPABASE_AUTH_ENABLED = true
 
 export type AuthSession = { access_token: string; refresh_token: string; expires_at: number; email: string }
 
