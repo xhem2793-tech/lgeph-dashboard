@@ -72,6 +72,15 @@ export default function LoginPage() {
       <div className="pointer-events-none absolute -right-20 top-10 h-72 w-72 rounded-full bg-fuchsia-300/25 blur-3xl dark:bg-fuchsia-500/12" />
       <div className="pointer-events-none absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-sky-300/20 blur-3xl dark:bg-sky-500/10" />
 
+      {/* 라이트/다크 — 페이지 우상단(대시보드와 동일 위치) */}
+      {themeMounted && (
+        <div className="absolute right-5 top-5 z-20 flex items-center rounded-full bg-white/70 p-1 shadow-sm ring-1 ring-gray-200 backdrop-blur dark:bg-gray-900/60 dark:ring-gray-700">
+          {([["light", SunIcon] as const, ["dark", MoonIcon] as const]).map(([k, icon]) => (
+            <button key={k} type="button" onClick={() => setTheme(k)} aria-label={k === "light" ? "라이트 모드" : "다크 모드"} className={"flex items-center justify-center rounded-full px-3 py-1.5 leading-none transition-colors " + (curTheme === k ? "bg-white text-gray-900 shadow-sm dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{icon}</button>
+          ))}
+        </div>
+      )}
+
       <div className="relative w-full max-w-[400px] overflow-hidden rounded-[24px] bg-white/90 ring-1 ring-black/[0.06] shadow-[0_28px_80px_-24px_rgba(30,30,80,0.4)] backdrop-blur-xl dark:bg-gray-900/85 dark:ring-white/10"
         style={{ animation: "loPop .5s cubic-bezier(.34,1.42,.64,1) both" }}>
         <style>{"@keyframes loPop{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}@keyframes loUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}"}</style>
@@ -84,21 +93,11 @@ export default function LoginPage() {
               <span className="text-gray-900 dark:text-gray-50">axlgeph</span><span className="text-indigo-600 dark:text-indigo-400">.report</span>
             </span>
             <span className="mt-0.5 text-[11px] font-semibold italic leading-none text-gray-400 dark:text-gray-500">beta</span>
-            <div className="ml-auto flex items-center gap-2">
-              {/* 한/영 선택(기본 KO) — 넉넉한 알약 토글 */}
-              <div className="flex items-center rounded-full bg-gray-100 p-1 text-[12.5px] font-bold ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
-                {(["ko", "en"] as const).map((l) => (
-                  <button key={l} type="button" onClick={() => setLang(l)} aria-label={l === "ko" ? "한국어" : "English"} className={"rounded-full px-3 py-1 leading-none transition-colors " + (lang === l ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{l === "ko" ? "KO" : "EN"}</button>
-                ))}
-              </div>
-              {/* 라이트/다크 — 대시보드와 동일 스타일(흰 스위치) */}
-              {themeMounted && (
-                <div className="flex items-center rounded-full bg-gray-100 p-1 ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
-                  {([["light", SunIcon] as const, ["dark", MoonIcon] as const]).map(([k, icon]) => (
-                    <button key={k} type="button" onClick={() => setTheme(k)} aria-label={k === "light" ? "라이트 모드" : "다크 모드"} className={"flex items-center justify-center rounded-full px-3 py-1 leading-none transition-colors " + (curTheme === k ? "bg-white text-gray-900 shadow-sm dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{icon}</button>
-                  ))}
-                </div>
-              )}
+            {/* 한/영 선택(기본 KO) — 넉넉한 알약 토글 */}
+            <div className="ml-auto flex items-center rounded-full bg-gray-100 p-1 text-[12.5px] font-bold ring-1 ring-gray-200 dark:bg-gray-800 dark:ring-gray-700">
+              {(["ko", "en"] as const).map((l) => (
+                <button key={l} type="button" onClick={() => setLang(l)} aria-label={l === "ko" ? "한국어" : "English"} className={"rounded-full px-3 py-1 leading-none transition-colors " + (lang === l ? "bg-indigo-600 text-white shadow-sm" : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200")}>{l === "ko" ? "KO" : "EN"}</button>
+              ))}
             </div>
           </div>
 
