@@ -763,7 +763,6 @@ function pesoKo(v){ if(v>=1e8) return (v/1e8).toFixed(1)+"억 페소"; if(v>=1e4
 function usdOf(v){ const u=v/PHPUSD; if(u>=1e9) return "$"+(u/1e9).toFixed(1)+"B"; if(u>=1e6) return "$"+(u/1e6).toFixed(1)+"M"; if(u>=1e3) return "$"+(u/1e3).toFixed(1)+"K"; return "$"+Math.round(u); }
 const MAPMETRICS=[
   {key:"none",     label:"전체", none:true},
-  {key:"opp",      label:"종합 기회점수", val:oppScore, fmt:v=>Math.round(v)+"점", src:"합성(PSA·DHS)", yr:"2020–25"},
   {key:"infra",    label:"인프라 투자(DPWH)", val:infraVal, fmt:v=>"₱"+Math.round(v)+"B", src:"DPWH Transparency", yr:"2019–26"},
   {key:"pop_n",    label:"인구",         val:name=>{const v=ECON[name]&&ECON[name].pop_n;return v!=null?v:NaN;}, fmt:v=>Math.round(v*100).toLocaleString()+"만명", src:"PSA 인구총조사", yr:"2020"},
   {key:"income_real",label:"평균 가구소득(연)", val:name=>{const v=ECON[name]&&ECON[name].income_real;return v!=null?v:NaN;}, fmt:v=>"연 "+pesoKo(v)+" ("+usdOf(v)+")", src:"PSA 가계소득지출조사(FIES)", yr:"2023"},
@@ -847,7 +846,6 @@ function renderLegend(m,ext){
     `<span class="lg-mx">${m.fmt(ext.max)}</span>`;
 }
 const MAP_GROUPS=[
-  {label:"★ 종합 기회점수", keys:["opp"]},
   {label:"경제규모 (GRDP·2025)", keys:["grdp_pc","grdp_size"]},
   {label:"가전보급·기회 (DHS 2022)", keys:["own_ref","own_tv","electrif","ref_gap"]},
   {label:"인구·소득", keys:["pop_n","income_real","poverty"]},
