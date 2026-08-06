@@ -718,8 +718,8 @@ export default function EnergyLabelView() {
 
       <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
-          {/* 채널별 가격비교식 필터 바 — 제품·설치·용량·지표 드롭다운 나란히. 선택한 지표 1개만 표시 */}
-          <div className="mb-3.5 flex flex-wrap items-center gap-2">
+          {/* 채널별 가격비교식 필터 바 — 제품·설치·용량·지표 드롭다운 나란히(테두리 묶음). 선택한 지표 1개만 표시 */}
+          <div className="mb-3.5 flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
             <PmDrop label={T("제품", "Product")} sel={cat} options={CATS.map((c) => ({ k: c.key, t: T(c.label, CAT_EN[c.key] ?? c.label) }))} onSelect={(k) => { setCat(k); setTyp("전체"); setSegIdx(0) }} />
             {hasType && <PmDrop label={T("설치", "Type")} sel={typ} options={["전체", ...types].map((t) => ({ k: t, t: T(t, t === "전체" ? "All" : t) }))} onSelect={setTyp} />}
             <PmDrop label={T("용량", "Cap.")} sel={String(segIdx)} options={segs.map((s, i) => ({ k: String(i), t: `${s.k} (${segCounts[i] || 0})` }))} onSelect={(k) => setSegIdx(Number(k))} />

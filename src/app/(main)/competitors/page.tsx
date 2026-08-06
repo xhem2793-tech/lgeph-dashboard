@@ -364,7 +364,7 @@ export default function Competitors() {
           className="min-w-0"
           style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}
         >
-          {view !== "movers" && view !== "asp" && view !== "board" && view !== "deals" && view !== "outlier" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+          {view !== "movers" && view !== "asp" && view !== "board" && view !== "deals" && view !== "outlier" && view !== "energy" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
             <h2 className="flex items-baseline gap-2 text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">
               {active?.label}
               <span className={"rounded border px-1 py-px text-[9px] font-semibold " + BADGE[active?.status ?? "plan"].c}>
