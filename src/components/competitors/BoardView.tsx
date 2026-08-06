@@ -118,12 +118,19 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
     })
     return out
   }, [D, curDate, prevDate, cat, brands, effForm, effSize, q, sorts]) // eslint-disable-line
-  // 클릭 한 번 = 그 컬럼 기준 정렬(재클릭 시 오름/내림 토글). 별도 키 불필요.
-  const setS = (k: string) => setSorts((cur) => (cur[0]?.k === k ? [{ k, asc: !cur[0].asc }] : [{ k, asc: true }]))
-  // 정렬 표시 — 활성은 방향(▲▼·인디고), 비활성은 옅은 ⇅(클릭 가능 안내)
-  const arrow = (k: string) => (sorts[0]?.k === k
-    ? <span className="ml-0.5 text-indigo-500">{sorts[0].asc ? "▲" : "▼"}</span>
-    : <span className="ml-0.5 text-[8px] text-gray-300 dark:text-gray-600">⇅</span>)
+  // 다중 정렬 — 클릭할 때마다 누적: 새 컬럼=오름차순 추가 → 재클릭=내림차순 → 3번째=해제. SHIFT 불필요.
+  const setS = (k: string) => setSorts((cur) => {
+    const i = cur.findIndex((s) => s.k === k)
+    if (i === -1) return [...cur, { k, asc: true }]
+    if (cur[i].asc) { const n = cur.slice(); n[i] = { k, asc: false }; return n }
+    return cur.filter((_, j) => j !== i)
+  })
+  // 정렬 표시 — 활성 컬럼만 방향(▲▼·인디고), 비활성은 아이콘 없음
+  const arrow = (k: string) => {
+    const s = sorts.find((s) => s.k === k)
+    if (!s) return null
+    return <span className="ml-0.5 text-indigo-500">{s.asc ? "▲" : "▼"}</span>
+  }
 
   // 원본(raw) 일일 거래선 가격 CSV — 수집 원본 9컬럼 전부 + 편의 파생(분류약자·유형·용량·모델코드).
   //  실제 수집: d·retailer·brand·category·model·capacity(상세 스펙 원문)·price·srp·url. onDate=해당 날짜만, null=전체. 엑셀 호환(BOM+CRLF)
