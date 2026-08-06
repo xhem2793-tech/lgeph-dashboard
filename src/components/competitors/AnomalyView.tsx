@@ -48,6 +48,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
   const [kind, setKind] = React.useState("전체")
   const [catF, setCatF] = React.useState("전체")
   const [dayF, setDayF] = React.useState("전체")
+  const [ownF, setOwnF] = React.useState("전체") // 대상: 전체·자사(LG)·경쟁사
   const DAY_LABEL: Record<string, string> = { today: T("오늘", "Today"), yesterday: T("어제", "Yesterday") }
   const R = rows ?? []
   const A = ads ?? []
@@ -116,7 +117,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
   // 말풍선 스트림 — 날짜(오늘/어제) > 말풍선(제품 묶음: 브랜드+모델). 각 말풍선 안에 거래선별 변동(펼침).
   // 묶음 기준: 브랜드+제품(title)+신호종류 → 대표 신호 + 거래선 all. 심각도>점수 순, 같은 브랜드는 인접.
   const byDay = React.useMemo(() => {
-    const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF))
+    const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF) && (ownF === "전체" || (ownF === "own" ? s.own : !s.own)))
     const DAY_ORDER: ("today" | "yesterday")[] = ["today", "yesterday"]
     return DAY_ORDER.map((day) => {
       const ds = filtered.filter((s) => s.day === day)
@@ -129,7 +130,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       }).sort((a, b) => a.order - b.order || (a.own === b.own ? 0 : a.own ? 1 : -1) || a.brand.localeCompare(b.brand) || b.score - a.score)
       return { day, bubbles, n: ds.length }
     }).filter((d) => d.n > 0)
-  }, [signals, kind, catF, dayF])
+  }, [signals, kind, catF, dayF, ownF])
   const total = byDay.reduce((s, d) => s + d.n, 0)
 
   const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
@@ -150,6 +151,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       {/* 필터바 — 채널비교식 드롭다운(날짜·제품·신호) */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <PmDrop label={T("날짜", "Date")} sel={dayF} options={[{ k: "전체", t: T("전체", "All") }, { k: "today", t: DAY_LABEL.today }, { k: "yesterday", t: DAY_LABEL.yesterday }]} onSelect={setDayF} />
+        <PmDrop label={T("대상", "Scope")} sel={ownF} options={[{ k: "전체", t: T("전체", "All") }, { k: "own", t: T("자사 LG", "LG") }, { k: "comp", t: T("경쟁사", "Rivals") }]} onSelect={setOwnF} />
         <PmDrop label={T("제품", "Div")} sel={catF} options={["전체", ...CATS].filter((c) => c === "전체" || (catCounts[c] ?? 0) > 0).map((c) => ({ k: c, t: c === "전체" ? T("전체", "All") : (CAT_LABEL[c] ?? c) }))} onSelect={setCatF} />
         <PmDrop label={T("신호", "Signal")} sel={kind} options={KIND_FILTERS.map((f) => ({ k: f.k, t: f.k === "전체" ? T("전체", "All") : KIND_LABEL[f.k] }))} onSelect={setKind} />
         <span className="ml-auto hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
@@ -183,11 +185,11 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                     : bg.sev === "warn" ? "border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10"
                     : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10"
                   return (
-                  <div key={bg.key} className={"flex items-end gap-2 " + (bg.own ? "flex-row-reverse" : "")} style={{ animation: "rowIn .3s ease both" }}>
+                  <div key={bg.key} className="flex items-end gap-2" style={{ animation: "rowIn .3s ease both" }}>
                     {/* 아바타(브랜드 이니셜) */}
                     <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
                     {/* 말풍선 */}
-                    <div className={"relative max-w-[88%] rounded-2xl border px-3 py-2 shadow-sm " + bub + (bg.own ? " rounded-br-sm" : " rounded-bl-sm")}>
+                    <div className={"relative max-w-[88%] rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm " + bub}>
                       <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                         <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
                         <span className={"whitespace-nowrap text-[12.5px] font-bold " + (bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{bg.brand}</span>
