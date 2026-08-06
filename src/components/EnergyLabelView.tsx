@@ -152,25 +152,47 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
           <IcoBtn onClick={() => setBig(true)} title={T("크게 보기 + 데이터 표", "Expand + data table")} d={ICO.expand} />
         </span>
       </div>
-      <div key={on ? "in" : "out"} className="mt-2 flex h-[200px] items-center justify-center overflow-hidden">{on ? children : null}</div>
-      {/* 타 페이지 ChartCard와 동일 레이아웃 — 의미 줄 + 접이식 LG 인사이트 */}
-      <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {meaning}</p>
-      {ai && (
-        <>
-          <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[10.5px] font-bold text-teal-600 dark:text-teal-400 transition-colors hover:text-teal-700 dark:hover:text-teal-300">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
-            {T("LG 인사이트", "LG Insight")}
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
-          </button>
-          <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}>
-            <div className="overflow-hidden">
-              <div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
-                <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
+      {/* 인라인 확대 레이아웃 — 좌: 큰 차트+의미·인사이트 / 우: 정렬 가능한 데이터 표 */}
+      <div className="mt-2 flex flex-col gap-4 lg:flex-row">
+        <div className="flex min-w-0 flex-col lg:w-[58%]">
+          <div key={on ? "in" : "out"} className="flex h-[300px] items-center justify-center overflow-hidden sm:h-[360px]">{on ? (bigChildren ?? children) : null}</div>
+          <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {meaning}</p>
+          {ai && (
+            <>
+              <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[10.5px] font-bold text-teal-600 dark:text-teal-400 transition-colors hover:text-teal-700 dark:hover:text-teal-300">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
+                {T("LG 인사이트", "LG Insight")}
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+              </button>
+              <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}>
+                <div className="overflow-hidden">
+                  <div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
+                    <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
+                  </div>
+                </div>
               </div>
+            </>
+          )}
+        </div>
+        {csv && (
+          <div className="flex min-h-0 flex-col lg:w-[42%] lg:border-l lg:border-gray-100 lg:dark:border-gray-800 lg:pl-4">
+            <div className="mb-2 flex shrink-0 flex-wrap items-center gap-1.5">
+              <span className="mr-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("정렬", "Sort")}</span>
+              <button type="button" onClick={() => setSortCol(-1)} className={"rounded-md px-2 py-1 text-[11px] font-semibold transition-all " + (sortCol < 0 ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-500/15")}>{T("기본순", "Default")}</button>
+              {csv.head.map((h, i) => (
+                <button key={i} type="button" onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"rounded-md px-2 py-1 text-[11px] font-semibold transition-all " + (sortCol === i ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-500/15")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</button>
+              ))}
             </div>
+            <div className="max-h-[420px] min-h-0 flex-1 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
+              <table className="w-full border-collapse text-[12px]">
+                <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="border-b border-gray-200 dark:border-gray-800">{csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-1.5 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</th>)}</tr></thead>
+                <tbody>{sortedRows.map((r, ri) => <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (/^lg$/i.test(String(r[0])) ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>{r.map((c, ci) => <td key={ci} className={"py-1.5 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}</tr>)}</tbody>
+              </table>
+            </div>
+            <p className="mt-1.5 shrink-0 text-[10px] text-gray-400 dark:text-gray-500">{T("열 클릭 시 정렬(재클릭=오름/내림) · ", "Click a column to sort · ")}<b className="text-teal-600 dark:text-teal-400">{T("LG 강조", "LG in teal")}</b></p>
           </div>
-        </>
-      )}
+        )}
+      </div>
     </div>
     {big && typeof document !== "undefined" && createPortal(
       <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-8" style={{ animation: "veilIn .24s ease both" }} onClick={() => setBig(false)}>
