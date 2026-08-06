@@ -17,19 +17,25 @@ const BRAND_DOMAIN: Record<string, string> = {
   LG: "lg.com", Samsung: "samsung.com", Panasonic: "panasonic.com", TCL: "tcl.com", Hisense: "hisense.com",
   Carrier: "carrier.com", Midea: "midea.com", Sony: "sony.com", Haier: "haier.com", Sharp: "sharp.com",
   Toshiba: "toshiba.com", Whirlpool: "whirlpool.com", Daikin: "daikin.com", Gree: "gree.com", Skyworth: "skyworth.com",
-  Devant: "devant.com.ph", Kolin: "kolin.ph", Koppel: "koppel.com.ph", Condura: "condura.com",
+  Devant: "devant.com.ph", Kolin: "kolinphil.com.ph", Koppel: "koppel.com.ph", Condura: "condura.com",
   Fujidenzo: "fujidenzo.com.ph", Prestiz: "prestiz.com.ph",
 }
 const RETAILER_DOMAIN: Record<string, string> = {
-  "SM Appliance": "smappliance.com", "Abenson": "abenson.com", "Anson's": "ansons.com.ph",
-  "Robinsons Appliances": "robinsonsappliances.com.ph", "Western Appliances": "westernappliances.com.ph",
+  "SM Appliance": "smappliance.com", "Abenson": "abenson.com", "Anson's": "ansons.ph",
+  "Robinsons Appliances": "robinsonsappliances.com.ph", "Western Appliances": "western.com.ph",
   "Emcor": "emcor.com.ph", "Addessa": "addessa.com.ph", "Home Credit": "homecredit.ph", "Imperial": "imperialappliance.com",
 }
 const IMPERIAL = "Imperial" // 9번 열 · 비활성(스크래핑 미연동)
 const SOON = "__soon" // 10번 열 · 비활성(준비중)
 // 로고 — Google 파비콘(정사각 128px)으로 전부 통일. 실패 시 이름 폴백.
 const favi = (domain: string) => `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
-const brandLogo = (b: string): string | null => BRAND_DOMAIN[b] ? favi(BRAND_DOMAIN[b]) : null
+// 로컬 고화질 로고(public/logos) — 주요 8종. 나머지는 파비콘.
+const BRAND_LOCAL: Record<string, string> = {
+  LG: "/logos/lg.png", Samsung: "/logos/samsung-company-logo-south-korean-260nw-2394493913.webp",
+  Panasonic: "/logos/panasonic.png", TCL: "/logos/tcl.png", Hisense: "/logos/Hisense-Logo.png",
+  Carrier: "/logos/carrier.png", Midea: "/logos/midea.png", Sony: "/logos/sony.png",
+}
+const brandLogo = (b: string): string | null => BRAND_LOCAL[b] ?? (BRAND_DOMAIN[b] ? favi(BRAND_DOMAIN[b]) : null)
 const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? favi(RETAILER_DOMAIN[r]) : null
 const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none" }
 
@@ -213,7 +219,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                 <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="sticky top-0 z-20 flex h-[70px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-100 px-0.5 text-center transition-all duration-300 ease-out hover:scale-[1.03] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800 dark:hover:border-indigo-500/40" style={{ animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
                   {retailerLogo(ret) && (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
+                    <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-6 w-auto max-w-full object-contain" />
                   )}
                   <span className="w-full break-words px-0.5 text-center text-[11px] font-semibold leading-tight text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
                   <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
@@ -225,7 +231,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                   <div className={"sticky left-0 z-10 flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 text-center text-[11px] font-bold transition-all duration-300 ease-out hover:z-20 hover:scale-[1.03] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
                     {b && brandLogo(b) && (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
+                      <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-6 w-auto max-w-full object-contain" />
                     )}
                     <span className="w-full break-words leading-tight">{b ?? ""}</span>
                     {b && <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.rowTot[b] || 0}</span>}
