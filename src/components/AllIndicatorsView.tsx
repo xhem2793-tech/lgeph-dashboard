@@ -184,10 +184,19 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
     return order.filter((k) => m[k]?.length).map((k) => [k, m[k]] as [string, Row[]])
   }, [filtered, sort])
 
+  // 기간 문자열(연/분기/월/일 혼재)을 비교 가능한 '기간 종료 시점' 숫자로 정규화 — 월/분기/연이 섞여도 최신 데이터가 위로.
+  const periodEnd = (p: string): number => {
+    if (!p) return 0
+    const q = p.match(/^(\d{4})[-\s]*Q([1-4])/i); if (q) return +q[1] * 10000 + +q[2] * 3 * 100 + 31 // 분기 → 종료월
+    const ymd = p.match(/^(\d{4})-(\d{2})-(\d{2})/); if (ymd) return +ymd[1] * 10000 + +ymd[2] * 100 + +ymd[3]
+    const ym = p.match(/^(\d{4})-(\d{2})/); if (ym) return +ym[1] * 10000 + +ym[2] * 100 + 31
+    const y = p.match(/^(\d{4})/); if (y) return +y[1] * 10000 + 1231 // 연 → 연말
+    return 0
+  }
   const flat = useMemo(() => {
     if (sort !== "recent") return null
-    return [...filtered].sort((a, b) => (b.period || "").localeCompare(a.period || ""))
-  }, [filtered, sort])
+    return [...filtered].sort((a, b) => periodEnd(b.period || "") - periodEnd(a.period || "") || (b.period || "").localeCompare(a.period || ""))
+  }, [filtered, sort]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="flex flex-col gap-4">
