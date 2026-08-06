@@ -323,7 +323,7 @@ export default function Competitors() {
     <div className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes sparkDraw{to{stroke-dashoffset:0}}@keyframes navBounce{0%,70%,100%{transform:translateX(0)}78%{transform:translateX(3px)}86%{transform:translateX(-2px)}93%{transform:translateX(1px)}}"}</style>
 
-      <div className={"grid items-start gap-6 transition-[grid-template-columns] duration-[350ms] ease-[cubic-bezier(.22,1,.36,1)] " + (navOpen ? "lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7" : "lg:grid-cols-[34px_minmax(0,1fr)] lg:gap-4")}>
+      <div className={"grid items-start gap-6 transition-[grid-template-columns] duration-[350ms] ease-[cubic-bezier(.22,1,.36,1)] " + (navOpen ? "lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7" : "lg:grid-cols-[0px_minmax(0,1fr)] lg:gap-0")}>
         <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit overflow-hidden lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
           {/* 좌 메뉴 — 아이콘 헤더(접기 토글 포함)·그룹 라벨·우측 상태 메타 */}
           <div className={"flex items-center border-b border-gray-100 dark:border-gray-800 py-2.5 " + (navOpen ? "gap-1.5 px-2" : "justify-center px-0")}>
@@ -368,6 +368,14 @@ export default function Competitors() {
         </aside>
 
         <div style={{ animation: "fadeUp .5s ease both" }} className="flex min-h-[1200px] min-w-0 flex-col gap-4">
+        {/* 접힘 상태: 콘텐츠 상단에 눈에 띄는 '메뉴 펼치기' 버튼(가이드) */}
+        {!navOpen && (
+          <button type="button" onClick={() => setNavOpen(true)} aria-label={T("메뉴 펼치기", "Expand menu")}
+            className="hidden w-fit items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-[12px] font-semibold text-indigo-600 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow active:scale-95 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20 lg:inline-flex">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "navBounce 3s ease-in-out infinite" }}><path d="M9 3v18M14 9l3 3-3 3" /><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
+            {T("분석 메뉴", "Menu")}
+          </button>
+        )}
         <section
           key={view}
           className="min-w-0"
