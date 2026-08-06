@@ -38,7 +38,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
   const [form, setForm] = React.useState("전체")
   const [size, setSize] = React.useState("전체")
   const [q, setQ] = React.useState("")
-  const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "min", asc: false })
+  const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "lg", asc: false }) // 기본: LG 상단 우선
   const [selDate, setSelDate] = React.useState<string | null>(null)
   const D = daily ?? []
   const loading = daily === null
@@ -101,8 +101,10 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
     const dir = sort.asc ? 1 : -1
     const shopIdx = BOARD_SHOPS.findIndex((s) => s.k === sort.k)
     out.sort((a, b) => {
+      // 기본값: LG 상단 우선 → 그다음 최저가 오름차순
+      if (sort.k === "lg") { const la = a.brand === "LG" ? 0 : 1, lb = b.brand === "LG" ? 0 : 1; if (la !== lb) return la - lb; return (a.min ?? Infinity) - (b.min ?? Infinity) }
       let x: number | string | null = null, y: number | string | null = null
-      if (sort.k === "min") { x = a.min; y = b.min } else if (sort.k === "spread") { x = a.spread; y = b.spread } else if (sort.k === "brand") { x = a.brand; y = b.brand } else if (sort.k === "code") { x = a.code; y = b.code } else if (shopIdx >= 0) { x = a.cells[shopIdx]?.price ?? null; y = b.cells[shopIdx]?.price ?? null }
+      if (sort.k === "min") { x = a.min; y = b.min } else if (sort.k === "spread") { x = a.spread; y = b.spread } else if (sort.k === "brand") { x = a.brand; y = b.brand } else if (sort.k === "cat") { x = a.cat; y = b.cat } else if (sort.k === "form") { x = a.form; y = b.form } else if (sort.k === "star") { x = a.star; y = b.star } else if (sort.k === "srp") { x = a.srp; y = b.srp } else if (sort.k === "code") { x = a.code; y = b.code } else if (shopIdx >= 0) { x = a.cells[shopIdx]?.price ?? null; y = b.cells[shopIdx]?.price ?? null }
       if (x == null) return 1; if (y == null) return -1
       return (typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y))) * dir
     })
@@ -174,12 +176,12 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
           </colgroup>
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
             <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("브랜드", "Brand")}</th>
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("제품", "Div")}</th>
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("유형", "Type")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("brand")}>{T("브랜드", "Brand")}{arrow("brand")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("cat")}>{T("제품", "Div")}{arrow("cat")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("form")}>{T("유형", "Type")}{arrow("form")}</th>
               <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("code")}>{T("모델", "Model")}{arrow("code")}</th>
-              <th className="border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title={T("New DOE 에너지등급", "New DOE energy rating")}>★</th>
-              <th className="whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center">SRP</th>
+              <th className="cursor-pointer border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title={T("New DOE 에너지등급", "New DOE energy rating")} onClick={() => setS("star")}>★{arrow("star")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("srp")}>SRP{arrow("srp")}</th>
               {BOARD_SHOPS.map((s) => (
                 <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
               ))}
