@@ -85,10 +85,11 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                   <div key={ci} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}
                     className="flex aspect-square w-full flex-col items-center justify-center rounded-md text-center transition-transform duration-150 ease-out hover:z-10 hover:scale-[1.12] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1" }}>
                     <span className="text-[15px] font-bold tabular-nums leading-none">{t || "·"}</span>
-                    {(d != null || oo > 0) && (
-                      <span className="mt-0.5 flex flex-wrap items-center justify-center gap-x-1 text-[8.5px] font-semibold leading-tight" style={{ color: light ? "rgba(255,255,255,0.9)" : undefined }}>
-                        {d != null && d !== 0 && <span className={light ? "" : d > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}>{d > 0 ? "▲" + d : "▼" + -d}</span>}
-                        {oo > 0 && <span className={light ? "" : "text-amber-600 dark:text-amber-400"}>{oo}{T("품", "x")}</span>}
+                    {t > 0 && (
+                      <span className="mt-0.5 flex flex-col items-center gap-0 text-[8.5px] font-semibold leading-tight" style={{ color: light ? "rgba(255,255,255,0.92)" : undefined }}>
+                        {di === 0 && <span className={light ? "" : "text-teal-700 dark:text-teal-300"}>{T("활성 ", "live ")}{Math.round(((t - oo) / t) * 100)}%</span>}
+                        {d != null && <span className={light ? "" : d > 0 ? "text-emerald-600 dark:text-emerald-400" : d < 0 ? "text-rose-500 dark:text-rose-400" : "text-gray-400 dark:text-gray-500"}>{T("어제 ", "vs ")}{d > 0 ? "▲" + d : d < 0 ? "▼" + -d : "±0"}</span>}
+                        {oo > 0 && <span className={light ? "" : "text-amber-600 dark:text-amber-400"}>{T("품절 ", "OOS ")}{oo}</span>}
                       </span>
                     )}
                   </div>
@@ -99,9 +100,10 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         </div>
       </div>
       <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9.5px] text-gray-400 dark:text-gray-500">
-        <span>{T("셀 큰 숫자=활성 SKU(해당일 전시 제품 수) · 색 진할수록 많음", "Big number = active SKUs (listed that day) · darker = more")}</span>
-        <span><b className="text-emerald-600 dark:text-emerald-400">▲</b>/<b className="text-rose-500 dark:text-rose-400">▼</b> {T("어제대비 증감", "vs prev")}</span>
-        <span><b className="text-amber-600 dark:text-amber-400">n품</b> {T("품절 수(오늘)", "OOS count (today)")}</span>
+        <span>{T("셀 큰 숫자=활성 SKU(전시 제품 수) · 색 진할수록 많음", "Big number = active SKUs (listed) · darker = more")}</span>
+        <span><b className="text-teal-700 dark:text-teal-300">{T("활성 %", "live %")}</b> {T("전시 중 재고 비율=(활성−품절)/활성", "in-stock share = (active−OOS)/active")}</span>
+        <span><b className="text-emerald-600 dark:text-emerald-400">어제 ▲</b>/<b className="text-rose-500 dark:text-rose-400">▼</b> {T("어제대비 증감", "vs prev")}</span>
+        <span><b className="text-amber-600 dark:text-amber-400">{T("품절 n", "OOS n")}</b> {T("오늘 품절 수", "OOS today")}</span>
         <span className="ml-auto tabular-nums">{T("총 활성 SKU", "Total active")} <b className="text-gray-600 dark:text-gray-300">{data.grand.toLocaleString()}</b></span>
       </p>
         </>)}
