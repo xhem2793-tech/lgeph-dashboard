@@ -111,7 +111,10 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
     return out
   }, [D, curDate, prevDate, cat, brands, effForm, effSize, q, sort]) // eslint-disable-line
   const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
-  const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : null)
+  // 정렬 표시 — 활성 컬럼은 방향(▲▼·인디고), 비활성은 옅은 정렬가능 아이콘(⇅)로 클릭 가능함을 안내
+  const arrow = (k: string) => (sort.k === k
+    ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span>
+    : <span className="ml-0.5 text-[8px] text-gray-300 transition-colors group-hover:text-gray-400 dark:text-gray-600">⇅</span>)
 
   // 원본(raw) 일일 거래선 가격 CSV — 수집 원본 9컬럼 전부 + 편의 파생(분류약자·유형·용량·모델코드).
   //  실제 수집: d·retailer·brand·category·model·capacity(상세 스펙 원문)·price·srp·url. onDate=해당 날짜만, null=전체. 엑셀 호환(BOM+CRLF)
