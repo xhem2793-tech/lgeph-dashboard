@@ -681,6 +681,8 @@ export default function EnergyLabelView() {
   const segs = SEG[cat] || []
   const hasType = cat === "acu" || cat === "ref"
   const catRows = useMemo(() => rows.filter((r) => r.category === cat && r.brand && r.eff != null && r.eff > 0), [rows, cat])
+  // DOE 공식 라벨 데이터 기준일(as_of_date) — 스크랩일이 아니라 정부 공식 유효일 기준으로 '최종 갱신' 표기
+  const doeAsOf = useMemo(() => rows.reduce<string | null>((m, r) => (r.asOf && (!m || r.asOf > m) ? r.asOf : m), null), [rows])
   const types = useMemo(() => hasType ? Array.from(new Set(catRows.map((r) => typeOf(cat, r.stype)))).filter((t) => t !== "기타") : [], [catRows, hasType, cat])
   useEffect(() => { setTyp("전체") }, [cat])
   const byType = (r: EnergyRow) => typ === "전체" || typeOf(cat, r.stype) === typ
@@ -817,6 +819,8 @@ export default function EnergyLabelView() {
             {hasType && <PmDrop label={T("유형", "Type")} sel={typ} options={["전체", ...types].map((t) => ({ k: t, t: T(t, t === "전체" ? "All" : t) }))} onSelect={setTyp} />}
             <PmDrop label={T("용량", "Cap.")} sel={String(segIdx)} options={segs.map((s, i) => ({ k: String(i), t: `${s.k} (${segCounts[i] || 0})` }))} onSelect={(k) => setSegIdx(Number(k))} />
             <PmDrop label={T("지표", "Metric")} sel={String(metricSel)} options={METRICS.filter((m) => !m.acuOnly || cat === "acu").map((m) => ({ k: String(m.idx), t: T(m.ko, m.en) }))} onSelect={(k) => setMetricSel(Number(k))} />
+            {/* 최종 갱신 — DOE 공식 라벨 데이터 기준일(스크랩일 아님). 정부 공식 출처 기반. */}
+            {doeAsOf && <span className="ml-auto hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex" title={T("필리핀 에너지부(DOE) 공식 에너지라벨 등록 데이터 기준일", "As-of date of the official Philippine DOE energy-label registry")}>{T("DOE 공식 기준", "DOE official as of")} {doeAsOf.replace(/-/g, ".")}<span className="rounded border border-teal-200 dark:border-teal-500/30 bg-teal-50 dark:bg-teal-500/10 px-1 py-px text-[10px] font-semibold text-teal-700 dark:text-teal-300">{T("정부", "Gov")}</span></span>}
           </div>
 
 

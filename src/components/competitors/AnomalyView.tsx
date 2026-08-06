@@ -209,7 +209,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
               {/* 날짜는 상단 네비게이터로 선택 — 여기선 건수만 표시 */}
               <div className="mb-1.5 flex items-center gap-2 px-0.5"><span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{DAY_LABEL[dg.day]} <span className="tabular-nums text-gray-400 dark:text-gray-500">{mmdd}</span></span><span className="text-[11px] text-gray-400 dark:text-gray-500">· {dg.n}{T("건", "")}</span></div>
               {/* 브랜드별 말풍선 스트림(전부 왼쪽·시각 표시) — 브랜드만 분리 */}
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-3.5">
                 {dg.bubbles.map((bg) => { const s = bg.rep; const sm = SEV_META[bg.sev]
                   const bub = bg.own ? "border-indigo-200 bg-indigo-50/70 dark:border-indigo-500/30 dark:bg-indigo-500/10"
                     : bg.sev === "alert" ? "border-rose-200 bg-rose-50/70 dark:border-rose-500/30 dark:bg-rose-500/10"
