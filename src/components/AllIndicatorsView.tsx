@@ -5,7 +5,7 @@ import { dataProvenance, allIndicatorLatest, indicatorSeries, econSpark, fmtStam
 import { Segmented } from "@/components/Segmented"
 import { LineChart, Lg } from "@/components/EconChart"
 import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
-import { INDICATOR_DESC } from "@/lib/indicatorDesc"
+import { INDICATOR_DESC, INDICATOR_INSIGHT } from "@/lib/indicatorDesc"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
 import { PmDrop } from "@/components/competitors/shared"
 import { T, pickL } from "@/lib/i18n"
@@ -336,6 +336,73 @@ function IndListTable({ items, q, fav, onFav, onDetail, showCat }: { items: Row[
 }
 
 // 지표 자세히보기 — 시계열(월/분기/연)을 엑셀 표처럼, 전월비·전년비 반영
+// 엑셀형 연도×기간 피벗 — 행=연도(최신 위), 열=월(1~12)/분기(Q1~4)/반기(상·하)/연간. 값·전년비(YoY%) 토글.
+// 월 데이터가 없는 분기/연 지표는 해당 열만 노출(월 열 생략). 집계=기간 평균(연평균·분기평균 등).
+function YearPivot({ series, native, u }: { series: { date: string; value: number }[]; native: "month" | "quarter" | "year"; u: { prefix?: string; suffix?: string } }) {
+  const [mode, setMode] = useState<"val" | "yoy">("val")
+  const mmap = useMemo(() => { const m = new Map<string, number>(); for (const p of series) m.set(p.date.slice(0, 4) + "-" + Number(p.date.slice(5, 7)), p.value); return m }, [series])
+  const years = useMemo(() => Array.from(new Set(series.map((p) => p.date.slice(0, 4)))).sort((a, b) => Number(b) - Number(a)), [series])
+  type Col = { key: string; label: string; kind: "m" | "q" | "h" | "a"; idx: number; grp: string }
+  const cols = useMemo(() => {
+    const c: Col[] = []
+    if (native === "month") for (let m = 1; m <= 12; m++) c.push({ key: "m" + m, label: String(m), kind: "m", idx: m, grp: T("월", "Month") })
+    if (native !== "year") for (let q = 1; q <= 4; q++) c.push({ key: "q" + q, label: "Q" + q, kind: "q", idx: q, grp: T("분기", "Qtr") })
+    if (native !== "year") { c.push({ key: "h1", label: T("상반", "H1"), kind: "h", idx: 1, grp: T("반기", "Half") }); c.push({ key: "h2", label: T("하반", "H2"), kind: "h", idx: 2, grp: T("반기", "Half") }) }
+    c.push({ key: "a", label: T("연간", "Yr"), kind: "a", idx: 0, grp: T("연간", "Annual") })
+    return c
+  }, [native])
+  const avg = (a: number[]) => (a.length ? a.reduce((x, y) => x + y, 0) / a.length : null)
+  const present = (y: string, ms: number[]) => ms.map((m) => mmap.get(y + "-" + m)).filter((v): v is number => v != null)
+  const cellVal = (y: string, c: Col): number | null => {
+    if (c.kind === "m") { const v = mmap.get(y + "-" + c.idx); return v == null ? null : v }
+    if (c.kind === "q") return avg(present(y, [1, 2, 3].map((x) => x + (c.idx - 1) * 3)))
+    if (c.kind === "h") return avg(present(y, c.idx === 1 ? [1, 2, 3, 4, 5, 6] : [7, 8, 9, 10, 11, 12]))
+    return avg(present(y, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]))
+  }
+  const disp = (y: string, c: Col): number | null => {
+    const cur = cellVal(y, c)
+    if (mode === "val") return cur
+    const prev = cellVal(String(Number(y) - 1), c)
+    return cur != null && prev != null && prev !== 0 ? ((cur - prev) / Math.abs(prev)) * 100 : null
+  }
+  const fmtCell = (v: number | null) => v == null ? "—" : mode === "val" ? (u.prefix || "") + fmtVal(v) + (u.suffix || "") : (v >= 0 ? "+" : "") + v.toFixed(1) + "%"
+  if (!years.length) return <div className="flex h-24 items-center justify-center text-[12px] text-gray-400">{T("데이터 없음", "No data")}</div>
+  // 그룹 경계(굵은 좌측선) — 그룹이 바뀌는 첫 열
+  const isGrpStart = (i: number) => i === 0 || cols[i].grp !== cols[i - 1].grp
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-2">
+        <span className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("표시", "Show")}</span>
+        <div className="inline-flex overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
+          {([["val", T("값", "Value")], ["yoy", T("전년비", "YoY")]] as const).map(([k, lb]) => (
+            <button key={k} type="button" onClick={() => setMode(k)} className={"px-2.5 py-1 text-[11px] font-semibold transition-colors " + (mode === k ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300")}>{lb}</button>
+          ))}
+        </div>
+        <span className="text-[10.5px] text-gray-400 dark:text-gray-500">{mode === "val" ? T("· 기간 평균(연평균·분기평균 등)", "· period average") : T("· 동일 기간 전년 대비 증감률", "· YoY change per column")}</span>
+      </div>
+      <div className="max-h-[420px] overflow-auto rounded-xl border border-gray-100 dark:border-gray-800">
+        <table className="w-full border-collapse text-[11px] tabular-nums">
+          <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800/95 backdrop-blur">
+            <tr className="text-gray-500 dark:text-gray-400">
+              <th className="sticky left-0 z-20 bg-gray-50 dark:bg-gray-800/95 px-3 py-2 text-left font-semibold">{T("연도", "Year")}</th>
+              {cols.map((c, i) => <th key={c.key} className={"px-2 py-2 text-right font-semibold whitespace-nowrap " + (isGrpStart(i) ? "border-l border-gray-200 dark:border-gray-700 " : "") + (c.kind === "a" ? "text-indigo-600 dark:text-indigo-300" : "")} title={c.grp}>{c.label}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {years.map((y) => (
+              <tr key={y} className="border-t border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/5">
+                <td className="sticky left-0 z-10 bg-white dark:bg-gray-900 px-3 py-1.5 text-left font-bold text-gray-800 dark:text-gray-100">{y}</td>
+                {cols.map((c, i) => { const v = disp(y, c); const col = mode === "yoy" && v != null ? (v >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400") : c.kind === "a" ? "font-bold text-gray-900 dark:text-gray-50" : v == null ? "text-gray-300 dark:text-gray-600" : "text-gray-700 dark:text-gray-200"
+                  return <td key={c.key} className={"px-2 py-1.5 text-right whitespace-nowrap " + (isGrpStart(i) ? "border-l border-gray-100 dark:border-gray-800 " : "") + col}>{fmtCell(v)}</td> })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
 function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onClose: () => void; onExcel: (r: Row) => void; onOpenChart: (cat: string) => void }) {
   const CAT_MI = buildCatMi()   // 렌더 시점 생성(언어 반영)
   const [series, setSeries] = useState<{ date: string; value: number }[] | null>(null)
@@ -398,8 +465,6 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
     }).reverse() // 최신 우선
   }, [winSeries, gran])
 
-  const label = (k: string) => (gran === "year" ? k + T("년", "") : gran === "quarter" ? k.replace("-", " ") : k.slice(0, 4) + "." + Number(k.slice(5)) + T("월", "M"))
-  const pct = (x: number | null) => (x == null ? "—" : (x >= 0 ? "+" : "") + x.toFixed(1) + "%")
   const gname: Record<string, string> = { month: T("월별", "Monthly"), quarter: T("분기별", "Quarterly"), year: T("연도별", "Annual") }
   const u = inferUnit(row.indicator, row.label || "")
   const chartData = useMemo(() => table.slice().reverse().map((t) => ({ k: t.k, v: t.v })), [table]) // 차트는 시간순(과거→최신)
@@ -438,61 +503,52 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
           ) : table.length === 0 ? (
             <div className="flex h-56 items-center justify-center text-[12.5px] text-gray-400">{T("시계열 데이터 없음", "No time-series data")}</div>
           ) : (
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
-              {/* 차트 카드(좌) — 경제지표 페이지와 동일한 LineChart. 토글(Segmented)은 카드에 상주해 슬라이드 애니메이션 유지 */}
-              <div className="min-w-0 rounded-xl border border-gray-100 p-3.5 dark:border-gray-800 lg:w-[56%]">
-                <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-                  <h4 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{enLabel(row.indicator, row.label)}</h4>
-                  <span className="shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
-                  <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: T("전체", "All") }]} /></span>
-                </div>
-                {/* 축 글씨가 넓은 모달에서 과대해지지 않도록 폭 제한 + SVG 텍스트 축소 */}
-                <style>{".detchart svg text{font-size:6.8px}"}</style>
-                {/* 기간 토글에 맞춰 차트/최신값만 부드럽게 리렌더(카드·토글은 유지) */}
-                <div key={"ch-" + win} style={{ animation: "bkFade .4s ease both" }}>
-                  <div className="mt-1.5 flex min-h-[26px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">
-                    <Lg c="#4f46e5" t={enLabel(row.indicator, row.label)} b />
-                    <span className="ml-auto tabular-nums text-gray-500 dark:text-gray-400">{T("최신", "Latest")} <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
+            <div className="flex flex-col gap-4">
+              {/* 상단: 좌 차트 카드 | 우 LG 인사이트 카드(지표별 3~4문장) */}
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-stretch">
+                {/* 차트 카드(좌) — 경제지표 페이지와 동일한 LineChart. 토글(Segmented)은 카드에 상주해 슬라이드 애니메이션 유지 */}
+                <div className="flex min-w-0 flex-col rounded-xl border border-gray-100 p-3.5 dark:border-gray-800 lg:w-[58%]">
+                  <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                    <h4 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{enLabel(row.indicator, row.label)}</h4>
+                    <span className="shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
+                    <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: T("전체", "All") }]} /></span>
                   </div>
-                  <div className="detchart mx-auto" style={{ maxWidth: 560 }}>
-                    <LineChart series={chSeries} labels={chLabels} decimals={chDec} unit={chUnit} />
+                  {/* 축 글씨가 넓은 화면에서 과대해지지 않도록 폭 제한 + SVG 텍스트 축소 */}
+                  <style>{".detchart svg text{font-size:6.8px}"}</style>
+                  {/* 기간 토글에 맞춰 차트/최신값만 부드럽게 리렌더(카드·토글은 유지) */}
+                  <div key={"ch-" + win} className="flex flex-1 flex-col justify-center" style={{ animation: "bkFade .4s ease both" }}>
+                    <div className="mt-1.5 flex min-h-[26px] flex-wrap items-start gap-x-3 gap-y-1 text-[10.5px]">
+                      <Lg c="#4f46e5" t={enLabel(row.indicator, row.label)} b />
+                      <span className="ml-auto tabular-nums text-gray-500 dark:text-gray-400">{T("최신", "Latest")} <b className="text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(chartData[chartData.length - 1]?.v ?? NaN) + (u.suffix || "")}</b></span>
+                    </div>
+                    <div className="detchart mx-auto w-full" style={{ maxWidth: 620 }}>
+                      <LineChart series={chSeries} labels={chLabels} decimals={chDec} unit={chUnit} />
+                    </div>
                   </div>
                 </div>
-                {/* 의미 + LG 인사이트 — 페이지 차트카드와 동일 위치 */}
-                <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {(CAT_MI[row.cat] || CAT_MI.etc).mean}</p>
-                <div className="mt-2 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
-                  <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">{T("LG 인사이트", "LG Insight")}</b> {(CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
+                {/* LG 인사이트 카드(우) — 지표별 큐레이션(INDICATOR_INSIGHT) 우선, 없으면 카테고리 인사이트 */}
+                <div className="flex min-w-0 flex-col rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-500/[0.06] p-4 lg:w-[42%]" style={{ animation: "bkFade .45s ease .06s both" }}>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg></span>
+                    <h4 className="text-[13.5px] font-bold text-gray-900 dark:text-gray-50">{T("LG 인사이트", "LG Insight")}</h4>
+                  </div>
+                  <p className="mt-2.5 text-[12.5px] leading-relaxed text-gray-700 dark:text-gray-200">{INDICATOR_INSIGHT[row.indicator] ?? (CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
+                  <p className="mt-3 border-t border-indigo-100 dark:border-indigo-500/20 pt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {(CAT_MI[row.cat] || CAT_MI.etc).mean}</p>
                 </div>
               </div>
-              {/* 엑셀형 표 카드(우) */}
-              <div key={"tb-" + win} className="min-w-0 overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800 lg:w-[44%]" style={{ animation: "bkFade .45s ease .06s both" }}>
-                <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
+              {/* 하단: 전폭 엑셀형 연도×기간 피벗(월·분기·반기·연간 + 전년비 토글) */}
+              <div className="min-w-0 rounded-xl border border-gray-100 dark:border-gray-800 p-3.5" style={{ animation: "bkFade .5s ease .1s both" }}>
+                <div className="mb-2.5 flex items-center gap-2">
                   <span className="h-[15px] w-1 rounded bg-indigo-500" />
-                  <h4 className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{T("시계열 표", "Time series")} <span className="text-[11px] font-semibold text-gray-400">{T("· 전기·전년 대비", "· vs. prior period · YoY")}</span></h4>
+                  <h4 className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{T("연도별 지표표", "Yearly matrix")} <span className="text-[11px] font-semibold text-gray-400">{T("· 월·분기·반기·연간", "· month·qtr·half·annual")}</span></h4>
                   <button type="button" onClick={() => onExcel(row)} className="ml-auto inline-flex items-center gap-1 rounded-md border border-emerald-200 dark:border-emerald-500/30 px-2 py-0.5 text-[10.5px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all hover:-translate-y-0.5 active:scale-95">{T("엑셀", "Excel")} ↓</button>
                 </div>
-                <div className="max-h-[320px] overflow-auto">
-                  <table className="w-full text-[12px]">
-                    <thead className="sticky top-0 bg-gray-50 dark:bg-gray-800/90 backdrop-blur"><tr className="text-left text-[10.5px] font-semibold uppercase text-gray-500 dark:text-gray-400">
-                      <th className="px-4 py-2">{T("기간", "Period")}</th><th className="px-3 py-2 text-right">{T("값", "Value")}</th><th className="px-3 py-2 text-right">{gran === "year" ? T("전년대비", "YoY") : gran === "quarter" ? T("전분기대비", "QoQ") : T("전월대비", "MoM")}</th>{gran !== "year" && <th className="px-4 py-2 text-right">{T("전년동기대비", "YoY")}</th>}
-                    </tr></thead>
-                    <tbody>
-                      {table.map((t) => (
-                        <tr key={t.k} className="border-t border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
-                          <td className="px-4 py-1.5 font-medium text-gray-800 dark:text-gray-100">{label(t.k)}</td>
-                          <td className="px-3 py-1.5 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{(u.prefix || "") + fmtVal(t.v) + (u.suffix || "")}</td>
-                          <td className={"px-3 py-1.5 text-right tabular-nums " + (t.mom == null ? "text-gray-300 dark:text-gray-600" : t.mom >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.mom)}</td>
-                          {gran !== "year" && <td className={"px-4 py-1.5 text-right tabular-nums " + (t.yoy == null ? "text-gray-300 dark:text-gray-600" : t.yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{pct(t.yoy)}</td>}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <YearPivot series={series} native={native as "month" | "quarter" | "year"} u={u} />
               </div>
             </div>
           )}
           </div>
-          <p className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{gname[gran]} {T("시계열 · 값=기간 말 관측 · 상승 ", "time series · Value = end-of-period observation · Up ")}<span className="text-rose-500">{T("적색", "red")}</span>{T("/하락 ", "/Down ")}<span className="text-emerald-500">{T("녹색", "green")}</span>{T(" · 출처 ", " · Source ")}{row.source}</p>
+          <p className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{gname[gran]} {T("시계열(차트) · 연도별 표=기간 평균(연평균·분기평균) · 전년비 ", "time series (chart) · yearly matrix = period average · YoY ")}<span className="text-rose-500">{T("상승 적색", "up red")}</span>{T("/", "/")}<span className="text-emerald-500">{T("하락 녹색", "down green")}</span>{T(" · 출처 ", " · Source ")}{row.source}</p>
         </div>
     </section>
   )
