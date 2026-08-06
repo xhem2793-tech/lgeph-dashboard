@@ -26,15 +26,10 @@ const RETAILER_DOMAIN: Record<string, string> = {
   "Emcor": "emcor.com.ph", "Addessa": "addessa.com.ph", "Home Credit": "homecredit.ph", "Imperial": "imperialappliance.com",
 }
 const IMPERIAL = "Imperial" // 9번 열 · 비활성(스크래핑 미연동)
-// 로컬 고화질 로고(public/logos) 우선 — 안 잡히던 8종 보강. 나머지는 Google 파비콘(안정적).
-const BRAND_LOCAL: Record<string, string> = {
-  LG: "/logos/lg.png", Samsung: "/logos/samsung-company-logo-south-korean-260nw-2394493913.webp",
-  Panasonic: "/logos/panasonic.png", TCL: "/logos/tcl.png", Hisense: "/logos/Hisense-Logo.png",
-  Carrier: "/logos/carrier.png", Midea: "/logos/midea.png", Sony: "/logos/sony.png",
-}
-// Google 파비콘 서비스(안정적, 64px) — Clearbit(종료)에서 교체.
-const brandLogo = (b: string): string | null => BRAND_LOCAL[b] ?? (BRAND_DOMAIN[b] ? `https://www.google.com/s2/favicons?domain=${BRAND_DOMAIN[b]}&sz=64` : null)
-const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? `https://www.google.com/s2/favicons?domain=${RETAILER_DOMAIN[r]}&sz=64` : null
+// 로고 — Google 파비콘(정사각 128px)으로 전부 통일(크기 일관). 실패 시 이름 폴백.
+const favi = (domain: string) => `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
+const brandLogo = (b: string): string | null => BRAND_DOMAIN[b] ? favi(BRAND_DOMAIN[b]) : null
+const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? favi(RETAILER_DOMAIN[r]) : null
 const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none" }
 
 function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
@@ -110,11 +105,11 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
               <span className="rounded bg-gray-100 px-1 text-[8px] font-semibold text-gray-400 dark:bg-gray-700 dark:text-gray-500">{T("준비중", "soon")}</span>
             </div>
           ) : ret ? (
-            <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="flex h-16 w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-indigo-500/40" style={{ animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: ci * 0.02 + "s" }}>
+            <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="flex h-16 w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-indigo-500/40" style={{ animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: ci * 0.02 + "s" }}>
               <span className="rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span>
               {retailerLogo(ret) && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-5 w-auto max-w-[56px] object-contain" />
+                <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
               )}
               <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
               <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
@@ -123,10 +118,10 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           {/* 본문 — 브랜드 10행(부족분 빈 칸) × 거래선 10열 */}
           {brSlots.map((b, bi) => (
             <React.Fragment key={bi}>
-              <div className={"sticky left-0 z-10 flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 text-center text-[12px] font-bold transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-20 hover:-translate-y-0.5 hover:scale-[1.05] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: bi * 0.02 + "s" }}>
+              <div className={"sticky left-0 z-10 flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 text-center text-[12px] font-bold transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-20 hover:-translate-y-0.5 hover:scale-[1.05] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: bi * 0.02 + "s" }}>
                 {b && brandLogo(b) && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-5 w-auto max-w-[56px] object-contain" />
+                  <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
                 )}
                 <span className="w-full break-words leading-tight">{b ?? ""}</span>
                 {b && <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.rowTot[b] || 0}</span>}
@@ -143,7 +138,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                 const rgb = teal ? "13,148,136" : "244,63,94"; const light = alpha > 0.55
                 return (
                   <div key={ci} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${dlt != null ? ` · ${T("어제대비", "vs prev")} ${dlt > 0 ? "+" : ""}${dlt}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}${t > 0 ? ` · ${T("활성율", "live")} ${Math.round(((t - oo) / t) * 100)}%` : ""}`}
-                    className="flex h-16 w-full items-center justify-center rounded-md text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", color: alpha > 0 ? (light ? "#fff" : teal ? "#0f766e" : "#9f1239") : "#cbd5e1", animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(bi * 10 + ci, 44) * 0.012 + "s" }}>
+                    className="flex h-16 w-full items-center justify-center rounded-md text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", color: alpha > 0 ? (light ? "#fff" : teal ? "#0f766e" : "#9f1239") : "#cbd5e1", animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(bi * 10 + ci, 44) * 0.012 + "s" }}>
                     <span className="text-[19px] font-bold tabular-nums xl:text-[23px]">{disp}</span>
                   </div>
                 ) })}
@@ -160,7 +155,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
       </p>
         </>)}
       </div>
-      <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}@keyframes covPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}"}</style>
+      <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}@keyframes covPop{from{opacity:0;transform:translateY(7px) scale(.97)}to{opacity:1;transform:none}}"}</style>
     </div>
   )
 }
