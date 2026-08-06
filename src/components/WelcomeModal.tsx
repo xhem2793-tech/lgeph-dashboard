@@ -71,8 +71,8 @@ export default function WelcomeModal() {
             </div>
           </div>
           <h2 className="relative mt-3.5 text-[20px] font-extrabold leading-[1.25] tracking-tight" style={{ animation: "fadeUp .55s cubic-bezier(.22,1,.36,1) both", animationDelay: ".17s" }}>
-            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300">{T("AX 필리핀법인", "AX Philippines")}</span>
-            <span className="block text-gray-900 dark:text-gray-50">{T("마켓 인텔리전스 대시보드", "Market Intelligence Dashboard")}</span>
+            <span className="bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-500 bg-clip-text text-transparent dark:from-indigo-300 dark:via-violet-300 dark:to-fuchsia-300">{T("필리핀법인", "Philippines")}</span>
+            <span className="block text-gray-900 dark:text-gray-50">{T("AX 마켓 인텔리전스 대시보드", "AX Market Intelligence Dashboard")}</span>
           </h2>
         </div>
 
