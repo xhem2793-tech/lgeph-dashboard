@@ -3,6 +3,7 @@
 // 유통 히트맵 — 스크래핑 커버리지(가로=거래선, 세로=브랜드). 셀=선택일 전시(스크랩)된 제품 수(=pN 존재).
 // 지표: SKU총갯수·진열점유율(SOS)·활성화율·품절갯수·품절율 / 날짜 네비 / 제품 / 셀 클릭 드릴다운 / CSV / LG갭 KPI.
 import React from "react"
+import { createPortal } from "react-dom"
 import { T } from "@/lib/i18n"
 import { fmtStamp, oosStreaks, type PriceRow } from "@/lib/supabase"
 import { md, peso, pmShopLabel, PmDrop, catLabel } from "@/components/competitors/shared"
@@ -248,8 +249,8 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         </>)}
       </div>
 
-      {/* 품절 리스트 팝업 — 제품·모델·가격·링크·재고없음 며칠째 */}
-      {sel && (
+      {/* 품절 리스트 팝업 — 제품·모델·가격·링크·재고없음 며칠째. body 포털(부모 transform 회피, 뷰포트 전체 기준) */}
+      {sel && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" style={{ animation: "fadeUp .2s ease both" }} onClick={() => setSel(null)}>
           <div className="flex max-h-[82vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.06] shadow-2xl dark:bg-gray-900 dark:ring-white/10" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
@@ -285,11 +286,12 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* 셀 호버 미니 팝업 — title 대신 스타일 툴팁 */}
-      {hov && (
+      {/* 셀 호버 미니 팝업 — title 대신 스타일 툴팁. body 포털(fixed 좌표=뷰포트 기준) */}
+      {hov && typeof document !== "undefined" && createPortal(
         <div className="pointer-events-none fixed z-[90]" style={{ left: hov.x, top: hov.y, transform: hov.below ? "translate(-50%, 8px)" : "translate(-50%, calc(-100% - 8px))" }}>
           <div className="min-w-[156px] rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-left shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/95" style={{ animation: "fadeUp .12s ease both" }}>
             <div className="mb-1.5 flex items-center gap-1.5">
@@ -309,7 +311,8 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
             </div>
             {metric === "oosCnt" && hov.oo > 0 && <div className="mt-1.5 border-t border-gray-100 pt-1.5 text-[10px] font-semibold text-indigo-600 dark:border-gray-800 dark:text-indigo-300">{T("클릭 → 품절 모델 보기", "click → OOS models")}</div>}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}@keyframes covPop{from{opacity:0;transform:translateY(7px) scale(.97)}to{opacity:1;transform:none}}"}</style>

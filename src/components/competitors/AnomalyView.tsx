@@ -4,6 +4,7 @@
 // 신호: 가격 급락/급등 · 프로모(깊은할인) · 경쟁사 광고(종료임박·신규) · 재고(보조).
 // 데이터: v_competitor_3d(가격) + v_competitor_ads_board(광고). 유리(기회)/불리(경보·주의) 시맨틱.
 import React from "react"
+import { createPortal } from "react-dom"
 import { fmtStamp, type PriceRow, type CompAd } from "@/lib/supabase"
 import { canonCode, pmFormOf } from "@/lib/classify"
 import { peso, md, pmShopLabel, PmDrop } from "@/components/competitors/shared"
@@ -248,8 +249,8 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       )}
       <p className="text-[10px] text-gray-400 dark:text-gray-500">{T("감지 룰: 가격 급락/급등(3일 실판매가 −6%↓·+8%↑) · 프로모(SRP 대비 ≥30% 할인) · 광고(종료 D-5 이내·신규 D+3 이내, v_competitor_ads_board) · 재고(보조) · 전체 상위 신호 큐레이션 · 유리(기회)/불리(경보·주의)", "Detection rules: price plunge/spike (3-day street price −6%↓·+8%↑) · promo (≥30% off SRP) · ads (ending within D-5 · new within D+3, v_competitor_ads_board) · stock (secondary) · curated top signals overall · favorable (opportunity)/adverse (alert·watch)")}</p>
 
-      {/* 클릭 팝업 — 선택 브랜드×제품군의 신호 리스트 + 링크 바로가기 */}
-      {openBub && (
+      {/* 클릭 팝업 — 선택 브랜드×제품군의 신호 리스트 + 링크 바로가기. 뷰포트 전체 기준으로 뜨도록 body에 포털(부모 transform 컨테이닝블록 회피). */}
+      {openBub && typeof document !== "undefined" && createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" style={{ animation: "fadeUp .2s ease both" }} onClick={() => setOpenBub(null)}>
           <div className="flex max-h-[82vh] w-full max-w-[560px] flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.06] shadow-2xl dark:bg-gray-900 dark:ring-white/10" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
@@ -282,7 +283,8 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )
