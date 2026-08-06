@@ -105,13 +105,16 @@ export default function Page() {
     return () => obs.disconnect()
   }, [mode])
 
-  // 딥링크: /economy/?v=<카테고리> → 해당 섹션으로 스크롤
+  // 딥링크: /economy/?v=<카테고리> → 해당 섹션. 없으면 새로고침/언어토글 전 마지막 카테고리(localStorage) 복원.
   useEffect(() => {
     if (typeof window === "undefined") return
-    const v = new URLSearchParams(window.location.search).get("v")
-    if (v && NAV.some((n) => n.id === v)) { setMode("card"); requestAnimationFrame(() => go(v)) }
+    let v = new URLSearchParams(window.location.search).get("v")
+    if (!v) { try { v = localStorage.getItem("econ_view") } catch {} }
+    if (v && NAV.some((n) => n.id === v)) { setMode("card"); requestAnimationFrame(() => go(v!)) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+  // 현재 카테고리 저장(복원용)
+  useEffect(() => { try { localStorage.setItem("econ_view", active) } catch {} }, [active])
 
   // 지표 기반 카테고리는 실시간 카운트, 구조적 항목은 고정
   const navCount = (n: NavItem) => (counts[n.id] != null ? String(counts[n.id]) : n.count)

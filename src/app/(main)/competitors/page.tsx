@@ -222,6 +222,9 @@ export default function Competitors() {
   const GROUPS = buildGroups()
   const ALL = GROUPS.flatMap((g) => g.items)
   const [view, setView] = React.useState("board")
+  // 새로고침·언어토글에도 마지막 뷰 유지 — 마운트 시 복원, 변경 시 저장(localStorage)
+  React.useEffect(() => { try { const v = localStorage.getItem("comp_view"); if (v) setView(v) } catch {} }, [])
+  React.useEffect(() => { try { localStorage.setItem("comp_view", view) } catch {} }, [view])
   const [navOpen, setNavOpen] = React.useState(true) // 좌측 분석 메뉴 접기/펼치기
   const [cat, setCat] = React.useState("전체")
   const [brands, setBrands] = React.useState<string[]>(["LG"])
