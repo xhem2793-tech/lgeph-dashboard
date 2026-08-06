@@ -42,7 +42,7 @@ function fmtVal(v: number): string {
   const a = Math.abs(v)
   if (a >= 1e9) return (v / 1e9).toFixed(2) + "B"
   if (a >= 1e6) return (v / 1e6).toFixed(2) + "M"
-  if (a >= 1e4) return Math.round(v).toLocaleString()
+  if (a >= 1000) return Math.round(v).toLocaleString()
   if (a >= 100) return v.toFixed(1)
   return v.toFixed(2)
 }
@@ -50,6 +50,15 @@ function fmtVal(v: number): string {
 // 값 단위 추론(%/₱/$/지수/℃/명) — 라벨·지표키 기반 휴리스틱
 function inferUnit(indicator: string, label: string): { prefix?: string; suffix?: string; unit: string; note: string } {
   const s = (indicator + " " + (label || "")).toLowerCase()
+  // ── 소스에 '축소 단위'로 저장된 지표 — 스케일 접미사 명시(억달러 5.74=$5.74B, 백만명 49.6=49.6M) ──
+  if (/appliance_market_usd|ecommerce_market_usd|ofw_cash_remittance$|ofw_personal_remittance/.test(indicator)) return { prefix: "$", suffix: "B", unit: "$B", note: T("$십억(USD bn)", "$ bn (USD)") }
+  if (/^employed_persons$|^tourism_arrivals$/.test(indicator)) return { suffix: T("백만명", "M"), unit: T("백만명", "M"), note: T("백만 명", "million") }
+  if (/^elec_consumption_pc$/.test(indicator)) return { suffix: " kWh", unit: "kWh", note: T("kWh/1인", "kWh/capita") }
+  if (/^energy_/.test(indicator)) return { suffix: " ktoe", unit: "ktoe", note: T("ktoe(석유환산천톤)", "ktoe") }
+  if (/^cdd_/.test(indicator)) return { suffix: "", unit: "CDD", note: T("냉방도일", "CDD") }
+  if (/^life_expectancy$/.test(indicator)) return { suffix: T("세", "yr"), unit: T("세", "yr"), note: T("세(기대수명)", "years") }
+  if (/^household_size$/.test(indicator)) return { suffix: T("명", ""), unit: T("명", "persons"), note: T("가구원 수", "persons") }
+  if (/cagr|_market_cagr/.test(s)) return { suffix: "%", unit: "%", note: T("% (연평균성장)", "% (CAGR)") }
   if (/유가|oil_|휘발유|경유|디젤|등유|gasoline|diesel|kerosene|ron9|meralco|요금|소매가|임금|wage|grdp|금액/.test(s)) return { prefix: "₱", unit: "₱", note: T("₱(페소)", "₱ (PHP)") }
   if (/brent|수출액|수입액|송금|remittance|fdi|reserves|_usd|market_usd|외환보유|gni|gdp_total/.test(s)) return { prefix: "$", unit: "$", note: T("$(미달러)", "$ (USD)") }
   if (/php_usd|환율|exchange/.test(s)) return { prefix: "₱", unit: "₱/$", note: T("₱/$(환율)", "₱/$ (FX)") }
