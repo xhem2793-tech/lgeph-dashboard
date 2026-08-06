@@ -195,8 +195,9 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
   }
   const flat = useMemo(() => {
     if (sort !== "recent") return null
-    // 최신순 = '가장 최근에 업데이트된 지표' — 실제 최근 관측일(mx)을 YYYYMMDD로 정규화해 우선, 없으면 기간 문자열 폴백.
-    const upd = (r: Row) => { const m = (r.mx || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? +m[1] * 10000 + +m[2] * 100 + +m[3] : periodEnd(r.period || "") }
+    // 최신순 = '가장 최근에 발표된 실제 지표' — 최근 관측일(mx) 기준. 단, 미래 날짜(전망치 gdp_forecast 등)는 발표 최신이 아니므로 하단으로.
+    const now = new Date(); const todayNum = now.getFullYear() * 10000 + (now.getMonth() + 1) * 100 + now.getDate()
+    const upd = (r: Row) => { const m = (r.mx || "").match(/^(\d{4})-(\d{2})-(\d{2})/); if (!m) return periodEnd(r.period || ""); const v = +m[1] * 10000 + +m[2] * 100 + +m[3]; return v > todayNum ? -1 : v }
     return [...filtered].sort((a, b) => (upd(b) - upd(a)) || (periodEnd(b.period || "") - periodEnd(a.period || "")))
   }, [filtered, sort]) // eslint-disable-line react-hooks/exhaustive-deps
 
