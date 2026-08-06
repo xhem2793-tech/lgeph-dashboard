@@ -292,6 +292,30 @@ function descOf(r: Row): string {
   return base
 }
 
+// 상승이 시장수요에 우호(+1)인지 악재(-1)인지 — 물가·금리·실업·유가·부채·빈곤은 상승=부담.
+function trendPolarity(ind: string): 1 | -1 {
+  const s = ind.toLowerCase()
+  return /cpi|inflation|ppi|policy_rate|_rate$|bsp_|odf|olf|unemploy|poverty|oil_|brent|crude|debt|lpg|kerosene|ron9|gwp|enso|cdd/.test(s) ? -1 : 1
+}
+// 기간(개월) 전 대비 변화율(%) — 연*12+월 정수 비교로 해당 시점 이하 최근 관측을 기준.
+function chgOverMonths(series: { date: string; value: number }[], months: number): number | null {
+  if (!series || series.length < 2) return null
+  const last = series[series.length - 1]
+  const tTot = Number(last.date.slice(0, 4)) * 12 + Number(last.date.slice(5, 7)) - months
+  let best: { date: string; value: number } | null = null
+  for (const p of series) { const tot = Number(p.date.slice(0, 4)) * 12 + Number(p.date.slice(5, 7)); if (tot <= tTot) best = p; else break }
+  return best && best.value !== 0 ? ((last.value - best.value) / Math.abs(best.value)) * 100 : null
+}
+// 기간별 시장 의미 — 방향(상승/하락)×폴라리티로 수요 관점 해석(짧게).
+function windowMeaning(ind: string, chg: number | null): string {
+  if (chg == null) return T("해당 기간 데이터 부족", "insufficient data for the period")
+  const dir = chg > 1.5 ? 1 : chg < -1.5 ? -1 : 0
+  if (dir === 0) return T("큰 변동 없이 안정적 흐름 — 시장 여건 유지", "stable — market conditions steady")
+  const good = dir === trendPolarity(ind), rising = dir > 0
+  if (good) return rising ? T("상승세 → 시장 확대·수요 개선 신호", "rising → market expansion, demand tailwind") : T("하락세 → 부담 완화로 수요 여건 개선", "falling → easing burden, demand improves")
+  return rising ? T("상승세 → 비용·부담 확대로 수요 제약 요인", "rising → higher cost/burden, demand headwind") : T("하락세 → 수요·구매력 위축 우려", "falling → weaker demand/purchasing power")
+}
+
 // 추정 발표일 — 관측 최신월 + 주기별 표준 발표지연(월별 +45일, 분기 +75, 연 +200, 일/주 +2).
 // 주기는 provenance의 mn~mx 스팬 ÷ 관측수로 추정. 실제 발표일 근사치(DB에 정확 발표일 미보유).
 function estReleaseMD(r: Row): string | null {
@@ -535,14 +559,40 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                     </div>
                   </div>
                 </div>
-                {/* LG 인사이트 카드(우) — 지표별 큐레이션(INDICATOR_INSIGHT) 우선, 없으면 카테고리 인사이트 */}
-                <div className="flex min-w-0 flex-col rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-500/[0.06] p-4 lg:w-[42%]" style={{ animation: "bkFade .45s ease .06s both" }}>
+                {/* LG 인사이트 카드(우) — 상세설명 + 시장의미(3~4문장) + 기간별(3M/1Y/5Y) 흐름·의미 */}
+                <div className="flex min-w-0 flex-col gap-3 rounded-xl border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/30 dark:bg-indigo-500/[0.06] p-4 lg:w-[42%]" style={{ animation: "bkFade .45s ease .06s both" }}>
                   <div className="flex items-center gap-2">
                     <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-indigo-600 text-white"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg></span>
                     <h4 className="text-[13.5px] font-bold text-gray-900 dark:text-gray-50">{T("LG 인사이트", "LG Insight")}</h4>
                   </div>
-                  <p className="mt-2.5 text-[12.5px] leading-relaxed text-gray-700 dark:text-gray-200">{INDICATOR_INSIGHT[row.indicator] ?? (CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
-                  <p className="mt-3 border-t border-indigo-100 dark:border-indigo-500/20 pt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {(CAT_MI[row.cat] || CAT_MI.etc).mean}</p>
+                  {/* 지표 상세 설명(정의) */}
+                  <div>
+                    <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-indigo-500/80 dark:text-indigo-300/70">{T("지표 설명", "About")}</div>
+                    <p className="text-[12px] leading-relaxed text-gray-600 dark:text-gray-300">{INDICATOR_DESC[row.indicator] ?? descOf(row)}</p>
+                  </div>
+                  {/* 시장 의미(해석 3~4문장) */}
+                  <div className="border-t border-indigo-100 dark:border-indigo-500/20 pt-2.5">
+                    <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-indigo-500/80 dark:text-indigo-300/70">{T("시장 의미", "Market read")}</div>
+                    <p className="text-[12.5px] leading-relaxed text-gray-700 dark:text-gray-200">{INDICATOR_INSIGHT[row.indicator] ?? (CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
+                  </div>
+                  {/* 기간별 흐름·의미 — 최근 3개월/1년/5년 */}
+                  <div className="border-t border-indigo-100 dark:border-indigo-500/20 pt-2.5">
+                    <div className="mb-1.5 text-[10px] font-bold uppercase tracking-wide text-indigo-500/80 dark:text-indigo-300/70">{T("기간별 흐름과 의미", "Trend by window")}</div>
+                    <div className="flex flex-col gap-1.5">
+                      {([[3, T("최근 3개월", "3M")], [12, T("최근 1년", "1Y")], [60, T("최근 5년", "5Y")]] as const).map(([mo, lb]) => {
+                        const c = chgOverMonths(series, mo)
+                        const col = c == null ? "text-gray-400 dark:text-gray-500" : c >= 0 ? "text-rose-500 dark:text-rose-400" : "text-emerald-500 dark:text-emerald-400"
+                        return (
+                          <div key={mo} className="flex items-start gap-2 text-[11px]">
+                            <span className="w-[58px] shrink-0 pt-px font-semibold text-gray-500 dark:text-gray-400">{lb}</span>
+                            <span className={"w-[58px] shrink-0 pt-px text-right font-bold tabular-nums " + col}>{c == null ? "—" : (c >= 0 ? "▲ +" : "▼ ") + c.toFixed(1) + "%"}</span>
+                            <span className="min-w-0 flex-1 leading-snug text-gray-600 dark:text-gray-300">{windowMeaning(row.indicator, c)}</span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                    <p className="mt-2 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{T("· 변화율=최신 관측 대비 해당 기간 전 관측. 데이터 부족 시 생략.", "· change vs. observation that many months earlier; omitted if insufficient.")}</p>
+                  </div>
                 </div>
               </div>
               {/* 하단: 전폭 엑셀형 연도×기간 피벗(월·분기·반기·연간 + 전년비 토글) */}
