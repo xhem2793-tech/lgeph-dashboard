@@ -266,7 +266,7 @@ function HBar({ items, hiName, startRank = 0, dom, mkt: mktProp, hi = [] }: { it
             <text x={10} y={y + 4.5} fontSize="11" fontWeight="800" className={isLG ? "fill-teal-500 dark:fill-teal-400" : foc ? "fill-indigo-500 dark:fill-indigo-400" : "fill-gray-300 dark:fill-gray-600"}>{startRank + i + 1}</text>
             <text x={padL - 9} y={y + 4.5} textAnchor="end" fontSize="12" fontWeight={emph || h === i ? 800 : 500} className={tcls}>{a.name}</text>
             {/* 가이드 라인 + 점 */}
-            <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#eef2f6" strokeWidth="1" className="dark:stroke-gray-800/70" />
+            <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#cbd5e1" strokeWidth="1.1" className="dark:stroke-gray-700" />
             <circle cx={X(a.v)} cy={y} r={r} fill={col} stroke="#fff" strokeWidth={emph ? 1.6 : 0.8} className={emph ? "" : "dark:fill-gray-500"} style={{ animation: "popIn .5s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.06 + Math.min(i, 12) * 0.04) + "s", transformOrigin: `${X(a.v)}px ${y}px` }} />
             <text x={X(a.v) + (X(a.v) > W - padR - 30 ? -(r + 5) : r + 5)} y={y + 4.5} textAnchor={X(a.v) > W - padR - 30 ? "end" : "start"} fontSize="12" fontWeight={emph || h === i ? 800 : 600} className={tcls}>{a.v.toFixed(2)}{h === i && a.n ? ` (${a.n})` : ""}</text>
           </g>
@@ -308,7 +308,7 @@ function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { la
             <g key={g.label} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.42 : 1, transition: "opacity .18s", cursor: "default" }}>
               <rect x={0} y={y - rowH / 2} width={W} height={rowH} fill="transparent" /><title>{g.label} · LG {g.lg != null ? fmt(g.lg) : "—"} · {T("시장", "Market")} {fmt(g.mkt)}</title>
               <text x={padL - 8} y={y + 3.5} textAnchor="end" fontSize="9.5" fontWeight={h === i ? 800 : 500} className="fill-gray-500 dark:fill-gray-400">{g.label.replace(/\(.*\)/g, "")}</text>
-              <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#eef2f6" strokeWidth="1" className="dark:stroke-gray-800/70" />
+              <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#cbd5e1" strokeWidth="1.1" className="dark:stroke-gray-700" />
               {/* 연결선(격차) */}
               {g.lg != null && <line x1={X(g.mkt)} y1={y} x2={X(g.lg)} y2={y} stroke={ahead ? "#5eead4" : "#fca5a5"} strokeWidth="2.4" strokeLinecap="round" style={{ animation: "growX .5s ease both", animationDelay: (0.08 + i * 0.05) + "s", transformOrigin: `${X(g.mkt)}px 0` }} />}
               {/* 시장 점 */}
