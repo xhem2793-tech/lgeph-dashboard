@@ -222,6 +222,7 @@ export default function Competitors() {
   const GROUPS = buildGroups()
   const ALL = GROUPS.flatMap((g) => g.items)
   const [view, setView] = React.useState("board")
+  const [navOpen, setNavOpen] = React.useState(true) // 좌측 분석 메뉴 접기/펼치기
   const [cat, setCat] = React.useState("전체")
   const [brands, setBrands] = React.useState<string[]>(["LG"])
   const [shops, setShops] = React.useState<string[]>([...SHOPS])
@@ -322,14 +323,17 @@ export default function Competitors() {
     <div className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes sparkDraw{to{stroke-dashoffset:0}}"}</style>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
-        <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
-          {/* 좌 메뉴 — 뉴스·경쟁사 광고 사이드바와 동일한 구조(아이콘 헤더·그룹 라벨·우측 상태 메타) */}
-          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M3 3v18h18" /><path d="M7 14l4-4 3 3 5-6" /></svg>
-            <p className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분석", "Analysis")}</p>
+      <div className={"grid items-start gap-6 transition-[grid-template-columns] duration-[350ms] ease-[cubic-bezier(.22,1,.36,1)] " + (navOpen ? "lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7" : "lg:grid-cols-[46px_minmax(0,1fr)] lg:gap-5")}>
+        <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit overflow-hidden lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
+          {/* 좌 메뉴 — 아이콘 헤더(접기 토글 포함)·그룹 라벨·우측 상태 메타 */}
+          <div className={"flex items-center border-b border-gray-100 dark:border-gray-800 py-2.5 " + (navOpen ? "gap-1.5 px-2" : "justify-center px-0")}>
+            <button type="button" onClick={() => setNavOpen((v) => !v)} aria-label={navOpen ? T("메뉴 접기", "Collapse menu") : T("메뉴 펼치기", "Expand menu")} title={navOpen ? T("메뉴 접기", "Collapse menu") : T("메뉴 펼치기", "Expand menu")}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:text-gray-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: navOpen ? "none" : "rotate(180deg)" }}><path d="M15 18l-6-6 6-6" /></svg>
+            </button>
+            {navOpen && <p className="whitespace-nowrap text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분석", "Analysis")}</p>}
           </div>
-          <div className="px-2 py-3">
+          <div className={"px-2 py-3 transition-opacity duration-200 " + (navOpen ? "opacity-100" : "pointer-events-none hidden opacity-0")}>
             <div className="flex flex-col gap-1">
               {GROUPS.map((g) => (
                 <React.Fragment key={g.group}>
