@@ -6,7 +6,7 @@
 import React from "react"
 import { fmtStamp, type PriceRow, type CompAd } from "@/lib/supabase"
 import { canonCode, pmFormOf } from "@/lib/classify"
-import { peso, pmShopLabel, PmDrop } from "@/components/competitors/shared"
+import { peso, md, pmShopLabel, PmDrop } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
 
 const SEV_META: Record<string, { label: string; dot: string; chip: string; order: number }> = {
@@ -48,11 +48,16 @@ type Signal = {
 export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads: CompAd[] | null; stamp: string | null }) {
   const [kind, setKind] = React.useState("전체")
   const [catF, setCatF] = React.useState("전체")
-  const [dayF, setDayF] = React.useState("전체")
+  const [daySel, setDaySel] = React.useState<"today" | "yesterday">("today") // 상단 날짜 네비게이터
   const [brandF, setBrandF] = React.useState("전체") // 브랜드: 전체·경쟁사(__comp)·개별 브랜드
   const [typeF, setTypeF] = React.useState("전체") // 유형(폼팩터)
   const DAY_LABEL: Record<string, string> = { today: T("오늘", "Today"), yesterday: T("어제", "Yesterday") }
   const R = rows ?? []
+  // 오늘/어제 대표 날짜(스크랩일) — 네비게이터·달력에 사용
+  const dayDate = React.useMemo(() => {
+    const mode = (k: "d0" | "d1") => { const m = new Map<string, number>(); R.forEach((r) => { const v = r[k]; if (v) m.set(v, (m.get(v) || 0) + 1) }); let best: string | null = null, bc = 0; m.forEach((c, d) => { if (c > bc) { bc = c; best = d } }); return best }
+    return { today: mode("d0"), yesterday: mode("d1") }
+  }, [R])
   const A = ads ?? []
   const AD_TYPE: Record<string, string> = { promo: T("프로모", "Promo"), launch: T("신제품", "New model"), brand: T("브랜드", "Brand"), campaign: T("캠페인", "Campaign"), event: T("행사", "Event"), roadshow: T("로드쇼", "Roadshow"), other: T("광고", "Ad") }
   const SEV_LABEL: Record<string, string> = { alert: T("경보", "Alert"), warn: T("주의", "Watch"), opp: T("기회", "Opportunity") }
@@ -120,7 +125,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
   // 말풍선 스트림 — 날짜(오늘/어제) > 말풍선(제품 묶음: 브랜드+모델). 각 말풍선 안에 거래선별 변동(펼침).
   // 묶음 기준: 브랜드+제품(title)+신호종류 → 대표 신호 + 거래선 all. 심각도>점수 순, 같은 브랜드는 인접.
   const byDay = React.useMemo(() => {
-    const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF) && (typeF === "전체" || (s.type || "") === typeF) && (brandF === "전체" || (brandF === "__comp" ? !s.own : s.brand === brandF)))
+    const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && s.day === daySel && (typeF === "전체" || (s.type || "") === typeF) && (brandF === "전체" || (brandF === "__comp" ? !s.own : s.brand === brandF)))
     const DAY_ORDER: ("today" | "yesterday")[] = ["today", "yesterday"]
     return DAY_ORDER.map((day) => {
       const ds = filtered.filter((s) => s.day === day)
@@ -148,7 +153,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       })
       return { day, cats, n: ds.length }
     }).filter((d) => d.n > 0)
-  }, [signals, kind, catF, dayF, brandF, typeF])
+  }, [signals, kind, catF, daySel, brandF, typeF])
   const total = byDay.reduce((s, d) => s + d.n, 0)
 
   const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
@@ -183,7 +188,16 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
     <div className="mt-3 flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both" }}>
       {/* 필터바 — 채널비교식 드롭다운(날짜·제품·신호) */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <PmDrop label={T("날짜", "Date")} sel={dayF} options={[{ k: "전체", t: T("전체", "All") }, { k: "today", t: DAY_LABEL.today }, { k: "yesterday", t: DAY_LABEL.yesterday }]} onSelect={setDayF} />
+        {/* 날짜 네비게이터 — 채널별 가격비교(BoardView) 스타일: ◀ 이전 · ▶ 다음 · 📅 달력(실작동) */}
+        <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-1 py-0.5">
+          <button type="button" onClick={() => setDaySel("yesterday")} disabled={daySel === "yesterday"} aria-label={T("이전 날짜", "Previous date")} className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
+          <span className="flex min-w-[96px] items-center justify-center gap-1 text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{md(dayDate[daySel] ?? null)}<span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{DAY_LABEL[daySel]}</span>{daySel === "today" && <span className="rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">{T("최신", "Latest")}</span>}</span>
+          <button type="button" onClick={() => setDaySel("today")} disabled={daySel === "today"} aria-label={T("다음 날짜", "Next date")} className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg></button>
+          <label className="relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400" title={T("달력에서 날짜 선택", "Pick a date from the calendar")}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+            <input type="date" value={dayDate[daySel] ?? ""} min={dayDate.yesterday ?? undefined} max={dayDate.today ?? undefined} onChange={(e) => { setDaySel(e.target.value === dayDate.today ? "today" : "yesterday") }} className="absolute inset-0 cursor-pointer opacity-0" aria-label={T("날짜 선택", "Select date")} />
+          </label>
+        </div>
         <PmDrop label={T("브랜드", "Brand")} sel={brandF} options={brandOpts} onSelect={setBrandF} />
         <PmDrop label={T("제품", "Div")} sel={catF} options={["전체", ...CATS].filter((c) => c === "전체" || (catCounts[c] ?? 0) > 0).map((c) => ({ k: c, t: c === "전체" ? T("전체", "All") : (CAT_LABEL[c] ?? c) }))} onSelect={(k) => { setCatF(k); setTypeF("전체") }} />
         {typeOpts.length > 1 && <PmDrop label={T("유형", "Type")} sel={typeF} options={typeOpts} onSelect={setTypeF} />}
@@ -203,16 +217,8 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
             const bubTime = dg.day === "today" && st ? `${String(st.getHours()).padStart(2, "0")}:${String(st.getMinutes()).padStart(2, "0")}` : mmdd
             return (
             <div key={dg.day}>
-              {/* 날짜 헤더 — 채널별 가격비교(BoardView) 날짜 pill 디자인(테두리 알약·달력 아이콘·볼드 tabular·최신 배지) */}
-              <div className="mb-2 flex items-center gap-2" style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
-                <div className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
-                  <span className="text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{mmdd}</span>
-                  <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{DAY_LABEL[dg.day]}</span>
-                  {dg.day === "today" && <span className="rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">{T("최신", "Latest")}</span>}
-                </div>
-                <span className="text-[11px] text-gray-400 dark:text-gray-500">{dg.n}{T("건", "")}</span>
-              </div>
+              {/* 날짜는 상단 네비게이터로 선택 — 여기선 건수만 표시 */}
+              <div className="mb-1 flex items-center gap-2 px-0.5"><span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{DAY_LABEL[dg.day]} <span className="tabular-nums text-gray-400 dark:text-gray-500">{mmdd}</span></span><span className="text-[11px] text-gray-400 dark:text-gray-500">· {dg.n}{T("건", "")}</span></div>
               {/* 제품(카테고리)별 그룹 — 대화방 섹션 구분선 + 말풍선 스트림(전부 왼쪽·시각 표시) */}
               {dg.cats.map((cg) => (
                 <div key={cg.cat}>

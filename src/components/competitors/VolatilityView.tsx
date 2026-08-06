@@ -5,7 +5,7 @@
 import React from "react"
 import { T } from "@/lib/i18n"
 import { fmtStamp, type PriceRow } from "@/lib/supabase"
-import { md, pmShopLabel } from "@/components/competitors/shared"
+import { md, pmShopLabel, PmDrop, catLabel } from "@/components/competitors/shared"
 
 const COV_P = ["p0", "p1", "p2", "p3"] as const
 const COV_D = ["d0", "d1", "d2", "d3"] as const
@@ -13,8 +13,11 @@ const COV_D = ["d0", "d1", "d2", "d3"] as const
 const RETAILER_RANK: Record<string, number> = { "SM Appliance": 1, "Abenson": 2, "Anson's": 3, "Robinsons Appliances": 4, "Western Appliances": 5, "Emcor": 6, "Addessa": 7, "Home Credit": 9 }
 const retRank = (r: string) => RETAILER_RANK[r] ?? 8
 
-function CoverageHeatmap({ rows }: { rows: PriceRow[] }) {
+function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
   const [di, setDi] = React.useState(0)
+  const [cat, setCat] = React.useState("전체")
+  const cats = React.useMemo(() => { const m = new Map<string, number>(); allRows.forEach((r) => { if (r.category) m.set(r.category, (m.get(r.category) || 0) + 1) }); return Array.from(m.entries()).sort((a, b) => b[1] - a[1]).map((x) => x[0]) }, [allRows])
+  const rows = React.useMemo(() => cat === "전체" ? allRows : allRows.filter((r) => r.category === cat), [allRows, cat])
   const listedOn = (r: PriceRow, slot: number) => slot >= 0 && slot <= 3 && r[COV_P[slot]] != null
   const dates = React.useMemo(() => [0, 1, 2, 3].map((i) => { const m = new Map<string, number>(); rows.forEach((r) => { const v = r[COV_D[i]] as string | null; if (v) m.set(v, (m.get(v) || 0) + 1) }); let best: string | null = null, bc = 0; m.forEach((c, d) => { if (c > bc) { bc = c; best = d } }); return best }), [rows])
   const data = React.useMemo(() => {
@@ -34,64 +37,71 @@ function CoverageHeatmap({ rows }: { rows: PriceRow[] }) {
     const grand = Array.from(today.values()).reduce((a, b) => a + b, 0)
     return { retailers, brands, today, prev, fresh, oos, maxT, colTot, rowTot, grand, K }
   }, [rows, di])
-  if (!rows.length) return null
   const slots = [0, 1, 2, 3].filter((i) => dates[i])
   return (
-    <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/40 p-3">
-      <div className="mb-2.5 flex flex-wrap items-center gap-2">
-        <span className="h-[15px] w-1 rounded bg-indigo-500" />
-        <h4 className="text-[13px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("전시 커버리지", "Listing coverage")}</h4>
-        <span className="text-[10.5px] text-gray-400 dark:text-gray-500">{T("거래선 × 브랜드 · 스크랩된 전시 제품 수", "Retailer × brand · listed (scraped) SKUs")}</span>
-        {/* 날짜 토글 */}
-        <div className="ml-auto flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 p-0.5">
-          {slots.map((i) => (
-            <button key={i} type="button" onClick={() => setDi(i)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold tabular-nums transition-colors " + (di === i ? "bg-indigo-600 text-white" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300")}>{md(dates[i])}{i === 0 ? T(" 오늘", " today") : ""}</button>
+    <div className="flex flex-col gap-2.5">
+      {/* 한 줄 필터바 — 채널별 가격비교식(제품 드롭다운 + 날짜 토글 + 최신) */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+        <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: catLabel(c) }))]} onSelect={setCat} />
+        <div className="ml-auto flex items-center gap-2.5">
+          <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-0.5">
+            {slots.map((i) => (
+              <button key={i} type="button" onClick={() => setDi(i)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold tabular-nums transition-colors " + (di === i ? "bg-indigo-600 text-white" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300")}>{md(dates[i])}{i === 0 ? T(" 오늘", " today") : ""}</button>
+            ))}
+          </div>
+          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+        </div>
+      </div>
+      {/* 히트맵 카드(바둑판) */}
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/40 p-3">
+        {data.brands.length === 0 ? (
+          <div className="flex h-40 items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">{T("해당 조건의 전시 데이터가 없습니다.", "No listing data for this filter.")}</div>
+        ) : (<>
+      <div className="overflow-x-auto pb-1">
+        {/* 바둑판 그리드 — 브랜드 라벨(104) · 거래선 48px 정사각 셀 반복 · 합계(46) */}
+        <div className="grid w-max gap-[3px] text-[11px]" style={{ gridTemplateColumns: `104px repeat(${data.retailers.length}, 48px) 46px` }}>
+          {/* 헤더 행 */}
+          <div className="sticky left-0 z-10 bg-white dark:bg-gray-900/40" />
+          {data.retailers.map((ret, ci) => (
+            <div key={ret} className="flex flex-col items-center justify-end gap-0.5 pb-1">
+              <span className="rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span>
+              <span className="w-[48px] truncate text-center text-[9.5px] font-semibold text-gray-600 dark:text-gray-300" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
+              <span className="text-[9px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
+            </div>
+          ))}
+          <div className="flex items-end justify-center pb-1 text-[9.5px] font-semibold text-indigo-500 dark:text-indigo-300">Σ</div>
+          {/* 본문 행 — 브랜드마다 라벨 + 48px 정사각 셀들 + 합계 */}
+          {data.brands.map((b) => (
+            <React.Fragment key={b}>
+              <div className={"sticky left-0 z-10 flex h-[48px] items-center whitespace-nowrap bg-white px-1.5 text-[11px] font-bold dark:bg-gray-900/40 " + (b === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-700 dark:text-gray-200")}>{b}</div>
+              {data.retailers.map((ret) => { const k = data.K(b, ret); const t = data.today.get(k) || 0; const p = di < 3 ? (data.prev.get(k) || 0) : null; const d = p != null ? t - p : null; const fr = data.fresh.get(k) || 0; const oo = di === 0 ? (data.oos.get(k) || 0) : 0
+                const alpha = t ? Math.max(0.12, Math.min(1, t / data.maxT)) : 0; const light = alpha > 0.55
+                return (
+                  <div key={ret} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}
+                    className="flex h-[48px] w-[48px] flex-col items-center justify-center rounded-md text-center transition-transform duration-150 ease-out hover:z-10 hover:scale-[1.16] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1" }}>
+                    <span className="text-[15px] font-bold tabular-nums leading-none">{t || "·"}</span>
+                    {(d != null || oo > 0) && (
+                      <span className="mt-0.5 flex flex-wrap items-center justify-center gap-x-1 text-[8px] font-semibold leading-tight" style={{ color: light ? "rgba(255,255,255,0.9)" : undefined }}>
+                        {d != null && d !== 0 && <span className={light ? "" : d > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}>{d > 0 ? "▲" + d : "▼" + -d}</span>}
+                        {oo > 0 && <span className={light ? "" : "text-amber-600 dark:text-amber-400"}>{oo}{T("품", "x")}</span>}
+                      </span>
+                    )}
+                  </div>
+                ) })}
+              <div className="flex h-[48px] items-center justify-center text-[11px] font-bold tabular-nums text-indigo-600 dark:text-indigo-300">{data.rowTot[b] || 0}</div>
+            </React.Fragment>
           ))}
         </div>
       </div>
-      <div className="overflow-x-auto">
-        <table className="w-full border-separate text-[11px]" style={{ borderSpacing: "3px" }}>
-          <thead>
-            <tr>
-              <th className="sticky left-0 z-10 bg-white dark:bg-gray-900/40 px-1.5 py-1 text-left text-[10px] font-semibold text-gray-400 dark:text-gray-500">{T("브랜드＼거래선", "Brand＼Retailer")}</th>
-              {data.retailers.map((ret, ci) => <th key={ret} className="px-0 py-1 text-center align-bottom text-[10px] font-semibold text-gray-600 dark:text-gray-300" style={{ width: 50 }}><div className="mx-auto flex flex-col items-center"><span className="mb-0.5 rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span><span className="w-[48px] truncate text-center" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span><span className="text-[9px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span></div></th>)}
-              <th className="px-1 py-1 text-center text-[10px] font-semibold text-indigo-500 dark:text-indigo-300">{T("합계", "Total")}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.brands.map((b) => (
-              <tr key={b}>
-                <td className={"sticky left-0 z-10 whitespace-nowrap bg-white px-1.5 py-1 text-left text-[11px] font-bold dark:bg-gray-900/40 " + (b === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-700 dark:text-gray-200")}>{b}</td>
-                {data.retailers.map((ret) => { const k = data.K(b, ret); const t = data.today.get(k) || 0; const p = di < 3 ? (data.prev.get(k) || 0) : null; const d = p != null ? t - p : null; const fr = data.fresh.get(k) || 0; const oo = di === 0 ? (data.oos.get(k) || 0) : 0
-                  const alpha = t ? Math.max(0.12, Math.min(1, t / data.maxT)) : 0; const light = alpha > 0.55
-                  return (
-                    <td key={ret} className="relative p-0 text-center align-middle" title={`${b} · ${pmShopLabel(ret)}\n${T("전시", "Listed")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}>
-                      <div className="mx-auto flex h-[48px] w-[48px] flex-col items-center justify-center rounded-md text-center transition-transform duration-150 ease-out hover:z-10 hover:scale-[1.14] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1" }}>
-                        <span className="text-[14px] font-bold tabular-nums leading-none">{t || "·"}</span>
-                        {(d != null || fr > 0 || oo > 0) && (
-                          <span className="mt-0.5 flex flex-wrap items-center justify-center gap-x-1 text-[8px] font-semibold leading-tight" style={{ color: light ? "rgba(255,255,255,0.9)" : undefined }}>
-                            {d != null && d !== 0 && <span className={light ? "" : d > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}>{d > 0 ? "▲" + d : "▼" + -d}</span>}
-                            {fr > 0 && <span className={light ? "" : "text-indigo-600 dark:text-indigo-300"}>+{fr}{T("신", "n")}</span>}
-                            {oo > 0 && <span className={light ? "" : "text-amber-600 dark:text-amber-400"}>{oo}{T("품", "x")}</span>}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  ) })}
-                <td className="px-1 text-center text-[11px] font-bold tabular-nums text-indigo-600 dark:text-indigo-300">{data.rowTot[b] || 0}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9.5px] text-gray-400 dark:text-gray-500">
+        <span>{T("셀 큰 숫자=활성 SKU(해당일 전시 제품 수) · 색 진할수록 많음", "Big number = active SKUs (listed that day) · darker = more")}</span>
+        <span><b className="text-emerald-600 dark:text-emerald-400">▲</b>/<b className="text-rose-500 dark:text-rose-400">▼</b> {T("어제대비 증감", "vs prev")}</span>
+        <span><b className="text-amber-600 dark:text-amber-400">n품</b> {T("품절 수(오늘)", "OOS count (today)")}</span>
+        <span className="ml-auto tabular-nums">{T("총 활성 SKU", "Total active")} <b className="text-gray-600 dark:text-gray-300">{data.grand.toLocaleString()}</b></span>
+      </p>
+        </>)}
       </div>
       <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}"}</style>
-      <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9.5px] text-gray-400 dark:text-gray-500">
-        <span>{T("셀 큰 숫자=해당일 전시(스크랩)된 제품 수 · 색 진할수록 많음", "Big number = SKUs listed (scraped) that day · darker = more")}</span>
-        <span><b className="text-emerald-600 dark:text-emerald-400">▲</b>/<b className="text-rose-500 dark:text-rose-400">▼</b> {T("어제대비", "vs prev")}</span>
-        <span><b className="text-indigo-600 dark:text-indigo-300">＋n신</b> {T("신규 전시", "new listings")}</span>
-        <span><b className="text-amber-600 dark:text-amber-400">품</b> {T("오늘 품절", "OOS today")}</span>
-        <span className="ml-auto tabular-nums">{T("총 전시", "Total listed")} <b className="text-gray-600 dark:text-gray-300">{data.grand.toLocaleString()}</b></span>
-      </p>
     </div>
   )
 }
@@ -99,12 +109,8 @@ function CoverageHeatmap({ rows }: { rows: PriceRow[] }) {
 export function VolatilityView({ rows, stamp }: { rows: PriceRow[] | null; stamp: string | null }) {
   if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("불러오는 중", "Loading")}</div>
   return (
-    <div className="mt-3 flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="text-[12px] text-gray-500 dark:text-gray-400">{T("각 거래선 사이트에 브랜드별로 몇 개 제품이 전시(스크랩)되는지 — 취급·노출 커버리지를 한눈에.", "How many SKUs each retailer lists per brand — listing & exposure coverage at a glance.")}</p>
-        <span className="flex shrink-0 items-center gap-1.5 text-[11px] text-gray-400 dark:text-gray-500">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
-      </div>
-      <CoverageHeatmap rows={rows} />
+    <div className="mt-3" style={{ animation: "fadeUp .5s ease both" }}>
+      <CoverageHeatmap rows={rows} stamp={stamp} />
     </div>
   )
 }
