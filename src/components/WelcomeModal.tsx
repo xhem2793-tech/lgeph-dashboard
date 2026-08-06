@@ -85,7 +85,7 @@ export default function WelcomeModal() {
           <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
             <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0 text-amber-500"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" /><path d="M12 9v4M12 17h.01" /></svg>
             <p className="text-[12px] leading-relaxed text-amber-800 dark:text-amber-200">
-              {T("현재 데이터베이스를 ", "The database is currently in a ")}<b className="font-bold">{T("수집하는 테스트 기간", "data-collection test phase")}</b>{T("입니다. 일부 수치는 정확도가 완전하지 않을 수 있으니 ", ". Some figures may not be fully accurate, so please treat them as ")}<b className="font-bold">{T("참고용", "reference only")}</b>{T("으로 봐주세요 — 파이프라인이 돌며 ", " — as the pipeline runs, data is ")}<b className="font-bold">{T("자동으로 갱신·보정", "automatically updated and corrected")}</b>{T("되고, ", ", and it is ")}<b className="font-bold">{T("실시간으로 구축 중", "actively being built in real time")}</b>{T("이라 일시적으로 ", ", so the ")}<b className="font-bold">{T("웹사이트가 불안정", "site may be temporarily unstable")}</b>{T("할 수 있습니다.", ".")}
+              {T("데이터 수집 테스트 기간이라 일부 수치는 ", "In a data-collection test phase, so some figures are ")}<b className="font-bold">{T("참고용", "reference only")}</b>{T("이며, 실시간 구축 중이라 사이트가 일시 불안정할 수 있습니다.", " and the site may be temporarily unstable while it's built in real time.")}
             </p>
           </div>
 
