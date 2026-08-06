@@ -320,20 +320,21 @@ export default function Competitors() {
   const active = ALL.find((v) => v.key === view)
 
   return (
-    <div className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
+    <div className="relative w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes sparkDraw{to{stroke-dashoffset:0}}@keyframes navBounce{0%,70%,100%{transform:translateX(0)}78%{transform:translateX(3px)}86%{transform:translateX(-2px)}93%{transform:translateX(1px)}}"}</style>
 
-      <div className={"grid items-start gap-6 transition-[grid-template-columns] duration-[350ms] ease-[cubic-bezier(.22,1,.36,1)] " + (navOpen ? "lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7" : "lg:grid-cols-[26px_minmax(0,1fr)] lg:gap-1")}>
+      {/* 접힘 상태 — 좌측 여백 띠(페이지 패딩) 중앙에 펼치기 아이콘 */}
+      {!navOpen && (
+        <button type="button" onClick={() => setNavOpen(true)} aria-label={T("메뉴 펼치기", "Expand menu")} title={T("분석 메뉴 펼치기", "Expand menu")}
+          className="absolute left-0 top-6 z-30 hidden w-10 justify-center lg:flex">
+          <span className="flex h-6 w-6 items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 text-indigo-600 shadow-sm transition-all hover:bg-indigo-100 active:scale-90 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-300 dark:hover:bg-indigo-500/25">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "navBounce 3s ease-in-out infinite" }}><path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" /></svg>
+          </span>
+        </button>
+      )}
+
+      <div className={"grid items-start gap-6 transition-[grid-template-columns] duration-[350ms] ease-[cubic-bezier(.22,1,.36,1)] " + (navOpen ? "lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7" : "lg:grid-cols-[0px_minmax(0,1fr)] lg:gap-0")}>
         <aside style={{ animation: "fadeUp .5s ease both" }} className={"h-fit overflow-hidden lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain " + (navOpen ? "lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6" : "")}>
-          {/* 접힘 상태 — 좌측 공간 중앙에 펼치기 아이콘(브랜드와 안 겹치게) */}
-          {!navOpen && (
-            <div className="hidden lg:flex lg:justify-center lg:pt-2">
-              <button type="button" onClick={() => setNavOpen(true)} aria-label={T("메뉴 펼치기", "Expand menu")} title={T("분석 메뉴 펼치기", "Expand menu")}
-                className="flex h-6 w-6 items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 text-indigo-600 shadow-sm transition-all hover:bg-indigo-100 active:scale-90 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-300 dark:hover:bg-indigo-500/25">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "navBounce 3s ease-in-out infinite" }}><path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" /></svg>
-              </button>
-            </div>
-          )}
           {/* 좌 메뉴 헤더 — 펼침 상태에서만 렌더(접기 토글 + 제목). */}
           {navOpen && (
           <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
