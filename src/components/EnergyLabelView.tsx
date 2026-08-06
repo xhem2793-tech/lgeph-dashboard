@@ -285,8 +285,10 @@ function Rank2Col({ items, hiName, hi }: { items: { name: string; v: number; n?:
   const half = Math.ceil(items.length / 2)
   const cols = [items.slice(0, half), items.slice(half)].filter((c) => c.length)
   return (
-    <div className="flex h-full w-full items-stretch gap-2">
-      {cols.map((col, ci) => <div key={ci} className="min-w-0 flex-1 overflow-y-auto pr-1"><HBar items={col} hiName={hiName} hi={hi} startRank={ci === 0 ? 0 : half} dom={dom} mkt={mkt} /></div>)}
+    <div className="h-full w-full overflow-y-auto">
+      <div className="flex w-full items-start gap-2">
+        {cols.map((col, ci) => <div key={ci} className="min-w-0 flex-1"><HBar items={col} hiName={hiName} hi={hi} startRank={ci === 0 ? 0 : half} dom={dom} mkt={mkt} /></div>)}
+      </div>
     </div>
   )
 }
