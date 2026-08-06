@@ -83,7 +83,8 @@ export default function OnlineMarketView() {
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes fadeOnly{from{opacity:0}to{opacity:1}}"}</style>
 
-      {/* 접이식 배너 */}
+      {/* 카테고리별 인사이트 배너 — 다른 카테고리와 통일해 숨김(추후 false 제거로 복구) */}
+      {false && (
       <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08]" style={{ animation: "fadeOnly .5s ease both" }}>
         <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
           <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200"><b className="font-semibold text-gray-900 dark:text-gray-50">{T("온라인 시장", "Online Market")}</b>{T(" — 인터넷 ", " — Internet ")}{phInternet.length ? <b className="text-violet-700 dark:text-violet-300">{Math.round(phInternet[phInternet.length - 1].value)}%</b> : "—"}{T("·계정 ", " · Accounts ")}{kv.account_ownership ? Math.round(kv.account_ownership.value) + "%" : "—"}{T("·모바일 ", " · Mobile ")}{kv.mobile_per100 ? Math.round(kv.mobile_per100.value) + "/100" : "—"}{T(" — 신용카드 3%대(역내 최저), 직불·BNPL 중심 온라인 가전 구매 저변", " — Credit-card penetration ~3% (lowest in region); online appliance demand rests on debit and BNPL")}</div>
@@ -96,13 +97,13 @@ export default function OnlineMarketView() {
           </div></div>
         </div>
       </div>
+      )}
 
       <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("온라인 시장", "Online Market")}</h2>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{tab === "sea" ? T("동남아 6개국 비교 · ●필리핀 강조", "6-country ASEAN comparison · ●Philippines highlighted") : T("이커머스·디지털·결제 저변", "E-commerce · digital · payments base")}</span>
             <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WINS.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} /></span>
           </header>
           <nav className="mb-3.5 flex flex-wrap gap-1.5">

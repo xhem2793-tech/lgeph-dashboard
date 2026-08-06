@@ -44,7 +44,6 @@ function build(d: Mon, years: number, specs: Spec[]): { series: SLine[]; labels:
   })
   return { series, labels: fmtLabels(axis) }
 }
-const f1 = (v?: number) => (v == null ? "–" : v.toFixed(1))
 
 export default function HousingView() {
   const [win, setWin] = useState("5Y")
@@ -66,21 +65,10 @@ export default function HousingView() {
   const infraMax = infra.length ? Math.max(...infra.map((r) => r.budgetB)) : 1
   const infraTot = infra.reduce((s, r) => s + r.budgetB, 0)
 
-  const rppiLast = d.rppi_index?.values?.at(-1)
-  const yoyLast = d.rppi_yoy?.values?.at(-1)
-  const rppiDate = d.rppi_index?.dates?.at(-1)
-
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"}</style>
 
-      <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08] p-4" style={{ animation: "fadeUp .5s ease both" }}>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200">
-            <b className="font-semibold text-gray-900 dark:text-gray-50">{T("주택·부동산", "Real Estate")}</b> — RPPI(2019=100) <b className="text-indigo-700 dark:text-indigo-300">{f1(rppiLast)}</b>{yoyLast != null ? <>{T(" · 전년비 ", " · YoY ")}<b className={yoyLast >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoyLast >= 0 ? "+" : ""}{f1(yoyLast)}%</b></> : null}{rppiDate ? " (" + rppiDate.slice(0, 4) + "Q" + (Math.floor(Number(rppiDate.slice(5, 7)) / 3) + 1) + ")" : ""}{T(" — 주택 공급·가격은 ", " — Housing supply & prices ")}<b className="text-gray-700 dark:text-gray-200">{T("빌트인·초도 가전 수요", "built-in and first-fit appliance demand")}</b>{T(" 선행", " lead")}
-          </div>
-        </div>
-      </div>
 
       <div className="grid items-start gap-4">
       <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
@@ -88,7 +76,6 @@ export default function HousingView() {
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
           <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("부동산·주택", "Real Estate")}</h2>
-          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("RPPI·건축허가·공실·인프라", "RPPI · Permits · Vacancy · Infra")}</span>
           <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} /></span>
         </header>
         <div className="grid items-stretch gap-4 sm:grid-cols-2">

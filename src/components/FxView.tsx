@@ -238,7 +238,6 @@ export default function FxView() {
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("환율", "Exchange")}</h2>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("필리핀 페소 · 대달러·역내·조달통화·실효환율", "Philippine peso · vs. USD · regional · sourcing currencies · effective rates")}</span>
             <span className="ml-auto flex items-center gap-2">
               <span className="hidden text-[10.5px] text-gray-400 dark:text-gray-500 sm:inline">{labels[0]} → {labels[labels.length - 1]}</span>
               <Segmented size="sm" value={win} onChange={setWin} options={WINDOWS.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} />

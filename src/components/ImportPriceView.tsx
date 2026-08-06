@@ -36,24 +36,10 @@ export default function ImportPriceView() {
   const years = win === "1Y" ? 1 : win === "5Y" ? 5 : win === "전체" ? 10 : 2
   const cur = HS.find((h) => h.hs === hs)!
   const chart = useMemo(() => toSeries(ser[hs], years, C.ind), [ser, hs, years])
-  const latest = ser[hs]?.values?.at(-1)
-  const prev = ser[hs]?.values?.at(-2)
-  const yrAgo = ser[hs]?.values?.at(-13)
-  const yoy = latest != null && yrAgo != null && yrAgo !== 0 ? ((latest - yrAgo) / yrAgo) * 100 : null
-  const lastDate = ser[hs]?.dates?.at(-1)
 
   return (
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}"}</style>
-
-      {/* 배너 */}
-      <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08] p-4" style={{ animation: "fadeUp .5s ease both" }}>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200">
-            <b className="font-semibold text-gray-900 dark:text-gray-50">{T("가전 수입 단가", "Import unit price")}</b> — {cur.label} <b className="text-indigo-700 dark:text-indigo-300">{latest != null ? "$" + latest.toFixed(2) + "/kg" : "–"}</b>{latest != null && prev != null ? <span className={"ml-0.5 " + (latest >= prev ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{latest >= prev ? "▲" : "▼"}{Math.abs(latest - prev).toFixed(2)}</span> : null}{yoy != null ? <> · {T("전년비", "YoY")} <b className={yoy >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"}>{yoy >= 0 ? "+" : ""}{yoy.toFixed(1)}%</b></> : null} — {T("페소 표시 조달원가·경쟁 수입가 신호", "peso-denominated procurement cost · competitive import price signal")}
-          </div>
-        </div>
-      </div>
 
       <div className="grid items-start gap-4">
       <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
@@ -62,7 +48,6 @@ export default function ImportPriceView() {
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
           <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("가전 수입 단가", "Import unit price")}</h2>
           <Segmented value={hs} onChange={setHs} options={HS.map((h) => ({ k: h.hs, label: h.label }))} size="sm" />
-          <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">HS {hs}{lastDate ? " · " + T("최신 확보", "Latest") + " " + fmtMonth(lastDate) : ""}</span>
           <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={[{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: T("전체", "All") }]} /></span>
         </header>
         <div className="grid items-stretch gap-4 sm:grid-cols-2">
