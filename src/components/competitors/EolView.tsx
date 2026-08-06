@@ -4,13 +4,13 @@
 // 3뷰(피드/보드/테이블) 세그먼트 전환 + 카테고리 필터 + KPI + 드릴다운 모달. 시안: design_handoff_eol_detection.
 import React from "react"
 import { fmtStamp, type DailyRow } from "@/lib/supabase"
-import { canonCode, PM_CATS } from "@/lib/classify"
-import { peso, catLabel } from "@/components/competitors/shared"
+import { canonCode, PM_CATS, pmFormOf } from "@/lib/classify"
+import { peso, catLabel, PmDrop } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
 
 type Kind = "new" | "eol"
 type Ev = {
-  id: string; kind: Kind; cat: string; brand: string; model: string
+  id: string; kind: Kind; cat: string; brand: string; model: string; form: string | null; spec: string | null
   firstSeen: string; lastSeen: string; daysMissing: number; price: number | null; channels: number
   conf: "높음" | "중간" | "낮음"; status: string; date: string; hist: { d: string; net: number | null }[]
 }
@@ -51,6 +51,8 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
       const r0 = list.find((r) => r.d === lastSeen) ?? list[0]
       const cN = catNorm(r0.category)
       const model = r0.code && r0.code.length >= 4 && r0.code !== "N/A" ? r0.code : cc
+      const form = pmFormOf(r0.category, (r0.model || "") + " " + (r0.capacity || ""), r0.brand)
+      const spec = r0.capacity ?? null
       const lastRows = list.filter((r) => r.d === lastSeen)
       const channels = new Set(lastRows.map((r) => r.retailer)).size
       const lastPrices = lastRows.map((r) => r.price).filter((v): v is number => v != null)
@@ -62,9 +64,9 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
       const hist = Object.entries(byDay).map(([d, ps]) => ({ d, net: Math.min(...ps) })).sort((a, b) => a.d.localeCompare(b.d))
       if (ageFirst <= 14 && daysMissing < 7 && ds.length <= 8) {
         const firstRows = list.filter((r) => r.d === firstSeen).map((r) => r.price).filter((v): v is number => v != null)
-        out.push({ id: "new-" + cc, kind: "new", cat: cN, brand: r0.brand, model, firstSeen, lastSeen, daysMissing, price: firstRows.length ? Math.min(...firstRows) : netPrice, channels, conf, status: "신제품", date: firstSeen, hist })
+        out.push({ id: "new-" + cc, kind: "new", cat: cN, brand: r0.brand, model, form, spec, firstSeen, lastSeen, daysMissing, price: firstRows.length ? Math.min(...firstRows) : netPrice, channels, conf, status: "신제품", date: firstSeen, hist })
       } else if (daysMissing >= 7) {
-        out.push({ id: "eol-" + cc, kind: "eol", cat: cN, brand: r0.brand, model, firstSeen, lastSeen, daysMissing, price: netPrice, channels, conf, status: eolStatus(daysMissing), date: lastSeen, hist })
+        out.push({ id: "eol-" + cc, kind: "eol", cat: cN, brand: r0.brand, model, form, spec, firstSeen, lastSeen, daysMissing, price: netPrice, channels, conf, status: eolStatus(daysMissing), date: lastSeen, hist })
       }
     }
     return out
@@ -95,11 +97,7 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
           ))}
         </div>
         <span className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
-        <div className="flex flex-wrap items-center gap-1.5">
-          {CATS.map((c) => { const n = c === "전체" ? events.length : (catCounts[c] ?? 0); if (c !== "전체" && n === 0) return null; const on = cat === c; return (
-            <button key={c} type="button" onClick={() => setCat(c)} className={"inline-flex items-center gap-1 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (on ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:text-indigo-600")}>{catLabel(c)}<span className={"tabular-nums text-[10.5px] " + (on ? "text-gray-300 dark:text-gray-500" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
-          ) })}
-        </div>
+        <PmDrop label={T("제품", "Div")} sel={cat} options={CATS.filter((c) => c === "전체" || (catCounts[c] ?? 0) > 0).map((c) => ({ k: c, t: c === "전체" ? T("전체", "All") : catLabel(c) }))} onSelect={setCat} />
         <div className="ml-auto flex items-center gap-3.5 text-[12px]">
           <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span className="h-2 w-2 rounded-full bg-emerald-500" />{T("신제품", "New")} <b className="tabular-nums text-gray-800 dark:text-gray-100">{kpi.neo}</b></span>
           <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span className="h-2 w-2 rounded-full bg-rose-500" />{T("단종 유력", "Likely EOL")} <b className="tabular-nums text-gray-800 dark:text-gray-100">{kpi.dead}</b></span>
@@ -148,11 +146,16 @@ function FeedView({ events, f, setF, onSel, KindBadge }: { events: Ev[]; f: stri
           <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
             {byDay[d].map((e, i) => (
               <button key={e.id} type="button" onClick={() => onSel(e)} className="flex w-full items-center gap-2.5 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 text-left transition-colors last:border-0 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10" style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 10) * 0.02 + "s" }}>
-                <span className={"h-2 w-2 shrink-0 rounded-full " + STATUS_C[e.status].dot} />
+                <span className="relative flex h-2 w-2 shrink-0 items-center justify-center">
+                  {(e.kind === "new" || e.status === "단종 유력") && <span className={"absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 " + STATUS_C[e.status].dot} />}
+                  <span className={"relative h-2 w-2 rounded-full " + STATUS_C[e.status].dot} />
+                </span>
                 <KindBadge e={e} />
                 <div className="flex min-w-0 flex-1 items-baseline gap-2">
                   <span className="shrink-0 whitespace-nowrap text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{e.brand === "LG" ? <span className="text-indigo-700 dark:text-indigo-300">{e.brand} {e.model}</span> : `${e.brand} ${e.model}`}</span>
                   <span className="hidden shrink-0 rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 sm:inline">{e.cat}</span>
+                  {e.form ? <span className="hidden shrink-0 rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 md:inline">{e.form}</span> : null}
+                  {e.spec ? <span className="hidden shrink-0 whitespace-nowrap rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 lg:inline">{e.spec}</span> : null}
                 </div>
                 <span className="shrink-0 text-right text-[11.5px] tabular-nums">{e.kind === "new" ? <span className="font-semibold text-emerald-600 dark:text-emerald-400">{T("등장가 ", "Launch ")}{peso(e.price)}</span> : <span className="text-gray-500 dark:text-gray-400">{T("미노출 ", "Absent ")}<b className="text-gray-800 dark:text-gray-100">D+{e.daysMissing}</b>{T(" · 최종 ", " · last ")}{md(e.lastSeen)}</span>}</span>
                 <span className="hidden w-14 shrink-0 text-right text-[11px] text-gray-400 dark:text-gray-500 md:block">{e.channels}{T("/거래선", "/dealers")}</span>
@@ -199,31 +202,51 @@ function BoardKanban({ events, onSel }: { events: Ev[]; onSel: (e: Ev) => void }
 }
 
 function TableView({ events, f, setF, onSel }: { events: Ev[]; f: string; setF: (v: string) => void; onSel: (e: Ev) => void }) {
-  const list = events.filter((e) => passF(e, f)).sort((a, b) => (b.kind === "eol" ? b.daysMissing : -1) - (a.kind === "eol" ? a.daysMissing : -1) || b.date.localeCompare(a.date))
+  const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "absent", asc: false })
+  const setS = (k: string) => setSort((s) => (s.k === k ? { k, asc: !s.asc } : { k, asc: true }))
+  const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : <span className="ml-0.5 text-[8px] text-gray-300 dark:text-gray-600">⇅</span>)
+  const sv = (e: Ev, k: string): number | string | null => {
+    if (k === "absent") return e.kind === "eol" ? e.daysMissing : -1
+    if (k === "model") return e.model; if (k === "brand") return e.brand; if (k === "cat") return e.cat
+    if (k === "form") return e.form ?? ""; if (k === "first") return e.firstSeen; if (k === "last") return e.lastSeen
+    if (k === "price") return e.price; if (k === "status") return e.kind === "new" ? "0" : e.status
+    return null
+  }
+  const list = events.filter((e) => passF(e, f)).sort((a, b) => {
+    const x = sv(a, sort.k), y = sv(b, sort.k)
+    if (x == null) return 1; if (y == null) return -1
+    const c = typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y))
+    return (c !== 0 ? c : b.date.localeCompare(a.date)) * (sort.asc ? 1 : -1)
+  })
+  const Th = ({ k, label, align = "left" }: { k: string; label: string; align?: string }) => (
+    <th onClick={() => setS(k)} className={"cursor-pointer select-none border-b border-gray-200 dark:border-gray-800 px-2 py-2 hover:text-indigo-600 dark:hover:text-indigo-400 " + (align === "right" ? "text-right" : align === "center" ? "text-center" : "text-left")}>{label}{arrow(k)}</th>
+  )
   return (
     <div className="flex flex-col gap-2.5">
       <SubTabs f={f} setF={setF} />
       <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
-        <table className="w-full min-w-[860px] table-fixed text-[12px]">
-          <colgroup><col style={{ width: 108 }} /><col /><col style={{ width: 88 }} /><col style={{ width: 72 }} /><col style={{ width: 80 }} /><col style={{ width: 80 }} /><col style={{ width: 70 }} /><col style={{ width: 92 }} /><col style={{ width: 64 }} /></colgroup>
+        <table className="w-full min-w-[930px] table-fixed text-[12px]">
+          <colgroup><col style={{ width: 108 }} /><col /><col style={{ width: 88 }} /><col style={{ width: 72 }} /><col style={{ width: 74 }} /><col style={{ width: 80 }} /><col style={{ width: 80 }} /><col style={{ width: 70 }} /><col style={{ width: 92 }} /><col style={{ width: 56 }} /></colgroup>
           <thead className="bg-gray-50 dark:bg-gray-900"><tr className="text-[11px] font-semibold text-gray-600 dark:text-gray-300">
-            <th className="border-b border-gray-200 dark:border-gray-800 px-3 py-2 text-left">{T("상태", "Status")}</th>
-            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("제품", "Product")}</th>
-            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("경쟁사", "Rival")}</th>
-            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("카테고리", "Category")}</th>
-            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("최초 관측", "First seen")}</th>
-            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-left">{T("최종 관측", "Last seen")}</th>
-            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("미노출", "Absent")}</th>
-            <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-right">{T("등록가", "Price")}</th>
+            <th onClick={() => setS("status")} className="cursor-pointer select-none border-b border-gray-200 dark:border-gray-800 px-3 py-2 text-left hover:text-indigo-600">{T("상태", "Status")}{arrow("status")}</th>
+            <Th k="model" label={T("제품", "Product")} />
+            <Th k="brand" label={T("경쟁사", "Rival")} />
+            <Th k="cat" label={T("카테고리", "Category")} />
+            <Th k="form" label={T("유형", "Type")} />
+            <Th k="first" label={T("최초 관측", "First seen")} />
+            <Th k="last" label={T("최종 관측", "Last seen")} />
+            <Th k="absent" label={T("미노출", "Absent")} align="center" />
+            <Th k="price" label={T("등록가", "Price")} align="right" />
             <th className="border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("상세", "Details")}</th>
           </tr></thead>
           <tbody>
-            {list.length === 0 ? <tr><td colSpan={9} className="px-4 py-10 text-center text-[12px] text-gray-400">{T("해당 이벤트가 없습니다.", "No matching events.")}</td></tr> : list.slice(0, 200).map((e, i) => (
+            {list.length === 0 ? <tr><td colSpan={10} className="px-4 py-10 text-center text-[12px] text-gray-400">{T("해당 이벤트가 없습니다.", "No matching events.")}</td></tr> : list.slice(0, 200).map((e, i) => (
               <tr key={e.id} onClick={() => onSel(e)} className="cursor-pointer border-b border-gray-100 dark:border-gray-800/60 last:border-0 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10" style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(i, 16) * 0.015 + "s" }}>
                 <td className="px-3 py-2"><span className={"inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-bold " + (e.kind === "new" ? STATUS_C["신제품"].chip : STATUS_C[e.status].chip)}><span className={"h-1.5 w-1.5 rounded-full " + (e.kind === "new" ? "bg-emerald-500" : STATUS_C[e.status].dot)} />{e.kind === "new" ? T("신제품", "New") : e.status}</span></td>
                 <td className="truncate px-2 py-2 font-semibold text-gray-800 dark:text-gray-100" title={e.model}>{e.model}</td>
                 <td className="truncate px-2 py-2 text-gray-600 dark:text-gray-300">{e.brand}</td>
                 <td className="px-2 py-2 text-gray-500 dark:text-gray-400">{e.cat}</td>
+                <td className="truncate px-2 py-2 text-gray-500 dark:text-gray-400" title={e.form || undefined}>{e.form || "—"}</td>
                 <td className="px-2 py-2 tabular-nums text-gray-500 dark:text-gray-400">{md(e.firstSeen)}</td>
                 <td className="px-2 py-2 tabular-nums text-gray-500 dark:text-gray-400">{md(e.lastSeen)}</td>
                 <td className="px-2 py-2 text-center tabular-nums">{e.kind === "new" ? <span className="text-gray-300 dark:text-gray-600">—</span> : <span className={"font-bold " + (e.daysMissing >= 14 ? "text-rose-600 dark:text-rose-400" : e.daysMissing >= 7 ? "text-amber-600 dark:text-amber-400" : "text-gray-500")}>D+{e.daysMissing}</span>}</td>
