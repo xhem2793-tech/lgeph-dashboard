@@ -5,7 +5,7 @@
 // 데이터: v_competitor_3d(가격) + v_competitor_ads_board(광고). 유리(기회)/불리(경보·주의) 시맨틱.
 import React from "react"
 import { fmtStamp, type PriceRow, type CompAd } from "@/lib/supabase"
-import { canonCode } from "@/lib/classify"
+import { canonCode, pmFormOf } from "@/lib/classify"
 import { peso, pmShopLabel, PmDrop } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
 
@@ -41,14 +41,15 @@ const cleanTxt = (s?: string | null) => (s || "").replace(/<[^>]*>/g, "").replac
 type Signal = {
   id: string; kind: "price" | "promo" | "ad" | "stock"; sev: string; cat: string; brand: string; own: boolean
   title: string; detail: string; metric: string; metricTone: string; before: number | null; after: number | null
-  channel: string | null; url: string | null; score: number; day: "today" | "yesterday"; spec: string | null; model: string
+  channel: string | null; url: string | null; score: number; day: "today" | "yesterday"; spec: string | null; model: string; type?: string
 }
 
 export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads: CompAd[] | null; stamp: string | null }) {
   const [kind, setKind] = React.useState("전체")
   const [catF, setCatF] = React.useState("전체")
   const [dayF, setDayF] = React.useState("전체")
-  const [ownF, setOwnF] = React.useState("전체") // 대상: 전체·자사(LG)·경쟁사
+  const [brandF, setBrandF] = React.useState("전체") // 브랜드: 전체·경쟁사(__comp)·개별 브랜드
+  const [typeF, setTypeF] = React.useState("전체") // 유형(폼팩터)
   const DAY_LABEL: Record<string, string> = { today: T("오늘", "Today"), yesterday: T("어제", "Yesterday") }
   const R = rows ?? []
   const A = ads ?? []
@@ -67,6 +68,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       const cat = normCat(r.category)
       const cc = canonCode(r.model, r.code); if (cc.length < 5) return
       const own = r.brand === "LG"
+      const ptype = pmFormOf(r.category, `${r.model || ""} ${r.capacity || ""}`, r.brand) || ""
       const label = r.code && r.code.length >= 4 && r.code !== "N/A" ? r.code : cc
       const nm = `${r.brand} ${label}`
       // 가격 급락/급등 — 오늘(d1→d0)·어제(d2→d1)
@@ -76,19 +78,19 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
         const day: "today" | "yesterday" = si === 0 ? "today" : "yesterday"
         const chg = (aft - bef) / bef, pctN = Math.round(chg * 100)
         if (chg <= -0.06) {
-          add({ id: `p${i}-d${si}`, kind: "price", sev: own ? "opp" : (chg <= -0.13 ? "alert" : "warn"), cat, brand: r.brand, own, title: nm, detail: own ? T("자사 실판매가 인하 — 가격 경쟁력↑", "Own street price cut — pricing edge up") : `${pmShopLabel(r.retailer)}${T(" 실판매가 급락 — 자사 최저가 위협", " street price plunge — threatens our floor")}`, metric: `${pctN}%`, metricTone: "down", before: bef, after: aft, channel: r.retailer, url: r.url, score: Math.abs(chg) * 100 * (own ? 0.8 : 1.25), day, spec: r.capacity ?? null, model: label })
+          add({ id: `p${i}-d${si}`, kind: "price", sev: own ? "opp" : (chg <= -0.13 ? "alert" : "warn"), cat, brand: r.brand, own, title: nm, detail: own ? T("자사 실판매가 인하 — 가격 경쟁력↑", "Own street price cut — pricing edge up") : `${pmShopLabel(r.retailer)}${T(" 실판매가 급락 — 자사 최저가 위협", " street price plunge — threatens our floor")}`, metric: `${pctN}%`, metricTone: "down", before: bef, after: aft, channel: r.retailer, url: r.url, score: Math.abs(chg) * 100 * (own ? 0.8 : 1.25), day, spec: r.capacity ?? null, model: label, type: ptype })
         } else if (chg >= 0.08 && !own) {
-          add({ id: `r${i}-d${si}`, kind: "price", sev: "opp", cat, brand: r.brand, own, title: nm, detail: `${pmShopLabel(r.retailer)}${T(" 가격 인상 — 자사 상대 우위 확대", " price hike — widens our relative edge")}`, metric: `+${pctN}%`, metricTone: "up", before: bef, after: aft, channel: r.retailer, url: r.url, score: chg * 100 * 0.8, day, spec: r.capacity ?? null, model: label })
+          add({ id: `r${i}-d${si}`, kind: "price", sev: "opp", cat, brand: r.brand, own, title: nm, detail: `${pmShopLabel(r.retailer)}${T(" 가격 인상 — 자사 상대 우위 확대", " price hike — widens our relative edge")}`, metric: `+${pctN}%`, metricTone: "up", before: bef, after: aft, channel: r.retailer, url: r.url, score: chg * 100 * 0.8, day, spec: r.capacity ?? null, model: label, type: ptype })
         }
       })
       // 깊은 할인(프로모 성격) — 오늘 스냅샷
       if ((r.discountPct ?? 0) >= 30 && r.d0) {
         const d = Math.round(r.discountPct as number)
-        add({ id: `d${i}`, kind: "promo", sev: own ? "opp" : "warn", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)}${T(" 자사 프로모 강세", " strong own promo")}` : `${pmShopLabel(r.retailer)}${T(" 경쟁 공격적 할인", " aggressive rival discount")}`, metric: `-${d}%`, metricTone: "down", before: r.srp, after: r.p0, channel: r.retailer, url: r.url, score: d * (own ? 0.75 : 1), day: "today", spec: r.capacity ?? null, model: label })
+        add({ id: `d${i}`, kind: "promo", sev: own ? "opp" : "warn", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)}${T(" 자사 프로모 강세", " strong own promo")}` : `${pmShopLabel(r.retailer)}${T(" 경쟁 공격적 할인", " aggressive rival discount")}`, metric: `-${d}%`, metricTone: "down", before: r.srp, after: r.p0, channel: r.retailer, url: r.url, score: d * (own ? 0.75 : 1), day: "today", spec: r.capacity ?? null, model: label, type: ptype })
       }
       // 재고(보조) — 점수 낮춰 편중 방지. 경쟁사 품절은 반사이익, 자사 품절은 손실.
       if (r.availability === "OutOfStock" && r.d0) {
-        add({ id: `s${i}`, kind: "stock", sev: own ? "alert" : "opp", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)}${T(" 자사 품절 — 판매 기회 손실", " own stockout — lost sales opportunity")}` : `${pmShopLabel(r.retailer)}${T(" 경쟁사 품절 — 반사이익", " rival stockout — our gain")}`, metric: "품절", metricTone: "flat", before: null, after: null, channel: r.retailer, url: r.url, score: own ? 42 : 16, day: "today", spec: r.capacity ?? null, model: label })
+        add({ id: `s${i}`, kind: "stock", sev: own ? "alert" : "opp", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)}${T(" 자사 품절 — 판매 기회 손실", " own stockout — lost sales opportunity")}` : `${pmShopLabel(r.retailer)}${T(" 경쟁사 품절 — 반사이익", " rival stockout — our gain")}`, metric: "품절", metricTone: "flat", before: null, after: null, channel: r.retailer, url: r.url, score: own ? 42 : 16, day: "today", spec: r.capacity ?? null, model: label, type: ptype })
       }
     })
 
@@ -117,7 +119,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
   // 말풍선 스트림 — 날짜(오늘/어제) > 말풍선(제품 묶음: 브랜드+모델). 각 말풍선 안에 거래선별 변동(펼침).
   // 묶음 기준: 브랜드+제품(title)+신호종류 → 대표 신호 + 거래선 all. 심각도>점수 순, 같은 브랜드는 인접.
   const byDay = React.useMemo(() => {
-    const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF) && (ownF === "전체" || (ownF === "own" ? s.own : !s.own)))
+    const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF) && (typeF === "전체" || (s.type || "") === typeF) && (brandF === "전체" || (brandF === "__comp" ? !s.own : s.brand === brandF)))
     const DAY_ORDER: ("today" | "yesterday")[] = ["today", "yesterday"]
     return DAY_ORDER.map((day) => {
       const ds = filtered.filter((s) => s.day === day)
@@ -128,12 +130,31 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
         const rep = arr[0]
         return { key: day + "|" + key, kind: rep.kind, brand: rep.brand, own: rep.own, cat: rep.cat, sev: rep.sev, rep, all: arr, order: SEV_META[rep.sev].order, score: Math.max(...arr.map((s) => s.score)) }
       }).sort((a, b) => a.order - b.order || (a.own === b.own ? 0 : a.own ? 1 : -1) || a.brand.localeCompare(b.brand) || b.score - a.score)
-      return { day, bubbles, n: ds.length }
+      // 제품(카테고리)별 그룹핑 — 대화방 섹션처럼. CATS 순서 유지.
+      const cm = new Map<string, typeof bubbles>()
+      for (const b of bubbles) { const arr = cm.get(b.cat); if (arr) arr.push(b); else cm.set(b.cat, [b]) }
+      const cats = CATS.filter((c) => cm.has(c)).map((c) => ({ cat: c, bubbles: cm.get(c)! }))
+      return { day, cats, n: ds.length }
     }).filter((d) => d.n > 0)
-  }, [signals, kind, catF, dayF, ownF])
+  }, [signals, kind, catF, dayF, brandF, typeF])
   const total = byDay.reduce((s, d) => s + d.n, 0)
 
   const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
+  // 브랜드 옵션 — 전체·경쟁사 + 개별 브랜드(LG 먼저, 나머지 알파벳). 신호 존재 브랜드만.
+  const brandOpts = React.useMemo(() => {
+    const set = new Set(signals.map((s) => s.brand))
+    const rest = Array.from(set).filter((b) => b !== "LG").sort((a, b) => a.localeCompare(b))
+    const list = [{ k: "전체", t: T("전체", "All") }, { k: "__comp", t: T("경쟁사", "Rivals") }]
+    if (set.has("LG")) list.push({ k: "LG", t: "LG" })
+    rest.forEach((b) => list.push({ k: b, t: b }))
+    return list
+  }, [signals])
+  // 유형 옵션 — 선택 제품(catF)에 존재하는 폼팩터만. 전체 포함.
+  const typeOpts = React.useMemo(() => {
+    const set = new Set<string>()
+    signals.forEach((s) => { if ((s.type || "") && (catF === "전체" || s.cat === catF)) set.add(s.type as string) })
+    return [{ k: "전체", t: T("전체", "All") }, ...Array.from(set).sort((a, b) => a.localeCompare(b)).map((tp) => ({ k: tp, t: tp }))]
+  }, [signals, catF])
 
   if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("불러오는 중", "Loading")}</div>
 
@@ -151,8 +172,9 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       {/* 필터바 — 채널비교식 드롭다운(날짜·제품·신호) */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <PmDrop label={T("날짜", "Date")} sel={dayF} options={[{ k: "전체", t: T("전체", "All") }, { k: "today", t: DAY_LABEL.today }, { k: "yesterday", t: DAY_LABEL.yesterday }]} onSelect={setDayF} />
-        <PmDrop label={T("대상", "Scope")} sel={ownF} options={[{ k: "전체", t: T("전체", "All") }, { k: "own", t: T("자사 LG", "LG") }, { k: "comp", t: T("경쟁사", "Rivals") }]} onSelect={setOwnF} />
-        <PmDrop label={T("제품", "Div")} sel={catF} options={["전체", ...CATS].filter((c) => c === "전체" || (catCounts[c] ?? 0) > 0).map((c) => ({ k: c, t: c === "전체" ? T("전체", "All") : (CAT_LABEL[c] ?? c) }))} onSelect={setCatF} />
+        <PmDrop label={T("브랜드", "Brand")} sel={brandF} options={brandOpts} onSelect={setBrandF} />
+        <PmDrop label={T("제품", "Div")} sel={catF} options={["전체", ...CATS].filter((c) => c === "전체" || (catCounts[c] ?? 0) > 0).map((c) => ({ k: c, t: c === "전체" ? T("전체", "All") : (CAT_LABEL[c] ?? c) }))} onSelect={(k) => { setCatF(k); setTypeF("전체") }} />
+        {typeOpts.length > 1 && <PmDrop label={T("유형", "Type")} sel={typeF} options={typeOpts} onSelect={setTypeF} />}
         <PmDrop label={T("신호", "Signal")} sel={kind} options={KIND_FILTERS.map((f) => ({ k: f.k, t: f.k === "전체" ? T("전체", "All") : KIND_LABEL[f.k] }))} onSelect={setKind} />
         <span className="ml-auto hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
@@ -165,65 +187,79 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
           {byDay.map((dg) => {
             const dnum = dg.day === "today" ? new Date() : new Date(Date.now() - 86400000)
             const mmdd = `${String(dnum.getMonth() + 1).padStart(2, "0")}/${String(dnum.getDate()).padStart(2, "0")}`
+            const st = stamp ? new Date(stamp) : null
+            const bubTime = dg.day === "today" && st ? `${String(st.getHours()).padStart(2, "0")}:${String(st.getMinutes()).padStart(2, "0")}` : mmdd
             return (
             <div key={dg.day}>
-              {/* 날짜 헤더 — 채널비교 날짜 pill 디자인(테두리 알약·볼드 tabular·최신 배지)+애니메이션 */}
-              <div className="mb-1.5 flex items-center gap-2" style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
+              {/* 날짜 헤더 — 채널별 가격비교(BoardView) 날짜 pill 디자인(테두리 알약·달력 아이콘·볼드 tabular·최신 배지) */}
+              <div className="mb-2 flex items-center gap-2" style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
                 <div className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1">
-                  <span className={"h-1.5 w-1.5 rounded-full " + (dg.day === "today" ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600")} />
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
                   <span className="text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{mmdd}</span>
                   <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{DAY_LABEL[dg.day]}</span>
                   {dg.day === "today" && <span className="rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">{T("최신", "Latest")}</span>}
                 </div>
                 <span className="text-[11px] text-gray-400 dark:text-gray-500">{dg.n}{T("건", "")}</span>
               </div>
-              {/* 말풍선 스트림 — 자사(LG)=우측·경쟁사=좌측. 말풍선=제품 묶음, 심각도별 색·펼치면 거래선별 */}
-              <div className="flex flex-col gap-2">
-                {dg.bubbles.map((bg) => { const s = bg.rep; const open = expanded.has(bg.key); const sm = SEV_META[bg.sev]; const km = KIND_META[bg.kind]
-                  const bub = bg.own ? "border-indigo-200 bg-indigo-50/70 dark:border-indigo-500/30 dark:bg-indigo-500/10"
-                    : bg.sev === "alert" ? "border-rose-200 bg-rose-50/70 dark:border-rose-500/30 dark:bg-rose-500/10"
-                    : bg.sev === "warn" ? "border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10"
-                    : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10"
-                  return (
-                  <div key={bg.key} className="flex items-end gap-2" style={{ animation: "rowIn .3s ease both" }}>
-                    {/* 아바타(브랜드 이니셜) */}
-                    <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
-                    {/* 말풍선 */}
-                    <div className={"relative max-w-[88%] rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm " + bub}>
-                      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-                        <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
-                        <span className={"whitespace-nowrap text-[12.5px] font-bold " + (bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{bg.brand}</span>
-                        <span className="text-[11px] text-gray-300 dark:text-gray-600">·</span>
-                        <span className="whitespace-nowrap text-[11.5px] font-medium text-gray-700 dark:text-gray-200">{s.spec ? s.spec : (CAT_LABEL[bg.cat] ?? bg.cat)}</span>
-                        {s.model && <span className="text-[10.5px] text-gray-400 dark:text-gray-500">({s.model})</span>}
-                        <span className={"inline-flex items-center rounded px-1.5 py-px text-[9.5px] font-bold " + km.cls}>{KIND_LABEL[bg.kind]}</span>
-                        <span className={"inline-flex items-center rounded px-1.5 py-px text-[9.5px] font-bold " + sm.chip}>{SEV_LABEL[bg.sev]}</span>
-                      </div>
-                      <div className="mt-1 flex items-center gap-2">
-                        <span className="min-w-0 flex-1 text-[11.5px] leading-snug text-gray-600 dark:text-gray-300">{s.detail}</span>
-                        <span className="shrink-0">{metricChip(s)}</span>
-                      </div>
-                      {bg.all.length > 1 && (
-                        <button type="button" onClick={() => toggleExp(bg.key)} className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-gray-500 transition-colors hover:text-indigo-600 dark:bg-gray-900/40 dark:text-gray-400 dark:hover:text-indigo-300">
-                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200" style={{ transform: open ? "rotate(90deg)" : "none" }}><path d="M9 18l6-6-6-6" /></svg>
-                          {bg.all.length}{T("개 거래선", " retailers")}
-                        </button>
-                      )}
-                      {open && bg.all.length > 1 && (
-                        <div className="mt-1.5 flex flex-col gap-1 border-t border-black/5 pt-1.5 dark:border-white/10" style={{ animation: "rowIn .28s ease both" }}>
-                          {bg.all.map((sig, si) => (
-                            <div key={sig.id + si} className="flex items-center gap-2">
-                              {sig.channel ? (sig.url ? <a href={sig.url} target="_blank" rel="noopener noreferrer" className="w-20 shrink-0 truncate text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">{pmShopLabel(sig.channel)}</a> : <span className="w-20 shrink-0 truncate text-[11px] font-semibold text-gray-600 dark:text-gray-300">{pmShopLabel(sig.channel)}</span>) : <span className="w-20 shrink-0 text-[11px] text-gray-400">—</span>}
-                              <span className="min-w-0 flex-1 truncate text-[11.5px] text-gray-500 dark:text-gray-400">{sig.detail}</span>
-                              <span className="shrink-0">{metricChip(sig)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+              {/* 제품(카테고리)별 그룹 — 대화방 섹션 구분선 + 말풍선 스트림(전부 왼쪽·시각 표시) */}
+              {dg.cats.map((cg) => (
+                <div key={cg.cat}>
+                  <div className="my-2 flex items-center gap-2">
+                    <span className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
+                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{CAT_LABEL[cg.cat] ?? cg.cat} · {cg.bubbles.length}</span>
+                    <span className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
                   </div>
-                ) })}
-              </div>
+                  <div className="flex flex-col gap-2">
+                    {cg.bubbles.map((bg) => { const s = bg.rep; const open = expanded.has(bg.key); const sm = SEV_META[bg.sev]; const km = KIND_META[bg.kind]
+                      const bub = bg.own ? "border-indigo-200 bg-indigo-50/70 dark:border-indigo-500/30 dark:bg-indigo-500/10"
+                        : bg.sev === "alert" ? "border-rose-200 bg-rose-50/70 dark:border-rose-500/30 dark:bg-rose-500/10"
+                        : bg.sev === "warn" ? "border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10"
+                        : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10"
+                      return (
+                      <div key={bg.key} className="flex items-end gap-2" style={{ animation: "rowIn .3s ease both" }}>
+                        {/* 아바타(브랜드 이니셜) */}
+                        <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
+                        {/* 말풍선 */}
+                        <div className={"relative max-w-[88%] rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm " + bub}>
+                          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+                            <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
+                            <span className={"whitespace-nowrap text-[12.5px] font-bold " + (bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{bg.brand}</span>
+                            {bg.rep.type ? <><span className="text-[11px] text-gray-300 dark:text-gray-600">·</span><span className="whitespace-nowrap text-[10.5px] text-gray-500 dark:text-gray-400">{bg.rep.type}</span></> : null}
+                            <span className="text-[11px] text-gray-300 dark:text-gray-600">·</span>
+                            <span className="whitespace-nowrap text-[11.5px] font-medium text-gray-700 dark:text-gray-200">{s.spec ? s.spec : (CAT_LABEL[bg.cat] ?? bg.cat)}</span>
+                            {s.model && <span className="text-[10.5px] text-gray-400 dark:text-gray-500">({s.model})</span>}
+                            <span className={"inline-flex items-center rounded px-1.5 py-px text-[9.5px] font-bold " + km.cls}>{KIND_LABEL[bg.kind]}</span>
+                            <span className={"inline-flex items-center rounded px-1.5 py-px text-[9.5px] font-bold " + sm.chip}>{SEV_LABEL[bg.sev]}</span>
+                          </div>
+                          <div className="mt-1 flex items-center gap-2">
+                            <span className="min-w-0 flex-1 text-[11.5px] leading-snug text-gray-600 dark:text-gray-300">{s.detail}</span>
+                            <span className="shrink-0">{metricChip(s)}</span>
+                          </div>
+                          {bg.all.length > 1 && (
+                            <button type="button" onClick={() => toggleExp(bg.key)} className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-gray-500 transition-colors hover:text-indigo-600 dark:bg-gray-900/40 dark:text-gray-400 dark:hover:text-indigo-300">
+                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200" style={{ transform: open ? "rotate(90deg)" : "none" }}><path d="M9 18l6-6-6-6" /></svg>
+                              {bg.all.length}{T("개 거래선", " retailers")}
+                            </button>
+                          )}
+                          {open && bg.all.length > 1 && (
+                            <div className="mt-1.5 flex flex-col gap-1 border-t border-black/5 pt-1.5 dark:border-white/10" style={{ animation: "rowIn .28s ease both" }}>
+                              {bg.all.map((sig, si) => (
+                                <div key={sig.id + si} className="flex items-center gap-2">
+                                  {sig.channel ? (sig.url ? <a href={sig.url} target="_blank" rel="noopener noreferrer" className="w-20 shrink-0 truncate text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">{pmShopLabel(sig.channel)}</a> : <span className="w-20 shrink-0 truncate text-[11px] font-semibold text-gray-600 dark:text-gray-300">{pmShopLabel(sig.channel)}</span>) : <span className="w-20 shrink-0 text-[11px] text-gray-400">—</span>}
+                                  <span className="min-w-0 flex-1 truncate text-[11.5px] text-gray-500 dark:text-gray-400">{sig.detail}</span>
+                                  <span className="shrink-0">{metricChip(sig)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          {/* 업데이트 시각 — 대화방 메시지 타임스탬프(우측 하단) */}
+                          <div className="mt-1 text-right text-[9px] tabular-nums text-gray-400 dark:text-gray-500">{bubTime}</div>
+                        </div>
+                      </div>
+                    ) })}
+                  </div>
+                </div>
+              ))}
             </div>
           )})}
         </div>
