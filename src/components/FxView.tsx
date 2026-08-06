@@ -237,10 +237,7 @@ export default function FxView() {
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("환율", "Exchange")}</h2>
-            <span className="ml-auto flex items-center gap-2">
-              <span className="hidden text-[10.5px] text-gray-400 dark:text-gray-500 sm:inline">{labels[0]} → {labels[labels.length - 1]}</span>
-              <Segmented size="sm" value={win} onChange={setWin} options={WINDOWS.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} />
-            </span>
+            <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WINDOWS.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} /></span>
           </header>
           <div className="grid items-stretch gap-4 sm:grid-cols-2">
             <ChartCard title={T("동남아 6개국 통화 약세도", "ASEAN 6-Currency Depreciation")} unit={T("대미달러 · 창 시작=100 · 위=절하", "vs. USD · window start=100 · up=depreciation")} labels={labels} series={region} tone="rose"
