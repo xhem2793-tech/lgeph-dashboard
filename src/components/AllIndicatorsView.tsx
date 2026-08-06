@@ -95,7 +95,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
   const [q, setQ] = useState("")
   const [focused, setFocused] = useState(false)
   const [cat, setCat] = useState("all")
-  const [sort, setSort] = useState<"cat" | "recent">("cat")
+  const [sort, setSort] = useState<"cat" | "recent">("recent")
   const [loadedAt, setLoadedAt] = useState<Date | null>(null)
   const [detail, setDetail] = useState<Row | null>(null)
   const [bnOpen, setBnOpen] = useState(false)
@@ -250,12 +250,10 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
       {/* 최신순: 단일 플랫 리스트 */}
       {flat && (
         <section style={{ animation: "fadeUp .5s ease both" }}>
-          <header className="mb-1 px-1">
-            <div className="flex items-baseline gap-2">
-              <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("최신 업데이트순", "By latest update")}</h2>
-              <span className="text-[11px] text-gray-400 dark:text-gray-500">{flat.length}{T("개 지표", " indicators")}</span>
-            </div>
-            <p className="mt-0.5 text-[12px] text-gray-500 dark:text-gray-400">{T("최근 관측이 갱신된 지표를 우선 정렬 — 최신값·직전 대비·최근 추세", "Most recently updated indicators first — latest value, prior change and recent trend")}</p>
+          <header className="mb-1.5 flex flex-wrap items-baseline gap-x-2 px-1">
+            <h2 className="text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("최신 업데이트순", "By latest update")}</h2>
+            <span className="text-[11px] text-gray-400 dark:text-gray-500">{flat.length}{T("개 지표", " indicators")}</span>
+            <span className="text-[12px] text-gray-400 dark:text-gray-500">· {T("최근 관측이 갱신된 지표 우선", "Most recently updated first")}</span>
           </header>
           <IndListTable items={flat} q={q} spark={spark} fav={fav} onFav={toggleFav} onDetail={setDetail} showCat />
         </section>
