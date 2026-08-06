@@ -146,7 +146,12 @@ function FeedView({ events, f, onSel }: { events: Ev[]; f: string; onSel: (e: Ev
         return (
         <div key={d} style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both", animationDelay: gi * 0.04 + "s" }}>
           <div className="mb-1.5 flex items-center gap-2">
-            <span className={"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold " + (gi === 0 ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200")}><span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />{gi === 0 ? T("오늘", "Today") : gi === 1 ? T("어제", "Yesterday") : md(d)}</span>
+            <div className="flex items-center gap-1.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1">
+              <span className={"h-1.5 w-1.5 rounded-full " + (gi === 0 ? "bg-indigo-500" : "bg-gray-300 dark:bg-gray-600")} />
+              <span className="text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{md(d)}</span>
+              {(gi === 0 || gi === 1) && <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{gi === 0 ? T("오늘", "Today") : T("어제", "Yesterday")}</span>}
+              {gi === 0 && <span className="rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">{T("최신", "Latest")}</span>}
+            </div>
             <span className="text-[11px] text-gray-400 dark:text-gray-500">{byDay[d].length}{T("건", "")}</span>
           </div>
           <div className="ml-1 flex flex-col gap-2 border-l-2 border-gray-200 pl-3 dark:border-gray-700">
