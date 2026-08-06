@@ -40,8 +40,8 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   const [cat, setCat] = React.useState("전체")
   const [metric, setMetric] = React.useState<Metric>("count")
   const [norm, setNorm] = React.useState<"global" | "col">("global") // 색 기준(전체/거래선별)
-  const [brandSort, setBrandSort] = React.useState<"cov" | "name">("cov")
   const [sel, setSel] = React.useState<{ b: string; ret: string } | null>(null) // 셀 드릴다운
+  const [moreBrands, setMoreBrands] = React.useState(false) // 브랜드 10개 이후 더보기
   const cats = ["냉장고", "세탁기", "에어컨", "TV"]
   const rows = React.useMemo(() => cat === "전체" ? allRows : allRows.filter((r) => r.category === cat), [allRows, cat])
   const listedOn = (r: PriceRow, slot: number) => slot >= 0 && slot <= 3 && r[COV_P[slot]] != null
@@ -51,26 +51,27 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
     const retM = new Map<string, number>(), brM = new Map<string, number>()
     rows.forEach((r) => { if (listedOn(r, di)) { if (r.retailer) retM.set(r.retailer, (retM.get(r.retailer) || 0) + 1); if (r.brand) brM.set(r.brand, (brM.get(r.brand) || 0) + 1) } })
     const retailers = Array.from(retM.entries()).sort((a, b) => retRank(a[0]) - retRank(b[0]) || b[1] - a[1]).map((x) => x[0])
-    let brands = Array.from(brM.entries()).sort((a, b) => (a[0] === "LG" ? -1 : b[0] === "LG" ? 1 : 0) || b[1] - a[1]).map((x) => x[0])
-    if (brandSort === "name") brands = [...brands].sort((a, b) => (a === "LG" ? -1 : b === "LG" ? 1 : 0) || a.localeCompare(b))
-    const today = new Map<string, number>(), oos = new Map<string, number>()
+    const brands = Array.from(brM.entries()).sort((a, b) => (a[0] === "LG" ? -1 : b[0] === "LG" ? 1 : 0) || b[1] - a[1]).map((x) => x[0])
+    const today = new Map<string, number>(), oos = new Map<string, number>(), series = new Map<string, number[]>()
     const K = (b: string, ret: string) => b + "|" + ret
     rows.forEach((r) => { if (!r.brand || !r.retailer) return; const k = K(r.brand, r.retailer)
       if (listedOn(r, di)) { today.set(k, (today.get(k) || 0) + 1); if (di === 0 && r.availability === "OutOfStock") oos.set(k, (oos.get(k) || 0) + 1) }
+      let sv = series.get(k); if (!sv) { sv = [0, 0, 0, 0]; series.set(k, sv) } // 4일(d0~d3) 전시 수 추이
+      for (let s = 0; s < 4; s++) if (listedOn(r, s)) sv[s]++
     })
     let maxT = 1; today.forEach((v) => { if (v > maxT) maxT = v })
     let maxOos = 1; oos.forEach((v) => { if (v > maxOos) maxOos = v })
     const colTot: Record<string, number> = {}, rowTot: Record<string, number> = {}, colMax: Record<string, number> = {}
     today.forEach((v, k) => { const [b, ret] = k.split("|"); colTot[ret] = (colTot[ret] || 0) + v; rowTot[b] = (rowTot[b] || 0) + v; if (v > (colMax[ret] || 0)) colMax[ret] = v })
     const grand = Array.from(today.values()).reduce((a, b) => a + b, 0)
-    return { retailers, brands, today, oos, maxT, maxOos, colTot, rowTot, colMax, grand, K }
-  }, [rows, di, brandSort])
+    return { retailers, brands, today, oos, series, maxT, maxOos, colTot, rowTot, colMax, grand, K }
+  }, [rows, di])
   const slots = [0, 1, 2, 3].filter((i) => dates[i])
   const slotPos = slots.indexOf(di)
   const pickDate = (v: string) => { const idx = [0, 1, 2, 3].find((i) => dates[i] === v); if (idx != null) setDi(idx) }
   const retSlots: (string | null)[] = []
   { let ai = 0; for (let i = 0; i < 10; i++) { if (i === 8) retSlots.push(IMPERIAL); else if (i === 9) retSlots.push(SOON); else { retSlots.push(data.retailers[ai] ?? null); ai++ } } }
-  const brSlots = Array.from({ length: 10 }, (_, i) => data.brands[i] ?? null)
+  const brSlots: (string | null)[] = moreBrands ? data.brands : Array.from({ length: 10 }, (_, i) => data.brands[i] ?? null)
 
   // 지표별 셀 수치(원시값) — null=해당 없음/미측정
   const rawVal = (t: number, oo: number, tot: number): number | null => {
@@ -122,119 +123,21 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
 
   return (
     <div className="flex flex-col gap-2.5">
-      {/* 한 줄 필터바 — 제품·지표·날짜네비·정렬·색기준 + 최신·CSV */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: c === "에어컨" ? "RAC" : catLabel(c) }))]} onSelect={setCat} />
-        <PmDrop label={T("지표", "Metric")} sel={metric} options={[{ k: "count", t: T("SKU 총갯수", "Total SKUs") }, { k: "sos", t: T("진열 점유율", "Share of shelf") }, { k: "actRate", t: T("활성화율", "Active %") }, { k: "oosCnt", t: T("품절 갯수", "OOS count") }, { k: "oosRate", t: T("품절율", "OOS %") }]} onSelect={(k) => setMetric(k as Metric)} />
-        <PmDrop label={T("정렬", "Sort")} sel={brandSort} options={[{ k: "cov", t: T("커버리지순", "By coverage") }, { k: "name", t: T("이름순", "By name") }]} onSelect={(k) => setBrandSort(k as "cov" | "name")} />
-        {metric === "count" && <button type="button" onClick={() => setNorm((n) => n === "global" ? "col" : "global")} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400 transition hover:text-indigo-600 dark:hover:text-indigo-300" title={T("색 농도 기준", "Color scale basis")}>{T("색: ", "Scale: ")}{norm === "global" ? T("전체", "Global") : T("거래선별", "Per-retailer")}</button>}
-        {/* 날짜 네비게이터(BoardView 스타일) */}
-        {slots.length > 0 && (
-          <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-1 py-0.5">
-            <button type="button" onClick={() => slotPos < slots.length - 1 && setDi(slots[slotPos + 1])} disabled={slotPos >= slots.length - 1} aria-label={T("이전 날짜", "Previous date")} className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
-            <span className="min-w-[74px] text-center text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{md(dates[di])}{di === 0 && <span className="ml-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">{T("최신", "Latest")}</span>}</span>
-            <button type="button" onClick={() => slotPos > 0 && setDi(slots[slotPos - 1])} disabled={slotPos <= 0} aria-label={T("다음 날짜", "Next date")} className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg></button>
-            <label className="relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400" title={T("달력에서 날짜 선택", "Pick a date from the calendar")}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
-              <input type="date" value={dates[di] ?? ""} min={dates[slots[slots.length - 1]] ?? undefined} max={dates[slots[0]] ?? undefined} onChange={(e) => pickDate(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label={T("날짜 선택", "Select date")} />
-            </label>
-          </div>
-        )}
-        <div className="ml-auto flex items-center gap-2.5">
-          <button type="button" onClick={exportCsv} title={T("현재 매트릭스 CSV 다운로드", "Download matrix CSV")} className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 dark:border-emerald-500/30 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 transition hover:-translate-y-0.5 active:scale-95"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>{T("엑셀", "CSV")}</button>
-          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
-        </div>
-      </div>
-
-      {/* LG 갭 KPI + 과거일 안내 */}
-      <div className="flex flex-wrap items-center gap-2 text-[11px]">
-        {lgGap.hasLG && (
-          <span className="inline-flex items-center gap-1.5 rounded-lg border border-indigo-100 dark:border-indigo-500/20 bg-indigo-50/60 dark:bg-indigo-500/10 px-2.5 py-1">
-            <span className="font-bold text-indigo-700 dark:text-indigo-300">LG {T("전시", "listed")} {lgGap.lg}</span>
-            <span className="text-gray-400">·</span>
-            <span className="text-gray-500 dark:text-gray-400">{T("경쟁 평균", "rival avg")} {lgGap.avg}</span>
-            <span className={"font-bold " + (lgGap.gap >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400")}>{T("갭", "gap")} {lgGap.gap >= 0 ? "+" : ""}{lgGap.gap}</span>
-          </span>
-        )}
-        {(metric === "oosCnt" || metric === "oosRate" || metric === "actRate") && !oosLive && (
-          <span className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 text-[10.5px] font-semibold text-amber-700 dark:text-amber-300">{T("품절·활성율은 오늘만 측정 — 과거일은 —로 표시", "OOS/active rate measured today only — past days show —")}</span>
-        )}
-      </div>
-
-      {/* 히트맵 카드(바둑판) */}
-      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/40 p-3">
-        {data.brands.length === 0 ? (
-          <div className="flex h-40 items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">{T("해당 조건의 전시 데이터가 없습니다.", "No listing data for this filter.")}</div>
-        ) : (<>
-          <div className="overflow-x-auto px-0.5 pb-1 pt-2">
-            <div key={cat + "-" + di + "-" + metric + "-" + brandSort} className="grid w-full gap-[5px] text-[11px]" style={{ minWidth: 660, gridTemplateColumns: `minmax(96px,0.9fr) repeat(10, minmax(50px,1fr))` }}>
-              {/* 헤더 행 */}
-              <div className="sticky left-0 z-10 bg-white dark:bg-gray-900/40" />
-              {retSlots.map((ret, ci) => (ret === IMPERIAL || ret === SOON) ? (
-                <div key={ci} className="flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-gray-200 bg-gray-50/40 px-0.5 text-center opacity-70 dark:border-gray-700 dark:bg-gray-800/20" title={T("준비 중 · 스크래핑 미연동", "Coming soon · not connected")}>
-                  <span className="rounded-full bg-gray-100 px-1 text-[8px] font-bold tabular-nums text-gray-400 dark:bg-gray-700 dark:text-gray-400">#{ci + 1}</span>
-                  <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-400 dark:text-gray-500">{ret === IMPERIAL ? "Imperial" : T("준비중", "Soon")}</span>
-                  <span className="rounded bg-gray-100 px-1 text-[8px] font-semibold text-gray-400 dark:bg-gray-700 dark:text-gray-500">{T("준비중", "soon")}</span>
-                </div>
-              ) : ret ? (
-                <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="flex h-[70px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-indigo-500/40" style={{ animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: ci * 0.02 + "s" }}>
-                  <span className="rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span>
-                  {retailerLogo(ret) && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
-                  )}
-                  <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
-                  <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
-                </a>
-              ) : <div key={ci} />)}
-              {/* 본문 — 브랜드 10행 × 거래선 10열 */}
-              {brSlots.map((b, bi) => (
-                <React.Fragment key={bi}>
-                  <div className={"sticky left-0 z-10 flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 text-center text-[12px] font-bold transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-20 hover:-translate-y-0.5 hover:scale-[1.05] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: bi * 0.02 + "s" }}>
-                    {b && brandLogo(b) && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
-                    )}
-                    <span className="w-full break-words leading-tight">{b ?? ""}</span>
-                    {b && <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.rowTot[b] || 0}</span>}
-                  </div>
-                  {retSlots.map((ret, ci) => {
-                    if (ret === IMPERIAL || ret === SOON) return <div key={ci} className="flex h-[70px] w-full items-center justify-center rounded-md border border-dashed border-gray-200 text-[9px] text-gray-300 dark:border-gray-700 dark:text-gray-600" style={{ background: "var(--cov-empty)", opacity: 0.45 }}>{b ? "—" : ""}</div>
-                    if (!b || !ret) return <div key={ci} className="h-[70px] w-full rounded-md" style={{ background: "var(--cov-empty)", opacity: 0.5 }} />
-                    const k = data.K(b, ret); const t = data.today.get(k) || 0; const oo = oosLive ? (data.oos.get(k) || 0) : 0; const tot = data.colTot[ret] || 0
-                    const v = rawVal(t, oo, tot); const disp = dispOf(v); const alpha = alphaOf(v, t, ret)
-                    const rgb = teal ? "13,148,136" : "244,63,94"; const light = alpha > 0.55
-                    return (
-                      <button key={ci} type="button" onClick={() => t > 0 && setSel({ b, ret })} title={`${b} · ${pmShopLabel(ret)}\n${T("전시", "Listed")} ${t}${tot ? ` · ${T("점유", "SOS")} ${Math.round(t / tot * 100)}%` : ""}${oosLive && oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}${oosLive && t > 0 ? ` · ${T("활성율", "live")} ${Math.round(((t - oo) / t) * 100)}%` : ""}\n${T("클릭=모델 보기", "click for models")}`}
-                        className={"flex h-[70px] w-full items-center justify-center rounded-md text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60 " + (t > 0 ? "cursor-pointer" : "cursor-default")} style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", color: alpha > 0 ? (light ? "#fff" : teal ? "#0f766e" : "#9f1239") : "#cbd5e1", animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(bi * 10 + ci, 44) * 0.012 + "s" }}>
-                        <span className="text-[19px] font-bold tabular-nums xl:text-[23px]">{disp}</span>
-                      </button>
-                    ) })}
-                </React.Fragment>
-              ))}
-            </div>
-          </div>
-          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9.5px] text-gray-400 dark:text-gray-500">
-            <span>{metric === "count" ? T("셀=활성 SKU(전시 제품 수)", "Cell = active SKUs (listed)") : metric === "sos" ? T("셀=진열 점유율(그 거래선 내 브랜드 비중)", "Cell = share of shelf (brand share in retailer)") : metric === "actRate" ? T("셀=활성화율=(활성−품절)/활성", "Cell = active rate = (active−OOS)/active") : metric === "oosCnt" ? T("셀=오늘 품절 수", "Cell = OOS count today") : T("셀=품절율=품절/활성", "Cell = OOS rate = OOS/active")} · {T("색 진할수록 큼 · 셀 클릭=모델 목록", "darker = higher · click a cell for models")}</span>
-            <span className="ml-auto tabular-nums">{T("총 활성 SKU", "Total active")} <b className="text-gray-600 dark:text-gray-300">{data.grand.toLocaleString()}</b></span>
-          </p>
-        </>)}
-      </div>
-
-      {/* 드릴다운 모달 — 선택 셀의 실제 모델·가격·재고 */}
-      {sel && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" style={{ animation: "fadeUp .2s ease both" }} onClick={() => setSel(null)}>
-          <div className="flex max-h-[82vh] w-full max-w-[560px] flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.06] shadow-2xl dark:bg-gray-900 dark:ring-white/10" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+      {sel ? (
+        // 드릴다운 — 별도 페이지(인라인 전체화면)
+        <div style={{ animation: "fadeUp .3s ease both" }}>
+          <button type="button" onClick={() => setSel(null)} className="mb-3 inline-flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[12px] font-semibold text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300 active:scale-95"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>{T("히트맵으로", "Back to heatmap")}</button>
+          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/40 p-4">
+            <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
               {brandLogo(sel.b) && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={brandLogo(sel.b) as string} alt={sel.b} onError={hideOnError} className="h-5 w-5 rounded-sm object-contain" />
+                <img src={brandLogo(sel.b) as string} alt={sel.b} onError={hideOnError} className="h-7 w-7 rounded-sm object-contain" />
               )}
-              <h3 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{sel.b} · {pmShopLabel(sel.ret)}</h3>
-              <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[10px] font-semibold text-gray-500 dark:text-gray-400">{drill.length}{T("개 모델", " models")} · {md(dates[di])}</span>
-              <button type="button" onClick={() => setSel(null)} aria-label={T("닫기", "Close")} className="ml-auto flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition hover:bg-black/10 active:scale-90 dark:bg-white/10 dark:text-gray-400"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+              <h3 className="text-[16px] font-bold text-gray-900 dark:text-gray-50">{sel.b} · {pmShopLabel(sel.ret)}</h3>
+              <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[11px] font-semibold text-gray-500 dark:text-gray-400">{drill.length}{T("개 모델", " models")} · {md(dates[di])}</span>
+              {RETAILER_DOMAIN[sel.ret] && <a href={`https://${RETAILER_DOMAIN[sel.ret]}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">{T("사이트 열기", "Open site")} →</a>}
             </div>
-            <div className="min-h-0 flex-1 overflow-auto">
+            <div className="mt-3 max-h-[64vh] overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
               {drill.length === 0 ? (
                 <div className="flex h-32 items-center justify-center text-[12px] text-gray-400">{T("모델 정보 없음", "No model data")}</div>
               ) : (
@@ -257,7 +160,105 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
             </div>
           </div>
         </div>
+      ) : (<>
+      {/* 한 줄 필터바 — 제품·지표·날짜네비·색기준 + 최신·CSV */}
+      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+        <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: c === "에어컨" ? "RAC" : catLabel(c) }))]} onSelect={setCat} />
+        <PmDrop label={T("지표", "Metric")} sel={metric} options={[{ k: "count", t: T("전시 SKU 수", "Listed SKUs") }, { k: "sos", t: T("진열 점유율", "Share of shelf") }, { k: "actRate", t: T("재고 활성율", "In-stock %") }, { k: "oosCnt", t: T("품절 수", "OOS count") }, { k: "oosRate", t: T("품절률", "OOS %") }]} onSelect={(k) => setMetric(k as Metric)} />
+        {metric === "count" && <button type="button" onClick={() => setNorm((n) => n === "global" ? "col" : "global")} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400 transition hover:text-indigo-600 dark:hover:text-indigo-300" title={T("색 농도 기준", "Color scale basis")}>{T("색: ", "Scale: ")}{norm === "global" ? T("전체", "Global") : T("거래선별", "Per-retailer")}</button>}
+        {/* 날짜 네비게이터(BoardView 스타일) */}
+        {slots.length > 0 && (
+          <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-1 py-0.5">
+            <button type="button" onClick={() => slotPos < slots.length - 1 && setDi(slots[slotPos + 1])} disabled={slotPos >= slots.length - 1} aria-label={T("이전 날짜", "Previous date")} className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
+            <span className="min-w-[74px] text-center text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{md(dates[di])}{di === 0 && <span className="ml-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">{T("최신", "Latest")}</span>}</span>
+            <button type="button" onClick={() => slotPos > 0 && setDi(slots[slotPos - 1])} disabled={slotPos <= 0} aria-label={T("다음 날짜", "Next date")} className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg></button>
+            <label className="relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400" title={T("달력에서 날짜 선택", "Pick a date from the calendar")}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+              <input type="date" value={dates[di] ?? ""} min={dates[slots[slots.length - 1]] ?? undefined} max={dates[slots[0]] ?? undefined} onChange={(e) => pickDate(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label={T("날짜 선택", "Select date")} />
+            </label>
+          </div>
+        )}
+        <div className="ml-auto flex items-center gap-2.5">
+          <button type="button" onClick={exportCsv} title={T("현재 매트릭스 CSV 다운로드", "Download matrix CSV")} className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 dark:border-emerald-500/30 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 transition hover:-translate-y-0.5 active:scale-95"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>{T("엑셀", "CSV")}</button>
+          <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+        </div>
+      </div>
+
+      {(metric === "oosCnt" || metric === "oosRate" || metric === "actRate") && !oosLive && (
+        <div className="text-[11px]"><span className="rounded-lg border border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-500/10 px-2.5 py-1 text-[10.5px] font-semibold text-amber-700 dark:text-amber-300">{T("품절·활성율은 오늘만 측정 — 과거일은 —로 표시", "OOS/active rate measured today only — past days show —")}</span></div>
       )}
+
+      {/* 히트맵 카드(바둑판) */}
+      <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/40 p-3">
+        {data.brands.length === 0 ? (
+          <div className="flex h-40 items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">{T("해당 조건의 전시 데이터가 없습니다.", "No listing data for this filter.")}</div>
+        ) : (<>
+          <div className="overflow-x-auto px-0.5 pb-1 pt-2">
+            <div key={cat + "-" + di + "-" + metric} className="grid w-full gap-[5px] text-[11px]" style={{ minWidth: 660, gridTemplateColumns: `minmax(96px,0.9fr) repeat(10, minmax(50px,1fr))` }}>
+              {/* 헤더 행 — 좌상단 코너에 LG 갭 KPI 카드 */}
+              <div className="sticky left-0 z-10 flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border border-indigo-100 bg-indigo-50/70 px-1 text-center transition-all duration-300 ease-out hover:z-30 hover:scale-[1.04] hover:shadow-md dark:border-indigo-500/20 dark:bg-indigo-500/10" style={{ animation: "covPop .6s ease-out backwards" }} title={T("LG 전시 vs 경쟁 평균", "LG listed vs rival avg")}>
+                {lgGap.hasLG ? (<>
+                  <span className="text-[8.5px] font-semibold uppercase tracking-wide text-indigo-500/80 dark:text-indigo-300/70">LG {T("전시", "listed")}</span>
+                  <span className="text-[16px] font-bold leading-none text-indigo-700 dark:text-indigo-300">{lgGap.lg}</span>
+                  <span className="text-[8.5px] font-semibold text-gray-500 dark:text-gray-400">{T("경쟁 평균", "avg")} {lgGap.avg} · <span className={lgGap.gap >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}>{lgGap.gap >= 0 ? "+" : ""}{lgGap.gap}</span></span>
+                </>) : <span className="text-[9px] text-gray-400">—</span>}
+              </div>
+              {retSlots.map((ret, ci) => (ret === IMPERIAL || ret === SOON) ? (
+                <div key={ci} className="flex h-[70px] w-full flex-col items-center justify-center gap-1 rounded-md border border-dashed border-gray-200 bg-gray-50/40 px-0.5 text-center opacity-70 dark:border-gray-700 dark:bg-gray-800/20" title={T("준비 중 · 스크래핑 미연동", "Coming soon · not connected")}>
+                  <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-400 dark:text-gray-500">{ret === IMPERIAL ? "Imperial" : T("준비중", "Soon")}</span>
+                  <span className="rounded bg-gray-100 px-1 text-[8px] font-semibold text-gray-400 dark:bg-gray-700 dark:text-gray-500">{T("준비중", "soon")}</span>
+                </div>
+              ) : ret ? (
+                <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="flex h-[70px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 text-center transition-all duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-indigo-500/40" style={{ animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
+                  {retailerLogo(ret) && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
+                  )}
+                  <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
+                  <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
+                </a>
+              ) : <div key={ci} />)}
+              {/* 본문 — 브랜드 10행 × 거래선 10열 */}
+              {brSlots.map((b, bi) => (
+                <React.Fragment key={bi}>
+                  <div className={"sticky left-0 z-10 flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 text-center text-[12px] font-bold transition-all duration-300 ease-out hover:z-20 hover:scale-[1.03] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
+                    {b && brandLogo(b) && (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
+                    )}
+                    <span className="w-full break-words leading-tight">{b ?? ""}</span>
+                    {b && <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.rowTot[b] || 0}</span>}
+                  </div>
+                  {retSlots.map((ret, ci) => {
+                    if (ret === IMPERIAL || ret === SOON) return <div key={ci} className="flex h-[70px] w-full items-center justify-center rounded-md border border-dashed border-gray-200 text-[9px] text-gray-300 dark:border-gray-700 dark:text-gray-600" style={{ background: "var(--cov-empty)", opacity: 0.45 }}>{b ? "—" : ""}</div>
+                    if (!b || !ret) return <div key={ci} className="h-[70px] w-full rounded-md" style={{ background: "var(--cov-empty)", opacity: 0.5 }} />
+                    const k = data.K(b, ret); const t = data.today.get(k) || 0; const oo = oosLive ? (data.oos.get(k) || 0) : 0; const tot = data.colTot[ret] || 0
+                    const v = rawVal(t, oo, tot); const disp = dispOf(v); const alpha = alphaOf(v, t, ret)
+                    const rgb = teal ? "99,102,241" : "244,63,94"; const light = alpha > 0.55
+                    return (
+                      <button key={ci} type="button" onClick={() => t > 0 && setSel({ b, ret })} title={`${b} · ${pmShopLabel(ret)}\n${T("전시", "Listed")} ${t}${tot ? ` · ${T("점유", "SOS")} ${Math.round(t / tot * 100)}%` : ""}${oosLive && oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}${oosLive && t > 0 ? ` · ${T("활성율", "live")} ${Math.round(((t - oo) / t) * 100)}%` : ""}\n${T("클릭=모델 보기", "click for models")}`}
+                        className={"flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md text-center transition-all duration-300 ease-out hover:z-10 hover:scale-[1.03] hover:shadow-lg hover:ring-2 hover:ring-indigo-400/70 dark:hover:ring-indigo-300/60 " + (t > 0 ? "cursor-pointer" : "cursor-default")} style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", color: alpha > 0 ? (light ? "#fff" : teal ? "#4338ca" : "#9f1239") : "#cbd5e1", animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
+                        <span className="text-[18px] font-bold leading-none tabular-nums xl:text-[21px]">{disp}</span>
+                        {t > 0 && (() => { const arr = slots.map((s) => (data.series.get(k) || [0, 0, 0, 0])[s]).reverse(); if (arr.length < 2) return null; const mn = Math.min(...arr), mx = Math.max(...arr), rng = mx - mn || 1, W = 36, H = 12, step = W / (arr.length - 1); const dd = arr.map((n, i) => `${i ? "L" : "M"}${(i * step).toFixed(1)} ${(H - 1.5 - ((n - mn) / rng) * (H - 3)).toFixed(1)}`).join(" "); const sc = light ? "rgba(255,255,255,.9)" : teal ? "rgba(67,56,202,.85)" : "rgba(159,18,57,.85)"; return <svg width={W} height={H} className="overflow-visible"><path d={dd} fill="none" stroke={sc} strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" /><circle cx={((arr.length - 1) * step).toFixed(1)} cy={(H - 1.5 - ((arr[arr.length - 1] - mn) / rng) * (H - 3)).toFixed(1)} r="1.5" fill={sc} /></svg> })()}
+                      </button>
+                    ) })}
+                </React.Fragment>
+              ))}
+            </div>
+          </div>
+          {data.brands.length > 10 && (
+            <div className="mt-2 flex justify-center">
+              <button type="button" onClick={() => setMoreBrands((v) => !v)} className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 hover:shadow-sm active:scale-95">{moreBrands ? T("접기", "Show less") : `+${data.brands.length - 10}${T("개 더보기", " more")}`}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: moreBrands ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg></button>
+            </div>
+          )}
+          <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9.5px] text-gray-400 dark:text-gray-500">
+            <span>{metric === "count" ? T("셀=활성 SKU(전시 제품 수)", "Cell = active SKUs (listed)") : metric === "sos" ? T("셀=진열 점유율(그 거래선 내 브랜드 비중)", "Cell = share of shelf (brand share in retailer)") : metric === "actRate" ? T("셀=활성화율=(활성−품절)/활성", "Cell = active rate = (active−OOS)/active") : metric === "oosCnt" ? T("셀=오늘 품절 수", "Cell = OOS count today") : T("셀=품절율=품절/활성", "Cell = OOS rate = OOS/active")} · {T("색 진할수록 큼 · 셀 클릭=모델 목록", "darker = higher · click a cell for models")}</span>
+            <span className="ml-auto tabular-nums">{T("총 활성 SKU", "Total active")} <b className="text-gray-600 dark:text-gray-300">{data.grand.toLocaleString()}</b></span>
+          </p>
+        </>)}
+      </div>
+
+      </>)}
 
       <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}@keyframes covPop{from{opacity:0;transform:translateY(7px) scale(.97)}to{opacity:1;transform:none}}"}</style>
     </div>
