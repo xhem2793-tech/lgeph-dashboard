@@ -82,7 +82,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           {/* 헤더 행 */}
           <div className="sticky left-0 z-10 bg-white dark:bg-gray-900/40" />
           {retSlots.map((ret, ci) => ret ? (
-            <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="flex w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 py-1.5 text-center transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-indigo-500/40" style={{ animation: "covPop .4s cubic-bezier(.34,1.56,.64,1) backwards", animationDelay: ci * 0.02 + "s" }}>
+            <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="flex w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 py-1.5 text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-indigo-500/40" style={{ animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: ci * 0.02 + "s" }}>
               <span className="rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span>
               {retailerLogo(ret) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -95,7 +95,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           {/* 본문 — 브랜드 10행(부족분 빈 칸) × 거래선 10열 */}
           {brSlots.map((b, bi) => (
             <React.Fragment key={bi}>
-              <div className={"sticky left-0 z-10 flex w-full flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-md border px-0.5 py-1.5 text-center text-[11px] font-bold transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] hover:z-20 hover:-translate-y-0.5 hover:scale-[1.06] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .4s cubic-bezier(.34,1.56,.64,1) backwards", animationDelay: bi * 0.02 + "s" }}>
+              <div className={"sticky left-0 z-10 flex w-full flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-md border px-0.5 py-1.5 text-center text-[11px] font-bold transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-20 hover:-translate-y-0.5 hover:scale-[1.06] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: bi * 0.02 + "s" }}>
                 {b && brandLogo(b) && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-4 w-auto max-w-[54px] object-contain" />
@@ -109,7 +109,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                 const alpha = t ? Math.max(0.12, Math.min(1, t / data.maxT)) : 0; const light = alpha > 0.55
                 return (
                   <div key={ci} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}
-                    className="flex aspect-square w-full flex-col items-center justify-center rounded-md text-center transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.22] hover:shadow-xl hover:ring-2 hover:ring-teal-400/80 dark:hover:ring-teal-300/70" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1", animation: "covPop .4s cubic-bezier(.34,1.56,.64,1) backwards", animationDelay: Math.min(bi * 10 + ci, 44) * 0.012 + "s" }}>
+                    className="flex aspect-square w-full flex-col items-center justify-center rounded-md text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.08] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1", animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(bi * 10 + ci, 44) * 0.012 + "s" }}>
                     <span className="text-[15px] font-bold tabular-nums leading-none">{t || "·"}</span>
                     {t > 0 && (
                       <span className="mt-0.5 flex flex-col items-center gap-0 text-[8.5px] font-semibold leading-tight" style={{ color: light ? "rgba(255,255,255,0.92)" : undefined }}>
@@ -133,7 +133,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
       </p>
         </>)}
       </div>
-      <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}@keyframes covPop{0%{opacity:0;transform:scale(.55)}62%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}"}</style>
+      <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}@keyframes covPop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}"}</style>
     </div>
   )
 }
