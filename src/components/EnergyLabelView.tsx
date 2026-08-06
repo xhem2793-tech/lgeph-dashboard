@@ -143,37 +143,22 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
   return (
     <>
     <div ref={(el) => { cardRef.current = el; (ref as React.MutableRefObject<HTMLDivElement | null>).current = el }} className="flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: on ? "fadeUp .5s cubic-bezier(.22,1,.36,1) both" : undefined, animationDelay: Math.min(idx, 6) * 0.06 + "s", opacity: on ? undefined : 0 }}>
-      <div className="flex items-center gap-1.5">
-        <h3 className="text-[13px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{title}</h3>
-        {seg && <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[9px] font-bold text-teal-700 dark:text-teal-300">{seg}</span>}
-        <span className="ml-auto flex shrink-0 items-center gap-0.5">
-          <IcoBtn onClick={() => dlImgFrom(cardRef.current, "에너지_" + title)} title={T("이미지(SVG) 다운로드", "Download image (SVG)")} d={ICO.img} />
-          {csv && <IcoBtn onClick={() => dlCsvFrom(csv, "에너지_" + title)} title={T("데이터(CSV) 다운로드", "Download data (CSV)")} d={ICO.csv} />}
-          <IcoBtn onClick={() => setBig(true)} title={T("크게 보기 + 데이터 표", "Expand + data table")} d={ICO.expand} />
-        </span>
+      <div className="flex items-center gap-2">
+        <span className="h-4 w-1 rounded bg-indigo-500" />
+        <h3 className="text-[22.5px] font-bold leading-tight tracking-tight text-gray-800 dark:text-gray-100">{title}</h3>
+        {seg && <span className="shrink-0 rounded bg-teal-50 dark:bg-teal-500/10 px-1.5 py-0.5 text-[10px] font-bold text-teal-700 dark:text-teal-300">{seg}</span>}
+        {csv && (
+          <button type="button" onClick={() => dlCsvFrom(csv, "에너지_" + title)} aria-label={T("데이터(CSV) 다운로드", "Download data (CSV)")} title={T("데이터(CSV) 다운로드", "Download data (CSV)")} className="ml-auto flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 transition-all duration-200 hover:border-teal-300 dark:hover:border-teal-500/40 hover:text-teal-600 dark:hover:text-teal-400 active:scale-95">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>
+          </button>
+        )}
       </div>
       {/* 인라인 확대 레이아웃 — 좌: 큰 차트+의미·인사이트 / 우: 정렬 가능한 데이터 표 */}
       <div className="mt-2 flex flex-col gap-4 lg:flex-row">
         <div className="flex min-w-0 flex-col lg:w-[58%]">
           {/* 메인 차트 — 테두리·고정높이, 넘치면 스크롤(레이아웃 고정·가독성) */}
-          <div key={on ? "in" : "out"} className="h-[380px] overflow-auto rounded-xl border border-gray-100 bg-gray-50/30 p-3 dark:border-gray-800 dark:bg-gray-900/20">{on ? (bigChildren ?? children) : null}</div>
+          <div key={on ? "in" : "out"} className="h-[420px] overflow-auto rounded-xl border border-gray-100 bg-gray-50/30 p-3 dark:border-gray-800 dark:bg-gray-900/20">{on ? (bigChildren ?? children) : null}</div>
           <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {meaning}</p>
-          {ai && (
-            <>
-              <button type="button" onClick={() => setAiOpen((v) => !v)} className="mt-2 flex items-center gap-1 text-[10.5px] font-bold text-teal-600 dark:text-teal-400 transition-colors hover:text-teal-700 dark:hover:text-teal-300">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
-                {T("LG 인사이트", "LG Insight")}
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
-              </button>
-              <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}>
-                <div className="overflow-hidden">
-                  <div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
-                    <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
         </div>
         {csv && (
           <div className="flex min-h-0 flex-col lg:w-[42%] lg:border-l lg:border-gray-100 lg:dark:border-gray-800 lg:pl-4">
@@ -184,13 +169,30 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
                 <button key={i} type="button" onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"rounded-md px-2 py-1 text-[11px] font-semibold transition-all " + (sortCol === i ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-500/15")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</button>
               ))}
             </div>
-            <div className="h-[344px] min-h-0 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
+            <div className="h-[300px] min-h-0 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
               <table className="w-full border-collapse text-[12px]">
                 <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="border-b border-gray-200 dark:border-gray-800">{csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-1.5 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</th>)}</tr></thead>
                 <tbody>{sortedRows.map((r, ri) => <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (/^lg$/i.test(String(r[0])) ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>{r.map((c, ci) => <td key={ci} className={"py-1.5 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}</tr>)}</tbody>
               </table>
             </div>
             <p className="mt-1.5 shrink-0 text-[10px] text-gray-400 dark:text-gray-500">{T("열 클릭 시 정렬(재클릭=오름/내림) · ", "Click a column to sort · ")}<b className="text-teal-600 dark:text-teal-400">{T("LG 강조", "LG in teal")}</b></p>
+            {/* LG 인사이트 — 표 아래(우측 컬럼) */}
+            {ai && (
+              <div className="mt-2.5">
+                <button type="button" onClick={() => setAiOpen((v) => !v)} className="flex items-center gap-1 text-[10.5px] font-bold text-teal-600 dark:text-teal-400 transition-colors hover:text-teal-700 dark:hover:text-teal-300">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l2.4 6.6L21 11l-6.6 2.4L12 20l-2.4-6.6L3 11l6.6-2.4z" /></svg>
+                  {T("LG 인사이트", "LG Insight")}
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: aiOpen ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>
+                </button>
+                <div style={{ display: "grid", gridTemplateRows: aiOpen ? "1fr" : "0fr", transition: "grid-template-rows .3s cubic-bezier(.22,1,.36,1)" }}>
+                  <div className="overflow-hidden">
+                    <div className="mt-1.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2.5">
+                      <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{ai}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -318,7 +320,7 @@ function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: numbe
         {pts.map((p, i) => (
           <g key={p.name} onMouseEnter={() => setH(i)} style={{ cursor: "default" }} opacity={h == null || h === i || p.isLG ? 1 : 0.45}>
             <title>{p.name} · {metric} {p.eff.toFixed(2)} · {Math.round(p.kwh)}{T("kWh/월", "kWh/mo")}{p.n ? ` · ${p.n}${T("모델", " models")}` : ""}</title>
-            <circle cx={X(p.eff)} cy={Y(p.kwh)} r={p.isLG ? 7 : 5} fill={p.isLG ? TEAL : "#94a3b8"} stroke={p.isLG ? "#fff" : "#fff"} strokeWidth={p.isLG ? 1.6 : 0.8} className={p.isLG ? "" : "dark:fill-gray-500"} style={{ animation: "fadeIn .5s ease both", animationDelay: i * 0.03 + "s", transition: "opacity .15s" }} />
+            <circle cx={X(p.eff)} cy={Y(p.kwh)} r={p.isLG ? 7 : 5} fill={p.isLG ? TEAL : "#94a3b8"} stroke={p.isLG ? "#fff" : "#fff"} strokeWidth={p.isLG ? 1.6 : 0.8} className={p.isLG ? "" : "dark:fill-gray-500"} style={{ animation: "popIn .7s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.1 + i * 0.06) + "s", transition: "opacity .15s", transformOrigin: `${X(p.eff)}px ${Y(p.kwh)}px` }} />
             {(p.isLG || h === i) && <text x={X(p.eff)} y={Y(p.kwh) - 10} textAnchor="middle" fontSize="9.5" fontWeight="800" className={p.isLG ? "fill-teal-700 dark:fill-teal-300" : "fill-gray-600 dark:fill-gray-200"}>{p.name}</text>}
           </g>
         ))}
