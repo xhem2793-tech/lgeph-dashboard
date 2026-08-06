@@ -38,7 +38,7 @@ type Signal = {
   title: string; detail: string; metric: string; metricTone: string; before: number | null; after: number | null
   channel: string | null; url: string | null; score: number; day: "today" | "yesterday"; spec: string | null; model: string; type?: string
 }
-type Bubble = { key: string; brand: string; own: boolean; cat: string; sev: string; rep: Signal; products: { title: string; rep: Signal; all: Signal[] }[]; nProd: number; kinds: string[] }
+type Bubble = { key: string; brand: string; own: boolean; cat: string; catsIn: string[]; sev: string; rep: Signal; products: { title: string; rep: Signal; all: Signal[] }[]; nProd: number; kinds: string[] }
 
 export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads: CompAd[] | null; stamp: string | null }) {
   const [kind, setKind] = React.useState("전체")
@@ -123,29 +123,24 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
     const DAY_ORDER: ("today" | "yesterday")[] = ["today", "yesterday"]
     return DAY_ORDER.map((day) => {
       const ds = filtered.filter((s) => s.day === day)
-      // 제품(카테고리) → 브랜드 1말풍선으로 요약. 말풍선 안에 제품(모델)별 변동을 펼침.
-      const catMap = new Map<string, Signal[]>()
-      for (const s of ds) { const arr = catMap.get(s.cat); if (arr) arr.push(s); else catMap.set(s.cat, [s]) }
-      const cats = CATS.filter((c) => catMap.has(c)).map((c) => {
-        const csigs = catMap.get(c)!
-        const bm = new Map<string, Signal[]>()
-        for (const s of csigs) { const arr = bm.get(s.brand); if (arr) arr.push(s); else bm.set(s.brand, [s]) }
-        const bubbles = Array.from(bm.entries()).map(([brand, arr]) => {
-          // 제품(모델=title)별 묶기 — 대표 신호 + 거래선 all
-          const pm = new Map<string, Signal[]>()
-          for (const s of arr) { const a = pm.get(s.title); if (a) a.push(s); else pm.set(s.title, [s]) }
-          const products = Array.from(pm.entries()).map(([title, sigs]) => {
-            sigs.sort((x, y) => SEV_META[x.sev].order - SEV_META[y.sev].order || y.score - x.score)
-            return { title, rep: sigs[0], all: sigs }
-          }).sort((a, b) => SEV_META[a.rep.sev].order - SEV_META[b.rep.sev].order || b.rep.score - a.rep.score)
-          arr.sort((x, y) => SEV_META[x.sev].order - SEV_META[y.sev].order || y.score - x.score)
-          const rep = arr[0]
-          const kinds = KIND_ORDER.filter((k) => arr.some((s) => s.kind === k))
-          return { key: day + "|" + c + "|" + brand, brand, own: rep.own, cat: c, sev: rep.sev, rep, products, nProd: products.length, kinds, order: SEV_META[rep.sev].order, score: Math.max(...arr.map((s) => s.score)) }
-        }).sort((a, b) => a.order - b.order || (a.own === b.own ? 0 : a.own ? 1 : -1) || a.brand.localeCompare(b.brand) || b.score - a.score)
-        return { cat: c, bubbles }
-      })
-      return { day, cats, n: ds.length }
+      // 브랜드 1말풍선으로 요약(제품·카테고리 구분 없이 전부 합침). 말풍선 안에 제품(모델)별 변동을 펼침.
+      const bm = new Map<string, Signal[]>()
+      for (const s of ds) { const arr = bm.get(s.brand); if (arr) arr.push(s); else bm.set(s.brand, [s]) }
+      const bubbles = Array.from(bm.entries()).map(([brand, arr]) => {
+        // 제품(모델=title)별 묶기 — 대표 신호 + 거래선 all
+        const pm = new Map<string, Signal[]>()
+        for (const s of arr) { const a = pm.get(s.title); if (a) a.push(s); else pm.set(s.title, [s]) }
+        const products = Array.from(pm.entries()).map(([title, sigs]) => {
+          sigs.sort((x, y) => SEV_META[x.sev].order - SEV_META[y.sev].order || y.score - x.score)
+          return { title, rep: sigs[0], all: sigs }
+        }).sort((a, b) => SEV_META[a.rep.sev].order - SEV_META[b.rep.sev].order || b.rep.score - a.rep.score)
+        arr.sort((x, y) => SEV_META[x.sev].order - SEV_META[y.sev].order || y.score - x.score)
+        const rep = arr[0]
+        const kinds = KIND_ORDER.filter((k) => arr.some((s) => s.kind === k))
+        const catsIn = CATS.filter((c) => arr.some((s) => s.cat === c)) // 이 브랜드가 걸친 제품군
+        return { key: day + "|" + brand, brand, own: rep.own, cat: rep.cat, catsIn, sev: rep.sev, rep, products, nProd: products.length, kinds, order: SEV_META[rep.sev].order, score: Math.max(...arr.map((s) => s.score)) }
+      }).sort((a, b) => a.order - b.order || (a.own === b.own ? 0 : a.own ? 1 : -1) || a.brand.localeCompare(b.brand) || b.score - a.score)
+      return { day, bubbles, n: ds.length }
     }).filter((d) => d.n > 0)
   }, [signals, kind, catF, daySel, brandF, typeF])
   const total = byDay.reduce((s, d) => s + d.n, 0)
@@ -199,11 +194,11 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
         <span className="ml-auto hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
 
-      {/* 시간별 리스트 — 날짜(오늘/어제) 섹션 + 제품 행(헤드라인) · 펼치면 거래선별 변동 */}
+      {/* 말풍선 스트림 — 브랜드 1개당 1말풍선(제품 전부 합침). 화면 고정 높이 + 초과 시 내부 스크롤. */}
       {total === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("해당 신호가 없습니다.", "No matching signals.")}</div>
       ) : (
-        <div className="flex flex-col gap-3">
+        <div className="flex max-h-[68vh] flex-col gap-3 overflow-y-auto pr-1">
           {byDay.map((dg) => {
             const dnum = dg.day === "today" ? new Date() : new Date(Date.now() - 86400000)
             const mmdd = `${String(dnum.getMonth() + 1).padStart(2, "0")}/${String(dnum.getDate()).padStart(2, "0")}`
@@ -212,37 +207,29 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
             return (
             <div key={dg.day}>
               {/* 날짜는 상단 네비게이터로 선택 — 여기선 건수만 표시 */}
-              <div className="mb-1 flex items-center gap-2 px-0.5"><span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{DAY_LABEL[dg.day]} <span className="tabular-nums text-gray-400 dark:text-gray-500">{mmdd}</span></span><span className="text-[11px] text-gray-400 dark:text-gray-500">· {dg.n}{T("건", "")}</span></div>
-              {/* 제품(카테고리)별 그룹 — 대화방 섹션 구분선 + 말풍선 스트림(전부 왼쪽·시각 표시) */}
-              {dg.cats.map((cg) => (
-                <div key={cg.cat}>
-                  <div className="my-2 flex items-center gap-2">
-                    <span className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
-                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{CAT_LABEL[cg.cat] ?? cg.cat} · {cg.bubbles.length}</span>
-                    <span className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    {cg.bubbles.map((bg) => { const s = bg.rep; const sm = SEV_META[bg.sev]
-                      const bub = bg.own ? "border-indigo-200 bg-indigo-50/70 dark:border-indigo-500/30 dark:bg-indigo-500/10"
-                        : bg.sev === "alert" ? "border-rose-200 bg-rose-50/70 dark:border-rose-500/30 dark:bg-rose-500/10"
-                        : bg.sev === "warn" ? "border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10"
-                        : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10"
-                      // 말풍선(아바타+꼬리) — 한 줄 핵심 요약, 클릭하면 팝업 리스트
-                      return (
-                        <div key={bg.key} className="flex items-end gap-2" style={{ animation: "rowIn .3s ease both" }}>
-                          <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
-                          <button type="button" onClick={() => setOpenBub(bg)} className={"relative flex max-w-[88%] items-center gap-2 rounded-2xl rounded-bl-sm border px-3 py-1.5 text-left shadow-sm transition-all duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md " + bub}>
-                            <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
-                            <span className="min-w-0 flex-1 truncate text-[12px] leading-snug text-gray-600 dark:text-gray-300"><b className={bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50"}>{bg.brand}</b> {CAT_LABEL[bg.cat] ?? bg.cat} · {s.detail}{bg.nProd > 1 ? T(` 외 ${bg.nProd - 1}건`, ` +${bg.nProd - 1}`) : ""}</span>
-                            <span className="shrink-0">{metricChip(s)}</span>
-                            <span className="hidden shrink-0 text-[9px] tabular-nums text-gray-400 dark:text-gray-500 sm:inline">{bubTime}</span>
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400"><path d="M9 18l6-6-6-6" /></svg>
-                          </button>
-                        </div>
-                      ) })}
-                  </div>
-                </div>
-              ))}
+              <div className="mb-1.5 flex items-center gap-2 px-0.5"><span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{DAY_LABEL[dg.day]} <span className="tabular-nums text-gray-400 dark:text-gray-500">{mmdd}</span></span><span className="text-[11px] text-gray-400 dark:text-gray-500">· {dg.n}{T("건", "")}</span></div>
+              {/* 브랜드별 말풍선 스트림(전부 왼쪽·시각 표시) — 브랜드만 분리 */}
+              <div className="flex flex-col gap-2">
+                {dg.bubbles.map((bg) => { const s = bg.rep; const sm = SEV_META[bg.sev]
+                  const bub = bg.own ? "border-indigo-200 bg-indigo-50/70 dark:border-indigo-500/30 dark:bg-indigo-500/10"
+                    : bg.sev === "alert" ? "border-rose-200 bg-rose-50/70 dark:border-rose-500/30 dark:bg-rose-500/10"
+                    : bg.sev === "warn" ? "border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10"
+                    : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10"
+                  // 말풍선(아바타+꼬리) — 한 줄 핵심 요약, 클릭하면 팝업 리스트
+                  return (
+                    <div key={bg.key} className="flex items-end gap-2" style={{ animation: "rowIn .3s ease both" }}>
+                      <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
+                      <button type="button" onClick={() => setOpenBub(bg)} className={"relative flex max-w-[88%] items-center gap-2 rounded-2xl rounded-bl-sm border px-3 py-1.5 text-left shadow-sm transition-all duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md " + bub}>
+                        <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
+                        <span className="min-w-0 flex-1 truncate text-[12px] leading-snug text-gray-600 dark:text-gray-300"><b className={bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50"}>{bg.brand}</b> · {s.detail}{bg.nProd > 1 ? T(` 외 ${bg.nProd - 1}건`, ` +${bg.nProd - 1}`) : ""}</span>
+                        <span className="hidden shrink-0 items-center gap-1 sm:flex">{bg.catsIn.slice(0, 3).map((c) => <span key={c} className="whitespace-nowrap rounded bg-gray-100 px-1 py-px text-[9px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{CAT_LABEL[c] ?? c}</span>)}</span>
+                        <span className="shrink-0">{metricChip(s)}</span>
+                        <span className="hidden shrink-0 text-[9px] tabular-nums text-gray-400 dark:text-gray-500 sm:inline">{bubTime}</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400"><path d="M9 18l6-6-6-6" /></svg>
+                      </button>
+                    </div>
+                  ) })}
+              </div>
             </div>
           )})}
         </div>
