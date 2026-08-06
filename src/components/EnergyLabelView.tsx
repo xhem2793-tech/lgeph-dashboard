@@ -805,7 +805,7 @@ export default function EnergyLabelView() {
   const lgGrade = grade.find((g) => /^lg$/i.test(g.name))
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex w-full max-w-[1180px] flex-col gap-3">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes growBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}"}</style>
 
       <div className="grid items-start gap-4">

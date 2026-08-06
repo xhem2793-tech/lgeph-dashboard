@@ -505,6 +505,10 @@ export default function Page() {
   const [insightCat, setInsightCat] = React.useState("전체")
   const [prod, setProd] = React.useState("에어컨·RAC")
   const [sort, setSort] = React.useState<"new" | "impact">("new")
+  // 새로고침·언어토글에도 마지막 카테고리·정렬 유지
+  React.useEffect(() => { try { const m = localStorage.getItem("news_menu"); if (m) setMenu(m); const s = localStorage.getItem("news_sort"); if (s === "new" || s === "impact") setSort(s) } catch {} }, [])
+  React.useEffect(() => { try { localStorage.setItem("news_menu", menu) } catch {} }, [menu])
+  React.useEffect(() => { try { localStorage.setItem("news_sort", sort) } catch {} }, [sort])
   const [q, setQ] = React.useState("")
   const [searchFocused, setSearchFocused] = React.useState(false)
   // 상단 메뉴바 통합 검색(/news?q=) → 뉴스 검색에 반영. 정적 export 안전을 위해 window.location으로 읽음
