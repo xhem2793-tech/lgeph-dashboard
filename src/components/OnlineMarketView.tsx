@@ -101,17 +101,16 @@ export default function OnlineMarketView() {
 
       <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
-          <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
+          <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("온라인 시장", "Online Market")}</h2>
+            <nav className="flex flex-wrap gap-1.5">
+              {[{ k: "ph", label: T("이커머스·디지털(PH)", "E-commerce · Digital (PH)") }, { k: "sea", label: T("동남아 6개국 비교", "6-country ASEAN comparison") }].map((s) => (
+                <button key={s.k} type="button" onClick={() => setTab(s.k as "ph" | "sea")}
+                  className={"rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-all duration-200 " + (tab === s.k ? "bg-violet-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-violet-50 hover:text-violet-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-violet-500/15 dark:hover:text-violet-300")}>{s.label}</button>
+              ))}
+            </nav>
             <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WINS.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} /></span>
           </header>
-          <nav className="mb-3.5 flex flex-wrap gap-1.5">
-            {[{ k: "ph", label: T("이커머스·디지털(PH)", "E-commerce · Digital (PH)") }, { k: "sea", label: T("동남아 6개국 비교", "6-country ASEAN comparison") }].map((s) => (
-              <button key={s.k} type="button" onClick={() => setTab(s.k as "ph" | "sea")}
-                className={"rounded-lg px-3 py-1.5 text-[12px] font-semibold transition-all duration-200 " + (tab === s.k ? "bg-violet-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-violet-50 hover:text-violet-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-violet-500/15 dark:hover:text-violet-300")}>{s.label}</button>
-            ))}
-          </nav>
 
           {tab === "ph" && (
           <div key={"ph" + win} className="grid items-stretch gap-4 sm:grid-cols-2" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>

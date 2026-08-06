@@ -75,7 +75,6 @@ export default function HousingView() {
         {/* 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
         <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
           <span className="h-[18px] w-1 rounded bg-indigo-500" />
-          <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("부동산·주택", "Real Estate")}</h2>
           <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} /></span>
         </header>
         <div className="grid items-stretch gap-4 sm:grid-cols-2">
