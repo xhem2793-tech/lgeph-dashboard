@@ -82,10 +82,6 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
 
   if (daily === null) return <div className="flex min-h-[440px] items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("불러오는 중", "Loading")}</div>
 
-  const KindBadge = ({ e }: { e: Ev }) => e.kind === "new"
-    ? <span className="inline-flex shrink-0 items-center gap-0.5 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">＋ {T("신제품", "New")}</span>
-    : <span className={"inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-bold " + STATUS_C[e.status].chip}>EOL · {e.status}</span>
-
   return (
     <div className="mt-3 flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
       {/* 컨트롤 바 — 뷰 세그먼트 + 카테고리 필터 + KPI */}
@@ -106,7 +102,7 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
         </div>
       </div>
 
-      {view === "feed" && <FeedView events={filtered} f={feedF} setF={setFeedF} onSel={setSel} KindBadge={KindBadge} />}
+      {view === "feed" && <FeedView events={filtered} f={feedF} setF={setFeedF} onSel={setSel} />}
       {view === "board" && <BoardKanban events={filtered} onSel={setSel} />}
       {view === "table" && <TableView events={filtered} f={tableF} setF={setTableF} onSel={setSel} />}
 
@@ -128,7 +124,7 @@ function SubTabs({ f, setF }: { f: string; setF: (v: string) => void }) {
 }
 const passF = (e: Ev, f: string) => f === "전체" || (f === "신제품" ? e.kind === "new" : e.kind === "eol")
 
-function FeedView({ events, f, setF, onSel, KindBadge }: { events: Ev[]; f: string; setF: (v: string) => void; onSel: (e: Ev) => void; KindBadge: (p: { e: Ev }) => React.ReactElement }) {
+function FeedView({ events, f, setF, onSel }: { events: Ev[]; f: string; setF: (v: string) => void; onSel: (e: Ev) => void }) {
   const list = events.filter((e) => passF(e, f)).sort((a, b) => b.date.localeCompare(a.date))
   const byDay: Record<string, Ev[]> = {}
   list.forEach((e) => { (byDay[e.date] = byDay[e.date] || []).push(e) })
@@ -136,35 +132,48 @@ function FeedView({ events, f, setF, onSel, KindBadge }: { events: Ev[]; f: stri
   return (
     <div className="flex flex-col gap-4">
       <SubTabs f={f} setF={setF} />
-      {days.length === 0 ? <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400">{T("해당 이벤트가 없습니다.", "No matching events.")}</div> : days.map((d, gi) => (
+      {days.length === 0 ? <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400">{T("해당 이벤트가 없습니다.", "No matching events.")}</div> : days.map((d, gi) => {
+        // 날짜 안에서 신호종류(신제품/EOL 후보) 카드로 그룹 — 이상치 알림과 동일 패턴
+        const groups = [
+          { key: "new", label: T("신제품 등장", "New products"), items: byDay[d].filter((e) => e.kind === "new") },
+          { key: "eol", label: T("EOL 후보", "EOL candidates"), items: byDay[d].filter((e) => e.kind === "eol").sort((a, b) => b.daysMissing - a.daysMissing) },
+        ].filter((g) => g.items.length > 0)
+        return (
         <div key={d} style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both", animationDelay: gi * 0.04 + "s" }}>
-          <div className="mb-2 flex items-center gap-2">
-            <span className="text-[12.5px] font-bold text-gray-800 dark:text-gray-100">{gi === 0 ? T("오늘", "Today") : gi === 1 ? T("어제", "Yesterday") : md(d)}</span>
-            <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[10px] font-bold tabular-nums text-gray-500 dark:text-gray-400">{byDay[d].length}</span>
-            <span className="ml-1 h-px flex-1 bg-gray-100 dark:bg-gray-800" />
+          <div className="mb-1.5 flex items-center gap-2">
+            <span className={"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold " + (gi === 0 ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200")}><span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />{gi === 0 ? T("오늘", "Today") : gi === 1 ? T("어제", "Yesterday") : md(d)}</span>
+            <span className="text-[11px] text-gray-400 dark:text-gray-500">{byDay[d].length}{T("건", "")}</span>
           </div>
-          <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-            {byDay[d].map((e, i) => (
-              <button key={e.id} type="button" onClick={() => onSel(e)} className="flex w-full items-center gap-2.5 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 text-left transition-colors last:border-0 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10" style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 10) * 0.02 + "s" }}>
-                <span className="relative flex h-2 w-2 shrink-0 items-center justify-center">
-                  {(e.kind === "new" || e.status === "단종 유력") && <span className={"absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 " + STATUS_C[e.status].dot} />}
-                  <span className={"relative h-2 w-2 rounded-full " + STATUS_C[e.status].dot} />
-                </span>
-                <KindBadge e={e} />
-                <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                  <span className="shrink-0 whitespace-nowrap text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{e.brand === "LG" ? <span className="text-indigo-700 dark:text-indigo-300">{e.brand} {e.model}</span> : `${e.brand} ${e.model}`}</span>
-                  <span className="hidden shrink-0 rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 sm:inline">{e.cat}</span>
-                  {e.form ? <span className="hidden shrink-0 rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 md:inline">{e.form}</span> : null}
-                  {e.spec ? <span className="hidden shrink-0 whitespace-nowrap rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 lg:inline">{e.spec}</span> : null}
+          <div className="ml-1 flex flex-col gap-2 border-l-2 border-gray-200 pl-3 dark:border-gray-700">
+            {groups.map((g) => (
+              <div key={g.key} className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+                <div className="flex items-center gap-1.5 border-b border-gray-100 bg-gray-50/70 px-3 py-1.5 dark:border-gray-800 dark:bg-gray-900/40">
+                  <span className={"-ml-[19px] h-2 w-2 rounded-full ring-2 ring-white dark:ring-gray-950 " + (g.key === "new" ? "bg-emerald-500" : "bg-rose-500")} />
+                  <span className={"inline-flex items-center rounded px-1.5 py-px text-[11px] font-bold " + (g.key === "new" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300" : "bg-rose-50 text-rose-600 dark:bg-rose-500/10 dark:text-rose-400")}>{g.label}</span>
+                  <span className="text-[10.5px] text-gray-400 dark:text-gray-500">{g.items.length}{T("개 제품", "")}</span>
                 </div>
-                <span className="shrink-0 text-right text-[11.5px] tabular-nums">{e.kind === "new" ? <span className="font-semibold text-emerald-600 dark:text-emerald-400">{T("등장가 ", "Launch ")}{peso(e.price)}</span> : <span className="text-gray-500 dark:text-gray-400">{T("미노출 ", "Absent ")}<b className="text-gray-800 dark:text-gray-100">D+{e.daysMissing}</b>{T(" · 최종 ", " · last ")}{md(e.lastSeen)}</span>}</span>
-                <span className="hidden w-14 shrink-0 text-right text-[11px] text-gray-400 dark:text-gray-500 md:block">{e.channels}{T("/거래선", "/dealers")}</span>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-300 dark:text-gray-600"><path d="M9 6l6 6-6 6" /></svg>
-              </button>
+                {g.items.map((e, i) => (
+                  <button key={e.id} type="button" onClick={() => onSel(e)} className="flex w-full items-center gap-2 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2 text-left transition-colors last:border-0 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10" style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 10) * 0.02 + "s" }}>
+                    <span className="relative flex h-2 w-2 shrink-0 items-center justify-center">
+                      {(e.kind === "new" || e.status === "단종 유력") && <span className={"absolute inline-flex h-full w-full animate-ping rounded-full opacity-60 " + STATUS_C[e.status].dot} />}
+                      <span className={"relative h-2 w-2 rounded-full " + STATUS_C[e.status].dot} />
+                    </span>
+                    <span className={"whitespace-nowrap text-[12.5px] font-bold uppercase " + (e.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50")}>{e.brand}</span>
+                    <span className="whitespace-nowrap text-[12px] font-semibold text-gray-700 dark:text-gray-200">{e.cat}</span>
+                    {e.form ? <span className="hidden whitespace-nowrap text-[12px] text-gray-600 dark:text-gray-300 sm:inline">{e.form}</span> : null}
+                    {e.spec ? <span className="hidden whitespace-nowrap text-[11.5px] text-gray-500 dark:text-gray-400 md:inline">{e.spec}</span> : null}
+                    <span className="hidden whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 lg:inline">({e.model})</span>
+                    <span className="ml-auto shrink-0 text-right text-[11.5px] tabular-nums">{e.kind === "new" ? <span className="font-semibold text-emerald-600 dark:text-emerald-400">{T("등장가 ", "Launch ")}{peso(e.price)}</span> : <span className="text-gray-500 dark:text-gray-400">{T("미노출 ", "Absent ")}<b className={e.daysMissing >= 14 ? "text-rose-600 dark:text-rose-400" : "text-gray-800 dark:text-gray-100"}>D+{e.daysMissing}</b></span>}</span>
+                    <span className="hidden w-12 shrink-0 text-right text-[11px] text-gray-400 dark:text-gray-500 md:block">{e.channels}{T("/곳", "/ch")}</span>
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-300 dark:text-gray-600"><path d="M9 6l6 6-6 6" /></svg>
+                  </button>
+                ))}
+              </div>
             ))}
           </div>
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
