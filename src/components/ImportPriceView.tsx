@@ -72,21 +72,36 @@ export default function ImportPriceView() {
           </div>
           <div className="mt-2.5 min-h-0 flex-1">
             {!orig ? <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">{T("불러오는 중", "Loading")}</div> : orig.origins.length === 0 ? <div className="flex h-40 items-center justify-center text-[12px] text-gray-400">{T("원산지 데이터 없음", "No origin data")}</div> : (
-              <div className="flex flex-col gap-2">
-                {orig.origins.slice(0, 7).map((o) => (
-                  <div key={o.partner} className="flex items-center gap-2">
-                    <span className="w-14 shrink-0 text-[12px] font-semibold text-gray-700 dark:text-gray-200">{o.partner}</span>
-                    <div className="relative h-5 flex-1 overflow-hidden rounded bg-gray-100 dark:bg-gray-800">
-                      <div className="absolute inset-y-0 left-0 rounded" style={{ width: Math.max(3, o.share) + "%", background: OCOL[o.partner] || "#94a3b8", opacity: 0.85 }} />
-                      <span className="absolute inset-y-0 left-2 flex items-center text-[10.5px] font-bold text-gray-700 dark:text-gray-100">{o.share.toFixed(0)}%</span>
+              (() => {
+                const items = orig.origins.slice(0, 7)
+                const total = items.reduce((s, o) => s + o.share, 0) || 1
+                const R = 46, SW = 20, C = 2 * Math.PI * R, cx = 60, cy = 60
+                let acc = 0
+                return (
+                  <div className="flex items-center gap-4">
+                    <svg width="126" height="126" viewBox="0 0 120 120" className="-rotate-90 shrink-0">
+                      <circle cx={cx} cy={cy} r={R} fill="none" strokeWidth={SW} className="stroke-gray-100 dark:stroke-gray-800" />
+                      {items.map((o, i) => { const frac = o.share / total, off = -C * acc; acc += frac
+                        return <circle key={o.partner} cx={cx} cy={cy} r={R} fill="none" stroke={OCOL[o.partner] || "#94a3b8"} strokeWidth={SW} strokeDasharray={`${C * frac} ${C * (1 - frac)}`} strokeDashoffset={off} style={{ animation: "growX .6s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.08 + i * 0.06) + "s" }} /> })}
+                      <text x={cx} y={cy - 3} textAnchor="middle" className="rotate-90 fill-gray-400 dark:fill-gray-500" style={{ transformOrigin: `${cx}px ${cy}px` }} fontSize="9" fontWeight="700">{T("점유", "Share")}</text>
+                      <text x={cx} y={cy + 9} textAnchor="middle" className="rotate-90 fill-gray-700 dark:fill-gray-100" style={{ transformOrigin: `${cx}px ${cy}px` }} fontSize="12" fontWeight="800">{items[0]?.partner}</text>
+                    </svg>
+                    <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+                      {items.map((o) => (
+                        <div key={o.partner} className="flex items-center gap-1.5 text-[11.5px]">
+                          <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: OCOL[o.partner] || "#94a3b8" }} />
+                          <span className="font-semibold text-gray-700 dark:text-gray-200">{o.partner}</span>
+                          <span className="tabular-nums text-gray-500 dark:text-gray-400">{o.share.toFixed(0)}%</span>
+                          <span className="ml-auto tabular-nums text-gray-400 dark:text-gray-500">${o.unit.toFixed(2)}/kg</span>
+                        </div>
+                      ))}
                     </div>
-                    <span className="w-16 shrink-0 text-right text-[11px] tabular-nums text-gray-500 dark:text-gray-400">${o.unit.toFixed(2)}/kg</span>
                   </div>
-                ))}
-              </div>
+                )
+              })()
             )}
           </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b>{T(" 막대=수입액 점유, 우측=원산지별 단가($/kg) — ", " Bar = import value share, right = unit price by origin ($/kg) — ")}<b className="text-gray-700 dark:text-gray-200">{T("중국 저가 대량·한국 고단가", "China high-volume low-price · Korea high unit price")}</b>{T(" 구도 확인", " structure")}</p>
+          <p className="mt-2 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b>{T(" 도넛=원산지별 수입액 점유, 범례 우측=단가($/kg) — ", " Donut = import value share by origin, legend right = unit price ($/kg) — ")}<b className="text-gray-700 dark:text-gray-200">{T("중국 저가 대량·한국 고단가", "China high-volume low-price · Korea high unit price")}</b>{T(" 구도 확인", " structure")}</p>
           <p className="mt-auto pt-2 text-[10px] text-gray-400 dark:text-gray-500">{T("UN Comtrade · 최신 확보월 원산지별 CIF 점유·단가", "UN Comtrade · CIF share and unit price by origin, latest available month")}</p>
         </div>
       </div>
