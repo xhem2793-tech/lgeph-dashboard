@@ -359,7 +359,7 @@ function IndListTable({ items, q, fav, onFav, onDetail, showCat }: { items: Row[
                   </div>
                 </td>
                 {showCat && <td className="truncate px-2 py-3 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
-                <td className="px-2 py-3 align-middle"><div className="flex min-h-[2.75em] items-center"><p className="line-clamp-2 text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></div></td>
+                <td className="px-2 py-3 align-middle"><div className="flex min-h-[2.75em] min-w-[240px] items-center"><p className="text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></div></td>
                 <td className="px-2 py-3 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
                 <td className="px-2 py-3 text-right align-middle tabular-nums whitespace-nowrap text-[11.5px] font-semibold text-gray-600 dark:text-gray-300">{r.period ? ym(r.period) : "—"}</td>
                 <td className="px-3 py-3 text-right align-middle tabular-nums whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400" title={T("추정 발표일(관측월+표준 발표지연)", "Est. release date (obs. month + typical lag)")}>{estReleaseMD(r) ?? "—"}</td>
