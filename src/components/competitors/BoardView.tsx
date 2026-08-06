@@ -125,10 +125,10 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
     if (cur[i].asc) { const n = cur.slice(); n[i] = { k, asc: false }; return n }
     return cur.filter((_, j) => j !== i)
   })
-  // 정렬 표시 — 활성 컬럼만 방향(▲▼·인디고), 비활성은 아이콘 없음
+  // 정렬 표시 — 활성 컬럼은 방향(▲▼·인디고), 비활성은 옅은 ⇅(클릭해 정렬 가능 안내)
   const arrow = (k: string) => {
     const s = sorts.find((s) => s.k === k)
-    if (!s) return null
+    if (!s) return <span className="ml-0.5 text-[8px] text-gray-300 dark:text-gray-600">⇅</span>
     return <span className="ml-0.5 text-indigo-500">{s.asc ? "▲" : "▼"}</span>
   }
 
