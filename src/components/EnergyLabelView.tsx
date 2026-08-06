@@ -3,16 +3,33 @@
 import React, { useEffect, useMemo, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { energyLabels, latestMacro, brandPriceRanges, type EnergyRow, type PriceRange } from "@/lib/supabase"
-import { Segmented } from "@/components/Segmented"
+import { PmDrop } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
 
 /** 에너지 효율 — 전문기관 수준 분석. 카테고리×설치형×냉매×용량 세그먼트별 브랜드 효율·등급·전력비용(TCO). */
+
+/** 화면에 보일 지표(차트) 선택 — 채널별 가격비교식 드롭다운 필터. Sub이 이 컨텍스트를 읽어 선택된 idx만 렌더. */
+const ActiveMetricCtx = React.createContext<number | null>(null)
+// 지표 필터 옵션(idx → 라벨). idx는 각 Sub의 idx와 일치. 냉매(5)는 에어컨만 노출.
+const METRICS: { idx: number; ko: string; en: string; acuOnly?: boolean }[] = [
+  { idx: 0, ko: "브랜드 효율 랭킹", en: "Efficiency Ranking" },
+  { idx: 1, ko: "효율↔월전력", en: "Efficiency ↔ Power" },
+  { idx: 2, ko: "용량대별 LG vs 시장", en: "LG vs Market by Capacity" },
+  { idx: 3, ko: "월 전기요금(TCO)", en: "Monthly Bill (TCO)" },
+  { idx: 4, ko: "브랜드 등급 분포", en: "Grade Distribution" },
+  { idx: 5, ko: "냉매 믹스(GWP)", en: "Refrigerant Mix", acuOnly: true },
+  { idx: 6, ko: "효율 분포", en: "Efficiency Distribution" },
+  { idx: 7, ko: "용량↔효율 지형", en: "Capacity ↔ Efficiency" },
+  { idx: 8, ko: "브랜드 포지셔닝", en: "Brand Positioning" },
+  { idx: 9, ko: "브랜드별 가격대", en: "Price Range by Brand" },
+]
 
 const CATS = [
   { key: "acu", label: "에어컨", metric: "CSPF", specUnit: "냉방용량" },
   { key: "ref", label: "냉장고", metric: "EEF", specUnit: "용량" },
   { key: "tvl", label: "TV", metric: "EER", specUnit: "화면" },
 ]
+const CAT_EN: Record<string, string> = { acu: "RAC", ref: "REF", tvl: "TV" }
 const SEG: Record<string, { k: string; lo: number; hi: number }[]> = {
   acu: [{ k: "소형(≤0.8HP)", lo: 0, hi: 2.5 }, { k: "1HP급", lo: 2.5, hi: 3.4 }, { k: "1.5HP급", lo: 3.4, hi: 5.2 }, { k: "2HP급", lo: 5.2, hi: 6.9 }, { k: "2.5HP급", lo: 6.9, hi: 8.5 }, { k: "3HP+", lo: 8.5, hi: Infinity }],
   ref: [{ k: "~150L", lo: 0, hi: 150 }, { k: "150~249L", lo: 150, hi: 250 }, { k: "250~349L", lo: 250, hi: 350 }, { k: "350~449L", lo: 350, hi: 450 }, { k: "450L+", lo: 450, hi: Infinity }],
@@ -121,6 +138,8 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
     rows.sort((a, b) => { const an = pNum(a[sortCol]), bn = pNum(b[sortCol]); let c: number; if (an != null && bn != null) c = an - bn; else c = String(a[sortCol]).localeCompare(String(b[sortCol])); return sortDesc ? -c : c })
     return rows
   })()
+  const activeIdx = React.useContext(ActiveMetricCtx)
+  if (activeIdx != null && idx !== activeIdx) return null // 지표 필터: 선택된 차트만 표시
   return (
     <>
     <div ref={(el) => { cardRef.current = el; (ref as React.MutableRefObject<HTMLDivElement | null>).current = el }} className="flex h-full flex-col rounded-xl p-3.5 transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md" style={{ animation: on ? "fadeUp .5s cubic-bezier(.22,1,.36,1) both" : undefined, animationDelay: Math.min(idx, 6) * 0.06 + "s", opacity: on ? undefined : 0 }}>
@@ -547,6 +566,9 @@ export default function EnergyLabelView() {
   const [cat, setCat] = useState("acu")
   const [typ, setTyp] = useState("전체")
   const [segIdx, setSegIdx] = useState(0)
+  const [metricSel, setMetricSel] = useState(0) // 화면에 표시할 지표(차트) idx
+  // 카테고리 바뀌면 냉매(에어컨 전용) 등 선택 불가 지표는 기본으로 리셋
+  useEffect(() => { if (cat !== "acu" && metricSel === 5) setMetricSel(0) }, [cat, metricSel])
   const [rate, setRate] = useState(14.83) // Meralco 가정용 ₱/kWh(실측 로드 전 기본값)
   const [rateAsOf, setRateAsOf] = useState("")
   const [simOpen, setSimOpen] = useState(false)
@@ -696,22 +718,12 @@ export default function EnergyLabelView() {
 
       <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
-          <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-            <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <Segmented size="sm" value={cat} onChange={setCat} options={CATS.map((c) => ({ k: c.key, label: c.label }))} />
-          </header>
-
-          <div className="mb-3.5 flex flex-col gap-2">
-            {hasType && (
-              <div className="flex flex-wrap items-center gap-1.5">
-                <span className="mr-0.5 w-9 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("설치", "Type")}</span>
-                {["전체", ...types].map((t) => <button key={t} onClick={() => setTyp(t)} className={"rounded-lg px-2.5 py-1 text-[12px] font-semibold transition-all " + (typ === t ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50 hover:text-teal-600 dark:hover:bg-teal-500/15")}>{t}</button>)}
-              </div>
-            )}
-            <div className="flex flex-wrap items-center gap-1.5">
-              <span className="mr-0.5 w-9 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{cur.specUnit.slice(0, 2)}</span>
-              {segs.map((s, i) => <button key={s.k} onClick={() => setSegIdx(i)} disabled={(segCounts[i] || 0) < 3} className={"rounded-lg px-2.5 py-1 text-[12px] font-semibold transition-all disabled:opacity-25 " + (segIdx === i ? "bg-gray-900 dark:bg-gray-100 text-white dark:text-gray-900" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200")}>{s.k}<span className="ml-1 text-[10px] opacity-60">{segCounts[i]}</span></button>)}
-            </div>
+          {/* 채널별 가격비교식 필터 바 — 제품·설치·용량·지표 드롭다운 나란히. 선택한 지표 1개만 표시 */}
+          <div className="mb-3.5 flex flex-wrap items-center gap-2">
+            <PmDrop label={T("제품", "Product")} sel={cat} options={CATS.map((c) => ({ k: c.key, t: T(c.label, CAT_EN[c.key] ?? c.label) }))} onSelect={(k) => { setCat(k); setTyp("전체"); setSegIdx(0) }} />
+            {hasType && <PmDrop label={T("설치", "Type")} sel={typ} options={["전체", ...types].map((t) => ({ k: t, t: T(t, t === "전체" ? "All" : t) }))} onSelect={setTyp} />}
+            <PmDrop label={T("용량", "Cap.")} sel={String(segIdx)} options={segs.map((s, i) => ({ k: String(i), t: `${s.k} (${segCounts[i] || 0})` }))} onSelect={(k) => setSegIdx(Number(k))} />
+            <PmDrop label={T("지표", "Metric")} sel={String(metricSel)} options={METRICS.filter((m) => !m.acuOnly || cat === "acu").map((m) => ({ k: String(m.idx), t: T(m.ko, m.en) }))} onSelect={(k) => setMetricSel(Number(k))} />
           </div>
 
 
@@ -731,7 +743,8 @@ export default function EnergyLabelView() {
               <p className="mt-2.5 border-l-2 border-indigo-300 dark:border-indigo-500/40 pl-2 text-[11px] leading-relaxed text-gray-600 dark:text-gray-300">{T("LG는 ", "LG has ")}<b>{coverage.lgTotal}{T("개", "")}</b>{T(" 모델을 ", " models across ")}{coverage.rowLabels.length}{T("개 설치형·", " types · ")}{coverage.colLabels.length}{T("개 용량대에 걸쳐 등록. ", " capacity bands. ")}<b>{T("빈 셀=미출시 공백", "Empty cell = not-launched gap")}</b>{T("(진입 기회), 색이 옅은 셀=효율 열세(개선 타깃).", " (entry opportunity); lighter cells = efficiency lag (improvement targets).")}</p>
             </div>
             )}
-            <div key={`seg-${typ}-${segIdx}`} className="grid items-stretch gap-4 sm:grid-cols-2">
+            <ActiveMetricCtx.Provider value={metricSel}>
+            <div key={`seg-${typ}-${segIdx}-${metricSel}`} className="grid items-stretch gap-4 grid-cols-1">
               <Sub idx={0} title={T("브랜드 효율 랭킹", "Brand Efficiency Ranking")} seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} meaning={<>{T("같은 세그먼트 브랜드 평균 ", "Same-segment brand avg ")}{cur.metric} — <b className="text-gray-700 dark:text-gray-200">{T("높을수록 고효율", "higher = more efficient")}</b></>} ai={lgR ? <>{T("LG는 이 세그먼트 ", "LG ranks ")}<b className="font-semibold text-teal-700 dark:text-teal-300">{lgRk}{T("위", "th")}</b>{T(", 리더 ", " in this segment; leader ")}{rank[0]?.name}{T(" 대비 ", " vs ")}{gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? <>{T("낮아 ", "lower — ")}<b className="font-semibold">{T("최고효율 격차가 곧 차기 개발 타깃", "the gap to best-in-class is the next-gen R&D target")}</b></> : <>{T("높아 ", "higher — ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("프리미엄 효율 소구 가능", "premium efficiency positioning available")}</b></>}{T(". 상위 브랜드와의 ", ". Reflect the ")}{cur.metric}{T(" 갭을 스펙 로드맵에 반영.", " gap vs top brands in the spec roadmap.")}</> : <><b className="font-semibold">{T("LG는 이 세그먼트 등록 모델 없음", "LG has no registered models in this segment")}</b>{T("(현지 미출시) — 시장 벤치마크로 진입 검토 시 목표 효율선 설정에 활용.", " (not launched locally) — use the market benchmark to set a target efficiency line when considering entry.")}</>} csv={{ head: [T("브랜드", "Brand"), cur.metric, T("모델수", "Models")], rows: rankAll.map((r) => [r.name, r.v.toFixed(2), r.n]) }} bigChildren={<HBar items={rankAll} hiName="LG" />}><HBar items={rank} hiName="LG" /></Sub>
               <Sub idx={1} title={T("효율 ↔ 월전력 관계", "Efficiency ↔ Monthly Power")} seg={seg?.k} meaning={<>{T("가로=효율, 세로=월전력 — ", "X = efficiency, Y = monthly power — ")}<b className="text-gray-700 dark:text-gray-200">{T("우상단", "upper-right")}</b>{T("이 고효율·저전력", " = high-efficiency, low-power")}</>} ai={<>{T("같은 효율이라도 실제 월전력은 다를 수 있어 ", "Even at equal efficiency, actual monthly power can differ, so ")}<b className="font-semibold">{T("효율 스펙과 실사용 전력의 정합성", "the alignment between spec efficiency and real-world power")}</b>{T("이 관건. LG 점이 우상단 음영(우수 구간)에 있으면 ", " is key. If the LG point sits in the shaded upper-right (optimal zone), ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("‘고효율=저전기료’ 메시지가 실측으로 뒷받침", "the ‘high-efficiency = low bill’ message is backed by measured data")}</b>{T("되고, 아니면 라벨효율 대비 소비전력 개선이 과제.", "; otherwise, improving consumption vs label efficiency is the task.")}</>} csv={{ head: [T("브랜드", "Brand"), cur.metric, T("월전력(kWh)", "Monthly power (kWh)")], rows: scatterData.map((p) => [p.name, p.eff.toFixed(2), Math.round(p.kwh)]) }}><Scatter pts={scatterData} metric={cur.metric} /></Sub>
               <Sub idx={2} title={T("용량대별 LG vs 시장", "LG vs Market by Capacity")} meaning={<>{T("용량대별 ", "By capacity, ")}<b className="text-gray-700 dark:text-gray-200">{T("LG vs 시장평균", "LG vs market avg")}</b> {cur.metric}{T(" — 효율 포지션", " — efficiency position")}</>} ai={weak && strong ? <>{T("LG는 ", "LG is ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{strong.label}</b>{T("에서 시장 대비 +", " +")}{strong.diff.toFixed(2)}{T(" 강세인 반면 ", " above market, while ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{weak.label}</b>{T("는 ", " lags ")}{weak.diff.toFixed(2)}{T(" 열세 → ", " → ")}<b className="font-semibold">{T("열세 용량대의 효율 스펙 상향이 차기 라인업 1순위", "raising efficiency specs in the lagging band is the top next-lineup priority")}</b>{T(". 강세 용량대는 프리미엄 가격 방어에 활용.", ". Use strong bands to defend premium pricing.")}</> : <>{T("용량대별 LG 포지션 — 시장평균 상회 구간은 프리미엄, 하회 구간은 개선 타깃.", "LG position by capacity — bands above market avg are premium; below are improvement targets.")}</>} csv={{ head: [T("용량대", "Capacity"), "LG " + cur.metric, T("시장 ", "Market ") + cur.metric], rows: bySegChart.map((g) => [g.label, g.lg != null ? g.lg.toFixed(2) : "—", g.mkt.toFixed(2)]) }}><GroupBars groups={bySegChart} /></Sub>
@@ -757,6 +770,7 @@ export default function EnergyLabelView() {
               <Sub idx={9} title={T("브랜드별 가격대 (소매)", "Price Range by Brand (retail)")} seg={CAT_KO[cat]} meaning={<>{T("리테일러 실판매가 분포 — ", "Retailer street-price distribution — ")}<b className="text-gray-700 dark:text-gray-200">{T("박스=P25~P75, 선=중앙값", "box = P25–P75, line = median")}</b></>} ai={lgPrice ? <>LG {CAT_KO[cat]}{T(" 중앙가 ", " median price ")}<b className="font-semibold text-teal-700 dark:text-teal-300">₱{Math.round(lgPrice.med).toLocaleString()}</b>(P25~P75 ₱{Math.round(lgPrice.p25).toLocaleString()}~₱{Math.round(lgPrice.p75).toLocaleString()}) — {priceDisp[0] && priceDisp[0].med > lgPrice.med * 1.1 ? <><b className="font-semibold">{priceDisp[0].brand}</b>{T(" 등 프리미엄 대비 중가 포지션", " and other premiums — a mid-price position")}</> : <>{T("상위 가격대에 위치", "positioned in the upper price band")}</>}. <b>{T("가격대 폭이 넓을수록", "The wider the price range,")}</b>{T(" 보급형~프리미엄 풀커버, 좁으면 특정 층 집중. 효율 우위 세그먼트에서 가격 프리미엄을 ", " the fuller the coverage from entry to premium; a narrow range concentrates on one tier. In segments with an efficiency edge, ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("에너지 절감 TCO로 정당화", "justifying the price premium via energy-saving TCO")}</b>{T("하는 전략이 유효.", " is an effective strategy.")}</> : <>{T("브랜드별 소매 가격대 — LG 가격 포지션과 프리미엄/보급 커버리지 진단(효율 대비 가격 매력도).", "Retail price range by brand — diagnosing LG's price position and premium/entry coverage (price appeal vs efficiency).")}</>} csv={{ head: [T("브랜드", "Brand"), "P10", "P25", T("중앙값", "Median"), "P75", "P90", T("모델수", "Models")], rows: priceRanges.map((p) => [p.brand, Math.round(p.p10), Math.round(p.p25), Math.round(p.med), Math.round(p.p75), Math.round(p.p90), p.n]) }} bigChildren={<PriceBox items={priceRanges} />}><PriceBox items={priceDisp} /></Sub>
               )}
             </div>
+            </ActiveMetricCtx.Provider>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
             <button type="button" onClick={() => setModelOpen(true)} className="flex w-full items-center gap-2.5 rounded-xl border border-teal-200 dark:border-teal-500/30 bg-teal-50/50 dark:bg-teal-500/10 px-4 py-3 text-left transition-all hover:-translate-y-0.5 hover:shadow-md" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both", animationDelay: ".28s" }}>
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[11px] bg-teal-600 text-white shadow-sm shadow-teal-600/25"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" /><line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" /></svg></span>
