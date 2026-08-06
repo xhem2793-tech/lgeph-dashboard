@@ -23,10 +23,12 @@ const BRAND_DOMAIN: Record<string, string> = {
 const RETAILER_DOMAIN: Record<string, string> = {
   "SM Appliance": "smappliance.com", "Abenson": "abenson.com", "Anson's": "ansons.com.ph",
   "Robinsons Appliances": "robinsonsappliances.com.ph", "Western Appliances": "westernappliances.com.ph",
-  "Emcor": "emcor.com.ph", "Addessa": "addessa.com.ph", "Home Credit": "homecredit.ph",
+  "Emcor": "emcor.com.ph", "Addessa": "addessa.com.ph", "Home Credit": "homecredit.ph", "Imperial": "imperialappliance.com",
 }
-const brandLogo = (b: string): string | null => BRAND_DOMAIN[b] ? `https://logo.clearbit.com/${BRAND_DOMAIN[b]}` : null
-const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? `https://logo.clearbit.com/${RETAILER_DOMAIN[r]}` : null
+const IMPERIAL = "Imperial" // 9번 열 · 비활성(스크래핑 미연동)
+// Google 파비콘 서비스(안정적, 64px 정사각) — 도메인 기반. Clearbit(종료)에서 교체.
+const brandLogo = (b: string): string | null => BRAND_DOMAIN[b] ? `https://www.google.com/s2/favicons?domain=${BRAND_DOMAIN[b]}&sz=64` : null
+const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? `https://www.google.com/s2/favicons?domain=${RETAILER_DOMAIN[r]}&sz=64` : null
 const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none" }
 
 function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
@@ -55,7 +57,9 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
     return { retailers, brands, today, prev, fresh, oos, maxT, colTot, rowTot, grand, K }
   }, [rows, di])
   const slots = [0, 1, 2, 3].filter((i) => dates[i])
-  const retSlots = Array.from({ length: 10 }, (_, i) => data.retailers[i] ?? null) // 거래선 10열 고정
+  // 거래선 10열 고정 — 9번(index 8)은 Imperial(비활성) 고정, 나머지는 활성 거래선 순서대로
+  const retSlots: (string | null)[] = []
+  { let ai = 0; for (let i = 0; i < 10; i++) { if (i === 8) retSlots.push(IMPERIAL); else { retSlots.push(data.retailers[ai] ?? null); ai++ } } }
   const brSlots = Array.from({ length: 10 }, (_, i) => data.brands[i] ?? null) // 브랜드 10행 고정
   return (
     <div className="flex flex-col gap-2.5">
@@ -78,41 +82,48 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         ) : (<>
       <div className="overflow-x-auto pb-1">
         {/* 10×10 고정 매트릭스 — 거래선 10열·브랜드 10행. 부족분은 빈 칸. 폭에 맞춰 늘어나는 정사각 셀. */}
-        <div key={cat + "-" + di} className="grid w-full gap-[4px] text-[11px]" style={{ minWidth: 600, gridTemplateColumns: `minmax(84px,0.85fr) repeat(10, minmax(44px,1fr))` }}>
+        <div key={cat + "-" + di} className="grid w-full gap-[5px] text-[11px]" style={{ minWidth: 660, gridTemplateColumns: `minmax(96px,0.9fr) repeat(10, minmax(50px,1fr))` }}>
           {/* 헤더 행 */}
           <div className="sticky left-0 z-10 bg-white dark:bg-gray-900/40" />
-          {retSlots.map((ret, ci) => ret ? (
+          {retSlots.map((ret, ci) => ret === IMPERIAL ? (
+            <div key={ci} className="flex w-full flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-gray-200 bg-gray-50/40 px-0.5 py-1.5 text-center opacity-70 dark:border-gray-700 dark:bg-gray-800/20" title={T("준비 중 · 스크래핑 미연동", "Coming soon · not connected")}>
+              <span className="rounded-full bg-gray-100 px-1 text-[8px] font-bold tabular-nums text-gray-400 dark:bg-gray-700 dark:text-gray-400">#9</span>
+              <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-400 dark:text-gray-500">Imperial</span>
+              <span className="rounded bg-gray-100 px-1 text-[8px] font-semibold text-gray-400 dark:bg-gray-700 dark:text-gray-500">{T("준비중", "soon")}</span>
+            </div>
+          ) : ret ? (
             <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="flex w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 py-1.5 text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-indigo-500/40" style={{ animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: ci * 0.02 + "s" }}>
               <span className="rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span>
               {retailerLogo(ret) && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-3.5 w-auto max-w-[52px] object-contain" />
+                <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-5 w-5 rounded object-contain" />
               )}
-              <span className="w-full truncate px-0.5 text-center text-[9.5px] font-semibold text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
-              <span className="text-[9px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
+              <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
+              <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
             </a>
           ) : <div key={ci} />)}
           {/* 본문 — 브랜드 10행(부족분 빈 칸) × 거래선 10열 */}
           {brSlots.map((b, bi) => (
             <React.Fragment key={bi}>
-              <div className={"sticky left-0 z-10 flex w-full flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-md border px-0.5 py-1.5 text-center text-[11px] font-bold transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-20 hover:-translate-y-0.5 hover:scale-[1.06] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: bi * 0.02 + "s" }}>
+              <div className={"sticky left-0 z-10 flex w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 py-1.5 text-center text-[12px] font-bold transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-20 hover:-translate-y-0.5 hover:scale-[1.05] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: bi * 0.02 + "s" }}>
                 {b && brandLogo(b) && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-4 w-auto max-w-[54px] object-contain" />
+                  <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-5 w-5 rounded object-contain" />
                 )}
-                <span className="max-w-full truncate">{b ?? ""}</span>
-                {b && <span className="text-[9px] font-normal tabular-nums text-gray-400">{data.rowTot[b] || 0}</span>}
+                <span className="w-full break-words leading-tight">{b ?? ""}</span>
+                {b && <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.rowTot[b] || 0}</span>}
               </div>
               {retSlots.map((ret, ci) => {
+                if (ret === IMPERIAL) return <div key={ci} className="flex aspect-square w-full items-center justify-center rounded-md border border-dashed border-gray-200 text-[9px] text-gray-300 dark:border-gray-700 dark:text-gray-600" style={{ background: "var(--cov-empty)", opacity: 0.45 }}>{b ? "—" : ""}</div>
                 if (!b || !ret) return <div key={ci} className="aspect-square w-full rounded-md" style={{ background: "var(--cov-empty)", opacity: 0.5 }} />
                 const k = data.K(b, ret); const t = data.today.get(k) || 0; const p = di < 3 ? (data.prev.get(k) || 0) : null; const d = p != null ? t - p : null; const fr = data.fresh.get(k) || 0; const oo = di === 0 ? (data.oos.get(k) || 0) : 0
                 const alpha = t ? Math.max(0.12, Math.min(1, t / data.maxT)) : 0; const light = alpha > 0.55
                 return (
                   <div key={ci} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}
                     className="flex aspect-square w-full flex-col items-center justify-center rounded-md text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.08] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1", animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(bi * 10 + ci, 44) * 0.012 + "s" }}>
-                    <span className="text-[15px] font-bold tabular-nums leading-none">{t || "·"}</span>
+                    <span className="text-[18px] font-bold tabular-nums leading-none xl:text-[22px]">{t || "·"}</span>
                     {t > 0 && (
-                      <span className="mt-0.5 flex flex-col items-center gap-0 text-[8.5px] font-semibold leading-tight" style={{ color: light ? "rgba(255,255,255,0.92)" : undefined }}>
+                      <span className="mt-0.5 flex flex-col items-center gap-0 text-[10px] font-semibold leading-tight xl:text-[11.5px]" style={{ color: light ? "rgba(255,255,255,0.92)" : undefined }}>
                         {di === 0 && <span className={light ? "" : "text-teal-700 dark:text-teal-300"}>{T("활성 ", "live ")}{Math.round(((t - oo) / t) * 100)}%</span>}
                         {d != null && <span className={light ? "" : d > 0 ? "text-emerald-600 dark:text-emerald-400" : d < 0 ? "text-rose-500 dark:text-rose-400" : "text-gray-400 dark:text-gray-500"}>{T("어제 ", "vs ")}{d > 0 ? "▲" + d : d < 0 ? "▼" + -d : "±0"}</span>}
                         {oo > 0 && <span className={light ? "" : "text-amber-600 dark:text-amber-400"}>{T("품절 ", "OOS ")}{oo}</span>}
