@@ -812,10 +812,10 @@ export default function EnergyLabelView() {
         <section className="min-w-0" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
           {/* 채널별 가격비교식 필터 바 — 제품·설치·용량·지표 드롭다운 나란히(테두리 묶음). 선택한 지표 1개만 표시 */}
           <div className="mb-3.5 flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+            <PmMultiDrop label={T("브랜드", "Brand")} sel={bubBrands} options={rankAll.filter((b) => !/^lg$/i.test(b.name)).map((b) => ({ k: b.name, t: b.name }))} onToggle={(k) => setBubBrands((cur) => cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k])} onClear={() => setBubBrands([])} allLabel={T("없음", "None")} />
             <PmDrop label={T("제품", "Product")} sel={cat} options={CATS.map((c) => ({ k: c.key, t: T(c.label, CAT_EN[c.key] ?? c.label) }))} onSelect={(k) => { setCat(k); setTyp("전체"); setSegIdx(0) }} />
-            {hasType && <PmDrop label={T("설치", "Type")} sel={typ} options={["전체", ...types].map((t) => ({ k: t, t: T(t, t === "전체" ? "All" : t) }))} onSelect={setTyp} />}
+            {hasType && <PmDrop label={T("유형", "Type")} sel={typ} options={["전체", ...types].map((t) => ({ k: t, t: T(t, t === "전체" ? "All" : t) }))} onSelect={setTyp} />}
             <PmDrop label={T("용량", "Cap.")} sel={String(segIdx)} options={segs.map((s, i) => ({ k: String(i), t: `${s.k} (${segCounts[i] || 0})` }))} onSelect={(k) => setSegIdx(Number(k))} />
-            <PmMultiDrop label={T("브랜드 강조", "Focus")} sel={bubBrands} options={rankAll.filter((b) => !/^lg$/i.test(b.name)).map((b) => ({ k: b.name, t: b.name }))} onToggle={(k) => setBubBrands((cur) => cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k])} onClear={() => setBubBrands([])} allLabel={T("없음", "None")} />
             <PmDrop label={T("지표", "Metric")} sel={String(metricSel)} options={METRICS.filter((m) => !m.acuOnly || cat === "acu").map((m) => ({ k: String(m.idx), t: T(m.ko, m.en) }))} onSelect={(k) => setMetricSel(Number(k))} />
           </div>
 
