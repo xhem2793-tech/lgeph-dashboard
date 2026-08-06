@@ -50,6 +50,7 @@ const buildGroups = (): { group: string; items: { key: string; no: number; label
   {
     group: T("가격 모니터링", "Price Monitoring"),
     items: [
+      { key: "volatility", no: 8, label: T("유통 히트맵", "Retail Heatmap"), desc: T("거래선×브랜드 전시 커버리지 히트맵 · 스크랩 제품수·점유율·품절", "Retailer × brand listing-coverage heatmap · SKUs, SOS, OOS"), status: "live", badge: "beta" },
       { key: "board", no: 0, label: T("채널별 가격 비교", "Price by Channel"), desc: T("거래선 × 대표 제품 오늘가 매트릭스 · 동일모델 유통 최저가", "Retailer × key-model today-price matrix · lowest cross-channel price for the same model"), status: "live" },
       { key: "movers", no: 1, label: T("일일 가격 변동", "Daily Price Moves"), desc: T("3일 가격·변동폭·할인율", "3-day prices, change and discount rate"), status: "live" },
       { key: "outlier", no: 12, label: T("이상치 알림", "Outlier Alerts"), desc: T("가격 급락·급등·깊은할인·품절 감지 · 유리/불리 신호", "Detects sharp drops/spikes, deep discounts and stockouts · favorable/adverse signals"), status: "live", badge: "beta" },
@@ -75,7 +76,6 @@ const buildGroups = (): { group: string; items: { key: string; no: number; label
     group: T("시장 신호·인사이트", "Market Signals & Insights"),
     items: [
       { key: "lifecycle", no: 7, label: T("신제품·EOL 감지", "New / EOL"), desc: T("신규 리스팅 등장 / 구모델 소멸", "New listings appearing / legacy models disappearing"), status: "live", badge: "beta" },
-      { key: "volatility", no: 8, label: T("유통 히트맵", "Retail Heatmap"), desc: T("거래선×브랜드 전시 커버리지 히트맵 · 스크랩 제품수·어제대비·신규·품절", "Retailer × brand listing-coverage heatmap · scraped SKUs, vs prev, new, OOS"), status: "live", badge: "beta" },
       { key: "intensity", no: 9, label: T("경쟁 강도 지수", "Intensity Index"), desc: T("취급 브랜드 수·가격 밀집도", "Number of brands carried and price density"), status: "plan" },
       { key: "listing", no: 10, label: T("취급·노출 시그널", "Listing Signals"), desc: T("브랜드별 리스팅 수 변화", "Change in listing count by brand"), status: "plan" },
       { key: "fx", no: 11, label: T("환율 연동 분석", "FX Analysis"), desc: T("페소 약세 ↔ 수입가전 가격 상관", "Peso weakness ↔ imported-appliance price correlation"), status: "plan" },

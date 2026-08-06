@@ -226,16 +226,18 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                         : bg.sev === "alert" ? "border-rose-200 bg-rose-50/70 dark:border-rose-500/30 dark:bg-rose-500/10"
                         : bg.sev === "warn" ? "border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10"
                         : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10"
-                      // 한 문장 요약 말풍선 — 클릭하면 팝업 리스트
+                      // 말풍선(아바타+꼬리) — 한 줄 핵심 요약, 클릭하면 팝업 리스트
                       return (
-                        <button key={bg.key} type="button" onClick={() => setOpenBub(bg)} className={"flex w-full items-center gap-2 rounded-xl border px-2.5 py-1.5 text-left shadow-sm transition-all duration-200 ease-out hover:-translate-y-px hover:shadow-md " + bub} style={{ animation: "rowIn .3s ease both" }}>
-                          <span className={"flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")}>{bg.brand.slice(0, 2).toUpperCase()}</span>
-                          <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
-                          <span className="min-w-0 flex-1 truncate text-[12px] leading-snug text-gray-600 dark:text-gray-300"><b className={bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50"}>{bg.brand}</b> {CAT_LABEL[bg.cat] ?? bg.cat} · {s.detail}{bg.nProd > 1 ? T(` 외 ${bg.nProd - 1}건`, ` +${bg.nProd - 1}`) : ""}</span>
-                          <span className="shrink-0">{metricChip(s)}</span>
-                          <span className="hidden shrink-0 text-[9px] tabular-nums text-gray-400 dark:text-gray-500 sm:inline">{bubTime}</span>
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400"><path d="M9 18l6-6-6-6" /></svg>
-                        </button>
+                        <div key={bg.key} className="flex items-end gap-2" style={{ animation: "rowIn .3s ease both" }}>
+                          <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
+                          <button type="button" onClick={() => setOpenBub(bg)} className={"relative flex max-w-[88%] items-center gap-2 rounded-2xl rounded-bl-sm border px-3 py-1.5 text-left shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md " + bub}>
+                            <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
+                            <span className="min-w-0 flex-1 truncate text-[12px] leading-snug text-gray-600 dark:text-gray-300"><b className={bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50"}>{bg.brand}</b> {CAT_LABEL[bg.cat] ?? bg.cat} · {s.detail}{bg.nProd > 1 ? T(` 외 ${bg.nProd - 1}건`, ` +${bg.nProd - 1}`) : ""}</span>
+                            <span className="shrink-0">{metricChip(s)}</span>
+                            <span className="hidden shrink-0 text-[9px] tabular-nums text-gray-400 dark:text-gray-500 sm:inline">{bubTime}</span>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400"><path d="M9 18l6-6-6-6" /></svg>
+                          </button>
+                        </div>
                       ) })}
                   </div>
                 </div>

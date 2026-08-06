@@ -42,7 +42,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   const [norm, setNorm] = React.useState<"global" | "col">("global") // 색 기준(전체/거래선별)
   const [sel, setSel] = React.useState<{ b: string; ret: string } | null>(null) // 셀 드릴다운
   const [moreBrands, setMoreBrands] = React.useState(false) // 브랜드 10개 이후 더보기
-  const cats = ["냉장고", "세탁기", "에어컨", "TV"]
+  const cats = ["냉장고", "세탁기", "RAC", "TV"] // classify가 에어컨→RAC/SAC 분류 · RAC 한정
   const rows = React.useMemo(() => cat === "전체" ? allRows : allRows.filter((r) => r.category === cat), [allRows, cat])
   const listedOn = (r: PriceRow, slot: number) => slot >= 0 && slot <= 3 && r[COV_P[slot]] != null
   const dates = React.useMemo(() => [0, 1, 2, 3].map((i) => { const m = new Map<string, number>(); rows.forEach((r) => { const v = r[COV_D[i]] as string | null; if (v) m.set(v, (m.get(v) || 0) + 1) }); let best: string | null = null, bc = 0; m.forEach((c, d) => { if (c > bc) { bc = c; best = d } }); return best }), [rows])
@@ -116,8 +116,9 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   // 드릴다운: 선택 셀의 실제 모델 리스트
   const drill = React.useMemo(() => {
     if (!sel) return []
-    return rows.filter((r) => r.brand === sel.b && r.retailer === sel.ret && listedOn(r, di))
-      .map((r) => ({ code: r.code && r.code.length >= 4 && r.code !== "N/A" ? r.code : canonCode(r.model, r.code), cap: r.capacity, price: r[COV_P[di]] as number | null, oos: r.availability === "OutOfStock", url: r.url }))
+    // 품절 갯수 클릭에서만 열리므로 — 실제 품절(OutOfStock) 제품만 리스트
+    return rows.filter((r) => r.brand === sel.b && r.retailer === sel.ret && listedOn(r, di) && r.availability === "OutOfStock")
+      .map((r) => ({ code: r.code && r.code.length >= 4 && r.code !== "N/A" ? r.code : canonCode(r.model, r.code), cap: r.capacity, price: r[COV_P[di]] as number | null, oos: true, url: r.url }))
       .sort((a, b) => (b.price ?? 0) - (a.price ?? 0))
   }, [sel, rows, di]) // eslint-disable-line
 
@@ -163,7 +164,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
       ) : (<>
       {/* 한 줄 필터바 — 제품·지표·날짜네비·색기준 + 최신·CSV */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: c === "에어컨" ? "RAC" : catLabel(c) }))]} onSelect={setCat} />
+        <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: c === "RAC" ? "RAC" : catLabel(c) }))]} onSelect={setCat} />
         <PmDrop label={T("지표", "Metric")} sel={metric} options={[{ k: "count", t: T("전시 SKU 수", "Listed SKUs") }, { k: "sos", t: T("진열 점유율", "Share of shelf") }, { k: "actRate", t: T("재고 활성율", "In-stock %") }, { k: "oosCnt", t: T("품절 수", "OOS count") }, { k: "oosRate", t: T("품절률", "OOS %") }]} onSelect={(k) => setMetric(k as Metric)} />
         {metric === "count" && <button type="button" onClick={() => setNorm((n) => n === "global" ? "col" : "global")} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400 transition hover:text-indigo-600 dark:hover:text-indigo-300" title={T("색 농도 기준", "Color scale basis")}>{T("색: ", "Scale: ")}{norm === "global" ? T("전체", "Global") : T("거래선별", "Per-retailer")}</button>}
         {/* 날짜 네비게이터(BoardView 스타일) */}
