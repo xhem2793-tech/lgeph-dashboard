@@ -75,7 +75,7 @@ const buildGroups = (): { group: string; items: { key: string; no: number; label
     group: T("시장 신호·인사이트", "Market Signals & Insights"),
     items: [
       { key: "lifecycle", no: 7, label: T("신제품·EOL 감지", "New / EOL"), desc: T("신규 리스팅 등장 / 구모델 소멸", "New listings appearing / legacy models disappearing"), status: "live", badge: "beta" },
-      { key: "volatility", no: 8, label: T("가격 변동성", "Volatility"), desc: T("거래선×브랜드 전시 커버리지 히트맵 · 스크랩 제품수·어제대비·신규·품절", "Retailer × brand listing-coverage heatmap · scraped SKUs, vs prev, new, OOS"), status: "live", badge: "beta" },
+      { key: "volatility", no: 8, label: T("유통 히트맵", "Retail Heatmap"), desc: T("거래선×브랜드 전시 커버리지 히트맵 · 스크랩 제품수·어제대비·신규·품절", "Retailer × brand listing-coverage heatmap · scraped SKUs, vs prev, new, OOS"), status: "live", badge: "beta" },
       { key: "intensity", no: 9, label: T("경쟁 강도 지수", "Intensity Index"), desc: T("취급 브랜드 수·가격 밀집도", "Number of brands carried and price density"), status: "plan" },
       { key: "listing", no: 10, label: T("취급·노출 시그널", "Listing Signals"), desc: T("브랜드별 리스팅 수 변화", "Change in listing count by brand"), status: "plan" },
       { key: "fx", no: 11, label: T("환율 연동 분석", "FX Analysis"), desc: T("페소 약세 ↔ 수입가전 가격 상관", "Peso weakness ↔ imported-appliance price correlation"), status: "plan" },

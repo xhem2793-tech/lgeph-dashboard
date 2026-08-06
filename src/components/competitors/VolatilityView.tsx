@@ -16,7 +16,8 @@ const retRank = (r: string) => RETAILER_RANK[r] ?? 8
 function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
   const [di, setDi] = React.useState(0)
   const [cat, setCat] = React.useState("전체")
-  const cats = React.useMemo(() => { const m = new Map<string, number>(); allRows.forEach((r) => { if (r.category) m.set(r.category, (m.get(r.category) || 0) + 1) }); return Array.from(m.entries()).sort((a, b) => b[1] - a[1]).map((x) => x[0]) }, [allRows])
+  // 제품 4개 고정: 냉장고·세탁기·에어컨(RAC)·TV (있는 것만)
+  const cats = React.useMemo(() => ["냉장고", "세탁기", "에어컨", "TV"].filter((c) => allRows.some((r) => r.category === c)), [allRows])
   const rows = React.useMemo(() => cat === "전체" ? allRows : allRows.filter((r) => r.category === cat), [allRows, cat])
   const listedOn = (r: PriceRow, slot: number) => slot >= 0 && slot <= 3 && r[COV_P[slot]] != null
   const dates = React.useMemo(() => [0, 1, 2, 3].map((i) => { const m = new Map<string, number>(); rows.forEach((r) => { const v = r[COV_D[i]] as string | null; if (v) m.set(v, (m.get(v) || 0) + 1) }); let best: string | null = null, bc = 0; m.forEach((c, d) => { if (c > bc) { bc = c; best = d } }); return best }), [rows])
@@ -42,7 +43,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
     <div className="flex flex-col gap-2.5">
       {/* 한 줄 필터바 — 채널별 가격비교식(제품 드롭다운 + 날짜 토글 + 최신) */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: catLabel(c) }))]} onSelect={setCat} />
+        <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: c === "에어컨" ? "RAC" : catLabel(c) }))]} onSelect={setCat} />
         <div className="ml-auto flex items-center gap-2.5">
           <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-0.5">
             {slots.map((i) => (
@@ -58,37 +59,37 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           <div className="flex h-40 items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">{T("해당 조건의 전시 데이터가 없습니다.", "No listing data for this filter.")}</div>
         ) : (<>
       <div className="overflow-x-auto pb-1">
-        {/* 바둑판 그리드 — 브랜드 라벨(104) · 거래선 48px 정사각 셀 반복 · 합계(46) */}
-        <div className="grid w-max gap-[3px] text-[11px]" style={{ gridTemplateColumns: `104px repeat(${data.retailers.length}, 48px) 46px` }}>
+        {/* 바둑판 그리드 — 화면 폭을 꽉 채우는 정사각 셀(1fr + aspect-square). 브랜드 라벨·합계는 고정폭. */}
+        <div className="grid w-full gap-[4px] text-[11px]" style={{ minWidth: 120 + data.retailers.length * 52, gridTemplateColumns: `minmax(84px,0.7fr) repeat(${data.retailers.length}, minmax(46px,1fr)) minmax(38px,0.5fr)` }}>
           {/* 헤더 행 */}
           <div className="sticky left-0 z-10 bg-white dark:bg-gray-900/40" />
           {data.retailers.map((ret, ci) => (
             <div key={ret} className="flex flex-col items-center justify-end gap-0.5 pb-1">
               <span className="rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span>
-              <span className="w-[48px] truncate text-center text-[9.5px] font-semibold text-gray-600 dark:text-gray-300" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
+              <span className="w-full truncate px-0.5 text-center text-[9.5px] font-semibold text-gray-600 dark:text-gray-300" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
               <span className="text-[9px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
             </div>
           ))}
           <div className="flex items-end justify-center pb-1 text-[9.5px] font-semibold text-indigo-500 dark:text-indigo-300">Σ</div>
-          {/* 본문 행 — 브랜드마다 라벨 + 48px 정사각 셀들 + 합계 */}
+          {/* 본문 행 — 브랜드 라벨 + 폭에 맞춰 늘어나는 정사각 셀 + 합계 */}
           {data.brands.map((b) => (
             <React.Fragment key={b}>
-              <div className={"sticky left-0 z-10 flex h-[48px] items-center whitespace-nowrap bg-white px-1.5 text-[11px] font-bold dark:bg-gray-900/40 " + (b === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-700 dark:text-gray-200")}>{b}</div>
+              <div className={"sticky left-0 z-10 flex items-center whitespace-nowrap bg-white px-1.5 text-[11px] font-bold dark:bg-gray-900/40 " + (b === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-700 dark:text-gray-200")}>{b}</div>
               {data.retailers.map((ret) => { const k = data.K(b, ret); const t = data.today.get(k) || 0; const p = di < 3 ? (data.prev.get(k) || 0) : null; const d = p != null ? t - p : null; const fr = data.fresh.get(k) || 0; const oo = di === 0 ? (data.oos.get(k) || 0) : 0
                 const alpha = t ? Math.max(0.12, Math.min(1, t / data.maxT)) : 0; const light = alpha > 0.55
                 return (
                   <div key={ret} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}
-                    className="flex h-[48px] w-[48px] flex-col items-center justify-center rounded-md text-center transition-transform duration-150 ease-out hover:z-10 hover:scale-[1.16] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1" }}>
+                    className="flex aspect-square w-full flex-col items-center justify-center rounded-md text-center transition-transform duration-150 ease-out hover:z-10 hover:scale-[1.12] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1" }}>
                     <span className="text-[15px] font-bold tabular-nums leading-none">{t || "·"}</span>
                     {(d != null || oo > 0) && (
-                      <span className="mt-0.5 flex flex-wrap items-center justify-center gap-x-1 text-[8px] font-semibold leading-tight" style={{ color: light ? "rgba(255,255,255,0.9)" : undefined }}>
+                      <span className="mt-0.5 flex flex-wrap items-center justify-center gap-x-1 text-[8.5px] font-semibold leading-tight" style={{ color: light ? "rgba(255,255,255,0.9)" : undefined }}>
                         {d != null && d !== 0 && <span className={light ? "" : d > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400"}>{d > 0 ? "▲" + d : "▼" + -d}</span>}
                         {oo > 0 && <span className={light ? "" : "text-amber-600 dark:text-amber-400"}>{oo}{T("품", "x")}</span>}
                       </span>
                     )}
                   </div>
                 ) })}
-              <div className="flex h-[48px] items-center justify-center text-[11px] font-bold tabular-nums text-indigo-600 dark:text-indigo-300">{data.rowTot[b] || 0}</div>
+              <div className="flex items-center justify-center text-[11px] font-bold tabular-nums text-indigo-600 dark:text-indigo-300">{data.rowTot[b] || 0}</div>
             </React.Fragment>
           ))}
         </div>

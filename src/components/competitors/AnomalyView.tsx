@@ -191,7 +191,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
         {/* 날짜 네비게이터 — 채널별 가격비교(BoardView) 스타일: ◀ 이전 · ▶ 다음 · 📅 달력(실작동) */}
         <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-1 py-0.5">
           <button type="button" onClick={() => setDaySel("yesterday")} disabled={daySel === "yesterday"} aria-label={T("이전 날짜", "Previous date")} className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
-          <span className="flex min-w-[96px] items-center justify-center gap-1 text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{md(dayDate[daySel] ?? null)}<span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{DAY_LABEL[daySel]}</span>{daySel === "today" && <span className="rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">{T("최신", "Latest")}</span>}</span>
+          <span className="min-w-[74px] text-center text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{md(dayDate[daySel] ?? null)}{daySel === "today" && <span className="ml-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">{T("최신", "Latest")}</span>}</span>
           <button type="button" onClick={() => setDaySel("today")} disabled={daySel === "today"} aria-label={T("다음 날짜", "Next date")} className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg></button>
           <label className="relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400" title={T("달력에서 날짜 선택", "Pick a date from the calendar")}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
@@ -227,7 +227,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{CAT_LABEL[cg.cat] ?? cg.cat} · {cg.bubbles.length}</span>
                     <span className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className="grid items-start gap-2 xl:grid-cols-2 2xl:grid-cols-3">
                     {cg.bubbles.map((bg) => { const s = bg.rep; const open = expanded.has(bg.key); const sm = SEV_META[bg.sev]
                       const canExpand = bg.nProd > 1 || bg.products.some((p) => p.all.length > 1)
                       const bub = bg.own ? "border-indigo-200 bg-indigo-50/70 dark:border-indigo-500/30 dark:bg-indigo-500/10"
@@ -239,7 +239,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                         {/* 아바타(브랜드 이니셜) */}
                         <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
                         {/* 말풍선 — 브랜드 1개로 요약(제품 N개), 펼치면 제품·거래선별 */}
-                        <div className={"relative max-w-[88%] rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md " + bub}>
+                        <div className={"relative min-w-0 flex-1 rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md " + bub}>
                           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                             <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
                             <span className={"whitespace-nowrap text-[12.5px] font-bold " + (bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{bg.brand}</span>
