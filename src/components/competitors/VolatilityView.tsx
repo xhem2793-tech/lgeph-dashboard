@@ -9,6 +9,9 @@ import { md, pmShopLabel } from "@/components/competitors/shared"
 
 const COV_P = ["p0", "p1", "p2", "p3"] as const
 const COV_D = ["d0", "d1", "d2", "d3"] as const
+// 거래선 매출 순위(필리핀 가전 유통, 큰 순) — 히트맵 열 좌→우 정렬 기준.
+const RETAILER_RANK: Record<string, number> = { "SM Appliance": 1, "Abenson": 2, "Anson's": 3, "Robinsons Appliances": 4, "Western Appliances": 5, "Emcor": 6, "Addessa": 7, "Home Credit": 9 }
+const retRank = (r: string) => RETAILER_RANK[r] ?? 8
 
 function CoverageHeatmap({ rows }: { rows: PriceRow[] }) {
   const [di, setDi] = React.useState(0)
@@ -17,7 +20,7 @@ function CoverageHeatmap({ rows }: { rows: PriceRow[] }) {
   const data = React.useMemo(() => {
     const retM = new Map<string, number>(), brM = new Map<string, number>()
     rows.forEach((r) => { if (listedOn(r, di)) { if (r.retailer) retM.set(r.retailer, (retM.get(r.retailer) || 0) + 1); if (r.brand) brM.set(r.brand, (brM.get(r.brand) || 0) + 1) } })
-    const retailers = Array.from(retM.entries()).sort((a, b) => b[1] - a[1]).map((x) => x[0])
+    const retailers = Array.from(retM.entries()).sort((a, b) => retRank(a[0]) - retRank(b[0]) || b[1] - a[1]).map((x) => x[0])
     const brands = Array.from(brM.entries()).sort((a, b) => (a[0] === "LG" ? -1 : b[0] === "LG" ? 1 : 0) || b[1] - a[1]).map((x) => x[0])
     const today = new Map<string, number>(), prev = new Map<string, number>(), fresh = new Map<string, number>(), oos = new Map<string, number>()
     const K = (b: string, ret: string) => b + "|" + ret
@@ -51,7 +54,7 @@ function CoverageHeatmap({ rows }: { rows: PriceRow[] }) {
           <thead>
             <tr>
               <th className="sticky left-0 z-10 bg-white dark:bg-gray-900/40 px-1.5 py-1 text-left text-[10px] font-semibold text-gray-400 dark:text-gray-500">{T("브랜드＼거래선", "Brand＼Retailer")}</th>
-              {data.retailers.map((ret) => <th key={ret} className="px-1 py-1 text-center text-[10px] font-semibold text-gray-600 dark:text-gray-300"><div className="truncate" title={pmShopLabel(ret)} style={{ maxWidth: 74 }}>{pmShopLabel(ret)}</div><div className="text-[9px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</div></th>)}
+              {data.retailers.map((ret, ci) => <th key={ret} className="px-0 py-1 text-center align-bottom text-[10px] font-semibold text-gray-600 dark:text-gray-300" style={{ width: 50 }}><div className="mx-auto flex flex-col items-center"><span className="mb-0.5 rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span><span className="w-[48px] truncate text-center" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span><span className="text-[9px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span></div></th>)}
               <th className="px-1 py-1 text-center text-[10px] font-semibold text-indigo-500 dark:text-indigo-300">{T("합계", "Total")}</th>
             </tr>
           </thead>
@@ -62,8 +65,8 @@ function CoverageHeatmap({ rows }: { rows: PriceRow[] }) {
                 {data.retailers.map((ret) => { const k = data.K(b, ret); const t = data.today.get(k) || 0; const p = di < 3 ? (data.prev.get(k) || 0) : null; const d = p != null ? t - p : null; const fr = data.fresh.get(k) || 0; const oo = di === 0 ? (data.oos.get(k) || 0) : 0
                   const alpha = t ? Math.max(0.12, Math.min(1, t / data.maxT)) : 0; const light = alpha > 0.55
                   return (
-                    <td key={ret} className="p-0" title={`${b} · ${pmShopLabel(ret)}\n${T("전시", "Listed")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}>
-                      <div className="flex min-h-[46px] flex-col items-center justify-center rounded-md px-1 py-1" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1" }}>
+                    <td key={ret} className="relative p-0 text-center align-middle" title={`${b} · ${pmShopLabel(ret)}\n${T("전시", "Listed")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}>
+                      <div className="mx-auto flex h-[48px] w-[48px] flex-col items-center justify-center rounded-md text-center transition-transform duration-150 ease-out hover:z-10 hover:scale-[1.14] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1" }}>
                         <span className="text-[14px] font-bold tabular-nums leading-none">{t || "·"}</span>
                         {(d != null || fr > 0 || oo > 0) && (
                           <span className="mt-0.5 flex flex-wrap items-center justify-center gap-x-1 text-[8px] font-semibold leading-tight" style={{ color: light ? "rgba(255,255,255,0.9)" : undefined }}>
