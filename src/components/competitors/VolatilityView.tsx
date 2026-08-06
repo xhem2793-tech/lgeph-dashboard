@@ -4,7 +4,7 @@
 // 지표: SKU총갯수·진열점유율(SOS)·활성화율·품절갯수·품절율 / 날짜 네비 / 제품 / 셀 클릭 드릴다운 / CSV / LG갭 KPI.
 import React from "react"
 import { T } from "@/lib/i18n"
-import { fmtStamp, type PriceRow } from "@/lib/supabase"
+import { fmtStamp, oosStreaks, type PriceRow } from "@/lib/supabase"
 import { md, peso, pmShopLabel, PmDrop, catLabel } from "@/components/competitors/shared"
 import { canonCode } from "@/lib/classify"
 
@@ -34,15 +34,19 @@ const brandLogo = (b: string): string | null => BRAND_DOMAIN[b] ? favi(BRAND_DOM
 const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? favi(RETAILER_DOMAIN[r]) : null
 const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none" }
 
-type Metric = "count" | "sos" | "actRate" | "oosCnt" | "oosRate"
+type Metric = "count" | "chg" | "sos" | "actRate" | "oosCnt" | "oosRate"
+type Hov = { x: number; y: number; below: boolean; b: string; ret: string; t: number; oo: number; tot: number; delta: number | null } | null
 
 function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
   const [di, setDi] = React.useState(0)
   const [cat, setCat] = React.useState("전체")
   const [metric, setMetric] = React.useState<Metric>("count")
   const [norm, setNorm] = React.useState<"global" | "col">("global") // 색 기준(전체/거래선별)
-  const [sel, setSel] = React.useState<{ b: string; ret: string } | null>(null) // 셀 드릴다운
+  const [sel, setSel] = React.useState<{ b: string; ret: string } | null>(null) // 셀 드릴다운(품절)
+  const [oosDays, setOosDays] = React.useState<Record<string, number>>({}) // 모델별 재고없음 연속일수
+  const [hov, setHov] = React.useState<Hov>(null) // 셀 호버 미니 팝업
   const [moreBrands, setMoreBrands] = React.useState(false) // 브랜드 10개 이후 더보기
+  React.useEffect(() => { if (sel) oosStreaks(sel.b, sel.ret).then(setOosDays).catch(() => setOosDays({})); else setOosDays({}) }, [sel])
   const cats = ["냉장고", "세탁기", "RAC", "TV"] // classify가 에어컨→RAC/SAC 분류 · RAC 한정
   const rows = React.useMemo(() => cat === "전체" ? allRows : allRows.filter((r) => r.category === cat), [allRows, cat])
   const listedOn = (r: PriceRow, slot: number) => slot >= 0 && slot <= 3 && r[COV_P[slot]] != null
@@ -62,11 +66,14 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
     })
     let maxT = 1; today.forEach((v) => { if (v > maxT) maxT = v })
     let maxOos = 1; oos.forEach((v) => { if (v > maxOos) maxOos = v })
+    const dprev = di + 1 <= 3 && dates[di + 1] ? di + 1 : -1 // 직전(더 과거) 유효일 슬롯 · 없으면 -1
+    let maxAbsD = 1; if (dprev >= 0) series.forEach((sv) => { const d = Math.abs(sv[di] - sv[dprev]); if (d > maxAbsD) maxAbsD = d })
     const colTot: Record<string, number> = {}, rowTot: Record<string, number> = {}, colMax: Record<string, number> = {}
     today.forEach((v, k) => { const [b, ret] = k.split("|"); colTot[ret] = (colTot[ret] || 0) + v; rowTot[b] = (rowTot[b] || 0) + v; if (v > (colMax[ret] || 0)) colMax[ret] = v })
     const grand = Array.from(today.values()).reduce((a, b) => a + b, 0)
-    return { retailers, brands, today, oos, series, maxT, maxOos, colTot, rowTot, colMax, grand, K }
-  }, [rows, di])
+    let oosTot = 0; oos.forEach((v) => { oosTot += v })
+    return { retailers, brands, today, oos, series, maxT, maxOos, dprev, maxAbsD, colTot, rowTot, colMax, grand, oosTot, K }
+  }, [rows, di, dates])
   const slots = [0, 1, 2, 3].filter((i) => dates[i])
   const slotPos = slots.indexOf(di)
   const pickDate = (v: string) => { const idx = [0, 1, 2, 3].find((i) => dates[i] === v); if (idx != null) setDi(idx) }
@@ -119,54 +126,16 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
     if (!sel) return []
     // 품절 갯수 클릭에서만 열리므로 — 실제 품절(OutOfStock) 제품만 리스트
     return rows.filter((r) => r.brand === sel.b && r.retailer === sel.ret && listedOn(r, di) && r.availability === "OutOfStock")
-      .map((r) => ({ code: r.code && r.code.length >= 4 && r.code !== "N/A" ? r.code : canonCode(r.model, r.code), cap: r.capacity, price: r[COV_P[di]] as number | null, oos: true, url: r.url }))
+      .map((r) => ({ code: r.code && r.code.length >= 4 && r.code !== "N/A" ? r.code : canonCode(r.model, r.code), model: r.model, cat: r.category, price: r[COV_P[di]] as number | null, url: r.url }))
       .sort((a, b) => (b.price ?? 0) - (a.price ?? 0))
   }, [sel, rows, di]) // eslint-disable-line
 
   return (
     <div className="flex flex-col gap-2.5">
-      {sel ? (
-        // 드릴다운 — 별도 페이지(인라인 전체화면)
-        <div style={{ animation: "fadeUp .3s ease both" }}>
-          <button type="button" onClick={() => setSel(null)} className="mb-3 inline-flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[12px] font-semibold text-gray-600 dark:text-gray-300 transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300 active:scale-95"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>{T("히트맵으로", "Back to heatmap")}</button>
-          <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900/40 p-4">
-            <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 dark:border-gray-800 pb-3">
-              {brandLogo(sel.b) && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={brandLogo(sel.b) as string} alt={sel.b} onError={hideOnError} className="h-7 w-7 rounded-sm object-contain" />
-              )}
-              <h3 className="text-[16px] font-bold text-gray-900 dark:text-gray-50">{sel.b} · {pmShopLabel(sel.ret)}</h3>
-              <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[11px] font-semibold text-gray-500 dark:text-gray-400">{drill.length}{T("개 모델", " models")} · {md(dates[di])}</span>
-              {RETAILER_DOMAIN[sel.ret] && <a href={`https://${RETAILER_DOMAIN[sel.ret]}`} target="_blank" rel="noopener noreferrer" className="ml-auto text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">{T("사이트 열기", "Open site")} →</a>}
-            </div>
-            <div className="mt-3 max-h-[64vh] overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
-              {drill.length === 0 ? (
-                <div className="flex h-32 items-center justify-center text-[12px] text-gray-400">{T("모델 정보 없음", "No model data")}</div>
-              ) : (
-                <table className="w-full border-collapse text-[12px]">
-                  <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="text-left text-[10.5px] font-semibold text-gray-500 dark:text-gray-400">
-                    <th className="px-4 py-2">{T("모델", "Model")}</th><th className="px-2 py-2">{T("스펙", "Spec")}</th><th className="px-3 py-2 text-right">{T("가격", "Price")}</th><th className="px-3 py-2 text-center">{T("재고", "Stock")}</th>
-                  </tr></thead>
-                  <tbody>
-                    {drill.map((m, i) => (
-                      <tr key={i} className="border-t border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/5">
-                        <td className="px-4 py-1.5 font-medium text-gray-800 dark:text-gray-100">{m.url ? <a href={m.url} target="_blank" rel="noopener noreferrer" className="text-indigo-600 hover:underline dark:text-indigo-400">{m.code}</a> : m.code}</td>
-                        <td className="px-2 py-1.5 text-gray-500 dark:text-gray-400">{m.cap || "—"}</td>
-                        <td className="px-3 py-1.5 text-right font-semibold tabular-nums text-gray-900 dark:text-gray-50">{m.price != null ? peso(m.price) : "—"}</td>
-                        <td className="px-3 py-1.5 text-center">{m.oos ? <span className="rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[10px] font-semibold text-amber-700 dark:text-amber-300">{T("품절", "OOS")}</span> : <span className="rounded bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">{T("재고", "In")}</span>}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        </div>
-      ) : (<>
       {/* 한 줄 필터바 — 제품·지표·날짜네비·색기준 + 최신·CSV */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: c === "RAC" ? "RAC" : catLabel(c) }))]} onSelect={setCat} />
-        <PmDrop label={T("지표", "Metric")} sel={metric} options={[{ k: "count", t: T("전시 SKU 수", "Listed SKUs") }, { k: "sos", t: T("진열 점유율", "Share of shelf") }, { k: "actRate", t: T("재고 활성율", "In-stock %") }, { k: "oosCnt", t: T("품절 수", "OOS count") }, { k: "oosRate", t: T("품절률", "OOS %") }]} onSelect={(k) => setMetric(k as Metric)} />
+        <PmDrop label={T("지표", "Metric")} sel={metric} options={[{ k: "count", t: T("전시 SKU 수", "Listed SKUs") }, { k: "chg", t: T("어제대비 증감", "Δ vs prev day") }, { k: "sos", t: T("진열 점유율", "Share of shelf") }, { k: "actRate", t: T("재고 활성율", "In-stock %") }, { k: "oosCnt", t: T("품절 수", "OOS count") }, { k: "oosRate", t: T("품절률", "OOS %") }]} onSelect={(k) => setMetric(k as Metric)} />
         {metric === "count" && <button type="button" onClick={() => setNorm((n) => n === "global" ? "col" : "global")} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400 transition hover:text-indigo-600 dark:hover:text-indigo-300" title={T("색 농도 기준", "Color scale basis")}>{T("색: ", "Scale: ")}{norm === "global" ? T("전체", "Global") : T("거래선별", "Per-retailer")}</button>}
         {/* 날짜 네비게이터(BoardView 스타일) */}
         {slots.length > 0 && (
@@ -180,9 +149,17 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
             </label>
           </div>
         )}
+        {/* 선택일 수집·활성 요약 — 기간 선택 우측 */}
+        <div className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1 text-[11px]" title={T("선택일 수집 SKU · 재고 활성 SKU", "Collected · in-stock SKUs on the selected day")}>
+          <span className="font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("수집", "Collected")}</span>
+          <b className="tabular-nums text-gray-800 dark:text-gray-100">{data.grand.toLocaleString()}</b>
+          <span className="h-3 w-px bg-gray-200 dark:bg-gray-700" />
+          <span className="font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("활성", "Active")}</span>
+          <b className="tabular-nums text-emerald-600 dark:text-emerald-400">{oosLive ? (data.grand - data.oosTot).toLocaleString() : "—"}</b>
+        </div>
         <div className="ml-auto flex items-center gap-2.5">
-          <button type="button" onClick={exportCsv} title={T("현재 매트릭스 CSV 다운로드", "Download matrix CSV")} className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 dark:border-emerald-500/30 px-2 py-1 text-[11px] font-semibold text-emerald-700 dark:text-emerald-300 transition hover:-translate-y-0.5 active:scale-95"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg>{T("엑셀", "CSV")}</button>
           <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
+          <button type="button" onClick={exportCsv} disabled={data.brands.length === 0} aria-label={T("현재 매트릭스(CSV) 다운로드", "Download matrix (CSV)")} title={T("현재 매트릭스(CSV) 다운로드 · ", "Download matrix (CSV) · ") + (dates[di] ? md(dates[di]) : "—")} className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 transition-all duration-200 hover:border-indigo-300 hover:text-indigo-600 dark:hover:border-indigo-500/40 dark:hover:text-indigo-300 active:scale-95 disabled:opacity-40"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><path d="M7 10l5 5 5-5" /><path d="M12 15V3" /></svg></button>
         </div>
       </div>
 
@@ -235,12 +212,25 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                     if (ret === IMPERIAL || ret === SOON) return <div key={ci} className="flex h-[70px] w-full items-center justify-center rounded-md border border-dashed border-gray-200 text-[9px] text-gray-300 dark:border-gray-700 dark:text-gray-600" style={{ background: "var(--cov-empty)", opacity: 0.45 }}>{b ? "—" : ""}</div>
                     if (!b || !ret) return <div key={ci} className="h-[70px] w-full rounded-md" style={{ background: "var(--cov-empty)", opacity: 0.5 }} />
                     const k = data.K(b, ret); const t = data.today.get(k) || 0; const oo = oosLive ? (data.oos.get(k) || 0) : 0; const tot = data.colTot[ret] || 0
-                    const v = rawVal(t, oo, tot); const disp = dispOf(v); const alpha = alphaOf(v, t, ret)
-                    const rgb = teal ? "99,102,241" : "244,63,94"; const light = alpha > 0.55; const clickable = metric === "oosCnt" && t > 0
+                    const prev = data.dprev >= 0 ? (data.series.get(k)?.[data.dprev] ?? 0) : null
+                    const delta = prev == null ? null : t - prev
+                    let disp: string, alpha: number, rgb: string
+                    if (metric === "chg") {
+                      disp = delta == null || (t === 0 && (prev ?? 0) === 0) ? "·" : (delta > 0 ? "+" : "") + delta
+                      alpha = delta == null || delta === 0 ? 0 : Math.max(0.18, Math.min(1, Math.abs(delta) / data.maxAbsD))
+                      rgb = delta != null && delta < 0 ? "244,63,94" : "16,185,129"
+                    } else {
+                      const v = rawVal(t, oo, tot); disp = dispOf(v); alpha = alphaOf(v, t, ret)
+                      rgb = teal ? "99,102,241" : "244,63,94"
+                    }
+                    const light = alpha > 0.55; const clickable = metric === "oosCnt" && t > 0
+                    const showUnit = (metric === "count" || metric === "oosCnt") && disp !== "·" && disp !== "—"
                     return (
-                      <button key={ci} type="button" onClick={() => clickable && setSel({ b, ret })} title={`${b} · ${pmShopLabel(ret)}\n${T("전시", "Listed")} ${t}${tot ? ` · ${T("점유", "SOS")} ${Math.round(t / tot * 100)}%` : ""}${oosLive && oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}${oosLive && t > 0 ? ` · ${T("활성율", "live")} ${Math.round(((t - oo) / t) * 100)}%` : ""}${clickable ? "\n" + T("클릭=품절 모델 보기", "click for OOS models") : ""}`}
+                      <button key={ci} type="button" onClick={() => clickable && setSel({ b, ret })}
+                        onMouseEnter={(e) => { const r = e.currentTarget.getBoundingClientRect(); const near = r.top < 160; setHov({ x: r.left + r.width / 2, y: near ? r.bottom : r.top, below: near, b, ret, t, oo, tot, delta }) }}
+                        onMouseLeave={() => setHov((h) => (h && h.b === b && h.ret === ret ? null : h))}
                         className={"flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md text-center transition-all duration-300 ease-out hover:z-10 hover:scale-[1.05] hover:shadow-lg hover:ring-2 hover:ring-indigo-400/70 dark:hover:ring-indigo-300/60 " + (clickable ? "cursor-pointer" : "cursor-default")} style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
-                        <span className={"text-[16px] font-bold leading-none tabular-nums " + (alpha > 0 ? (light ? "text-white" : "text-gray-900 dark:text-white") : "text-gray-300 dark:text-gray-600")}>{disp}{v != null && (metric === "count" || metric === "oosCnt") ? <span className="ml-px text-[9px] font-semibold opacity-60">{T("개", "")}</span> : null}</span>
+                        <span className={"text-[16px] font-bold leading-none tabular-nums " + (alpha > 0 ? (light ? "text-white" : "text-gray-900 dark:text-white") : "text-gray-300 dark:text-gray-600")}>{disp}{showUnit ? <span className="ml-px text-[9px] font-semibold opacity-60">{T("개", "")}</span> : null}</span>
                       </button>
                     ) })}
                 </React.Fragment>
@@ -253,13 +243,74 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
             </div>
           )}
           <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9.5px] text-gray-400 dark:text-gray-500">
-            <span>{metric === "count" ? T("셀=활성 SKU(전시 제품 수)", "Cell = active SKUs (listed)") : metric === "sos" ? T("셀=진열 점유율(그 거래선 내 브랜드 비중)", "Cell = share of shelf (brand share in retailer)") : metric === "actRate" ? T("셀=활성화율=(활성−품절)/활성", "Cell = active rate = (active−OOS)/active") : metric === "oosCnt" ? T("셀=오늘 품절 수", "Cell = OOS count today") : T("셀=품절율=품절/활성", "Cell = OOS rate = OOS/active")} · {T("색 진할수록 큼 · 셀 클릭=모델 목록", "darker = higher · click a cell for models")}</span>
-            <span className="ml-auto tabular-nums">{T("총 활성 SKU", "Total active")} <b className="text-gray-600 dark:text-gray-300">{data.grand.toLocaleString()}</b></span>
+            <span>{metric === "count" ? T("셀=활성 SKU(전시 제품 수)", "Cell = active SKUs (listed)") : metric === "chg" ? T("셀=어제(직전일)대비 전시 증감 · 초록=증가·빨강=감소", "Cell = Δ listed vs prev day · green up · red down") : metric === "sos" ? T("셀=진열 점유율(그 거래선 내 브랜드 비중)", "Cell = share of shelf (brand share in retailer)") : metric === "actRate" ? T("셀=활성화율=(활성−품절)/활성", "Cell = active rate = (active−OOS)/active") : metric === "oosCnt" ? T("셀=오늘 품절 수", "Cell = OOS count today") : T("셀=품절율=품절/활성", "Cell = OOS rate = OOS/active")} · {T("셀에 마우스를 올리면 상세 · 셀 클릭=모델 목록", "hover a cell for detail · click for models")}</span>
           </p>
         </>)}
       </div>
 
-      </>)}
+      {/* 품절 리스트 팝업 — 제품·모델·가격·링크·재고없음 며칠째 */}
+      {sel && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" style={{ animation: "fadeUp .2s ease both" }} onClick={() => setSel(null)}>
+          <div className="flex max-h-[82vh] w-full max-w-[600px] flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.06] shadow-2xl dark:bg-gray-900 dark:ring-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+              {brandLogo(sel.b) && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={brandLogo(sel.b) as string} alt={sel.b} onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
+              )}
+              <h3 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{sel.b} · {pmShopLabel(sel.ret)}</h3>
+              <span className="rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[10.5px] font-bold text-amber-700 dark:text-amber-300">{T("품절", "OOS")} {drill.length}</span>
+              <span className="text-[10.5px] text-gray-400">· {md(dates[di])}</span>
+              <button type="button" onClick={() => setSel(null)} aria-label={T("닫기", "Close")} className="ml-auto flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition hover:bg-black/10 active:scale-90 dark:bg-white/10 dark:text-gray-400"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-auto">
+              {drill.length === 0 ? (
+                <div className="flex h-32 items-center justify-center text-[12px] text-gray-400">{T("품절 제품 없음", "No OOS models")}</div>
+              ) : (
+                <table className="w-full border-collapse text-[12px]">
+                  <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="text-left text-[10.5px] font-semibold text-gray-500 dark:text-gray-400">
+                    <th className="px-3 py-2">{T("제품", "Div")}</th><th className="px-2 py-2">{T("모델", "Model")}</th><th className="px-3 py-2 text-right">{T("가격", "Price")}</th><th className="px-2 py-2 text-center">{T("링크", "Link")}</th><th className="px-3 py-2 text-right">{T("재고없음", "OOS since")}</th>
+                  </tr></thead>
+                  <tbody>
+                    {drill.map((m, i) => { const days = oosDays[m.model]; return (
+                      <tr key={i} className="border-t border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/5">
+                        <td className="whitespace-nowrap px-3 py-1.5 text-gray-500 dark:text-gray-400">{catLabel(m.cat)}</td>
+                        <td className="px-2 py-1.5 font-medium text-gray-800 dark:text-gray-100">{m.code}</td>
+                        <td className="px-3 py-1.5 text-right font-semibold tabular-nums text-gray-900 dark:text-gray-50">{m.price != null ? peso(m.price) : "—"}</td>
+                        <td className="px-2 py-1.5 text-center">{m.url ? <a href={m.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center text-indigo-600 hover:text-indigo-800 dark:text-indigo-400" title={T("상품 페이지 열기", "Open product page")}><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M9 7h8v8" /></svg></a> : <span className="text-gray-300">—</span>}</td>
+                        <td className="whitespace-nowrap px-3 py-1.5 text-right font-semibold tabular-nums">{days != null && days > 0 ? <span className="text-rose-600 dark:text-rose-400">{days}{T("일째", "d")}</span> : <span className="text-gray-400">—</span>}</td>
+                      </tr>
+                    ) })}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 셀 호버 미니 팝업 — title 대신 스타일 툴팁 */}
+      {hov && (
+        <div className="pointer-events-none fixed z-[90]" style={{ left: hov.x, top: hov.y, transform: hov.below ? "translate(-50%, 8px)" : "translate(-50%, calc(-100% - 8px))" }}>
+          <div className="min-w-[156px] rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-left shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/95" style={{ animation: "fadeUp .12s ease both" }}>
+            <div className="mb-1.5 flex items-center gap-1.5">
+              {brandLogo(hov.b) && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={brandLogo(hov.b) as string} alt="" onError={hideOnError} className="h-4 w-4 rounded-sm object-contain" />
+              )}
+              <span className="text-[12px] font-bold text-gray-900 dark:text-gray-50">{hov.b}</span>
+              <span className="text-[10.5px] text-gray-400">· {pmShopLabel(hov.ret)}</span>
+            </div>
+            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-[11px]">
+              <span className="text-gray-500 dark:text-gray-400">{T("전시 SKU", "Listed")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{hov.t}{T("개", "")}</span>
+              <span className="text-gray-500 dark:text-gray-400">{T("진열 점유율", "Share")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{hov.tot ? Math.round(hov.t / hov.tot * 100) + "%" : "—"}</span>
+              <span className="text-gray-500 dark:text-gray-400">{T("어제대비", "vs prev")}</span><span className={"text-right font-semibold tabular-nums " + (hov.delta == null || hov.delta === 0 ? "text-gray-400 dark:text-gray-500" : hov.delta > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400")}>{hov.delta == null ? "—" : (hov.delta > 0 ? "+" : "") + hov.delta + T("개", "")}</span>
+              {oosLive && (<><span className="text-gray-500 dark:text-gray-400">{T("품절", "OOS")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{hov.oo}{T("개", "")}</span></>)}
+              {oosLive && hov.t > 0 && (<><span className="text-gray-500 dark:text-gray-400">{T("재고 활성율", "Active")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{Math.round((hov.t - hov.oo) / hov.t * 100)}%</span></>)}
+            </div>
+            {metric === "oosCnt" && hov.oo > 0 && <div className="mt-1.5 border-t border-gray-100 pt-1.5 text-[10px] font-semibold text-indigo-600 dark:border-gray-800 dark:text-indigo-300">{T("클릭 → 품절 모델 보기", "click → OOS models")}</div>}
+          </div>
+        </div>
+      )}
 
       <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}@keyframes covPop{from{opacity:0;transform:translateY(7px) scale(.97)}to{opacity:1;transform:none}}"}</style>
     </div>

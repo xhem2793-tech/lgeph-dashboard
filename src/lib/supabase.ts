@@ -639,6 +639,21 @@ export async function competitorTable(max = 6000): Promise<PriceRow[]> {
   })
 }
 
+/** 품절 연속일수 — 특정 브랜드×거래선의 모델별 '재고없음 며칠째'(최근일부터 연속 OutOfStock). competitor_prices 일자별 이력. */
+export async function oosStreaks(brand: string, retailer: string): Promise<Record<string, number>> {
+  const rows = await sb(`competitor_prices?brand=eq.${encodeURIComponent(brand)}&retailer=eq.${encodeURIComponent(retailer)}&select=model,scraped_date,availability&order=scraped_date.desc&limit=4000`)
+  const byModel: Record<string, { d: string; a: string }[]> = {}
+  for (const r of rows) { const m = r.model as string; if (!m) continue; (byModel[m] = byModel[m] || []).push({ d: r.scraped_date, a: r.availability }) }
+  const out: Record<string, number> = {}
+  for (const m of Object.keys(byModel)) {
+    const arr = byModel[m].sort((x, y) => (y.d || "").localeCompare(x.d || "")) // 최신 먼저
+    let streak = 0
+    for (const it of arr) { if (it.a === "OutOfStock") streak++; else break }
+    out[m] = streak
+  }
+  return out
+}
+
 /** 경쟁사 일간 스냅샷 — LG 전용, v_competitor_daily. board 달력(과거 특정일 피벗)용. 하루×거래선×모델 최저가. */
 export type DailyRow = {
   d: string
