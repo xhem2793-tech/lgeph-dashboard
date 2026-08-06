@@ -269,6 +269,7 @@ export default function FxView({ win = "2Y" }: { win?: string }) {
         </section>
 
       </div>
+      <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">{T("자료 Alpha Vantage 월별 양자환율(USD/PHP·USD/KRW) · BSP fx_daily(일별 페소) · BIS 실효환율(Broad, 64개국) — Supabase 적재", "Source: Alpha Vantage monthly bilateral rates (USD/PHP · USD/KRW) · BSP fx_daily (daily peso) · BIS effective exchange rates (Broad, 64 countries) — loaded to Supabase")}</p>
     </div>
   )
 }

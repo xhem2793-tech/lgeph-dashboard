@@ -273,14 +273,14 @@ function HBar({ items, hiName, startRank = 0, dom, mkt: mktProp }: { items: { na
     </svg>
   )
 }
-// 효율 랭킹 2열 — 상위 20개를 10개씩 두 열로. 두 열의 효율 스케일·시장평균선을 공유해 좌우 비교 일관.
+// 효율 랭킹 2열 — 상위 30개를 15개씩 두 열로. 두 열의 효율 스케일·시장평균선을 공유해 좌우 비교 일관.
 function Rank2Col({ items, hiName }: { items: { name: string; v: number; n?: number }[]; hiName?: string }) {
-  const top = items.slice(0, 20)
+  const top = items.slice(0, 30)
   if (!top.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const vals = top.map((i) => i.v), mn = Math.min(...vals), mx = Math.max(...vals), pd = (mx - mn) * 0.14 || 1
   const dom: [number, number] = [mn - pd, mx + pd]
   const mkt = vals.reduce((a, b) => a + b, 0) / vals.length
-  const cols = [top.slice(0, 10), top.slice(10, 20)].filter((c) => c.length)
+  const cols = [top.slice(0, 15), top.slice(15, 30)].filter((c) => c.length)
   return (
     <div className="flex h-full w-full items-start gap-2">
       {cols.map((col, ci) => <div key={ci} className="min-w-0 flex-1"><HBar items={col} hiName={hiName} startRank={ci * 10} dom={dom} mkt={mkt} /></div>)}
