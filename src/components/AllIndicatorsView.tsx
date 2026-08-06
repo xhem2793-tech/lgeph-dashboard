@@ -316,6 +316,7 @@ function IndListTable({ items, q, spark, fav, onFav, onDetail, showCat }: { item
           <th className="px-3 py-2">{T("지표", "Indicator")}</th>
           {showCat && <th className="px-2 py-2">{T("분류", "Category")}</th>}
           <th className="px-2 py-2">{T("설명", "Desc.")}</th>
+          <th className="px-2 py-2 text-right whitespace-nowrap">{T("최신월·갱신", "Period·Upd.")}</th>
           <th className="px-2 py-2 text-right">{T("최신 값", "Latest")}</th>
           <th className="px-2 py-2 text-right">24H (%)</th>
           <th className="px-3 py-2 text-right">{T("최근 7일", "Last 7d")}</th>
@@ -339,6 +340,10 @@ function IndListTable({ items, q, spark, fav, onFav, onDetail, showCat }: { item
                 </td>
                 {showCat && <td className="truncate px-2 py-3 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
                 <td className="px-2 py-3 align-middle"><p className="line-clamp-2 min-h-[2.75em] text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></td>
+                <td className="px-2 py-3 text-right align-middle tabular-nums whitespace-nowrap">
+                  <div className="text-[11px] font-semibold text-gray-600 dark:text-gray-300">{r.period ? ym(r.period) : "—"}</div>
+                  <div className="text-[10px] text-gray-400 dark:text-gray-500">{r.mx && /^\d{4}-\d{2}-\d{2}/.test(r.mx) ? T("갱신 ", "upd ") + Number(r.mx.slice(5, 7)) + "/" + Number(r.mx.slice(8, 10)) : ""}</div>
+                </td>
                 <td className="px-2 py-3 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
                 <td className={"px-2 py-3 text-right font-semibold tabular-nums " + (pc == null ? "text-gray-300 dark:text-gray-600" : up ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>{pc == null ? "—" : (up ? "+" : "") + pc.toFixed(2) + "%"}</td>
                 <td className="px-3 py-3"><div className="flex justify-end">{sp && sp.length >= 2 ? <Spark pts={sp} /> : <span className="text-[12px] text-gray-300 dark:text-gray-600">—</span>}</div></td>
