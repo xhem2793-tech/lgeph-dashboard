@@ -214,14 +214,14 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
                   )}
-                  <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
+                  <span className="w-full break-words px-0.5 text-center text-[11px] font-semibold leading-tight text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
                   <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
                 </a>
               ) : <div key={ci} />)}
               {/* 본문 — 브랜드 10행 × 거래선 10열 */}
               {brSlots.map((b, bi) => (
                 <React.Fragment key={bi}>
-                  <div className={"sticky left-0 z-10 flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 text-center text-[12px] font-bold transition-all duration-300 ease-out hover:z-20 hover:scale-[1.03] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
+                  <div className={"sticky left-0 z-10 flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 text-center text-[11px] font-bold transition-all duration-300 ease-out hover:z-20 hover:scale-[1.03] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
                     {b && brandLogo(b) && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />

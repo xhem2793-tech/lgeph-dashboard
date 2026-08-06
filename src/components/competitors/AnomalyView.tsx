@@ -15,13 +15,6 @@ const SEV_META: Record<string, { label: string; dot: string; chip: string; order
   opp: { label: "기회", dot: "bg-emerald-500", chip: "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300", order: 2 },
 }
 
-// 신호 계열 — 재고 편중 탈피, 가격·프로모·광고를 함께
-const KIND_META: Record<string, { label: string; cls: string }> = {
-  price: { label: "가격", cls: "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300" },
-  promo: { label: "프로모", cls: "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400" },
-  ad: { label: "광고", cls: "bg-violet-50 dark:bg-violet-500/10 text-violet-700 dark:text-violet-300" },
-  stock: { label: "재고", cls: "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400" },
-}
 const KIND_ORDER = ["price", "promo", "ad", "stock"] as const
 const KIND_FILTERS: { k: string; label: string }[] = [
   { k: "전체", label: "전체" }, { k: "price", label: "가격" }, { k: "promo", label: "프로모" }, { k: "ad", label: "광고" }, { k: "stock", label: "재고" },
@@ -44,6 +37,7 @@ type Signal = {
   title: string; detail: string; metric: string; metricTone: string; before: number | null; after: number | null
   channel: string | null; url: string | null; score: number; day: "today" | "yesterday"; spec: string | null; model: string; type?: string
 }
+type Bubble = { key: string; brand: string; own: boolean; cat: string; sev: string; rep: Signal; products: { title: string; rep: Signal; all: Signal[] }[]; nProd: number; kinds: string[] }
 
 export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads: CompAd[] | null; stamp: string | null }) {
   const [kind, setKind] = React.useState("전체")
@@ -119,8 +113,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
     return out
   }, [R, A])
 
-  const [expanded, setExpanded] = React.useState<Set<string>>(new Set())
-  const toggleExp = (k: string) => setExpanded((prev) => { const n = new Set(prev); n.has(k) ? n.delete(k) : n.add(k); return n })
+  const [openBub, setOpenBub] = React.useState<Bubble | null>(null) // 클릭 시 팝업 리스트
 
   // 말풍선 스트림 — 날짜(오늘/어제) > 말풍선(제품 묶음: 브랜드+모델). 각 말풍선 안에 거래선별 변동(펼침).
   // 묶음 기준: 브랜드+제품(title)+신호종류 → 대표 신호 + 거래선 all. 심각도>점수 순, 같은 브랜드는 인접.
@@ -228,66 +221,22 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                     <span className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
                   </div>
                   <div className="flex flex-col gap-2">
-                    {cg.bubbles.map((bg) => { const s = bg.rep; const open = expanded.has(bg.key); const sm = SEV_META[bg.sev]
-                      const canExpand = bg.nProd > 1 || bg.products.some((p) => p.all.length > 1)
+                    {cg.bubbles.map((bg) => { const s = bg.rep; const sm = SEV_META[bg.sev]
                       const bub = bg.own ? "border-indigo-200 bg-indigo-50/70 dark:border-indigo-500/30 dark:bg-indigo-500/10"
                         : bg.sev === "alert" ? "border-rose-200 bg-rose-50/70 dark:border-rose-500/30 dark:bg-rose-500/10"
                         : bg.sev === "warn" ? "border-amber-200 bg-amber-50/70 dark:border-amber-500/30 dark:bg-amber-500/10"
                         : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10"
+                      // 한 문장 요약 말풍선 — 클릭하면 팝업 리스트
                       return (
-                      <div key={bg.key} className="flex items-end gap-2" style={{ animation: "rowIn .3s ease both" }}>
-                        {/* 아바타(브랜드 이니셜) */}
-                        <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
-                        {/* 말풍선 — 브랜드 1개로 요약(제품 N개), 펼치면 제품·거래선별 */}
-                        <div className={"relative max-w-[92%] rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md " + bub}>
-                          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-                            <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
-                            <span className={"whitespace-nowrap text-[12.5px] font-bold " + (bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{bg.brand}</span>
-                            <span className="rounded-full bg-white/70 px-1.5 py-px text-[9.5px] font-bold tabular-nums text-gray-500 dark:bg-gray-900/40 dark:text-gray-400">{bg.nProd}{T("개 제품", " SKU")}</span>
-                            {bg.kinds.map((k) => <span key={k} className={"inline-flex items-center rounded px-1.5 py-px text-[9.5px] font-bold " + KIND_META[k].cls}>{KIND_LABEL[k]}</span>)}
-                            <span className={"inline-flex items-center rounded px-1.5 py-px text-[9.5px] font-bold " + sm.chip}>{SEV_LABEL[bg.sev]}</span>
-                          </div>
-                          {/* 대표(가장 심각한) 제품 요약 */}
-                          <div className="mt-1 flex items-center gap-2">
-                            <span className="min-w-0 flex-1 text-[11.5px] leading-snug text-gray-600 dark:text-gray-300"><b className="font-semibold text-gray-700 dark:text-gray-200">{s.spec || (CAT_LABEL[bg.cat] ?? bg.cat)}{s.model ? ` (${s.model})` : ""}</b> {s.detail}{bg.nProd > 1 ? T(` 외 ${bg.nProd - 1}건`, ` +${bg.nProd - 1} more`) : ""}</span>
-                            <span className="shrink-0">{metricChip(s)}</span>
-                          </div>
-                          {canExpand && (
-                            <button type="button" onClick={() => toggleExp(bg.key)} className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold text-gray-500 transition-colors hover:text-indigo-600 dark:bg-gray-900/40 dark:text-gray-400 dark:hover:text-indigo-300">
-                              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-200" style={{ transform: open ? "rotate(90deg)" : "none" }}><path d="M9 18l6-6-6-6" /></svg>
-                              {open ? T("접기", "collapse") : T(`제품 ${bg.nProd}개 자세히`, `${bg.nProd} SKUs`)}
-                            </button>
-                          )}
-                          {open && (
-                            <div className="mt-1.5 flex flex-col gap-2 border-t border-black/5 pt-1.5 dark:border-white/10" style={{ animation: "rowIn .28s ease both" }}>
-                              {bg.products.map((p) => (
-                                <div key={p.title}>
-                                  <div className="flex items-center gap-2">
-                                    <span className={"h-1 w-1 shrink-0 rounded-full " + SEV_META[p.rep.sev].dot} />
-                                    <span className="min-w-0 flex-1 truncate text-[11px] font-semibold text-gray-700 dark:text-gray-200">{p.rep.spec || (CAT_LABEL[p.rep.cat] ?? p.rep.cat)}{p.rep.model ? <span className="font-normal text-gray-400 dark:text-gray-500"> ({p.rep.model})</span> : null}</span>
-                                    {p.all.length > 1 && <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-px text-[9px] font-bold tabular-nums text-gray-500 dark:bg-gray-800 dark:text-gray-400">{p.all.length}{T("곳", "")}</span>}
-                                    <span className="shrink-0">{metricChip(p.rep)}</span>
-                                  </div>
-                                  {p.all.length > 1 && (
-                                    <div className="mt-1 flex flex-col gap-0.5 pl-3">
-                                      {p.all.map((sig, si) => (
-                                        <div key={sig.id + si} className="flex items-center gap-2">
-                                          {sig.channel ? (sig.url ? <a href={sig.url} target="_blank" rel="noopener noreferrer" className="w-16 shrink-0 truncate text-[10.5px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">{pmShopLabel(sig.channel)}</a> : <span className="w-16 shrink-0 truncate text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">{pmShopLabel(sig.channel)}</span>) : <span className="w-16 shrink-0 text-[10.5px] text-gray-400">—</span>}
-                                          <span className="min-w-0 flex-1 truncate text-[10.5px] text-gray-500 dark:text-gray-400">{sig.detail}</span>
-                                          <span className="shrink-0">{metricChip(sig)}</span>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {/* 업데이트 시각 — 대화방 메시지 타임스탬프(우측 하단) */}
-                          <div className="mt-1 text-right text-[9px] tabular-nums text-gray-400 dark:text-gray-500">{bubTime}</div>
-                        </div>
-                      </div>
-                    ) })}
+                        <button key={bg.key} type="button" onClick={() => setOpenBub(bg)} className={"flex w-full items-center gap-2 rounded-xl border px-2.5 py-1.5 text-left shadow-sm transition-all duration-200 ease-out hover:-translate-y-px hover:shadow-md " + bub} style={{ animation: "rowIn .3s ease both" }}>
+                          <span className={"flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")}>{bg.brand.slice(0, 2).toUpperCase()}</span>
+                          <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
+                          <span className="min-w-0 flex-1 truncate text-[12px] leading-snug text-gray-600 dark:text-gray-300"><b className={bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50"}>{bg.brand}</b> {CAT_LABEL[bg.cat] ?? bg.cat} · {s.detail}{bg.nProd > 1 ? T(` 외 ${bg.nProd - 1}건`, ` +${bg.nProd - 1}`) : ""}</span>
+                          <span className="shrink-0">{metricChip(s)}</span>
+                          <span className="hidden shrink-0 text-[9px] tabular-nums text-gray-400 dark:text-gray-500 sm:inline">{bubTime}</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400"><path d="M9 18l6-6-6-6" /></svg>
+                        </button>
+                      ) })}
                   </div>
                 </div>
               ))}
@@ -296,6 +245,43 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
         </div>
       )}
       <p className="text-[10px] text-gray-400 dark:text-gray-500">{T("감지 룰: 가격 급락/급등(3일 실판매가 −6%↓·+8%↑) · 프로모(SRP 대비 ≥30% 할인) · 광고(종료 D-5 이내·신규 D+3 이내, v_competitor_ads_board) · 재고(보조) · 전체 상위 신호 큐레이션 · 유리(기회)/불리(경보·주의)", "Detection rules: price plunge/spike (3-day street price −6%↓·+8%↑) · promo (≥30% off SRP) · ads (ending within D-5 · new within D+3, v_competitor_ads_board) · stock (secondary) · curated top signals overall · favorable (opportunity)/adverse (alert·watch)")}</p>
+
+      {/* 클릭 팝업 — 선택 브랜드×제품군의 신호 리스트 + 링크 바로가기 */}
+      {openBub && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4 backdrop-blur-sm" style={{ animation: "fadeUp .2s ease both" }} onClick={() => setOpenBub(null)}>
+          <div className="flex max-h-[82vh] w-full max-w-[560px] flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-black/[0.06] shadow-2xl dark:bg-gray-900 dark:ring-white/10" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-3">
+              <span className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white " + (openBub.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")}>{openBub.brand.slice(0, 2).toUpperCase()}</span>
+              <h3 className="text-[14px] font-bold text-gray-900 dark:text-gray-50">{openBub.brand} · {CAT_LABEL[openBub.cat] ?? openBub.cat}</h3>
+              <span className={"rounded px-1.5 py-px text-[10px] font-bold " + SEV_META[openBub.sev].chip}>{SEV_LABEL[openBub.sev]}</span>
+              <span className="rounded bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[10px] font-semibold text-gray-500 dark:text-gray-400">{openBub.nProd}{T("건", " items")}</span>
+              <button type="button" onClick={() => setOpenBub(null)} aria-label={T("닫기", "Close")} className="ml-auto flex h-7 w-7 items-center justify-center rounded-full bg-black/[0.06] text-gray-500 transition hover:bg-black/10 active:scale-90 dark:bg-white/10 dark:text-gray-400"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18M6 6l12 12" /></svg></button>
+            </div>
+            <div className="min-h-0 flex-1 overflow-auto p-3">
+              <div className="flex flex-col gap-2.5">
+                {openBub.products.map((p) => (
+                  <div key={p.title} className="rounded-lg border border-gray-100 dark:border-gray-800 p-2.5">
+                    <div className="flex items-center gap-2">
+                      <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + SEV_META[p.rep.sev].dot} />
+                      <span className="min-w-0 flex-1 truncate text-[12px] font-semibold text-gray-800 dark:text-gray-100">{p.rep.spec || (CAT_LABEL[p.rep.cat] ?? p.rep.cat)}{p.rep.model ? <span className="font-normal text-gray-400 dark:text-gray-500"> ({p.rep.model})</span> : null}</span>
+                      <span className="shrink-0">{metricChip(p.rep)}</span>
+                    </div>
+                    <div className="mt-1.5 flex flex-col gap-1 border-t border-gray-50 dark:border-gray-800/60 pt-1.5">
+                      {p.all.map((sig, si) => (
+                        <div key={sig.id + si} className="flex items-center gap-2">
+                          {sig.channel ? (sig.url ? <a href={sig.url} target="_blank" rel="noopener noreferrer" className="inline-flex w-24 shrink-0 items-center gap-0.5 truncate text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">{pmShopLabel(sig.channel)}<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17L17 7M9 7h8v8" /></svg></a> : <span className="w-24 shrink-0 truncate text-[11px] font-semibold text-gray-600 dark:text-gray-300">{pmShopLabel(sig.channel)}</span>) : <span className="w-24 shrink-0 text-[11px] text-gray-400">—</span>}
+                          <span className="min-w-0 flex-1 truncate text-[11px] text-gray-500 dark:text-gray-400">{sig.detail}</span>
+                          <span className="shrink-0">{metricChip(sig)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
