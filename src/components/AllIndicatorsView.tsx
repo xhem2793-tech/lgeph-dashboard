@@ -322,7 +322,7 @@ function IndListTable({ items, q, fav, onFav, onDetail, showCat }: { items: Row[
                   </div>
                 </td>
                 {showCat && <td className="truncate px-2 py-3 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
-                <td className="px-2 py-3 align-middle"><p className="line-clamp-2 min-h-[2.75em] text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></td>
+                <td className="px-2 py-3 align-middle"><div className="flex min-h-[2.75em] items-center"><p className="line-clamp-2 text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></div></td>
                 <td className="px-2 py-3 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
                 <td className="px-2 py-3 text-right align-middle tabular-nums whitespace-nowrap text-[11.5px] font-semibold text-gray-600 dark:text-gray-300">{r.period ? ym(r.period) : "—"}</td>
                 <td className="px-3 py-3 text-right align-middle tabular-nums whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400">{r.mx && /^\d{4}-\d{2}-\d{2}/.test(r.mx) ? Number(r.mx.slice(5, 7)) + "/" + Number(r.mx.slice(8, 10)) : "—"}</td>
@@ -343,6 +343,8 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
   const [win, setWin] = useState("전체")
 
   useEffect(() => { indicatorSeries(row.indicator).then(setSeries).catch(() => setSeries([])) }, [row.indicator])
+  // 지표 상세 진입 시 항상 최상단에서 시작(리스트 스크롤 위치 이월 방지). 스크롤 컨테이너 무관하게 동작.
+  useEffect(() => { if (typeof window !== "undefined") { window.scrollTo({ top: 0, behavior: "auto" }); const se = document.scrollingElement; if (se) se.scrollTop = 0 } }, [row.indicator])
 
   // 기간 윈도우 필터(1Y/2Y/5Y/전체) — 페이지 차트와 동일
   const winSeries = useMemo(() => {

@@ -156,8 +156,8 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
       {/* 인라인 확대 레이아웃 — 좌: 큰 차트+의미·인사이트 / 우: 정렬 가능한 데이터 표 */}
       <div className="mt-2 flex flex-col gap-4 lg:flex-row">
         <div className="flex min-w-0 flex-col lg:w-[58%]">
-          {/* 메인 차트 — 테두리·고정높이, 넘치면 스크롤(레이아웃 고정·가독성) */}
-          <div key={on ? "in" : "out"} className="h-[352px] overflow-auto rounded-xl border border-gray-100 bg-gray-50/30 p-3 dark:border-gray-800 dark:bg-gray-900/20">{on ? (bigChildren ?? children) : null}</div>
+          {/* 메인 차트 — 테두리·고정높이, 넘치면 스크롤. 와이드 화면에선 폭 상한(mx-auto)으로 차트만 과대해지지 않게 */}
+          <div key={on ? "in" : "out"} className="mx-auto h-[352px] w-full max-w-[760px] overflow-auto rounded-xl border border-gray-100 bg-gray-50/30 p-3 dark:border-gray-800 dark:bg-gray-900/20">{on ? (bigChildren ?? children) : null}</div>
           <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {meaning}</p>
         </div>
         {csv && (
@@ -805,7 +805,7 @@ export default function EnergyLabelView() {
   const lgGrade = grade.find((g) => /^lg$/i.test(g.name))
 
   return (
-    <div className="flex w-full max-w-[1180px] flex-col gap-3">
+    <div className="mx-auto flex w-full max-w-[1760px] flex-col gap-3">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes growBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}"}</style>
 
       <div className="grid items-start gap-4">
