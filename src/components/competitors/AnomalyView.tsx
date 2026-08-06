@@ -231,7 +231,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                       return (
                         <div key={bg.key} className="flex items-end gap-2" style={{ animation: "rowIn .3s ease both" }}>
                           <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
-                          <button type="button" onClick={() => setOpenBub(bg)} className={"relative flex max-w-[88%] items-center gap-2 rounded-2xl rounded-bl-sm border px-3 py-1.5 text-left shadow-sm transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-md " + bub}>
+                          <button type="button" onClick={() => setOpenBub(bg)} className={"relative flex max-w-[88%] items-center gap-2 rounded-2xl rounded-bl-sm border px-3 py-1.5 text-left shadow-sm transition-all duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md " + bub}>
                             <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
                             <span className="min-w-0 flex-1 truncate text-[12px] leading-snug text-gray-600 dark:text-gray-300"><b className={bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50"}>{bg.brand}</b> {CAT_LABEL[bg.cat] ?? bg.cat} · {s.detail}{bg.nProd > 1 ? T(` 외 ${bg.nProd - 1}건`, ` +${bg.nProd - 1}`) : ""}</span>
                             <span className="shrink-0">{metricChip(s)}</span>

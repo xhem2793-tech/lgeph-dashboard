@@ -7,7 +7,7 @@ import { createPortal } from "react-dom"
 import { T } from "@/lib/i18n"
 import { fmtStamp, oosStreaks, type PriceRow } from "@/lib/supabase"
 import { md, peso, pmShopLabel, PmDrop, catLabel } from "@/components/competitors/shared"
-import { canonCode } from "@/lib/classify"
+import { canonCode, isAC, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit } from "@/lib/classify"
 
 const COV_P = ["p0", "p1", "p2", "p3"] as const
 const COV_D = ["d0", "d1", "d2", "d3"] as const
@@ -36,11 +36,13 @@ const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? favi(RET
 const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none" }
 
 type Metric = "count" | "chg" | "sos" | "actRate" | "oosCnt" | "oosRate"
-type Hov = { x: number; y: number; below: boolean; b: string; ret: string; t: number; oo: number; tot: number; delta: number | null } | null
+type Hov = { x: number; y: number; b: string; ret: string; t: number; oo: number; tot: number; delta: number | null } | null
 
 function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
   const [di, setDi] = React.useState(0)
   const [cat, setCat] = React.useState("전체")
+  const [form, setForm] = React.useState("전체") // 유형(세그먼트) 필터
+  const [size, setSize] = React.useState("전체") // 용량·마력·화면 필터
   const [metric, setMetric] = React.useState<Metric>("count")
   const [norm, setNorm] = React.useState<"global" | "col">("global") // 색 기준(전체/거래선별)
   const [sel, setSel] = React.useState<{ b: string; ret: string } | null>(null) // 셀 드릴다운(품절)
@@ -49,7 +51,11 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   const [moreBrands, setMoreBrands] = React.useState(false) // 브랜드 10개 이후 더보기
   React.useEffect(() => { if (sel) oosStreaks(sel.b, sel.ret).then(setOosDays).catch(() => setOosDays({})); else setOosDays({}) }, [sel])
   const cats = ["냉장고", "세탁기", "RAC", "TV"] // classify가 에어컨→RAC/SAC 분류 · RAC 한정
-  const rows = React.useMemo(() => cat === "전체" ? allRows : allRows.filter((r) => r.category === cat), [allRows, cat])
+  const forms = cat === "전체" ? [] : pmFormsFor(cat) // 선택 제품군의 유형 세그먼트
+  const effForm = form === "전체" || forms.includes(form) ? form : "전체"
+  const sizes = cat === "전체" ? [] : pmSizeList(cat) // 용량/마력/화면 버킷
+  const effSize = size === "전체" || sizes.includes(size) ? size : "전체"
+  const rows = React.useMemo(() => allRows.filter((r) => (cat === "전체" || r.category === cat) && pmFormHit(cat, r.model + " " + (r.capacity || ""), effForm, r.brand) && pmSizeHit(cat, r.model, r.capacity, effSize)), [allRows, cat, effForm, effSize])
   const listedOn = (r: PriceRow, slot: number) => slot >= 0 && slot <= 3 && r[COV_P[slot]] != null
   const dates = React.useMemo(() => [0, 1, 2, 3].map((i) => { const m = new Map<string, number>(); rows.forEach((r) => { const v = r[COV_D[i]] as string | null; if (v) m.set(v, (m.get(v) || 0) + 1) }); let best: string | null = null, bc = 0; m.forEach((c, d) => { if (c > bc) { bc = c; best = d } }); return best }), [rows])
   const oosLive = di === 0 // 품절·활성율은 오늘 스냅샷만 유효
@@ -135,7 +141,9 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
     <div className="flex flex-col gap-2.5">
       {/* 한 줄 필터바 — 제품·지표·날짜네비·색기준 + 최신·CSV */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: c === "RAC" ? "RAC" : catLabel(c) }))]} onSelect={setCat} />
+        <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: c === "RAC" ? "RAC" : catLabel(c) }))]} onSelect={(k) => { setCat(k); setForm("전체"); setSize("전체") }} />
+        {forms.length > 0 && <PmDrop label={T("유형", "Type")} sel={effForm} options={[{ k: "전체", t: T("전체", "All") }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} />}
+        {sizes.length > 0 && <PmDrop label={isAC(cat) ? T("마력", "HP") : cat === "TV" ? T("화면", "Screen") : T("용량", "Cap.")} sel={effSize} options={[{ k: "전체", t: T("전체", "All") }, ...sizes.map((t) => ({ k: t, t }))]} onSelect={setSize} />}
         <PmDrop label={T("지표", "Metric")} sel={metric} options={[{ k: "count", t: T("전시 SKU 수", "Listed SKUs") }, { k: "chg", t: T("어제대비 증감", "Δ vs prev day") }, { k: "sos", t: T("진열 점유율", "Share of shelf") }, { k: "actRate", t: T("재고 활성율", "In-stock %") }, { k: "oosCnt", t: T("품절 수", "OOS count") }, { k: "oosRate", t: T("품절률", "OOS %") }]} onSelect={(k) => setMetric(k as Metric)} />
         {metric === "count" && <button type="button" onClick={() => setNorm((n) => n === "global" ? "col" : "global")} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400 transition hover:text-indigo-600 dark:hover:text-indigo-300" title={T("색 농도 기준", "Color scale basis")}>{T("색: ", "Scale: ")}{norm === "global" ? T("전체", "Global") : T("거래선별", "Per-retailer")}</button>}
         {/* 날짜 네비게이터(BoardView 스타일) */}
@@ -176,7 +184,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           <div className="max-h-[72vh] overflow-auto px-0.5 pb-1 pt-2">
             <div key={cat + "-" + di + "-" + metric} className="grid w-full gap-[5px] text-[11px]" style={{ minWidth: 620, gridTemplateColumns: `repeat(11, minmax(52px,1fr))` }}>
               {/* 헤더 행 — 좌상단 코너에 LG 갭 KPI 카드 */}
-              <div className="sticky left-0 top-0 z-30 flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border border-indigo-100 bg-indigo-50 px-1 text-center transition-all duration-300 ease-out hover:scale-[1.04] hover:shadow-md dark:border-indigo-500/20 dark:bg-indigo-500/20" title={T("LG 전시 vs 경쟁 평균", "LG listed vs rival avg")}>
+              <div className="sticky left-0 top-0 z-30 flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border border-indigo-100 bg-indigo-50 px-1 text-center transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:scale-[1.04] hover:shadow-md dark:border-indigo-500/20 dark:bg-indigo-500/20" title={T("LG 전시 vs 경쟁 평균", "LG listed vs rival avg")}>
                 {lgGap.hasLG ? (<>
                   <span className="text-[8.5px] font-semibold uppercase tracking-wide text-indigo-500/80 dark:text-indigo-300/70">LG {T("전시", "listed")}</span>
                   <span className="text-[16px] font-bold leading-none text-indigo-700 dark:text-indigo-300">{lgGap.lg}</span>
@@ -189,7 +197,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                   <span className="rounded bg-gray-100 px-1 text-[8px] font-semibold text-gray-400 dark:bg-gray-700 dark:text-gray-500">{T("준비중", "soon")}</span>
                 </div>
               ) : ret ? (
-                <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="sticky top-0 z-20 flex h-[70px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-100 px-0.5 text-center transition-all duration-300 ease-out hover:scale-[1.03] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800 dark:hover:border-indigo-500/40" style={{ animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
+                <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="sticky top-0 z-20 flex h-[70px] w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-100 px-0.5 text-center transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:scale-[1.03] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800 dark:hover:border-indigo-500/40" style={{ animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
                   {retailerLogo(ret) && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
@@ -201,7 +209,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
               {/* 본문 — 브랜드 10행 × 거래선 10열 */}
               {brSlots.map((b, bi) => (
                 <React.Fragment key={bi}>
-                  <div className={"sticky left-0 z-10 flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 text-center text-[11px] font-bold transition-all duration-300 ease-out hover:z-20 hover:scale-[1.03] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
+                  <div className={"sticky left-0 z-10 flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 text-center text-[11px] font-bold transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-20 hover:scale-[1.03] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
                     {b && brandLogo(b) && (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-6 w-6 rounded-sm object-contain" />
@@ -228,9 +236,10 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                     const showUnit = (metric === "count" || metric === "oosCnt") && disp !== "·" && disp !== "—"
                     return (
                       <button key={ci} type="button" onClick={() => clickable && setSel({ b, ret })}
-                        onMouseEnter={(e) => { const r = e.currentTarget.getBoundingClientRect(); const near = r.top < 160; setHov({ x: r.left + r.width / 2, y: near ? r.bottom : r.top, below: near, b, ret, t, oo, tot, delta }) }}
+                        onMouseEnter={(e) => setHov({ x: e.clientX, y: e.clientY, b, ret, t, oo, tot, delta })}
+                        onMouseMove={(e) => setHov((h) => (h && h.b === b && h.ret === ret ? { ...h, x: e.clientX, y: e.clientY } : h))}
                         onMouseLeave={() => setHov((h) => (h && h.b === b && h.ret === ret ? null : h))}
-                        className={"flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md text-center transition-all duration-300 ease-out hover:z-10 hover:scale-[1.05] hover:shadow-lg hover:ring-2 hover:ring-indigo-400/70 dark:hover:ring-indigo-300/60 " + (clickable ? "cursor-pointer" : "cursor-default")} style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", animation: "covPop .6s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
+                        className={"flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md text-center transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:scale-[1.05] hover:shadow-lg hover:ring-2 hover:ring-indigo-400/70 dark:hover:ring-indigo-300/60 " + (clickable ? "cursor-pointer" : "cursor-default")} style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
                         <span className={"text-[16px] font-bold leading-none tabular-nums " + (alpha > 0 ? (light ? "text-white" : "text-gray-900 dark:text-white") : "text-gray-300 dark:text-gray-600")}>{disp}{showUnit ? <span className="ml-px text-[9px] font-semibold opacity-60">{T("개", "")}</span> : null}</span>
                       </button>
                     ) })}
@@ -240,7 +249,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           </div>
           {data.brands.length > 10 && (
             <div className="mt-2 flex justify-center">
-              <button type="button" onClick={() => setMoreBrands((v) => !v)} className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 transition-all duration-300 ease-out hover:-translate-y-px hover:border-indigo-300 hover:shadow-sm active:scale-95">{moreBrands ? T("접기", "Show less") : `+${data.brands.length - 10}${T("개 더보기", " more")}`}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: moreBrands ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg></button>
+              <button type="button" onClick={() => setMoreBrands((v) => !v)} className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-px hover:border-indigo-300 hover:shadow-sm active:scale-95">{moreBrands ? T("접기", "Show less") : `+${data.brands.length - 10}${T("개 더보기", " more")}`}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: moreBrands ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg></button>
             </div>
           )}
           <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9.5px] text-gray-400 dark:text-gray-500">
@@ -290,10 +299,10 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         document.body
       )}
 
-      {/* 셀 호버 미니 팝업 — title 대신 스타일 툴팁. body 포털(fixed 좌표=뷰포트 기준) */}
+      {/* 셀 호버 미니 팝업 — 커서를 따라다니는 스타일 툴팁. body 포털(fixed 좌표=뷰포트 기준) */}
       {hov && typeof document !== "undefined" && createPortal(
-        <div className="pointer-events-none fixed z-[90]" style={{ left: hov.x, top: hov.y, transform: hov.below ? "translate(-50%, 8px)" : "translate(-50%, calc(-100% - 8px))" }}>
-          <div className="min-w-[156px] rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-left shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/95" style={{ animation: "fadeUp .12s ease both" }}>
+        <div className="pointer-events-none fixed z-[90]" style={{ left: hov.x, top: hov.y, transform: `translate(${hov.x > (typeof window !== "undefined" ? window.innerWidth : 1200) - 200 ? "calc(-100% - 14px)" : "14px"}, ${hov.y < 150 ? "14px" : "calc(-100% - 14px)"})` }}>
+          <div className="min-w-[156px] rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-left shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/95" style={{ animation: "covTip .16s cubic-bezier(.22,1,.36,1) both" }}>
             <div className="mb-1.5 flex items-center gap-1.5">
               {brandLogo(hov.b) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -315,7 +324,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         document.body
       )}
 
-      <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}@keyframes covPop{from{opacity:0;transform:translateY(7px) scale(.97)}to{opacity:1;transform:none}}"}</style>
+      <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}@keyframes covPop{from{opacity:0;transform:translateY(7px) scale(.97)}to{opacity:1;transform:none}}@keyframes covTip{from{opacity:0;transform:translateY(4px) scale(.96)}to{opacity:1;transform:none}}"}</style>
     </div>
   )
 }

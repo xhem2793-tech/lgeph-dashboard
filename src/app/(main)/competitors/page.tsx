@@ -248,7 +248,7 @@ export default function Competitors() {
     freshness()
       .then((f) => setStamp(f.prices ?? null))
       .catch(() => {})
-    competitorTable(4000)
+    competitorTable(6000)
       .then((rs) => {
         const shown = rs.filter((r) => brandShown(r.brand, r.category))
         // 홈크레딧 = 백업/보강용(제휴점 가격 재판매) → 주요 유통이 이미 가진 모델은 제외, 없는 모델만 채운다(gap-fill·중복 방지)
