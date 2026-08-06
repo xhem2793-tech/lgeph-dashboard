@@ -12,7 +12,7 @@ const COV_D = ["d0", "d1", "d2", "d3"] as const
 // 거래선 매출 순위(필리핀 가전 유통, 큰 순) — 히트맵 열 좌→우 정렬 기준.
 const RETAILER_RANK: Record<string, number> = { "SM Appliance": 1, "Abenson": 2, "Anson's": 3, "Robinsons Appliances": 4, "Western Appliances": 5, "Emcor": 6, "Addessa": 7, "Home Credit": 9 }
 const retRank = (r: string) => RETAILER_RANK[r] ?? 8
-// 브랜드 로고(public/logos) — 있는 브랜드만. 없으면 이름만 표시.
+// 브랜드 로고 — 로컬(public/logos) 우선, 없으면 Clearbit 로고 API(도메인 기반). 실패 시 이름 폴백.
 const BRAND_LOGO: Record<string, string> = {
   LG: "/logos/lg.png",
   Samsung: "/logos/samsung-company-logo-south-korean-260nw-2394493913.webp",
@@ -23,6 +23,19 @@ const BRAND_LOGO: Record<string, string> = {
   Midea: "/logos/midea.png",
   Sony: "/logos/sony.png",
 }
+const BRAND_DOMAIN: Record<string, string> = {
+  Haier: "haier.com", Sharp: "sharp.com", Toshiba: "toshiba.com", Whirlpool: "whirlpool.com", Daikin: "daikin.com",
+  Gree: "gree.com", Skyworth: "skyworth.com", Devant: "devant.com.ph", Kolin: "kolin.ph", Koppel: "koppel.com.ph",
+  Condura: "condura.com", Fujidenzo: "fujidenzo.com.ph", Prestiz: "prestiz.com.ph",
+}
+const RETAILER_DOMAIN: Record<string, string> = {
+  "SM Appliance": "smappliance.com", "Abenson": "abenson.com", "Anson's": "ansons.com.ph",
+  "Robinsons Appliances": "robinsonsappliances.com.ph", "Western Appliances": "westernappliances.com.ph",
+  "Emcor": "emcor.com.ph", "Addessa": "addessa.com.ph", "Home Credit": "homecredit.ph",
+}
+const brandLogo = (b: string): string | null => BRAND_LOGO[b] ?? (BRAND_DOMAIN[b] ? `https://logo.clearbit.com/${BRAND_DOMAIN[b]}` : null)
+const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? `https://logo.clearbit.com/${RETAILER_DOMAIN[r]}` : null
+const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none" }
 
 function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
   const [di, setDi] = React.useState(0)
@@ -73,12 +86,16 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         ) : (<>
       <div className="overflow-x-auto pb-1">
         {/* 10×10 고정 매트릭스 — 거래선 10열·브랜드 10행. 부족분은 빈 칸. 폭에 맞춰 늘어나는 정사각 셀. */}
-        <div className="grid w-full gap-[4px] text-[11px]" style={{ minWidth: 640, gridTemplateColumns: `minmax(80px,0.7fr) repeat(10, minmax(44px,1fr)) minmax(36px,0.5fr)` }}>
+        <div key={cat + "-" + di} className="grid w-full gap-[4px] text-[11px]" style={{ minWidth: 640, gridTemplateColumns: `minmax(80px,0.7fr) repeat(10, minmax(44px,1fr)) minmax(36px,0.5fr)` }}>
           {/* 헤더 행 */}
           <div className="sticky left-0 z-10 bg-white dark:bg-gray-900/40" />
           {retSlots.map((ret, ci) => ret ? (
             <div key={ci} className="flex w-full flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 py-1.5 text-center dark:border-gray-800 dark:bg-gray-800/40">
               <span className="rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span>
+              {retailerLogo(ret) && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-3.5 w-auto max-w-[52px] object-contain" />
+              )}
               <span className="w-full truncate px-0.5 text-center text-[9.5px] font-semibold text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
               <span className="text-[9px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
             </div>
@@ -88,9 +105,9 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           {brSlots.map((b, bi) => (
             <React.Fragment key={bi}>
               <div className={"sticky left-0 z-10 flex w-full flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-md border px-1 py-1 text-center text-[11px] font-bold " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")}>
-                {b && BRAND_LOGO[b] && (
+                {b && brandLogo(b) && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={BRAND_LOGO[b]} alt={b} loading="lazy" className="h-4 w-auto max-w-[56px] object-contain" />
+                  <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-4 w-auto max-w-[56px] object-contain" />
                 )}
                 <span className="max-w-full truncate">{b ?? ""}</span>
               </div>
@@ -100,7 +117,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                 const alpha = t ? Math.max(0.12, Math.min(1, t / data.maxT)) : 0; const light = alpha > 0.55
                 return (
                   <div key={ci} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}
-                    className="flex aspect-square w-full flex-col items-center justify-center rounded-md text-center transition-transform duration-150 ease-out hover:z-10 hover:scale-[1.12] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1" }}>
+                    className="flex aspect-square w-full flex-col items-center justify-center rounded-md text-center transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.22] hover:shadow-xl hover:ring-2 hover:ring-teal-400/80 dark:hover:ring-teal-300/70" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1", animation: "covPop .4s cubic-bezier(.34,1.56,.64,1) backwards", animationDelay: Math.min(bi * 10 + ci, 44) * 0.012 + "s" }}>
                     <span className="text-[15px] font-bold tabular-nums leading-none">{t || "·"}</span>
                     {t > 0 && (
                       <span className="mt-0.5 flex flex-col items-center gap-0 text-[8.5px] font-semibold leading-tight" style={{ color: light ? "rgba(255,255,255,0.92)" : undefined }}>
@@ -125,7 +142,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
       </p>
         </>)}
       </div>
-      <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}"}</style>
+      <style>{":root{--cov-empty:#f1f5f9}.dark{--cov-empty:#0f172a}@keyframes covPop{0%{opacity:0;transform:scale(.55)}62%{transform:scale(1.08)}100%{opacity:1;transform:scale(1)}}"}</style>
     </div>
   )
 }
