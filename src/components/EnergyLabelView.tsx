@@ -246,7 +246,7 @@ function HBar({ items, hiName, startRank = 0, dom, mkt: mktProp }: { items: { na
   const [h, setH] = useState<number | null>(null)
   if (!items.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   // Cleveland 점 랭킹 — 효율축 위 브랜드 점, 시장평균 기준선, 순위·LG 강조. (막대 나열 대체)
-  const rowH = 21, padL = 78, padR = 36, W = 264, TP = 15, H = items.length * rowH + TP + 5
+  const rowH = 21, padL = 134, padR = 38, W = 264, TP = 15, H = items.length * rowH + TP + 5 // 축(선)≈35%, 나머지=순위·이름 여백
   const vals = items.map((i) => i.v), mn = Math.min(...vals), mx = Math.max(...vals), pd = (mx - mn) * 0.14 || 1
   const lo = dom ? dom[0] : mn - pd, hi = dom ? dom[1] : mx + pd
   const X = (v: number) => padL + (W - padL - padR) * ((v - lo) / ((hi - lo) || 1))
