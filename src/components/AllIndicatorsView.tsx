@@ -292,6 +292,19 @@ function descOf(r: Row): string {
   return base
 }
 
+// 추정 발표일 — 관측 최신월 + 주기별 표준 발표지연(월별 +45일, 분기 +75, 연 +200, 일/주 +2).
+// 주기는 provenance의 mn~mx 스팬 ÷ 관측수로 추정. 실제 발표일 근사치(DB에 정확 발표일 미보유).
+function estReleaseMD(r: Row): string | null {
+  const base = r.period && /^\d{4}-\d{2}-\d{2}/.test(r.period) ? r.period : r.mx || ""
+  const m = base.match(/^(\d{4})-(\d{2})-(\d{2})/); if (!m) return null
+  const a = (r.mn || "").match(/^(\d{4})-(\d{2})/), b = (r.mx || "").match(/^(\d{4})-(\d{2})/)
+  const span = a && b ? (Number(b[1]) - Number(a[1])) * 12 + (Number(b[2]) - Number(a[2])) : 1
+  const cad = span / Math.max(1, (r.n || 1) - 1) // 관측 간 개월 간격(주기)
+  const lag = cad >= 6 ? 200 : cad >= 2 ? 75 : cad >= 0.7 ? 45 : 2
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])); d.setDate(d.getDate() + lag)
+  return (d.getMonth() + 1) + "/" + d.getDate()
+}
+
 // ── 이미지형 리스트 테이블 — 지표(☆) | 설명 | 최신값 | 24H(%) | 최근 7일 ──
 function IndListTable({ items, q, fav, onFav, onDetail, showCat }: { items: Row[]; q: string; spark?: Record<string, number[]>; fav: Set<string>; onFav: (id: string) => void; onDetail: (r: Row) => void; showCat?: boolean }) {
   const cols = showCat ? ["21%", "9%", "39%", "12%", "11%", "8%"] : ["23%", "45%", "13%", "11%", "8%"]
@@ -325,7 +338,7 @@ function IndListTable({ items, q, fav, onFav, onDetail, showCat }: { items: Row[
                 <td className="px-2 py-3 align-middle"><div className="flex min-h-[2.75em] items-center"><p className="line-clamp-2 text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></div></td>
                 <td className="px-2 py-3 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
                 <td className="px-2 py-3 text-right align-middle tabular-nums whitespace-nowrap text-[11.5px] font-semibold text-gray-600 dark:text-gray-300">{r.period ? ym(r.period) : "—"}</td>
-                <td className="px-3 py-3 text-right align-middle tabular-nums whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400">{r.mx && /^\d{4}-\d{2}-\d{2}/.test(r.mx) ? Number(r.mx.slice(5, 7)) + "/" + Number(r.mx.slice(8, 10)) : "—"}</td>
+                <td className="px-3 py-3 text-right align-middle tabular-nums whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400" title={T("추정 발표일(관측월+표준 발표지연)", "Est. release date (obs. month + typical lag)")}>{estReleaseMD(r) ?? "—"}</td>
               </tr>
             )
           })}
@@ -336,10 +349,9 @@ function IndListTable({ items, q, fav, onFav, onDetail, showCat }: { items: Row[
 }
 
 // 지표 자세히보기 — 시계열(월/분기/연)을 엑셀 표처럼, 전월비·전년비 반영
-// 엑셀형 연도×기간 피벗 — 행=연도(최신 위), 열=월(1~12)/분기(Q1~4)/반기(상·하)/연간. 값·전년비(YoY%) 토글.
-// 월 데이터가 없는 분기/연 지표는 해당 열만 노출(월 열 생략). 집계=기간 평균(연평균·분기평균 등).
+// 엑셀형 연도×기간 피벗 — 행=연도(최신 위), 열=월(1~12)/분기(Q1~4)/반기(상·하)/연간.
+// 각 셀=값(상단)+전년비 YoY%(하단, 색상)를 함께 표시. 월 데이터가 없는 분기/연 지표는 해당 열만 노출.
 function YearPivot({ series, native, u }: { series: { date: string; value: number }[]; native: "month" | "quarter" | "year"; u: { prefix?: string; suffix?: string } }) {
-  const [mode, setMode] = useState<"val" | "yoy">("val")
   const mmap = useMemo(() => { const m = new Map<string, number>(); for (const p of series) m.set(p.date.slice(0, 4) + "-" + Number(p.date.slice(5, 7)), p.value); return m }, [series])
   const years = useMemo(() => Array.from(new Set(series.map((p) => p.date.slice(0, 4)))).sort((a, b) => Number(b) - Number(a)), [series])
   type Col = { key: string; label: string; kind: "m" | "q" | "h" | "a"; idx: number; grp: string }
@@ -359,28 +371,20 @@ function YearPivot({ series, native, u }: { series: { date: string; value: numbe
     if (c.kind === "h") return avg(present(y, c.idx === 1 ? [1, 2, 3, 4, 5, 6] : [7, 8, 9, 10, 11, 12]))
     return avg(present(y, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]))
   }
-  const disp = (y: string, c: Col): number | null => {
-    const cur = cellVal(y, c)
-    if (mode === "val") return cur
-    const prev = cellVal(String(Number(y) - 1), c)
+  const yoyOf = (y: string, c: Col): number | null => {
+    const cur = cellVal(y, c), prev = cellVal(String(Number(y) - 1), c)
     return cur != null && prev != null && prev !== 0 ? ((cur - prev) / Math.abs(prev)) * 100 : null
   }
-  const fmtCell = (v: number | null) => v == null ? "—" : mode === "val" ? (u.prefix || "") + fmtVal(v) + (u.suffix || "") : (v >= 0 ? "+" : "") + v.toFixed(1) + "%"
+  const fmtV = (v: number | null) => v == null ? "—" : (u.prefix || "") + fmtVal(v) + (u.suffix || "")
   if (!years.length) return <div className="flex h-24 items-center justify-center text-[12px] text-gray-400">{T("데이터 없음", "No data")}</div>
-  // 그룹 경계(굵은 좌측선) — 그룹이 바뀌는 첫 열
-  const isGrpStart = (i: number) => i === 0 || cols[i].grp !== cols[i - 1].grp
+  const isGrpStart = (i: number) => i === 0 || cols[i].grp !== cols[i - 1].grp // 그룹 경계(좌측선)
   return (
     <div>
-      <div className="mb-2 flex items-center gap-2">
-        <span className="text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("표시", "Show")}</span>
-        <div className="inline-flex overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
-          {([["val", T("값", "Value")], ["yoy", T("전년비", "YoY")]] as const).map(([k, lb]) => (
-            <button key={k} type="button" onClick={() => setMode(k)} className={"px-2.5 py-1 text-[11px] font-semibold transition-colors " + (mode === k ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-900 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300")}>{lb}</button>
-          ))}
-        </div>
-        <span className="text-[10.5px] text-gray-400 dark:text-gray-500">{mode === "val" ? T("· 기간 평균(연평균·분기평균 등)", "· period average") : T("· 동일 기간 전년 대비 증감률", "· YoY change per column")}</span>
+      <div className="mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10.5px] text-gray-400 dark:text-gray-500">
+        <span>{T("각 셀 상단=값(기간 평균) · 하단=전년비", "Each cell: top = value (period avg) · bottom = YoY")}</span>
+        <span className="inline-flex items-center gap-1"><span className="text-rose-500">{T("▲ 상승", "▲ up")}</span><span className="text-emerald-500">{T("▼ 하락", "▼ down")}</span></span>
       </div>
-      <div className="max-h-[420px] overflow-auto rounded-xl border border-gray-100 dark:border-gray-800">
+      <div className="max-h-[440px] overflow-auto rounded-xl border border-gray-100 dark:border-gray-800">
         <table className="w-full border-collapse text-[11px] tabular-nums">
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-800/95 backdrop-blur">
             <tr className="text-gray-500 dark:text-gray-400">
@@ -392,8 +396,13 @@ function YearPivot({ series, native, u }: { series: { date: string; value: numbe
             {years.map((y) => (
               <tr key={y} className="border-t border-gray-50 dark:border-gray-800/50 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/5">
                 <td className="sticky left-0 z-10 bg-white dark:bg-gray-900 px-3 py-1.5 text-left font-bold text-gray-800 dark:text-gray-100">{y}</td>
-                {cols.map((c, i) => { const v = disp(y, c); const col = mode === "yoy" && v != null ? (v >= 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400") : c.kind === "a" ? "font-bold text-gray-900 dark:text-gray-50" : v == null ? "text-gray-300 dark:text-gray-600" : "text-gray-700 dark:text-gray-200"
-                  return <td key={c.key} className={"px-2 py-1.5 text-right whitespace-nowrap " + (isGrpStart(i) ? "border-l border-gray-100 dark:border-gray-800 " : "") + col}>{fmtCell(v)}</td> })}
+                {cols.map((c, i) => { const v = cellVal(y, c), yy = yoyOf(y, c)
+                  const vCol = v == null ? "text-gray-300 dark:text-gray-600" : c.kind === "a" ? "font-bold text-gray-900 dark:text-gray-50" : "text-gray-700 dark:text-gray-200"
+                  const yCol = yy == null ? "text-gray-300 dark:text-gray-600" : yy >= 0 ? "text-rose-500 dark:text-rose-400" : "text-emerald-500 dark:text-emerald-400"
+                  return <td key={c.key} className={"px-2 py-1 text-right align-top " + (isGrpStart(i) ? "border-l border-gray-100 dark:border-gray-800 " : "")}>
+                    <div className={"whitespace-nowrap leading-tight " + vCol}>{fmtV(v)}</div>
+                    <div className={"whitespace-nowrap text-[9px] leading-tight " + yCol}>{yy == null ? "" : (yy >= 0 ? "+" : "") + yy.toFixed(1) + "%"}</div>
+                  </td> })}
               </tr>
             ))}
           </tbody>
