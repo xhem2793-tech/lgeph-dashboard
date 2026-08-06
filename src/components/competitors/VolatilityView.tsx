@@ -12,28 +12,20 @@ const COV_D = ["d0", "d1", "d2", "d3"] as const
 // 거래선 매출 순위(필리핀 가전 유통, 큰 순) — 히트맵 열 좌→우 정렬 기준.
 const RETAILER_RANK: Record<string, number> = { "SM Appliance": 1, "Abenson": 2, "Anson's": 3, "Robinsons Appliances": 4, "Western Appliances": 5, "Emcor": 6, "Addessa": 7, "Home Credit": 9 }
 const retRank = (r: string) => RETAILER_RANK[r] ?? 8
-// 브랜드 로고 — 로컬(public/logos) 우선, 없으면 Clearbit 로고 API(도메인 기반). 실패 시 이름 폴백.
-const BRAND_LOGO: Record<string, string> = {
-  LG: "/logos/lg.png",
-  Samsung: "/logos/samsung-company-logo-south-korean-260nw-2394493913.webp",
-  Panasonic: "/logos/panasonic.png",
-  TCL: "/logos/tcl.png",
-  Hisense: "/logos/Hisense-Logo.png",
-  Carrier: "/logos/carrier.png",
-  Midea: "/logos/midea.png",
-  Sony: "/logos/sony.png",
-}
+// 브랜드/거래선 로고 — Clearbit 로고 API(도메인 기반)로 전부 통일(크기 일관·object-contain). 실패 시 이름 폴백.
 const BRAND_DOMAIN: Record<string, string> = {
-  Haier: "haier.com", Sharp: "sharp.com", Toshiba: "toshiba.com", Whirlpool: "whirlpool.com", Daikin: "daikin.com",
-  Gree: "gree.com", Skyworth: "skyworth.com", Devant: "devant.com.ph", Kolin: "kolin.ph", Koppel: "koppel.com.ph",
-  Condura: "condura.com", Fujidenzo: "fujidenzo.com.ph", Prestiz: "prestiz.com.ph",
+  LG: "lg.com", Samsung: "samsung.com", Panasonic: "panasonic.com", TCL: "tcl.com", Hisense: "hisense.com",
+  Carrier: "carrier.com", Midea: "midea.com", Sony: "sony.com", Haier: "haier.com", Sharp: "sharp.com",
+  Toshiba: "toshiba.com", Whirlpool: "whirlpool.com", Daikin: "daikin.com", Gree: "gree.com", Skyworth: "skyworth.com",
+  Devant: "devant.com.ph", Kolin: "kolin.ph", Koppel: "koppel.com.ph", Condura: "condura.com",
+  Fujidenzo: "fujidenzo.com.ph", Prestiz: "prestiz.com.ph",
 }
 const RETAILER_DOMAIN: Record<string, string> = {
   "SM Appliance": "smappliance.com", "Abenson": "abenson.com", "Anson's": "ansons.com.ph",
   "Robinsons Appliances": "robinsonsappliances.com.ph", "Western Appliances": "westernappliances.com.ph",
   "Emcor": "emcor.com.ph", "Addessa": "addessa.com.ph", "Home Credit": "homecredit.ph",
 }
-const brandLogo = (b: string): string | null => BRAND_LOGO[b] ?? (BRAND_DOMAIN[b] ? `https://logo.clearbit.com/${BRAND_DOMAIN[b]}` : null)
+const brandLogo = (b: string): string | null => BRAND_DOMAIN[b] ? `https://logo.clearbit.com/${BRAND_DOMAIN[b]}` : null
 const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? `https://logo.clearbit.com/${RETAILER_DOMAIN[r]}` : null
 const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none" }
 
@@ -86,11 +78,11 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         ) : (<>
       <div className="overflow-x-auto pb-1">
         {/* 10×10 고정 매트릭스 — 거래선 10열·브랜드 10행. 부족분은 빈 칸. 폭에 맞춰 늘어나는 정사각 셀. */}
-        <div key={cat + "-" + di} className="grid w-full gap-[4px] text-[11px]" style={{ minWidth: 640, gridTemplateColumns: `minmax(80px,0.7fr) repeat(10, minmax(44px,1fr)) minmax(36px,0.5fr)` }}>
+        <div key={cat + "-" + di} className="grid w-full gap-[4px] text-[11px]" style={{ minWidth: 600, gridTemplateColumns: `minmax(84px,0.85fr) repeat(10, minmax(44px,1fr))` }}>
           {/* 헤더 행 */}
           <div className="sticky left-0 z-10 bg-white dark:bg-gray-900/40" />
           {retSlots.map((ret, ci) => ret ? (
-            <div key={ci} className="flex w-full flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 py-1.5 text-center dark:border-gray-800 dark:bg-gray-800/40">
+            <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="flex w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 py-1.5 text-center transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-indigo-500/40" style={{ animation: "covPop .4s cubic-bezier(.34,1.56,.64,1) backwards", animationDelay: ci * 0.02 + "s" }}>
               <span className="rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span>
               {retailerLogo(ret) && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -98,18 +90,18 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
               )}
               <span className="w-full truncate px-0.5 text-center text-[9.5px] font-semibold text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
               <span className="text-[9px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
-            </div>
+            </a>
           ) : <div key={ci} />)}
-          <div className="flex w-full items-center justify-center rounded-md border border-indigo-100 bg-indigo-50/60 text-[10px] font-bold text-indigo-500 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300">Σ</div>
           {/* 본문 — 브랜드 10행(부족분 빈 칸) × 거래선 10열 */}
           {brSlots.map((b, bi) => (
             <React.Fragment key={bi}>
-              <div className={"sticky left-0 z-10 flex w-full flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-md border px-1 py-1 text-center text-[11px] font-bold " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")}>
+              <div className={"sticky left-0 z-10 flex w-full flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-md border px-0.5 py-1.5 text-center text-[11px] font-bold transition-transform duration-200 ease-[cubic-bezier(.34,1.56,.64,1)] hover:z-20 hover:-translate-y-0.5 hover:scale-[1.06] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .4s cubic-bezier(.34,1.56,.64,1) backwards", animationDelay: bi * 0.02 + "s" }}>
                 {b && brandLogo(b) && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-4 w-auto max-w-[56px] object-contain" />
+                  <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-4 w-auto max-w-[54px] object-contain" />
                 )}
                 <span className="max-w-full truncate">{b ?? ""}</span>
+                {b && <span className="text-[9px] font-normal tabular-nums text-gray-400">{data.rowTot[b] || 0}</span>}
               </div>
               {retSlots.map((ret, ci) => {
                 if (!b || !ret) return <div key={ci} className="aspect-square w-full rounded-md" style={{ background: "var(--cov-empty)", opacity: 0.5 }} />
@@ -128,7 +120,6 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                     )}
                   </div>
                 ) })}
-              <div className={"flex w-full items-center justify-center rounded-md text-[11px] font-bold tabular-nums " + (b == null ? "" : "border border-indigo-100 bg-indigo-50/60 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300")}>{b ? (data.rowTot[b] || 0) : ""}</div>
             </React.Fragment>
           ))}
         </div>
