@@ -267,28 +267,35 @@ function HBar({ items, hiName }: { items: { name: string; v: number; n?: number 
     </svg>
   )
 }
+// 덤벨 — 용량대별 LG vs 시장평균 효율을 점 2개+연결선으로. 격차(우측=LG 우위)를 한눈에. (그룹막대 대체)
 function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { label: string; lg: number | null; mkt: number }[]; fmt?: (v: number) => string }) {
   const [h, setH] = useState<number | null>(null)
   if (!groups.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
-  const max = Math.max(...groups.flatMap((g) => [g.lg ?? 0, g.mkt]), 1), W = 360, H = 158, B = 26, TP = 14, L = 6, R = 6
-  const gw = (W - L - R) / groups.length, bw = Math.min(17, gw * 0.3)
-  const Y = (v: number) => TP + (H - TP - B) * (1 - v / max)
+  const vals = groups.flatMap((g) => (g.lg != null ? [g.lg, g.mkt] : [g.mkt]))
+  const mn = Math.min(...vals), mx = Math.max(...vals), pd = (mx - mn) * 0.16 || 1, lo = mn - pd, hi = mx + pd
+  const rowH = 40, padL = 74, padR = 48, W = 360, TP = 8, H = groups.length * rowH + TP + 6
+  const X = (v: number) => padL + (W - padL - padR) * ((v - lo) / ((hi - lo) || 1))
   return (
-    <div className="flex h-full w-full flex-col">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
-        {groups.map((g, i) => { const cx = L + gw * (i + 0.5), dim = h != null && h !== i
+    <div className="flex w-full flex-col">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
+        {groups.map((g, i) => { const y = TP + i * rowH + rowH / 2, dim = h != null && h !== i, ahead = g.lg != null && g.lg >= g.mkt
           return (
-            <g key={g.label} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.45 : 1, transition: "opacity .15s", cursor: "default" }}>
-              <rect x={cx - gw / 2} y={0} width={gw} height={H} fill="transparent" /><title>{g.label} · LG {g.lg != null ? fmt(g.lg) : "—"} · {T("시장", "Market")} {fmt(g.mkt)}</title>
-              {g.lg != null && <rect x={cx - bw - 1} y={Y(g.lg)} width={bw} height={H - B - Y(g.lg)} rx="2" fill={TEAL} style={{ animation: "growBar .55s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />}
-              <rect x={cx + 1} y={Y(g.mkt)} width={bw} height={H - B - Y(g.mkt)} rx="2" fill={GRAY} className="dark:opacity-40" style={{ animation: "growBar .55s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.12 + i * 0.05) + "s", transformOrigin: `center ${H - B}px` }} />
-              {g.lg != null && <text x={cx - bw / 2 - 1} y={Y(g.lg) - 3} textAnchor="middle" fontSize="8" fontWeight="700" className="fill-teal-600 dark:fill-teal-400">{fmt(g.lg)}</text>}
-              <text x={cx} y={H - 13} textAnchor="middle" fontSize="8.5" className="fill-gray-500 dark:fill-gray-400">{g.label.replace(/급|\(.*\)/g, "")}</text>
+            <g key={g.label} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.42 : 1, transition: "opacity .18s", cursor: "default" }}>
+              <rect x={0} y={y - rowH / 2} width={W} height={rowH} fill="transparent" /><title>{g.label} · LG {g.lg != null ? fmt(g.lg) : "—"} · {T("시장", "Market")} {fmt(g.mkt)}</title>
+              <text x={padL - 8} y={y + 3.5} textAnchor="end" fontSize="9.5" fontWeight={h === i ? 800 : 500} className="fill-gray-500 dark:fill-gray-400">{g.label.replace(/\(.*\)/g, "")}</text>
+              <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#eef2f6" strokeWidth="1" className="dark:stroke-gray-800/70" />
+              {/* 연결선(격차) */}
+              {g.lg != null && <line x1={X(g.mkt)} y1={y} x2={X(g.lg)} y2={y} stroke={ahead ? "#5eead4" : "#fca5a5"} strokeWidth="2.4" strokeLinecap="round" style={{ animation: "growX .5s ease both", animationDelay: (0.08 + i * 0.05) + "s", transformOrigin: `${X(g.mkt)}px 0` }} />}
+              {/* 시장 점 */}
+              <circle cx={X(g.mkt)} cy={y} r={4.2} fill={GRAY} stroke="#fff" strokeWidth="0.8" className="dark:fill-gray-500" style={{ animation: "popIn .5s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.1 + i * 0.05) + "s", transformOrigin: `${X(g.mkt)}px ${y}px` }} />
+              {/* LG 점 */}
+              {g.lg != null && <circle cx={X(g.lg)} cy={y} r={6} fill={TEAL} stroke="#fff" strokeWidth="1.6" style={{ animation: "popIn .5s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.16 + i * 0.05) + "s", transformOrigin: `${X(g.lg)}px ${y}px` }} />}
+              {g.lg != null && <text x={X(g.lg) + (X(g.lg) >= X(g.mkt) ? 9 : -9)} y={y + 3.2} textAnchor={X(g.lg) >= X(g.mkt) ? "start" : "end"} fontSize="9.5" fontWeight="800" className="fill-teal-600 dark:fill-teal-400">{fmt(g.lg)}</text>}
             </g>
           )
         })}
       </svg>
-      <div className="mt-1 flex shrink-0 items-center gap-3 text-[10px]"><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm" style={{ background: TEAL }} />LG</span><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-sm bg-gray-300 dark:bg-gray-600" />{T("시장평균", "Market avg")}</span></div>
+      <div className="mt-1 flex shrink-0 items-center gap-3 text-[10px]"><span className="inline-flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-full" style={{ background: TEAL }} />LG</span><span className="inline-flex items-center gap-1"><span className="h-2 w-2 rounded-full bg-gray-300 dark:bg-gray-600" />{T("시장평균", "Market avg")}</span><span className="text-gray-400">{T("→ 오른쪽일수록 고효율", "→ right = higher efficiency")}</span></div>
     </div>
   )
 }
