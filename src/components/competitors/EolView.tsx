@@ -6,6 +6,7 @@ import React from "react"
 import { fmtStamp, type DailyRow } from "@/lib/supabase"
 import { canonCode, PM_CATS, pmFormOf } from "@/lib/classify"
 import { peso, catLabel, PmDrop } from "@/components/competitors/shared"
+import { Segmented } from "@/components/Segmented"
 import { T } from "@/lib/i18n"
 
 type Kind = "new" | "eol"
@@ -30,8 +31,7 @@ const catNorm = (c: string) => (/에어컨|rac|sac/i.test(c) ? "에어컨" : /�
 export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: string | null }) {
   const [view, setView] = React.useState<"feed" | "board" | "table">("feed")
   const [cat, setCat] = React.useState("전체")
-  const [feedF, setFeedF] = React.useState("전체")
-  const [tableF, setTableF] = React.useState("전체")
+  const [subF, setSubF] = React.useState("전체") // 전체/신제품/EOL 후보 — 피드·테이블 공용
   const [sel, setSel] = React.useState<Ev | null>(null)
 
   const events = React.useMemo<Ev[]>(() => {
@@ -84,27 +84,25 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
 
   return (
     <div className="mt-3 flex flex-col gap-3" style={{ animation: "fadeUp .5s ease both" }}>
-      {/* 컨트롤 바 — 뷰 세그먼트 + 카테고리 필터 + KPI */}
+      {/* 컨트롤 바 — 한 줄: 제품(좌) · 서브필터 · 시그널(KPI) · 피드/보드/테이블(우) */}
       <div className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <div className="relative flex items-center rounded-full bg-gray-200/80 p-[3px] text-[12px] font-semibold shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80">
-          <span aria-hidden className="absolute inset-y-[3px] rounded-full bg-indigo-600 shadow-sm transition-all duration-[280ms] ease-[cubic-bezier(.22,1,.36,1)]" style={{ left: `calc(3px + ${["feed", "board", "table"].indexOf(view)} * ((100% - 6px)/3))`, width: "calc((100% - 6px)/3)" }} />
-          {([["feed", T("피드", "Feed")], ["board", T("보드", "Board")], ["table", T("테이블", "Table")]] as const).map(([k, l]) => (
-            <button key={k} type="button" onClick={() => setView(k)} className={"relative z-10 rounded-full px-3.5 py-1 transition-colors " + (view === k ? "text-white" : "text-gray-600 dark:text-gray-300")}>{l}</button>
-          ))}
-        </div>
-        <span className="h-4 w-px bg-gray-200 dark:bg-gray-700" />
         <PmDrop label={T("제품", "Div")} sel={cat} options={CATS.filter((c) => c === "전체" || (catCounts[c] ?? 0) > 0).map((c) => ({ k: c, t: c === "전체" ? T("전체", "All") : catLabel(c) }))} onSelect={setCat} />
-        <div className="ml-auto flex items-center gap-3.5 text-[12px]">
+        {view !== "board" && <SubTabs f={subF} setF={setSubF} />}
+        <span className="hidden h-4 w-px bg-gray-200 dark:bg-gray-700 sm:block" />
+        <div className="flex items-center gap-3.5 text-[12px]">
           <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span className="h-2 w-2 rounded-full bg-emerald-500" />{T("신제품", "New")} <b className="tabular-nums text-gray-800 dark:text-gray-100">{kpi.neo}</b></span>
           <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span className="h-2 w-2 rounded-full bg-rose-500" />{T("단종 유력", "Likely EOL")} <b className="tabular-nums text-gray-800 dark:text-gray-100">{kpi.dead}</b></span>
           <span className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400"><span className="h-2 w-2 rounded-full bg-amber-500" />{T("관찰중", "Watching")} <b className="tabular-nums text-gray-800 dark:text-gray-100">{kpi.watch}</b></span>
-          <span className="hidden text-[11px] text-gray-400 dark:text-gray-500 sm:inline">{T("최신 ", "Updated ")}{stamp ? fmtStamp(stamp) : "—"}</span>
+          <span className="hidden text-[11px] text-gray-400 dark:text-gray-500 lg:inline">{T("최신 ", "Updated ")}{stamp ? fmtStamp(stamp) : "—"}</span>
+        </div>
+        <div className="ml-auto">
+          <Segmented value={view} onChange={(k) => setView(k as "feed" | "board" | "table")} options={[{ k: "feed", label: T("피드", "Feed") }, { k: "board", label: T("보드", "Board") }, { k: "table", label: T("테이블", "Table") }]} />
         </div>
       </div>
 
-      {view === "feed" && <FeedView events={filtered} f={feedF} setF={setFeedF} onSel={setSel} />}
+      {view === "feed" && <FeedView events={filtered} f={subF} onSel={setSel} />}
       {view === "board" && <BoardKanban events={filtered} onSel={setSel} />}
-      {view === "table" && <TableView events={filtered} f={tableF} setF={setTableF} onSel={setSel} />}
+      {view === "table" && <TableView events={filtered} f={subF} onSel={setSel} />}
 
       <p className="text-[10px] text-gray-400 dark:text-gray-500">{T("신제품=최근 14일 내 첫 관측 SKU · EOL 후보=마지막 관측 이후 경과일(미노출 D+) — 14일↑ 단종 유력, 7~13일 관찰중 · 데이터 v_competitor_daily(관측)", "New = SKU first observed within the last 14 days · EOL candidate = days since last sighting (absent D+) — 14d+ likely EOL, 7–13d watching · data v_competitor_daily (observed)")}</p>
 
@@ -124,14 +122,13 @@ function SubTabs({ f, setF }: { f: string; setF: (v: string) => void }) {
 }
 const passF = (e: Ev, f: string) => f === "전체" || (f === "신제품" ? e.kind === "new" : e.kind === "eol")
 
-function FeedView({ events, f, setF, onSel }: { events: Ev[]; f: string; setF: (v: string) => void; onSel: (e: Ev) => void }) {
+function FeedView({ events, f, onSel }: { events: Ev[]; f: string; onSel: (e: Ev) => void }) {
   const list = events.filter((e) => passF(e, f)).sort((a, b) => b.date.localeCompare(a.date))
   const byDay: Record<string, Ev[]> = {}
   list.forEach((e) => { (byDay[e.date] = byDay[e.date] || []).push(e) })
   const days = Object.keys(byDay).sort((a, b) => b.localeCompare(a)).slice(0, 8)
   return (
     <div className="flex flex-col gap-4">
-      <SubTabs f={f} setF={setF} />
       {days.length === 0 ? <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400">{T("해당 이벤트가 없습니다.", "No matching events.")}</div> : days.map((d, gi) => {
         // 날짜 안에서 신호종류(신제품/EOL 후보) 카드로 그룹 — 이상치 알림과 동일 패턴
         const groups = [
@@ -210,7 +207,7 @@ function BoardKanban({ events, onSel }: { events: Ev[]; onSel: (e: Ev) => void }
   )
 }
 
-function TableView({ events, f, setF, onSel }: { events: Ev[]; f: string; setF: (v: string) => void; onSel: (e: Ev) => void }) {
+function TableView({ events, f, onSel }: { events: Ev[]; f: string; onSel: (e: Ev) => void }) {
   const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "absent", asc: false })
   const setS = (k: string) => setSort((s) => (s.k === k ? { k, asc: !s.asc } : { k, asc: true }))
   const arrow = (k: string) => (sort.k === k ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span> : <span className="ml-0.5 text-[8px] text-gray-300 dark:text-gray-600">⇅</span>)
@@ -232,7 +229,6 @@ function TableView({ events, f, setF, onSel }: { events: Ev[]; f: string; setF: 
   )
   return (
     <div className="flex flex-col gap-2.5">
-      <SubTabs f={f} setF={setF} />
       <div className="overflow-x-auto rounded-xl border border-gray-200 dark:border-gray-800">
         <table className="w-full min-w-[930px] table-fixed text-[12px]">
           <colgroup><col style={{ width: 108 }} /><col /><col style={{ width: 88 }} /><col style={{ width: 72 }} /><col style={{ width: 74 }} /><col style={{ width: 80 }} /><col style={{ width: 80 }} /><col style={{ width: 70 }} /><col style={{ width: 92 }} /><col style={{ width: 56 }} /></colgroup>
