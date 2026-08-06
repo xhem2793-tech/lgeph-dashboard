@@ -113,22 +113,28 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
   const [expanded, setExpanded] = React.useState<Set<string>>(new Set())
   const toggleExp = (k: string) => setExpanded((prev) => { const n = new Set(prev); n.has(k) ? n.delete(k) : n.add(k); return n })
 
-  // 시간별(날짜) 리스트 — 오늘/어제 섹션. 각 섹션은 제품(브랜드·모델)별 행: 헤드라인 + 펼치면 거래선별 변동.
+  // 3단 — 날짜(시간) > 신호종류(가격/프로모/광고/재고) > 제품(브랜드·모델). 제품 펼치면 거래선별 변동.
   const byDay = React.useMemo(() => {
     const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF))
     const DAY_ORDER: ("today" | "yesterday")[] = ["today", "yesterday"]
+    const KIND_ORDER = ["price", "promo", "ad", "stock"]
     return DAY_ORDER.map((day) => {
       const ds = filtered.filter((s) => s.day === day)
-      const pm = new Map<string, Signal[]>()
-      for (const s of ds) { const key = s.brand + "|" + s.title; const arr = pm.get(key); if (arr) arr.push(s); else pm.set(key, [s]) }
-      const prods = Array.from(pm.entries()).map(([k, arr]) => {
-        arr.sort((x, y) => SEV_META[x.sev].order - SEV_META[y.sev].order || y.score - x.score)
-        return { key: day + "|" + k, rep: arr[0], all: arr, kinds: Array.from(new Set(arr.map((s) => s.kind))) }
-      }).sort((a, b) => SEV_META[a.rep.sev].order - SEV_META[b.rep.sev].order || b.rep.score - a.rep.score).slice(0, 40)
-      return { day, prods }
-    }).filter((d) => d.prods.length > 0)
+      const kinds = KIND_ORDER.map((k) => {
+        const ks = ds.filter((s) => s.kind === k)
+        if (!ks.length) return null
+        const pm = new Map<string, Signal[]>()
+        for (const s of ks) { const key = s.brand + "|" + s.title; const arr = pm.get(key); if (arr) arr.push(s); else pm.set(key, [s]) }
+        const prods = Array.from(pm.entries()).map(([kk, arr]) => {
+          arr.sort((x, y) => SEV_META[x.sev].order - SEV_META[y.sev].order || y.score - x.score)
+          return { key: day + "|" + k + "|" + kk, rep: arr[0], all: arr }
+        }).sort((a, b) => SEV_META[a.rep.sev].order - SEV_META[b.rep.sev].order || b.rep.score - a.rep.score)
+        return { kind: k, prods, n: ks.length }
+      }).filter((x): x is NonNullable<typeof x> => x != null)
+      return { day, kinds, n: ds.length }
+    }).filter((d) => d.n > 0)
   }, [signals, kind, catF, dayF])
-  const total = byDay.reduce((s, d) => s + d.prods.length, 0)
+  const total = byDay.reduce((s, d) => s + d.n, 0)
 
   const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
 
@@ -165,44 +171,49 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                 <span className={"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold " + (dg.day === "today" ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200")}>
                   <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />{DAY_LABEL[dg.day]}
                 </span>
-                <span className="text-[11px] text-gray-400 dark:text-gray-500">{dg.prods.length}{T("건", "")}</span>
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">{dg.n}{T("건", "")}</span>
               </div>
-              {/* 좌측 세로 타임라인 + 제품 행들 */}
-              <div className="relative ml-1 border-l-2 border-gray-200 pl-3 dark:border-gray-700">
-                <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
-                  {dg.prods.map((p) => { const s = p.rep; const open = expanded.has(p.key); const km = KIND_META[s.kind]; return (
-                    <div key={p.key} className="border-b border-gray-100 last:border-0 dark:border-gray-800/60">
-                      {/* 헤드라인 — 브랜드 · 카테고리 · 스펙 · (모델) · 신호변동 */}
-                      <button type="button" onClick={() => toggleExp(p.key)} className="flex w-full items-center gap-1.5 px-3 py-2 text-left transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400 transition-transform duration-200" style={{ transform: open ? "rotate(90deg)" : "none" }}><path d="M9 18l6-6-6-6" /></svg>
-                        <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + SEV_META[s.sev].dot} title={SEV_LABEL[s.sev]} />
-                        <span className={"whitespace-nowrap text-[12.5px] font-bold uppercase " + (s.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50")}>{s.brand}</span>
-                        <span className="whitespace-nowrap text-[12px] font-semibold text-gray-700 dark:text-gray-200">{CAT_LABEL[s.cat] ?? s.cat}</span>
-                        {s.spec ? <span className="whitespace-nowrap text-[12px] text-gray-600 dark:text-gray-300">{s.spec}</span> : null}
-                        {s.model ? <span className="hidden whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:inline">({s.model})</span> : null}
-                        <span className={"inline-flex shrink-0 items-center rounded px-1.5 py-px text-[10px] font-bold " + km.cls}>{KIND_LABEL[s.kind]}{T(" 변동", "")}</span>
-                        {p.all.length > 1 && <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-px text-[9px] font-bold tabular-nums text-gray-500 dark:bg-gray-800 dark:text-gray-400">+{p.all.length - 1}</span>}
-                        <span className="ml-auto shrink-0">{metricChip(s)}</span>
-                      </button>
-                      {/* 펼침 — 어떤 거래선에서 변동이 있었는지 */}
-                      {open && (
-                        <div className="border-t border-gray-100 bg-gray-50/60 px-3 py-2.5 dark:border-gray-800/60 dark:bg-gray-900/40" style={{ animation: "rowIn .28s ease both" }}>
-                          <div className="mb-1.5 text-[9.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("거래선별 변동", "By retailer")}</div>
-                          <div className="flex flex-col gap-1">
-                            {p.all.map((sig, si) => { const skm = KIND_META[sig.kind]; return (
-                              <div key={sig.id + si} className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-white dark:hover:bg-gray-800/60">
-                                <span className={"inline-flex w-10 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[9px] font-semibold " + skm.cls}>{KIND_LABEL[sig.kind]}</span>
-                                {sig.channel ? (sig.url ? <a href={sig.url} target="_blank" rel="noopener noreferrer" className="w-20 shrink-0 truncate text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">{pmShopLabel(sig.channel)}</a> : <span className="w-20 shrink-0 truncate text-[11px] font-semibold text-gray-600 dark:text-gray-300">{pmShopLabel(sig.channel)}</span>) : <span className="w-20 shrink-0 text-[11px] text-gray-400">—</span>}
-                                <span className="min-w-0 flex-1 truncate text-[11.5px] text-gray-500 dark:text-gray-400">{sig.detail}</span>
-                                <span className="shrink-0">{metricChip(sig)}</span>
-                              </div>
-                            ) })}
-                          </div>
-                        </div>
-                      )}
+              {/* 좌측 세로 타임라인 + 신호종류 카드들 */}
+              <div className="relative ml-1 flex flex-col gap-2 border-l-2 border-gray-200 pl-3 dark:border-gray-700">
+                {dg.kinds.map((kg) => { const km = KIND_META[kg.kind]; return (
+                  <div key={kg.kind} className="relative overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+                    {/* 신호종류 카드 헤더 — 가격/프로모/광고/재고 변동 */}
+                    <div className="flex items-center gap-1.5 border-b border-gray-100 bg-gray-50/70 px-3 py-1.5 dark:border-gray-800 dark:bg-gray-900/40">
+                      <span className="-ml-[19px] h-2 w-2 rounded-full bg-gray-300 ring-2 ring-white dark:bg-gray-600 dark:ring-gray-950" />
+                      <span className={"inline-flex items-center rounded px-1.5 py-px text-[11px] font-bold " + km.cls}>{KIND_LABEL[kg.kind]}{T(" 변동", "")}</span>
+                      <span className="text-[10.5px] text-gray-400 dark:text-gray-500">{kg.prods.length}{T("개 제품", "")}</span>
                     </div>
-                  ) })}
-                </div>
+                    {/* 변화한 제품들 */}
+                    {kg.prods.map((p) => { const s = p.rep; const open = expanded.has(p.key); return (
+                      <div key={p.key} className="border-b border-gray-100 last:border-0 dark:border-gray-800/60">
+                        <button type="button" onClick={() => toggleExp(p.key)} className="flex w-full items-center gap-1.5 px-3 py-2 text-left transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400 transition-transform duration-200" style={{ transform: open ? "rotate(90deg)" : "none" }}><path d="M9 18l6-6-6-6" /></svg>
+                          <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + SEV_META[s.sev].dot} title={SEV_LABEL[s.sev]} />
+                          <span className={"whitespace-nowrap text-[12.5px] font-bold uppercase " + (s.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50")}>{s.brand}</span>
+                          <span className="whitespace-nowrap text-[12px] font-semibold text-gray-700 dark:text-gray-200">{CAT_LABEL[s.cat] ?? s.cat}</span>
+                          {s.spec ? <span className="whitespace-nowrap text-[12px] text-gray-600 dark:text-gray-300">{s.spec}</span> : null}
+                          {s.model ? <span className="hidden whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:inline">({s.model})</span> : null}
+                          {p.all.length > 1 && <span className="shrink-0 rounded-full bg-gray-100 px-1.5 py-px text-[9px] font-bold tabular-nums text-gray-500 dark:bg-gray-800 dark:text-gray-400">{p.all.length}{T("곳", "")}</span>}
+                          <span className="ml-auto shrink-0">{metricChip(s)}</span>
+                        </button>
+                        {open && (
+                          <div className="border-t border-gray-100 bg-gray-50/60 px-3 py-2.5 dark:border-gray-800/60 dark:bg-gray-900/40" style={{ animation: "rowIn .28s ease both" }}>
+                            <div className="mb-1.5 text-[9.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("거래선별 변동", "By retailer")}</div>
+                            <div className="flex flex-col gap-1">
+                              {p.all.map((sig, si) => (
+                                <div key={sig.id + si} className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-white dark:hover:bg-gray-800/60">
+                                  {sig.channel ? (sig.url ? <a href={sig.url} target="_blank" rel="noopener noreferrer" className="w-20 shrink-0 truncate text-[11px] font-semibold text-indigo-600 hover:underline dark:text-indigo-400">{pmShopLabel(sig.channel)}</a> : <span className="w-20 shrink-0 truncate text-[11px] font-semibold text-gray-600 dark:text-gray-300">{pmShopLabel(sig.channel)}</span>) : <span className="w-20 shrink-0 text-[11px] text-gray-400">—</span>}
+                                  <span className="min-w-0 flex-1 truncate text-[11.5px] text-gray-500 dark:text-gray-400">{sig.detail}</span>
+                                  <span className="shrink-0">{metricChip(sig)}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) })}
+                  </div>
+                ) })}
               </div>
             </div>
           ))}
