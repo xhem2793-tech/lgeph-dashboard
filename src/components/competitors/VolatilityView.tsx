@@ -26,6 +26,7 @@ const RETAILER_DOMAIN: Record<string, string> = {
   "Emcor": "emcor.com.ph", "Addessa": "addessa.com.ph", "Home Credit": "homecredit.ph", "Imperial": "imperialappliance.com",
 }
 const IMPERIAL = "Imperial" // 9번 열 · 비활성(스크래핑 미연동)
+const SOON = "__soon" // 10번 열 · 비활성(준비중)
 // 로고 — Google 파비콘(정사각 128px)으로 전부 통일. 실패 시 이름 폴백.
 const favi = (domain: string) => `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
 const brandLogo = (b: string): string | null => BRAND_DOMAIN[b] ? favi(BRAND_DOMAIN[b]) : null
@@ -68,7 +69,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   const slotPos = slots.indexOf(di)
   const pickDate = (v: string) => { const idx = [0, 1, 2, 3].find((i) => dates[i] === v); if (idx != null) setDi(idx) }
   const retSlots: (string | null)[] = []
-  { let ai = 0; for (let i = 0; i < 10; i++) { if (i === 8) retSlots.push(IMPERIAL); else { retSlots.push(data.retailers[ai] ?? null); ai++ } } }
+  { let ai = 0; for (let i = 0; i < 10; i++) { if (i === 8) retSlots.push(IMPERIAL); else if (i === 9) retSlots.push(SOON); else { retSlots.push(data.retailers[ai] ?? null); ai++ } } }
   const brSlots = Array.from({ length: 10 }, (_, i) => data.brands[i] ?? null)
 
   // 지표별 셀 수치(원시값) — null=해당 없음/미측정
@@ -169,10 +170,10 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
             <div key={cat + "-" + di + "-" + metric + "-" + brandSort} className="grid w-full gap-[5px] text-[11px]" style={{ minWidth: 660, gridTemplateColumns: `minmax(96px,0.9fr) repeat(10, minmax(50px,1fr))` }}>
               {/* 헤더 행 */}
               <div className="sticky left-0 z-10 bg-white dark:bg-gray-900/40" />
-              {retSlots.map((ret, ci) => ret === IMPERIAL ? (
+              {retSlots.map((ret, ci) => (ret === IMPERIAL || ret === SOON) ? (
                 <div key={ci} className="flex h-[70px] w-full flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-gray-200 bg-gray-50/40 px-0.5 text-center opacity-70 dark:border-gray-700 dark:bg-gray-800/20" title={T("준비 중 · 스크래핑 미연동", "Coming soon · not connected")}>
-                  <span className="rounded-full bg-gray-100 px-1 text-[8px] font-bold tabular-nums text-gray-400 dark:bg-gray-700 dark:text-gray-400">#9</span>
-                  <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-400 dark:text-gray-500">Imperial</span>
+                  <span className="rounded-full bg-gray-100 px-1 text-[8px] font-bold tabular-nums text-gray-400 dark:bg-gray-700 dark:text-gray-400">#{ci + 1}</span>
+                  <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-400 dark:text-gray-500">{ret === IMPERIAL ? "Imperial" : T("준비중", "Soon")}</span>
                   <span className="rounded bg-gray-100 px-1 text-[8px] font-semibold text-gray-400 dark:bg-gray-700 dark:text-gray-500">{T("준비중", "soon")}</span>
                 </div>
               ) : ret ? (
@@ -198,7 +199,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                     {b && <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.rowTot[b] || 0}</span>}
                   </div>
                   {retSlots.map((ret, ci) => {
-                    if (ret === IMPERIAL) return <div key={ci} className="flex h-[70px] w-full items-center justify-center rounded-md border border-dashed border-gray-200 text-[9px] text-gray-300 dark:border-gray-700 dark:text-gray-600" style={{ background: "var(--cov-empty)", opacity: 0.45 }}>{b ? "—" : ""}</div>
+                    if (ret === IMPERIAL || ret === SOON) return <div key={ci} className="flex h-[70px] w-full items-center justify-center rounded-md border border-dashed border-gray-200 text-[9px] text-gray-300 dark:border-gray-700 dark:text-gray-600" style={{ background: "var(--cov-empty)", opacity: 0.45 }}>{b ? "—" : ""}</div>
                     if (!b || !ret) return <div key={ci} className="h-[70px] w-full rounded-md" style={{ background: "var(--cov-empty)", opacity: 0.5 }} />
                     const k = data.K(b, ret); const t = data.today.get(k) || 0; const oo = oosLive ? (data.oos.get(k) || 0) : 0; const tot = data.colTot[ret] || 0
                     const v = rawVal(t, oo, tot); const disp = dispOf(v); const alpha = alphaOf(v, t, ret)
