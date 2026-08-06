@@ -116,7 +116,7 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
       {/* 필터바 — 채널별 가격 비교와 동일: 브랜드·제품·유형·용량 + 인하/인상 알약토글 + 검색 + 최종갱신 */}
       <div className="relative z-20 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <div className="w-fit"><PmMultiDrop label={T("브랜드", "Brand")} sel={brands} options={brandsL.filter((b) => b !== "전체").map((b) => ({ k: b, t: b }))} onToggle={(k) => setBrands((v) => v.includes(k) ? v.filter((x) => x !== k) : [...v, k])} onClear={() => setBrands([])} /></div>
-        <div className="w-fit"><PmDrop label={T("제품", "Product")} sel={effCat} options={cats.map((c) => ({ k: c, t: catLabel(c) }))} onSelect={(k) => { setCat(k); setBrands([]); setForm("전체"); setShop("전체") }} /></div>
+        <div className="w-fit"><PmDrop label={T("제품", "Div")} sel={effCat} options={cats.map((c) => ({ k: c, t: catLabel(c) }))} onSelect={(k) => { setCat(k); setBrands([]); setForm("전체"); setShop("전체") }} /></div>
         <div className="w-fit"><PmDrop label={T("유형", "Type")} sel={effForm} options={[{ k: "전체", t: T("전체", "All") }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} /></div>
         <div className="w-fit"><PmDrop label={T("거래선", "Retailer")} sel={effShop} options={shopsL.map((s) => ({ k: s, t: s === "전체" ? T("전체", "All") : pmShopLabel(s) }))} onSelect={setShop} /></div>
         {/* 인하순/인상순 — 슬라이딩 알약 토글(초록↔빨강) */}
