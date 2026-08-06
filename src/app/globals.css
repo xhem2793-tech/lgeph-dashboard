@@ -94,17 +94,23 @@ html { scroll-behavior: smooth; }
 * { -webkit-tap-highlight-color: transparent; }
 body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
 
-/* iOS식 얇은 스크롤바 — 오버레이 톤, 라이트/다크 공통(반투명 회색). 전 스크롤 컨테이너 통일 */
-* { scrollbar-width: thin; scrollbar-color: rgba(120,120,128,0.35) transparent; }
+/* iOS식 얇은 스크롤바 — 기본 숨김(투명), 호버·스크롤 시에만 표시. 전 스크롤 컨테이너 통일(국가동향식 오버레이) */
+* { scrollbar-width: thin; scrollbar-color: transparent transparent; transition: scrollbar-color .45s ease; }
 *::-webkit-scrollbar { width: 8px; height: 8px; }
 *::-webkit-scrollbar-track { background: transparent; }
 *::-webkit-scrollbar-thumb {
-  background-color: rgba(120,120,128,0.35);
+  background-color: transparent;
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: content-box;
+  transition: background-color .45s ease;
 }
-*::-webkit-scrollbar-thumb:hover { background-color: rgba(120,120,128,0.55); }
+/* 호버·포커스·스크롤 중일 때만 노출 */
+*:hover, *:focus-within, *.is-scrolling { scrollbar-color: rgba(120,120,128,0.4) transparent; }
+*:hover::-webkit-scrollbar-thumb,
+*:focus-within::-webkit-scrollbar-thumb,
+*.is-scrolling::-webkit-scrollbar-thumb { background-color: rgba(120,120,128,0.4); }
+*::-webkit-scrollbar-thumb:hover { background-color: rgba(120,120,128,0.62); }
 
 /* 좌측 리스트 등 — 평소엔 스크롤바 숨김, 스크롤 중·hover 시에만 '부드럽게' 노출(오버레이 톤).
    폭은 항상 확보(0↔7 점프 방지)하고 thumb 색만 투명↔반투명으로 페이드 → 나타남/사라짐이 매끄럽다.
