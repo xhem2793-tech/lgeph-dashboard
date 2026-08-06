@@ -79,7 +79,7 @@ export default function WelcomeModal() {
         <div className="min-h-0 flex-1 overflow-y-auto px-7 py-5">
           {/* 리드 문구 — 헤더에서 내려 제목형(좌측 인디고 액센트)으로 강조 */}
           <p className="mb-4 border-l-[3px] border-indigo-400 pl-3 text-[13.5px] font-semibold leading-relaxed text-gray-800 dark:border-indigo-500/50 dark:text-gray-100">
-            {T("AX로 구축한 필리핀 거시경제·가전시장·경쟁사 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.", "A dashboard that brings AX-built Philippine macroeconomic, appliance-market, and competitor data into one place to support decision-making.")}
+            {T("AX 기반 각 데이터를 한 곳에 모아 의사결정을 돕는 대시보드입니다.", "An AX-powered dashboard that brings each dataset into one place to support decision-making.")}
           </p>
           {/* 주의 — 정확도·갱신 안내 */}
           <div className="flex gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-3.5 py-3 dark:border-amber-500/30 dark:bg-amber-500/10">
