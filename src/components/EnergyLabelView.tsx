@@ -447,24 +447,35 @@ function Bubble({ items, metric, hi = [] }: { items: { name: string; eff: number
   )
 }
 
-// 롤리팝 — 월 전기요금(낮을수록 유리). 막대 대신 선+원, LG teal 강조·값 라벨·hover. (스타일 변경 + 진입 애니메이션)
+// LG 기준 대비 다이버징 — 월 전기요금(낮을수록 유리)을 'LG보다 월 얼마 더/덜 드는지'로. LG=기준선(0). (롤리팝 대체)
 function CostLollipop({ items }: { items: { label: string; cost: number; isLG: boolean }[] }) {
   const [h, setH] = useState<number | null>(null)
   if (!items.length) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
-  const max = Math.max(...items.map((i) => i.cost), 1)
-  const rowH = 38, padL = 62, padR = 56, W = 360, H = items.length * rowH + 8
-  const bx = (v: number) => padL + (W - padL - padR) * (v / max)
+  const lg = items.find((i) => i.isLG)?.cost ?? [...items].sort((a, b) => a.cost - b.cost)[Math.floor(items.length / 2)].cost
+  const rows = items.map((a) => ({ ...a, d: a.cost - lg }))
+  const maxAbs = Math.max(...rows.map((r) => Math.abs(r.d)), 1)
+  const rowH = 38, padL = 66, padR = 58, W = 360, TP = 16, H = rows.length * rowH + TP + 6
+  const hasNeg = rows.some((r) => r.d < -0.5)
+  const x0 = hasNeg ? padL + (W - padL - padR) * 0.32 : padL + 6   // LG 기준선 위치(음수 있으면 왼쪽 여유)
+  const bx = (d: number) => x0 + (W - x0 - padR) * (d > 0 ? d / (maxAbs * 1.08) : d / (maxAbs * 1.08) * ((x0 - padL) / (W - x0 - padR)))
   return (
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
-      {items.map((a, i) => { const y = i * rowH + rowH / 2 + 3, isLG = a.isLG, col = isLG ? TEAL : "#94a3b8", dim = h != null && h !== i
+      {/* LG 기준선 */}
+      <line x1={x0} y1={TP - 4} x2={x0} y2={H - 4} stroke={TEAL} strokeWidth="1.2" strokeDasharray="3 2" opacity="0.85" />
+      <text x={x0} y={TP - 7} textAnchor="middle" fontSize="8.5" fontWeight="800" className="fill-teal-600 dark:fill-teal-400">{T("LG 기준", "LG base")}</text>
+      {rows.map((a, i) => { const y = TP + i * rowH + rowH / 2, isLG = a.isLG, worse = a.d > 0, dim = h != null && h !== i
+        const col = isLG ? TEAL : worse ? "#f43f5e" : "#10b981"  // 더 비쌈=rose, 더 쌈=emerald
+        const bw = bx(a.d) - x0
         return (
-          <g key={a.label} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.4 : 1, transition: "opacity .15s", cursor: "default" }}>
-            <rect x={0} y={i * rowH} width={W} height={rowH} fill="transparent" /><title>{a.label} · ₱{a.cost.toLocaleString()}{T("/월", "/mo")}</title>
-            <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#e5e7eb" strokeWidth="0.6" strokeDasharray="2 3" className="dark:stroke-gray-800" />
+          <g key={a.label} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.42 : 1, transition: "opacity .18s", cursor: "default" }}>
+            <rect x={0} y={y - rowH / 2} width={W} height={rowH} fill="transparent" /><title>{a.label} · ₱{a.cost.toLocaleString()}{T("/월", "/mo")}{isLG ? "" : ` · LG${T(" 대비 ", " vs ")}${a.d > 0 ? "+" : ""}₱${a.d.toLocaleString()}`}</title>
             <text x={padL - 8} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight={isLG ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{a.label}</text>
-            <rect x={padL} y={y - (isLG ? 1.4 : 0.9)} width={Math.max(1, bx(a.cost) - padL)} height={isLG ? 2.8 : 1.8} rx={1.4} fill={col} className={isLG ? "" : "dark:opacity-60"} style={{ animation: "growX .6s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.1 + i * 0.06) + "s", transformOrigin: `${padL}px 0` }} />
-            <circle cx={bx(a.cost)} cy={y} r={isLG ? 5.5 : 4} fill={col} stroke="#fff" strokeWidth={isLG ? 1.5 : 0.8} className={isLG ? "" : "dark:fill-gray-500"} style={{ animation: "fadeIn .4s ease both", animationDelay: (0.36 + i * 0.06) + "s" }} />
-            <text x={bx(a.cost) + 9} y={y + 3.5} fontSize="10.5" fontWeight={isLG ? 800 : 600} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>₱{a.cost.toLocaleString()}</text>
+            {isLG ? (
+              <circle cx={x0} cy={y} r={5} fill={TEAL} stroke="#fff" strokeWidth="1.5" style={{ animation: "popIn .5s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.06 + i * 0.05) + "s", transformOrigin: `${x0}px ${y}px` }} />
+            ) : (
+              <rect x={Math.min(x0, bx(a.d))} y={y - 8} width={Math.max(2, Math.abs(bw))} height={16} rx={3} fill={col} fillOpacity={0.85} style={{ animation: "growX .55s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.08 + i * 0.05) + "s", transformOrigin: `${x0}px 0` }} />
+            )}
+            <text x={isLG ? x0 + 9 : bx(a.d) + (worse ? 6 : -6)} y={y + 3.5} textAnchor={isLG ? "start" : worse ? "start" : "end"} fontSize="10" fontWeight={isLG ? 800 : 700} className={isLG ? "fill-teal-600 dark:fill-teal-400" : worse ? "fill-rose-500 dark:fill-rose-400" : "fill-emerald-600 dark:fill-emerald-400"}>{isLG ? T("기준 ₱", "base ₱") + a.cost.toLocaleString() : (a.d > 0 ? "+" : "") + "₱" + a.d.toLocaleString()}</text>
           </g>
         )
       })}
