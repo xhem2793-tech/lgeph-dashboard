@@ -784,10 +784,10 @@ export type FeedItem = {
 
 /** days = 0 이면 전체 기간(누적 425건). 창을 좁히면 기사가 사라지는 게 아니라 안 보이는 것뿐이다. */
 export async function newsFeed(days = 30): Promise<FeedItem[]> {
-  let path = "v_news_feed?select=*&order=date.desc,id.desc&limit=600"
+  let path = "v_news_feed?select=*&order=date.desc,id.desc&limit=5000"
   if (days > 0) {
     const d = new Date(Date.now() - days * 86400000)
-    path = "v_news_feed?select=*&date=gte." + d.toISOString().slice(0, 10) + "&order=date.desc,id.desc&limit=600"
+    path = "v_news_feed?select=*&date=gte." + d.toISOString().slice(0, 10) + "&order=date.desc,id.desc&limit=5000"
   }
   const rows = await sb(path)
   return (rows ?? []).map((r: any) => ({
