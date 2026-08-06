@@ -155,7 +155,8 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
       {/* 인라인 확대 레이아웃 — 좌: 큰 차트+의미·인사이트 / 우: 정렬 가능한 데이터 표 */}
       <div className="mt-2 flex flex-col gap-4 lg:flex-row">
         <div className="flex min-w-0 flex-col lg:w-[58%]">
-          <div key={on ? "in" : "out"} className="flex h-[300px] items-center justify-center overflow-hidden sm:h-[360px]">{on ? (bigChildren ?? children) : null}</div>
+          {/* 메인 차트 — 테두리·고정높이, 넘치면 스크롤(레이아웃 고정·가독성) */}
+          <div key={on ? "in" : "out"} className="h-[380px] overflow-auto rounded-xl border border-gray-100 bg-gray-50/30 p-3 dark:border-gray-800 dark:bg-gray-900/20">{on ? (bigChildren ?? children) : null}</div>
           <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {meaning}</p>
           {ai && (
             <>
@@ -183,7 +184,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
                 <button key={i} type="button" onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"rounded-md px-2 py-1 text-[11px] font-semibold transition-all " + (sortCol === i ? "bg-teal-600 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-500/15")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</button>
               ))}
             </div>
-            <div className="max-h-[420px] min-h-0 flex-1 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
+            <div className="h-[344px] min-h-0 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
               <table className="w-full border-collapse text-[12px]">
                 <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="border-b border-gray-200 dark:border-gray-800">{csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-1.5 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</th>)}</tr></thead>
                 <tbody>{sortedRows.map((r, ri) => <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (/^lg$/i.test(String(r[0])) ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>{r.map((c, ci) => <td key={ci} className={"py-1.5 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}</tr>)}</tbody>
