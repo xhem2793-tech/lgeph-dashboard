@@ -12,6 +12,17 @@ const COV_D = ["d0", "d1", "d2", "d3"] as const
 // 거래선 매출 순위(필리핀 가전 유통, 큰 순) — 히트맵 열 좌→우 정렬 기준.
 const RETAILER_RANK: Record<string, number> = { "SM Appliance": 1, "Abenson": 2, "Anson's": 3, "Robinsons Appliances": 4, "Western Appliances": 5, "Emcor": 6, "Addessa": 7, "Home Credit": 9 }
 const retRank = (r: string) => RETAILER_RANK[r] ?? 8
+// 브랜드 로고(public/logos) — 있는 브랜드만. 없으면 이름만 표시.
+const BRAND_LOGO: Record<string, string> = {
+  LG: "/logos/lg.png",
+  Samsung: "/logos/samsung-company-logo-south-korean-260nw-2394493913.webp",
+  Panasonic: "/logos/panasonic.png",
+  TCL: "/logos/tcl.png",
+  Hisense: "/logos/Hisense-Logo.png",
+  Carrier: "/logos/carrier.png",
+  Midea: "/logos/midea.png",
+  Sony: "/logos/sony.png",
+}
 
 function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
   const [di, setDi] = React.useState(0)
@@ -76,7 +87,13 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           {/* 본문 — 브랜드 10행(부족분 빈 칸) × 거래선 10열 */}
           {brSlots.map((b, bi) => (
             <React.Fragment key={bi}>
-              <div className={"sticky left-0 z-10 flex w-full items-center justify-center whitespace-nowrap rounded-md border px-1 text-center text-[11px] font-bold " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")}>{b ?? ""}</div>
+              <div className={"sticky left-0 z-10 flex w-full flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-md border px-1 py-1 text-center text-[11px] font-bold " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")}>
+                {b && BRAND_LOGO[b] && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={BRAND_LOGO[b]} alt={b} loading="lazy" className="h-4 w-auto max-w-[56px] object-contain" />
+                )}
+                <span className="max-w-full truncate">{b ?? ""}</span>
+              </div>
               {retSlots.map((ret, ci) => {
                 if (!b || !ret) return <div key={ci} className="aspect-square w-full rounded-md" style={{ background: "var(--cov-empty)", opacity: 0.5 }} />
                 const k = data.K(b, ret); const t = data.today.get(k) || 0; const p = di < 3 ? (data.prev.get(k) || 0) : null; const d = p != null ? t - p : null; const fr = data.fresh.get(k) || 0; const oo = di === 0 ? (data.oos.get(k) || 0) : 0
