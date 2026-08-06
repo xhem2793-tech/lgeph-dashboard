@@ -166,7 +166,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
               <table className="w-full border-collapse text-[12px]">
                 <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="border-b border-gray-200 dark:border-gray-800">
                   <th className="w-8 py-2 px-2 text-center font-semibold text-gray-400 dark:text-gray-500">#</th>
-                  {csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-2 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? <span className="text-teal-600 dark:text-teal-400">{sortDesc ? " ↓" : " ↑"}</span> : <span className="text-[8px] text-gray-300 dark:text-gray-600"> ⇅</span>}</th>)}
+                  {csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) { if (sortDesc) setSortDesc(false); else setSortCol(-1) } else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-2 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? <span className="text-teal-600 dark:text-teal-400">{sortDesc ? " ↓" : " ↑"}</span> : <span className="text-[8px] text-gray-300 dark:text-gray-600"> ⇅</span>}</th>)}
                 </tr></thead>
                 <tbody>{sortedRows.map((r, ri) => { const isLg = /^lg$/i.test(String(r[0])); return <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (isLg ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>
                   <td className={"w-8 py-2 px-2 text-center text-[11px] font-bold tabular-nums " + (isLg ? "text-teal-600 dark:text-teal-400" : "text-gray-300 dark:text-gray-600")}>{ri + 1}</td>
@@ -242,31 +242,33 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
     </>
   )
 }
-function HBar({ items, hiName, startRank = 0, dom, mkt: mktProp }: { items: { name: string; v: number; n?: number }[]; hiName?: string; startRank?: number; dom?: [number, number]; mkt?: number }) {
+function HBar({ items, hiName, startRank = 0, dom, mkt: mktProp, hi = [] }: { items: { name: string; v: number; n?: number }[]; hiName?: string; startRank?: number; dom?: [number, number]; mkt?: number; hi?: string[] }) {
   const [h, setH] = useState<number | null>(null)
+  const hiSet = new Set(hi.map((b) => b.toLowerCase()))
   if (!items.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   // Cleveland 점 랭킹 — 효율축 위 브랜드 점, 시장평균 기준선, 순위·LG 강조. (막대 나열 대체)
   const rowH = 21, padL = 134, padR = 38, W = 264, TP = 15, H = items.length * rowH + TP + 5 // 축(선)≈35%, 나머지=순위·이름 여백
   const vals = items.map((i) => i.v), mn = Math.min(...vals), mx = Math.max(...vals), pd = (mx - mn) * 0.14 || 1
-  const lo = dom ? dom[0] : mn - pd, hi = dom ? dom[1] : mx + pd
-  const X = (v: number) => padL + (W - padL - padR) * ((v - lo) / ((hi - lo) || 1))
+  const lo = dom ? dom[0] : mn - pd, dHi = dom ? dom[1] : mx + pd
+  const X = (v: number) => padL + (W - padL - padR) * ((v - lo) / ((dHi - lo) || 1))
   const mkt = mktProp ?? vals.reduce((a, b) => a + b, 0) / vals.length
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMin meet" style={{ width: "100%", height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
       {/* 시장평균 기준선 */}
       <line x1={X(mkt)} y1={TP - 4} x2={X(mkt)} y2={H - 4} stroke="#f59e0b" strokeWidth="1.1" strokeDasharray="3 2.5" opacity="0.8" />
-      <text x={X(mkt)} y={TP - 6} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#d97706">{T("시장평균 ", "Mkt avg ")}{mkt.toFixed(2)}</text>
-      {items.map((a, i) => { const isHi = hiName && a.name.toLowerCase() === hiName.toLowerCase(), y = TP + i * rowH + rowH / 2, dim = h != null && h !== i, r = isHi ? 5.5 : h === i ? 5 : 4, col = isHi ? TEAL : "#94a3b8"
+      <text x={X(mkt)} y={TP - 6} textAnchor="middle" fontSize="9.7" fontWeight="700" fill="#d97706">{T("시장평균 ", "Mkt avg ")}{mkt.toFixed(2)}</text>
+      {items.map((a, i) => { const isLG = !!(hiName && a.name.toLowerCase() === hiName.toLowerCase()), foc = hiSet.has(a.name.toLowerCase()), emph = isLG || foc, y = TP + i * rowH + rowH / 2, dim = hiSet.size > 0 ? (emph ? 1 : 0.28) : (h != null && h !== i ? 0.42 : 1), r = emph ? 5.5 : h === i ? 5 : 4, col = isLG ? TEAL : foc ? "#6366f1" : "#94a3b8"
+        const tcls = isLG ? "fill-teal-600 dark:fill-teal-400" : foc ? "fill-indigo-600 dark:fill-indigo-300" : "fill-gray-600 dark:fill-gray-300"
         return (
-          <g key={a.name} onMouseEnter={() => setH(i)} style={{ cursor: "default", opacity: dim ? 0.42 : 1, transition: "opacity .18s" }}>
+          <g key={a.name} onMouseEnter={() => setH(i)} style={{ cursor: "default", opacity: dim, transition: "opacity .18s" }}>
             <rect x={0} y={y - rowH / 2} width={W} height={rowH} fill="transparent" /><title>{a.name} · {a.v.toFixed(2)}{a.n ? ` · ${a.n}${T("개 모델", " models")}` : ""}</title>
             {/* 순위 뱃지 */}
-            <text x={10} y={y + 4.5} fontSize="12" fontWeight="800" className={isHi ? "fill-teal-500 dark:fill-teal-400" : "fill-gray-300 dark:fill-gray-600"}>{startRank + i + 1}</text>
-            <text x={padL - 9} y={y + 4.5} textAnchor="end" fontSize="13" fontWeight={isHi || h === i ? 800 : 500} className={isHi ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>{a.name}</text>
+            <text x={10} y={y + 4.5} fontSize="11" fontWeight="800" className={isLG ? "fill-teal-500 dark:fill-teal-400" : foc ? "fill-indigo-500 dark:fill-indigo-400" : "fill-gray-300 dark:fill-gray-600"}>{startRank + i + 1}</text>
+            <text x={padL - 9} y={y + 4.5} textAnchor="end" fontSize="12" fontWeight={emph || h === i ? 800 : 500} className={tcls}>{a.name}</text>
             {/* 가이드 라인 + 점 */}
             <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#eef2f6" strokeWidth="1" className="dark:stroke-gray-800/70" />
-            <circle cx={X(a.v)} cy={y} r={r} fill={col} stroke="#fff" strokeWidth={isHi ? 1.6 : 0.8} className={isHi ? "" : "dark:fill-gray-500"} style={{ animation: "popIn .5s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.06 + Math.min(i, 12) * 0.04) + "s", transformOrigin: `${X(a.v)}px ${y}px` }} />
-            <text x={X(a.v) + (X(a.v) > W - padR - 30 ? -(r + 5) : r + 5)} y={y + 4.5} textAnchor={X(a.v) > W - padR - 30 ? "end" : "start"} fontSize="13" fontWeight={isHi || h === i ? 800 : 600} className={isHi ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>{a.v.toFixed(2)}{h === i && a.n ? ` (${a.n})` : ""}</text>
+            <circle cx={X(a.v)} cy={y} r={r} fill={col} stroke="#fff" strokeWidth={emph ? 1.6 : 0.8} className={emph ? "" : "dark:fill-gray-500"} style={{ animation: "popIn .5s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.06 + Math.min(i, 12) * 0.04) + "s", transformOrigin: `${X(a.v)}px ${y}px` }} />
+            <text x={X(a.v) + (X(a.v) > W - padR - 30 ? -(r + 5) : r + 5)} y={y + 4.5} textAnchor={X(a.v) > W - padR - 30 ? "end" : "start"} fontSize="12" fontWeight={emph || h === i ? 800 : 600} className={tcls}>{a.v.toFixed(2)}{h === i && a.n ? ` (${a.n})` : ""}</text>
           </g>
         )
       })}
@@ -274,16 +276,17 @@ function HBar({ items, hiName, startRank = 0, dom, mkt: mktProp }: { items: { na
   )
 }
 // 효율 랭킹 2열 — 상위 30개를 15개씩 두 열로. 두 열의 효율 스케일·시장평균선을 공유해 좌우 비교 일관.
-function Rank2Col({ items, hiName }: { items: { name: string; v: number; n?: number }[]; hiName?: string }) {
-  const top = items.slice(0, 30)
-  if (!top.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
-  const vals = top.map((i) => i.v), mn = Math.min(...vals), mx = Math.max(...vals), pd = (mx - mn) * 0.14 || 1
+function Rank2Col({ items, hiName, hi }: { items: { name: string; v: number; n?: number }[]; hiName?: string; hi?: string[] }) {
+  if (!items.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
+  // 전체 브랜드를 좌우 2열로(왼쪽 절반=1위~, 오른쪽=이어서). 열 높이 고정, 넘치면 스크롤(왼 ~15개 보이고 아래로 스크롤).
+  const vals = items.map((i) => i.v), mn = Math.min(...vals), mx = Math.max(...vals), pd = (mx - mn) * 0.14 || 1
   const dom: [number, number] = [mn - pd, mx + pd]
   const mkt = vals.reduce((a, b) => a + b, 0) / vals.length
-  const cols = [top.slice(0, 15), top.slice(15, 30)].filter((c) => c.length)
+  const half = Math.ceil(items.length / 2)
+  const cols = [items.slice(0, half), items.slice(half)].filter((c) => c.length)
   return (
-    <div className="flex h-full w-full items-start gap-2">
-      {cols.map((col, ci) => <div key={ci} className="min-w-0 flex-1"><HBar items={col} hiName={hiName} startRank={ci * 10} dom={dom} mkt={mkt} /></div>)}
+    <div className="flex h-full w-full items-stretch gap-2">
+      {cols.map((col, ci) => <div key={ci} className="min-w-0 flex-1 overflow-y-auto pr-1"><HBar items={col} hiName={hiName} hi={hi} startRank={ci === 0 ? 0 : half} dom={dom} mkt={mkt} /></div>)}
     </div>
   )
 }
@@ -321,8 +324,9 @@ function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { la
 }
 
 // 산점도 — 효율(X, 높을수록 우측=좋음) vs 월전력(Y, 낮을수록 상단=좋음). LG 강조, 사분면 가이드·격자
-function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: number; isLG: boolean; n?: number }[]; metric: string }) {
+function Scatter({ pts, metric, hi = [] }: { pts: { name: string; eff: number; kwh: number; isLG: boolean; n?: number }[]; metric: string; hi?: string[] }) {
   const [h, setH] = useState<number | null>(null)
+  const hiSet = new Set(hi.map((b) => b.toLowerCase()))
   if (pts.length < 2) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const W = 400, H = 200, L = 40, R = 14, TP = 14, B = 30
   const exs = pts.map((p) => p.eff), kys = pts.map((p) => p.kwh)
@@ -348,13 +352,16 @@ function Scatter({ pts, metric }: { pts: { name: string; eff: number; kwh: numbe
         <text x={(L + W - R) / 2} y={H - 3} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b">{T("효율", "Efficiency")}({metric}) {T("→ 높을수록 우수", "→ higher is better")}</text>
         <text x={11} y={(TP + H - B) / 2} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b" transform={`rotate(-90 11 ${(TP + H - B) / 2})`}>{T("월전력 ↓ 낮을수록 우수", "Monthly power ↓ lower is better")}</text>
         <text x={W - R - 2} y={TP + 9} textAnchor="end" fontSize="7.5" fontWeight="700" className="fill-teal-600/70 dark:fill-teal-400/60">{T("우수 구간", "Optimal zone")}</text>
-        {pts.map((p, i) => (
-          <g key={p.name} onMouseEnter={() => setH(i)} style={{ cursor: "default" }} opacity={h == null || h === i || p.isLG ? 1 : 0.45}>
+        {pts.map((p, i) => { const foc = hiSet.has(p.name.toLowerCase()), emph = p.isLG || foc, col = p.isLG ? TEAL : foc ? "#6366f1" : "#94a3b8"
+          const op = hiSet.size > 0 ? (emph ? 1 : 0.22) : (h == null || h === i || p.isLG ? 1 : 0.45)
+          return (
+          <g key={p.name} onMouseEnter={() => setH(i)} style={{ cursor: "default", transition: "opacity .2s" }} opacity={op}>
             <title>{p.name} · {metric} {p.eff.toFixed(2)} · {Math.round(p.kwh)}{T("kWh/월", "kWh/mo")}{p.n ? ` · ${p.n}${T("모델", " models")}` : ""}</title>
-            <circle cx={X(p.eff)} cy={Y(p.kwh)} r={p.isLG ? 7 : 5} fill={p.isLG ? TEAL : "#94a3b8"} stroke={p.isLG ? "#fff" : "#fff"} strokeWidth={p.isLG ? 1.6 : 0.8} className={p.isLG ? "" : "dark:fill-gray-500"} style={{ animation: "popIn .7s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.1 + i * 0.06) + "s", transition: "opacity .15s", transformOrigin: `${X(p.eff)}px ${Y(p.kwh)}px` }} />
-            {(p.isLG || h === i) && <text x={X(p.eff)} y={Y(p.kwh) - 10} textAnchor="middle" fontSize="9.5" fontWeight="800" className={p.isLG ? "fill-teal-700 dark:fill-teal-300" : "fill-gray-600 dark:fill-gray-200"}>{p.name}</text>}
+            <circle cx={X(p.eff)} cy={Y(p.kwh)} r={emph ? 7 : 5} fill={col} stroke="#fff" strokeWidth={emph ? 1.6 : 0.8} className={emph ? "" : "dark:fill-gray-500"} style={{ animation: "popIn .7s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.1 + i * 0.06) + "s", transformOrigin: `${X(p.eff)}px ${Y(p.kwh)}px` }} />
+            {(emph || h === i) && <text x={X(p.eff)} y={Y(p.kwh) - 10} textAnchor="middle" fontSize="9.5" fontWeight="800" className={p.isLG ? "fill-teal-700 dark:fill-teal-300" : foc ? "fill-indigo-600 dark:fill-indigo-300" : "fill-gray-600 dark:fill-gray-200"}>{p.name}</text>}
           </g>
-        ))}
+          )
+        })}
       </svg>
       <div className="mt-1 shrink-0 text-[10px] text-gray-400"><span className="font-semibold text-teal-600 dark:text-teal-400">● LG</span>{T(" · 우측·상단(음영)일수록 고효율·저전력", " · upper-right (shaded) = higher efficiency, lower power")}</div>
     </div>
@@ -403,8 +410,9 @@ function EffHist({ vals, lgVals, metric }: { vals: number[]; lgVals: number[]; m
 }
 
 // 용량↔효율 지형 — 카테고리 전체 모델. x=용량(스펙), y=효율. LG(teal)·시장(gray). 용량대별 LG 포진·효율 추세를 한눈에.
-function CapScatter({ pts, metric, specUnit }: { pts: { spec: number; eff: number; isLG: boolean; name: string }[]; metric: string; specUnit: string }) {
+function CapScatter({ pts, metric, specUnit, hi = [] }: { pts: { spec: number; eff: number; isLG: boolean; name: string }[]; metric: string; specUnit: string; hi?: string[] }) {
   const [h, setH] = useState<number | null>(null)
+  const hiSet = new Set(hi.map((b) => b.toLowerCase()))
   if (pts.length < 3) return <div className="flex h-full min-h-[200px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const W = 400, H = 200, L = 40, R = 12, TP = 14, B = 32
   const sxs = pts.map((p) => p.spec), eys = pts.map((p) => p.eff)
@@ -422,12 +430,16 @@ function CapScatter({ pts, metric, specUnit }: { pts: { spec: number; eff: numbe
         <text x={L - 4} y={H - B} textAnchor="end" fontSize="8" fill="#94a3b8">{ey0.toFixed(1)}</text>
         <text x={11} y={(TP + H - B) / 2} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b" transform={`rotate(-90 11 ${(TP + H - B) / 2})`}>{T("효율", "Efficiency")}({metric}) ↑</text>
         <text x={(L + W - R) / 2} y={H - 2} textAnchor="middle" fontSize="8.5" fontWeight="600" fill="#64748b">{specUnit} →</text>
-        {pts.map((p, i) => (
-          <g key={i} onMouseEnter={() => setH(i)} style={{ cursor: "default" }} opacity={h == null || h === i || p.isLG ? 1 : 0.4}>
+        {pts.map((p, i) => { const foc = hiSet.has(p.name.toLowerCase()), emph = p.isLG || foc, col = p.isLG ? TEAL : foc ? "#6366f1" : "#94a3b8"
+          const op = hiSet.size > 0 ? (emph ? 1 : 0.18) : (h == null || h === i || p.isLG ? 1 : 0.4)
+          return (
+          <g key={i} onMouseEnter={() => setH(i)} style={{ cursor: "default", transition: "opacity .2s" }} opacity={op}>
             <title>{p.name} · {specUnit} {p.spec} · {metric} {p.eff.toFixed(2)}</title>
-            <circle cx={X(p.spec)} cy={Y(p.eff)} r={p.isLG ? 5.5 : 3.4} fill={p.isLG ? TEAL : "#94a3b8"} stroke="#fff" strokeWidth={p.isLG ? 1.3 : 0.6} className={p.isLG ? "" : "dark:fill-gray-500"} style={{ animation: "fadeIn .5s ease both", animationDelay: Math.min(i, 40) * 0.012 + "s", transition: "opacity .15s" }} />
+            <circle cx={X(p.spec)} cy={Y(p.eff)} r={emph ? 5.5 : 3.4} fill={col} stroke="#fff" strokeWidth={emph ? 1.3 : 0.6} className={emph ? "" : "dark:fill-gray-500"} style={{ animation: "fadeIn .5s ease both", animationDelay: Math.min(i, 40) * 0.012 + "s" }} />
+            {foc && <text x={X(p.spec)} y={Y(p.eff) - 8} textAnchor="middle" fontSize="8.5" fontWeight="800" className="fill-indigo-600 dark:fill-indigo-300">{p.name}</text>}
           </g>
-        ))}
+          )
+        })}
       </svg>
       <div className="mt-1 shrink-0 text-[10px] text-gray-400"><span className="font-semibold text-teal-600 dark:text-teal-400">● LG</span>{T(" · 우상단일수록 대용량·고효율", " · upper-right = larger capacity, higher efficiency")}</div>
     </div>
@@ -475,8 +487,9 @@ function Bubble({ items, metric, hi = [] }: { items: { name: string; eff: number
 }
 
 // LG 기준 대비 다이버징 — 월 전기요금(낮을수록 유리)을 'LG보다 월 얼마 더/덜 드는지'로. LG=기준선(0). (롤리팝 대체)
-function CostLollipop({ items }: { items: { label: string; cost: number; isLG: boolean }[] }) {
+function CostLollipop({ items, hi = [] }: { items: { label: string; cost: number; isLG: boolean }[]; hi?: string[] }) {
   const [h, setH] = useState<number | null>(null)
+  const hiSet = new Set(hi.map((b) => b.toLowerCase()))
   if (!items.length) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const lg = items.find((i) => i.isLG)?.cost ?? [...items].sort((a, b) => a.cost - b.cost)[Math.floor(items.length / 2)].cost
   const rows = items.map((a) => ({ ...a, d: a.cost - lg }))
@@ -490,13 +503,14 @@ function CostLollipop({ items }: { items: { label: string; cost: number; isLG: b
       {/* LG 기준선 */}
       <line x1={x0} y1={TP - 4} x2={x0} y2={H - 4} stroke={TEAL} strokeWidth="1.2" strokeDasharray="3 2" opacity="0.85" />
       <text x={x0} y={TP - 7} textAnchor="middle" fontSize="8.5" fontWeight="800" className="fill-teal-600 dark:fill-teal-400">{T("LG 기준", "LG base")}</text>
-      {rows.map((a, i) => { const y = TP + i * rowH + rowH / 2, isLG = a.isLG, worse = a.d > 0, dim = h != null && h !== i
+      {rows.map((a, i) => { const y = TP + i * rowH + rowH / 2, isLG = a.isLG, worse = a.d > 0, foc = hiSet.has(a.label.toLowerCase()), emph = isLG || foc
+        const dim = hiSet.size > 0 ? (emph ? 1 : 0.28) : (h != null && h !== i ? 0.42 : 1)
         const col = isLG ? TEAL : worse ? "#f43f5e" : "#10b981"  // 더 비쌈=rose, 더 쌈=emerald
         const bw = bx(a.d) - x0
         return (
-          <g key={a.label} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.42 : 1, transition: "opacity .18s", cursor: "default" }}>
+          <g key={a.label} onMouseEnter={() => setH(i)} style={{ opacity: dim, transition: "opacity .18s", cursor: "default" }}>
             <rect x={0} y={y - rowH / 2} width={W} height={rowH} fill="transparent" /><title>{a.label} · ₱{a.cost.toLocaleString()}{T("/월", "/mo")}{isLG ? "" : ` · LG${T(" 대비 ", " vs ")}${a.d > 0 ? "+" : ""}₱${a.d.toLocaleString()}`}</title>
-            <text x={padL - 8} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight={isLG ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{a.label}</text>
+            <text x={padL - 8} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight={emph ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : foc ? "fill-indigo-600 dark:fill-indigo-300" : "fill-gray-500 dark:fill-gray-400"}>{a.label}</text>
             {isLG ? (
               <circle cx={x0} cy={y} r={5} fill={TEAL} stroke="#fff" strokeWidth="1.5" style={{ animation: "popIn .5s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.06 + i * 0.05) + "s", transformOrigin: `${x0}px ${y}px` }} />
             ) : (
@@ -511,20 +525,22 @@ function CostLollipop({ items }: { items: { label: string; cost: number; isLG: b
 }
 
 // 100% 스택바(SVG) — 브랜드별 5·4·3성↓ 구성. 세그먼트별 growX 애니메이션·hover·값 라벨. (인라인 막대→SVG 스택바)
-function GradeStack({ rows }: { rows: { name: string; s5: number; s4: number; s3: number; n: number }[] }) {
+function GradeStack({ rows, hi = [] }: { rows: { name: string; s5: number; s4: number; s3: number; n: number }[]; hi?: string[] }) {
   const [h, setH] = useState<number | null>(null)
+  const hiSet = new Set(hi.map((b) => b.toLowerCase()))
   if (!rows.length) return <div className="flex h-full min-h-[160px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const rowH = 26, padL = 58, padR = 42, W = 360, H = rows.length * rowH + 4, barW = W - padL - padR
   const seg = [{ k: "s5" as const, c: "#10b981" }, { k: "s4" as const, c: AMBER }, { k: "s3" as const, c: "#cbd5e1" }]
   return (
     <div className="flex h-full w-full flex-col">
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
-        {rows.map((g, i) => { const y = i * rowH, isLG = /^lg$/i.test(g.name), dim = h != null && h !== i
+        {rows.map((g, i) => { const y = i * rowH, isLG = /^lg$/i.test(g.name), foc = hiSet.has(g.name.toLowerCase()), emph = isLG || foc
+          const dim = hiSet.size > 0 ? (emph ? 1 : 0.28) : (h != null && h !== i ? 0.45 : 1)
           let acc = 0
           return (
-            <g key={g.name} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.45 : 1, transition: "opacity .15s", cursor: "default" }}>
+            <g key={g.name} onMouseEnter={() => setH(i)} style={{ opacity: dim, transition: "opacity .15s", cursor: "default" }}>
               <rect x={0} y={y} width={W} height={rowH} fill="transparent" /><title>{g.name} · {T("5성", "5★")} {g.s5.toFixed(0)}% · {T("4성", "4★")} {g.s4.toFixed(0)}% · {T("3성↓", "≤3★")} {g.s3.toFixed(0)}% · {g.n}{T("모델", " models")}</title>
-              <text x={padL - 6} y={y + rowH / 2 + 3} textAnchor="end" fontSize="10.5" fontWeight={isLG ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{g.name}</text>
+              <text x={padL - 6} y={y + rowH / 2 + 3} textAnchor="end" fontSize="10.5" fontWeight={emph ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : foc ? "fill-indigo-600 dark:fill-indigo-300" : "fill-gray-500 dark:fill-gray-400"}>{g.name}</text>
               {seg.map((s, si) => { const w = barW * (g[s.k] || 0) / 100, x = padL + acc; acc += w; if (w <= 0) return null
                 return <rect key={s.k} x={x} y={y + 4} width={w} height={rowH - 9} fill={s.c} className={s.k === "s3" ? "dark:fill-gray-600" : ""} style={{ animation: "growX .5s cubic-bezier(.22,1,.36,1) both", animationDelay: (0.1 + i * 0.05 + si * 0.06) + "s", transformOrigin: `${x}px 0` }} /> })}
               <text x={padL + barW + 5} y={y + rowH / 2 + 3} fontSize="10" fontWeight={isLG ? 800 : 600} className="fill-emerald-600 dark:fill-emerald-400">{g.s5.toFixed(0)}%</text>
@@ -564,8 +580,9 @@ function RefrigDonut({ keys, lg, mkt, colors }: { keys: string[]; lg: { m: Recor
 }
 
 // 가격대 박스 — 브랜드별 소매가 분포(박스=P25~P75, 세로선=중앙값, 수염=P10~P90). LG teal 강조·growX 애니메이션.
-function PriceBox({ items }: { items: PriceRange[] }) {
+function PriceBox({ items, hi = [] }: { items: PriceRange[]; hi?: string[] }) {
   const [h, setH] = useState<number | null>(null)
+  const hiSet = new Set(hi.map((b) => b.toLowerCase()))
   if (!items.length) return <div className="flex h-full min-h-[180px] w-full items-center justify-center text-[12px] text-gray-400">{T("가격 데이터 부족", "No price data")}</div>
   const max = Math.max(...items.map((i) => i.p90), 1)
   const rowH = 25, padL = 58, padR = 46, W = 360, H = items.length * rowH + 4
@@ -574,11 +591,12 @@ function PriceBox({ items }: { items: PriceRange[] }) {
   return (
     <div className="flex h-full w-full flex-col">
       <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
-        {items.map((a, i) => { const y = i * rowH + rowH / 2, isLG = /^lg$/i.test(a.brand), col = isLG ? TEAL : "#94a3b8", dim = h != null && h !== i, bw = Math.max(2, bx(a.p75) - bx(a.p25))
+        {items.map((a, i) => { const y = i * rowH + rowH / 2, isLG = /^lg$/i.test(a.brand), foc = hiSet.has(a.brand.toLowerCase()), emph = isLG || foc, col = isLG ? TEAL : foc ? "#6366f1" : "#94a3b8", bw = Math.max(2, bx(a.p75) - bx(a.p25))
+          const dim = hiSet.size > 0 ? (emph ? 1 : 0.28) : (h != null && h !== i ? 0.4 : 1)
           return (
-            <g key={a.brand} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.4 : 1, transition: "opacity .15s", cursor: "default" }}>
+            <g key={a.brand} onMouseEnter={() => setH(i)} style={{ opacity: dim, transition: "opacity .15s", cursor: "default" }}>
               <rect x={0} y={i * rowH} width={W} height={rowH} fill="transparent" /><title>{a.brand} · {T("중앙", "Median")} ₱{a.med.toLocaleString()} · P25~P75 ₱{a.p25.toLocaleString()}~₱{a.p75.toLocaleString()} · {a.n}{T("모델", " models")}</title>
-              <text x={padL - 6} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight={isLG ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{a.brand}</text>
+              <text x={padL - 6} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight={emph ? 800 : 500} className={isLG ? "fill-teal-600 dark:fill-teal-400" : foc ? "fill-indigo-600 dark:fill-indigo-300" : "fill-gray-500 dark:fill-gray-400"}>{a.brand}</text>
               <line x1={bx(a.p10)} y1={y} x2={bx(a.p90)} y2={y} stroke={col} strokeWidth="1" strokeOpacity="0.5" className={isLG ? "" : "dark:opacity-70"} />
               <line x1={bx(a.p10)} y1={y - 3} x2={bx(a.p10)} y2={y + 3} stroke={col} strokeWidth="1" strokeOpacity="0.5" />
               <line x1={bx(a.p90)} y1={y - 3} x2={bx(a.p90)} y2={y + 3} stroke={col} strokeWidth="1" strokeOpacity="0.5" />
@@ -795,7 +813,7 @@ export default function EnergyLabelView() {
             <PmDrop label={T("제품", "Product")} sel={cat} options={CATS.map((c) => ({ k: c.key, t: T(c.label, CAT_EN[c.key] ?? c.label) }))} onSelect={(k) => { setCat(k); setTyp("전체"); setSegIdx(0) }} />
             {hasType && <PmDrop label={T("설치", "Type")} sel={typ} options={["전체", ...types].map((t) => ({ k: t, t: T(t, t === "전체" ? "All" : t) }))} onSelect={setTyp} />}
             <PmDrop label={T("용량", "Cap.")} sel={String(segIdx)} options={segs.map((s, i) => ({ k: String(i), t: `${s.k} (${segCounts[i] || 0})` }))} onSelect={(k) => setSegIdx(Number(k))} />
-            {metricSel === 8 && <PmMultiDrop label={T("브랜드 강조", "Focus")} sel={bubBrands} options={bubbleData.filter((b) => !b.isLG).map((b) => ({ k: b.name, t: b.name }))} onToggle={(k) => setBubBrands((cur) => cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k])} onClear={() => setBubBrands([])} allLabel={T("없음", "None")} />}
+            <PmMultiDrop label={T("브랜드 강조", "Focus")} sel={bubBrands} options={rankAll.filter((b) => !/^lg$/i.test(b.name)).map((b) => ({ k: b.name, t: b.name }))} onToggle={(k) => setBubBrands((cur) => cur.includes(k) ? cur.filter((x) => x !== k) : [...cur, k])} onClear={() => setBubBrands([])} allLabel={T("없음", "None")} />
             <PmDrop label={T("지표", "Metric")} sel={String(metricSel)} options={METRICS.filter((m) => !m.acuOnly || cat === "acu").map((m) => ({ k: String(m.idx), t: T(m.ko, m.en) }))} onSelect={(k) => setMetricSel(Number(k))} />
           </div>
 
@@ -818,14 +836,14 @@ export default function EnergyLabelView() {
             )}
             <ActiveMetricCtx.Provider value={metricSel}>
             <div key={`seg-${typ}-${segIdx}-${metricSel}`} className="grid items-stretch gap-4 grid-cols-1">
-              <Sub idx={0} title={T("브랜드 효율 랭킹", "Brand Efficiency Ranking")} seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} meaning={<>{T("같은 세그먼트 브랜드 평균 ", "Same-segment brand avg ")}{cur.metric} — <b className="text-gray-700 dark:text-gray-200">{T("높을수록 고효율", "higher = more efficient")}</b></>} ai={lgR ? <>{T("LG는 이 세그먼트 ", "LG ranks ")}<b className="font-semibold text-teal-700 dark:text-teal-300">{lgRk}{T("위", "th")}</b>{T(", 리더 ", " in this segment; leader ")}{rank[0]?.name}{T(" 대비 ", " vs ")}{gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? <>{T("낮아 ", "lower — ")}<b className="font-semibold">{T("최고효율 격차가 곧 차기 개발 타깃", "the gap to best-in-class is the next-gen R&D target")}</b></> : <>{T("높아 ", "higher — ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("프리미엄 효율 소구 가능", "premium efficiency positioning available")}</b></>}{T(". 상위 브랜드와의 ", ". Reflect the ")}{cur.metric}{T(" 갭을 스펙 로드맵에 반영.", " gap vs top brands in the spec roadmap.")}</> : <><b className="font-semibold">{T("LG는 이 세그먼트 등록 모델 없음", "LG has no registered models in this segment")}</b>{T("(현지 미출시) — 시장 벤치마크로 진입 검토 시 목표 효율선 설정에 활용.", " (not launched locally) — use the market benchmark to set a target efficiency line when considering entry.")}</>} csv={{ head: [T("브랜드", "Brand"), cur.metric, T("모델수", "Models")], rows: rankAll.map((r) => [r.name, r.v.toFixed(2), r.n]) }}><Rank2Col items={rankAll} hiName="LG" /></Sub>
-              <Sub idx={1} title={T("효율 ↔ 월전력 관계", "Efficiency ↔ Monthly Power")} seg={seg?.k} meaning={<>{T("가로=효율, 세로=월전력 — ", "X = efficiency, Y = monthly power — ")}<b className="text-gray-700 dark:text-gray-200">{T("우상단", "upper-right")}</b>{T("이 고효율·저전력", " = high-efficiency, low-power")}</>} ai={<>{T("같은 효율이라도 실제 월전력은 다를 수 있어 ", "Even at equal efficiency, actual monthly power can differ, so ")}<b className="font-semibold">{T("효율 스펙과 실사용 전력의 정합성", "the alignment between spec efficiency and real-world power")}</b>{T("이 관건. LG 점이 우상단 음영(우수 구간)에 있으면 ", " is key. If the LG point sits in the shaded upper-right (optimal zone), ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("‘고효율=저전기료’ 메시지가 실측으로 뒷받침", "the ‘high-efficiency = low bill’ message is backed by measured data")}</b>{T("되고, 아니면 라벨효율 대비 소비전력 개선이 과제.", "; otherwise, improving consumption vs label efficiency is the task.")}</>} csv={{ head: [T("브랜드", "Brand"), cur.metric, T("월전력(kWh)", "Monthly power (kWh)")], rows: scatterData.map((p) => [p.name, p.eff.toFixed(2), Math.round(p.kwh)]) }}><Scatter pts={scatterData} metric={cur.metric} /></Sub>
+              <Sub idx={0} title={T("브랜드 효율 랭킹", "Brand Efficiency Ranking")} seg={`${typ !== "전체" ? typ + " " : ""}${seg?.k}`} meaning={<>{T("같은 세그먼트 브랜드 평균 ", "Same-segment brand avg ")}{cur.metric} — <b className="text-gray-700 dark:text-gray-200">{T("높을수록 고효율", "higher = more efficient")}</b></>} ai={lgR ? <>{T("LG는 이 세그먼트 ", "LG ranks ")}<b className="font-semibold text-teal-700 dark:text-teal-300">{lgRk}{T("위", "th")}</b>{T(", 리더 ", " in this segment; leader ")}{rank[0]?.name}{T(" 대비 ", " vs ")}{gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? <>{T("낮아 ", "lower — ")}<b className="font-semibold">{T("최고효율 격차가 곧 차기 개발 타깃", "the gap to best-in-class is the next-gen R&D target")}</b></> : <>{T("높아 ", "higher — ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("프리미엄 효율 소구 가능", "premium efficiency positioning available")}</b></>}{T(". 상위 브랜드와의 ", ". Reflect the ")}{cur.metric}{T(" 갭을 스펙 로드맵에 반영.", " gap vs top brands in the spec roadmap.")}</> : <><b className="font-semibold">{T("LG는 이 세그먼트 등록 모델 없음", "LG has no registered models in this segment")}</b>{T("(현지 미출시) — 시장 벤치마크로 진입 검토 시 목표 효율선 설정에 활용.", " (not launched locally) — use the market benchmark to set a target efficiency line when considering entry.")}</>} csv={{ head: [T("브랜드", "Brand"), cur.metric, T("모델수", "Models")], rows: rankAll.map((r) => [r.name, r.v.toFixed(2), r.n]) }}><Rank2Col items={rankAll} hiName="LG" hi={bubBrands} /></Sub>
+              <Sub idx={1} title={T("효율 ↔ 월전력 관계", "Efficiency ↔ Monthly Power")} seg={seg?.k} meaning={<>{T("가로=효율, 세로=월전력 — ", "X = efficiency, Y = monthly power — ")}<b className="text-gray-700 dark:text-gray-200">{T("우상단", "upper-right")}</b>{T("이 고효율·저전력", " = high-efficiency, low-power")}</>} ai={<>{T("같은 효율이라도 실제 월전력은 다를 수 있어 ", "Even at equal efficiency, actual monthly power can differ, so ")}<b className="font-semibold">{T("효율 스펙과 실사용 전력의 정합성", "the alignment between spec efficiency and real-world power")}</b>{T("이 관건. LG 점이 우상단 음영(우수 구간)에 있으면 ", " is key. If the LG point sits in the shaded upper-right (optimal zone), ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("‘고효율=저전기료’ 메시지가 실측으로 뒷받침", "the ‘high-efficiency = low bill’ message is backed by measured data")}</b>{T("되고, 아니면 라벨효율 대비 소비전력 개선이 과제.", "; otherwise, improving consumption vs label efficiency is the task.")}</>} csv={{ head: [T("브랜드", "Brand"), cur.metric, T("월전력(kWh)", "Monthly power (kWh)")], rows: scatterData.map((p) => [p.name, p.eff.toFixed(2), Math.round(p.kwh)]) }}><Scatter pts={scatterData} metric={cur.metric} hi={bubBrands} /></Sub>
               <Sub idx={2} title={T("용량대별 LG vs 시장", "LG vs Market by Capacity")} meaning={<>{T("용량대별 ", "By capacity, ")}<b className="text-gray-700 dark:text-gray-200">{T("LG vs 시장평균", "LG vs market avg")}</b> {cur.metric}{T(" — 효율 포지션", " — efficiency position")}</>} ai={weak && strong ? <>{T("LG는 ", "LG is ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{strong.label}</b>{T("에서 시장 대비 +", " +")}{strong.diff.toFixed(2)}{T(" 강세인 반면 ", " above market, while ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{weak.label}</b>{T("는 ", " lags ")}{weak.diff.toFixed(2)}{T(" 열세 → ", " → ")}<b className="font-semibold">{T("열세 용량대의 효율 스펙 상향이 차기 라인업 1순위", "raising efficiency specs in the lagging band is the top next-lineup priority")}</b>{T(". 강세 용량대는 프리미엄 가격 방어에 활용.", ". Use strong bands to defend premium pricing.")}</> : <>{T("용량대별 LG 포지션 — 시장평균 상회 구간은 프리미엄, 하회 구간은 개선 타깃.", "LG position by capacity — bands above market avg are premium; below are improvement targets.")}</>} csv={{ head: [T("용량대", "Capacity"), "LG " + cur.metric, T("시장 ", "Market ") + cur.metric], rows: bySegChart.map((g) => [g.label, g.lg != null ? g.lg.toFixed(2) : "—", g.mkt.toFixed(2)]) }}><GroupBars groups={bySegChart} /></Sub>
-              <Sub idx={3} title={T("월 전기요금 (TCO)", "Monthly Bill (TCO)")} seg={seg?.k} meaning={<>{T("월소비전력×전기료(Meralco) 추정 — ", "Monthly kWh × rate (Meralco), est. — ")}<b className="text-gray-700 dark:text-gray-200">{T("낮을수록 유리", "lower is better")}</b></>} ai={(() => { const lgT = tco.find((t) => t.isLG); const best = tco[0]; if (!lgT || !best) return <>{T("효율이 높을수록 월 전기요금↓ — ", "Higher efficiency → lower monthly bill — ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("연간 절감액을 구매 설득 메시지로 전환", "turn annual savings into a purchase-persuasion message")}</b>{T("(고효율 프리미엄 정당화).", " (justifying the high-efficiency premium).")}</>; const diff = lgT.cost - best.cost; return <>{T("LG 월 약 ", "LG ~")}<b>₱{lgT.cost.toLocaleString()}</b>{T(", 최저 ", "; lowest ")}{best.label}(₱{best.cost.toLocaleString()}){T(" 대비 ", " vs ")}{diff > 0 ? <>₱{diff.toLocaleString()}{T(" 높아 ", " higher — ")}<b className="font-semibold">{T("효율 개선 시 절감 소구 여지", "room to pitch savings via efficiency gains")}</b></> : diff < 0 ? <>₱{(-diff).toLocaleString()}{T(" 낮아 ", " lower — ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("연 ₱", "₱")}{((-diff) * 12).toLocaleString()}{T(" 절감 마케팅 가능", "/yr savings marketing possible")}</b></> : T("동일", "same")}{T(". 필리핀 高전기료 구조상 TCO 절감은 강한 구매 동인.", ". Given the Philippines' high electricity costs, TCO savings are a strong purchase driver.")}</> })()} csv={{ head: [T("브랜드", "Brand"), T("월 전기요금(₱)", "Monthly bill (₱)")], rows: tcoAll.map((t) => [t.label, t.cost]) }} bigChildren={<CostLollipop items={tcoAll} />}>
-                <CostLollipop items={tco} />
+              <Sub idx={3} title={T("월 전기요금 (TCO)", "Monthly Bill (TCO)")} seg={seg?.k} meaning={<>{T("월소비전력×전기료(Meralco) 추정 — ", "Monthly kWh × rate (Meralco), est. — ")}<b className="text-gray-700 dark:text-gray-200">{T("낮을수록 유리", "lower is better")}</b></>} ai={(() => { const lgT = tco.find((t) => t.isLG); const best = tco[0]; if (!lgT || !best) return <>{T("효율이 높을수록 월 전기요금↓ — ", "Higher efficiency → lower monthly bill — ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("연간 절감액을 구매 설득 메시지로 전환", "turn annual savings into a purchase-persuasion message")}</b>{T("(고효율 프리미엄 정당화).", " (justifying the high-efficiency premium).")}</>; const diff = lgT.cost - best.cost; return <>{T("LG 월 약 ", "LG ~")}<b>₱{lgT.cost.toLocaleString()}</b>{T(", 최저 ", "; lowest ")}{best.label}(₱{best.cost.toLocaleString()}){T(" 대비 ", " vs ")}{diff > 0 ? <>₱{diff.toLocaleString()}{T(" 높아 ", " higher — ")}<b className="font-semibold">{T("효율 개선 시 절감 소구 여지", "room to pitch savings via efficiency gains")}</b></> : diff < 0 ? <>₱{(-diff).toLocaleString()}{T(" 낮아 ", " lower — ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("연 ₱", "₱")}{((-diff) * 12).toLocaleString()}{T(" 절감 마케팅 가능", "/yr savings marketing possible")}</b></> : T("동일", "same")}{T(". 필리핀 高전기료 구조상 TCO 절감은 강한 구매 동인.", ". Given the Philippines' high electricity costs, TCO savings are a strong purchase driver.")}</> })()} csv={{ head: [T("브랜드", "Brand"), T("월 전기요금(₱)", "Monthly bill (₱)")], rows: tcoAll.map((t) => [t.label, t.cost]) }} bigChildren={<CostLollipop items={tcoAll} hi={bubBrands} />}>
+                <CostLollipop items={tco} hi={bubBrands} />
               </Sub>
-              <Sub idx={4} title={T("브랜드 등급 분포(별점)", "Brand Grade Distribution (stars)")} seg={seg?.k} meaning={<>{T("브랜드별 ", "Per brand, ")}<b className="text-gray-700 dark:text-gray-200">{T("5·4·3성↓ 구성", "5/4/≤3-star mix")}</b>{T(" — 모델수와 함께 해석", " — read alongside model count")}</>} ai={lgGrade ? <>{T("LG 5성 ", "LG 5-star ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{lgGrade.s5.toFixed(0)}%</b>{T("(4성 ", " (4-star ")}{lgGrade.s4.toFixed(0)}%) — {lgGrade.s5 >= 60 ? <b className="font-semibold">{T("프리미엄 효율 라인이 견고", "premium efficiency line is solid")}</b> : <b className="font-semibold text-amber-600 dark:text-amber-400">{T("5성 비중 확대 여지", "room to grow 5-star share")}</b>}{T(". DOE 별점은 소비자·유통 진열의 직접 소구 포인트라 5성 라인 폭이 매대 경쟁력으로 직결.", ". DOE stars are a direct selling point on the shelf, so 5-star breadth translates straight into retail competitiveness.")}</> : <>{T("고별점 비중이 높은 브랜드일수록 프리미엄 진열·인증 마케팅에 유리 — LG 미등록 세그먼트는 진입 시 5성 라인 우선 확보가 관건.", "Brands with a higher share of top ratings gain in premium display and certification marketing — for segments where LG is unregistered, securing a 5-star line first is key on entry.")}</>} csv={{ head: [T("브랜드", "Brand"), T("5성%", "5★%"), T("4성%", "4★%"), T("3성↓%", "≤3★%"), T("모델수", "Models")], rows: gradeAll.map((g) => [g.name, g.s5.toFixed(0), g.s4.toFixed(0), g.s3.toFixed(0), g.n]) }} bigChildren={<GradeStack rows={gradeAll} />}>
-                <GradeStack rows={grade} />
+              <Sub idx={4} title={T("브랜드 등급 분포(별점)", "Brand Grade Distribution (stars)")} seg={seg?.k} meaning={<>{T("브랜드별 ", "Per brand, ")}<b className="text-gray-700 dark:text-gray-200">{T("5·4·3성↓ 구성", "5/4/≤3-star mix")}</b>{T(" — 모델수와 함께 해석", " — read alongside model count")}</>} ai={lgGrade ? <>{T("LG 5성 ", "LG 5-star ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{lgGrade.s5.toFixed(0)}%</b>{T("(4성 ", " (4-star ")}{lgGrade.s4.toFixed(0)}%) — {lgGrade.s5 >= 60 ? <b className="font-semibold">{T("프리미엄 효율 라인이 견고", "premium efficiency line is solid")}</b> : <b className="font-semibold text-amber-600 dark:text-amber-400">{T("5성 비중 확대 여지", "room to grow 5-star share")}</b>}{T(". DOE 별점은 소비자·유통 진열의 직접 소구 포인트라 5성 라인 폭이 매대 경쟁력으로 직결.", ". DOE stars are a direct selling point on the shelf, so 5-star breadth translates straight into retail competitiveness.")}</> : <>{T("고별점 비중이 높은 브랜드일수록 프리미엄 진열·인증 마케팅에 유리 — LG 미등록 세그먼트는 진입 시 5성 라인 우선 확보가 관건.", "Brands with a higher share of top ratings gain in premium display and certification marketing — for segments where LG is unregistered, securing a 5-star line first is key on entry.")}</>} csv={{ head: [T("브랜드", "Brand"), T("5성%", "5★%"), T("4성%", "4★%"), T("3성↓%", "≤3★%"), T("모델수", "Models")], rows: gradeAll.map((g) => [g.name, g.s5.toFixed(0), g.s4.toFixed(0), g.s3.toFixed(0), g.n]) }} bigChildren={<GradeStack rows={gradeAll} hi={bubBrands} />}>
+                <GradeStack rows={grade} hi={bubBrands} />
               </Sub>
               {cat === "acu" && refrigMix.mkt.tot > 0 && (() => {
                 const RC: Record<string, string> = { R32: "#10b981", R290: "#0d9488", R600a: "#22c55e", R410A: "#dc2626", R134a: "#f59e0b" }
@@ -837,10 +855,10 @@ export default function EnergyLabelView() {
                 )
               })()}
               <Sub idx={6} title={T("효율 분포 (히스토그램)", "Efficiency Distribution (histogram)")} seg={seg?.k} meaning={<>{T("세그먼트 ", "Segment ")}{cur.metric}{T(" 분포 — ", " distribution — ")}<b className="text-teal-600 dark:text-teal-400">{T("teal=LG", "teal = LG")}</b>{T(", 주황선=중앙값", ", orange line = median")}</>} ai={<>{T("LG 막대가 ", "If LG bars cluster ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("중앙값 오른쪽(고효율)", "right of the median (high-efficiency)")}</b>{T("에 몰려 있으면 세그먼트 상위권, 왼쪽이면 개선 필요. 분포가 좌우로 넓으면 브랜드 간 효율 편차가 커 ", ", LG leads the segment; on the left, it needs improvement. A wide spread means large efficiency variance across brands, so ")}<b className="font-semibold">{T("고효율 차별화 여지가 크고", "there is ample room for high-efficiency differentiation")}</b>{T(", 촘촘하면 스펙 경쟁이 상향 평준화됐다는 신호.", "; a tight spread signals specs have converged upward.")}</>} csv={{ head: [T("구간(하한)", "Bin (lower)"), T("모델수", "Models")], rows: (() => { const v = histData.vals; if (v.length < 4) return []; const lo = Math.min(...v), hi = Math.max(...v), nb = Math.min(8, Math.max(5, Math.round(Math.sqrt(v.length)))), bw = (hi - lo) / nb || 1; const b = Array(nb).fill(0); for (const x of v) { let k = Math.floor((x - lo) / bw); if (k >= nb) k = nb - 1; if (k < 0) k = 0; b[k]++ } return b.map((n, i) => [(lo + bw * i).toFixed(2), n]) })() }}><EffHist vals={histData.vals} lgVals={histData.lgVals} metric={cur.metric} /></Sub>
-              <Sub idx={7} title={T("용량↔효율 지형", "Capacity ↔ Efficiency Map")} meaning={<>{T("전 용량대 ", "Across all capacities, ")}<b className="text-gray-700 dark:text-gray-200">{T("용량 대비 효율", "efficiency vs capacity")}</b>{T(" 지형 — ", " map — ")}<b className="text-teal-600 dark:text-teal-400">{T("teal=LG", "teal = LG")}</b></>} ai={<>{T("보통 용량이 커질수록 효율이 낮아지는 추세가 있어, ", "Efficiency usually trends lower as capacity grows, so ")}<b className="font-semibold">{T("LG 점이 같은 용량대의 시장 무리보다 위쪽", "an LG point above the market cluster at the same capacity")}</b>{T("이면 효율 우위. LG teal 점이 특정 용량대에 없으면 ", " indicates an efficiency edge. If no LG teal point appears in a capacity band, that is a ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("라인업 공백(진입 기회)", "lineup gap (entry opportunity)")}</b>{T(", 아래쪽에 몰리면 해당 용량 효율 개선이 과제.", "; if they cluster low, improving efficiency at that capacity is the task.")}</>} csv={{ head: [T("브랜드", "Brand"), cur.specUnit, cur.metric], rows: capData.map((p) => [p.name, p.spec, p.eff.toFixed(2)]) }}><CapScatter pts={capData} metric={cur.metric} specUnit={cur.specUnit} /></Sub>
+              <Sub idx={7} title={T("용량↔효율 지형", "Capacity ↔ Efficiency Map")} meaning={<>{T("전 용량대 ", "Across all capacities, ")}<b className="text-gray-700 dark:text-gray-200">{T("용량 대비 효율", "efficiency vs capacity")}</b>{T(" 지형 — ", " map — ")}<b className="text-teal-600 dark:text-teal-400">{T("teal=LG", "teal = LG")}</b></>} ai={<>{T("보통 용량이 커질수록 효율이 낮아지는 추세가 있어, ", "Efficiency usually trends lower as capacity grows, so ")}<b className="font-semibold">{T("LG 점이 같은 용량대의 시장 무리보다 위쪽", "an LG point above the market cluster at the same capacity")}</b>{T("이면 효율 우위. LG teal 점이 특정 용량대에 없으면 ", " indicates an efficiency edge. If no LG teal point appears in a capacity band, that is a ")}<b className="font-semibold text-amber-600 dark:text-amber-400">{T("라인업 공백(진입 기회)", "lineup gap (entry opportunity)")}</b>{T(", 아래쪽에 몰리면 해당 용량 효율 개선이 과제.", "; if they cluster low, improving efficiency at that capacity is the task.")}</>} csv={{ head: [T("브랜드", "Brand"), cur.specUnit, cur.metric], rows: capData.map((p) => [p.name, p.spec, p.eff.toFixed(2)]) }}><CapScatter pts={capData} metric={cur.metric} specUnit={cur.specUnit} hi={bubBrands} /></Sub>
               <Sub idx={8} title={T("브랜드 포지셔닝", "Brand Positioning")} seg={seg?.k} meaning={<><span className="font-semibold text-teal-600 dark:text-teal-400">● LG</span> · {T("x=효율, y=5성 비중%, ", "x = efficiency, y = 5-star %, ")}<b className="text-gray-700 dark:text-gray-200">{T("버블 크기=모델수(라인업 폭)", "bubble size = model count")}</b>{T(" · 우상단·큰 버블일수록 고효율·프리미엄·풀라인업", " · upper-right & larger = high-efficiency, premium, full lineup")}</>} ai={<><b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("우상단·큰 버블", "Upper-right, large bubble")}</b>{T("=고효율·프리미엄·풀라인업(이상적). LG 버블이 우상단이면 효율·등급·라인업 폭 3박자를 갖춘 것이고, 작으면 ", " = high-efficiency, premium, full lineup (ideal). An LG bubble in the upper-right has all three — efficiency, grade, and lineup breadth; if it is small, the task is ")}<b className="font-semibold">{T("라인업 확장", "lineup expansion")}</b>{T(", 좌측이면 ", "; if to the left, ")}<b className="font-semibold">{T("효율 상향", "raising efficiency")}</b>{T(", 하단이면 ", "; if low, ")}<b className="font-semibold">{T("5성 모델 확대", "expanding 5-star models")}</b>{T("가 각각의 과제.", ".")}</>} csv={{ head: [T("브랜드", "Brand"), cur.metric, T("5성%", "5★%"), T("모델수", "Models")], rows: bubbleData.map((p) => [p.name, p.eff.toFixed(2), p.s5.toFixed(0), p.n]) }}><Bubble items={bubbleData} metric={cur.metric} hi={bubBrands} /></Sub>
               {CAT_KO[cat] && priceDisp.length > 0 && (
-              <Sub idx={9} title={T("브랜드별 가격대 (소매)", "Price Range by Brand (retail)")} seg={CAT_KO[cat]} meaning={<>{T("리테일러 실판매가 분포 — ", "Retailer street-price distribution — ")}<b className="text-gray-700 dark:text-gray-200">{T("박스=P25~P75, 선=중앙값", "box = P25–P75, line = median")}</b></>} ai={lgPrice ? <>LG {CAT_KO[cat]}{T(" 중앙가 ", " median price ")}<b className="font-semibold text-teal-700 dark:text-teal-300">₱{Math.round(lgPrice.med).toLocaleString()}</b>(P25~P75 ₱{Math.round(lgPrice.p25).toLocaleString()}~₱{Math.round(lgPrice.p75).toLocaleString()}) — {priceDisp[0] && priceDisp[0].med > lgPrice.med * 1.1 ? <><b className="font-semibold">{priceDisp[0].brand}</b>{T(" 등 프리미엄 대비 중가 포지션", " and other premiums — a mid-price position")}</> : <>{T("상위 가격대에 위치", "positioned in the upper price band")}</>}. <b>{T("가격대 폭이 넓을수록", "The wider the price range,")}</b>{T(" 보급형~프리미엄 풀커버, 좁으면 특정 층 집중. 효율 우위 세그먼트에서 가격 프리미엄을 ", " the fuller the coverage from entry to premium; a narrow range concentrates on one tier. In segments with an efficiency edge, ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("에너지 절감 TCO로 정당화", "justifying the price premium via energy-saving TCO")}</b>{T("하는 전략이 유효.", " is an effective strategy.")}</> : <>{T("브랜드별 소매 가격대 — LG 가격 포지션과 프리미엄/보급 커버리지 진단(효율 대비 가격 매력도).", "Retail price range by brand — diagnosing LG's price position and premium/entry coverage (price appeal vs efficiency).")}</>} csv={{ head: [T("브랜드", "Brand"), "P10", "P25", T("중앙값", "Median"), "P75", "P90", T("모델수", "Models")], rows: priceRanges.map((p) => [p.brand, Math.round(p.p10), Math.round(p.p25), Math.round(p.med), Math.round(p.p75), Math.round(p.p90), p.n]) }} bigChildren={<PriceBox items={priceRanges} />}><PriceBox items={priceDisp} /></Sub>
+              <Sub idx={9} title={T("브랜드별 가격대 (소매)", "Price Range by Brand (retail)")} seg={CAT_KO[cat]} meaning={<>{T("리테일러 실판매가 분포 — ", "Retailer street-price distribution — ")}<b className="text-gray-700 dark:text-gray-200">{T("박스=P25~P75, 선=중앙값", "box = P25–P75, line = median")}</b></>} ai={lgPrice ? <>LG {CAT_KO[cat]}{T(" 중앙가 ", " median price ")}<b className="font-semibold text-teal-700 dark:text-teal-300">₱{Math.round(lgPrice.med).toLocaleString()}</b>(P25~P75 ₱{Math.round(lgPrice.p25).toLocaleString()}~₱{Math.round(lgPrice.p75).toLocaleString()}) — {priceDisp[0] && priceDisp[0].med > lgPrice.med * 1.1 ? <><b className="font-semibold">{priceDisp[0].brand}</b>{T(" 등 프리미엄 대비 중가 포지션", " and other premiums — a mid-price position")}</> : <>{T("상위 가격대에 위치", "positioned in the upper price band")}</>}. <b>{T("가격대 폭이 넓을수록", "The wider the price range,")}</b>{T(" 보급형~프리미엄 풀커버, 좁으면 특정 층 집중. 효율 우위 세그먼트에서 가격 프리미엄을 ", " the fuller the coverage from entry to premium; a narrow range concentrates on one tier. In segments with an efficiency edge, ")}<b className="font-semibold text-emerald-600 dark:text-emerald-400">{T("에너지 절감 TCO로 정당화", "justifying the price premium via energy-saving TCO")}</b>{T("하는 전략이 유효.", " is an effective strategy.")}</> : <>{T("브랜드별 소매 가격대 — LG 가격 포지션과 프리미엄/보급 커버리지 진단(효율 대비 가격 매력도).", "Retail price range by brand — diagnosing LG's price position and premium/entry coverage (price appeal vs efficiency).")}</>} csv={{ head: [T("브랜드", "Brand"), "P10", "P25", T("중앙값", "Median"), "P75", "P90", T("모델수", "Models")], rows: priceRanges.map((p) => [p.brand, Math.round(p.p10), Math.round(p.p25), Math.round(p.med), Math.round(p.p75), Math.round(p.p90), p.n]) }} bigChildren={<PriceBox items={priceRanges} hi={bubBrands} />}><PriceBox items={priceDisp} hi={bubBrands} /></Sub>
               )}
             </div>
             </ActiveMetricCtx.Provider>
