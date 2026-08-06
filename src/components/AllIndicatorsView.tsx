@@ -195,7 +195,9 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
   }
   const flat = useMemo(() => {
     if (sort !== "recent") return null
-    return [...filtered].sort((a, b) => periodEnd(b.period || "") - periodEnd(a.period || "") || (b.period || "").localeCompare(a.period || ""))
+    // 최신순 = '가장 최근에 업데이트된 지표' — 실제 최근 관측일(mx)을 YYYYMMDD로 정규화해 우선, 없으면 기간 문자열 폴백.
+    const upd = (r: Row) => { const m = (r.mx || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? +m[1] * 10000 + +m[2] * 100 + +m[3] : periodEnd(r.period || "") }
+    return [...filtered].sort((a, b) => (upd(b) - upd(a)) || (periodEnd(b.period || "") - periodEnd(a.period || "")))
   }, [filtered, sort]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
