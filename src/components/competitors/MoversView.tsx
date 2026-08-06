@@ -4,7 +4,7 @@
 import React from "react"
 import { T } from "@/lib/i18n"
 import { fmtStamp, type PriceRow, type EnergyRow } from "@/lib/supabase"
-import { canonCode, PM_CATS, pmFormsFor, pmFormHit } from "@/lib/classify"
+import { canonCode, PM_CATS, pmFormsFor, pmFormHit, pmFormOf } from "@/lib/classify"
 import { peso, md, pmShopLabel, pmStarCls, DOE_CODE, doeNorm, PmDrop, PmMultiDrop, ListSearch, catLabel } from "@/components/competitors/shared"
 
 // 전일비 — 주변과 통일한 ▼▲ 컬러 텍스트. 4초마다 %↔₱ 토글(badgeSwap 애니메이션).
@@ -136,14 +136,15 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
       </div>
       {/* 매트릭스 — 브랜드·분류·모델·★·SRP·오늘·할인율·전일비·날짜3열·최근7일변동·유통 */}
       <div className="max-h-[1040px] overflow-auto rounded-lg border border-gray-200 dark:border-gray-800">
-        <table className="w-full min-w-[1290px] table-fixed border-collapse text-[12px]">
+        <table className="w-full min-w-[1360px] table-fixed border-collapse text-[12px]">
           <colgroup>
-            <col style={{ width: 138 }} /><col style={{ width: 58 }} /><col style={{ width: 128 }} /><col style={{ width: 32 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 82 }} /><col style={{ width: 92 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 140 }} /><col style={{ width: 120 }} />
+            <col style={{ width: 138 }} /><col style={{ width: 58 }} /><col style={{ width: 70 }} /><col style={{ width: 128 }} /><col style={{ width: 32 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 82 }} /><col style={{ width: 92 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 100 }} /><col style={{ width: 140 }} /><col style={{ width: 120 }} />
           </colgroup>
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
             <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
               <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("브랜드", "Brand")}</th>
-              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("분류", "Cat.")}</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("제품", "Div")}</th>
+              <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("유형", "Type")}</th>
               <th className="whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center">{T("모델", "Model")}</th>
               <th className="border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title={T("New DOE 에너지등급", "New DOE energy rating")}>★</th>
               <th className="whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center">SRP</th>
@@ -159,13 +160,14 @@ export function MoversView({ rows, elabels, stamp }: { rows: PriceRow[] | null; 
           </thead>
           <tbody>
             {list.length === 0 ? (
-              <tr><td colSpan={13} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">{T("조건에 맞는 모델 없음", "No models match the filters")}</td></tr>
+              <tr><td colSpan={14} className="px-3 py-12 text-center text-gray-400 dark:text-gray-500">{T("조건에 맞는 모델 없음", "No models match the filters")}</td></tr>
             ) : list.slice(0, 400).map((r, ri) => {
               const star = starFor(r.category, r.model)
               return (
               <tr key={r.retailer + r.model + ri} style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s" }} className="border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5">
                 <td className={"truncate whitespace-nowrap px-2 py-1.5 text-center text-[11.5px] font-semibold " + (r.brand === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")} title={r.brand}>{r.brand}</td>
                 <td className="px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400">{catLabel(r.category)}</td>
+                <td className="truncate px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400" title={pmFormOf(r.category, (r.model||"")+" "+(r.capacity||""), r.brand) || undefined}>{pmFormOf(r.category, (r.model||"")+" "+(r.capacity||""), r.brand) || "—"}</td>
                 <td className="truncate px-2 py-1.5 font-medium text-gray-700 dark:text-gray-200" title={r.model}>{r.code && r.code.length >= 4 && r.code !== "N/A" ? r.code : canonCode(r.model, r.code)}</td>
                 <td className="px-1 py-1.5 text-center">{star != null ? <span className={"rounded px-1 text-[9px] font-bold " + pmStarCls(star)}>★{star}</span> : <span className="text-gray-300 dark:text-gray-600">·</span>}</td>
                 <td className="border-l border-gray-100 dark:border-gray-800 px-2 py-1.5 text-right tabular-nums text-gray-400 dark:text-gray-500">{r.srp != null ? peso(r.srp) : "—"}</td>

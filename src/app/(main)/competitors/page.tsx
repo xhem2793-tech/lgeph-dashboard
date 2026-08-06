@@ -326,10 +326,8 @@ export default function Competitors() {
       {/* 접힘 상태 — 좌측 여백 띠(페이지 패딩) 중앙에 펼치기 아이콘 */}
       {!navOpen && (
         <button type="button" onClick={() => setNavOpen(true)} aria-label={T("메뉴 펼치기", "Expand menu")} title={T("분석 메뉴 펼치기", "Expand menu")}
-          className="absolute left-0 top-6 z-30 hidden w-10 justify-center lg:flex">
-          <span className="flex h-6 w-6 items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 text-indigo-600 shadow-sm transition-all hover:bg-indigo-100 active:scale-90 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-300 dark:hover:bg-indigo-500/25">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "navBounce 3s ease-in-out infinite" }}><path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" /></svg>
-          </span>
+          className="absolute left-0 top-6 z-30 hidden w-10 justify-center text-indigo-400 transition-colors hover:text-indigo-600 active:scale-90 dark:text-indigo-400 dark:hover:text-indigo-300 lg:flex">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "navBounce 3s ease-in-out infinite" }}><path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" /></svg>
         </button>
       )}
 
