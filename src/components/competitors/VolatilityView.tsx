@@ -44,7 +44,6 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   const [form, setForm] = React.useState("전체") // 유형(세그먼트) 필터
   const [size, setSize] = React.useState("전체") // 용량·마력·화면 필터
   const [metric, setMetric] = React.useState<Metric>("count")
-  const [norm, setNorm] = React.useState<"global" | "col">("global") // 색 기준(전체/거래선별)
   const [sel, setSel] = React.useState<{ b: string; ret: string } | null>(null) // 셀 드릴다운(품절)
   const [oosDays, setOosDays] = React.useState<Record<string, number>>({}) // 모델별 재고없음 연속일수
   const [hov, setHov] = React.useState<Hov>(null) // 셀 호버 미니 팝업
@@ -100,9 +99,9 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   const isPct = metric === "sos" || metric === "actRate" || metric === "oosRate"
   const teal = !(metric === "oosCnt" || metric === "oosRate")
   const dispOf = (v: number | null): string => v == null ? ((metric === "oosCnt" || metric === "actRate" || metric === "oosRate") && !oosLive ? "—" : "·") : isPct ? Math.round(v) + "%" : String(v)
-  const alphaOf = (v: number | null, t: number, ret: string): number => {
+  const alphaOf = (v: number | null, t: number): number => {
     if (v == null || v === 0) return 0
-    if (metric === "count") { const denom = norm === "col" ? (data.colMax[ret] || 1) : data.maxT; return Math.max(0.12, Math.min(1, t / denom)) }
+    if (metric === "count") return Math.max(0.12, Math.min(1, t / data.maxT))
     if (metric === "oosCnt") return Math.max(0.18, Math.min(1, v / data.maxOos))
     return Math.max(0.08, Math.min(1, v / 100)) // 퍼센트 계열
   }
@@ -145,7 +144,6 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         {forms.length > 0 && <PmDrop label={T("유형", "Type")} sel={effForm} options={[{ k: "전체", t: T("전체", "All") }, ...forms.map((t) => ({ k: t, t }))]} onSelect={setForm} />}
         {sizes.length > 0 && <PmDrop label={isAC(cat) ? T("마력", "HP") : cat === "TV" ? T("화면", "Screen") : T("용량", "Cap.")} sel={effSize} options={[{ k: "전체", t: T("전체", "All") }, ...sizes.map((t) => ({ k: t, t }))]} onSelect={setSize} />}
         <PmDrop label={T("지표", "Metric")} sel={metric} options={[{ k: "count", t: T("전시 SKU 수", "Listed SKUs") }, { k: "chg", t: T("어제대비 증감", "Δ vs prev day") }, { k: "sos", t: T("진열 점유율", "Share of shelf") }, { k: "actRate", t: T("재고 활성율", "In-stock %") }, { k: "oosCnt", t: T("품절 수", "OOS count") }, { k: "oosRate", t: T("품절률", "OOS %") }]} onSelect={(k) => setMetric(k as Metric)} />
-        {metric === "count" && <button type="button" onClick={() => setNorm((n) => n === "global" ? "col" : "global")} className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-2 py-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400 transition hover:text-indigo-600 dark:hover:text-indigo-300" title={T("색 농도 기준", "Color scale basis")}>{T("색: ", "Scale: ")}{norm === "global" ? T("전체", "Global") : T("거래선별", "Per-retailer")}</button>}
         {/* 날짜 네비게이터(BoardView 스타일) */}
         {slots.length > 0 && (
           <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-1 py-0.5">
@@ -229,7 +227,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                       alpha = delta == null || delta === 0 ? 0 : Math.max(0.18, Math.min(1, Math.abs(delta) / data.maxAbsD))
                       rgb = delta != null && delta < 0 ? "244,63,94" : "16,185,129"
                     } else {
-                      const v = rawVal(t, oo, tot); disp = dispOf(v); alpha = alphaOf(v, t, ret)
+                      const v = rawVal(t, oo, tot); disp = dispOf(v); alpha = alphaOf(v, t)
                       rgb = teal ? "99,102,241" : "244,63,94"
                     }
                     const light = alpha > 0.55; const clickable = metric === "oosCnt" && t > 0
