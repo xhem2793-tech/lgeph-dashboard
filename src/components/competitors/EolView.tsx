@@ -39,9 +39,6 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
     if (!D.length) return []
     // 기준일 = 오늘(8/4). 신제품 등장·미노출(EOL) 경과일을 '관측 최종일'이 아니라 '오늘' 기준으로 산정
     const T = dayNum(new Date().toISOString().slice(0, 10))
-    // 데이터 관측 시작일 — '신제품'은 이 시점 이후에 처음 나타난 SKU만 인정(수집 첫날부터 있던 재고는 신제품 아님).
-    // 이 가드가 없으면 수집 기간이 짧을 때 거의 모든 SKU의 첫 관측일이 14일 이내로 잡혀 신제품이 과다 집계됨.
-    const startNum = dayNum(D.reduce((a, r) => (r.d < a ? r.d : a), D[0].d))
     const g: Record<string, DailyRow[]> = {}
     D.forEach((r) => { if (!PM_CATS.includes(r.category)) return; const cc = canonCode(r.model, r.code); if (cc.length < 5) return; (g[cc] = g[cc] || []).push(r) })
     const out: Ev[] = []
@@ -50,7 +47,6 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
       const firstSeen = ds.reduce((a, b) => (a < b ? a : b))
       const lastSeen = ds.reduce((a, b) => (a > b ? a : b))
       const daysMissing = T - dayNum(lastSeen)
-      const ageFirst = T - dayNum(firstSeen)
       const r0 = list.find((r) => r.d === lastSeen) ?? list[0]
       const cN = catNorm(r0.category)
       const model = r0.code && r0.code.length >= 4 && r0.code !== "N/A" ? r0.code : cc
@@ -65,12 +61,19 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
       const byDay: Record<string, number[]> = {}
       list.forEach((r) => { if (r.price != null) (byDay[r.d] = byDay[r.d] || []).push(r.price) })
       const hist = Object.entries(byDay).map(([d, ps]) => ({ d, net: Math.min(...ps) })).sort((a, b) => a.d.localeCompare(b.d))
-      // 신제품 = ①첫 관측이 14일 이내 AND ②관측 시작 후 최소 2일 지나서 처음 등장(수집 첫날부터 있던 SKU 제외) AND ③현재 노출중 AND ④관측일수 8일 이하
-      const appearedAfterStart = dayNum(firstSeen) - startNum >= 2
-      if (ageFirst <= 14 && appearedAfterStart && daysMissing < 7 && ds.length <= 8) {
+      // 기간대조 + 지속성(균형 기준) — 모델명 노이즈로 하루만 스친 유령 SKU를 걸러내기 위해 '며칠 지속 관측'을 필수 조건화.
+      //   신제품 = 최근 4일(T-3~T) 중 2일↑ 등장 AND 직전 2주(T-17~T-4) 전무  → '없던 게 새로 지속 등장'
+      //   단종  = 과거(T-7 이전) 3일↑ 관측 AND 최근 7일(T-6~T) 전무           → '있던 게 사라짐'
+      const dayNums = Array.from(new Set(ds.map((d) => dayNum(d))))
+      const cnt = (lo: number, hi: number) => dayNums.reduce((n, dn) => n + (dn >= lo && dn <= hi ? 1 : 0), 0)
+      const recentN = cnt(T - 3, T)      // 최근 4일
+      const priorN = cnt(T - 17, T - 4)  // 직전 2주(신제품 대조 기준)
+      const last7N = cnt(T - 6, T)       // 최근 7일
+      const earlierN = cnt(T - 3650, T - 7) // 7일 이전 전체
+      if (recentN >= 2 && priorN === 0) {
         const firstRows = list.filter((r) => r.d === firstSeen).map((r) => r.price).filter((v): v is number => v != null)
         out.push({ id: "new-" + cc, kind: "new", cat: cN, brand: r0.brand, model, form, spec, firstSeen, lastSeen, daysMissing, price: firstRows.length ? Math.min(...firstRows) : netPrice, channels, conf, status: "신제품", date: firstSeen, hist })
-      } else if (daysMissing >= 7) {
+      } else if (earlierN >= 3 && last7N === 0) {
         out.push({ id: "eol-" + cc, kind: "eol", cat: cN, brand: r0.brand, model, form, spec, firstSeen, lastSeen, daysMissing, price: netPrice, channels, conf, status: eolStatus(daysMissing), date: lastSeen, hist })
       }
     }
@@ -109,7 +112,7 @@ export function EolView({ daily, stamp }: { daily: DailyRow[] | null; stamp: str
       {view === "board" && <BoardKanban events={filtered} onSel={setSel} />}
       {view === "table" && <TableView events={filtered} f={subF} onSel={setSel} />}
 
-      <p className="text-[10px] text-gray-400 dark:text-gray-500">{T("신제품=관측 시작 이후 새로 등장(첫 관측 14일 이내, 수집 첫날부터 있던 SKU 제외) · EOL 후보=마지막 관측 이후 경과일(미노출 D+) — 14일↑ 단종 유력, 7~13일 관찰중 · 데이터 v_competitor_daily(관측)", "New = appeared after observation began (first seen within 14d, excludes SKUs present since collection start) · EOL candidate = days since last sighting (absent D+) — 14d+ likely EOL, 7–13d watching · data v_competitor_daily (observed)")}</p>
+      <p className="text-[10px] text-gray-400 dark:text-gray-500">{T("신제품=최근 4일 중 2일↑ 지속 등장 & 직전 2주 전무(하루만 스친 스크랩 노이즈 제외) · EOL 후보=과거 3일↑ 관측되던 모델이 최근 7일 미노출 — 14일↑ 단종 유력, 7~13일 관찰중 · 데이터 v_competitor_daily(관측)", "New = seen ≥2 of last 4 days & absent the prior 2 weeks (filters one-day scrape noise) · EOL candidate = model observed ≥3 days before but absent the last 7 days — 14d+ likely EOL, 7–13d watching · data v_competitor_daily (observed)")}</p>
 
       {sel && <EolModal e={sel} onClose={() => setSel(null)} />}
     </div>
