@@ -113,12 +113,21 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
 
   // 제품(모델)별로 신호를 묶어서 나열 — 같은 모델의 가격/프로모/재고/광고 신호를 한 그룹으로.
   // 그룹 내부는 심각도·점수 순, 그룹 정렬은 대표(최상위) 신호 기준. 중구난방 개별 나열 해소.
-  // 단일 통합 리스트 — 카드 그룹 대신 한 줄씩. 정렬: 심각도 → 점수. 각 행에 브랜드·카테고리·스펙·모델 포함.
+  // 제품(브랜드·모델)당 한 줄로 축약 — 대표 신호 1개 + 나머지 신호는 요약(신호종류·개수·오늘/어제).
+  //  왼쪽 세로형 타임라인(세로선)에 노드로 나열. 정렬: 대표 신호 심각도 → 점수.
   const list = React.useMemo(() => {
-    return signals
-      .filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF))
-      .sort((a, b) => SEV_META[a.sev].order - SEV_META[b.sev].order || b.score - a.score)
-      .slice(0, 80)
+    const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF))
+    const m = new Map<string, Signal[]>()
+    for (const s of filtered) { const key = s.brand + "|" + s.title; const arr = m.get(key); if (arr) arr.push(s); else m.set(key, [s]) }
+    const items = Array.from(m.values()).map((arr) => {
+      arr.sort((x, y) => SEV_META[x.sev].order - SEV_META[y.sev].order || y.score - x.score)
+      const rep = arr[0]
+      const kinds = Array.from(new Set(arr.map((s) => s.kind)))
+      const hasToday = arr.some((s) => s.day === "today"), hasYest = arr.some((s) => s.day === "yesterday")
+      return { rep, all: arr, kinds, hasToday, hasYest, n: arr.length }
+    })
+    items.sort((a, b) => SEV_META[a.rep.sev].order - SEV_META[b.rep.sev].order || b.rep.score - a.rep.score)
+    return items.slice(0, 60)
   }, [signals, kind, catF, dayF])
 
   const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
@@ -148,14 +157,15 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       {list.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("해당 신호가 없습니다.", "No matching signals.")}</div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
-          {/* 단일 통합 리스트 — 한 줄에 타임라인·신호·심각도·제품(브랜드·카테고리·스펙·모델)·내용·지표·채널 */}
-          {list.map((s, i) => { const km = KIND_META[s.kind]; return (
-            <div key={s.id + i} className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 transition-colors last:border-0 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10" style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(i, 20) * 0.02 + "s" }}>
-              {/* 타임라인(오늘/어제) 먼저 */}
-              <span className={"inline-flex w-10 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + (s.day === "today" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400")} title={DAY_LABEL[s.day]}>{DAY_LABEL[s.day]}</span>
-              <span className={"inline-flex w-12 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + km.cls}>{KIND_LABEL[s.kind]}</span>
-              <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + SEV_META[s.sev].dot} title={SEV_LABEL[s.sev]} />
+        // 세로형 타임라인 — 왼쪽 세로선(rail) + 제품당 노드 1개. 한 줄에 대표 신호 축약.
+        <div className="relative rounded-xl border border-gray-200 dark:border-gray-800 py-1">
+          <span aria-hidden className="absolute bottom-3 left-[26px] top-3 w-px bg-gray-200 dark:bg-gray-700" />
+          {list.map((it, i) => { const s = it.rep; return (
+            <div key={s.brand + s.title + i} className="relative flex items-center gap-2 py-2.5 pl-[42px] pr-3 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10" style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(i, 20) * 0.02 + "s" }}>
+              {/* 타임라인 노드 — 세로선 위 심각도 색 점(오늘=채움/어제=옅음) */}
+              <span className={"absolute left-[22px] top-1/2 z-10 h-2.5 w-2.5 -translate-y-1/2 rounded-full ring-2 ring-white dark:ring-gray-950 " + SEV_META[s.sev].dot} title={SEV_LABEL[s.sev] + " · " + (it.hasToday ? DAY_LABEL.today : DAY_LABEL.yesterday)} />
+              {/* 오늘/어제 라벨 */}
+              <span className={"inline-flex w-9 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[9.5px] font-semibold " + (it.hasToday ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400")}>{it.hasToday ? DAY_LABEL.today : DAY_LABEL.yesterday}</span>
               {/* 제품 식별 — 브랜드 · 모델 · 카테고리 · 스펙 */}
               <div className="flex min-w-0 shrink-0 items-center gap-1.5">
                 <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (CAT_DOT[s.cat] ?? "bg-gray-400")} />
@@ -164,8 +174,13 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                 <span className="hidden shrink-0 rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 md:inline">{CAT_LABEL[s.cat] ?? s.cat}</span>
                 {s.spec ? <span className="hidden shrink-0 whitespace-nowrap rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 lg:inline">{s.spec}</span> : null}
               </div>
-              {/* 내용 */}
-              <div className="flex min-w-0 flex-1 items-baseline gap-2">
+              {/* 신호 요약 칩 — 이 제품에서 뜬 신호 종류(가격·프로모·광고·재고) */}
+              <div className="hidden shrink-0 items-center gap-1 sm:flex">
+                {it.kinds.map((k) => <span key={k} className={"inline-flex items-center rounded px-1 py-px text-[9px] font-semibold " + KIND_META[k].cls}>{KIND_LABEL[k]}</span>)}
+                {it.n > 1 && <span className="rounded-full bg-gray-100 px-1.5 py-px text-[9px] font-bold tabular-nums text-gray-500 dark:bg-gray-800 dark:text-gray-400">+{it.n - 1}</span>}
+              </div>
+              {/* 대표 신호 내용 */}
+              <div className="flex min-w-0 flex-1 items-baseline">
                 <span className="truncate text-[12px] text-gray-500 dark:text-gray-400">{s.detail}</span>
               </div>
               <div className="shrink-0 text-right">{metricChip(s)}</div>
