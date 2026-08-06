@@ -128,7 +128,7 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
   const cardRef = useRef<HTMLDivElement | null>(null)
   const [big, setBig] = useState(false)
   const [aiOpen, setAiOpen] = useState(false)
-  const [sortCol, setSortCol] = useState(-1) // -1=기본(원래순)
+  const [sortCol, setSortCol] = useState(1) // 기본: 첫 값 컬럼(지표값) 내림차순 정렬
   const [sortDesc, setSortDesc] = useState(true)
   const pNum = (v: string | number) => { const n = parseFloat(String(v).replace(/[^0-9.\-]/g, "")); return Number.isFinite(n) ? n : null }
   const sortedRows = (() => {
@@ -164,8 +164,14 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
           <div className="flex min-h-0 flex-col lg:w-[42%] lg:border-l lg:border-gray-100 lg:dark:border-gray-800 lg:pl-4">
             <div className="h-[352px] min-h-0 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
               <table className="w-full border-collapse text-[12px]">
-                <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="border-b border-gray-200 dark:border-gray-800">{csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-1.5 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</th>)}</tr></thead>
-                <tbody>{sortedRows.map((r, ri) => <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (/^lg$/i.test(String(r[0])) ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>{r.map((c, ci) => <td key={ci} className={"py-1.5 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}</tr>)}</tbody>
+                <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="border-b border-gray-200 dark:border-gray-800">
+                  <th className="w-8 py-2 px-2 text-center font-semibold text-gray-400 dark:text-gray-500">#</th>
+                  {csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-2 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</th>)}
+                </tr></thead>
+                <tbody>{sortedRows.map((r, ri) => { const isLg = /^lg$/i.test(String(r[0])); return <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (isLg ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>
+                  <td className={"w-8 py-2 px-2 text-center text-[11px] font-bold tabular-nums " + (isLg ? "text-teal-600 dark:text-teal-400" : "text-gray-300 dark:text-gray-600")}>{ri + 1}</td>
+                  {r.map((c, ci) => <td key={ci} className={"py-2 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}
+                </tr> })}</tbody>
               </table>
             </div>
             <p className="mt-1.5 shrink-0 text-[10px] text-gray-400 dark:text-gray-500">{T("열 클릭 시 정렬(재클릭=오름/내림) · ", "Click a column to sort · ")}<b className="text-teal-600 dark:text-teal-400">{T("LG 강조", "LG in teal")}</b></p>
