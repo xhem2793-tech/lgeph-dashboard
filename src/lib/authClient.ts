@@ -26,6 +26,37 @@ export function getSession(): AuthSession | null {
   return null
 }
 
+/** 저장된 세션(만료 여부 무관) — 리프레시 토큰 확보용. */
+function getStoredSession(): AuthSession | null {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || "null") as AuthSession | null } catch { return null }
+}
+
+/** 세션 확보 — 유효하면 그대로, 만료됐지만 리프레시 토큰이 있으면 갱신해서 반환.
+ *  이 덕분에 로그인 세션이 (액세스 토큰 1h가 아니라) 리프레시 토큰 수명 동안 유지된다 → 재로그인 최소화. */
+export async function ensureSession(): Promise<AuthSession | null> {
+  const live = getSession()
+  if (live) return live
+  const stored = getStoredSession()
+  if (!stored?.refresh_token) return null
+  try {
+    const r = await fetch(`${SB_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: "POST",
+      headers: { apikey: SB_ANON, "Content-Type": "application/json" },
+      body: JSON.stringify({ refresh_token: stored.refresh_token }),
+    })
+    const d = await r.json().catch(() => ({} as Record<string, unknown>))
+    if (!r.ok || !d.access_token) { signOut(); return null }
+    const sess: AuthSession = {
+      access_token: d.access_token as string,
+      refresh_token: (d.refresh_token as string) ?? stored.refresh_token,
+      expires_at: (d.expires_at as number) ?? Math.floor(Date.now() / 1000) + ((d.expires_in as number) || 3600),
+      email: (d.user as { email?: string } | undefined)?.email ?? stored.email,
+    }
+    try { localStorage.setItem(LS_KEY, JSON.stringify(sess)) } catch {}
+    return sess
+  } catch { return getStoredSession() ? stored : null }
+}
+
 export function signOut() {
   try { localStorage.removeItem(LS_KEY) } catch {}
 }
