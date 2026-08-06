@@ -42,7 +42,7 @@ const cleanTxt = (s?: string | null) => (s || "").replace(/<[^>]*>/g, "").replac
 type Signal = {
   id: string; kind: "price" | "promo" | "ad" | "stock"; sev: string; cat: string; brand: string; own: boolean
   title: string; detail: string; metric: string; metricTone: string; before: number | null; after: number | null
-  channel: string | null; url: string | null; score: number; day: "today" | "yesterday"; spec: string | null
+  channel: string | null; url: string | null; score: number; day: "today" | "yesterday"; spec: string | null; model: string
 }
 
 export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads: CompAd[] | null; stamp: string | null }) {
@@ -76,19 +76,19 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
         const day: "today" | "yesterday" = si === 0 ? "today" : "yesterday"
         const chg = (aft - bef) / bef, pctN = Math.round(chg * 100)
         if (chg <= -0.06) {
-          add({ id: `p${i}-d${si}`, kind: "price", sev: own ? "opp" : (chg <= -0.13 ? "alert" : "warn"), cat, brand: r.brand, own, title: nm, detail: own ? T("자사 실판매가 인하 — 가격 경쟁력↑", "Own street price cut — pricing edge up") : `${pmShopLabel(r.retailer)}${T(" 실판매가 급락 — 자사 최저가 위협", " street price plunge — threatens our floor")}`, metric: `${pctN}%`, metricTone: "down", before: bef, after: aft, channel: r.retailer, url: r.url, score: Math.abs(chg) * 100 * (own ? 0.8 : 1.25), day, spec: r.capacity ?? null })
+          add({ id: `p${i}-d${si}`, kind: "price", sev: own ? "opp" : (chg <= -0.13 ? "alert" : "warn"), cat, brand: r.brand, own, title: nm, detail: own ? T("자사 실판매가 인하 — 가격 경쟁력↑", "Own street price cut — pricing edge up") : `${pmShopLabel(r.retailer)}${T(" 실판매가 급락 — 자사 최저가 위협", " street price plunge — threatens our floor")}`, metric: `${pctN}%`, metricTone: "down", before: bef, after: aft, channel: r.retailer, url: r.url, score: Math.abs(chg) * 100 * (own ? 0.8 : 1.25), day, spec: r.capacity ?? null, model: label })
         } else if (chg >= 0.08 && !own) {
-          add({ id: `r${i}-d${si}`, kind: "price", sev: "opp", cat, brand: r.brand, own, title: nm, detail: `${pmShopLabel(r.retailer)}${T(" 가격 인상 — 자사 상대 우위 확대", " price hike — widens our relative edge")}`, metric: `+${pctN}%`, metricTone: "up", before: bef, after: aft, channel: r.retailer, url: r.url, score: chg * 100 * 0.8, day, spec: r.capacity ?? null })
+          add({ id: `r${i}-d${si}`, kind: "price", sev: "opp", cat, brand: r.brand, own, title: nm, detail: `${pmShopLabel(r.retailer)}${T(" 가격 인상 — 자사 상대 우위 확대", " price hike — widens our relative edge")}`, metric: `+${pctN}%`, metricTone: "up", before: bef, after: aft, channel: r.retailer, url: r.url, score: chg * 100 * 0.8, day, spec: r.capacity ?? null, model: label })
         }
       })
       // 깊은 할인(프로모 성격) — 오늘 스냅샷
       if ((r.discountPct ?? 0) >= 30 && r.d0) {
         const d = Math.round(r.discountPct as number)
-        add({ id: `d${i}`, kind: "promo", sev: own ? "opp" : "warn", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)}${T(" 자사 프로모 강세", " strong own promo")}` : `${pmShopLabel(r.retailer)}${T(" 경쟁 공격적 할인", " aggressive rival discount")}`, metric: `-${d}%`, metricTone: "down", before: r.srp, after: r.p0, channel: r.retailer, url: r.url, score: d * (own ? 0.75 : 1), day: "today", spec: r.capacity ?? null })
+        add({ id: `d${i}`, kind: "promo", sev: own ? "opp" : "warn", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)}${T(" 자사 프로모 강세", " strong own promo")}` : `${pmShopLabel(r.retailer)}${T(" 경쟁 공격적 할인", " aggressive rival discount")}`, metric: `-${d}%`, metricTone: "down", before: r.srp, after: r.p0, channel: r.retailer, url: r.url, score: d * (own ? 0.75 : 1), day: "today", spec: r.capacity ?? null, model: label })
       }
       // 재고(보조) — 점수 낮춰 편중 방지. 경쟁사 품절은 반사이익, 자사 품절은 손실.
       if (r.availability === "OutOfStock" && r.d0) {
-        add({ id: `s${i}`, kind: "stock", sev: own ? "alert" : "opp", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)}${T(" 자사 품절 — 판매 기회 손실", " own stockout — lost sales opportunity")}` : `${pmShopLabel(r.retailer)}${T(" 경쟁사 품절 — 반사이익", " rival stockout — our gain")}`, metric: "품절", metricTone: "flat", before: null, after: null, channel: r.retailer, url: r.url, score: own ? 42 : 16, day: "today", spec: r.capacity ?? null })
+        add({ id: `s${i}`, kind: "stock", sev: own ? "alert" : "opp", cat, brand: r.brand, own, title: nm, detail: own ? `${pmShopLabel(r.retailer)}${T(" 자사 품절 — 판매 기회 손실", " own stockout — lost sales opportunity")}` : `${pmShopLabel(r.retailer)}${T(" 경쟁사 품절 — 반사이익", " rival stockout — our gain")}`, metric: "품절", metricTone: "flat", before: null, after: null, channel: r.retailer, url: r.url, score: own ? 42 : 16, day: "today", spec: r.capacity ?? null, model: label })
       }
     })
 
@@ -101,34 +101,41 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       const offer = cleanTxt(ad.offer).slice(0, 20)
       // 프로모/광고 종료 임박(D-5 이내) — 경쟁사 종료=압력 완화(기회), 자사 종료=후속 점검(주의)
       if (ad.days_to_end != null && ad.days_to_end >= 0 && ad.days_to_end <= 5) {
-        add({ id: `ae${i}`, kind: "ad", sev: own ? "warn" : "opp", cat, brand: ad.brand, own, title: head, detail: own ? T("자사 광고 종료 임박 — 후속 캠페인 점검", "Own ad ending soon — plan follow-up campaign") : `${ad.brand} ${at}${T(" 종료 임박 — 경쟁 압력 완화", " ending soon — competitive pressure easing")}`, metric: `D-${ad.days_to_end}`, metricTone: "flat", before: null, after: null, channel: ad.venue, url: ad.ad_url, score: (6 - ad.days_to_end) * 10 + (offer ? 14 : 0) + (own ? -8 : 0), day: "today", spec: null })
+        add({ id: `ae${i}`, kind: "ad", sev: own ? "warn" : "opp", cat, brand: ad.brand, own, title: head, detail: own ? T("자사 광고 종료 임박 — 후속 캠페인 점검", "Own ad ending soon — plan follow-up campaign") : `${ad.brand} ${at}${T(" 종료 임박 — 경쟁 압력 완화", " ending soon — competitive pressure easing")}`, metric: `D-${ad.days_to_end}`, metricTone: "flat", before: null, after: null, channel: ad.venue, url: ad.ad_url, score: (6 - ad.days_to_end) * 10 + (offer ? 14 : 0) + (own ? -8 : 0), day: "today", spec: null, model: "" })
       }
       // 신규 광고 개시(D+3 이내) — 경쟁사 신규 캠페인=주시, 자사=정보
       if (ad.days_since_start != null && ad.days_since_start >= 0 && ad.days_since_start <= 3) {
-        add({ id: `an${i}`, kind: "ad", sev: own ? "opp" : "warn", cat, brand: ad.brand, own, title: head, detail: own ? `${T("자사 신규", "New own")} ${at}${T(" 광고 개시", " ad launched")}` : `${ad.brand} ${T("신규", "new")} ${at}${T(" 광고 — 경쟁 캠페인 주시", " ad — monitor rival campaign")}`, metric: offer || at, metricTone: "flat", before: null, after: null, channel: ad.venue, url: ad.ad_url, score: (4 - ad.days_since_start) * 8 + (offer ? 12 : 0) + (own ? -10 : 0), day: "today", spec: null })
+        add({ id: `an${i}`, kind: "ad", sev: own ? "opp" : "warn", cat, brand: ad.brand, own, title: head, detail: own ? `${T("자사 신규", "New own")} ${at}${T(" 광고 개시", " ad launched")}` : `${ad.brand} ${T("신규", "new")} ${at}${T(" 광고 — 경쟁 캠페인 주시", " ad — monitor rival campaign")}`, metric: offer || at, metricTone: "flat", before: null, after: null, channel: ad.venue, url: ad.ad_url, score: (4 - ad.days_since_start) * 8 + (offer ? 12 : 0) + (own ? -10 : 0), day: "today", spec: null, model: "" })
       }
     })
     return out
   }, [R, A])
 
-  // 제품(모델)별로 신호를 묶어서 나열 — 같은 모델의 가격/프로모/재고/광고 신호를 한 그룹으로.
-  // 그룹 내부는 심각도·점수 순, 그룹 정렬은 대표(최상위) 신호 기준. 중구난방 개별 나열 해소.
-  // 제품(브랜드·모델)당 한 줄로 축약 — 대표 신호 1개 + 나머지 신호는 요약(신호종류·개수·오늘/어제).
-  //  왼쪽 세로형 타임라인(세로선)에 노드로 나열. 정렬: 대표 신호 심각도 → 점수.
-  const list = React.useMemo(() => {
+  const [expanded, setExpanded] = React.useState<Set<string>>(new Set())
+  const toggleExp = (k: string) => setExpanded((prev) => { const n = new Set(prev); n.has(k) ? n.delete(k) : n.add(k); return n })
+
+  // 3단 계층 트리 — 날짜(오늘/어제) > 카테고리 > 제품(브랜드·모델). 제품 펼치면 거래선별 가격변동.
+  const tree = React.useMemo(() => {
     const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF))
-    const m = new Map<string, Signal[]>()
-    for (const s of filtered) { const key = s.brand + "|" + s.title; const arr = m.get(key); if (arr) arr.push(s); else m.set(key, [s]) }
-    const items = Array.from(m.values()).map((arr) => {
-      arr.sort((x, y) => SEV_META[x.sev].order - SEV_META[y.sev].order || y.score - x.score)
-      const rep = arr[0]
-      const kinds = Array.from(new Set(arr.map((s) => s.kind)))
-      const hasToday = arr.some((s) => s.day === "today"), hasYest = arr.some((s) => s.day === "yesterday")
-      return { rep, all: arr, kinds, hasToday, hasYest, n: arr.length }
-    })
-    items.sort((a, b) => SEV_META[a.rep.sev].order - SEV_META[b.rep.sev].order || b.rep.score - a.rep.score)
-    return items.slice(0, 60)
+    const DAY_ORDER: ("today" | "yesterday")[] = ["today", "yesterday"]
+    return DAY_ORDER.map((day) => {
+      const ds = filtered.filter((s) => s.day === day)
+      if (!ds.length) return null
+      const cats = CATS.filter((c) => ds.some((s) => s.cat === c))
+      const catGroups = cats.map((c) => {
+        const cs = ds.filter((s) => s.cat === c)
+        const pm = new Map<string, Signal[]>()
+        for (const s of cs) { const key = s.brand + "|" + s.title; const arr = pm.get(key); if (arr) arr.push(s); else pm.set(key, [s]) }
+        const prods = Array.from(pm.entries()).map(([k, arr]) => {
+          arr.sort((x, y) => SEV_META[x.sev].order - SEV_META[y.sev].order || y.score - x.score)
+          return { key: day + "|" + k, rep: arr[0], all: arr, kinds: Array.from(new Set(arr.map((s) => s.kind))) }
+        }).sort((a, b) => SEV_META[a.rep.sev].order - SEV_META[b.rep.sev].order || b.rep.score - a.rep.score)
+        return { cat: c, prods }
+      })
+      return { day, cats: catGroups, n: ds.length }
+    }).filter((x): x is NonNullable<typeof x> => x != null)
   }, [signals, kind, catF, dayF])
+  const total = tree.reduce((s, d) => s + d.n, 0)
 
   const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
 
@@ -153,40 +160,68 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
         <span className="ml-auto hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
 
-      {/* 제품(모델)별로 묶은 그룹 카드 — 헤더(제품·카테고리·신호수) + 소속 신호 나열 */}
-      {list.length === 0 ? (
+      {/* 3단 계층 — 날짜 > 카테고리 > 제품(펼치면 모델·거래선별 가격변동) */}
+      {total === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("해당 신호가 없습니다.", "No matching signals.")}</div>
       ) : (
-        // 세로형 타임라인 — 왼쪽 세로선(rail) + 제품당 노드 1개. 한 줄에 대표 신호 축약.
-        <div className="relative rounded-xl border border-gray-200 dark:border-gray-800 py-1">
-          <span aria-hidden className="absolute bottom-3 left-[26px] top-3 w-px bg-gray-200 dark:bg-gray-700" />
-          {list.map((it, i) => { const s = it.rep; return (
-            <div key={s.brand + s.title + i} className="relative flex items-center gap-2 py-2.5 pl-[42px] pr-3 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10" style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(i, 20) * 0.02 + "s" }}>
-              {/* 타임라인 노드 — 세로선 위 심각도 색 점(오늘=채움/어제=옅음) */}
-              <span className={"absolute left-[22px] top-1/2 z-10 h-2.5 w-2.5 -translate-y-1/2 rounded-full ring-2 ring-white dark:ring-gray-950 " + SEV_META[s.sev].dot} title={SEV_LABEL[s.sev] + " · " + (it.hasToday ? DAY_LABEL.today : DAY_LABEL.yesterday)} />
-              {/* 오늘/어제 라벨 */}
-              <span className={"inline-flex w-9 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[9.5px] font-semibold " + (it.hasToday ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400")}>{it.hasToday ? DAY_LABEL.today : DAY_LABEL.yesterday}</span>
-              {/* 제품 식별 — 브랜드 · 모델 · 카테고리 · 스펙 */}
-              <div className="flex min-w-0 shrink-0 items-center gap-1.5">
-                <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (CAT_DOT[s.cat] ?? "bg-gray-400")} />
-                <span className={"whitespace-nowrap text-[12px] font-bold " + (s.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50")}>{s.title}</span>
-                {s.own && <span className="hidden shrink-0 rounded bg-indigo-100 px-1 py-px text-[9px] font-bold text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300 sm:inline">{T("자사", "Own")}</span>}
-                <span className="hidden shrink-0 rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 md:inline">{CAT_LABEL[s.cat] ?? s.cat}</span>
-                {s.spec ? <span className="hidden shrink-0 whitespace-nowrap rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 lg:inline">{s.spec}</span> : null}
+        <div className="flex flex-col gap-3">
+          {tree.map((dg) => (
+            <div key={dg.day} className="relative">
+              {/* 날짜 헤더 + 좌측 세로 타임라인 */}
+              <div className="mb-1.5 flex items-center gap-2">
+                <span className={"inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-bold " + (dg.day === "today" ? "bg-indigo-600 text-white" : "bg-gray-200 text-gray-600 dark:bg-gray-700 dark:text-gray-200")}>
+                  <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />{DAY_LABEL[dg.day]}
+                </span>
+                <span className="text-[11px] text-gray-400 dark:text-gray-500">{dg.n}{T("건", " signals")}</span>
               </div>
-              {/* 신호 요약 칩 — 이 제품에서 뜬 신호 종류(가격·프로모·광고·재고) */}
-              <div className="hidden shrink-0 items-center gap-1 sm:flex">
-                {it.kinds.map((k) => <span key={k} className={"inline-flex items-center rounded px-1 py-px text-[9px] font-semibold " + KIND_META[k].cls}>{KIND_LABEL[k]}</span>)}
-                {it.n > 1 && <span className="rounded-full bg-gray-100 px-1.5 py-px text-[9px] font-bold tabular-nums text-gray-500 dark:bg-gray-800 dark:text-gray-400">+{it.n - 1}</span>}
+              <div className="relative ml-1 border-l-2 border-gray-200 pl-4 dark:border-gray-700">
+                {dg.cats.map((cg) => (
+                  <div key={cg.cat} className="mb-2 last:mb-0">
+                    {/* 카테고리 서브헤더 */}
+                    <div className="mb-1 flex items-center gap-1.5 py-0.5">
+                      <span className={"-ml-[21px] h-2 w-2 rounded-full ring-2 ring-white dark:ring-gray-950 " + (CAT_DOT[cg.cat] ?? "bg-gray-400")} />
+                      <span className="text-[11.5px] font-bold text-gray-700 dark:text-gray-200">{CAT_LABEL[cg.cat] ?? cg.cat}</span>
+                      <span className="text-[10px] text-gray-400 dark:text-gray-500">{cg.prods.length}</span>
+                    </div>
+                    {/* 제품 행들 */}
+                    <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-800">
+                      {cg.prods.map((p) => { const s = p.rep; const open = expanded.has(p.key); return (
+                        <div key={p.key} className="border-b border-gray-100 last:border-0 dark:border-gray-800/60">
+                          {/* 헤드라인 — 브랜드·카테고리·스펙(모델코드 제외) + 신호칩 + 대표지표 · 클릭 펼침 */}
+                          <button type="button" onClick={() => toggleExp(p.key)} className="flex w-full items-center gap-2 px-3 py-2 text-left transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400 transition-transform duration-200" style={{ transform: open ? "rotate(90deg)" : "none" }}><path d="M9 18l6-6-6-6" /></svg>
+                            <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + SEV_META[s.sev].dot} title={SEV_LABEL[s.sev]} />
+                            <span className={"whitespace-nowrap text-[12.5px] font-bold " + (s.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50")}>{s.brand}</span>
+                            {s.own && <span className="shrink-0 rounded bg-indigo-100 px-1 py-px text-[9px] font-bold text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300">{T("자사", "Own")}</span>}
+                            <span className="shrink-0 rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400">{CAT_LABEL[s.cat] ?? s.cat}</span>
+                            {s.spec ? <span className="hidden shrink-0 whitespace-nowrap rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 sm:inline">{s.spec}</span> : null}
+                            <span className="ml-1 hidden shrink-0 items-center gap-1 sm:flex">{p.kinds.map((k) => <span key={k} className={"inline-flex items-center rounded px-1 py-px text-[9px] font-semibold " + KIND_META[k].cls}>{KIND_LABEL[k]}</span>)}</span>
+                            <span className="ml-auto shrink-0">{metricChip(s)}</span>
+                          </button>
+                          {/* 펼침 — 모델 정보 + 거래선별 가격변동(세로형) */}
+                          {open && (
+                            <div className="border-t border-gray-100 bg-gray-50/60 px-3 py-2.5 dark:border-gray-800/60 dark:bg-gray-900/40" style={{ animation: "rowIn .28s ease both" }}>
+                              {s.model && <div className="mb-1.5 flex items-center gap-1.5"><span className="text-[9.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("모델", "Model")}</span><span className="rounded bg-white px-1.5 py-0.5 text-[11px] font-mono font-semibold text-gray-700 ring-1 ring-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:ring-gray-700">{s.model}</span></div>}
+                              <div className="flex flex-col gap-1">
+                                {p.all.map((sig, si) => { const km = KIND_META[sig.kind]; return (
+                                  <div key={sig.id + si} className="flex items-center gap-2 rounded-md px-1.5 py-1 hover:bg-white dark:hover:bg-gray-800/60">
+                                    <span className={"inline-flex w-10 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[9px] font-semibold " + km.cls}>{KIND_LABEL[sig.kind]}</span>
+                                    {sig.channel ? (sig.url ? <a href={sig.url} target="_blank" rel="noopener noreferrer" className="w-16 shrink-0 truncate text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400">{pmShopLabel(sig.channel)}</a> : <span className="w-16 shrink-0 truncate text-[11px] text-gray-500 dark:text-gray-400">{pmShopLabel(sig.channel)}</span>) : <span className="w-16 shrink-0 text-[11px] text-gray-400">—</span>}
+                                    <span className="min-w-0 flex-1 truncate text-[11.5px] text-gray-500 dark:text-gray-400">{sig.detail}</span>
+                                    <span className="shrink-0">{metricChip(sig)}</span>
+                                  </div>
+                                ) })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ) })}
+                    </div>
+                  </div>
+                ))}
               </div>
-              {/* 대표 신호 내용 */}
-              <div className="flex min-w-0 flex-1 items-baseline">
-                <span className="truncate text-[12px] text-gray-500 dark:text-gray-400">{s.detail}</span>
-              </div>
-              <div className="shrink-0 text-right">{metricChip(s)}</div>
-              {s.channel ? (s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="hidden w-20 shrink-0 truncate text-right text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400 md:block">{pmShopLabel(s.channel)} ↗</a> : <span className="hidden w-20 shrink-0 truncate text-right text-[11px] text-gray-400 dark:text-gray-500 md:block">{pmShopLabel(s.channel)}</span>) : <span className="hidden w-20 shrink-0 md:block" />}
             </div>
-          ) })}
+          ))}
         </div>
       )}
       <p className="text-[10px] text-gray-400 dark:text-gray-500">{T("감지 룰: 가격 급락/급등(3일 실판매가 −6%↓·+8%↑) · 프로모(SRP 대비 ≥30% 할인) · 광고(종료 D-5 이내·신규 D+3 이내, v_competitor_ads_board) · 재고(보조) · 전체 상위 신호 큐레이션 · 유리(기회)/불리(경보·주의)", "Detection rules: price plunge/spike (3-day street price −6%↓·+8%↑) · promo (≥30% off SRP) · ads (ending within D-5 · new within D+3, v_competitor_ads_board) · stock (secondary) · curated top signals overall · favorable (opportunity)/adverse (alert·watch)")}</p>
