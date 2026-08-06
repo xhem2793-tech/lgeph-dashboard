@@ -107,3 +107,41 @@ export async function isAllowed(email: string): Promise<boolean> {
     return (await r.json()) === true
   } catch { return false }
 }
+
+/* ── 계정별 설정(customize) DB 동기화 — user_prefs 테이블(RLS: 본인 것만) ────────────
+ *  로그인 세션 토큰으로 접근. 저장은 localStorage(즉시 반영)+DB(기기 간 동기화) 병행. */
+
+/** DB에서 내 설정(data jsonb)을 읽는다. 세션 없으면 null. */
+export async function fetchPrefs(): Promise<Record<string, unknown> | null> {
+  const s = getSession()
+  if (!s?.access_token) return null
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/user_prefs?select=data`, {
+      headers: { apikey: SB_ANON, Authorization: `Bearer ${s.access_token}` },
+    })
+    if (!r.ok) return null
+    const rows = (await r.json()) as { data?: Record<string, unknown> }[]
+    return rows[0]?.data ?? {}
+  } catch { return null }
+}
+
+/** 설정 1건을 DB에 저장(upsert·merge). 실패해도 조용히(로컬은 이미 저장됨). */
+export async function pushPref(key: string, value: unknown): Promise<void> {
+  const s = getSession()
+  if (!s?.access_token) return
+  try {
+    const cur = (await fetchPrefs()) ?? {}
+    const next = { ...cur, [key]: value }
+    await fetch(`${SB_URL}/rest/v1/user_prefs?on_conflict=user_id`, {
+      method: "POST",
+      headers: {
+        apikey: SB_ANON,
+        Authorization: `Bearer ${s.access_token}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=minimal",
+      },
+      body: JSON.stringify({ email: s.email, data: next }), // user_id는 DB default auth.uid()가 채움
+
+    })
+  } catch {}
+}
