@@ -183,6 +183,22 @@ function FeedView({ events, f, onSel }: { events: Ev[]; f: string; onSel: (e: Ev
   )
 }
 
+// 카테고리 썸네일 — 실제 제품 이미지 URL이 데이터에 없어 카테고리 아이콘 타일로 대체(추후 og:image 저장 시 <img>로 교체).
+const CAT_ICON: Record<string, string> = {
+  "냉장고": '<rect x="6" y="2.5" width="12" height="19" rx="2.2"/><path d="M6 10h12"/><path d="M9 5.5v2.5M9 12.5v3.5"/>',
+  "세탁기": '<rect x="4" y="2.5" width="16" height="19" rx="2.2"/><circle cx="12" cy="14" r="4.2"/><path d="M7 6h.01M10 6h.01"/>',
+  "TV": '<rect x="2.5" y="4" width="19" height="13" rx="2"/><path d="M8 21h8M12 17v4"/>',
+  "에어컨": '<rect x="2.5" y="5" width="19" height="7" rx="2.2"/><path d="M6 8.5h9M6 16c0 1.5 1 2 2.2 2M12 16c0 2 1.4 2.6 3 2.6M18 16c0 1.3-.8 1.8-1.8 1.8"/>',
+}
+function CatThumb({ cat, brand }: { cat: string; brand: string }) {
+  const lg = /^lg$/i.test(brand)
+  const d = CAT_ICON[cat] ?? '<rect x="4" y="4" width="16" height="16" rx="2"/>'
+  return (
+    <span className={"flex h-12 w-12 shrink-0 items-center justify-center rounded-lg " + (lg ? "bg-indigo-50 text-indigo-500 dark:bg-indigo-500/15 dark:text-indigo-300" : "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500")} title={cat}>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" dangerouslySetInnerHTML={{ __html: d }} />
+    </span>
+  )
+}
 function BoardKanban({ events, onSel }: { events: Ev[]; onSel: (e: Ev) => void }) {
   const cols: { key: string; title: string; items: Ev[] }[] = [
     { key: "신제품", title: T("신제품 등장", "New products"), items: events.filter((e) => e.kind === "new").sort((a, b) => b.date.localeCompare(a.date)) },
@@ -199,14 +215,18 @@ function BoardKanban({ events, onSel }: { events: Ev[]; onSel: (e: Ev) => void }
             <span className="rounded-full bg-white dark:bg-gray-800 px-1.5 py-px text-[10px] font-bold tabular-nums text-gray-500 dark:text-gray-400">{col.items.length}</span>
           </div>
           {col.items.length === 0 ? <p className="px-1 py-6 text-center text-[11.5px] text-gray-400 dark:text-gray-500">{T("없음", "None")}</p> : col.items.slice(0, 40).map((e, i) => (
-            <button key={e.id} type="button" onClick={() => onSel(e)} className="group flex flex-col gap-1.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2.5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md" style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 12) * 0.03 + "s" }}>
+            <button key={e.id} type="button" onClick={() => onSel(e)} className="group flex gap-2.5 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-2.5 text-left transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-500/40 hover:shadow-md" style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(i, 12) * 0.03 + "s" }}>
+              <CatThumb cat={e.cat} brand={e.brand} />
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <div className="flex items-center gap-1.5">
                 <span className="rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400">{e.cat}</span>
+                {e.form ? <span className="rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400">{e.form}</span> : null}
                 <span className="ml-auto text-[9.5px] font-semibold text-gray-400 dark:text-gray-500">{T("신뢰 ", "Conf. ")}{e.conf}</span>
               </div>
-              <span className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{e.brand} {e.model}</span>
+              <span className="truncate text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{e.brand} {e.model}</span>
               <span className={"rounded-md px-2 py-1 text-[11px] font-semibold tabular-nums " + STATUS_C[col.key].soft + (col.key === "신제품" ? " text-emerald-700 dark:text-emerald-300" : col.key === "단종 유력" ? " text-rose-700 dark:text-rose-300" : " text-amber-700 dark:text-amber-300")}>{e.kind === "new" ? T("등장가 ", "Launch ") + peso(e.price) : T("미노출 ", "Absent ") + "D+" + e.daysMissing}</span>
               <span className="text-[10px] text-gray-400 dark:text-gray-500">{T("최초 ", "First ")}{md(e.firstSeen)}{T(" · 최종 ", " · last ")}{md(e.lastSeen)}{e.price != null ? " · " + peso(e.price) : ""}</span>
+              </div>
             </button>
           ))}
         </div>
