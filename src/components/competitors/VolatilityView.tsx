@@ -39,6 +39,8 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
     return { retailers, brands, today, prev, fresh, oos, maxT, colTot, rowTot, grand, K }
   }, [rows, di])
   const slots = [0, 1, 2, 3].filter((i) => dates[i])
+  const retSlots = Array.from({ length: 10 }, (_, i) => data.retailers[i] ?? null) // 거래선 10열 고정
+  const brSlots = Array.from({ length: 10 }, (_, i) => data.brands[i] ?? null) // 브랜드 10행 고정
   return (
     <div className="flex flex-col gap-2.5">
       {/* 한 줄 필터바 — 채널별 가격비교식(제품 드롭다운 + 날짜 토글 + 최신) */}
@@ -59,26 +61,28 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           <div className="flex h-40 items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">{T("해당 조건의 전시 데이터가 없습니다.", "No listing data for this filter.")}</div>
         ) : (<>
       <div className="overflow-x-auto pb-1">
-        {/* 바둑판 그리드 — 화면 폭을 꽉 채우는 정사각 셀(1fr + aspect-square). 브랜드 라벨·합계는 고정폭. */}
-        <div className="grid w-full gap-[4px] text-[11px]" style={{ minWidth: 120 + data.retailers.length * 52, gridTemplateColumns: `minmax(84px,0.7fr) repeat(${data.retailers.length}, minmax(46px,1fr)) minmax(38px,0.5fr)` }}>
+        {/* 10×10 고정 매트릭스 — 거래선 10열·브랜드 10행. 부족분은 빈 칸. 폭에 맞춰 늘어나는 정사각 셀. */}
+        <div className="grid w-full gap-[4px] text-[11px]" style={{ minWidth: 640, gridTemplateColumns: `minmax(80px,0.7fr) repeat(10, minmax(44px,1fr)) minmax(36px,0.5fr)` }}>
           {/* 헤더 행 */}
           <div className="sticky left-0 z-10 bg-white dark:bg-gray-900/40" />
-          {data.retailers.map((ret, ci) => (
-            <div key={ret} className="flex flex-col items-center justify-end gap-0.5 pb-1">
+          {retSlots.map((ret, ci) => ret ? (
+            <div key={ci} className="flex w-full flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 py-1.5 text-center dark:border-gray-800 dark:bg-gray-800/40">
               <span className="rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span>
-              <span className="w-full truncate px-0.5 text-center text-[9.5px] font-semibold text-gray-600 dark:text-gray-300" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
+              <span className="w-full truncate px-0.5 text-center text-[9.5px] font-semibold text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
               <span className="text-[9px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
             </div>
-          ))}
-          <div className="flex items-end justify-center pb-1 text-[9.5px] font-semibold text-indigo-500 dark:text-indigo-300">Σ</div>
-          {/* 본문 행 — 브랜드 라벨 + 폭에 맞춰 늘어나는 정사각 셀 + 합계 */}
-          {data.brands.map((b) => (
-            <React.Fragment key={b}>
-              <div className={"sticky left-0 z-10 flex items-center whitespace-nowrap bg-white px-1.5 text-[11px] font-bold dark:bg-gray-900/40 " + (b === "LG" ? "text-indigo-700 dark:text-indigo-300" : "text-gray-700 dark:text-gray-200")}>{b}</div>
-              {data.retailers.map((ret) => { const k = data.K(b, ret); const t = data.today.get(k) || 0; const p = di < 3 ? (data.prev.get(k) || 0) : null; const d = p != null ? t - p : null; const fr = data.fresh.get(k) || 0; const oo = di === 0 ? (data.oos.get(k) || 0) : 0
+          ) : <div key={ci} />)}
+          <div className="flex w-full items-center justify-center rounded-md border border-indigo-100 bg-indigo-50/60 text-[10px] font-bold text-indigo-500 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300">Σ</div>
+          {/* 본문 — 브랜드 10행(부족분 빈 칸) × 거래선 10열 */}
+          {brSlots.map((b, bi) => (
+            <React.Fragment key={bi}>
+              <div className={"sticky left-0 z-10 flex w-full items-center justify-center whitespace-nowrap rounded-md border px-1 text-center text-[11px] font-bold " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")}>{b ?? ""}</div>
+              {retSlots.map((ret, ci) => {
+                if (!b || !ret) return <div key={ci} className="aspect-square w-full rounded-md" style={{ background: "var(--cov-empty)", opacity: 0.5 }} />
+                const k = data.K(b, ret); const t = data.today.get(k) || 0; const p = di < 3 ? (data.prev.get(k) || 0) : null; const d = p != null ? t - p : null; const fr = data.fresh.get(k) || 0; const oo = di === 0 ? (data.oos.get(k) || 0) : 0
                 const alpha = t ? Math.max(0.12, Math.min(1, t / data.maxT)) : 0; const light = alpha > 0.55
                 return (
-                  <div key={ret} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}
+                  <div key={ci} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}
                     className="flex aspect-square w-full flex-col items-center justify-center rounded-md text-center transition-transform duration-150 ease-out hover:z-10 hover:scale-[1.12] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1" }}>
                     <span className="text-[15px] font-bold tabular-nums leading-none">{t || "·"}</span>
                     {(d != null || oo > 0) && (
@@ -89,7 +93,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                     )}
                   </div>
                 ) })}
-              <div className="flex items-center justify-center text-[11px] font-bold tabular-nums text-indigo-600 dark:text-indigo-300">{data.rowTot[b] || 0}</div>
+              <div className={"flex w-full items-center justify-center rounded-md text-[11px] font-bold tabular-nums " + (b == null ? "" : "border border-indigo-100 bg-indigo-50/60 text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300")}>{b ? (data.rowTot[b] || 0) : ""}</div>
             </React.Fragment>
           ))}
         </div>
