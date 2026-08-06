@@ -1,7 +1,6 @@
 "use client"
 
 import React, { useEffect, useMemo, useState } from "react"
-import { createPortal } from "react-dom"
 import { dataProvenance, allIndicatorLatest, indicatorSeries, econSpark, fmtStamp, type Provenance } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 import { LineChart, Lg } from "@/components/EconChart"
@@ -214,6 +213,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes detFade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes bkFade{from{opacity:0}to{opacity:1}}@keyframes detSwap{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes detModalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}"}</style>
 
+      {!detail && (<>
       <InsightBanner banner={ALL_BANNER} open={bnOpen} onToggle={() => setBnOpen((v) => !v)} />
 
       {/* 정렬(분류순/최신순) + 분류 드롭다운(시장동향식) + 총 지표 + 검색 + 최신 — 한 줄 */}
@@ -275,6 +275,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
       <p className="text-[11px] leading-relaxed text-gray-400 dark:text-gray-500">
         {T("최신값=국가지표(PHILIPPINES) 최신 관측 · 직전 대비=직전 관측 대비 증감 · 기간=데이터 보유 범위(관측수) · ", "Latest = most recent observation for the national indicator (PHILIPPINES) · Prior change = change vs. previous observation · Coverage = data range held (observations) · ")}<b className="font-semibold text-gray-500 dark:text-gray-400">{T("자세히보기=시계열(연·분기·월)+전년비·전월비, 엑셀=CSV 다운로드", "Detail = time series (Y/Q/M) + YoY·MoM, Excel = CSV download")}</b>{T(" · 「전망」은 ADB·IMF·BSP 예측치.", " · “Forecast” = ADB·IMF·BSP projections.")}
       </p>
+      </>)}
 
       {detail && <IndicatorDetail row={detail} onClose={() => setDetail(null)} onExcel={downloadExcel} onOpenChart={goChart} />}
     </div>
@@ -287,9 +288,8 @@ function descOf(r: Row): string {
   const u = inferUnit(r.indicator, r.label || "")
   const base = INDICATOR_DESC[r.indicator]
     ?? ((u.unit === "%" ? T("전기 대비 증감률·비율", "Change vs. prior period · ratio") : u.unit === "지수" ? T("기준계열 대비 지수", "Index vs. base series") : u.prefix === "₱" ? T("가격·금액(₱ 페소)", "Price · amount (₱ PHP)") : u.prefix === "$" ? T("금액($ 미달러)", "Amount ($ USD)") : u.unit === "℃" ? T("월평균 기온", "Monthly avg. temperature") : u.unit === "CDD" ? T("냉방도일(에어컨 수요 선행)", "Cooling degree days (leads AC demand)") : u.unit.indexOf("명") >= 0 ? T("인구·규모·수량", "Population · size · count") : T("국가 공식통계 관측값", "Official national statistic observation")) + T(" 지표", " indicator"))
-  // 단위 + 출처 + 데이터 기간(관측수)로 2줄 분량 보강
-  const prov = T("단위 ", "Unit ") + u.note + T(" · 출처 ", " · Source ") + r.source + (r.n ? " · " + ym(r.mn) + "~" + ym(r.mx) + " " + r.n + T("관측", " obs.") : "")
-  return base + " · " + prov
+  // 리스트에는 설명(정의)만 — 단위·출처·관측기간은 지표 상세 페이지에서 표시
+  return base
 }
 
 // ── 이미지형 리스트 테이블 — 지표(☆) | 설명 | 최신값 | 24H(%) | 최근 7일 ──
@@ -408,12 +408,10 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
   const chDec = Math.abs(chartData[chartData.length - 1]?.v ?? 0) < 20 ? 1 : 0
   const chUnit = u.suffix || (u.prefix ? " " + u.prefix : u.unit && u.unit !== "값" ? " " + u.unit : "") // 툴팁 단위
 
-  if (typeof document === "undefined") return null
-  return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 sm:p-6" onClick={onClose} style={{ animation: "veilIn .24s ease both" }}>
-      <div className="relative flex max-h-[88vh] w-full max-w-[760px] flex-col overflow-hidden rounded-[26px] bg-white ring-1 ring-black/[0.06] shadow-[0_24px_70px_-20px_rgba(0,0,0,0.5)] dark:bg-gray-900 dark:ring-white/10" onClick={(e) => e.stopPropagation()} style={{ animation: "popIn .44s cubic-bezier(.34,1.42,.64,1) both", willChange: "transform, opacity" }}>
-        <button type="button" onClick={onClose} aria-label={T("닫기", "Close")} className="absolute right-3.5 top-3.5 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.06] text-gray-600 backdrop-blur transition-all duration-200 hover:bg-black/10 hover:text-gray-900 active:scale-90 dark:bg-white/10 dark:text-gray-300 dark:hover:bg-white/20 dark:hover:text-gray-50"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M6 6l12 12M18 6L6 18" /></svg></button>
-        <div className="min-h-0 flex-1 overflow-y-auto px-7 pb-7 pt-6">
+  return (
+    <section style={{ animation: "detFade .3s ease both" }}>
+        <button type="button" onClick={onClose} className="mb-3 inline-flex items-center gap-1 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1.5 text-[12px] font-semibold text-gray-600 dark:text-gray-300 transition-all hover:-translate-y-0.5 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300 active:scale-95"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>{T("목록으로", "Back")}</button>
+        <div>
           <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (row.confidence === "FORECAST" ? "bg-amber-500" : "bg-indigo-500")} />
             <span className="font-semibold text-indigo-600 dark:text-indigo-400">{row.catKo}</span>
@@ -423,7 +421,8 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
             <span className="num">{ym(row.mn)}~{ym(row.mx)} ({row.n}{T("관측", " obs.")})</span>
             {row.confidence === "FORECAST" && <span className="ml-1 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[10px] font-bold text-amber-700 dark:text-amber-300">{T("전망", "Forecast")}</span>}
           </div>
-          <h3 className="mt-2 text-[19px] font-semibold leading-[1.35] tracking-tight text-gray-900 dark:text-gray-50">{enLabel(row.indicator, row.label)}</h3>
+          <h3 className="mt-2 text-[22px] font-bold leading-tight tracking-tight text-gray-900 dark:text-gray-50">{enLabel(row.indicator, row.label)}</h3>
+          <p className="mt-1.5 max-w-[920px] text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">{INDICATOR_DESC[row.indicator] ?? descOf(row)}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {canOpen && <button type="button" onClick={() => { onOpenChart(row.cat); onClose() }} className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-[12px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95">{T("경제지표에서 보기", "View in Indicators")} →</button>}
             <button type="button" onClick={() => onExcel(row)} className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 text-[12px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95">
@@ -437,9 +436,9 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
           ) : table.length === 0 ? (
             <div className="flex h-56 items-center justify-center text-[12.5px] text-gray-400">{T("시계열 데이터 없음", "No time-series data")}</div>
           ) : (
-            <div className="flex flex-col gap-4">
-              {/* 차트 카드 — 경제지표 페이지와 동일한 LineChart. 토글(Segmented)은 카드에 상주(리마운트 X)해 슬라이드 애니메이션 유지 */}
-              <div className="rounded-xl p-3.5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
+              {/* 차트 카드(좌) — 경제지표 페이지와 동일한 LineChart. 토글(Segmented)은 카드에 상주해 슬라이드 애니메이션 유지 */}
+              <div className="min-w-0 rounded-xl border border-gray-100 p-3.5 dark:border-gray-800 lg:w-[56%]">
                 <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
                   <h4 className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{enLabel(row.indicator, row.label)}</h4>
                   <span className="shrink-0 text-[10.5px] font-medium text-gray-400 dark:text-gray-500">{gname[gran]} · {u.note}</span>
@@ -463,8 +462,8 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                   <p className="text-[11px] leading-relaxed text-gray-600 dark:text-gray-300"><b className="font-semibold text-indigo-600 dark:text-indigo-400">{T("LG 인사이트", "LG Insight")}</b> {(CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
                 </div>
               </div>
-              {/* 엑셀형 표 카드 */}
-              <div key={"tb-" + win} className="overflow-hidden rounded-xl" style={{ animation: "bkFade .45s ease .06s both" }}>
+              {/* 엑셀형 표 카드(우) */}
+              <div key={"tb-" + win} className="min-w-0 overflow-hidden rounded-xl border border-gray-100 dark:border-gray-800 lg:w-[44%]" style={{ animation: "bkFade .45s ease .06s both" }}>
                 <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 px-4 py-2.5">
                   <span className="h-[15px] w-1 rounded bg-indigo-500" />
                   <h4 className="text-[12.5px] font-bold text-gray-900 dark:text-gray-50">{T("시계열 표", "Time series")} <span className="text-[11px] font-semibold text-gray-400">{T("· 전기·전년 대비", "· vs. prior period · YoY")}</span></h4>
@@ -493,9 +492,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
           </div>
           <p className="mt-4 border-t border-gray-100 dark:border-gray-800 pt-3 text-[10px] leading-relaxed text-gray-400 dark:text-gray-500">{gname[gran]} {T("시계열 · 값=기간 말 관측 · 상승 ", "time series · Value = end-of-period observation · Up ")}<span className="text-rose-500">{T("적색", "red")}</span>{T("/하락 ", "/Down ")}<span className="text-emerald-500">{T("녹색", "green")}</span>{T(" · 출처 ", " · Source ")}{row.source}</p>
         </div>
-      </div>
-    </div>,
-    document.body
+    </section>
   )
 }
 
