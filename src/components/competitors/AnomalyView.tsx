@@ -227,7 +227,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                     <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{CAT_LABEL[cg.cat] ?? cg.cat} · {cg.bubbles.length}</span>
                     <span className="h-px flex-1 bg-gray-100 dark:bg-gray-800" />
                   </div>
-                  <div className="grid items-start gap-2 xl:grid-cols-2 2xl:grid-cols-3">
+                  <div className="flex flex-col gap-2">
                     {cg.bubbles.map((bg) => { const s = bg.rep; const open = expanded.has(bg.key); const sm = SEV_META[bg.sev]
                       const canExpand = bg.nProd > 1 || bg.products.some((p) => p.all.length > 1)
                       const bub = bg.own ? "border-indigo-200 bg-indigo-50/70 dark:border-indigo-500/30 dark:bg-indigo-500/10"
@@ -239,7 +239,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                         {/* 아바타(브랜드 이니셜) */}
                         <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
                         {/* 말풍선 — 브랜드 1개로 요약(제품 N개), 펼치면 제품·거래선별 */}
-                        <div className={"relative min-w-0 flex-1 rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md " + bub}>
+                        <div className={"relative max-w-[92%] rounded-2xl rounded-bl-sm border px-3 py-2 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md " + bub}>
                           <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
                             <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
                             <span className={"whitespace-nowrap text-[12.5px] font-bold " + (bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-800 dark:text-gray-100")}>{bg.brand}</span>

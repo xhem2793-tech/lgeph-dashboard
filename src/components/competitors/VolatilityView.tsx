@@ -26,14 +26,21 @@ const RETAILER_DOMAIN: Record<string, string> = {
   "Emcor": "emcor.com.ph", "Addessa": "addessa.com.ph", "Home Credit": "homecredit.ph", "Imperial": "imperialappliance.com",
 }
 const IMPERIAL = "Imperial" // 9번 열 · 비활성(스크래핑 미연동)
-// Google 파비콘 서비스(안정적, 64px 정사각) — 도메인 기반. Clearbit(종료)에서 교체.
-const brandLogo = (b: string): string | null => BRAND_DOMAIN[b] ? `https://www.google.com/s2/favicons?domain=${BRAND_DOMAIN[b]}&sz=64` : null
+// 로컬 고화질 로고(public/logos) 우선 — 안 잡히던 8종 보강. 나머지는 Google 파비콘(안정적).
+const BRAND_LOCAL: Record<string, string> = {
+  LG: "/logos/lg.png", Samsung: "/logos/samsung-company-logo-south-korean-260nw-2394493913.webp",
+  Panasonic: "/logos/panasonic.png", TCL: "/logos/tcl.png", Hisense: "/logos/Hisense-Logo.png",
+  Carrier: "/logos/carrier.png", Midea: "/logos/midea.png", Sony: "/logos/sony.png",
+}
+// Google 파비콘 서비스(안정적, 64px) — Clearbit(종료)에서 교체.
+const brandLogo = (b: string): string | null => BRAND_LOCAL[b] ?? (BRAND_DOMAIN[b] ? `https://www.google.com/s2/favicons?domain=${BRAND_DOMAIN[b]}&sz=64` : null)
 const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? `https://www.google.com/s2/favicons?domain=${RETAILER_DOMAIN[r]}&sz=64` : null
 const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none" }
 
 function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
   const [di, setDi] = React.useState(0)
   const [cat, setCat] = React.useState("전체")
+  const [metric, setMetric] = React.useState<"count" | "actRate" | "oosCnt" | "oosRate">("count") // 셀 표시 지표
   // 제품 4개 고정: 냉장고·세탁기·에어컨(RAC)·TV (있는 것만)
   const cats = React.useMemo(() => ["냉장고", "세탁기", "에어컨", "TV"].filter((c) => allRows.some((r) => r.category === c)), [allRows])
   const rows = React.useMemo(() => cat === "전체" ? allRows : allRows.filter((r) => r.category === cat), [allRows, cat])
@@ -51,12 +58,15 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
       if (di < 3 && listedOn(r, di + 1)) prev.set(k, (prev.get(k) || 0) + 1)
     })
     let maxT = 1; today.forEach((v) => { if (v > maxT) maxT = v })
+    let maxOos = 1; oos.forEach((v) => { if (v > maxOos) maxOos = v })
     const colTot: Record<string, number> = {}, rowTot: Record<string, number> = {}
     today.forEach((v, k) => { const [b, ret] = k.split("|"); colTot[ret] = (colTot[ret] || 0) + v; rowTot[b] = (rowTot[b] || 0) + v })
     const grand = Array.from(today.values()).reduce((a, b) => a + b, 0)
-    return { retailers, brands, today, prev, fresh, oos, maxT, colTot, rowTot, grand, K }
+    return { retailers, brands, today, prev, fresh, oos, maxT, maxOos, colTot, rowTot, grand, K }
   }, [rows, di])
   const slots = [0, 1, 2, 3].filter((i) => dates[i])
+  const slotPos = slots.indexOf(di)
+  const pickDate = (v: string) => { const idx = [0, 1, 2, 3].find((i) => dates[i] === v); if (idx != null) setDi(idx) }
   // 거래선 10열 고정 — 9번(index 8)은 Imperial(비활성) 고정, 나머지는 활성 거래선 순서대로
   const retSlots: (string | null)[] = []
   { let ai = 0; for (let i = 0; i < 10; i++) { if (i === 8) retSlots.push(IMPERIAL); else { retSlots.push(data.retailers[ai] ?? null); ai++ } } }
@@ -66,12 +76,20 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
       {/* 한 줄 필터바 — 채널별 가격비교식(제품 드롭다운 + 날짜 토글 + 최신) */}
       <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
         <PmDrop label={T("제품", "Div")} sel={cat} options={[{ k: "전체", t: T("전체", "All") }, ...cats.map((c) => ({ k: c, t: c === "에어컨" ? "RAC" : catLabel(c) }))]} onSelect={setCat} />
+        <PmDrop label={T("지표", "Metric")} sel={metric} options={[{ k: "count", t: T("SKU 총갯수", "Total SKUs") }, { k: "actRate", t: T("활성화율", "Active %") }, { k: "oosCnt", t: T("품절 갯수", "OOS count") }, { k: "oosRate", t: T("품절율", "OOS %") }]} onSelect={(k) => setMetric(k as "count" | "actRate" | "oosCnt" | "oosRate")} />
         <div className="ml-auto flex items-center gap-2.5">
-          <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-0.5">
-            {slots.map((i) => (
-              <button key={i} type="button" onClick={() => setDi(i)} className={"rounded-full px-2.5 py-0.5 text-[11px] font-semibold tabular-nums transition-colors " + (di === i ? "bg-indigo-600 text-white" : "text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-300")}>{md(dates[i])}{i === 0 ? T(" 오늘", " today") : ""}</button>
-            ))}
-          </div>
+          {/* 날짜 네비게이터 — 채널별 가격비교(BoardView) 스타일: ◀ 이전 · ▶ 다음 · 📅 달력 */}
+          {slots.length > 0 && (
+            <div className="flex items-center gap-0.5 rounded-full border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-1 py-0.5">
+              <button type="button" onClick={() => slotPos < slots.length - 1 && setDi(slots[slotPos + 1])} disabled={slotPos >= slots.length - 1} aria-label={T("이전 날짜", "Previous date")} className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg></button>
+              <span className="min-w-[74px] text-center text-[12px] font-bold tabular-nums text-gray-800 dark:text-gray-100">{md(dates[di])}{di === 0 && <span className="ml-1 rounded bg-emerald-50 dark:bg-emerald-500/10 px-1 text-[9px] font-semibold text-emerald-700 dark:text-emerald-300">{T("최신", "Latest")}</span>}</span>
+              <button type="button" onClick={() => slotPos > 0 && setDi(slots[slotPos - 1])} disabled={slotPos <= 0} aria-label={T("다음 날짜", "Next date")} className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400 disabled:opacity-30 disabled:hover:bg-transparent active:scale-90"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg></button>
+              <label className="relative flex h-6 w-6 cursor-pointer items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition hover:bg-indigo-50 dark:hover:bg-indigo-500/10 hover:text-indigo-600 dark:hover:text-indigo-400" title={T("달력에서 날짜 선택", "Pick a date from the calendar")}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
+                <input type="date" value={dates[di] ?? ""} min={dates[slots[slots.length - 1]] ?? undefined} max={dates[slots[0]] ?? undefined} onChange={(e) => pickDate(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label={T("날짜 선택", "Select date")} />
+              </label>
+            </div>
+          )}
           <span className="hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
         </div>
       </div>
@@ -86,17 +104,17 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           {/* 헤더 행 */}
           <div className="sticky left-0 z-10 bg-white dark:bg-gray-900/40" />
           {retSlots.map((ret, ci) => ret === IMPERIAL ? (
-            <div key={ci} className="flex w-full flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-gray-200 bg-gray-50/40 px-0.5 py-1.5 text-center opacity-70 dark:border-gray-700 dark:bg-gray-800/20" title={T("준비 중 · 스크래핑 미연동", "Coming soon · not connected")}>
+            <div key={ci} className="flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-md border border-dashed border-gray-200 bg-gray-50/40 px-0.5 text-center opacity-70 dark:border-gray-700 dark:bg-gray-800/20" title={T("준비 중 · 스크래핑 미연동", "Coming soon · not connected")}>
               <span className="rounded-full bg-gray-100 px-1 text-[8px] font-bold tabular-nums text-gray-400 dark:bg-gray-700 dark:text-gray-400">#9</span>
               <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-400 dark:text-gray-500">Imperial</span>
               <span className="rounded bg-gray-100 px-1 text-[8px] font-semibold text-gray-400 dark:bg-gray-700 dark:text-gray-500">{T("준비중", "soon")}</span>
             </div>
           ) : ret ? (
-            <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="flex w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 py-1.5 text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-indigo-500/40" style={{ animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: ci * 0.02 + "s" }}>
+            <a key={ci} href={RETAILER_DOMAIN[ret] ? `https://${RETAILER_DOMAIN[ret]}` : undefined} target="_blank" rel="noopener noreferrer" title={pmShopLabel(ret) + (RETAILER_DOMAIN[ret] ? " · " + T("사이트 열기", "open site") : "")} className="flex h-16 w-full cursor-pointer flex-col items-center justify-center gap-0.5 rounded-md border border-gray-100 bg-gray-50 px-0.5 text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:border-indigo-300 hover:shadow-md dark:border-gray-800 dark:bg-gray-800/40 dark:hover:border-indigo-500/40" style={{ animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: ci * 0.02 + "s" }}>
               <span className="rounded-full bg-indigo-50 px-1 text-[8px] font-bold tabular-nums text-indigo-500 dark:bg-indigo-500/10 dark:text-indigo-300" title={T("매출 순위", "Sales rank")}>#{ci + 1}</span>
               {retailerLogo(ret) && (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-5 w-5 rounded object-contain" />
+                <img src={retailerLogo(ret) as string} alt={pmShopLabel(ret)} loading="lazy" onError={hideOnError} className="h-5 w-auto max-w-[56px] object-contain" />
               )}
               <span className="w-full break-words px-0.5 text-center text-[10.5px] font-semibold leading-tight text-gray-700 dark:text-gray-200" title={pmShopLabel(ret)}>{pmShopLabel(ret)}</span>
               <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.colTot[ret] || 0}</span>
@@ -105,30 +123,28 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           {/* 본문 — 브랜드 10행(부족분 빈 칸) × 거래선 10열 */}
           {brSlots.map((b, bi) => (
             <React.Fragment key={bi}>
-              <div className={"sticky left-0 z-10 flex w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 py-1.5 text-center text-[12px] font-bold transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-20 hover:-translate-y-0.5 hover:scale-[1.05] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: bi * 0.02 + "s" }}>
+              <div className={"sticky left-0 z-10 flex h-16 w-full flex-col items-center justify-center gap-0.5 rounded-md border px-0.5 text-center text-[12px] font-bold transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-20 hover:-translate-y-0.5 hover:scale-[1.05] hover:shadow-md " + (b == null ? "border-transparent bg-transparent" : b === "LG" ? "border-indigo-100 bg-indigo-50 text-indigo-700 dark:border-indigo-500/20 dark:bg-indigo-500/10 dark:text-indigo-300" : "border-gray-100 bg-gray-50 text-gray-700 dark:border-gray-800 dark:bg-gray-800/40 dark:text-gray-200")} style={b == null ? undefined : { animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: bi * 0.02 + "s" }}>
                 {b && brandLogo(b) && (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-5 w-5 rounded object-contain" />
+                  <img src={brandLogo(b) as string} alt={b} loading="lazy" onError={hideOnError} className="h-5 w-auto max-w-[56px] object-contain" />
                 )}
                 <span className="w-full break-words leading-tight">{b ?? ""}</span>
                 {b && <span className="text-[10px] font-normal tabular-nums text-gray-400">{data.rowTot[b] || 0}</span>}
               </div>
               {retSlots.map((ret, ci) => {
-                if (ret === IMPERIAL) return <div key={ci} className="flex aspect-square w-full items-center justify-center rounded-md border border-dashed border-gray-200 text-[9px] text-gray-300 dark:border-gray-700 dark:text-gray-600" style={{ background: "var(--cov-empty)", opacity: 0.45 }}>{b ? "—" : ""}</div>
-                if (!b || !ret) return <div key={ci} className="aspect-square w-full rounded-md" style={{ background: "var(--cov-empty)", opacity: 0.5 }} />
-                const k = data.K(b, ret); const t = data.today.get(k) || 0; const p = di < 3 ? (data.prev.get(k) || 0) : null; const d = p != null ? t - p : null; const fr = data.fresh.get(k) || 0; const oo = di === 0 ? (data.oos.get(k) || 0) : 0
-                const alpha = t ? Math.max(0.12, Math.min(1, t / data.maxT)) : 0; const light = alpha > 0.55
+                if (ret === IMPERIAL) return <div key={ci} className="flex h-16 w-full items-center justify-center rounded-md border border-dashed border-gray-200 text-[9px] text-gray-300 dark:border-gray-700 dark:text-gray-600" style={{ background: "var(--cov-empty)", opacity: 0.45 }}>{b ? "—" : ""}</div>
+                if (!b || !ret) return <div key={ci} className="h-16 w-full rounded-md" style={{ background: "var(--cov-empty)", opacity: 0.5 }} />
+                const k = data.K(b, ret); const t = data.today.get(k) || 0; const oo = di === 0 ? (data.oos.get(k) || 0) : 0; const p = di < 3 ? (data.prev.get(k) || 0) : null; const dlt = p != null ? t - p : null
+                let disp: string, alpha: number, teal = true
+                if (metric === "count") { disp = t ? String(t) : "·"; alpha = t ? Math.max(0.12, Math.min(1, t / data.maxT)) : 0 }
+                else if (metric === "actRate") { const r = t > 0 ? ((t - oo) / t) * 100 : null; disp = r == null ? "·" : Math.round(r) + "%"; alpha = r != null ? Math.max(0.12, r / 100) : 0 }
+                else if (metric === "oosCnt") { teal = false; disp = oo ? String(oo) : (t ? "0" : "·"); alpha = oo ? Math.max(0.18, Math.min(1, oo / data.maxOos)) : 0 }
+                else { teal = false; const r = t > 0 ? (oo / t) * 100 : null; disp = r == null ? "·" : Math.round(r) + "%"; alpha = r != null ? Math.max(0.08, r / 100) : 0 }
+                const rgb = teal ? "13,148,136" : "244,63,94"; const light = alpha > 0.55
                 return (
-                  <div key={ci} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${d != null ? ` · ${T("어제대비", "vs prev")} ${d > 0 ? "+" : ""}${d}` : ""}${fr ? ` · ${T("신규", "new")} ${fr}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}`}
-                    className="flex aspect-square w-full flex-col items-center justify-center rounded-md text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.08] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: t ? `rgba(13,148,136,${alpha})` : "var(--cov-empty)", color: t ? (light ? "#fff" : "#0f766e") : "#cbd5e1", animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(bi * 10 + ci, 44) * 0.012 + "s" }}>
-                    <span className="text-[18px] font-bold tabular-nums leading-none xl:text-[22px]">{t || "·"}</span>
-                    {t > 0 && (
-                      <span className="mt-0.5 flex flex-col items-center gap-0 text-[10px] font-semibold leading-tight xl:text-[11.5px]" style={{ color: light ? "rgba(255,255,255,0.92)" : undefined }}>
-                        {di === 0 && <span className={light ? "" : "text-teal-700 dark:text-teal-300"}>{T("활성 ", "live ")}{Math.round(((t - oo) / t) * 100)}%</span>}
-                        {d != null && <span className={light ? "" : d > 0 ? "text-emerald-600 dark:text-emerald-400" : d < 0 ? "text-rose-500 dark:text-rose-400" : "text-gray-400 dark:text-gray-500"}>{T("어제 ", "vs ")}{d > 0 ? "▲" + d : d < 0 ? "▼" + -d : "±0"}</span>}
-                        {oo > 0 && <span className={light ? "" : "text-amber-600 dark:text-amber-400"}>{T("품절 ", "OOS ")}{oo}</span>}
-                      </span>
-                    )}
+                  <div key={ci} title={`${b} · ${pmShopLabel(ret)}\n${T("활성 SKU", "Active")} ${t}${dlt != null ? ` · ${T("어제대비", "vs prev")} ${dlt > 0 ? "+" : ""}${dlt}` : ""}${oo ? ` · ${T("품절", "OOS")} ${oo}` : ""}${t > 0 ? ` · ${T("활성율", "live")} ${Math.round(((t - oo) / t) * 100)}%` : ""}`}
+                    className="flex h-16 w-full items-center justify-center rounded-md text-center transition-transform duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:-translate-y-0.5 hover:scale-[1.06] hover:shadow-lg hover:ring-2 hover:ring-teal-400/70 dark:hover:ring-teal-300/60" style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", color: alpha > 0 ? (light ? "#fff" : teal ? "#0f766e" : "#9f1239") : "#cbd5e1", animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: Math.min(bi * 10 + ci, 44) * 0.012 + "s" }}>
+                    <span className="text-[19px] font-bold tabular-nums xl:text-[23px]">{disp}</span>
                   </div>
                 ) })}
             </React.Fragment>
