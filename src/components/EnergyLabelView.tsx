@@ -246,7 +246,7 @@ function HBar({ items, hiName, startRank = 0, dom, mkt: mktProp }: { items: { na
   const [h, setH] = useState<number | null>(null)
   if (!items.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   // Cleveland 점 랭킹 — 효율축 위 브랜드 점, 시장평균 기준선, 순위·LG 강조. (막대 나열 대체)
-  const rowH = 28, padL = 92, padR = 44, W = 360, TP = 18, H = items.length * rowH + TP + 6
+  const rowH = 21, padL = 78, padR = 36, W = 264, TP = 15, H = items.length * rowH + TP + 5
   const vals = items.map((i) => i.v), mn = Math.min(...vals), mx = Math.max(...vals), pd = (mx - mn) * 0.14 || 1
   const lo = dom ? dom[0] : mn - pd, hi = dom ? dom[1] : mx + pd
   const X = (v: number) => padL + (W - padL - padR) * ((v - lo) / ((hi - lo) || 1))
@@ -255,18 +255,18 @@ function HBar({ items, hiName, startRank = 0, dom, mkt: mktProp }: { items: { na
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
       {/* 시장평균 기준선 */}
       <line x1={X(mkt)} y1={TP - 4} x2={X(mkt)} y2={H - 4} stroke="#f59e0b" strokeWidth="1.1" strokeDasharray="3 2.5" opacity="0.8" />
-      <text x={X(mkt)} y={TP - 8} textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#d97706">{T("시장평균 ", "Mkt avg ")}{mkt.toFixed(2)}</text>
-      {items.map((a, i) => { const isHi = hiName && a.name.toLowerCase() === hiName.toLowerCase(), y = TP + i * rowH + rowH / 2, dim = h != null && h !== i, r = isHi ? 7 : h === i ? 6 : 5, col = isHi ? TEAL : "#94a3b8"
+      <text x={X(mkt)} y={TP - 6} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#d97706">{T("시장평균 ", "Mkt avg ")}{mkt.toFixed(2)}</text>
+      {items.map((a, i) => { const isHi = hiName && a.name.toLowerCase() === hiName.toLowerCase(), y = TP + i * rowH + rowH / 2, dim = h != null && h !== i, r = isHi ? 5.5 : h === i ? 5 : 4, col = isHi ? TEAL : "#94a3b8"
         return (
           <g key={a.name} onMouseEnter={() => setH(i)} style={{ cursor: "default", opacity: dim ? 0.42 : 1, transition: "opacity .18s" }}>
             <rect x={0} y={y - rowH / 2} width={W} height={rowH} fill="transparent" /><title>{a.name} · {a.v.toFixed(2)}{a.n ? ` · ${a.n}${T("개 모델", " models")}` : ""}</title>
             {/* 순위 뱃지 */}
-            <text x={12} y={y + 3.5} fontSize="10" fontWeight="800" className={isHi ? "fill-teal-500 dark:fill-teal-400" : "fill-gray-300 dark:fill-gray-600"}>{startRank + i + 1}</text>
-            <text x={padL - 10} y={y + 3.5} textAnchor="end" fontSize="10.5" fontWeight={isHi || h === i ? 800 : 500} className={isHi ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-500 dark:fill-gray-400"}>{a.name}</text>
+            <text x={10} y={y + 4.5} fontSize="12" fontWeight="800" className={isHi ? "fill-teal-500 dark:fill-teal-400" : "fill-gray-300 dark:fill-gray-600"}>{startRank + i + 1}</text>
+            <text x={padL - 9} y={y + 4.5} textAnchor="end" fontSize="13" fontWeight={isHi || h === i ? 800 : 500} className={isHi ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>{a.name}</text>
             {/* 가이드 라인 + 점 */}
             <line x1={padL} y1={y} x2={W - padR} y2={y} stroke="#eef2f6" strokeWidth="1" className="dark:stroke-gray-800/70" />
             <circle cx={X(a.v)} cy={y} r={r} fill={col} stroke="#fff" strokeWidth={isHi ? 1.6 : 0.8} className={isHi ? "" : "dark:fill-gray-500"} style={{ animation: "popIn .5s cubic-bezier(.34,1.42,.64,1) both", animationDelay: (0.06 + Math.min(i, 12) * 0.04) + "s", transformOrigin: `${X(a.v)}px ${y}px` }} />
-            <text x={X(a.v) + (X(a.v) > W - padR - 30 ? -(r + 5) : r + 5)} y={y + 3.5} textAnchor={X(a.v) > W - padR - 30 ? "end" : "start"} fontSize="10.5" fontWeight={isHi || h === i ? 800 : 600} className={isHi ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>{a.v.toFixed(2)}{h === i && a.n ? ` (${a.n})` : ""}</text>
+            <text x={X(a.v) + (X(a.v) > W - padR - 30 ? -(r + 5) : r + 5)} y={y + 4.5} textAnchor={X(a.v) > W - padR - 30 ? "end" : "start"} fontSize="13" fontWeight={isHi || h === i ? 800 : 600} className={isHi ? "fill-teal-600 dark:fill-teal-400" : "fill-gray-600 dark:fill-gray-300"}>{a.v.toFixed(2)}{h === i && a.n ? ` (${a.n})` : ""}</text>
           </g>
         )
       })}
