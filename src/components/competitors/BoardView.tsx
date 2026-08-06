@@ -38,7 +38,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
   const [form, setForm] = React.useState("전체")
   const [size, setSize] = React.useState("전체")
   const [q, setQ] = React.useState("")
-  const [sort, setSort] = React.useState<{ k: string; asc: boolean }>({ k: "lg", asc: false }) // 기본: LG 상단 우선
+  const [sorts, setSorts] = React.useState<{ k: string; asc: boolean }[]>([{ k: "lg", asc: false }]) // 다중 정렬(기본: LG 상단)
   const [selDate, setSelDate] = React.useState<string | null>(null)
   const D = daily ?? []
   const loading = daily === null
@@ -98,23 +98,35 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
       const _size = isAC(r0.category) ? acHpLabel(r0.model || "") : pmSizeBucket(r0.category, r0.model, r0.capacity)
       return { cat: r0.category, brand: r0.brand, code: cc || r0.code, model: r0.model, form: _form, size: _size, srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
     })
-    const dir = sort.asc ? 1 : -1
-    const shopIdx = BOARD_SHOPS.findIndex((s) => s.k === sort.k)
+    // 컬럼값 추출기(다중 정렬용)
+    const sv = (r: typeof out[number], k: string): number | string | null => {
+      if (k === "min") return r.min; if (k === "spread") return r.spread; if (k === "brand") return r.brand
+      if (k === "cat") return r.cat; if (k === "form") return r.form; if (k === "star") return r.star
+      if (k === "srp") return r.srp; if (k === "code") return r.code
+      const si = BOARD_SHOPS.findIndex((s) => s.k === k); return si >= 0 ? (r.cells[si]?.price ?? null) : null
+    }
     out.sort((a, b) => {
-      // 기본값: LG 상단 우선 → 그다음 최저가 오름차순
-      if (sort.k === "lg") { const la = a.brand === "LG" ? 0 : 1, lb = b.brand === "LG" ? 0 : 1; if (la !== lb) return la - lb; return (a.min ?? Infinity) - (b.min ?? Infinity) }
-      let x: number | string | null = null, y: number | string | null = null
-      if (sort.k === "min") { x = a.min; y = b.min } else if (sort.k === "spread") { x = a.spread; y = b.spread } else if (sort.k === "brand") { x = a.brand; y = b.brand } else if (sort.k === "cat") { x = a.cat; y = b.cat } else if (sort.k === "form") { x = a.form; y = b.form } else if (sort.k === "star") { x = a.star; y = b.star } else if (sort.k === "srp") { x = a.srp; y = b.srp } else if (sort.k === "code") { x = a.code; y = b.code } else if (shopIdx >= 0) { x = a.cells[shopIdx]?.price ?? null; y = b.cells[shopIdx]?.price ?? null }
-      if (x == null) return 1; if (y == null) return -1
-      return (typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y))) * dir
+      for (const s of sorts) {
+        if (s.k === "lg") { const la = a.brand === "LG" ? 0 : 1, lb = b.brand === "LG" ? 0 : 1; if (la !== lb) return la - lb; continue }
+        const x = sv(a, s.k), y = sv(b, s.k)
+        if (x == null && y == null) continue
+        if (x == null) return 1; if (y == null) return -1
+        const c = typeof x === "number" ? x - (y as number) : String(x).localeCompare(String(y))
+        if (c !== 0) return c * (s.asc ? 1 : -1)
+      }
+      return 0
     })
     return out
-  }, [D, curDate, prevDate, cat, brands, effForm, effSize, q, sort]) // eslint-disable-line
-  const setS = (k: string) => setSort((s) => ({ k, asc: s.k === k ? !s.asc : true }))
-  // 정렬 표시 — 활성 컬럼은 방향(▲▼·인디고), 비활성은 옅은 정렬가능 아이콘(⇅)로 클릭 가능함을 안내
-  const arrow = (k: string) => (sort.k === k
-    ? <span className="ml-0.5 text-indigo-500">{sort.asc ? "▲" : "▼"}</span>
-    : <span className="ml-0.5 text-[8px] text-gray-300 transition-colors group-hover:text-gray-400 dark:text-gray-600">⇅</span>)
+  }, [D, curDate, prevDate, cat, brands, effForm, effSize, q, sorts]) // eslint-disable-line
+  // 클릭=단일 정렬(재클릭 방향 토글), Shift+클릭=정렬 기준 추가(다중)
+  const setS = (k: string, additive = false) => setSorts((cur) => {
+    const idx = cur.findIndex((s) => s.k === k)
+    if (additive) { if (idx >= 0) { const n = [...cur]; n[idx] = { k, asc: !n[idx].asc }; return n } return [...cur, { k, asc: true }] }
+    if (cur[0]?.k === k && cur.length === 1) return [{ k, asc: !cur[0].asc }]
+    return [{ k, asc: true }]
+  })
+  // 정렬 표시 — 활성은 방향(▲▼·인디고, 다중이면 우선순위 번호), 비활성은 옅은 ⇅
+  const arrow = (k: string) => { const i = sorts.findIndex((s) => s.k === k); if (i < 0) return <span className="ml-0.5 text-[8px] text-gray-300 dark:text-gray-600">⇅</span>; return <span className="ml-0.5 text-indigo-500">{sorts[i].asc ? "▲" : "▼"}{sorts.length > 1 ? <sup className="text-[8px]">{i + 1}</sup> : ""}</span> }
 
   // 원본(raw) 일일 거래선 가격 CSV — 수집 원본 9컬럼 전부 + 편의 파생(분류약자·유형·용량·모델코드).
   //  실제 수집: d·retailer·brand·category·model·capacity(상세 스펙 원문)·price·srp·url. onDate=해당 날짜만, null=전체. 엑셀 호환(BOM+CRLF)
@@ -179,17 +191,17 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
           </colgroup>
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
             <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
-              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("brand")}>{T("브랜드", "Brand")}{arrow("brand")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("cat")}>{T("제품", "Div")}{arrow("cat")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("form")}>{T("유형", "Type")}{arrow("form")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("code")}>{T("모델", "Model")}{arrow("code")}</th>
-              <th className="cursor-pointer border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title={T("New DOE 에너지등급", "New DOE energy rating")} onClick={() => setS("star")}>★{arrow("star")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("srp")}>SRP{arrow("srp")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("brand", e.shiftKey)}>{T("브랜드", "Brand")}{arrow("brand")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("cat", e.shiftKey)}>{T("제품", "Div")}{arrow("cat")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("form", e.shiftKey)}>{T("유형", "Type")}{arrow("form")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("code", e.shiftKey)}>{T("모델", "Model")}{arrow("code")}</th>
+              <th className="cursor-pointer border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title={T("New DOE 에너지등급", "New DOE energy rating")} onClick={(e) => setS("star", e.shiftKey)}>★{arrow("star")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("srp", e.shiftKey)}>SRP{arrow("srp")}</th>
               {BOARD_SHOPS.map((s) => (
-                <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
+                <th key={s.k} onClick={(e) => setS(s.k, e.shiftKey)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
               ))}
-              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("min")}>{T("최저", "Lowest")}{arrow("min")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("spread")}>{T("스프레드", "Spread")}{arrow("spread")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("min", e.shiftKey)}>{T("최저", "Lowest")}{arrow("min")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("spread", e.shiftKey)}>{T("스프레드", "Spread")}{arrow("spread")}</th>
             </tr>
           </thead>
           <tbody>
