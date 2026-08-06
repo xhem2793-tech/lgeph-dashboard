@@ -113,14 +113,12 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
 
   // 제품(모델)별로 신호를 묶어서 나열 — 같은 모델의 가격/프로모/재고/광고 신호를 한 그룹으로.
   // 그룹 내부는 심각도·점수 순, 그룹 정렬은 대표(최상위) 신호 기준. 중구난방 개별 나열 해소.
-  const groups = React.useMemo(() => {
-    const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF))
-    const m = new Map<string, Signal[]>()
-    for (const s of filtered) { const key = s.brand + "|" + s.title; const arr = m.get(key); if (arr) arr.push(s); else m.set(key, [s]) }
-    const gs = Array.from(m.values())
-    gs.forEach((a) => a.sort((x, y) => SEV_META[x.sev].order - SEV_META[y.sev].order || y.score - x.score))
-    gs.sort((a, b) => SEV_META[a[0].sev].order - SEV_META[b[0].sev].order || b[0].score - a[0].score)
-    return gs.slice(0, 40)
+  // 단일 통합 리스트 — 카드 그룹 대신 한 줄씩. 정렬: 심각도 → 점수. 각 행에 브랜드·카테고리·스펙·모델 포함.
+  const list = React.useMemo(() => {
+    return signals
+      .filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF))
+      .sort((a, b) => SEV_META[a.sev].order - SEV_META[b.sev].order || b.score - a.score)
+      .slice(0, 80)
   }, [signals, kind, catF, dayF])
 
   const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
@@ -147,34 +145,31 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       </div>
 
       {/* 제품(모델)별로 묶은 그룹 카드 — 헤더(제품·카테고리·신호수) + 소속 신호 나열 */}
-      {groups.length === 0 ? (
+      {list.length === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("해당 신호가 없습니다.", "No matching signals.")}</div>
       ) : (
-        <div className="flex flex-col gap-2.5">
-          {groups.map((g, gi) => { const head = g[0]; return (
-            <div key={head.brand + head.title + gi} className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800" style={{ animation: "rowIn .4s cubic-bezier(.22,1,.36,1) both", animationDelay: Math.min(gi, 12) * 0.03 + "s" }}>
-              {/* 그룹 헤더 — 제품명 + 카테고리 + 신호 수 */}
-              <div className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2">
-                <span className={"h-2 w-2 shrink-0 rounded-full " + (CAT_DOT[head.cat] ?? "bg-gray-400")} />
-                <span className="shrink-0 whitespace-nowrap text-[13px] font-bold text-gray-900 dark:text-gray-50">{head.own ? <span className="text-indigo-700 dark:text-indigo-300">{head.title}</span> : head.title}{head.own ? <span className="ml-1 rounded bg-indigo-100 dark:bg-indigo-500/20 px-1 py-px text-[9.5px] font-bold text-indigo-600 dark:text-indigo-300">{T("자사", "Own")}</span> : null}</span>
-                <span className="hidden rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 sm:inline">{CAT_LABEL[head.cat] ?? head.cat}</span>
-                {head.spec ? <span className="hidden shrink-0 whitespace-nowrap rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 sm:inline">{head.spec}</span> : null}
-                <span className="ml-auto shrink-0 rounded-full bg-gray-100 dark:bg-gray-800 px-1.5 py-px text-[10px] font-bold tabular-nums text-gray-500 dark:text-gray-400">{T("신호", "Signals")} {g.length}</span>
+        <div className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
+          {/* 단일 통합 리스트 — 한 줄에 타임라인·신호·심각도·제품(브랜드·카테고리·스펙·모델)·내용·지표·채널 */}
+          {list.map((s, i) => { const km = KIND_META[s.kind]; return (
+            <div key={s.id + i} className="flex items-center gap-2 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 transition-colors last:border-0 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10" style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(i, 20) * 0.02 + "s" }}>
+              {/* 타임라인(오늘/어제) 먼저 */}
+              <span className={"inline-flex w-10 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + (s.day === "today" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400")} title={DAY_LABEL[s.day]}>{DAY_LABEL[s.day]}</span>
+              <span className={"inline-flex w-12 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + km.cls}>{KIND_LABEL[s.kind]}</span>
+              <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + SEV_META[s.sev].dot} title={SEV_LABEL[s.sev]} />
+              {/* 제품 식별 — 브랜드 · 모델 · 카테고리 · 스펙 */}
+              <div className="flex min-w-0 shrink-0 items-center gap-1.5">
+                <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (CAT_DOT[s.cat] ?? "bg-gray-400")} />
+                <span className={"whitespace-nowrap text-[12px] font-bold " + (s.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50")}>{s.title}</span>
+                {s.own && <span className="hidden shrink-0 rounded bg-indigo-100 px-1 py-px text-[9px] font-bold text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300 sm:inline">{T("자사", "Own")}</span>}
+                <span className="hidden shrink-0 rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 md:inline">{CAT_LABEL[s.cat] ?? s.cat}</span>
+                {s.spec ? <span className="hidden shrink-0 whitespace-nowrap rounded bg-gray-100 px-1.5 py-px text-[10px] text-gray-500 dark:bg-gray-800 dark:text-gray-400 lg:inline">{s.spec}</span> : null}
               </div>
-              {/* 소속 신호들 */}
-              {g.map((s, i) => { const km = KIND_META[s.kind]; return (
-                <div key={s.id + i} className="flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800/60 px-3 py-2.5 transition-colors last:border-0 hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
-                  {/* 타임라인(오늘/어제) 먼저 */}
-                  <span className={"inline-flex w-10 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + (s.day === "today" ? "bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-300" : "bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400")} title={DAY_LABEL[s.day]}>{DAY_LABEL[s.day]}</span>
-                  <span className={"inline-flex w-12 shrink-0 items-center justify-center rounded px-1 py-0.5 text-center text-[10px] font-semibold " + km.cls}>{KIND_LABEL[s.kind]}</span>
-                  <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + SEV_META[s.sev].dot} title={SEV_LABEL[s.sev]} />
-                  <div className="flex min-w-0 flex-1 items-baseline gap-2">
-                    <span className="truncate text-[12px] text-gray-500 dark:text-gray-400">{s.detail}</span>
-                  </div>
-                  <div className="shrink-0 text-right">{metricChip(s)}</div>
-                  {s.channel ? (s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="hidden w-20 shrink-0 truncate text-right text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400 md:block">{pmShopLabel(s.channel)} ↗</a> : <span className="hidden w-20 shrink-0 truncate text-right text-[11px] text-gray-400 dark:text-gray-500 md:block">{pmShopLabel(s.channel)}</span>) : <span className="hidden w-20 shrink-0 md:block" />}
-                </div>
-              ) })}
+              {/* 내용 */}
+              <div className="flex min-w-0 flex-1 items-baseline gap-2">
+                <span className="truncate text-[12px] text-gray-500 dark:text-gray-400">{s.detail}</span>
+              </div>
+              <div className="shrink-0 text-right">{metricChip(s)}</div>
+              {s.channel ? (s.url ? <a href={s.url} target="_blank" rel="noopener noreferrer" className="hidden w-20 shrink-0 truncate text-right text-[11px] font-medium text-indigo-600 hover:underline dark:text-indigo-400 md:block">{pmShopLabel(s.channel)} ↗</a> : <span className="hidden w-20 shrink-0 truncate text-right text-[11px] text-gray-400 dark:text-gray-500 md:block">{pmShopLabel(s.channel)}</span>) : <span className="hidden w-20 shrink-0 md:block" />}
             </div>
           ) })}
         </div>
