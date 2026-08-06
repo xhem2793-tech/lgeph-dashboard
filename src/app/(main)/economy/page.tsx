@@ -66,7 +66,7 @@ export default function Page() {
   const { lang } = useLang()
   const en = lang === "en"
   const NAV = buildNav()   // 렌더 시점 생성(언어 토글 반영)
-  const [mode, setMode] = useState<"card" | "list">("card")
+  const [mode, setMode] = useState<"card" | "list">("list")
   const [active, setActive] = useState("prices")   // 스크롤스파이 현재 섹션
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [mounted, setMounted] = useState<Set<string>>(() => new Set(["prices", "growth"]))
@@ -105,15 +105,19 @@ export default function Page() {
     return () => obs.disconnect()
   }, [mode])
 
-  // 딥링크: /economy/?v=<카테고리> → 해당 섹션. 없으면 새로고침/언어토글 전 마지막 카테고리(localStorage) 복원.
+  // 첫 진입 기본 = 리스트(최신순). 딥링크(?v=) 또는 '카드 모드로 보던 마지막 카테고리'만 복원.
   useEffect(() => {
     if (typeof window === "undefined") return
-    let v = new URLSearchParams(window.location.search).get("v")
-    if (!v) { try { v = localStorage.getItem("econ_view") } catch {} }
-    if (v && NAV.some((n) => n.id === v)) { setMode("card"); requestAnimationFrame(() => go(v!)) }
+    const urlV = new URLSearchParams(window.location.search).get("v")
+    if (urlV && NAV.some((n) => n.id === urlV)) { setMode("card"); requestAnimationFrame(() => go(urlV)); return }
+    let savedMode: string | null = null, savedView: string | null = null
+    try { savedMode = localStorage.getItem("econ_mode"); savedView = localStorage.getItem("econ_view") } catch {}
+    if (savedMode === "card" && savedView && NAV.some((n) => n.id === savedView)) { setMode("card"); requestAnimationFrame(() => go(savedView!)) }
+    // savedMode가 없거나 list면 기본값(list) 유지
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
-  // 현재 카테고리 저장(복원용)
+  // 현재 모드·카테고리 저장(복원용)
+  useEffect(() => { try { localStorage.setItem("econ_mode", mode) } catch {} }, [mode])
   useEffect(() => { try { localStorage.setItem("econ_view", active) } catch {} }, [active])
 
   // 지표 기반 카테고리는 실시간 카운트, 구조적 항목은 고정
