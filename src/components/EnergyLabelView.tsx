@@ -157,12 +157,12 @@ function Sub({ title, seg, meaning, ai, idx = 0, csv, children, bigChildren }: {
       <div className="mt-2 flex flex-col gap-4 lg:flex-row">
         <div className="flex min-w-0 flex-col lg:w-[58%]">
           {/* 메인 차트 — 테두리·고정높이, 넘치면 스크롤(레이아웃 고정·가독성) */}
-          <div key={on ? "in" : "out"} className="h-[420px] overflow-auto rounded-xl border border-gray-100 bg-gray-50/30 p-3 dark:border-gray-800 dark:bg-gray-900/20">{on ? (bigChildren ?? children) : null}</div>
+          <div key={on ? "in" : "out"} className="h-[352px] overflow-auto rounded-xl border border-gray-100 bg-gray-50/30 p-3 dark:border-gray-800 dark:bg-gray-900/20">{on ? (bigChildren ?? children) : null}</div>
           <p className="mt-2.5 text-[11px] leading-relaxed text-gray-500 dark:text-gray-400"><b className="font-semibold text-gray-700 dark:text-gray-200">{T("의미", "Meaning")}</b> {meaning}</p>
         </div>
         {csv && (
           <div className="flex min-h-0 flex-col lg:w-[42%] lg:border-l lg:border-gray-100 lg:dark:border-gray-800 lg:pl-4">
-            <div className="h-[344px] min-h-0 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
+            <div className="h-[352px] min-h-0 overflow-auto rounded-lg border border-gray-100 dark:border-gray-800">
               <table className="w-full border-collapse text-[12px]">
                 <thead className="sticky top-0 bg-gray-50 dark:bg-gray-900"><tr className="border-b border-gray-200 dark:border-gray-800">{csv.head.map((h, i) => <th key={i} onClick={() => { if (sortCol === i) setSortDesc((d) => !d); else { setSortCol(i); setSortDesc(true) } }} className={"cursor-pointer select-none py-1.5 px-2 font-semibold text-gray-500 dark:text-gray-400 hover:text-teal-600 dark:hover:text-teal-400 " + (i === 0 ? "text-left" : "text-right")}>{h}{sortCol === i ? (sortDesc ? " ↓" : " ↑") : ""}</th>)}</tr></thead>
                 <tbody>{sortedRows.map((r, ri) => <tr key={ri} className={"border-b border-gray-100 dark:border-gray-800/60 " + (/^lg$/i.test(String(r[0])) ? "bg-teal-50/50 dark:bg-teal-500/10 font-semibold" : "")}>{r.map((c, ci) => <td key={ci} className={"py-1.5 px-2 tabular-nums " + (ci === 0 ? "text-left text-gray-700 dark:text-gray-200" : "text-right text-gray-600 dark:text-gray-300")}>{c}</td>)}</tr>)}</tbody>
@@ -240,13 +240,13 @@ function HBar({ items, hiName }: { items: { name: string; v: number; n?: number 
   const [h, setH] = useState<number | null>(null)
   if (!items.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   // Cleveland 점 랭킹 — 효율축 위 브랜드 점, 시장평균 기준선, 순위·LG 강조. (막대 나열 대체)
-  const rowH = 38, padL = 104, padR = 46, W = 360, TP = 20, H = items.length * rowH + TP + 6
+  const rowH = 28, padL = 104, padR = 46, W = 360, TP = 18, H = items.length * rowH + TP + 6
   const vals = items.map((i) => i.v), mn = Math.min(...vals), mx = Math.max(...vals), pd = (mx - mn) * 0.14 || 1
   const lo = mn - pd, hi = mx + pd
   const X = (v: number) => padL + (W - padL - padR) * ((v - lo) / ((hi - lo) || 1))
   const mkt = vals.reduce((a, b) => a + b, 0) / vals.length
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
       {/* 시장평균 기준선 */}
       <line x1={X(mkt)} y1={TP - 4} x2={X(mkt)} y2={H - 4} stroke="#f59e0b" strokeWidth="1.1" strokeDasharray="3 2.5" opacity="0.8" />
       <text x={X(mkt)} y={TP - 8} textAnchor="middle" fontSize="8.5" fontWeight="700" fill="#d97706">{T("시장평균 ", "Mkt avg ")}{mkt.toFixed(2)}</text>
@@ -273,11 +273,11 @@ function GroupBars({ groups, fmt = (v: number) => v.toFixed(1) }: { groups: { la
   if (!groups.length) return <div className="flex h-28 w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
   const vals = groups.flatMap((g) => (g.lg != null ? [g.lg, g.mkt] : [g.mkt]))
   const mn = Math.min(...vals), mx = Math.max(...vals), pd = (mx - mn) * 0.16 || 1, lo = mn - pd, hi = mx + pd
-  const rowH = 40, padL = 74, padR = 48, W = 360, TP = 8, H = groups.length * rowH + TP + 6
+  const rowH = 30, padL = 74, padR = 48, W = 360, TP = 8, H = groups.length * rowH + TP + 6
   const X = (v: number) => padL + (W - padL - padR) * ((v - lo) / ((hi - lo) || 1))
   return (
-    <div className="flex w-full flex-col">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
+    <div className="flex h-full w-full flex-col">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
         {groups.map((g, i) => { const y = TP + i * rowH + rowH / 2, dim = h != null && h !== i, ahead = g.lg != null && g.lg >= g.mkt
           return (
             <g key={g.label} onMouseEnter={() => setH(i)} style={{ opacity: dim ? 0.42 : 1, transition: "opacity .18s", cursor: "default" }}>
@@ -461,12 +461,12 @@ function CostLollipop({ items }: { items: { label: string; cost: number; isLG: b
   const lg = items.find((i) => i.isLG)?.cost ?? [...items].sort((a, b) => a.cost - b.cost)[Math.floor(items.length / 2)].cost
   const rows = items.map((a) => ({ ...a, d: a.cost - lg }))
   const maxAbs = Math.max(...rows.map((r) => Math.abs(r.d)), 1)
-  const rowH = 38, padL = 66, padR = 58, W = 360, TP = 16, H = rows.length * rowH + TP + 6
+  const rowH = 28, padL = 66, padR = 58, W = 360, TP = 15, H = rows.length * rowH + TP + 6
   const hasNeg = rows.some((r) => r.d < -0.5)
   const x0 = hasNeg ? padL + (W - padL - padR) * 0.32 : padL + 6   // LG 기준선 위치(음수 있으면 왼쪽 여유)
   const bx = (d: number) => x0 + (W - x0 - padR) * (d > 0 ? d / (maxAbs * 1.08) : d / (maxAbs * 1.08) * ((x0 - padL) / (W - x0 - padR)))
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
       {/* LG 기준선 */}
       <line x1={x0} y1={TP - 4} x2={x0} y2={H - 4} stroke={TEAL} strokeWidth="1.2" strokeDasharray="3 2" opacity="0.85" />
       <text x={x0} y={TP - 7} textAnchor="middle" fontSize="8.5" fontWeight="800" className="fill-teal-600 dark:fill-teal-400">{T("LG 기준", "LG base")}</text>
@@ -494,11 +494,11 @@ function CostLollipop({ items }: { items: { label: string; cost: number; isLG: b
 function GradeStack({ rows }: { rows: { name: string; s5: number; s4: number; s3: number; n: number }[] }) {
   const [h, setH] = useState<number | null>(null)
   if (!rows.length) return <div className="flex h-full min-h-[160px] w-full items-center justify-center text-[12px] text-gray-400">{T("데이터 부족", "No data")}</div>
-  const rowH = 34, padL = 58, padR = 42, W = 360, H = rows.length * rowH + 4, barW = W - padL - padR
+  const rowH = 26, padL = 58, padR = 42, W = 360, H = rows.length * rowH + 4, barW = W - padL - padR
   const seg = [{ k: "s5" as const, c: "#10b981" }, { k: "s4" as const, c: AMBER }, { k: "s3" as const, c: "#cbd5e1" }]
   return (
-    <div className="flex w-full flex-col">
-      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ width: "100%", height: "auto", display: "block" }} onMouseLeave={() => setH(null)}>
+    <div className="flex h-full w-full flex-col">
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="min-h-0 flex-1" style={{ width: "100%", display: "block" }} onMouseLeave={() => setH(null)}>
         {rows.map((g, i) => { const y = i * rowH, isLG = /^lg$/i.test(g.name), dim = h != null && h !== i
           let acc = 0
           return (
