@@ -236,7 +236,7 @@ export default function FxView() {
       <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-            <span className="h-[18px] w-1 rounded bg-indigo-500" />
+            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("환율", "Exchange")}</h2>
             <span className="ml-auto flex items-center gap-2">
               <span className="hidden text-[10.5px] text-gray-400 dark:text-gray-500 sm:inline">{labels[0]} → {labels[labels.length - 1]}</span>
               <Segmented size="sm" value={win} onChange={setWin} options={WINDOWS.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} />

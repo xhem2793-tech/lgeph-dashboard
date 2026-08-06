@@ -102,7 +102,6 @@ export default function OnlineMarketView() {
       <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-            <span className="h-[18px] w-1 rounded bg-indigo-500" />
             <nav className="flex flex-wrap gap-1.5">
               {[{ k: "ph", label: T("이커머스·디지털(PH)", "E-commerce · Digital (PH)") }, { k: "sea", label: T("동남아 6개국 비교", "6-country ASEAN comparison") }].map((s) => (
                 <button key={s.k} type="button" onClick={() => setTab(s.k as "ph" | "sea")}
