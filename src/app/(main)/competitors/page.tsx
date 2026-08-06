@@ -324,20 +324,17 @@ export default function Competitors() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes sparkDraw{to{stroke-dashoffset:0}}@keyframes navBounce{0%,70%,100%{transform:translateX(0)}78%{transform:translateX(3px)}86%{transform:translateX(-2px)}93%{transform:translateX(1px)}}"}</style>
 
       <div className={"grid items-start gap-6 transition-[grid-template-columns] duration-[350ms] ease-[cubic-bezier(.22,1,.36,1)] " + (navOpen ? "lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7" : "lg:grid-cols-[0px_minmax(0,1fr)] lg:gap-0")}>
-        <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit overflow-hidden lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
-          {/* 좌 메뉴 — 아이콘 헤더(접기 토글 포함)·그룹 라벨·우측 상태 메타 */}
-          <div className={"flex items-center border-b border-gray-100 dark:border-gray-800 py-2.5 " + (navOpen ? "gap-1.5 px-2" : "justify-center px-0")}>
-            <button type="button" onClick={() => setNavOpen((v) => !v)} aria-label={navOpen ? T("메뉴 접기", "Collapse menu") : T("메뉴 펼치기", "Expand menu")} title={navOpen ? T("메뉴 접기", "Collapse menu") : T("메뉴 펼치기", "Expand menu")}
-              className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors " + (navOpen ? "text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 dark:text-gray-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300" : "text-indigo-500 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-500/10")}>
-              {navOpen ? (
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
-              ) : (
-                // 접힘: 펼치기 유도 이중 셰브론 + 3초마다 통통 튀는 바운스(라이브 느낌)
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "navBounce 3s ease-in-out infinite" }}><path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" /></svg>
-              )}
+        <aside style={{ animation: "fadeUp .5s ease both" }} className={"h-fit overflow-hidden lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain " + (navOpen ? "lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6" : "")}>
+          {/* 좌 메뉴 헤더 — 펼침 상태에서만 렌더(접기 토글 + 제목). 접힘 시엔 콘텐츠의 펼치기 버튼만 노출 */}
+          {navOpen && (
+          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
+            <button type="button" onClick={() => setNavOpen(false)} aria-label={T("메뉴 접기", "Collapse menu")} title={T("메뉴 접기", "Collapse menu")}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:text-gray-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
             </button>
-            {navOpen && <p className="whitespace-nowrap text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분석", "Analysis")}</p>}
+            <p className="whitespace-nowrap text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분석", "Analysis")}</p>
           </div>
+          )}
           <div className={"px-2 py-3 transition-opacity duration-200 " + (navOpen ? "opacity-100" : "pointer-events-none hidden opacity-0")}>
             <div className="flex flex-col gap-1">
               {GROUPS.map((g) => (
@@ -367,13 +364,12 @@ export default function Competitors() {
 
         </aside>
 
-        <div style={{ animation: "fadeUp .5s ease both" }} className="flex min-h-[1200px] min-w-0 flex-col gap-4">
-        {/* 접힘 상태: 콘텐츠 상단에 눈에 띄는 '메뉴 펼치기' 버튼(가이드) */}
+        <div style={{ animation: "fadeUp .5s ease both" }} className="relative flex min-h-[1200px] min-w-0 flex-col gap-4">
+        {/* 접힘 상태: 작은 펼치기 아이콘(좌상단, 살짝) — 뷰 전환·재펼침용 */}
         {!navOpen && (
-          <button type="button" onClick={() => setNavOpen(true)} aria-label={T("메뉴 펼치기", "Expand menu")}
-            className="hidden w-fit items-center gap-1.5 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-[12px] font-semibold text-indigo-600 shadow-sm transition-all hover:-translate-y-0.5 hover:bg-indigo-100 hover:shadow active:scale-95 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300 dark:hover:bg-indigo-500/20 lg:inline-flex">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "navBounce 3s ease-in-out infinite" }}><path d="M9 3v18M14 9l3 3-3 3" /><rect x="3" y="3" width="18" height="18" rx="2" /></svg>
-            {T("분석 메뉴", "Menu")}
+          <button type="button" onClick={() => setNavOpen(true)} aria-label={T("메뉴 펼치기", "Expand menu")} title={T("분석 메뉴 펼치기", "Expand menu")}
+            className="absolute -left-1 top-1 z-30 hidden h-7 w-7 items-center justify-center rounded-md border border-indigo-200 bg-indigo-50 text-indigo-600 shadow-sm transition-all hover:bg-indigo-100 active:scale-90 dark:border-indigo-500/30 dark:bg-indigo-500/15 dark:text-indigo-300 dark:hover:bg-indigo-500/25 lg:inline-flex">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "navBounce 3s ease-in-out infinite" }}><path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" /></svg>
           </button>
         )}
         <section
