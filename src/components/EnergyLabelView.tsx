@@ -549,7 +549,6 @@ export default function EnergyLabelView() {
   const [segIdx, setSegIdx] = useState(0)
   const [rate, setRate] = useState(14.83) // Meralco 가정용 ₱/kWh(실측 로드 전 기본값)
   const [rateAsOf, setRateAsOf] = useState("")
-  const [open, setOpen] = useState(false)
   const [simOpen, setSimOpen] = useState(false)
   const [modelOpen, setModelOpen] = useState(false)
   const [mSort, setMSort] = useState<"eff" | "kwh" | "star">("eff")
@@ -584,7 +583,7 @@ export default function EnergyLabelView() {
   const seg = segs[segIdx] || segs[0]
   const segRows = useMemo(() => catRows.filter((r) => byType(r) && seg && inSeg(r, seg)), [catRows, seg, typ])
 
-  const { rank, rankAll, lgR, lgRk, brandCount } = useMemo(() => {
+  const { rank, rankAll, lgR, lgRk } = useMemo(() => {
     const by: Record<string, number[]> = {}; for (const r of segRows) (by[r.brand] = by[r.brand] || []).push(r.eff!)
     // 모델 2개 이상 브랜드 + LG(1개만 있어도) 전체 랭킹
     const all = Object.entries(by).map(([name, a]) => ({ name, v: avgOf(a)!, n: a.length })).filter((x) => x.n >= 2 || /^lg$/i.test(x.name)).sort((a, b) => b.v - a.v)
@@ -694,33 +693,12 @@ export default function EnergyLabelView() {
     <div className="flex flex-col gap-4">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}@keyframes growX{from{transform:scaleX(0)}to{transform:scaleX(1)}}@keyframes growBar{from{transform:scaleY(0)}to{transform:scaleY(1)}}@keyframes fadeIn{from{opacity:0}to{opacity:1}}"}</style>
 
-      <div className="overflow-hidden rounded-xl border border-indigo-100 dark:border-indigo-500/25 bg-indigo-50/60 dark:bg-indigo-500/[0.08]" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
-        <div onClick={() => setOpen((v) => !v)} className="flex cursor-pointer select-none items-center gap-3 px-4 py-3">
-          <div className="min-w-0 flex-1 text-[12.5px] leading-snug text-gray-700 dark:text-gray-200">{loaded && lgR && rank[0] ? <><b className="font-semibold text-gray-900 dark:text-gray-50">{T("에너지 효율 · ", "Energy Efficiency · ")}{cur.label} {typ !== "전체" ? typ + " " : ""}{seg?.k}</b> — LG {lgRk}{T("위/", " / ")}{brandCount}{T("개사, 리더 ", " cos., leader ")}{rank[0].name}({rank[0].v.toFixed(2)}){T(" 대비 ", " vs ")}{gap != null ? gap.toFixed(0) : "—"}{T("% 낮음 · 같은 스펙 비교", "% lower · same-spec comparison")}</> : <><b className="font-semibold text-gray-900 dark:text-gray-50">{T("에너지 효율", "Energy Efficiency")}</b>{T(" — DOE 라벨 세그먼트별 브랜드 ", " — DOE-label per-segment brand ")}{cur.metric}{T(" 분석", " analysis")}</>}</div>
-          {loaded && lgR && <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-indigo-400 dark:text-indigo-300 transition-transform duration-300" style={{ transform: open ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg>}
-        </div>
-        {loaded && lgR && (
-          <div style={{ display: "grid", gridTemplateRows: open ? "1fr" : "0fr", transition: "grid-template-rows .36s cubic-bezier(.22,1,.36,1)" }}>
-            <div className="overflow-hidden"><div className="border-t border-teal-100/70 dark:border-teal-500/25 px-4 pb-3.5 pt-3">
-              <div className="mb-1.5 text-[11px] font-bold uppercase tracking-wide text-teal-700 dark:text-teal-300">LG {cur.label}{T(" 효율 경쟁력 진단 — ", " Efficiency Competitiveness Diagnosis — ")}{typ !== "전체" ? typ + " · " : ""}{seg?.k}</div>
-              <ul className="space-y-1 text-[12px] leading-relaxed text-gray-700 dark:text-gray-200">
-                <li>• <b>{T("포지션", "Position")}</b>{T(": 이 세그먼트 ", ": Among ")}{brandCount}{T("개사 중 ", " companies, ranked ")}<b className="text-teal-700 dark:text-teal-300">{lgRk}{T("위", "th")}</b>({cur.metric} {lgR.v.toFixed(2)}){T(", 리더 ", ", leader ")}{rank[0]?.name}{T(" 대비 ", " vs ")}{gap != null ? gap.toFixed(0) : "—"}% {gap != null && gap > 0 ? T("낮음", "lower") : T("높음", "higher")}.</li>
-                {strong && weak && <li>• <b>{T("용량대 강·약", "Capacity strengths/weaknesses")}</b>: <b className="text-emerald-600 dark:text-emerald-400">{strong.label}</b>{T(" 시장평균 +", " market avg +")}{strong.diff.toFixed(2)}{T(" 강세, ", " strong, ")}<b className="text-rose-600 dark:text-rose-400">{weak.label}</b> {weak.diff.toFixed(2)}{T(" 열세 → 차기 개발 우선순위.", " weak → next-gen development priority.")}</li>}
-                {lgGrade && <li>• <b>{T("등급 믹스", "Grade mix")}</b>{T(": LG 5성 ", ": LG 5-star ")}{lgGrade.s5.toFixed(0)}{T("%(4성 ", "% (4-star ")}{lgGrade.s4.toFixed(0)}%) — {lgGrade.s5 >= 60 ? T("프리미엄 효율 라인 견고", "premium efficiency line is solid") : T("5성 확대 여지", "room to expand 5-star")}.</li>}
-                {(() => { const lgT = tco.find((t) => t.isLG); const best = tco[0]; if (!lgT || !best) return null; const diff = lgT.cost - best.cost; return <li>• <b>{T("전력비용(TCO)", "Power Cost (TCO)")}</b>{T(": LG 월 약 ", ": LG ~")}<b>₱{lgT.cost.toLocaleString()}</b>{T(", 최저 ", ", lowest ")}{best.label}({`₱${best.cost.toLocaleString()}`}){T(" 대비 ", " vs ")}{diff > 0 ? `₱${diff.toLocaleString()}${T(" 높음(효율 개선 시 절감 소구)", " higher (efficiency gains → savings pitch)")}` : diff < 0 ? `₱${(-diff).toLocaleString()}${T(" 낮음(절감 마케팅 가능)", " lower (savings marketing possible)")}` : T("동일", "same")}.</li> })()}
-              </ul>
-            </div></div>
-          </div>
-        )}
-      </div>
 
       <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .5s cubic-bezier(.22,1,.36,1) both" }}>
           <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
             <span className="h-[18px] w-1 rounded bg-indigo-500" />
-            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("에너지 효율", "Energy Efficiency")}</h2>
-            <span className="text-[11px] font-semibold text-gray-400 dark:text-gray-500">{T("DOE 라벨 · 같은 ", "DOE label · same ")}{cur.specUnit}{T(" 세그먼트 내 ", " segment ")}{cur.metric}{T(" 분석", " analysis")}</span>
-            <span className="ml-auto"><Segmented size="sm" value={cat} onChange={setCat} options={CATS.map((c) => ({ k: c.key, label: c.label }))} /></span>
+            <Segmented size="sm" value={cat} onChange={setCat} options={CATS.map((c) => ({ k: c.key, label: c.label }))} />
           </header>
 
           <div className="mb-3.5 flex flex-col gap-2">
