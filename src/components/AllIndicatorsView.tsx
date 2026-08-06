@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useId, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import { createPortal } from "react-dom"
 import { dataProvenance, allIndicatorLatest, indicatorSeries, econSpark, fmtStamp, type Provenance } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
@@ -274,26 +274,6 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
   )
 }
 
-// ── 지표별 미니 스파크라인(최근 12관측) — 상승 emerald / 하락 rose ──
-function Spark({ pts }: { pts: number[] }) {
-  const uid = useId()
-  const p = pts.slice(-12)
-  const w = 118, h = 34, pad = 3
-  const min = Math.min(...p), max = Math.max(...p), rng = max - min || 1
-  const X = (i: number) => pad + (i / (p.length - 1)) * (w - 2 * pad)
-  const Y = (v: number) => pad + (1 - (v - min) / rng) * (h - 2 * pad)
-  const line = p.map((v, i) => (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1)).join(" ")
-  const area = line + " L" + X(p.length - 1).toFixed(1) + " " + (h - pad) + " L" + X(0).toFixed(1) + " " + (h - pad) + " Z"
-  const up = p[p.length - 1] >= p[0]
-  const col = up ? "#10b981" : "#f43f5e"
-  return (
-    <svg width={w} height={h} viewBox={"0 0 " + w + " " + h}>
-      <defs><linearGradient id={uid} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={col} stopOpacity="0.22" /><stop offset="1" stopColor={col} stopOpacity="0" /></linearGradient></defs>
-      <path d={area} fill={"url(#" + uid + ")"} />
-      <path d={line} fill="none" stroke={col} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
-    </svg>
-  )
-}
 
 // 지표별 설명 — 큐레이션 문구(INDICATOR_DESC) 우선 + 단위·출처·기간을 붙여 전 행 2줄 분량으로 보강(균일)
 function descOf(r: Row): string {
@@ -306,8 +286,8 @@ function descOf(r: Row): string {
 }
 
 // ── 이미지형 리스트 테이블 — 지표(☆) | 설명 | 최신값 | 24H(%) | 최근 7일 ──
-function IndListTable({ items, q, spark, fav, onFav, onDetail, showCat }: { items: Row[]; q: string; spark: Record<string, number[]>; fav: Set<string>; onFav: (id: string) => void; onDetail: (r: Row) => void; showCat?: boolean }) {
-  const cols = showCat ? ["23%", "9%", "25%", "12%", "11%", "20%"] : ["28%", "33%", "12%", "10%", "17%"]
+function IndListTable({ items, q, fav, onFav, onDetail, showCat }: { items: Row[]; q: string; spark?: Record<string, number[]>; fav: Set<string>; onFav: (id: string) => void; onDetail: (r: Row) => void; showCat?: boolean }) {
+  const cols = showCat ? ["21%", "9%", "39%", "12%", "11%", "8%"] : ["23%", "45%", "13%", "11%", "8%"]
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[760px] table-fixed text-[12px]">
@@ -316,18 +296,14 @@ function IndListTable({ items, q, spark, fav, onFav, onDetail, showCat }: { item
           <th className="px-3 py-2">{T("지표", "Indicator")}</th>
           {showCat && <th className="px-2 py-2">{T("분류", "Category")}</th>}
           <th className="px-2 py-2">{T("설명", "Desc.")}</th>
-          <th className="px-2 py-2 text-right whitespace-nowrap">{T("최신월·갱신", "Period·Upd.")}</th>
           <th className="px-2 py-2 text-right">{T("최신 값", "Latest")}</th>
-          <th className="px-2 py-2 text-right">24H (%)</th>
-          <th className="px-3 py-2 text-right">{T("최근 7일", "Last 7d")}</th>
+          <th className="px-2 py-2 text-right whitespace-nowrap">{T("최신월", "Period")}</th>
+          <th className="px-3 py-2 text-right whitespace-nowrap">{T("갱신", "Updated")}</th>
         </tr></thead>
         <tbody>
           {items.map((r) => {
             const u = inferUnit(r.indicator, r.label || "")
-            const pc = r.value != null && r.prev != null && r.prev !== 0 ? ((r.value - r.prev) / Math.abs(r.prev)) * 100 : null
-            const up = pc != null && pc >= 0
             const isFav = fav.has(r.indicator)
-            const sp = spark[r.indicator]
             return (
               <tr key={r.indicator} onClick={() => onDetail(r)} className="group cursor-pointer border-b border-gray-50 dark:border-gray-800/50 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-500/10">
                 <td className="px-3 py-3">
@@ -340,13 +316,9 @@ function IndListTable({ items, q, spark, fav, onFav, onDetail, showCat }: { item
                 </td>
                 {showCat && <td className="truncate px-2 py-3 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
                 <td className="px-2 py-3 align-middle"><p className="line-clamp-2 min-h-[2.75em] text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></td>
-                <td className="px-2 py-3 text-right align-middle tabular-nums whitespace-nowrap">
-                  <div className="text-[11px] font-semibold text-gray-600 dark:text-gray-300">{r.period ? ym(r.period) : "—"}</div>
-                  <div className="text-[10px] text-gray-400 dark:text-gray-500">{r.mx && /^\d{4}-\d{2}-\d{2}/.test(r.mx) ? T("갱신 ", "upd ") + Number(r.mx.slice(5, 7)) + "/" + Number(r.mx.slice(8, 10)) : ""}</div>
-                </td>
                 <td className="px-2 py-3 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
-                <td className={"px-2 py-3 text-right font-semibold tabular-nums " + (pc == null ? "text-gray-300 dark:text-gray-600" : up ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400")}>{pc == null ? "—" : (up ? "+" : "") + pc.toFixed(2) + "%"}</td>
-                <td className="px-3 py-3"><div className="flex justify-end">{sp && sp.length >= 2 ? <Spark pts={sp} /> : <span className="text-[12px] text-gray-300 dark:text-gray-600">—</span>}</div></td>
+                <td className="px-2 py-3 text-right align-middle tabular-nums whitespace-nowrap text-[11.5px] font-semibold text-gray-600 dark:text-gray-300">{r.period ? ym(r.period) : "—"}</td>
+                <td className="px-3 py-3 text-right align-middle tabular-nums whitespace-nowrap text-[11px] text-gray-500 dark:text-gray-400">{r.mx && /^\d{4}-\d{2}-\d{2}/.test(r.mx) ? Number(r.mx.slice(5, 7)) + "/" + Number(r.mx.slice(8, 10)) : "—"}</td>
               </tr>
             )
           })}
