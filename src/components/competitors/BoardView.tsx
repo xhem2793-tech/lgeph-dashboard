@@ -118,15 +118,12 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
     })
     return out
   }, [D, curDate, prevDate, cat, brands, effForm, effSize, q, sorts]) // eslint-disable-line
-  // 클릭=단일 정렬(재클릭 방향 토글), Shift+클릭=정렬 기준 추가(다중)
-  const setS = (k: string, additive = false) => setSorts((cur) => {
-    const idx = cur.findIndex((s) => s.k === k)
-    if (additive) { if (idx >= 0) { const n = [...cur]; n[idx] = { k, asc: !n[idx].asc }; return n } return [...cur, { k, asc: true }] }
-    if (cur[0]?.k === k && cur.length === 1) return [{ k, asc: !cur[0].asc }]
-    return [{ k, asc: true }]
-  })
-  // 정렬 표시 — 활성은 방향(▲▼·인디고, 다중이면 우선순위 번호), 비활성은 옅은 ⇅
-  const arrow = (k: string) => { const i = sorts.findIndex((s) => s.k === k); if (i < 0) return <span className="ml-0.5 text-[8px] text-gray-300 dark:text-gray-600">⇅</span>; return <span className="ml-0.5 text-indigo-500">{sorts[i].asc ? "▲" : "▼"}{sorts.length > 1 ? <sup className="text-[8px]">{i + 1}</sup> : ""}</span> }
+  // 클릭 한 번 = 그 컬럼 기준 정렬(재클릭 시 오름/내림 토글). 별도 키 불필요.
+  const setS = (k: string) => setSorts((cur) => (cur[0]?.k === k ? [{ k, asc: !cur[0].asc }] : [{ k, asc: true }]))
+  // 정렬 표시 — 활성은 방향(▲▼·인디고), 비활성은 옅은 ⇅(클릭 가능 안내)
+  const arrow = (k: string) => (sorts[0]?.k === k
+    ? <span className="ml-0.5 text-indigo-500">{sorts[0].asc ? "▲" : "▼"}</span>
+    : <span className="ml-0.5 text-[8px] text-gray-300 dark:text-gray-600">⇅</span>)
 
   // 원본(raw) 일일 거래선 가격 CSV — 수집 원본 9컬럼 전부 + 편의 파생(분류약자·유형·용량·모델코드).
   //  실제 수집: d·retailer·brand·category·model·capacity(상세 스펙 원문)·price·srp·url. onDate=해당 날짜만, null=전체. 엑셀 호환(BOM+CRLF)
@@ -191,17 +188,17 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
           </colgroup>
           <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-gray-900">
             <tr className="text-[10.5px] font-semibold text-gray-600 dark:text-gray-300">
-              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("brand", e.shiftKey)}>{T("브랜드", "Brand")}{arrow("brand")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("cat", e.shiftKey)}>{T("제품", "Div")}{arrow("cat")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("form", e.shiftKey)}>{T("유형", "Type")}{arrow("form")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("code", e.shiftKey)}>{T("모델", "Model")}{arrow("code")}</th>
-              <th className="cursor-pointer border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title={T("New DOE 에너지등급", "New DOE energy rating")} onClick={(e) => setS("star", e.shiftKey)}>★{arrow("star")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("srp", e.shiftKey)}>SRP{arrow("srp")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("brand")}>{T("브랜드", "Brand")}{arrow("brand")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("cat")}>{T("제품", "Div")}{arrow("cat")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("form")}>{T("유형", "Type")}{arrow("form")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("code")}>{T("모델", "Model")}{arrow("code")}</th>
+              <th className="cursor-pointer border-b border-gray-200 dark:border-gray-800 px-1 py-2 text-center" title={T("New DOE 에너지등급", "New DOE energy rating")} onClick={() => setS("star")}>★{arrow("star")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("srp")}>SRP{arrow("srp")}</th>
               {BOARD_SHOPS.map((s) => (
-                <th key={s.k} onClick={(e) => setS(s.k, e.shiftKey)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
+                <th key={s.k} onClick={() => setS(s.k)} className={"cursor-pointer whitespace-nowrap border-b border-l border-gray-100 dark:border-gray-800 px-2 py-2 text-center " + (s.live ? "" : "text-gray-400 dark:text-gray-600")}>{s.label}{arrow(s.k)}</th>
               ))}
-              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("min", e.shiftKey)}>{T("최저", "Lowest")}{arrow("min")}</th>
-              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={(e) => setS("spread", e.shiftKey)}>{T("스프레드", "Spread")}{arrow("spread")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("min")}>{T("최저", "Lowest")}{arrow("min")}</th>
+              <th className="cursor-pointer whitespace-nowrap border-b border-l border-gray-200 dark:border-gray-800 px-2 py-2 text-center" onClick={() => setS("spread")}>{T("스프레드", "Spread")}{arrow("spread")}</th>
             </tr>
           </thead>
           <tbody>

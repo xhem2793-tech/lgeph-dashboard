@@ -6,7 +6,7 @@
 import React from "react"
 import { fmtStamp, type PriceRow, type CompAd } from "@/lib/supabase"
 import { canonCode } from "@/lib/classify"
-import { peso, pmShopLabel, PmDrop } from "@/components/competitors/shared"
+import { peso, pmShopLabel } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
 
 const SEV_META: Record<string, { label: string; dot: string; chip: string; order: number }> = {
@@ -48,7 +48,6 @@ type Signal = {
 export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads: CompAd[] | null; stamp: string | null }) {
   const [kind, setKind] = React.useState("전체")
   const [catF, setCatF] = React.useState("전체")
-  const [dayF, setDayF] = React.useState("전체") // 날짜: 전체/오늘/어제 (3일 창 데이터 기준)
   const DAY_LABEL: Record<string, string> = { today: T("오늘", "Today"), yesterday: T("어제", "Yesterday") }
   const R = rows ?? []
   const A = ads ?? []
@@ -116,7 +115,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
 
   // 3단 계층 트리 — 날짜(오늘/어제) > 카테고리 > 제품(브랜드·모델). 제품 펼치면 거래선별 가격변동.
   const tree = React.useMemo(() => {
-    const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF) && (dayF === "전체" || s.day === dayF))
+    const filtered = signals.filter((s) => (kind === "전체" || s.kind === kind) && (catF === "전체" || s.cat === catF))
     const DAY_ORDER: ("today" | "yesterday")[] = ["today", "yesterday"]
     return DAY_ORDER.map((day) => {
       const ds = filtered.filter((s) => s.day === day)
@@ -134,10 +133,11 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       })
       return { day, cats: catGroups, n: ds.length }
     }).filter((x): x is NonNullable<typeof x> => x != null)
-  }, [signals, kind, catF, dayF])
+  }, [signals, kind, catF])
   const total = tree.reduce((s, d) => s + d.n, 0)
 
   const catCounts = React.useMemo(() => { const c: Record<string, number> = {}; signals.forEach((s) => { c[s.cat] = (c[s.cat] || 0) + 1 }); return c }, [signals])
+  const counts = React.useMemo(() => { const c: Record<string, number> = { price: 0, promo: 0, ad: 0, stock: 0 }; signals.forEach((s) => c[s.kind]++); return c }, [signals])
 
   if (rows === null) return <div className="flex min-h-[440px] items-center justify-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("불러오는 중", "Loading")}</div>
 
@@ -152,11 +152,20 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
 
   return (
     <div className="mt-3 flex flex-col gap-4" style={{ animation: "fadeUp .5s ease both" }}>
-      {/* 필터바 — 채널별 가격비교식 드롭다운(제품·신호·날짜) 나란히 */}
-      <div className="flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
-        <PmDrop label={T("날짜", "Date")} sel={dayF} options={[{ k: "전체", t: T("전체", "All") }, { k: "today", t: DAY_LABEL.today }, { k: "yesterday", t: DAY_LABEL.yesterday }]} onSelect={setDayF} />
-        <PmDrop label={T("제품", "Div")} sel={catF} options={["전체", ...CATS].filter((c) => c === "전체" || (catCounts[c] ?? 0) > 0).map((c) => ({ k: c, t: c === "전체" ? T("전체", "All") : (CAT_LABEL[c] ?? c) }))} onSelect={setCatF} />
-        <PmDrop label={T("신호", "Signal")} sel={kind} options={KIND_FILTERS.map((f) => ({ k: f.k, t: f.k === "전체" ? T("전체", "All") : KIND_LABEL[f.k] }))} onSelect={setKind} />
+      {/* 필터바 — 제품·신호 알약(원복). 날짜는 본문 타임라인 그룹으로 분리 */}
+      <div className="flex flex-wrap items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+        <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("제품", "Div")}</span>
+        {["전체", ...CATS].map((c) => {
+          const n = c === "전체" ? signals.length : (catCounts[c] ?? 0)
+          if (c !== "전체" && n === 0) return null
+          return <button key={c} type="button" onClick={() => setCatF(c)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (c === catF ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{c === "전체" ? T("전체", "All") : <><span className={"h-1.5 w-1.5 rounded-full " + (CAT_DOT[c] ?? "bg-gray-400")} />{CAT_LABEL[c] ?? c}</>}<span className={"tabular-nums text-[10.5px] " + (c === catF ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+        })}
+        <span className="mx-1 h-4 w-px bg-gray-200 dark:bg-gray-700" />
+        <span className="mr-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("신호", "Signal")}</span>
+        {KIND_FILTERS.map((f) => {
+          const n = f.k === "전체" ? signals.length : counts[f.k]
+          return <button key={f.k} type="button" onClick={() => setKind(f.k)} className={"inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-1 text-[12px] font-semibold transition-all duration-200 active:scale-95 " + (f.k === kind ? "bg-indigo-600 text-white shadow-sm shadow-indigo-600/25" : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 ring-1 ring-inset ring-gray-200 dark:ring-gray-700 hover:border-indigo-300 hover:text-indigo-600 dark:hover:text-indigo-300")}>{f.k === "전체" ? T("전체", "All") : KIND_LABEL[f.k]}<span className={"tabular-nums text-[10.5px] " + (f.k === kind ? "text-indigo-100" : "text-gray-400 dark:text-gray-500")}>{n}</span></button>
+        })}
         <span className="ml-auto hidden shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500 sm:flex">{T("최신", "Updated")} {stamp ? fmtStamp(stamp) : "—"}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></span>
       </div>
 
