@@ -179,7 +179,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         {data.brands.length === 0 ? (
           <div className="flex h-40 items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">{T("해당 조건의 전시 데이터가 없습니다.", "No listing data for this filter.")}</div>
         ) : (<>
-          <div className="overflow-x-auto px-0.5 pb-1 pt-2">
+          <div className="max-h-[calc(100vh-72px)] overflow-auto px-0.5 pb-1 pt-2">
             <div key={cat + "-" + di + "-" + metric} className="grid w-full gap-[5px] text-[11px]" style={{ minWidth: 620, gridTemplateColumns: `repeat(11, minmax(52px,1fr))` }}>
               {/* 헤더 행 — 좌상단 코너에 LG 갭 KPI 카드 */}
               <div className="sticky left-0 top-0 z-30 flex h-[clamp(60px,7vh,72px)] w-full flex-col items-center justify-center gap-0.5 rounded-md border border-indigo-100 bg-indigo-50 px-1 text-center transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:scale-[1.04] hover:shadow-md dark:border-indigo-500/20 dark:bg-indigo-500/20" title={T("LG 전시 vs 경쟁 평균", "LG listed vs rival avg")}>

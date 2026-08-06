@@ -198,7 +198,7 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
       {total === 0 ? (
         <div className="rounded-xl border border-dashed border-gray-200 dark:border-gray-800 py-16 text-center text-[12.5px] text-gray-400 dark:text-gray-500">{T("해당 신호가 없습니다.", "No matching signals.")}</div>
       ) : (
-        <div className="flex max-h-[68vh] flex-col gap-3 overflow-y-auto pr-1">
+        <div className="flex max-h-[calc(100vh-72px)] flex-col gap-3 overflow-y-auto pr-1">
           {byDay.map((dg) => {
             const dnum = dg.day === "today" ? new Date() : new Date(Date.now() - 86400000)
             const mmdd = `${String(dnum.getMonth() + 1).padStart(2, "0")}/${String(dnum.getDate()).padStart(2, "0")}`
