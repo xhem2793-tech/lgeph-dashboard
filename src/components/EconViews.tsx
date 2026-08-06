@@ -191,13 +191,6 @@ const HS_YRS = ["'15", "'16", "'17", "'18", "'19", "'20", "'21", "'22", "'23", "
 const HS_TOTALS: Record<string, number[]> = { ac: [205, 329, 371, 398, 466, 358, 376, 458, 531, 666], ref: [245, 331, 358, 387, 426, 380, 428, 452, 452, 501], tv: [176, 338, 399, 471, 466, 382, 460, 418, 373, 383], wash: [43, 78, 102, 128, 120, 95, 128, 149, 159, 178] }
 const HS_ORIGIN: Record<string, number[]> = { cn: [28.9, 27, 29.7, 35.1, 37.8, 41.8, 44.3, 43.2, 44.1, 48.7], th: [19.4, 16.3, 16.4, 15.6, 16.4, 16.1, 16.4, 17.5, 15.5, 14], vn: [4.8, 13, 12.8, 10.2, 9.6, 10.8, 12, 12.1, 12.8, 11.4], kr: [3.9, 6.7, 5.2, 4.4, 4.1, 2.9, 2.5, 2.6, 3, 3.1] }
 // 품목별 원산지 점유%(4대 원산지) — 제품 필터 연동용
-const HS_ORIGIN_CAT: Record<string, Record<string, number[]>> = {
-  ref: { cn: [32.3, 35.0, 39.5, 43.6, 43.9, 47.1, 54.9, 53.9, 55.4, 57.5], th: [26.6, 20.5, 16.9, 14.0, 15.3, 13.3, 12.3, 14.1, 12.2, 13.1], vn: [0.4, 3.1, 8.4, 9.8, 9.7, 10.2, 8.3, 11.8, 11.5, 11.6], kr: [3.3, 5.4, 4.3, 3.6, 3.2, 2.5, 2.9, 1.8, 2.2, 2.2] },
-  ac: { cn: [27.4, 29.8, 26.1, 30.2, 40.1, 39.3, 36.5, 34.2, 40.9, 48.9], th: [22.7, 24.8, 30.4, 32.1, 31.3, 34.4, 40.6, 37.2, 28.2, 22.0], vn: [6.5, 4.5, 4.3, 3.0, 0.4, 0.0, 0.1, 0.1, 0.1, 0.1], kr: [5.2, 7.8, 6.5, 5.5, 4.9, 3.9, 2.5, 2.7, 3.4, 3.5] },
-  wash: { cn: [53.1, 39.1, 36.7, 36.8, 42.3, 44.7, 49.8, 53.6, 51.1, 53.4], th: [25.4, 29.9, 25.3, 23.5, 24.0, 22.3, 17.7, 15.7, 17.6, 14.8], vn: [3.8, 9.8, 10.9, 13.2, 15.3, 18.0, 20.7, 18.7, 15.6, 19.5], kr: [2.2, 7.2, 8.1, 9.4, 8.6, 6.1, 5.3, 6.5, 8.7, 9.6] },
-  tv: { cn: [20.1, 13.6, 22.5, 31.8, 28.9, 38.2, 39.2, 37.6, 32.1, 34.8], th: [3.9, 0.8, 0.6, 0.7, 0.5, 0.3, 0.2, 0.4, 0.4, 0.9], vn: [9.2, 31.8, 25.3, 15.7, 17.3, 19.7, 22.8, 23.1, 31.3, 26.8], kr: [3.8, 6.8, 4.2, 2.9, 2.9, 1.6, 1.3, 2.0, 1.0, 0.5] },
-}
-const PROD_HS: Record<string, string> = { "냉장고": "ref", "세탁·건조": "wash", "에어컨(RAC)": "ac", "공조(B2B)": "ac", "TV·AV": "tv", "모니터·사이니지": "tv" }
 // 가전 시장규모·이커머스 — 다중기관 추정 범위 + 근거(백데이터). 단일 숫자 아닌 삼각검증.
 function MarketCard() {
   const [appl, setAppl] = useState<MktEst[]>([])
@@ -362,17 +355,13 @@ function RegionOwnCard() {
     </div>
   )
 }
-const PRODS = ["전체", "냉장고", "세탁·건조", "에어컨(RAC)", "TV·AV", "공조(B2B)", "모니터·사이니지"]
 // 제품 필터 표시 라벨 — 키(한글)는 로직 유지, EN 표시만(함수라 렌더 시점 반영)
-const PROD_EN: Record<string, string> = { "전체": "All", "냉장고": "REF", "세탁·건조": "Laundry", "에어컨(RAC)": "RAC", "TV·AV": "TV·AV", "공조(B2B)": "HVAC (B2B)", "모니터·사이니지": "Monitor·Signage" }
-const prodLabel = (p: string) => T(p, PROD_EN[p] ?? p)
 export function ApplianceView() {
   const [win, setWin] = useState("2Y")
-  const [prod, setProd] = useState("전체")
   const { d, loaded } = useMacro(APPLIANCE_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
-  // 제품 필터 — '전 제품' 태그(원가·수입·전기 등 공통지표)는 항상 표시, 제품특정 지표는 해당 제품 선택 시만
-  const show = (tags: string[]) => prod === "전체" || tags.includes("전 제품") || tags.includes(prod)
+  // 제품 필터 제거 — 모든 지표를 항상 표시(전 제품 통합 뷰)
+  const show = (_tags: string[]) => true
   const ppi = build(d, n, [{ key: "PPI_domestic_appliances", name: T("가전 PPI", "Appl. PPI"), color: C.ind, w: 2 }, { key: "PPI_electrical", name: T("전기기기", "Elec. equip."), color: C.rose }, { key: "PPI_electronics", name: T("전자", "Electronics"), color: C.blue }, { key: "PPI_manufacturing", name: T("제조업 전체", "Total mfg"), color: C.brown }])
   const imp = build(d, n, [{ key: "imports_home_appliances", name: T("가전", "Appliances"), color: C.ind, w: 2, tf: (v) => v / 1e6 }, { key: "imports_consumer_electronics", name: T("소비자전자", "Consumer elec."), color: C.rose, tf: (v) => v / 1e6 }, { key: "imports_telecom", name: T("통신기기", "Telecom"), color: C.blue, tf: (v) => v / 1e6 }]) // USD→백만$ (연간 무역통계)
   const inf = build(d, n, [{ key: "INF_household_appliances", name: T("가전 물가", "Appl. CPI"), color: C.ind, w: 2 }, { key: "INF_aircon", name: T("에어컨", "Aircon"), color: C.rose }, { key: "INF_all_items", name: T("전체 CPI", "Headline"), color: C.brown }])
@@ -391,10 +380,6 @@ export function ApplianceView() {
         { key: "meralco_residential_rate", label: T("전기료", "Electricity"), fmt: (v) => "₱" + v.toFixed(2), tone: "amber" },
       ]}>
       {false && <MarketCard />}
-      <div className="col-span-full -mt-1 flex flex-wrap items-center gap-1.5">
-        <span className="mr-0.5 text-[10.5px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("제품", "Product")}</span>
-        {PRODS.map((p) => <button key={p} type="button" onClick={() => setProd(p)} className={"rounded-lg px-2.5 py-1 text-[12px] font-semibold transition-all " + (prod === p ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-teal-500/15")}>{prodLabel(p)}</button>)}
-      </div>
       {show(["전 제품"]) && <OwnershipCard d={d} />}
       {false && <RegionOwnCard />}{/* 지역별 보유율 — 지도(RegionMap)에 반영 예정, 잠시 숨김 */}
       {show(["전 제품"]) && ppi.series.length > 0 && (
@@ -454,16 +439,14 @@ export function ApplianceView() {
           tone="amber" src={src(T("UN Comtrade 필리핀 수입액 HS 8415·8418·8450·8528 · 연간", "UN Comtrade Philippine imports HS 8415·8418·8450·8528 · Annual"))} />
       )}
       {(() => {
-        const hcat = PROD_HS[prod] // 전체=집계, 특정 제품=해당 HS 원산지
-        const og = hcat ? HS_ORIGIN_CAT[hcat] : HS_ORIGIN
-        const scope = hcat ? prod : T("4품목 합산", "4-item total")
+        const og = HS_ORIGIN // 4품목 합산 원산지 점유(제품 필터 제거로 집계 고정)
         const lastKr = og.kr[og.kr.length - 1], lastCn = og.cn[og.cn.length - 1], firstCn = og.cn[0]
         return (
-        <ChartCard seg={T("전 제품·CE·B2B", "All·CE·B2B")} title={T("가전 수입 원산지 점유율", "Appliance Origin Share") + (hcat ? " · " + prod : "")} unit={T("% · 연간(", "% · Annual(") + scope + ")"} labels={HS_YRS} series={[{ name: T("중국", "China"), color: C.rose, w: 2.4, data: og.cn }, { name: T("태국", "Thailand"), color: C.amber, data: og.th }, { name: T("베트남", "Vietnam"), color: C.emer, data: og.vn }, { name: T("한국", "Korea"), color: C.ind, w: 2, data: og.kr }]} decimals={1} seriesUnit="%"
+        <ChartCard seg={T("전 제품·CE·B2B", "All·CE·B2B")} title={T("가전 수입 원산지 점유율", "Appliance Origin Share")} unit={T("% · 연간(", "% · Annual(") + T("4품목 합산", "4-item total") + ")"} labels={HS_YRS} series={[{ name: T("중국", "China"), color: C.rose, w: 2.4, data: og.cn }, { name: T("태국", "Thailand"), color: C.amber, data: og.th }, { name: T("베트남", "Vietnam"), color: C.emer, data: og.vn }, { name: T("한국", "Korea"), color: C.ind, w: 2, data: og.kr }]} decimals={1} seriesUnit="%"
           legend={<><Lg c={C.rose} t={T("중국", "China")} b /><Lg c={C.amber} t={T("태국", "Thailand")} /><Lg c={C.emer} t={T("베트남", "Vietnam")} /><Lg c={C.ind} t={T("한국", "Korea")} b /></>}
-          meaning={<>{hcat ? prod : T("가전", "Appliances")} {T("수입 원산지 구성 — ", "import origin mix — ")}<b className="text-gray-700 dark:text-gray-200">{T("경쟁 원산지·조달 구조", "competing origins & sourcing structure")}</b>{hcat ? "" : T(" · 제품 필터로 품목별 전환", " · switch by category via the product filter")}</>}
-          ai={<>{T("중국이 ", "China rose ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{firstCn}%→{lastCn}%</b>{T("로 상승, ", ", while ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("한국은 ", "Korea is ")}{lastKr}%</b> = {hcat === "wash" ? T("세탁기는 그나마 한국 9%대·베트남 급상승(20%)", "for washers Korea holds ~9% while Vietnam surges (20%)") : hcat === "tv" ? T("TV는 베트남(27%)이 중국 다음 2위, 한국 0.5%로 최저", "for TVs Vietnam (27%) is #2 after China, Korea lowest at 0.5%") : hcat === "ac" ? T("에어컨은 태국(22%)이 중국 다음 조달허브, 한국 3%대", "for AC Thailand (22%) is the sourcing hub after China, Korea ~3%") : hcat === "ref" ? T("냉장고는 중국 57%로 편중 최고, 한국 2%대 최저", "refrigerators are most China-concentrated at 57%, Korea lowest ~2%") : T("필리핀 완제품 시장을 중국계가 장악", "Chinese brands dominate the Philippine finished-goods market")}{T(". LG는 ", ". LG must either ")}<b className="font-semibold">{T("현지·역내(태국·베트남) 생산·조달로 원가·물류 대응", "manage cost/logistics via local/regional (Thailand·Vietnam) production & sourcing")}</b>{T("하거나 고효율·프리미엄 차별화가 관건.", " or differentiate on high-efficiency/premium — that is the key.")}</>}
-          tone="rose" src={src(T("UN Comtrade 원산지별 수입액 · 연간", "UN Comtrade imports by origin · Annual") + (hcat ? " (HS " + ({ ref: "8418", ac: "8415", wash: "8450", tv: "8528" }[hcat]) + ")" : T(" (4품목 합산)", " (4-item total)")))} />
+          meaning={<>{T("가전", "Appliances")} {T("수입 원산지 구성 — ", "import origin mix — ")}<b className="text-gray-700 dark:text-gray-200">{T("경쟁 원산지·조달 구조", "competing origins & sourcing structure")}</b></>}
+          ai={<>{T("중국이 ", "China rose ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{firstCn}%→{lastCn}%</b>{T("로 상승, ", ", while ")}<b className="font-semibold text-rose-600 dark:text-rose-400">{T("한국은 ", "Korea is ")}{lastKr}%</b> = {T("필리핀 완제품 시장을 중국계가 장악", "Chinese brands dominate the Philippine finished-goods market")}{T(". LG는 ", ". LG must either ")}<b className="font-semibold">{T("현지·역내(태국·베트남) 생산·조달로 원가·물류 대응", "manage cost/logistics via local/regional (Thailand·Vietnam) production & sourcing")}</b>{T("하거나 고효율·프리미엄 차별화가 관건.", " or differentiate on high-efficiency/premium — that is the key.")}</>}
+          tone="rose" src={src(T("UN Comtrade 원산지별 수입액 · 연간", "UN Comtrade imports by origin · Annual") + T(" (4품목 합산)", " (4-item total)"))} />
         )
       })()}
     </Shell>
