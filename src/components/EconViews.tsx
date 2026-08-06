@@ -131,7 +131,7 @@ export function AgendaCard() {
 
 // ── 공용 셸 — 환율 페이지와 동일 레이아웃(배너 + 좌 차트 | 우 위젯 286px) ──
 type Section = { key: string; label: string; node: React.ReactNode }
-function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children, sections }: { title: string; sub?: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; banner?: BannerDef; kpiDefs?: KpiDef[]; d: Mon; children?: React.ReactNode; sections?: Section[]; accent?: string }) {
+function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children, sections, hideWin }: { title: string; sub?: string; win: string; setWin: (k: string) => void; loaded: boolean; empty: boolean; banner?: BannerDef; kpiDefs?: KpiDef[]; d: Mon; children?: React.ReactNode; sections?: Section[]; accent?: string; hideWin?: boolean }) {
   const [activeSub, setActiveSub] = useState(sections?.[0]?.key ?? "")
   const curSub = sections?.find((s) => s.key === activeSub) ?? sections?.[0]
   // 적응형 토글 — 뷰의 실제 데이터 기간(년)보다 긴 창은 숨김(5년치 데이터 없는데 5Y 토글 노출 방지)
@@ -157,9 +157,11 @@ function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children
                 ))}
               </nav>
             )}
+            {!hideWin && (
             <span className="ml-auto">
               <Segmented size="sm" value={win} onChange={setWin} options={winOpts.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} />
             </span>
+            )}
           </header>
           {!loaded ? (
             <div className="grid gap-4 sm:grid-cols-2">
@@ -356,8 +358,7 @@ function RegionOwnCard() {
   )
 }
 // 제품 필터 표시 라벨 — 키(한글)는 로직 유지, EN 표시만(함수라 렌더 시점 반영)
-export function ApplianceView() {
-  const [win, setWin] = useState("2Y")
+export function ApplianceView({ win = "5Y" }: { win?: string }) {
   const { d, loaded } = useMacro(APPLIANCE_KEYS)
   const n = WIN.find((w) => w.k === win)!.n
   // 제품 필터 제거 — 모든 지표를 항상 표시(전 제품 통합 뷰)
@@ -371,7 +372,7 @@ export function ApplianceView() {
   const elecpc = build(d, n, [{ key: "elec_consumption_pc", name: T("1인당 전력소비", "Elec. per cap."), color: C.ind, w: 2 }]) // kWh/인, 연간
   const empty = !ppi.series.length && !imp.series.length && !inf.series.length && !elec.series.length && !cdd.series.length
   return (
-    <Shell title={T("가전 선행지표", "Appliance Leading Indicators")} sub={T("생산자물가·수입액·가전물가·전기료 — 원가·공급 선행", "PPI · Imports · Appliance CPI · Electricity — cost & supply leading")} win={win} setWin={setWin} loaded={loaded} empty={empty} d={d} accent="indigo"
+    <Shell title={T("가전 선행지표", "Appliance Leading Indicators")} sub={T("생산자물가·수입액·가전물가·전기료 — 원가·공급 선행", "PPI · Imports · Appliance CPI · Electricity — cost & supply leading")} win={win} setWin={() => {}} hideWin loaded={loaded} empty={empty} d={d} accent="indigo"
       banner={{ summary: (kv) => <>{T("가전 물가 ", "Appliance CPI ")}{B(f1(kv.INF_household_appliances) + "%")}{T("·에어컨 ", " · AC ")}{B(f1(kv.INF_aircon) + "%")}{T("·가전 PPI ", " · Appliance PPI ")}{B(f1(kv.PPI_domestic_appliances) + "%")}{T(", 전기료 ", ", Electricity ")}{B("₱" + f1(kv.meralco_residential_rate))} — {(kv.PPI_domestic_appliances ?? 0) > 2 ? T("원가·소매가 상방 압박", "Upward pressure on cost & retail price") : T("원가·가전물가 안정 국면", "Cost & appliance prices stable")}</>, headline: <><b className="font-semibold text-gray-900 dark:text-gray-50">{T("가전 원가·공급 선행지표", "Appliance Cost & Supply Leading Indicators")}</b></>, lg: <>{T("PPI·수입 급등은 원가·중국계 물량 신호 → ", "PPI/import spikes signal cost pressure & Chinese-brand volume → ")}<b className="font-semibold">{T("조달 헤지·프로모 타이밍", "procurement hedging & promo timing")}</b>{T(" 선제 대응 · 전기료↑엔 고효율 프리미엄 소구", " pre-emptively · when electricity rises, pitch high-efficiency premium")}</> }}
       kpiDefs={[
         { key: "INF_household_appliances", label: T("가전 물가 YoY", "Appliance CPI YoY"), fmt: (v) => v + "%", tone: "rose" },

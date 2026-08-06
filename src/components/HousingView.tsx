@@ -3,7 +3,6 @@
 import React, { useEffect, useMemo, useState } from "react"
 import { macroMonthly, infraRegional, type InfraRegion } from "@/lib/supabase"
 import { ChartCard, Lg, fmtLabels, type SLine } from "@/components/EconChart"
-import { Segmented } from "@/components/Segmented"
 import { T } from "@/lib/i18n"
 
 const REGSHORT: Record<string, string> = {
@@ -45,8 +44,7 @@ function build(d: Mon, years: number, specs: Spec[]): { series: SLine[]; labels:
   return { series, labels: fmtLabels(axis) }
 }
 
-export default function HousingView() {
-  const [win, setWin] = useState("5Y")
+export default function HousingView({ win = "5Y" }: { win?: string }) {
   const [d, setD] = useState<Mon>({})
   useEffect(() => {
     macroMonthly(["rppi_index", "rppi_index_condo", "rppi_index_house", "rppi_yoy", "permits_residential_floorarea", "permits_residential_value", "office_vacancy_ncr", "construction_gva_growth"]).then(setD).catch(() => {})
@@ -72,11 +70,7 @@ export default function HousingView() {
 
       <div className="grid items-start gap-4">
       <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
-        {/* 기간 토글 — 타 경제지표 뷰와 동일하게 카드 헤더 내부에 배치 */}
-        <header className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-          <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("부동산·주택", "Real Estate")}</h2>
-          <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WIN.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} /></span>
-        </header>
+        {/* 기간 토글은 상위(경제 페이지 섹션 헤더)에서 렌더 — 여기선 제목/토글 없음(중복 제거) */}
         <div className="grid items-stretch gap-4 sm:grid-cols-2">
         {rppi.series.length ? (
           <ChartCard title={T("주택가격지수 RPPI", "Residential Property Price Index (RPPI)")} seg="CE" unit={T("2019=100 · 분기", "2019=100 · Qtr")} decimals={1}

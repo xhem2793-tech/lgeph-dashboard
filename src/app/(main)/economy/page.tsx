@@ -44,18 +44,21 @@ function Soon({ label }: { label: string }) {
   )
 }
 
-function viewFor(id: string) {
+// 기간 토글을 섹션 헤더에서 렌더하는 뷰(win 상위 제어) — 부동산·환율·가전 선행지표
+const PERIOD_VIEWS = new Set(["housing", "fx", "appliance"])
+const PERIOD_OPTS = [{ k: "1Y", label: "1Y" }, { k: "2Y", label: "2Y" }, { k: "5Y", label: "5Y" }, { k: "전체", label: T("전체", "All") }]
+function viewFor(id: string, win: string) {
   if (id === "regions") return <div className="flex flex-col gap-3"><RegionMapView /><RegionPriceExtras /></div>
-  if (id === "fx") return <FxView />
+  if (id === "fx") return <FxView win={win} />
   if (id === "online") return <OnlineMarketView />
   if (id === "importprice") return <ImportPriceView />
-  if (id === "housing") return <HousingView />
+  if (id === "housing") return <HousingView win={win} />
   if (id === "prices") return <PricesView />
   if (id === "growth") return <GrowthView />
   if (id === "labor") return <LaborView />
   if (id === "sentiment") return <SentimentView />
   if (id === "rates") return <RatesView />
-  if (id === "appliance") return <ApplianceView />
+  if (id === "appliance") return <ApplianceView win={win} />
   return <Soon label={buildNav().find((n) => n.id === id)?.ko ?? ""} />
 }
 
@@ -67,6 +70,8 @@ export default function Page() {
   const [active, setActive] = useState("prices")   // 스크롤스파이 현재 섹션
   const [counts, setCounts] = useState<Record<string, number>>({})
   const [mounted, setMounted] = useState<Set<string>>(() => new Set(["prices", "growth"]))
+  const [winMap, setWinMap] = useState<Record<string, string>>({})
+  const winOf = (id: string) => winMap[id] ?? (id === "fx" ? "2Y" : "5Y")
   const secRefs = useRef<Record<string, HTMLElement | null>>({})
   const clickLock = useRef(false)
 
@@ -178,13 +183,14 @@ export default function Page() {
                   ref={(el) => { secRefs.current[n.id] = el }}
                   className="scroll-mt-[76px] rounded-2xl border border-gray-200 dark:border-gray-800/80 bg-white/70 dark:bg-gray-900/25 p-4 shadow-[0_1px_2px_rgba(0,0,0,0.03)] sm:p-5"
                 >
-                  {/* 카테고리 제목 — 바로 밑 토글과 밀착(간격 축소), 카드로 카테고리 구분 */}
-                  <div className="mb-2.5 flex items-baseline gap-2 pb-2">
+                  {/* 카테고리 제목 + (해당 뷰) 기간 토글을 한 줄로 통일 */}
+                  <div className="mb-2.5 flex flex-wrap items-center gap-x-2 gap-y-1.5 pb-2">
                     <h2 className="text-[17px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{n.ko}</h2>
-                    <span className="truncate text-[12px] text-gray-400 dark:text-gray-500">{n.sub}</span>
+                    <span className="min-w-0 truncate text-[12px] text-gray-400 dark:text-gray-500">{n.sub}</span>
+                    {PERIOD_VIEWS.has(n.id) && <span className="ml-auto shrink-0"><Segmented size="sm" value={winOf(n.id)} onChange={(v) => setWinMap((m) => ({ ...m, [n.id]: v }))} options={PERIOD_OPTS} /></span>}
                   </div>
                   {mounted.has(n.id)
-                    ? <div style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>{viewFor(n.id)}</div>
+                    ? <div style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>{viewFor(n.id, winOf(n.id))}</div>
                     : <div className="min-h-[360px] rounded-xl border border-dashed border-gray-200 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-900/40" />}
                 </section>
               ))}

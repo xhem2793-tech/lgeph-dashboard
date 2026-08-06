@@ -2,7 +2,6 @@
 
 import React from "react"
 import { fxStrip, pageBanner } from "@/lib/supabase"
-import { Segmented } from "@/components/Segmented"
 import { useIsDark, chartColors } from "@/components/EconChart"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
 import { T } from "@/lib/i18n"
@@ -191,10 +190,9 @@ function ChartCard({ title, unit, legend, series, labels, decimals, seriesUnit, 
   )
 }
 
-export default function FxView() {
+export default function FxView({ win = "2Y" }: { win?: string }) {
   const [, setS] = React.useState<Strip | null>(null)
   const [open, setOpen] = React.useState(false)
-  const [win, setWin] = React.useState("2Y")
   const [banner, setBanner] = React.useState<Banner>(FX_BANNER)
   React.useEffect(() => { fxStrip().then(setS).catch(() => setS({ asOf: null, pairs: {}, peers: [] })) }, [])
   React.useEffect(() => { pageBanner("fx").then((b) => { if (b) setBanner(b as Banner) }).catch(() => {}) }, [])
@@ -235,10 +233,7 @@ export default function FxView() {
       {/* 본문: 차트(우측 위젯 제거 — 경제일정 레일과 중복) */}
       <div className="grid items-start gap-4">
         <section className="min-w-0 rounded-xl p-4" style={{ animation: "fadeUp .34s cubic-bezier(.22,1,.36,1) both" }}>
-          <header className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-2.5">
-            <h2 className="text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("환율", "Exchange")}</h2>
-            <span className="ml-auto"><Segmented size="sm" value={win} onChange={setWin} options={WINDOWS.map((w) => ({ k: w.k, label: w.k === "전체" ? T("전체", "All") : w.k }))} /></span>
-          </header>
+          {/* 기간 토글은 상위(경제 페이지 섹션 헤더)에서 렌더 — 여기선 제목/토글 없음(중복 제거) */}
           <div className="grid items-stretch gap-4 sm:grid-cols-2">
             <ChartCard title={T("동남아 6개국 통화 약세도", "ASEAN 6-Currency Depreciation")} unit={T("대미달러 · 창 시작=100 · 위=절하", "vs. USD · window start=100 · up=depreciation")} labels={labels} series={region} tone="rose"
               legend={<><Lg c="#4338ca" t={T("필리핀", "Philippines")} b /><Lg c="#ef4444" t={T("인니", "Indonesia")} /><Lg c="#0ea5e9" t={T("말련", "Malaysia")} /><Lg c="#10b981" t={T("태국", "Thailand")} /><Lg c="#f59e0b" t={T("베트남", "Vietnam")} /><Lg c="#a855f7" t={T("싱가포르", "Singapore")} /></>}
