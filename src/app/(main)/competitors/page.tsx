@@ -321,15 +321,20 @@ export default function Competitors() {
 
   return (
     <div className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
-      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes sparkDraw{to{stroke-dashoffset:0}}"}</style>
+      <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes sparkDraw{to{stroke-dashoffset:0}}@keyframes navBounce{0%,70%,100%{transform:translateX(0)}78%{transform:translateX(3px)}86%{transform:translateX(-2px)}93%{transform:translateX(1px)}}"}</style>
 
-      <div className={"grid items-start gap-6 transition-[grid-template-columns] duration-[350ms] ease-[cubic-bezier(.22,1,.36,1)] " + (navOpen ? "lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7" : "lg:grid-cols-[46px_minmax(0,1fr)] lg:gap-5")}>
+      <div className={"grid items-start gap-6 transition-[grid-template-columns] duration-[350ms] ease-[cubic-bezier(.22,1,.36,1)] " + (navOpen ? "lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7" : "lg:grid-cols-[34px_minmax(0,1fr)] lg:gap-4")}>
         <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit overflow-hidden lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
           {/* 좌 메뉴 — 아이콘 헤더(접기 토글 포함)·그룹 라벨·우측 상태 메타 */}
           <div className={"flex items-center border-b border-gray-100 dark:border-gray-800 py-2.5 " + (navOpen ? "gap-1.5 px-2" : "justify-center px-0")}>
             <button type="button" onClick={() => setNavOpen((v) => !v)} aria-label={navOpen ? T("메뉴 접기", "Collapse menu") : T("메뉴 펼치기", "Expand menu")} title={navOpen ? T("메뉴 접기", "Collapse menu") : T("메뉴 펼치기", "Expand menu")}
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:text-gray-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: navOpen ? "none" : "rotate(180deg)" }}><path d="M15 18l-6-6 6-6" /></svg>
+              className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors " + (navOpen ? "text-gray-400 hover:bg-indigo-50 hover:text-indigo-600 dark:text-gray-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300" : "text-indigo-500 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-500/10")}>
+              {navOpen ? (
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
+              ) : (
+                // 접힘: 펼치기 유도 이중 셰브론 + 3초마다 통통 튀는 바운스(라이브 느낌)
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "navBounce 3s ease-in-out infinite" }}><path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" /></svg>
+              )}
             </button>
             {navOpen && <p className="whitespace-nowrap text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분석", "Analysis")}</p>}
           </div>
