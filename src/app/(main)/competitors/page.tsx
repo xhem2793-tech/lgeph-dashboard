@@ -344,12 +344,12 @@ export default function Competitors() {
           {/* 좌 메뉴 헤더 — 펼침 상태에서만 렌더(접기 토글 + 제목). */}
           {navOpen && (
           <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400 dark:text-gray-500"><path d="M3 3v18h18" /><path d="M7 15l3-3 3 2 5-6" /></svg>
-            <p className="whitespace-nowrap text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분석", "Analysis")}</p>
             <button type="button" onClick={() => setNavOpen(false)} aria-label={T("메뉴 접기", "Collapse menu")} title={T("메뉴 접기", "Collapse menu")}
-              className="ml-auto flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:text-gray-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300">
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600 dark:text-gray-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6" /></svg>
             </button>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400 dark:text-gray-500"><path d="M3 3v18h18" /><path d="M7 15l3-3 3 2 5-6" /></svg>
+            <p className="whitespace-nowrap text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("분석", "Analysis")}</p>
           </div>
           )}
           <div className={"px-2 py-3 transition-opacity duration-200 " + (navOpen ? "opacity-100" : "pointer-events-none hidden opacity-0")}>
