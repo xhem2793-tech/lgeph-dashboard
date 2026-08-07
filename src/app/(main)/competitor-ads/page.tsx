@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react"
 import { competitorAds, pageBanner } from "@/lib/supabase"
 import type { CompAd } from "@/lib/supabase"
-import { ListSearch } from "@/components/competitors/shared"
+import { ListSearch, PmMultiDrop } from "@/components/competitors/shared"
 import { Segmented } from "@/components/Segmented"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
 import { T } from "@/lib/i18n"
@@ -51,30 +51,6 @@ const clean = (s: string | null | undefined) =>
 const ymLabel = (ym: string) => T(Number(ym.slice(0, 4)) + "년 " + Number(ym.slice(5, 7)) + "월", Number(ym.slice(5, 7)) + "/" + Number(ym.slice(0, 4)))
 
 type Opt = { value: string; label: string; count: number; dot?: string }
-function Facet({ title, options, selected, onToggle }: { title: string; options: Opt[]; selected: string[]; onToggle: (v: string) => void }) {
-  if (options.length === 0) return null
-  return (
-    <div className="py-2">
-      <div className="mb-1 px-1.5 text-[11px] font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{title}</div>
-      <div className="flex flex-col">
-        {options.map((o, i) => {
-          const ck = selected.includes(o.value)
-          return (
-            <button key={o.value} onClick={() => onToggle(o.value)} style={{ animation: "fadeUp .35s ease both", animationDelay: (Math.min(i, 8) * 25) + "ms" }} className="group flex items-center gap-2 rounded-md px-1.5 py-[6px] text-left text-[12.5px] font-medium transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 active:scale-[.98] hover:bg-indigo-50 dark:hover:bg-indigo-500/10">
-              <span className={"flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border transition-colors " + (ck ? "border-indigo-600 bg-indigo-600 text-white" : "border-gray-300 dark:border-gray-700 group-hover:border-gray-400")}>
-                {ck && <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round"><path d="M5 13l4 4L19 7" /></svg>}
-              </span>
-              {o.dot && <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + o.dot} />}
-              <span className={"flex-1 truncate " + (ck ? "font-semibold text-indigo-700 dark:text-indigo-300" : "text-gray-700 dark:text-gray-200")}>{o.label}</span>
-              <span className="text-[10px] tabular-nums text-gray-400 dark:text-gray-500">{o.count}</span>
-            </button>
-          )
-        })}
-      </div>
-    </div>
-  )
-}
-
 function Thumb({ a }: { a: CompAd }) {
   const [err, setErr] = useState(false)
   const st = stOf(a.status)
@@ -351,28 +327,33 @@ export default function Page() {
     <main className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
-        <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit py-2 lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
-          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
-            <span className="flex items-center gap-1.5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 dark:text-gray-500"><path d="M22 3H2l8 9.46V19l4 2v-8.54z" /></svg>
-              <span className="text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("필터", "Filters")}</span>
-            </span>
-            {anyFilter && <button onClick={clearAll} className="text-[10.5px] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">{T("초기화", "Reset")}</button>}
-          </div>
-          <Facet title={T("브랜드", "Brand")} options={brandOpts} selected={fBrand} onToggle={(v) => toggle(fBrand, setFBrand, v)} />
-          <div className="mx-1.5 h-px bg-gray-100 dark:bg-gray-800" />
-          <Facet title={T("제품", "Product")} options={prodOpts} selected={fProd} onToggle={(v) => toggle(fProd, setFProd, v)} />
-          <div className="mx-1.5 h-px bg-gray-100 dark:bg-gray-800" />
-          <Facet title={T("카테고리", "Category")} options={typeOpts} selected={fType} onToggle={(v) => toggle(fType, setFType, v)} />
-          <div className="mx-1.5 h-px bg-gray-100 dark:bg-gray-800" />
-          <Facet title={T("상태", "Status")} options={statOpts} selected={fStat} onToggle={(v) => toggle(fStat, setFStat, v)} />
+      <div className="grid items-start gap-6 lg:grid-cols-[212px_minmax(0,1fr)] lg:gap-7">
+        {/* 좌측 네비 리스트 — 시장동향 스타일. 현재 '경쟁사 동향' 하나 */}
+        <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit py-2 lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-5">
+          <div className="mb-1.5 px-2 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("마케팅", "Marketing")}</div>
+          <button type="button" className="flex w-full items-center gap-2 rounded-lg border-l-2 border-indigo-500 bg-indigo-50/70 px-2.5 py-2 text-left text-[13px] font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 15l4-4 3 3 5-6" /></svg>
+            {T("경쟁사 동향", "Competitor Trends")}
+          </button>
         </aside>
 
         <div className="min-w-0" style={{animation:"fadeUp .5s ease both"}}>
           <div className="mb-4"><InsightBanner banner={banner} open={sitOpen} onToggle={() => setSitOpen((v) => !v)} /></div>
 
-        <div className="relative mb-3 flex flex-wrap items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5"><div className="flex shrink-0 items-center gap-3"><Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: T("최신순", "Latest") }, { k: "ending", label: T("종료임박순", "Ending soon") }]} size="sm" /><div className="inline-flex items-center gap-1 rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]"><button onClick={() => setMonthIdx(-1)} className={"h-7 rounded-full px-3 text-[12px] font-semibold transition-all duration-200 active:scale-[.93] " + (monthSel === null ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")}>{T("전체", "All")}</button><button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label={T("이전 달", "Prev month")} disabled={months.length === 0 || monthIdx >= months.length - 1} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg></button><span className={"min-w-[92px] px-1 text-center text-[12px] font-semibold " + (monthSel ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500")}>{monthSel ? ymLabel(monthSel) : T("전체 기간", "All periods")}</span><button onClick={() => setMonthIdx((i) => (i <= 0 ? 0 : i - 1))} aria-label={T("다음 달", "Next month")} disabled={monthIdx <= 0} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg></button></div></div><div className="flex shrink-0 items-center gap-3"><ListSearch value={q} onChange={setQ} placeholder={T("브랜드·제목·프로모 검색", "Search brand / title / promo")} className="hidden lg:block" /><span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-700 dark:text-gray-200">{shown.length}{T("건", "")}</b>{qq ? <span>· {hits}{T("곳 일치", " matches")}</span> : null}{_maxDate ? <>· {T("최신", "Updated")} {_fresh}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></> : null}</span></div></div>
+          {/* 상단 필터 한 줄 — 4개 드롭다운(브랜드·제품·카테고리·상태) + 검색 + 최신 */}
+          <div className="mb-3 flex flex-wrap items-center gap-2 rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50/70 dark:bg-gray-900/40 px-3 py-2.5">
+            <PmMultiDrop label={T("브랜드", "Brand")} sel={fBrand} options={brandOpts.map((o) => ({ k: o.value, t: o.label + " (" + o.count + ")" }))} onToggle={(v) => toggle(fBrand, setFBrand, v)} onClear={() => setFBrand([])} />
+            <PmMultiDrop label={T("제품", "Product")} sel={fProd} options={prodOpts.map((o) => ({ k: o.value, t: o.label + " (" + o.count + ")" }))} onToggle={(v) => toggle(fProd, setFProd, v)} onClear={() => setFProd([])} />
+            <PmMultiDrop label={T("카테고리", "Category")} sel={fType} options={typeOpts.map((o) => ({ k: o.value, t: o.label + " (" + o.count + ")" }))} onToggle={(v) => toggle(fType, setFType, v)} onClear={() => setFType([])} />
+            <PmMultiDrop label={T("상태", "Status")} sel={fStat} options={statOpts.map((o) => ({ k: o.value, t: o.label + " (" + o.count + ")" }))} onToggle={(v) => toggle(fStat, setFStat, v)} onClear={() => setFStat([])} />
+            <div className="ml-auto flex items-center gap-2.5">
+              <ListSearch value={q} onChange={setQ} placeholder={T("브랜드·제목·프로모 검색", "Search brand / title / promo")} className="hidden lg:block" />
+              <span className="flex shrink-0 items-center gap-1.5 whitespace-nowrap text-[11px] text-gray-400 dark:text-gray-500"><b className="font-semibold text-gray-700 dark:text-gray-200">{shown.length}{T("건", "")}</b>{qq ? <span>· {hits}{T("곳 일치", " matches")}</span> : null}{_maxDate ? <>· {T("최신", "Updated")} {_fresh}<span title="CONFIRMED" className="rounded border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-1 py-px text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">C</span></> : null}</span>
+            </div>
+          </div>
+
+          {/* 정렬 행 — 최신순/종료임박순 + 게재월 스테퍼 + 초기화 */}
+          <div className="relative mb-3 flex flex-wrap items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-2.5"><Segmented value={sort} onChange={(k) => setSort(k)} options={[{ k: "latest", label: T("최신순", "Latest") }, { k: "ending", label: T("종료임박순", "Ending soon") }]} size="sm" /><div className="inline-flex items-center gap-1 rounded-full bg-gray-200/80 p-[3px] shadow-[inset_0_1px_2px_rgba(0,0,0,0.07)] dark:bg-gray-800/80 dark:shadow-[inset_0_1px_2px_rgba(0,0,0,0.35)]"><button onClick={() => setMonthIdx(-1)} className={"h-7 rounded-full px-3 text-[12px] font-semibold transition-all duration-200 active:scale-[.93] " + (monthSel === null ? "bg-white shadow-[0_1px_3px_rgba(0,0,0,0.14),0_1px_1px_rgba(0,0,0,0.04)] text-gray-900 dark:bg-gray-950 dark:text-gray-50" : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200")}>{T("전체", "All")}</button><button onClick={() => setMonthIdx((i) => Math.min((i < 0 ? -1 : i) + 1, months.length - 1))} aria-label={T("이전 달", "Prev month")} disabled={months.length === 0 || monthIdx >= months.length - 1} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M15 6l-6 6 6 6" /></svg></button><span className={"min-w-[92px] px-1 text-center text-[12px] font-semibold " + (monthSel ? "text-gray-700 dark:text-gray-200" : "text-gray-400 dark:text-gray-500")}>{monthSel ? ymLabel(monthSel) : T("전체 기간", "All periods")}</span><button onClick={() => setMonthIdx((i) => (i <= 0 ? 0 : i - 1))} aria-label={T("다음 달", "Next month")} disabled={monthIdx <= 0} className="flex h-7 w-7 items-center justify-center rounded-full text-gray-500 dark:text-gray-400 transition-colors hover:bg-white dark:hover:bg-gray-900 disabled:opacity-30"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 6l6 6-6 6" /></svg></button></div>{anyFilter && <button onClick={clearAll} className="ml-auto text-[11px] font-medium text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400">{T("필터 초기화", "Reset filters")}</button>}</div>
 
           <div key={(ads === null ? "L" : "R") + fBrand.join() + fType.join() + fProd.join() + fStat.join() + String(monthSel) + sort + q} style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}>
           {ads === null ? (
