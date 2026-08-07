@@ -28,6 +28,22 @@ async function sb(path: string): Promise<any[]> {
   return p
 }
 
+/** 지역 유통지도 — 거래선×지방 매장수(v_store_counts) */
+export type StoreCount = { retailer: string; region: string; stores: number }
+export async function storeCounts(): Promise<StoreCount[]> {
+  try {
+    const r = await sb("v_store_counts?select=retailer,region,stores")
+    return r.map((x) => ({ retailer: x.retailer, region: x.region, stores: Number(x.stores) })).filter((x) => x.region)
+  } catch { return [] }
+}
+/** 개별 매장(핀·리스트 팝업용) — 좌표·도시 포함 */
+export type StoreLoc = { retailer: string; name: string; region: string; province: string | null; city: string | null; lat: number | null; lng: number | null; address: string | null }
+export async function storeList(): Promise<StoreLoc[]> {
+  try {
+    return (await sb("retailer_stores?select=retailer,name,region,province,city,lat,lng,address&limit=5000")) as StoreLoc[]
+  } catch { return [] }
+}
+
 /** 페이지네이션 병렬 로딩 — 필요한 페이지 전부를 한 웨이브로 동시 요청(HTTP/2 멀티플렉싱).
  *  실측: 13k행(14p)을 순차 대비 ~1.2s로 단축. 첫 짧은 페이지까지만 누적(그 뒤는 빈 응답).
  *  build(off)=오프셋별 경로. Supabase는 요청당 1000행 상한이라 page=1000 고정. */
