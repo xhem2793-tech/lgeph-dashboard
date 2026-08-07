@@ -164,7 +164,7 @@ function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children
             )}
           </header>
           {!loaded ? (
-            <div className="grid gap-4 sm:grid-cols-2 min-[1600px]:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 min-[2000px]:grid-cols-3">
               {[0, 1, 2, 3, 4, 5].map((i) => <div key={i} className="h-72 animate-pulse rounded-xl border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900" />)}
             </div>
           ) : empty ? (
@@ -173,7 +173,7 @@ function Shell({ title, win, setWin, loaded, empty, banner, kpiDefs, d, children
               <div className="text-[12px] text-gray-400 dark:text-gray-500">{T("해당 지표가 아직 Supabase에 없음 · 수집 후 자동 표시", "Indicator not yet in Supabase · Auto-displays once collected")}</div>
             </div>
           ) : (
-            <div key={activeSub} className="grid items-stretch gap-4 sm:grid-cols-2 min-[1600px]:grid-cols-3" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>{sections ? curSub?.node : children}</div>
+            <div key={activeSub} className="grid items-stretch gap-4 sm:grid-cols-2 min-[2000px]:grid-cols-3" style={{ animation: "fadeUp .35s cubic-bezier(.22,1,.36,1) both" }}>{sections ? curSub?.node : children}</div>
           )}
         </section>
       </div>

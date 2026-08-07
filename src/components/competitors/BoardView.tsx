@@ -38,7 +38,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
   const [form, setForm] = React.useState("전체")
   const [size, setSize] = React.useState("전체")
   const [q, setQ] = React.useState("")
-  const [sorts, setSorts] = React.useState<{ k: string; asc: boolean }[]>([{ k: "lg", asc: false }]) // 다중 정렬(기본: LG 상단)
+  const [sorts, setSorts] = React.useState<{ k: string; asc: boolean }[]>([]) // 다중 정렬(기본: 고정 없음 — LG 상단 고정 해제)
   const [selDate, setSelDate] = React.useState<string | null>(null)
   const D = daily ?? []
   const loading = daily === null

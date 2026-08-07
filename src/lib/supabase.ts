@@ -601,6 +601,16 @@ function classify(model: string, fallback: string) {
   return fallback ?? "기타"
 }
 
+// LG 권장가(우리가 유통에 제시한 권장 소비자가) — model_code별. 모니터링 뷰에서 유통 실판가와 비교(초과 점검).
+//  업로드 목록(lg_recommended_prices 테이블) 기준. 조인 정규화는 소비 측(canonCode)에서 처리.
+export type RecPrice = { model_code: string; price: number; asOf: string | null; note: string | null }
+export async function lgRecommendedPrices(): Promise<RecPrice[]> {
+  const rows = await sb("lg_recommended_prices?select=model_code,recommended_price,as_of,note&limit=5000").catch(() => [] as any[])
+  return rows
+    .map((r: any) => ({ model_code: String(r.model_code || ""), price: num(r.recommended_price) as number, asOf: r.as_of ?? null, note: r.note ?? null }))
+    .filter((r: RecPrice) => r.model_code && r.price != null)
+}
+
 // 브랜드 추론 — 일부 스크랩(예: Western Appliances)은 brand가 비고 model 첫 토큰에 브랜드명이 박혀 있음
 //  ("Prestiz WPREU4002" · "Skyworth 65GE6200"). 첫 토큰이 순수 알파벳(숫자 없음)이면 브랜드로 채택. brand 있으면 미적용.
 function inferBrand(model: string | null): string | null {

@@ -23,6 +23,7 @@ import {
 import { canonCode } from "@/lib/classify"
 import { peso, pct, md, SEGMENTS, ListSearch } from "@/components/competitors/shared"
 import { BoardView } from "@/components/competitors/BoardView"
+import { MonitoringView } from "@/components/competitors/MonitoringView"
 import { PositioningMatrix } from "@/components/competitors/PositioningMatrix"
 import { PromoView } from "@/components/competitors/PromoView"
 import { DealsView } from "@/components/competitors/DealsView"
@@ -52,6 +53,7 @@ const buildGroups = (): { group: string; items: { key: string; no: number; label
     items: [
       { key: "volatility", no: 8, label: T("유통 히트맵", "Retail Heatmap"), desc: T("거래선×브랜드 전시 커버리지 히트맵 · 스크랩 제품수·점유율·품절", "Retailer × brand listing-coverage heatmap · SKUs, SOS, OOS"), status: "live", badge: "beta" },
       { key: "board", no: 0, label: T("채널별 가격 비교", "Price by Channel"), desc: T("거래선 × 대표 제품 오늘가 매트릭스 · 동일모델 유통 최저가", "Retailer × key-model today-price matrix · lowest cross-channel price for the same model"), status: "live" },
+      { key: "monitoring", no: 16, label: T("모니터링", "Monitoring"), desc: T("LG 전용 · 유통 실판가 vs 권장가 준수 점검(초과·프로모 펼침)", "LG only · retailer street price vs recommended-price compliance (overage, expandable promo)"), status: "live", badge: "beta" },
       { key: "movers", no: 1, label: T("일일 가격 변동", "Daily Price Moves"), desc: T("3일 가격·변동폭·할인율", "3-day prices, change and discount rate"), status: "live" },
       { key: "outlier", no: 12, label: T("이상치 알림", "Outlier Alerts"), desc: T("가격 급락·급등·깊은할인·품절 감지 · 유리/불리 신호", "Detects sharp drops/spikes, deep discounts and stockouts · favorable/adverse signals"), status: "live", badge: "beta" },
     ],
@@ -382,7 +384,7 @@ export default function Competitors() {
           className="min-w-0"
           style={{ animation: "viewIn .42s cubic-bezier(.22,1,.36,1) both" }}
         >
-          {view !== "movers" && view !== "asp" && view !== "board" && view !== "deals" && view !== "outlier" && view !== "energy" && view !== "lifecycle" && view !== "volatility" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
+          {view !== "movers" && view !== "asp" && view !== "board" && view !== "monitoring" && view !== "deals" && view !== "outlier" && view !== "energy" && view !== "lifecycle" && view !== "volatility" && (<header className="flex flex-wrap items-baseline justify-between gap-2 border-b border-gray-100 dark:border-gray-800 pb-2">
             <h2 className="flex items-baseline gap-2 text-[15px] font-bold tracking-tight text-gray-900 dark:text-gray-50">
               {active?.label}
               <span className={"rounded border px-1 py-px text-[9px] font-semibold " + BADGE[active?.status ?? "plan"].c}>
@@ -399,6 +401,8 @@ export default function Competitors() {
 
           <ErrorBoundary key={view} label={active?.label}>{view === "board" ? (
             <BoardView daily={daily} stamp={stamp} elabels={elabels} />
+          ) : view === "monitoring" ? (
+            <MonitoringView daily={daily} stamp={stamp} elabels={elabels} />
           ) : view === "asp" ? (
             <PositioningMatrix rows={rows} elabels={elabels} stamp={stamp} />
           ) : view === "promo" ? (
