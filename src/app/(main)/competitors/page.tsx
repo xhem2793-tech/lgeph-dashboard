@@ -331,11 +331,11 @@ export default function Competitors() {
     <div className="relative w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes rowIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}@keyframes badgeSwap{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}@keyframes sparkDraw{to{stroke-dashoffset:0}}@keyframes navBounce{0%,70%,100%{transform:translateX(0)}78%{transform:translateX(3px)}86%{transform:translateX(-2px)}93%{transform:translateX(1px)}}"}</style>
 
-      {/* 접힘 상태 — 좌측 여백 띠(페이지 패딩) 중앙에 펼치기 아이콘 */}
+      {/* 접힘 상태 — 접기 버튼과 동일 위치·아이콘(단일 셰브론) 방향만 반대 */}
       {!navOpen && (
         <button type="button" onClick={() => setNavOpen(true)} aria-label={T("메뉴 펼치기", "Expand menu")} title={T("분석 메뉴 펼치기", "Expand menu")}
-          className="absolute left-0 top-6 z-30 hidden w-10 justify-center text-indigo-400 transition-colors hover:text-indigo-600 active:scale-90 dark:text-indigo-400 dark:hover:text-indigo-300 lg:flex">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: "navBounce 3s ease-in-out infinite" }}><path d="M13 17l5-5-5-5" /><path d="M6 17l5-5-5-5" /></svg>
+          className="absolute left-2 top-[9px] z-30 hidden h-7 w-7 shrink-0 items-center justify-center rounded-md text-gray-400 transition-colors hover:bg-indigo-50 hover:text-indigo-600 active:scale-90 dark:text-gray-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300 lg:flex">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6" /></svg>
         </button>
       )}
 
