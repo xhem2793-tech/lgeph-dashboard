@@ -827,6 +827,8 @@ function metricColor(m,v,ext){
 }
 function applyChoropleth(key){
   curMapMetric=key;
+  const isRetail=(key==="retail_total"||key.startsWith("r_"));
+  if(gPins){ gPins.style("display", isRetail?null:"none"); if(isRetail) drawPins(); }
   const m=MAPMETRICS.find(x=>x.key===key);
   const mb=document.getElementById("monthbar"); if(mb) mb.style.display=(m&&m.monthly&&MONTHS.length>1)?"flex":"none"; // 월 선택은 인플레이션 지표에만
   const yb=document.getElementById("yearbar"); if(yb) yb.style.display=(key==="infra")?"flex":"none"; // 연도 선택은 인프라에만
@@ -1025,7 +1027,8 @@ const PROV={
     }
   }
 };
-let W=0,H=0,path,g,gLabels,features,selected=null;
+let W=0,H=0,path,proj,g,gLabels,gPins,features,selected=null;
+let STORES=[];
 
 d3.json("data/ph-regions.geojson").then(geo=>{
   document.getElementById("loading").remove();
@@ -1042,15 +1045,18 @@ d3.json("data/ph-regions.geojson").then(geo=>{
     .on("mouseleave",(e,d)=>{ if(!selected){ hideLabels(); hideTip(); } })
     .on("click",(e,d)=>selectRegion(d));
 
+  gPins=g.append("g").attr("class","store-pins").style("display","none"); // 매장 핀(유통 카테고리에서만·지도 위 레이어·팬/줌 동반)
+
   // 스테이지를 꽉 채우되(원래 크기), 크기 변할 때마다 재핏 → 로드 타이밍 드리프트 없음
   function fitMap(){
     const st=document.querySelector(".stage"); const w=st.clientWidth, h=st.clientHeight;
     if(!w||!h) return;
     W=w; H=h;
     svg.attr("viewBox",`0 0 ${W} ${H}`);
-    const proj=d3.geoMercator().fitExtent([[30,52],[W-30,H-44]],geo);
+    proj=d3.geoMercator().fitExtent([[30,52],[W-30,H-44]],geo);
     path=d3.geoPath(proj);
     g.selectAll("path.region").attr("d",path);
+    drawPins();
     if(!selected) hideLabels();
   }
   fitMap();
@@ -1109,6 +1115,7 @@ d3.json("data/ph-regions.geojson").then(geo=>{
   loadRegionalCensus();
   loadRegionalInfra();
   loadRetail();
+  loadStorePins();
 });
 
 // ── 유통 매장망(Google Places) — v_store_counts(지역별·거래선별 매장수) → ECON[region].retail{} ──
@@ -1128,6 +1135,35 @@ async function loadRetail(){
     if(curMapMetric && (curMapMetric==="retail_total"||curMapMetric.startsWith("r_"))) applyChoropleth(curMapMetric);
     if(selected) showDetail(selected.properties.REGION);
   }catch(e){ /* 매장 데이터 없으면 조용히 무시 */ }
+}
+
+// ── 개별 매장 핀 ──
+const RET_COLOR={"SM Appliance":"#e11d48","Abenson":"#2563eb","Robinsons Appliances":"#16a34a","Anson's":"#9333ea","Western Appliances":"#f59e0b","Emcor":"#0891b2","Imperial":"#db2777","K-Servico":"#65a30d","Dueksam":"#f97316","Desmark":"#7c3aed"};
+const RET_KEY={r_sm:"SM Appliance",r_abenson:"Abenson",r_robinsons:"Robinsons Appliances",r_ansons:"Anson's",r_western:"Western Appliances",r_emcor:"Emcor",r_imperial:"Imperial",r_kservico:"K-Servico"};
+function retColor(r){ return RET_COLOR[r]||"#94a3b8"; } // 기타=회색
+async function loadStorePins(){
+  try{
+    const rr=await fetch(`${SB_CPI.url}/rest/v1/retailer_stores?select=retailer,name,city,region,lat,lng&limit=5000`,
+      {headers:{apikey:SB_CPI.key,Authorization:"Bearer "+SB_CPI.key}});
+    if(!rr.ok) return;
+    STORES=(await rr.json()).filter(s=>s.lat&&s.lng);
+    drawPins();
+  }catch(e){}
+}
+function drawPins(){
+  if(!gPins||!proj||!STORES.length) return;
+  const only=RET_KEY[curMapMetric]||null; // 특정 거래선 지표면 그 체인만 강조
+  const sel=gPins.selectAll("circle.pin").data(STORES,(d,i)=>d.name+"|"+i);
+  sel.join(
+    en=>{ const c=en.append("circle").attr("class","pin").attr("r",2.6).attr("stroke","#fff").attr("stroke-width",.5).style("cursor","pointer");
+          c.append("title"); return c; },
+    up=>up, ex=>ex.remove()
+  ).attr("cx",d=>{const p=proj([d.lng,d.lat]);return p?p[0]:-999;})
+   .attr("cy",d=>{const p=proj([d.lng,d.lat]);return p?p[1]:-999;})
+   .attr("fill",d=>retColor(d.retailer))
+   .attr("opacity",d=> only? (d.retailer===only?0.95:0.08) : 0.8)
+   .attr("r",d=> only? (d.retailer===only?3.4:2) : 2.6)
+   .select("title").text(d=>`${d.name}${d.retailer&&d.retailer!=="기타"?" · "+d.retailer:""}${d.city?" · "+d.city:""}`);
 }
 
 function centroidXY(d){ return path.centroid(d); }
