@@ -183,7 +183,7 @@ export function MonitoringView({ daily, stamp, elabels }: { daily: DailyRow[] | 
               const isOpen = open.has(k)
               return (
                 <React.Fragment key={k}>
-                  <tr style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s", height: 62 }} className={"cursor-pointer border-b border-gray-50 dark:border-gray-800/50 align-middle transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5 " + (r.overCount > 0 ? "bg-rose-50/40 dark:bg-rose-500/[0.06]" : "")} onClick={() => toggle(k)}>
+                  <tr style={{ animation: "rowIn .32s ease both", animationDelay: Math.min(ri, 20) * 0.018 + "s", height: 44 }} className={"cursor-pointer border-b border-gray-50 dark:border-gray-800/50 align-middle transition-colors hover:bg-indigo-50/50 dark:hover:bg-indigo-500/5 " + (r.overCount > 0 ? "bg-rose-50/40 dark:bg-rose-500/[0.06]" : "")} onClick={() => toggle(k)}>
                     <td className="px-1 py-1.5 text-center text-gray-400"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" className="inline transition-transform duration-200" style={{ transform: isOpen ? "rotate(90deg)" : "none" }}><path d="M9 6l6 6-6 6" /></svg></td>
                     <td className="px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400">{catLabel(r.cat)}</td>
                     <td className="truncate px-2 py-1.5 text-center text-[10.5px] text-gray-500 dark:text-gray-400" title={r.form || undefined}>{r.form || "—"}</td>
