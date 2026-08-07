@@ -217,15 +217,15 @@ export function AnomalyView({ rows, ads, stamp }: { rows: PriceRow[] | null; ads
                     : "border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10"
                   // 말풍선(아바타+꼬리) — 한 줄 핵심 요약, 클릭하면 팝업 리스트
                   return (
-                    <div key={bg.key} className="flex items-end gap-2" style={{ animation: "rowIn .3s ease both" }}>
-                      <div className={"flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
-                      <button type="button" onClick={() => setOpenBub(bg)} className={"relative flex max-w-[88%] items-center gap-2 rounded-2xl rounded-bl-sm border px-3 py-1.5 text-left shadow-sm transition-all duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md " + bub}>
-                        <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
-                        <span className="min-w-0 flex-1 truncate text-[12px] leading-snug text-gray-600 dark:text-gray-300"><b className={bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50"}>{bg.brand}</b> · {s.detail}{bg.nProd > 1 ? T(` 외 ${bg.nProd - 1}건`, ` +${bg.nProd - 1}`) : ""}</span>
-                        <span className="hidden shrink-0 items-center gap-1 sm:flex">{bg.catsIn.slice(0, 3).map((c) => <span key={c} className="whitespace-nowrap rounded bg-gray-100 px-1 py-px text-[9px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{CAT_LABEL[c] ?? c}</span>)}</span>
+                    <div key={bg.key} className="flex items-stretch gap-2" style={{ animation: "rowIn .3s ease both" }}>
+                      <div className={"flex h-8 w-8 shrink-0 items-center justify-center self-end rounded-full text-[11px] font-bold text-white shadow-sm " + (bg.own ? "bg-indigo-500" : "bg-gray-400 dark:bg-gray-600")} title={bg.brand}>{bg.brand.slice(0, 2).toUpperCase()}</div>
+                      <button type="button" onClick={() => setOpenBub(bg)} className={"relative flex max-w-[92%] items-center gap-2.5 rounded-2xl rounded-bl-sm border px-3.5 py-2.5 text-left shadow-sm transition-all duration-150 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-0.5 hover:scale-[1.01] hover:shadow-md " + bub}>
+                        <span className={"mt-0.5 h-2 w-2 shrink-0 self-start rounded-full " + sm.dot} title={SEV_LABEL[bg.sev]} />
+                        <span className="min-w-0 flex-1 line-clamp-2 text-[13px] leading-relaxed text-gray-600 dark:text-gray-300"><b className={bg.own ? "text-indigo-700 dark:text-indigo-300" : "text-gray-900 dark:text-gray-50"}>{bg.brand}</b> · {s.detail}{bg.nProd > 1 ? T(` 외 ${bg.nProd - 1}건`, ` +${bg.nProd - 1}`) : ""}</span>
+                        <span className="hidden shrink-0 items-center gap-1 sm:flex">{bg.catsIn.slice(0, 3).map((c) => <span key={c} className="whitespace-nowrap rounded bg-gray-100 px-1 py-0.5 text-[9.5px] font-semibold text-gray-500 dark:bg-gray-800 dark:text-gray-400">{CAT_LABEL[c] ?? c}</span>)}</span>
                         <span className="shrink-0">{metricChip(s)}</span>
-                        <span className="hidden shrink-0 text-[9px] tabular-nums text-gray-400 dark:text-gray-500 sm:inline">{bubTime}</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400"><path d="M9 18l6-6-6-6" /></svg>
+                        <span className="hidden shrink-0 text-[9.5px] tabular-nums text-gray-400 dark:text-gray-500 sm:inline">{bubTime}</span>
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-gray-400"><path d="M9 18l6-6-6-6" /></svg>
                       </button>
                     </div>
                   ) })}
