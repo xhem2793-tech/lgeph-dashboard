@@ -19,15 +19,17 @@ const BRAND_DOMAIN: Record<string, string> = {
   Carrier: "carrier.com", Midea: "midea.com", Sony: "sony.com", Haier: "haier.com", Sharp: "sharp.com",
   Toshiba: "toshiba.com", Whirlpool: "whirlpool.com", Daikin: "daikin.com", Gree: "gree.com", Skyworth: "skyworth.com",
   Devant: "devant.com.ph", Kolin: "kolinphil.com.ph", Koppel: "koppel.com.ph", Condura: "condura.com",
-  Fujidenzo: "fujidenzo.com.ph", Prestiz: "prestiz.com.ph",
+  Fujidenzo: "fujidenzo.com.ph", Prestiz: "prestiz.com.ph", Philips: "philips.com", Konka: "konka.com",
+  Fujiaire: "fujiaire.com", Kelvinator: "kelvinator.com", Union: "unionappliances.com", American: "americanhome.com.ph",
 }
 const RETAILER_DOMAIN: Record<string, string> = {
   "SM Appliance": "smappliance.com", "Abenson": "abenson.com", "Anson's": "ansons.ph",
   "Robinsons Appliances": "robinsonsappliances.com.ph", "Western Appliances": "western.com.ph",
   "Emcor": "emcor.com.ph", "Addessa": "addessa.com.ph", "Home Credit": "homecredit.ph", "Imperial": "imperialappliance.com",
 }
-const IMPERIAL = "Imperial" // 9번 열 · 비활성(스크래핑 미연동)
-const SOON = "__soon" // 10번 열 · 비활성(준비중)
+const IMPERIAL = "Imperial" // 비활성(스크래핑 미연동)
+const SOON = "__soon" // 비활성(준비중)
+const HOMECREDIT = "Home Credit" // 히트맵 리스트에서 제외(제휴점 재판매·중복 다수) — 원본 카운트엔 포함
 // 로고 — Google 파비콘(정사각 128px)으로 전부 통일. 실패 시 이름 폴백.
 const favi = (domain: string) => `https://www.google.com/s2/favicons?domain=${domain}&sz=128`
 // 로고는 전부 파비콘(정사각 아이콘)으로 통일 — 브랜드·거래선 일관.
@@ -59,13 +61,18 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   const dates = React.useMemo(() => [0, 1, 2, 3].map((i) => { const m = new Map<string, number>(); rows.forEach((r) => { const v = r[COV_D[i]] as string | null; if (v) m.set(v, (m.get(v) || 0) + 1) }); let best: string | null = null, bc = 0; m.forEach((c, d) => { if (c > bc) { bc = c; best = d } }); return best }), [rows])
   const oosLive = di === 0 // 품절·활성율은 오늘 스냅샷만 유효
   const data = React.useMemo(() => {
+    // 원본(raw) — 선택일 스크랩 전체(홈크레딧·전 브랜드 포함, brand+retailer 有). 표시(grand)와 별도.
+    let rawGrand = 0
+    rows.forEach((r) => { if (r.brand && r.retailer && listedOn(r, di)) rawGrand++ })
+    // 표시용 — 홈크레딧 제외(리스트에서 완전 제외), 전 브랜드 포함(비추적 브랜드도 표시)
+    const skip = (r: PriceRow) => !r.brand || !r.retailer || r.retailer === HOMECREDIT
     const retM = new Map<string, number>(), brM = new Map<string, number>()
-    rows.forEach((r) => { if (listedOn(r, di)) { if (r.retailer) retM.set(r.retailer, (retM.get(r.retailer) || 0) + 1); if (r.brand) brM.set(r.brand, (brM.get(r.brand) || 0) + 1) } })
+    rows.forEach((r) => { if (skip(r) || !listedOn(r, di)) return; retM.set(r.retailer!, (retM.get(r.retailer!) || 0) + 1); brM.set(r.brand!, (brM.get(r.brand!) || 0) + 1) })
     const retailers = Array.from(retM.entries()).sort((a, b) => retRank(a[0]) - retRank(b[0]) || b[1] - a[1]).map((x) => x[0])
     const brands = Array.from(brM.entries()).sort((a, b) => (a[0] === "LG" ? -1 : b[0] === "LG" ? 1 : 0) || b[1] - a[1]).map((x) => x[0])
     const today = new Map<string, number>(), oos = new Map<string, number>(), series = new Map<string, number[]>()
     const K = (b: string, ret: string) => b + "|" + ret
-    rows.forEach((r) => { if (!r.brand || !r.retailer) return; const k = K(r.brand, r.retailer)
+    rows.forEach((r) => { if (skip(r)) return; const k = K(r.brand!, r.retailer!)
       if (listedOn(r, di)) { today.set(k, (today.get(k) || 0) + 1); if (di === 0 && r.availability === "OutOfStock") oos.set(k, (oos.get(k) || 0) + 1) }
       let sv = series.get(k); if (!sv) { sv = [0, 0, 0, 0]; series.set(k, sv) } // 4일(d0~d3) 전시 수 추이
       for (let s = 0; s < 4; s++) if (listedOn(r, s)) sv[s]++
@@ -78,13 +85,14 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
     today.forEach((v, k) => { const [b, ret] = k.split("|"); colTot[ret] = (colTot[ret] || 0) + v; rowTot[b] = (rowTot[b] || 0) + v; if (v > (colMax[ret] || 0)) colMax[ret] = v })
     const grand = Array.from(today.values()).reduce((a, b) => a + b, 0)
     let oosTot = 0; oos.forEach((v) => { oosTot += v })
-    return { retailers, brands, today, oos, series, maxT, maxOos, dprev, maxAbsD, colTot, rowTot, colMax, grand, oosTot, K }
+    return { retailers, brands, today, oos, series, maxT, maxOos, dprev, maxAbsD, colTot, rowTot, colMax, grand, rawGrand, oosTot, K }
   }, [rows, di, dates])
   const slots = [0, 1, 2, 3].filter((i) => dates[i])
   const slotPos = slots.indexOf(di)
   const pickDate = (v: string) => { const idx = [0, 1, 2, 3].find((i) => dates[i] === v); if (idx != null) setDi(idx) }
-  const retSlots: (string | null)[] = []
-  { let ai = 0; for (let i = 0; i < 10; i++) { if (i === 8) retSlots.push(IMPERIAL); else if (i === 9) retSlots.push(SOON); else { retSlots.push(data.retailers[ai] ?? null); ai++ } } }
+  // 실제 거래선(홈크레딧 제외·매출순) + Imperial + 준비중. 거래선 수에 맞춰 열 개수 동적.
+  const retSlots: (string | null)[] = [...data.retailers.slice(0, 9), IMPERIAL, SOON]
+  const nCols = retSlots.length + 1 // + 좌상단 코너
   const brSlots: (string | null)[] = moreBrands ? data.brands : Array.from({ length: 10 }, (_, i) => data.brands[i] ?? null)
 
   // 지표별 셀 수치(원시값) — null=해당 없음/미측정
@@ -156,10 +164,13 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
             </label>
           </div>
         )}
-        {/* 선택일 수집·활성 요약 — 기간 선택 우측 */}
-        <div className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1 text-[11px]" title={T("선택일 수집 SKU · 재고 활성 SKU", "Collected · in-stock SKUs on the selected day")}>
-          <span className="font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("수집", "Collected")}</span>
-          <b className="tabular-nums text-gray-800 dark:text-gray-100">{data.grand.toLocaleString()}</b>
+        {/* 선택일 원본·표시·활성 요약 — 기간 선택 우측. 원본=스크랩 전체(홈크레딧 포함), 표시=히트맵 반영(홈크레딧 제외) */}
+        <div className="flex items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-2.5 py-1 text-[11px]" title={T("원본=선택일 스크랩 전체(홈크레딧 포함) · 표시=히트맵에 반영된 수(홈크레딧 제외·전 브랜드) · 활성=재고 활성", "Raw = all scraped on the day (incl. Home Credit) · Shown = plotted on the heatmap (excl. Home Credit, all brands) · Active = in-stock")}>
+          <span className="font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("원본", "Raw")}</span>
+          <b className="tabular-nums text-gray-800 dark:text-gray-100">{data.rawGrand.toLocaleString()}</b>
+          <span className="h-3 w-px bg-gray-200 dark:bg-gray-700" />
+          <span className="font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("표시", "Shown")}</span>
+          <b className="tabular-nums text-indigo-600 dark:text-indigo-300">{data.grand.toLocaleString()}</b>
           <span className="h-3 w-px bg-gray-200 dark:bg-gray-700" />
           <span className="font-semibold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("활성", "Active")}</span>
           <b className="tabular-nums text-emerald-600 dark:text-emerald-400">{oosLive ? (data.grand - data.oosTot).toLocaleString() : "—"}</b>
@@ -180,7 +191,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
           <div className="flex h-40 items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">{T("해당 조건의 전시 데이터가 없습니다.", "No listing data for this filter.")}</div>
         ) : (<>
           <div className="overflow-x-auto px-0.5 pb-1 pt-2">
-            <div key={cat + "-" + di + "-" + metric} className="grid w-full gap-[6px] text-[11px]" style={{ minWidth: 620, gridTemplateColumns: `repeat(11, minmax(52px,1fr))` }}>
+            <div key={cat + "-" + di + "-" + metric} className="grid w-full gap-[6px] text-[11px]" style={{ minWidth: 560, gridTemplateColumns: `repeat(${nCols}, minmax(52px,1fr))` }}>
               {/* 헤더 행 — 좌상단 코너에 LG 갭 KPI 카드 */}
               <div className="sticky left-0 top-0 z-30 flex h-[clamp(82px,9vh,104px)] w-full flex-col items-center justify-center gap-0.5 rounded-md border border-indigo-100 bg-indigo-50 px-1 text-center transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:scale-[1.04] hover:shadow-md dark:border-indigo-500/20 dark:bg-indigo-500/20" title={T("LG 전시 vs 경쟁 평균", "LG listed vs rival avg")}>
                 {lgGap.hasLG ? (<>

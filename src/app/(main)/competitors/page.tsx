@@ -236,6 +236,7 @@ export default function Competitors() {
   const [band, setBand] = React.useState("전체")
   const [onlyMoved, setOnlyMoved] = React.useState(false)
   const [rows, setRows] = React.useState<PriceRow[] | null>(null)
+  const [rawRows, setRawRows] = React.useState<PriceRow[] | null>(null) // 필터 전 원본(히트맵 전용 — 전 브랜드·원본 카운트)
   const [daily, setDaily] = React.useState<DailyRow[] | null>(null)
   const [stamp, setStamp] = React.useState<string | null>(null)
   const [q, setQ] = React.useState("")
@@ -252,6 +253,7 @@ export default function Competitors() {
       .catch(() => {})
     competitorTable(6000)
       .then((rs) => {
+        setRawRows(rs) // 히트맵 전용 — 화이트리스트·홈크레딧 중복 제거 이전 원본(전 브랜드)
         const shown = rs.filter((r) => brandShown(r.brand, r.category))
         // 홈크레딧 = 백업/보강용(제휴점 가격 재판매) → 주요 유통이 이미 가진 모델은 제외, 없는 모델만 채운다(gap-fill·중복 방지)
         const primary = new Set(shown.filter((r) => r.retailer !== "Home Credit").map((r) => canonCode(r.model, r.code)).filter((c) => c && c.length >= 4))
@@ -418,7 +420,7 @@ export default function Competitors() {
           ) : view === "lifecycle" ? (
             <EolView daily={daily} stamp={stamp} />
           ) : view === "volatility" ? (
-            <VolatilityView rows={rows} stamp={stamp} />
+            <VolatilityView rows={rawRows} stamp={stamp} />
           ) : active?.status !== "live" ? (
             <div className="flex min-h-[440px] flex-col items-center justify-center gap-1">
               <p className="text-[12.5px] font-medium text-gray-600 dark:text-gray-300">{active?.desc}</p>
