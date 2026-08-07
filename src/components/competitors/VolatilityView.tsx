@@ -49,7 +49,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   const [sel, setSel] = React.useState<{ b: string; ret: string } | null>(null) // 셀 드릴다운(품절)
   const [oosDays, setOosDays] = React.useState<Record<string, number>>({}) // 모델별 재고없음 연속일수
   const [hov, setHov] = React.useState<Hov>(null) // 셀 호버 미니 팝업
-  const [moreBrands, setMoreBrands] = React.useState(false) // 브랜드 10개 이후 더보기
+  const [shownBrands, setShownBrands] = React.useState(10) // 표시 브랜드 수 — 더보기 10개씩 증가
   React.useEffect(() => { if (sel) oosStreaks(sel.b, sel.ret).then(setOosDays).catch(() => setOosDays({})); else setOosDays({}) }, [sel])
   const cats = ["냉장고", "세탁기", "RAC", "TV"] // classify가 에어컨→RAC/SAC 분류 · RAC 한정
   const forms = cat === "전체" ? [] : pmFormsFor(cat) // 선택 제품군의 유형 세그먼트
@@ -93,7 +93,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   // 실제 거래선(홈크레딧 제외·매출순) + Imperial + 준비중. 거래선 수에 맞춰 열 개수 동적.
   const retSlots: (string | null)[] = [...data.retailers.slice(0, 9), IMPERIAL, SOON]
   const nCols = retSlots.length + 1 // + 좌상단 코너
-  const brSlots: (string | null)[] = moreBrands ? data.brands : Array.from({ length: 10 }, (_, i) => data.brands[i] ?? null)
+  const brSlots: (string | null)[] = data.brands.slice(0, shownBrands); while (brSlots.length < 10) brSlots.push(null) // 첫 페이지 10칸 유지·더보기 시 실제 브랜드만 추가
 
   // 지표별 셀 수치(원시값) — null=해당 없음/미측정
   const rawVal = (t: number, oo: number, tot: number): number | null => {
@@ -257,8 +257,13 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
             </div>
           </div>
           {data.brands.length > 10 && (
-            <div className="mt-2 flex justify-center">
-              <button type="button" onClick={() => setMoreBrands((v) => !v)} className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-px hover:border-indigo-300 hover:shadow-sm active:scale-95">{moreBrands ? T("접기", "Show less") : `+${data.brands.length - 10}${T("개 더보기", " more")}`}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform duration-300" style={{ transform: moreBrands ? "rotate(180deg)" : "none" }}><path d="M6 9l6 6 6-6" /></svg></button>
+            <div className="mt-2 flex justify-center gap-2">
+              {shownBrands < data.brands.length && (
+                <button type="button" onClick={() => setShownBrands((n) => n + 10)} className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-px hover:border-indigo-300 hover:shadow-sm active:scale-95">+{Math.min(10, data.brands.length - shownBrands)}{T("개 더보기", " more")}<span className="ml-0.5 text-gray-400 dark:text-gray-500">({T("남은 ", "")}{data.brands.length - shownBrands})</span><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9l6 6 6-6" /></svg></button>
+              )}
+              {shownBrands > 10 && (
+                <button type="button" onClick={() => setShownBrands(10)} className="inline-flex items-center gap-1 rounded-full border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1 text-[11px] font-semibold text-gray-500 dark:text-gray-400 transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:-translate-y-px hover:border-indigo-300 active:scale-95">{T("접기", "Show less")}<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: "rotate(180deg)" }}><path d="M6 9l6 6 6-6" /></svg></button>
+              )}
             </div>
           )}
           <p className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9.5px] text-gray-400 dark:text-gray-500">
