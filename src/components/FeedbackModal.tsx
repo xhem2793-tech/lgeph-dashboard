@@ -8,31 +8,40 @@ import { submitFeedback } from "@/lib/supabase"
 import { useAccessIdentity } from "@/lib/useAccessIdentity"
 import { T } from "@/lib/i18n"
 
-// 경로 → 사람이 읽는 페이지명(제출 시 참고). 없으면 경로 그대로.
-const PAGE_LABEL: Record<string, string> = {
-  "/overview": "국가동향(개요)", "/competitors": "시장동향(경쟁사)", "/economy": "주요지표",
-  "/competitor-ads": "마케팅", "/calendar": "주요일정", "/news": "주요뉴스", "/regions": "지역시장지도",
-  "/reports": "리포트", "/weather": "날씨·재난", "/details": "상세", "/appendix": "부록",
-}
-function pageName(path: string): string {
+// 상위 5개 페이지 + 각 페이지의 리스트(하위 뷰). 문의 시 페이지→리스트 순으로 선택.
+const PAGES: { k: string; lists: string[] }[] = [
+  { k: "국가동향", lists: ["개요", "지역시장지도", "기타"] },
+  { k: "시장동향", lists: ["유통 히트맵", "채널별 가격 비교", "모니터링", "일일 가격 변동", "이상치 알림", "가격 포지셔닝", "에너지 라벨", "신제품·EOL 감지", "기타"] },
+  { k: "주요지표", lists: ["물가·생활비", "국민계정·성장", "고용·임금·소득", "기업·소비 심리", "부동산·주택", "환율·원가", "통화·금리·신용", "가전 선행지표", "수입 단가", "온라인 시장", "기타"] },
+  { k: "마케팅", lists: ["경쟁사 동향", "기타"] },
+  { k: "주요일정", lists: ["캘린더", "기타"] },
+]
+// 현재 경로 → 상위 페이지 자동 추정
+function pathToPage(path: string): string {
   const base = "/" + (path.replace(/^\//, "").split("/")[0] || "")
-  return PAGE_LABEL[base] ? `${PAGE_LABEL[base]} (${path})` : path
+  if (base === "/competitors") return "시장동향"
+  if (base === "/economy") return "주요지표"
+  if (base === "/competitor-ads") return "마케팅"
+  if (base === "/calendar") return "주요일정"
+  return "국가동향"
 }
 
 export default function FeedbackModal() {
   const [open, setOpen] = React.useState(false)
-  const [page, setPage] = React.useState("")
+  const [page, setPage] = React.useState("국가동향")
+  const [list, setList] = React.useState("")
   const [area, setArea] = React.useState("")
   const [request, setRequest] = React.useState("")
   const [sending, setSending] = React.useState(false)
   const [done, setDone] = React.useState(false)
   const [err, setErr] = React.useState(false)
   const me = useAccessIdentity()
+  const lists = (PAGES.find((p) => p.k === page) ?? PAGES[0]).lists
 
   React.useEffect(() => {
     const onOpen = () => {
-      setPage(typeof window !== "undefined" ? pageName(window.location.pathname) : "")
-      setArea(""); setRequest(""); setDone(false); setErr(false); setOpen(true)
+      setPage(typeof window !== "undefined" ? pathToPage(window.location.pathname) : "국가동향")
+      setList(""); setArea(""); setRequest(""); setDone(false); setErr(false); setOpen(true)
     }
     window.addEventListener("ax:open-feedback", onOpen)
     return () => window.removeEventListener("ax:open-feedback", onOpen)
@@ -42,10 +51,12 @@ export default function FeedbackModal() {
   const send = async () => {
     if (!canSend) return
     setSending(true); setErr(false)
-    const ok = await submitFeedback({ page, area: area.trim(), request: request.trim(), submitter: me?.email || me?.name || "" })
+    const pageField = list ? `${page} > ${list}` : page
+    const ok = await submitFeedback({ page: pageField, area: area.trim(), request: request.trim(), submitter: me?.email || me?.name || "" })
     setSending(false)
     if (ok) { setDone(true); setTimeout(() => setOpen(false), 1400) } else setErr(true)
   }
+  const selCls = "w-full appearance-none rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3 py-2 text-[12.5px] text-gray-800 outline-none focus:border-indigo-400 dark:text-gray-100"
 
   if (!open || typeof document === "undefined") return null
   return createPortal(
@@ -67,10 +78,27 @@ export default function FeedbackModal() {
           </div>
         ) : (
           <div className="flex flex-col gap-3 px-4 py-3.5">
-            <label className="flex flex-col gap-1">
-              <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{T("페이지", "Page")}</span>
-              <input value={page} onChange={(e) => setPage(e.target.value)} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3 py-2 text-[12.5px] text-gray-800 outline-none focus:border-indigo-400 dark:text-gray-100" />
-            </label>
+            <div className="grid grid-cols-2 gap-2">
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{T("페이지", "Page")}</span>
+                <div className="relative">
+                  <select value={page} onChange={(e) => { setPage(e.target.value); setList("") }} className={selCls}>
+                    {PAGES.map((p) => <option key={p.k} value={p.k}>{p.k}</option>)}
+                  </select>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"><path d="M6 9l6 6 6-6" /></svg>
+                </div>
+              </label>
+              <label className="flex flex-col gap-1">
+                <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{T("리스트", "List")}</span>
+                <div className="relative">
+                  <select value={list} onChange={(e) => setList(e.target.value)} className={selCls}>
+                    <option value="">{T("선택", "Select")}</option>
+                    {lists.map((l) => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400"><path d="M6 9l6 6 6-6" /></svg>
+                </div>
+              </label>
+            </div>
             <label className="flex flex-col gap-1">
               <span className="text-[11px] font-semibold text-gray-500 dark:text-gray-400">{T("개선할 부분 (선택)", "Which part (optional)")}</span>
               <input value={area} onChange={(e) => setArea(e.target.value)} placeholder={T("예: 유통 히트맵 미니팝업 위치", "e.g. Retail heatmap tooltip position")} className="rounded-lg border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 px-3 py-2 text-[12.5px] text-gray-800 outline-none placeholder:text-gray-400 focus:border-indigo-400 dark:text-gray-100" />
