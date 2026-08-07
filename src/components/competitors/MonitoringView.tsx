@@ -3,7 +3,7 @@
 // 모니터링 — LG 전용 권장가 준수 점검. LG모델 × 거래선 실판가를 우리가 준 '권장가'와 비교해
 //   유통이 권장가를 지키는지(초과 여부·초과액)를 표시. 행을 펼치면 거래선별 프로모션(SRP 대비 할인)도 표기.
 import React from "react"
-import { fmtStamp, lgRecommendedPrices, type DailyRow, type EnergyRow, type RecPrice } from "@/lib/supabase"
+import { fmtStamp, lgRecommendedPrices, lgPromoSnapshot, type DailyRow, type EnergyRow, type RecPrice, type LgPromo } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormOf, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit } from "@/lib/classify"
 import { peso, md, deltaCol, pmStarCls, DOE_CODE, doeNorm, PmDrop, ListSearch, catLabel } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
@@ -17,6 +17,27 @@ const MON_SHOPS: { k: string; label: string }[] = [
   { k: "Emcor", label: "Emcor" },
   { k: "Addessa", label: "Addessa" },
 ]
+
+// promo_text 파싱 — "33%↓ · 번들 | LG ... Bundle" / "0% installment · P10,997 x6mos" 형태에서 태그·할인·할부·설명 추출
+function parsePromo(p?: LgPromo): { disc: number | null; tags: string[]; install: string | null; desc: string | null } {
+  if (!p) return { disc: null, tags: [], install: null, desc: null }
+  const txt = (p.promoText || "").trim()
+  const bar = txt.indexOf(" | ")
+  const head = bar >= 0 ? txt.slice(0, bar) : txt
+  const desc = bar >= 0 ? txt.slice(bar + 3).trim() || null : null
+  const tags: string[] = []
+  let disc: number | null = p.disc ?? null
+  for (const s0 of head.split("·")) {
+    const s = s0.trim(); if (!s) continue
+    if (/installment|할부/i.test(s)) { tags.push("할부") ; continue }
+    if (/번들|bundle/i.test(s)) { tags.push("번들"); continue }
+    if (/사은품|무료배송|gift|free/i.test(s)) { tags.push("사은품·무료배송"); continue }
+    const m = s.match(/(\d+(?:\.\d+)?)\s*%/); if (m && disc == null) { disc = Number(m[1]); continue }
+    if (!/^\d/.test(s)) tags.push(s)
+  }
+  const install = p.installment && p.installment.trim() ? p.installment.trim() : null
+  return { disc, tags: Array.from(new Set(tags)), install, desc }
+}
 
 type Cell = { price: number; srp: number | null; delta: number | null; url: string | null } | null
 type MonRow = { cat: string; code: string; model: string; form: string | null; srp: number | null; rec: number | null; recNote: string | null; cells: Cell[]; min: number | null; overCount: number; overMax: number; star: number | null }
@@ -36,11 +57,19 @@ export function MonitoringView({ daily, stamp, elabels }: { daily: DailyRow[] | 
     for (const r of recs || []) { const c = canonCode(r.model_code, null); if (c) m[c] = r }
     return m
   }, [recs])
+  // 프로모 스냅샷(선택일) — code → retailer → LgPromo. 펼침 상세(번들·사은품·할부)용.
+  const [promoSnap, setPromoSnap] = React.useState<LgPromo[]>([])
 
   const D = React.useMemo(() => (daily ?? []).filter((r) => r.brand === "LG"), [daily]) // LG 전용
   const loading = daily === null
   const dates = React.useMemo(() => Array.from(new Set(D.map((r) => r.d))).sort((a, b) => b.localeCompare(a)), [D])
   const curDate = selDate && dates.includes(selDate) ? selDate : dates[0] ?? null
+  React.useEffect(() => { if (!curDate) { setPromoSnap([]); return } lgPromoSnapshot(curDate).then(setPromoSnap).catch(() => setPromoSnap([])) }, [curDate])
+  const promoIdx = React.useMemo(() => {
+    const m: Record<string, Record<string, LgPromo>> = {}
+    for (const p of promoSnap) { const c = canonCode(p.model, null); if (!c) continue; (m[c] = m[c] || {})[p.retailer] = p }
+    return m
+  }, [promoSnap])
   const curIdx = curDate ? dates.indexOf(curDate) : -1
   const prevDate = curIdx >= 0 && curIdx < dates.length - 1 ? dates[curIdx + 1] : null
   const isLatest = curIdx <= 0
@@ -170,6 +199,7 @@ export function MonitoringView({ daily, stamp, elabels }: { daily: DailyRow[] | 
                           {!c ? <span className="text-gray-300 dark:text-gray-600">—</span> : (
                             <div className="flex flex-col items-end leading-tight">
                               <span className={"font-bold " + (over ? "text-rose-700 dark:text-rose-300" : under ? "text-emerald-700 dark:text-emerald-300" : "text-gray-900 dark:text-gray-50")}>{peso(c.price)}{c.delta != null && c.delta !== 0 && <span className={"ml-1 text-[9px] " + deltaCol(c.delta)}>{c.delta < 0 ? "▼" : "▲"}</span>}</span>
+                              {c.srp != null && c.srp > c.price && <span className="whitespace-nowrap text-[8.5px] font-semibold text-violet-600 dark:text-violet-400"><span className="mr-0.5 text-gray-400 line-through dark:text-gray-500">{peso(c.srp)}</span>-{Math.round((1 - c.price / c.srp) * 100)}%</span>}
                               {over && <span className="text-[9px] font-semibold text-rose-600 dark:text-rose-400">+{peso((c.price as number) - (r.rec as number))} {T("초과", "over")}</span>}
                             </div>
                           )}
@@ -186,18 +216,28 @@ export function MonitoringView({ daily, stamp, elabels }: { daily: DailyRow[] | 
                         <div className="flex flex-wrap gap-2">
                           {r.cells.map((c, i) => {
                             if (!c) return null
-                            const disc = c.srp != null && c.srp > 0 && c.price < c.srp ? Math.round((1 - c.price / c.srp) * 100) : null
+                            const pr = promoIdx[r.code]?.[MON_SHOPS[i].k]
+                            const parsed = parsePromo(pr)
+                            const disc = parsed.disc ?? (c.srp != null && c.srp > 0 && c.price < c.srp ? Math.round((1 - c.price / c.srp) * 100) : null)
                             const over = r.rec != null && c.price > r.rec
+                            const noPromo = disc == null && parsed.tags.length === 0 && !parsed.install
                             return (
-                              <div key={i} className={"flex min-w-[150px] flex-col gap-0.5 rounded-lg border px-2.5 py-2 " + (over ? "border-rose-200 bg-rose-50/60 dark:border-rose-500/30 dark:bg-rose-500/[0.08]" : "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900")}>
+                              <div key={i} className={"flex w-[212px] flex-col gap-1 rounded-lg border px-2.5 py-2 " + (over ? "border-rose-200 bg-rose-50/60 dark:border-rose-500/30 dark:bg-rose-500/[0.08]" : "border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900")}>
                                 <div className="flex items-center justify-between gap-2">
                                   <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-200">{MON_SHOPS[i].label}</span>
-                                  {disc != null ? <span className="rounded bg-violet-50 dark:bg-violet-500/10 px-1 py-px text-[9.5px] font-bold text-violet-700 dark:text-violet-300">-{disc}%</span> : <span className="text-[9.5px] text-gray-400">{T("프로모 없음", "no promo")}</span>}
+                                  {disc != null ? <span className="rounded bg-violet-50 dark:bg-violet-500/10 px-1 py-px text-[9.5px] font-bold text-violet-700 dark:text-violet-300">-{disc}%</span> : noPromo ? <span className="text-[9.5px] text-gray-400">{T("프로모 없음", "no promo")}</span> : null}
                                 </div>
                                 <div className="flex items-center gap-1.5 text-[11px] tabular-nums">
-                                  {c.srp != null && disc != null && <span className="text-gray-400 line-through dark:text-gray-500">{peso(c.srp)}</span>}
+                                  {c.srp != null && c.srp > c.price && <span className="text-gray-400 line-through dark:text-gray-500">{peso(c.srp)}</span>}
                                   {c.url ? <a href={c.url} target="_blank" rel="noreferrer" className="font-bold text-gray-900 hover:underline dark:text-gray-50">{peso(c.price)}</a> : <span className="font-bold text-gray-900 dark:text-gray-50">{peso(c.price)}</span>}
                                 </div>
+                                {(parsed.tags.length > 0 || parsed.install) && (
+                                  <div className="flex flex-wrap items-center gap-1">
+                                    {parsed.tags.map((tg, ti) => <span key={ti} className="rounded bg-amber-50 dark:bg-amber-500/10 px-1 py-px text-[9px] font-semibold text-amber-700 dark:text-amber-300">{tg === "번들" ? T("번들", "Bundle") : tg === "사은품·무료배송" ? T("사은품·무료배송", "Gift·Free ship") : tg === "할부" ? T("할부", "Installment") : tg}</span>)}
+                                    {parsed.install && <span className="rounded bg-sky-50 dark:bg-sky-500/10 px-1 py-px text-[9px] font-semibold text-sky-700 dark:text-sky-300">{T("할부 ", "Inst. ")}{parsed.install}</span>}
+                                  </div>
+                                )}
+                                {parsed.desc && <span className="line-clamp-2 text-[9.5px] leading-snug text-gray-500 dark:text-gray-400" title={parsed.desc}>{parsed.desc}</span>}
                                 {r.rec != null && <span className={"text-[10px] font-semibold " + (over ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400")}>{over ? `${T("권장가 +", "rec +")}${peso(c.price - r.rec)} ${T("초과", "over")}` : T("권장가 준수", "within rec.")}</span>}
                               </div>
                             )

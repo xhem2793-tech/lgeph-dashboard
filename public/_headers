@@ -11,7 +11,9 @@
   Cache-Control: public, max-age=31536000, immutable
 
 # 전역 보안 헤더(본사 검토 대비 · 최소·안전)
+#  + HTML은 항상 재검증(no-cache) — 새 배포가 즉시 반영되도록. 해시된 _next/static은 위 규칙(immutable)이 우선.
 /*
+  Cache-Control: no-cache, must-revalidate
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: SAMEORIGIN

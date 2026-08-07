@@ -51,7 +51,7 @@ const buildGroups = (): { group: string; items: { key: string; no: number; label
   {
     group: T("가격 모니터링", "Price Monitoring"),
     items: [
-      { key: "volatility", no: 8, label: T("유통 히트맵", "Retail Heatmap"), desc: T("거래선×브랜드 전시 커버리지 히트맵 · 스크랩 제품수·점유율·품절", "Retailer × brand listing-coverage heatmap · SKUs, SOS, OOS"), status: "live", badge: "beta" },
+      { key: "volatility", no: 8, label: T("유통 히트맵", "Retail Heatmap"), desc: T("거래선×브랜드 전시 커버리지 히트맵 · 스크랩 제품수·점유율·품절", "Retailer × brand listing-coverage heatmap · SKUs, SOS, OOS"), status: "live" },
       { key: "board", no: 0, label: T("채널별 가격 비교", "Price by Channel"), desc: T("거래선 × 대표 제품 오늘가 매트릭스 · 동일모델 유통 최저가", "Retailer × key-model today-price matrix · lowest cross-channel price for the same model"), status: "live" },
       { key: "monitoring", no: 16, label: T("모니터링", "Monitoring"), desc: T("LG 전용 · 유통 실판가 vs 권장가 준수 점검(초과·프로모 펼침)", "LG only · retailer street price vs recommended-price compliance (overage, expandable promo)"), status: "live", badge: "beta" },
       { key: "movers", no: 1, label: T("일일 가격 변동", "Daily Price Moves"), desc: T("3일 가격·변동폭·할인율", "3-day prices, change and discount rate"), status: "live" },

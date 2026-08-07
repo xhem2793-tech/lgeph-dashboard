@@ -611,6 +611,14 @@ export async function lgRecommendedPrices(): Promise<RecPrice[]> {
     .filter((r: RecPrice) => r.model_code && r.price != null)
 }
 
+// LG 프로모 스냅샷 — 선택일 LG 모델×거래선의 프로모 원문(할인·번들·사은품·할부). 모니터링 펼침 상세용.
+//  promo_text 예: "33%↓ · 번들 | LG RV09... Bundle" · installment 예: "P10,997 x6mos"(홈크레딧). 조인 정규화는 소비 측(canonCode).
+export type LgPromo = { retailer: string; model: string; promoText: string | null; installment: string | null; disc: number | null; price: number | null; srp: number | null; url: string | null }
+export async function lgPromoSnapshot(date: string): Promise<LgPromo[]> {
+  const rows = await sb(`competitor_prices?scraped_date=eq.${date}&brand=eq.LG&select=retailer,model,promo_text,installment,discount_pct,price_php,srp_php,url&limit=3000`).catch(() => [] as any[])
+  return rows.map((r: any) => ({ retailer: r.retailer, model: r.model, promoText: r.promo_text ?? null, installment: r.installment ?? null, disc: num(r.discount_pct), price: num(r.price_php), srp: num(r.srp_php), url: r.url ?? null }))
+}
+
 // 브랜드 추론 — 일부 스크랩(예: Western Appliances)은 brand가 비고 model 첫 토큰에 브랜드명이 박혀 있음
 //  ("Prestiz WPREU4002" · "Skyworth 65GE6200"). 첫 토큰이 순수 알파벳(숫자 없음)이면 브랜드로 채택. brand 있으면 미적용.
 function inferBrand(model: string | null): string | null {
