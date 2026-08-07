@@ -327,7 +327,7 @@ export default function Page() {
     <main className="w-full px-6 pb-10 pt-4 sm:px-8 lg:px-10">
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
-      <div className="grid items-start gap-6 lg:grid-cols-[212px_minmax(0,1fr)] lg:gap-7">
+      <div className="grid items-start gap-6 lg:grid-cols-[270px_minmax(0,1fr)] lg:gap-7">
         {/* 좌측 네비 리스트 — 시장동향(분석 메뉴)과 동일 디자인. 현재 '경쟁사 동향' 하나 */}
         <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
           <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
