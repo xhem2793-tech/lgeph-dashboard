@@ -833,7 +833,7 @@ export default function Page() {
                 onChange={(ev) => setQ(ev.target.value)}
                 onFocus={() => setSearchFocused(true)}
                 onBlur={() => setSearchFocused(false)}
-                placeholder={T("제목 · 본문 · SO WHAT · 출처 검색", "Search title · SO WHAT · source")}
+                placeholder={T("제목·본문·출처 검색", "Search title / SO WHAT / source")}
                 aria-label={T("뉴스 검색", "Search news")}
                 className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-8 text-[13px] outline-none transition-[background,border,box-shadow] duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 hover:bg-white dark:hover:border-gray-700 dark:hover:bg-gray-900 focus:border-indigo-400 focus:bg-white focus:shadow-[0_0_0_3.5px_rgba(99,102,241,0.12)] dark:focus:border-indigo-500/50 dark:focus:bg-gray-950"
               />
@@ -865,7 +865,7 @@ export default function Page() {
             <input
               value={q}
               onChange={(ev) => setQ(ev.target.value)}
-              placeholder={T("제목 · 본문 · SO WHAT · 출처 검색", "Search title · SO WHAT · source")}
+              placeholder={T("제목·본문·출처 검색", "Search title / SO WHAT / source")}
               className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900"
             />
           </div>

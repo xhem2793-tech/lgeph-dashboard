@@ -56,6 +56,8 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
     const id = window.requestAnimationFrame(() => root.classList.remove("lang-switching"))
     return () => window.cancelAnimationFrame(id)
   }, [lang])
+  // 브라우저 탭 title 지역화 — 정적 메타데이터(한글)를 언어에 맞춰 갱신
+  React.useEffect(() => { if (typeof document !== "undefined") document.title = lang === "en" ? "LGE-PH Market Intelligence" : "LGE-PH 시장 인텔리전스" }, [lang])
   _lang = lang  // 모듈 변수 동기화(T 헬퍼가 참조)
   // key={lang} — 언어 전환 시 트리 전체 리마운트로 T() 결과가 즉시 반영됨
   return <Ctx.Provider value={{ lang, setLang }}><React.Fragment key={lang}>{children}</React.Fragment></Ctx.Provider>

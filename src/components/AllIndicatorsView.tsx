@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react"
 import { dataProvenance, allIndicatorLatest, indicatorSeries, econSpark, fmtStamp, type Provenance } from "@/lib/supabase"
 import { Segmented } from "@/components/Segmented"
 import { LineChart, Lg } from "@/components/EconChart"
-import { CATS, NAV_IDS, classify, catKo } from "@/lib/indicatorCats"
+import { CATS, NAV_IDS, classify, catKo, catLabel } from "@/lib/indicatorCats"
 import { INDICATOR_DESC, INDICATOR_INSIGHT } from "@/lib/indicatorDesc"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
 import { PmDrop } from "@/components/competitors/shared"
@@ -219,7 +219,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
       {/* 정렬(분류순/최신순) + 분류 드롭다운(시장동향식) + 총 지표 + 검색 + 최신 — 한 줄 */}
       <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2 border-b border-gray-100 dark:border-gray-800 pb-2.5">
         <Segmented value={sort} onChange={(k) => setSort(k as "cat" | "recent")} options={[{ k: "cat", label: T("분류순", "By type") }, { k: "recent", label: T("최신순", "Latest") }]} size="sm" />
-        <PmDrop label={T("분류", "Category")} sel={cat} onSelect={setCat} options={[{ k: "all", t: T("전체", "All") }, ...[...CATS.map((c) => c.key), "etc"].filter((k) => catCounts[k]).map((k) => ({ k, t: catKo(k) + " (" + catCounts[k] + ")" }))]} />
+        <PmDrop label={T("분류", "Category")} sel={cat} onSelect={setCat} options={[{ k: "all", t: T("전체", "All") }, ...[...CATS.map((c) => c.key), "etc"].filter((k) => catCounts[k]).map((k) => ({ k, t: catLabel(k) + " (" + catCounts[k] + ")" }))]} />
         <span className="shrink-0 text-[11.5px] text-gray-500 dark:text-gray-400">{T("총 지표", "Total")} <b className="text-gray-900 dark:text-gray-50">{rows.length}</b></span>
         <div className={"group relative ml-auto transition-all duration-500 ease-[cubic-bezier(.22,1,.36,1)] " + (focused || q ? "w-full max-w-[360px]" : "w-full max-w-[260px]")}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden
@@ -227,7 +227,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
             <circle cx="11" cy="11" r="7" /><path d="M20 20l-3.5-3.5" />
           </svg>
           <input value={q} onChange={(e) => setQ(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)}
-            placeholder={T("지표 · 원본코드 · 출처 · 분류 검색", "Search indicator · code · source · category")}
+            placeholder={T("지표·코드·출처 검색", "Search indicator / code / source")}
             className="w-full rounded-full border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900 py-1.5 pl-9 pr-9 text-[12px] outline-none transition-all duration-300 ease-out placeholder:text-gray-400 dark:placeholder:text-gray-500 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-white dark:hover:bg-gray-900 focus:border-indigo-400 dark:focus:border-indigo-500/50 focus:bg-white dark:focus:bg-gray-900 focus:shadow-[0_0_0_3px_rgba(99,102,241,0.12)]" />
           {q && (
             <button type="button" onClick={() => setQ("")} aria-label={T("검색어 지우기", "Clear search")}
@@ -247,7 +247,7 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
         <section key={k} style={{ animation: "fadeUp .5s ease both" }}>
           {/* 카테고리 헤더 — 제목·개수·설명을 한 줄로 */}
           <header className="mb-1 flex items-baseline gap-2 px-1">
-            <h2 className="shrink-0 text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{catKo(k)}</h2>
+            <h2 className="shrink-0 text-[16px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{catLabel(k)}</h2>
             <span className="shrink-0 text-[11px] text-gray-400 dark:text-gray-500">{items.length}{T("개 지표", " indicators")}</span>
             <span className="min-w-0 flex-1 truncate text-[12px] text-gray-500 dark:text-gray-400">{CAT_MI[k]?.mean ?? T("국가 공식통계 기반 최신 관측 지표", "Latest observations from official national statistics")}</span>
             {NAV_IDS.has(k) && <button type="button" onClick={() => goChart(k)} className="shrink-0 text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">{T("차트 전체 보기", "View all charts")} →</button>}
@@ -358,7 +358,7 @@ function IndListTable({ items, q, fav, onFav, onDetail, showCat }: { items: Row[
                     <span className="truncate font-semibold text-gray-800 dark:text-gray-100 transition-colors group-hover:text-indigo-700 dark:group-hover:text-indigo-300" title={enLabel(r.indicator, r.label)}><Hi text={enLabel(r.indicator, r.label)} q={q} /></span>
                   </div>
                 </td>
-                {showCat && <td className="truncate px-2 py-3 text-gray-500 dark:text-gray-400">{r.catKo}</td>}
+                {showCat && <td className="truncate px-2 py-3 text-gray-500 dark:text-gray-400">{catLabel(r.cat)}</td>}
                 <td className="px-2 py-3 align-middle"><div className="flex min-h-[2.75em] min-w-[240px] items-center"><p className="text-[11.5px] leading-snug text-gray-500 dark:text-gray-400">{descOf(r)}</p></div></td>
                 <td className="px-2 py-3 text-right font-bold tabular-nums text-gray-900 dark:text-gray-50">{r.value != null ? (u.prefix || "") + fmtVal(r.value) + (u.suffix || "") : "—"}</td>
                 <td className="px-2 py-3 text-right align-middle tabular-nums whitespace-nowrap text-[11.5px] font-semibold text-gray-600 dark:text-gray-300">{r.period ? ym(r.period) : "—"}</td>
@@ -514,7 +514,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
         <div>
           <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400">
             <span className={"h-1.5 w-1.5 shrink-0 rounded-full " + (row.confidence === "FORECAST" ? "bg-amber-500" : "bg-indigo-500")} />
-            <span className="font-semibold text-indigo-600 dark:text-indigo-400">{row.catKo}</span>
+            <span className="font-semibold text-indigo-600 dark:text-indigo-400">{catLabel(row.cat)}</span>
             <span className="text-gray-300 dark:text-gray-600">·</span>
             <span>{row.source}</span>
             <span className="text-gray-300 dark:text-gray-600">·</span>

@@ -1,4 +1,5 @@
 /** 지표 → 경제지표 카테고리 분류(네비 id와 정합). 전체 지표 리스트·사이드바 카운트 공용. */
+import { T } from "@/lib/i18n"
 
 // 순서=우선순위(위에서부터 첫 매칭). 구체적 카테고리를 먼저 두고, 그리디한 growth는 마지막.
 export const CATS: { key: string; ko: string; re: RegExp }[] = [
@@ -23,6 +24,17 @@ export function classify(ind: string, label: string): { key: string; ko: string 
   return { key: "etc", ko: "기타" }
 }
 export const catKo = (k: string) => (k === "etc" ? "기타" : CATS.find((c) => c.key === k)?.ko || k)
+
+// 카테고리 EN 라벨(사이드바·economy 네비와 정합) — 전체 지표 CATEGORY 컬럼 지역화용
+const CAT_EN: Record<string, string> = {
+  weather: "Weather & Disaster", housing: "Real Estate", appliance: "Appliance Indicators",
+  energy: "Energy Labels", sentiment: "Biz · Consumer Sentiment", rates: "Rates · Credit",
+  fx: "FX · Costs", prices: "Prices & Living Costs", labor: "Jobs · Wages · Income",
+  online: "Online Market", importprice: "Import Prices", growth: "Nat'l Accounts", etc: "Other",
+}
+export const catEn = (k: string) => CAT_EN[k] ?? catKo(k)
+/** 카테고리 키 → 현재 언어 라벨(EN 모드면 영문). 전체 지표 CATEGORY 컬럼·필터·헤더 공용. */
+export const catLabel = (k: string) => T(catKo(k), catEn(k))
 
 /** provenance 목록을 분류별 지표 수로 집계 — { [catKey]: count } */
 export function countByCat(items: { indicator: string; label: string }[]): Record<string, number> {
