@@ -38,7 +38,6 @@ const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? favi(RET
 const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none" }
 
 type Metric = "count" | "chg" | "sos" | "actRate" | "oosCnt" | "oosRate"
-type Hov = { x: number; y: number; b: string; ret: string; t: number; oo: number; tot: number; delta: number | null } | null
 
 function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
   const [di, setDi] = React.useState(0)
@@ -48,7 +47,6 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   const [metric, setMetric] = React.useState<Metric>("count")
   const [sel, setSel] = React.useState<{ b: string; ret: string } | null>(null) // 셀 드릴다운(품절)
   const [oosDays, setOosDays] = React.useState<Record<string, number>>({}) // 모델별 재고없음 연속일수
-  const [hov, setHov] = React.useState<Hov>(null) // 셀 호버 미니 팝업
   const [shownBrands, setShownBrands] = React.useState(10) // 표시 브랜드 수 — 더보기 10개씩 증가
   React.useEffect(() => { if (sel) oosStreaks(sel.b, sel.ret).then(setOosDays).catch(() => setOosDays({})); else setOosDays({}) }, [sel])
   const cats = ["냉장고", "세탁기", "RAC", "TV"] // classify가 에어컨→RAC/SAC 분류 · RAC 한정
@@ -190,7 +188,7 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         {data.brands.length === 0 ? (
           <div className="flex h-40 items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">{T("해당 조건의 전시 데이터가 없습니다.", "No listing data for this filter.")}</div>
         ) : (<>
-          <div className="overflow-x-auto px-0.5 pb-1 pt-2">
+          <div className="overflow-visible px-0.5 pb-1 pt-2">
             <div key={cat + "-" + di + "-" + metric} className="grid w-full gap-[6px] text-[11px]" style={{ minWidth: 560, gridTemplateColumns: `repeat(${nCols}, minmax(52px,1fr))` }}>
               {/* 헤더 행 — 좌상단 코너에 LG 갭 KPI 카드 */}
               <div className="sticky left-0 top-0 z-30 flex h-[clamp(82px,9vh,104px)] w-full flex-col items-center justify-center gap-0.5 rounded-md border border-indigo-100 bg-indigo-50 px-1 text-center transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:scale-[1.04] hover:shadow-md dark:border-indigo-500/20 dark:bg-indigo-500/20" title={T("LG 전시 vs 경쟁 평균", "LG listed vs rival avg")}>
@@ -245,11 +243,23 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                     const showUnit = (metric === "count" || metric === "oosCnt") && disp !== "·" && disp !== "—"
                     return (
                       <button key={ci} type="button" onClick={() => clickable && setSel({ b, ret })}
-                        onMouseEnter={(e) => setHov({ x: e.clientX, y: e.clientY, b, ret, t, oo, tot, delta })}
-                        onMouseMove={(e) => setHov((h) => (h && h.b === b && h.ret === ret ? { ...h, x: e.clientX, y: e.clientY } : h))}
-                        onMouseLeave={() => setHov((h) => (h && h.b === b && h.ret === ret ? null : h))}
-                        className={"flex h-[clamp(82px,9vh,104px)] w-full flex-col items-center justify-center gap-0.5 rounded-md text-center transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:scale-[1.05] hover:shadow-lg hover:ring-2 hover:ring-indigo-400/70 dark:hover:ring-indigo-300/60 " + (clickable ? "cursor-pointer" : "cursor-default")} style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
+                        className={"group/cell relative flex h-[clamp(82px,9vh,104px)] w-full flex-col items-center justify-center gap-0.5 rounded-md text-center transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-30 hover:scale-[1.05] hover:shadow-lg hover:ring-2 hover:ring-indigo-400/70 dark:hover:ring-indigo-300/60 " + (clickable ? "cursor-pointer" : "cursor-default")} style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
                         <span className={"text-[16px] font-bold leading-none tabular-nums " + (alpha > 0 ? (light ? "text-white" : "text-gray-900 dark:text-white") : "text-gray-300 dark:text-gray-600")}>{disp}{showUnit ? <span className="ml-px text-[9px] font-semibold opacity-60">{T("개", "")}</span> : null}</span>
+                        {/* 순수 CSS 호버 미니 팝업 — 셀 바로 아래, JS/좌표 없음 */}
+                        <span className="pointer-events-none absolute left-1/2 top-full z-40 mt-1.5 hidden w-[176px] -translate-x-1/2 flex-col rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-left shadow-xl backdrop-blur-sm group-hover/cell:flex dark:border-gray-700 dark:bg-gray-900/95">
+                          <span className="mb-1 flex items-center gap-1.5">
+                            <b className="text-[12px] font-bold text-gray-900 dark:text-gray-50">{b}</b>
+                            <span className="text-[10.5px] text-gray-400">· {pmShopLabel(ret)}</span>
+                          </span>
+                          <span className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-[11px]">
+                            <span className="text-gray-500 dark:text-gray-400">{T("전시 SKU", "Listed")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{t}{T("개", "")}</span>
+                            <span className="text-gray-500 dark:text-gray-400">{T("진열 점유율", "Share")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{tot ? Math.round(t / tot * 100) + "%" : "—"}</span>
+                            <span className="text-gray-500 dark:text-gray-400">{T("어제대비", "vs prev")}</span><span className={"text-right font-semibold tabular-nums " + (delta == null || delta === 0 ? "text-gray-400 dark:text-gray-500" : delta > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400")}>{delta == null ? "—" : (delta > 0 ? "+" : "") + delta + T("개", "")}</span>
+                            {oosLive && <><span className="text-gray-500 dark:text-gray-400">{T("품절", "OOS")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{oo}{T("개", "")}</span></>}
+                            {oosLive && t > 0 && <><span className="text-gray-500 dark:text-gray-400">{T("재고 활성율", "Active")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{Math.round((t - oo) / t * 100)}%</span></>}
+                          </span>
+                          {clickable && <span className="mt-1 border-t border-gray-100 pt-1 text-[10px] font-semibold text-indigo-600 dark:border-gray-800 dark:text-indigo-300">{T("클릭 → 품절 모델 보기", "click → OOS models")}</span>}
+                        </span>
                       </button>
                     ) })}
                 </React.Fragment>
@@ -308,31 +318,6 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                 </table>
               )}
             </div>
-          </div>
-        </div>,
-        document.body
-      )}
-
-      {/* 셀 호버 미니 팝업 — 마우스 커서 바로 옆을 따라다님. body 포털(fixed 좌표=뷰포트 기준, 인치 무관). 가장자리에선 반대쪽으로 뒤집힘 */}
-      {hov && typeof document !== "undefined" && createPortal(
-        <div className="pointer-events-none fixed z-[90]" style={{ left: hov.x, top: hov.y, transform: `translate(${hov.x > (typeof window !== "undefined" ? window.innerWidth : 1400) - 210 ? "calc(-100% - 14px)" : "14px"}, ${hov.y > (typeof window !== "undefined" ? window.innerHeight : 900) - 190 ? "calc(-100% - 14px)" : "14px"})` }}>
-          <div className="min-w-[156px] rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-left shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/95" style={{ animation: "covTip .16s cubic-bezier(.22,1,.36,1) both" }}>
-            <div className="mb-1.5 flex items-center gap-1.5">
-              {brandLogo(hov.b) && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={brandLogo(hov.b) as string} alt="" onError={hideOnError} className="h-4 w-4 rounded-sm object-contain" />
-              )}
-              <span className="text-[12px] font-bold text-gray-900 dark:text-gray-50">{hov.b}</span>
-              <span className="text-[10.5px] text-gray-400">· {pmShopLabel(hov.ret)}</span>
-            </div>
-            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-[11px]">
-              <span className="text-gray-500 dark:text-gray-400">{T("전시 SKU", "Listed")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{hov.t}{T("개", "")}</span>
-              <span className="text-gray-500 dark:text-gray-400">{T("진열 점유율", "Share")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{hov.tot ? Math.round(hov.t / hov.tot * 100) + "%" : "—"}</span>
-              <span className="text-gray-500 dark:text-gray-400">{T("어제대비", "vs prev")}</span><span className={"text-right font-semibold tabular-nums " + (hov.delta == null || hov.delta === 0 ? "text-gray-400 dark:text-gray-500" : hov.delta > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-500 dark:text-rose-400")}>{hov.delta == null ? "—" : (hov.delta > 0 ? "+" : "") + hov.delta + T("개", "")}</span>
-              {oosLive && (<><span className="text-gray-500 dark:text-gray-400">{T("품절", "OOS")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{hov.oo}{T("개", "")}</span></>)}
-              {oosLive && hov.t > 0 && (<><span className="text-gray-500 dark:text-gray-400">{T("재고 활성율", "Active")}</span><span className="text-right font-semibold tabular-nums text-gray-800 dark:text-gray-100">{Math.round((hov.t - hov.oo) / hov.t * 100)}%</span></>)}
-            </div>
-            {metric === "oosCnt" && hov.oo > 0 && <div className="mt-1.5 border-t border-gray-100 pt-1.5 text-[10px] font-semibold text-indigo-600 dark:border-gray-800 dark:text-indigo-300">{T("클릭 → 품절 모델 보기", "click → OOS models")}</div>}
           </div>
         </div>,
         document.body
