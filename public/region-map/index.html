@@ -457,6 +457,10 @@
           <div class="lb">주(Province) · 주요 도시 · 딜러</div>
           <div id="d-prov"></div>
         </div>
+        <div class="sec" id="d-stores-sec" style="display:none">
+          <div class="lb">가전 매장 <span id="d-stores-cnt" style="color:#94a3b8;font-weight:600"></span></div>
+          <div id="d-stores"></div>
+        </div>
         <div class="note" id="d-note">※ 내부 데이터(셀아웃·매장·딜러)는 2024년 기준, 경제 데이터(인구·물가·소득)는 최신(Supabase) 기준입니다. 현재 값은 연동 전 근사치입니다.</div>
       </div>
     </div>
@@ -1148,6 +1152,7 @@ async function loadStorePins(){
     if(!rr.ok) return;
     STORES=(await rr.json()).filter(s=>s.lat&&s.lng);
     drawPins();
+    if(selected) renderStores(selected.properties.REGION);
   }catch(e){}
 }
 function drawPins(){
@@ -1437,6 +1442,32 @@ function renderFocus(name){
       "PSA 인구총조사·FIES 가계소득조사 · 유통 거래선=내부 데이터(예정)");
   }
 }
+// 선택 지방의 가전 매장을 도시별로 그룹핑해 우측 패널에 표로 나열(핀과 연동)
+function renderStores(name){
+  const sec=document.getElementById("d-stores-sec"); const box=document.getElementById("d-stores");
+  const cnt=document.getElementById("d-stores-cnt"); if(!sec||!box) return;
+  const list=STORES.filter(s=>s.region===name);
+  if(!list.length){ sec.style.display="none"; return; }
+  sec.style.display="block";
+  cnt.textContent="· "+list.length+"개";
+  // 도시별 그룹 → 매장 수 많은 도시 순
+  const byCity={}; list.forEach(s=>{ (byCity[s.city||"기타"]=byCity[s.city||"기타"]||[]).push(s); });
+  const cities=Object.entries(byCity).sort((a,b)=>b[1].length-a[1].length);
+  let html="";
+  cities.forEach(([city,arr])=>{
+    arr.sort((a,b)=>(b.review_count||0)-(a.review_count||0));
+    html+=`<div style="margin:8px 0 3px;font-size:11px;font-weight:800;color:#475569">${city} <span style="color:#94a3b8;font-weight:600">${arr.length}</span></div>`;
+    html+=`<div style="display:flex;flex-direction:column;gap:2px">`;
+    arr.forEach(s=>{
+      const chain=s.retailer&&s.retailer!=="기타";
+      const dot=`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${retColor(s.retailer)};flex:none"></span>`;
+      const tag=chain?`<span style="font-size:9.5px;font-weight:700;color:${retColor(s.retailer)};white-space:nowrap">${s.retailer}</span>`:`<span style="font-size:9.5px;color:#94a3b8">기타</span>`;
+      html+=`<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#334155;padding:2px 0">${dot}<span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${s.name}</span>${tag}</div>`;
+    });
+    html+=`</div>`;
+  });
+  box.innerHTML=html;
+}
 function showDetail(name){
   const info=DATA[name]||{};
   document.getElementById("d-code").textContent=info.code||"—";
@@ -1449,6 +1480,7 @@ function showDetail(name){
   const ind=document.getElementById("d-ind"); ind.innerHTML="";
   (info.ind||[]).forEach(t=>{const c=document.createElement("span");c.className="chip";c.textContent=t;ind.appendChild(c);});
   renderProvinces(name);
+  renderStores(name);
   renderKPI(name);
   renderSummary(name);
   renderMetrics(name);
