@@ -29,6 +29,8 @@ const BOARD_SHOPS: { k: string; label: string; live: boolean }[] = [
   { k: "Western Appliances", label: "Western", live: true },
   { k: "Emcor", label: "Emcor", live: true },
   { k: "Addessa", label: "Addessa", live: true },
+  { k: "Desmark", label: "Desmark", live: true },
+  { k: "K-Servico", label: "K-Servico", live: true },
 ]
 
 type PivRow = { cat: string; brand: string; code: string; model: string; form: string | null; size: string | null; srp: number | null; cells: ({ price: number; delta: number | null; url: string | null } | null)[]; min: number | null; spread: number | null; star: number | null }
