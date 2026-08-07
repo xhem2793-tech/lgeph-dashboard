@@ -2,7 +2,7 @@
 
 // 채널별 가격 비교 — LG모델 × 거래선 매트릭스(날짜 네비·전일대비·스프레드·★DOE등급).
 import React from "react"
-import { fmtStamp, type DailyRow, type EnergyRow } from "@/lib/supabase"
+import { fmtStamp, lgRecommendedPrices, type DailyRow, type EnergyRow } from "@/lib/supabase"
 import { canonCode, isAC, PM_CATS, pmFormOf, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit, pmSizeBucket, acHpLabel } from "@/lib/classify"
 import { peso, md, deltaCol, pmStarCls, DOE_CODE, doeNorm, PmDrop, PmMultiDrop, ListSearch, catLabel } from "@/components/competitors/shared"
 import { T } from "@/lib/i18n"
@@ -73,6 +73,16 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
   }, [elabels])
   const starFor = (c: string, model: string) => { const code = DOE_CODE[c]; const idx = code ? starIdx[code] : null; if (!idx) return null; const mm = doeNorm(code, model); const cc = doeNorm(code, canonCode(model, null)); for (const e of idx) { if (e.codeN.length < 5) continue; if (mm.includes(e.codeN)) return e.star; if (cc.length >= 8 && e.codeN.includes(cc)) return e.star } return null }
 
+  // 공식 LG 권장가(SRP 신뢰소스) — 유통 스크랩 "정가/was"는 부풀려진 경우 많아 권장가 우선
+  const [recMap, setRecMap] = React.useState<Record<string, number>>({})
+  React.useEffect(() => {
+    lgRecommendedPrices().then((rs) => {
+      const m: Record<string, number> = {}
+      rs.forEach((r) => { const cc = canonCode(r.model_code, null); if (cc && r.price > 0) m[cc] = r.price })
+      setRecMap(m)
+    }).catch(() => {})
+  }, [])
+
   const data = React.useMemo(() => {
     const kw = q.trim().toLowerCase()
     // 전일(직전 데이터일) 최저가 인덱스 — canonCode|거래선 → 가격(▼▲ 전일 대비)
@@ -95,10 +105,15 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
       const min = prices.length ? Math.min(...prices) : null
       const max = prices.length ? Math.max(...prices) : null
       const spread = min != null && max != null && min > 0 && max > min ? ((max - min) / min) * 100 : null
-      const srps = list.map((x) => x.srp).filter((v): v is number => v != null)
+      // SRP = 공식 LG 권장가 우선. 없으면 유통 정가(srp)의 중앙값, 단 최저판매가의 1.6배 초과(부풀린 was가격)면 신뢰 불가로 제외.
+      const srps = list.map((x) => x.srp).filter((v): v is number => v != null && v > 0).sort((a, b) => a - b)
+      const medSrp = srps.length ? srps[Math.floor(srps.length / 2)] : null
+      const recv = cc ? recMap[cc] : undefined
+      const srp = recv != null ? recv
+        : (medSrp != null && (min == null || medSrp <= min * 1.6) ? medSrp : null)
       const _form = pmFormOf(r0.category, r0.model + " " + (r0.capacity || ""), r0.brand)
       const _size = isAC(r0.category) ? acHpLabel(r0.model || "") : pmSizeBucket(r0.category, r0.model, r0.capacity)
-      return { cat: r0.category, brand: r0.brand, code: cc || r0.code, model: r0.model, form: _form, size: _size, srp: srps.length ? Math.max(...srps) : null, cells, min, spread, star: starFor(r0.category, r0.model) }
+      return { cat: r0.category, brand: r0.brand, code: cc || r0.code, model: r0.model, form: _form, size: _size, srp, cells, min, spread, star: starFor(r0.category, r0.model) }
     })
     // 컬럼값 추출기(다중 정렬용)
     const sv = (r: typeof out[number], k: string): number | string | null => {
@@ -119,7 +134,7 @@ export function BoardView({ daily, stamp, elabels }: { daily: DailyRow[] | null;
       return 0
     })
     return out
-  }, [D, curDate, prevDate, cat, brands, effForm, effSize, q, sorts]) // eslint-disable-line
+  }, [D, curDate, prevDate, cat, brands, effForm, effSize, q, sorts, recMap]) // eslint-disable-line
   // 다중 정렬 — 클릭할 때마다 누적: 새 컬럼=오름차순 추가 → 재클릭=내림차순 → 3번째=해제. SHIFT 불필요.
   const setS = (k: string) => setSorts((cur) => {
     const i = cur.findIndex((s) => s.k === k)
