@@ -601,6 +601,13 @@ function classify(model: string, fallback: string) {
   return fallback ?? "기타"
 }
 
+// 브랜드 추론 — 일부 스크랩(예: Western Appliances)은 brand가 비고 model 첫 토큰에 브랜드명이 박혀 있음
+//  ("Prestiz WPREU4002" · "Skyworth 65GE6200"). 첫 토큰이 순수 알파벳(숫자 없음)이면 브랜드로 채택. brand 있으면 미적용.
+function inferBrand(model: string | null): string | null {
+  if (!model) return null
+  const first = String(model).trim().split(/\s+/)[0] || ""
+  return first.length >= 2 && /^[A-Za-z][A-Za-z.&'-]+$/.test(first) ? first : null
+}
 export async function competitorTable(max = 6000): Promise<PriceRow[]> {
   const rows = await sbPaged(
     (off) => "v_competitor_3d?select=*&order=brand.asc,category.asc,model.asc&offset=" + off + "&limit=1000",
@@ -612,7 +619,7 @@ export async function competitorTable(max = 6000): Promise<PriceRow[]> {
     const p2 = num(r.p2)
     return {
       retailer: r.retailer,
-      brand: r.brand,
+      brand: r.brand || inferBrand(r.model),
       category: classify(r.model, r.category),
       model: clean(r.model),
       code: modelCode(r.model, r.url),
