@@ -328,13 +328,22 @@ export default function Page() {
       <style>{"@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}@keyframes viewIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}@keyframes backIn{from{opacity:0}to{opacity:1}}@keyframes backOut{from{opacity:1}to{opacity:0}}@keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}@keyframes modalOut{from{opacity:1;transform:none}to{opacity:0;transform:translateY(8px) scale(.98)}}"}</style>
 
       <div className="grid items-start gap-6 lg:grid-cols-[212px_minmax(0,1fr)] lg:gap-7">
-        {/* 좌측 네비 리스트 — 시장동향 스타일. 현재 '경쟁사 동향' 하나 */}
-        <aside style={{animation:"fadeUp .5s ease both"}} className="h-fit py-2 lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-5">
-          <div className="mb-1.5 px-2 text-[10.5px] font-bold uppercase tracking-wide text-gray-400 dark:text-gray-500">{T("마케팅", "Marketing")}</div>
-          <button type="button" className="flex w-full items-center gap-2 rounded-lg border-l-2 border-indigo-500 bg-indigo-50/70 px-2.5 py-2 text-left text-[13px] font-semibold text-indigo-700 dark:bg-indigo-500/10 dark:text-indigo-300">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 3v18h18" /><path d="M7 15l4-4 3 3 5-6" /></svg>
-            {T("경쟁사 동향", "Competitor Trends")}
-          </button>
+        {/* 좌측 네비 리스트 — 시장동향(분석 메뉴)과 동일 디자인. 현재 '경쟁사 동향' 하나 */}
+        <aside style={{ animation: "fadeUp .5s ease both" }} className="h-fit lg:sticky lg:top-[61px] scroll-soft lg:max-h-[calc(100vh-72px)] lg:overflow-y-auto lg:overscroll-contain lg:border-r lg:border-gray-100 lg:dark:border-gray-800/70 lg:pr-6">
+          <div className="flex items-center gap-1.5 border-b border-gray-100 dark:border-gray-800 px-2 py-2.5">
+            <p className="whitespace-nowrap text-[13.5px] font-bold tracking-tight text-gray-900 dark:text-gray-50">{T("마케팅", "Marketing")}</p>
+          </div>
+          <div className="px-2 py-3">
+            <div className="flex flex-col gap-1">
+              <p className="px-2.5 pb-1 pt-1 text-[11px] font-semibold tracking-wide text-gray-400 dark:text-gray-500">{T("경쟁사 인텔리전스", "Competitor Intel")}</p>
+              <button type="button" className="group relative flex items-center rounded-md px-2.5 py-2 text-left transition-all duration-300 ease-[cubic-bezier(.34,1.42,.64,1)] hover:-translate-y-0.5 active:scale-[.98] bg-indigo-50/70 dark:bg-indigo-500/10">
+                <span className="absolute -left-2 top-1/2 h-4 w-[2.5px] -translate-y-1/2 rounded-r-full bg-indigo-500 dark:bg-indigo-400" />
+                <span className="flex w-full items-center gap-1.5">
+                  <span className="flex-1 truncate text-[14px] font-semibold text-indigo-700 dark:text-indigo-300">{T("경쟁사 동향", "Competitor Trends")}</span>
+                </span>
+              </button>
+            </div>
+          </div>
         </aside>
 
         <div className="min-w-0" style={{animation:"fadeUp .5s ease both"}}>
