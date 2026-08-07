@@ -611,6 +611,18 @@ export async function lgRecommendedPrices(): Promise<RecPrice[]> {
     .filter((r: RecPrice) => r.model_code && r.price != null)
 }
 
+// 개선요청/문의 제출 — feedback_requests에 insert(익명 insert만 허용·조회 불가로 비공개). 오너는 MCP/서비스롤로 조회.
+export async function submitFeedback(d: { page: string; area: string; request: string; submitter: string }): Promise<boolean> {
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/feedback_requests`, {
+      method: "POST",
+      headers: { apikey: SB_KEY, Authorization: `Bearer ${SB_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ page: d.page, area: d.area || null, request: d.request, submitter: d.submitter || null }),
+    })
+    return r.ok
+  } catch { return false }
+}
+
 // LG 프로모 스냅샷 — 선택일 LG 모델×거래선의 프로모 원문(할인·번들·사은품·할부). 모니터링 펼침 상세용.
 //  promo_text 예: "33%↓ · 번들 | LG RV09... Bundle" · installment 예: "P10,997 x6mos"(홈크레딧). 조인 정규화는 소비 측(canonCode).
 export type LgPromo = { retailer: string; model: string; promoText: string | null; installment: string | null; disc: number | null; price: number | null; srp: number | null; url: string | null }

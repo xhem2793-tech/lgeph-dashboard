@@ -115,6 +115,16 @@ export function TopNav() {
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18h6" /><path d="M10 22h4" /><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5" /></svg>
           </button>
+          {/* 개선 요청·문의 창구 — 클릭 시 피드백 모달(ax:open-feedback) */}
+          <button
+            type="button"
+            onClick={() => { if (typeof window !== "undefined") window.dispatchEvent(new Event("ax:open-feedback")) }}
+            aria-label={T("개선 요청·문의", "Improvement request")}
+            title={T("개선 요청·문의", "Improvement request / feedback")}
+            className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition-all duration-200 hover:-translate-y-px hover:bg-indigo-50 hover:text-indigo-600 active:scale-90 dark:text-gray-500 dark:hover:bg-indigo-500/10 dark:hover:text-indigo-300"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+          </button>
           <PillToggle
             ariaLabel="언어 선택"
             value={lang}
