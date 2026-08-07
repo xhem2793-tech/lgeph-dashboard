@@ -12,7 +12,7 @@ import { canonCode, isAC, pmFormsFor, pmFormHit, pmSizeList, pmSizeHit } from "@
 const COV_P = ["p0", "p1", "p2", "p3"] as const
 const COV_D = ["d0", "d1", "d2", "d3"] as const
 // 거래선 매출 순위(필리핀 가전 유통, 큰 순) — 히트맵 열 좌→우 정렬 기준.
-const RETAILER_RANK: Record<string, number> = { "SM Appliance": 1, "Abenson": 2, "Anson's": 3, "Robinsons Appliances": 4, "Western Appliances": 5, "Emcor": 6, "Addessa": 7, "Home Credit": 9 }
+const RETAILER_RANK: Record<string, number> = { "SM Appliance": 1, "Abenson": 2, "Anson's": 3, "Robinsons Appliances": 4, "Western Appliances": 5, "Emcor": 6, "Addessa": 7, "K-Servico": 8, "Desmark": 8.5, "Home Credit": 9 }
 const retRank = (r: string) => RETAILER_RANK[r] ?? 8
 const BRAND_DOMAIN: Record<string, string> = {
   LG: "lg.com", Samsung: "samsung.com", Panasonic: "panasonic.com", TCL: "tcl.com", Hisense: "hisense.com",
@@ -26,6 +26,7 @@ const RETAILER_DOMAIN: Record<string, string> = {
   "SM Appliance": "smappliance.com", "Abenson": "abenson.com", "Anson's": "ansons.ph",
   "Robinsons Appliances": "robinsonsappliances.com.ph", "Western Appliances": "western.com.ph",
   "Emcor": "emcor.com.ph", "Addessa": "addessa.com.ph", "Home Credit": "homecredit.ph", "Imperial": "imperialappliance.com",
+  "K-Servico": "kservico.com.ph", "Desmark": "desmark.com.ph",
 }
 const IMPERIAL = "Imperial" // 비활성(스크래핑 미연동)
 const SOON = "__soon" // 비활성(준비중)
