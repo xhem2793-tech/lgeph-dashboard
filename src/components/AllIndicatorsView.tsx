@@ -5,7 +5,7 @@ import { dataProvenance, allIndicatorLatest, indicatorSeries, econSpark, fmtStam
 import { Segmented } from "@/components/Segmented"
 import { LineChart, Lg } from "@/components/EconChart"
 import { CATS, NAV_IDS, classify, catKo, catLabel } from "@/lib/indicatorCats"
-import { INDICATOR_DESC, INDICATOR_DESC_EN, INDICATOR_INSIGHT } from "@/lib/indicatorDesc"
+import { INDICATOR_DESC, INDICATOR_DESC_EN, INDICATOR_INSIGHT, INDICATOR_INSIGHT_EN } from "@/lib/indicatorDesc"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
 import { PmDrop } from "@/components/competitors/shared"
 import { T, pickL } from "@/lib/i18n"
@@ -576,7 +576,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                   {/* 시장 의미(해석 3~4문장) */}
                   <div className="border-t border-indigo-100 dark:border-indigo-500/20 pt-2.5">
                     <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-indigo-500/80 dark:text-indigo-300/70">{T("시장 의미", "Market read")}</div>
-                    <p className="text-[12.5px] leading-relaxed text-gray-700 dark:text-gray-200">{INDICATOR_INSIGHT[row.indicator] ?? (CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
+                    <p className="text-[12.5px] leading-relaxed text-gray-700 dark:text-gray-200">{pickL(INDICATOR_INSIGHT[row.indicator], INDICATOR_INSIGHT_EN[row.indicator]) || (CAT_MI[row.cat] || CAT_MI.etc).ai}</p>
                   </div>
                   {/* 기간별 흐름·의미 — 최근 3개월/1년/5년 */}
                   <div className="border-t border-indigo-100 dark:border-indigo-500/20 pt-2.5">
