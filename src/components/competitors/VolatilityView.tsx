@@ -36,7 +36,7 @@ const retailerLogo = (r: string): string | null => RETAILER_DOMAIN[r] ? favi(RET
 const hideOnError = (e: React.SyntheticEvent<HTMLImageElement>) => { e.currentTarget.style.display = "none" }
 
 type Metric = "count" | "chg" | "sos" | "actRate" | "oosCnt" | "oosRate"
-type Hov = { rr: number; rl: number; cy: number; b: string; ret: string; t: number; oo: number; tot: number; delta: number | null } | null
+type Hov = { x: number; y: number; b: string; ret: string; t: number; oo: number; tot: number; delta: number | null } | null
 
 function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: string | null }) {
   const [di, setDi] = React.useState(0)
@@ -234,7 +234,8 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
                     const showUnit = (metric === "count" || metric === "oosCnt") && disp !== "·" && disp !== "—"
                     return (
                       <button key={ci} type="button" onClick={() => clickable && setSel({ b, ret })}
-                        onMouseEnter={(e) => { const r = e.currentTarget.getBoundingClientRect(); setHov({ rr: r.right, rl: r.left, cy: r.top + r.height / 2, b, ret, t, oo, tot, delta }) }}
+                        onMouseEnter={(e) => setHov({ x: e.clientX, y: e.clientY, b, ret, t, oo, tot, delta })}
+                        onMouseMove={(e) => setHov((h) => (h && h.b === b && h.ret === ret ? { ...h, x: e.clientX, y: e.clientY } : h))}
                         onMouseLeave={() => setHov((h) => (h && h.b === b && h.ret === ret ? null : h))}
                         className={"flex h-[clamp(82px,9vh,104px)] w-full flex-col items-center justify-center gap-0.5 rounded-md text-center transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:z-10 hover:scale-[1.05] hover:shadow-lg hover:ring-2 hover:ring-indigo-400/70 dark:hover:ring-indigo-300/60 " + (clickable ? "cursor-pointer" : "cursor-default")} style={{ background: alpha > 0 ? `rgba(${rgb},${alpha})` : "var(--cov-empty)", animation: "covPop .4s cubic-bezier(.22,1,.36,1) backwards", animationDelay: "0s" }}>
                         <span className={"text-[16px] font-bold leading-none tabular-nums " + (alpha > 0 ? (light ? "text-white" : "text-gray-900 dark:text-white") : "text-gray-300 dark:text-gray-600")}>{disp}{showUnit ? <span className="ml-px text-[9px] font-semibold opacity-60">{T("개", "")}</span> : null}</span>
@@ -296,9 +297,9 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         document.body
       )}
 
-      {/* 셀 호버 미니 팝업 — 카드 바로 옆에 앵커. body 포털(fixed 좌표=뷰포트 기준) */}
+      {/* 셀 호버 미니 팝업 — 마우스 커서 바로 옆을 따라다님. body 포털(fixed 좌표=뷰포트 기준, 인치 무관). 가장자리에선 반대쪽으로 뒤집힘 */}
       {hov && typeof document !== "undefined" && createPortal(
-        <div className="pointer-events-none fixed z-[90]" style={hov.rr > (typeof window !== "undefined" ? window.innerWidth : 1200) - 190 ? { left: hov.rl, top: hov.cy, transform: "translate(calc(-100% - 8px), -50%)" } : { left: hov.rr, top: hov.cy, transform: "translate(8px, -50%)" }}>
+        <div className="pointer-events-none fixed z-[90]" style={{ left: hov.x, top: hov.y, transform: `translate(${hov.x > (typeof window !== "undefined" ? window.innerWidth : 1400) - 210 ? "calc(-100% - 14px)" : "14px"}, ${hov.y > (typeof window !== "undefined" ? window.innerHeight : 900) - 190 ? "calc(-100% - 14px)" : "14px"})` }}>
           <div className="min-w-[156px] rounded-xl border border-gray-200 bg-white/95 px-3 py-2 text-left shadow-xl backdrop-blur-sm dark:border-gray-700 dark:bg-gray-900/95" style={{ animation: "covTip .16s cubic-bezier(.22,1,.36,1) both" }}>
             <div className="mb-1.5 flex items-center gap-1.5">
               {brandLogo(hov.b) && (
