@@ -5,7 +5,7 @@ import { dataProvenance, allIndicatorLatest, indicatorSeries, econSpark, fmtStam
 import { Segmented } from "@/components/Segmented"
 import { LineChart, Lg } from "@/components/EconChart"
 import { CATS, NAV_IDS, classify, catKo, catLabel } from "@/lib/indicatorCats"
-import { INDICATOR_DESC, INDICATOR_INSIGHT } from "@/lib/indicatorDesc"
+import { INDICATOR_DESC, INDICATOR_DESC_EN, INDICATOR_INSIGHT } from "@/lib/indicatorDesc"
 import { InsightBanner, type Banner } from "@/components/InsightBanner"
 import { PmDrop } from "@/components/competitors/shared"
 import { T, pickL } from "@/lib/i18n"
@@ -286,8 +286,11 @@ export default function AllIndicatorsView({ onPick }: { onPick?: (catKey: string
 // 지표별 설명 — 큐레이션 문구(INDICATOR_DESC) 우선 + 단위·출처·기간을 붙여 전 행 2줄 분량으로 보강(균일)
 function descOf(r: Row): string {
   const u = inferUnit(r.indicator, r.label || "")
-  const base = INDICATOR_DESC[r.indicator]
-    ?? ((u.unit === "%" ? T("전기 대비 증감률·비율", "Change vs. prior period · ratio") : u.unit === "지수" ? T("기준계열 대비 지수", "Index vs. base series") : u.prefix === "₱" ? T("가격·금액(₱ 페소)", "Price · amount (₱ PHP)") : u.prefix === "$" ? T("금액($ 미달러)", "Amount ($ USD)") : u.unit === "℃" ? T("월평균 기온", "Monthly avg. temperature") : u.unit === "CDD" ? T("냉방도일(에어컨 수요 선행)", "Cooling degree days (leads AC demand)") : u.unit.indexOf("명") >= 0 ? T("인구·규모·수량", "Population · size · count") : T("국가 공식통계 관측값", "Official national statistic observation")) + T(" 지표", " indicator"))
+  const curated = INDICATOR_DESC[r.indicator]
+  // 큐레이션 설명 있으면 언어별(EN 모드=영문, 없으면 KO 폴백), 없으면 단위 기반 합성 폴백
+  const base = curated
+    ? pickL(curated, INDICATOR_DESC_EN[r.indicator])
+    : ((u.unit === "%" ? T("전기 대비 증감률·비율", "Change vs. prior period · ratio") : u.unit === "지수" ? T("기준계열 대비 지수", "Index vs. base series") : u.prefix === "₱" ? T("가격·금액(₱ 페소)", "Price · amount (₱ PHP)") : u.prefix === "$" ? T("금액($ 미달러)", "Amount ($ USD)") : u.unit === "℃" ? T("월평균 기온", "Monthly avg. temperature") : u.unit === "CDD" ? T("냉방도일(에어컨 수요 선행)", "Cooling degree days (leads AC demand)") : u.unit.indexOf("명") >= 0 ? T("인구·규모·수량", "Population · size · count") : T("국가 공식통계 관측값", "Official national statistic observation")) + T(" 지표", " indicator"))
   // 리스트에는 설명(정의)만 — 단위·출처·관측기간은 지표 상세 페이지에서 표시
   return base
 }
@@ -522,7 +525,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
             {row.confidence === "FORECAST" && <span className="ml-1 rounded bg-amber-50 dark:bg-amber-500/10 px-1.5 py-px text-[10px] font-bold text-amber-700 dark:text-amber-300">{T("전망", "Forecast")}</span>}
           </div>
           <h3 className="mt-2 text-[22px] font-bold leading-tight tracking-tight text-gray-900 dark:text-gray-50">{enLabel(row.indicator, row.label)}</h3>
-          <p className="mt-1.5 max-w-[920px] text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">{INDICATOR_DESC[row.indicator] ?? descOf(row)}</p>
+          <p className="mt-1.5 max-w-[920px] text-[12.5px] leading-relaxed text-gray-600 dark:text-gray-300">{pickL(INDICATOR_DESC[row.indicator], INDICATOR_DESC_EN[row.indicator]) || descOf(row)}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {canOpen && <button type="button" onClick={() => { onOpenChart(row.cat); onClose() }} className="inline-flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-1.5 text-[12px] font-medium text-white transition-all duration-300 ease-out hover:-translate-y-0.5 hover:bg-indigo-700 active:scale-95">{T("경제지표에서 보기", "View in Indicators")} →</button>}
             <button type="button" onClick={() => onExcel(row)} className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 dark:border-emerald-500/30 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1.5 text-[12px] font-semibold text-emerald-700 dark:text-emerald-300 transition-all duration-300 ease-out hover:-translate-y-0.5 active:scale-95">
@@ -568,7 +571,7 @@ function IndicatorDetail({ row, onClose, onExcel, onOpenChart }: { row: Row; onC
                   {/* 지표 상세 설명(정의) */}
                   <div>
                     <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-indigo-500/80 dark:text-indigo-300/70">{T("지표 설명", "About")}</div>
-                    <p className="text-[12px] leading-relaxed text-gray-600 dark:text-gray-300">{INDICATOR_DESC[row.indicator] ?? descOf(row)}</p>
+                    <p className="text-[12px] leading-relaxed text-gray-600 dark:text-gray-300">{pickL(INDICATOR_DESC[row.indicator], INDICATOR_DESC_EN[row.indicator]) || descOf(row)}</p>
                   </div>
                   {/* 시장 의미(해석 3~4문장) */}
                   <div className="border-t border-indigo-100 dark:border-indigo-500/20 pt-2.5">
