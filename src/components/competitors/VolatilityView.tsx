@@ -49,6 +49,14 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   const [sel, setSel] = React.useState<{ b: string; ret: string } | null>(null) // 셀 드릴다운(품절)
   const [oosDays, setOosDays] = React.useState<Record<string, number>>({}) // 모델별 재고없음 연속일수
   const [shownBrands, setShownBrands] = React.useState(10) // 표시 브랜드 수 — 더보기 10개씩 증가
+  // 스크롤 뷰포트 폭 측정 → 기본 거래선 9개가 화면폭에 정확히 차도록 열 폭 고정(10번째부터 가로 스크롤)
+  const scrollRef = React.useRef<HTMLDivElement>(null)
+  const [vw, setVw] = React.useState(0)
+  React.useEffect(() => {
+    const el = scrollRef.current; if (!el) return
+    const ro = new ResizeObserver((es) => { for (const e of es) setVw(e.contentRect.width) })
+    ro.observe(el); return () => ro.disconnect()
+  }, [])
   React.useEffect(() => { if (sel) oosStreaks(sel.b, sel.ret).then(setOosDays).catch(() => setOosDays({})); else setOosDays({}) }, [sel])
   const cats = ["냉장고", "세탁기", "RAC", "TV"] // classify가 에어컨→RAC/SAC 분류 · RAC 한정
   const forms = cat === "전체" ? [] : pmFormsFor(cat) // 선택 제품군의 유형 세그먼트
@@ -92,6 +100,15 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
   // 실제 거래선(홈크레딧 제외·매출순) 전부 + Imperial + 준비중. 기본 9개가 화면폭에 맞고, 초과분은 가로 스크롤.
   const retSlots: (string | null)[] = [...data.retailers.slice(0, 30), IMPERIAL, SOON]
   const nCols = retSlots.length + 1 // + 좌상단 코너
+  const BASE_VISIBLE = 9   // 기준 거래선 열 수(이걸 넘으면 스크롤)
+  const BRAND_COL = 118    // 좌측 브랜드/코너 열 고정 폭
+  // 뷰포트 폭에서 브랜드열·열간격을 뺀 나머지를 9로 나눠 각 거래선 열 폭 고정 → 정확히 9개가 한 화면
+  const colW = React.useMemo(() => {
+    if (!vw) return 96
+    const gaps = nCols * 6
+    return Math.max(64, Math.min(150, Math.floor((vw - BRAND_COL - gaps) / BASE_VISIBLE)))
+  }, [vw, nCols])
+  const gridCols = `${BRAND_COL}px repeat(${retSlots.length}, ${colW}px)`
   const brSlots: (string | null)[] = data.brands.slice(0, shownBrands); while (brSlots.length < 10) brSlots.push(null) // 첫 페이지 10칸 유지·더보기 시 실제 브랜드만 추가
 
   // 지표별 셀 수치(원시값) — null=해당 없음/미측정
@@ -189,8 +206,8 @@ function CoverageHeatmap({ rows: allRows, stamp }: { rows: PriceRow[]; stamp: st
         {data.brands.length === 0 ? (
           <div className="flex h-40 items-center justify-center text-[12px] text-gray-400 dark:text-gray-500">{T("해당 조건의 전시 데이터가 없습니다.", "No listing data for this filter.")}</div>
         ) : (<>
-          <div className="scroll-soft overflow-x-auto px-0.5 pb-3 pt-2">
-            <div key={cat + "-" + di + "-" + metric} className="grid w-full gap-[6px] text-[11px]" style={{ minWidth: 560, gridTemplateColumns: `repeat(${nCols}, minmax(76px,1fr))` }}>
+          <div ref={scrollRef} className="scroll-soft overflow-x-auto px-0.5 pb-3 pt-2">
+            <div key={cat + "-" + di + "-" + metric} className="grid gap-[6px] text-[11px]" style={{ width: "max-content", gridTemplateColumns: gridCols }}>
               {/* 헤더 행 — 좌상단 코너에 LG 갭 KPI 카드 */}
               <div className="sticky left-0 top-0 z-30 flex h-[clamp(82px,9vh,104px)] w-full flex-col items-center justify-center gap-0.5 rounded-md border border-indigo-100 bg-indigo-50 px-1 text-center transition-all duration-200 ease-[cubic-bezier(.22,1,.36,1)] hover:scale-[1.04] hover:shadow-md dark:border-indigo-500/20 dark:bg-indigo-500/20" title={T("LG 전시 vs 경쟁 평균", "LG listed vs rival avg")}>
                 {lgGap.hasLG ? (<>
