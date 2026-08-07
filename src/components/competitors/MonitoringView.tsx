@@ -216,7 +216,7 @@ export function MonitoringView({ daily, stamp, elabels }: { daily: DailyRow[] | 
                         <div className="flex flex-wrap gap-2">
                           {r.cells.map((c, i) => {
                             if (!c) return null
-                            const pr = promoIdx[r.code]?.[MON_SHOPS[i].k]
+                            const pr = (promoIdx[r.code] || promoIdx[canonCode(r.model, null)])?.[MON_SHOPS[i].k]
                             const parsed = parsePromo(pr)
                             const disc = parsed.disc ?? (c.srp != null && c.srp > 0 && c.price < c.srp ? Math.round((1 - c.price / c.srp) * 100) : null)
                             const over = r.rec != null && c.price > r.rec
