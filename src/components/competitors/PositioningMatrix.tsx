@@ -82,7 +82,7 @@ export function PositioningMatrix({ rows, elabels, stamp }: { rows: PriceRow[] |
   const specOf = React.useCallback((r: PriceRow) => { const cc = canonCode(r.model, r.code); return (cc && specText[cc]) || (r.model + " " + (r.capacity || "")) }, [specText])
 
   const { cards, brands, ticks, gmin, gmax, plotH } = React.useMemo(() => {
-    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (effShop === "전체" || r.retailer === effShop) && pmSizeHit(cat, specOf(r), null, effSpec) && pmFormHit(cat, specOf(r), effForm, r.brand))
+    const f0 = R.filter((r) => r.category === cat && r.p0 != null && (r.p0 as number) > 0 && (effShop === "전체" || r.retailer === effShop) && pmSizeHit(cat, specOf(r), null, effSpec) && pmFormHit(cat, specOf(r), effForm, r.brand))
     const empty = { cards: [] as PMCard[], brands: [] as string[], ticks: [] as number[], gmin: 0, gmax: 0, plotH: H, count: f0.length, matched: 0 }
     if (f0.length < 3) return empty
     // 가격대는 카테고리별 절대 기준(PM_TIER_BANDS) — 상대백분위 아님
